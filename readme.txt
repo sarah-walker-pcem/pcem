@@ -1,0 +1,483 @@
+PCem v0.7
+
+Changes since v0.6:
+
+- New machines - DTK XT clone, Amstrad PC2086, Amstrad PC3086, Olivetti M24, Commodore PC 30 III, 
+  PCI 486 clone
+- New graphics cards - IBM EGA, Diamond Stealth 32 (ET4000/W32p), Paradise Bahamas 64 (S3 Vision864)
+- IDE hard disc emulation. This replaces the old INT 13 trapping emulation on all models. For machines
+  which don't natively have IDE support, the XTIDE board is emulated. See the readme file for details.
+- Fixed wrong code segment on page fault - eliminates some Win95 crashes
+- Fixed trap flag on POPF/IRET - improves DOS box on Win95
+- Fixed various pmode stuff, OS/2 v1.3 works
+- Fixed MMU caching bug, Win95 more stable, IE4 now works, Win98 now works, Linux now appears to work
+- Major improvements to floppy disc emulation - fixed occasional disc corruption, works with OS/2 and Linux
+- ATAPI identify command now returns an ATAPI version, Win95 native CD-ROM drivers now work.
+- CD-ROM emulation now uses raw read for audio - works on Windows 7
+- Major internal changes to graphics emulation
+- Major internal changes to memory and IO emulation
+- Many other changes
+
+
+PCem emulates the following machines:
+
+IBM 5150 PC (1981) 
+The original PC. This shipped in 1981 with a 4.77mhz 8088, 64k of RAM, and a cassette port.
+Disc drives quickly became standard, along with more memory.
+
+ROM files needed:
+
+pc102782.bin
+basicc11.f6
+basicc11.f8
+basicc11.fa
+basicc11.fc
+
+
+IBM 5160 XT (1983)
+From a hardware perspective, this is a minor tweak of the original PC. It originally shipped
+with 128k of RAM and a 10mb hard disc, both of which could be easily fitted to the 1981 machine.
+However, this was targetted as businesses and was more successful than the original.
+
+ROM files needed:
+
+xt050986.0
+xt050986.1
+
+
+IBM AT (1984)
+This was the 'next generation' PC, fully 16-bit with an 80286. The original model came with a 6mhz
+286, which ran three times as fast as the XT. This model also introduced EGA.
+
+ROM files needed:
+
+at111585.0
+at111585.1
+
+
+Olivetti M24 (1984)
+An enhanced XT clone, also known as the AT&T PC 6300. Has an 8086 CPU, and an unusual 'double-res'
+CGA display.
+
+ROM files needed:
+
+olivetti_m24_version_1.43_low.bin
+olivetti_m24_version_1.43_high.bin
+
+
+Tandy 1000 (1985)
+This is a clone of the unsuccessful IBM PCjr, which added better graphics and sound to the XT,
+but removed much expandability plus some other hardware (such as the DMA controller). The Tandy
+puts back the DMA controller and ISA slots, making it a much more useful machine. Many games
+from the late 80s support the Tandy.
+
+ROM files needed:
+
+tandy1t1.020
+
+
+DTK Clone XT (1986)
+A generic clone XT board.
+
+ROM files needed:
+
+DTK_ERSO_2.42_2764.bin
+
+
+Amstrad PC1512 (1986)
+This was Amstrad's first entry into the PC clone market (after the CPC and PCW machines), and
+was the first cheap PC available in the UK, selling for only £500. It was a 'turbo' clone, 
+having an 8mhz 8086, as opposed to an 8088, and had 512k RAM as standard. It also had a 
+perculiar modification to its onboard CGA controller - the 640x200 mode had 16 colours instead
+of the usual 2. This was put to good use by GEM, which shipped with the machine.
+
+Amstrad's CGA implementation has a few oddities, these are emulated as best as possible. This
+mainly affects games defining unusual video modes, though 160x100x16 still works (as on the real
+machine).
+
+ROM files needed:
+
+40043.v1
+40044.v2
+40078.ic127
+
+
+Amstrad PC1640 (1987)
+Amstrad's followup to the PC1512, the PC1640 had 640k of RAM and onboard EGA, but was otherwise
+mostly the same.
+
+ROM files needed:
+
+40043.v3
+40044.v3
+40100
+
+
+Sinclair PC200/Amstrad PC20 (1988)
+This was Amstrad's entry to the 16-bit home computer market, intended to compete with the Atari
+ST and Commodore Amiga. It's similar to the PC1512, but is based on Amstrad's portable PPC512
+system. With stock CGA and PC speaker, it couldn't compare with the ST or Amiga.
+
+ROM files needed:
+
+pc20v2.0
+pc20v2.1
+40109.bin
+
+
+Schneider Euro PC (1988)
+A German XT clone. An 'all-in-one' system like the Sinclair PC200. I don't know much about this
+machine to be honest! This doesn't appear to work with the XTIDE BIOS, so therefore this is the
+only model that does not support hard discs.
+
+ROM files needed:
+
+50145
+50146
+
+
+(c)Anonymous Generic Turbo XT BIOS (1988?)
+This is a BIOS whose source code was made available on Usenet in 1988. It appears to be an 
+anonymous BIOS from an XT clone board. It was then heavily modified to fix bugs. The history of
+this BIOS (and the source code) is at http://dizzie.narod.ru/bios.txt
+
+ROM files needed:
+
+pcxt.rom
+
+
+Commodore PC30-III (1988)
+A fairly generic 286 clone.
+
+ROM files needed:
+
+commodore pc 30 iii even.bin
+commodore pc 30 iii odd.bin
+
+
+Amstrad PC2086 (1989)
+The PC2086 is essentially a PC1640 with VGA and 3.5" floppy drives.
+
+ROM files needed:
+
+40179.ic129
+40180.ic132
+40186.ic171
+
+
+Amstrad PC3086 (1990)
+The PC3086 is a version of the PC2086 with a more standard case.
+
+ROM files needed:
+
+fc00.bin
+c000.bin
+
+
+Dell System 200 (1990?)
+This is a pretty generic 286 clone with a Phoenix BIOS.
+
+HIMEM.SYS doesn't appear to work on this one, for some reason.
+
+ROM files needed:
+
+dell0.bin
+dell1.bin
+
+
+AMI 286 clone (1990)
+This is a generic 286 clone with an AMI BIOS.
+
+ROM files needed:
+
+amic206.bin
+
+
+Acermate 386SX/25N (1992?)
+An integrated 386SX clone, with onboard Oak SVGA and IO.
+
+ROM files needed:
+acer386.bin
+oti067.bin
+
+
+Amstrad MegaPC (1992)
+A 386SX clone (otherwise known as the PC7386SX) with a built-in Sega Megadrive. Only the PC section
+is emulated, obv.
+
+ROM files needed:
+41651-bios lo.u18
+211253-bios hi.u19
+
+
+AMI 386 clone (1994)
+This is a generic 386 clone with an AMI BIOS. The BIOS came from my 386DX/40, the motherboard is
+dated June 1994.
+
+ROM files needed:
+
+ami495.bin
+
+
+AMI 486 clone (1993)
+This is a generic 486 clone with an AMI BIOS. The BIOS came from my 486SX/25, bought in December
+1993.
+
+ROM files needed:
+
+ami1429.bin
+
+
+AMI WinBIOS 486 clone (1994)
+A 486 clone with a newer AMI BIOS.
+
+ROM files needed:
+
+ali1429g.amw
+
+
+PCI 486 clone (1994)
+A 486 clone with a PCI bus - specifically, a Shuttle HOT-433 board. Due to lack of documentation
+this machine has some issues - in particular, don't enable the PCI IDE emulation.
+
+ROM files needed:
+
+hot-433.ami
+
+
+PCem emulates the following graphics adapters :
+
+MDA - The original PC adapter. This displays 80x25 text in monochrome.
+
+Hercules - A clone of MDA, with the addition of a high-resolution 720x348 graphics mode.
+
+CGA - The most common of the original adapters, supporting 40x25 and 80x25 text, and 
+    320x200 in 4 colours, 640x200 in 2 colours, and a composite mode giving 160x200 in 16 colours.
+
+IBM EGA - The original 1984 IBM EGA card, with 256k VRAM.
+
+Trident 8900D SVGA - A low cost SVGA board circa 1992/1993. Not the greatest board in it's day, but
+    it has a reasonable VESA driver and (buggy) 15/16/24-bit colour modes.
+
+Tseng ET4000AX SVGA - A somewhat better SVGA board than the Trident, here you get better compatibility
+    and speed (on the real card, not the emulator) in exchange for being limited to 8-bit colour.
+
+Diamond Stealth 32 SVGA - An ET4000/W32p based board, has 15/16/24-bit colour modes, plus acceleration.
+    There is an odd bug with this one, where Windows 9x DOS boxes won't open with modes beyond 8-bit 
+    colour. Supports PCI.
+
+Paradise Bahamas 64 - An S3 Vision864 based board. This has the best Windows drivers, but the default
+    VESA driver is poor. Supports PCI.
+
+
+Some models have fixed graphics adapters :
+
+Olivetti M24 - CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
+    ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
+    as it is 14-line instead of 16-line.
+
+Tandy 1000 - CGA with various new modes - 160x200x16, 320x200x16, 640x200x4. Widely supported in 80s 
+    games.
+
+Amstrad PC1512 - CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
+
+Amstrad PC1640 - Paradise EGA.
+
+Amstrad PC2086/PC3086 - Paradise PVGA1. An early SVGA clone with 256kb VRAM.
+
+Amstrad MegaPC - Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
+
+Acer 386SX/25N - Oak OTI-067. Another 512kb SVGA clone.
+
+
+Pcem emulates the following sound devices :
+
+PC speaker - The standard beeper on all PCs. Supports samples/RealSound.
+
+Tandy PSG - The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus
+    noise. I reused the emulator in B-em for this (slightly modified).
+
+Gameblaster - The Creative Labs Gameblaster/Creative Music System, Creative's first sound card
+    introduced in 1987. Has two Philips SAA1099, giving 12 voices of square waves plus 4 noise
+    voices. In stereo!
+
+Adlib - Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a useless drum section. 
+    PCem uses Jarek Burczynski's emulator for this.
+
+Sound Blaster - Several Sound Blasters are emulated :
+    SB v1.0 - The original. Limited to 22khz, and no auto-init DMA (can cause crackles sometimes).
+    SB v1.5 - Adds auto-init DMA
+    SB v2.0 - Upped to 41khz
+    SB Pro v1.0 - Stereo, with twin OPL2 chips.
+    SB Pro v2.0 - Stereo, with OPL 3 chip
+    SB 16 - 16 bit stereo
+    All are set to Address 220, IRQ 7 and DMA 1 (and High DMA 5). IRQ and DMA can be changed for the 
+    SB16.
+    The relevant SET line for autoexec.bat is
+	SET BLASTER = A220 I7 D1 Tx    - where Tx is T1 for SB v1.0, T3 for SB v2.0, T4 for SB Pro,
+					 and T6 for SB16.
+    The SB16 software seems to work (including Windows drivers), but you must stick to these settings.
+
+Gravis Ultrasound - 32 voice sample playback. PCem's emulation of this is a bit preliminary :
+    - Only older ULTRASND setup programs work, ie text mode instead of graphics (3.xx?)
+    - MIDI playback occasionally goes wrong
+    - 16-bit playback only uses top 8 bits of samples
+    - Some games, eg later versions of Epic Pinball, have no music
+    - No stereo
+    - Some clicking in sound output
+    - Does work well in lots of stuff though, eg Worms, Pinball Fantasies, Zone 66 etc.
+    - Settings are hardwired to Address 240, IRQ 5, DMA 3. The relevant SET line for autoexec.bat is
+	SET ULTRASND=240,3,3,5,12
+      This means unlike on a real board, you don't have to run a init program on bootup for sound 
+      to work. You do need to install the ULTRAMID patches if you want MIDI.
+
+
+Other stuff emulated :
+
+Serial mouse - A Microsoft compatible serial mouse on COM1. Compatible drivers are all over the 
+    place for this.
+
+M24 mouse - I haven't seen a DOS mouse driver for this yet, but the regular scancode mode works, as
+    does the Windows 1.x driver.
+
+PC1512 mouse - The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this
+    one.
+
+PS/2 mouse - A PS/2 mouse is emulated on the MegaPC and 386SX/25N model. As with serial, compatible
+    drivers are common.
+
+ATAPI CD-ROM - Works with OAKCDROM.SYS and Windows 9x. It can only work with actual CD-ROM drives 
+    at the minute, so to use ISO images you need a virtual CD drive.
+
+
+XTIDE :
+
+The XTIDE board is emulated for machines that don't natively support IDE hard discs.
+
+You will need to download the XTIDE BIOS seperately. Of the various versions, ide_at.bin and ide_xt.bin
+should be placed in the ROMS directory. ide_xt is used on all XT models, and ide_at is used on the IBM AT
+and Commodore PC30-III machines.
+
+The BIOS is available at :
+
+http://code.google.com/p/xtideuniversalbios/
+
+v2.0.0 beta 1 is the only version that has been tested.
+
+
+Notes :
+
+- The AT and AMI 286 both fail part of their self test. This doesn't really affect anything, 
+  just puts an irritating message on the screen.
+
+- The time on the PC1512 clock is wrong. The date is correct, though since the PC1512's bios isn't
+  Y2k compliant, it thinks it's 1988.
+
+- The envelope system on the Gameblaster isn't emulated. The noise may not be right either.
+
+- Some of the more unusual VGA features are not emulated. I haven't found anything that uses them yet.
+
+- Windows 3.x should work okay in all modes now.
+
+- Windows 95/98 run, with the following caveats :
+  - Mouse is not detected. Strangely, it still works - except during setup, when it stops working at one point.
+    Sometimes running the 'Add New Hardware' wizard a couple of times will find it.
+  - The default Trident driver only allows 16 and 256 colour modes. There is an alternative driver which enables
+    high and true colour modes, but it doesn't work with DirectX.
+  - Setup sometimes crashes in the first stage (during file copying). This appears to be a side effect of the 
+    bugs fixed making OS/2 work. Unfortunately I haven't been able to eliminate this issue.
+
+- OS/2 1.3 seems to work okay, but I haven't tested it very thoroughly.
+
+- Linux appears to work. fdlinux runs okay, but is relatively useless. SuSE 6.3 seemed mostly okay, but I only
+  had the first disc of 6 when testing, so I didn't get very far.
+
+- Windows NT does not work at all.
+
+
+Software tested:
+
+I removed most of this, and only put the stuff I actually tested on this release.
+
+Booter games :
+
+King's Quest (Tandy)
+King's Quest (CGA)
+
+
+DOS stuff :
+
+MS-DOS 3.30
+PC-DOS 3.30
+PC-DOS 5.02
+MS-DOS 6.22
+ - Most of the supplied software seems to work, eg Drivespace, Defrag, Scandisk, QBASIC
+   etc
+
+OS/2 v1.3
+
+Windows 3.0 (CGA, Hercules, EGA, VGA) (real and standard modes only)
+Windows 3.1 (VGA, SVGA) (standard & enhanced modes)
+Windows 95
+Windows 98
+
+Works for Windows 3.0
+Microsoft Arcade
+Internet Explorer 4
+
+Jill of the Jungle (CGA,EGA,VGA)
+Tetris
+Zak McKraken (CGA, Tandy)
+
+Brix (VGA)
+Commander Keen 4 (EGA)
+Duke Nukem 2 (VGA)
+Heartlight (VGA)
+Jetpack (VGA)
+
+Cascada - Cronologia (VGA)
+EMF - Verses
+Renaissance - Amnesia
+Future Crew - Second Reality
+
+386/486 stuff :
+
+Jungle Strike (EMM386)
+Dawn Patrol (EMM386) (use ET4000 driver)
+
+Doom
+Doom 2
+Duke Nukem 3D
+Heretic
+Hexen
+Jazz Jackrabbit
+Rise of the Triad
+Simcity 2000
+Terminal Velocity
+Tyrian
+Trasnport Tycoon
+Transport Tycoon Deluxe
+X-Com : Terror From The Deep
+Theme Hospital - DOS and Windows versions
+Zone 66 (don't use DOS 6.22)
+Pro Pinball : Timeshock
+
+Actua Soccer
+Grand Theft Auto
+Jazz Jackrabbit 2
+Magic Carpet
+Network Q RAC Rally
+Quake
+WinQuake
+Quake 2 (SLOW - unsurprisingly)
+Tomb Raider
+Screamer
+Screamer Rally
+Virtual Pool (accelerated drivers work with both S3 and ET4000/W32)
+Jedi Knight
+Command & Conquer : Red Alert
+Simcity 2000
+
+ZSNES
+Genecyst
+Kgen98

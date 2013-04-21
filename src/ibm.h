@@ -1,0 +1,468 @@
+#include <stdio.h>
+#include <stdint.h>
+#define printf pclog
+
+/*Memory*/
+uint8_t *ram,*vram;
+
+unsigned char isram[0x10000];
+
+uint32_t rammask;
+
+int readlookup[256],readlookupp[256];
+uint32_t *readlookup2;
+int readlnext;
+int writelookup[256],writelookupp[256];
+uint32_t *writelookup2;
+int writelnext;
+
+extern int mmu_perm;
+
+#define readmemb(a) ((readlookup2[(a)>>12]==0xFFFFFFFF)?readmembl(a):ram[readlookup2[(a)>>12]+((a)&0xFFF)])
+#define readmemw(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE)?readmemwl(s,a):*((uint16_t *)(&ram[readlookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)])))
+#define readmeml(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC)?readmemll(s,a):*((uint32_t *)(&ram[readlookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)])))
+
+//#define writememb(a,v) if (writelookup2[(a)>>12]==0xFFFFFFFF) writemembl(a,v); else ram[writelookup2[(a)>>12]+((a)&0xFFF)]=v
+//#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
+//#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememll(s,a,v); else *((uint32_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
+//#define readmemb(a) ((isram[((a)>>16)&255] && !(cr0>>31))?ram[a&0xFFFFFF]:readmembl(a))
+//#define writememb(a,v) if (isram[((a)>>16)&255] && !(cr0>>31)) ram[a&0xFFFFFF]=v; else writemembl(a,v)
+
+//void writememb(uint32_t addr, uint8_t val);
+uint8_t readmembl(uint32_t addr);
+void writemembl(uint32_t addr, uint8_t val);
+uint8_t readmemb386l(uint32_t seg, uint32_t addr);
+void writememb386l(uint32_t seg, uint32_t addr, uint8_t val);
+uint16_t readmemwl(uint32_t seg, uint32_t addr);
+void writememwl(uint32_t seg, uint32_t addr, uint16_t val);
+uint32_t readmemll(uint32_t seg, uint32_t addr);
+void writememll(uint32_t seg, uint32_t addr, uint32_t val);
+
+uint8_t *getpccache(uint32_t a);
+
+uint32_t mmutranslatereal(uint32_t addr, int rw);
+
+void addreadlookup(uint32_t virt, uint32_t phys);
+void addwritelookup(uint32_t virt, uint32_t phys);
+
+
+/*IO*/
+uint8_t  inb(uint16_t port);
+void outb(uint16_t port, uint8_t  val);
+uint16_t inw(uint16_t port);
+void outw(uint16_t port, uint16_t val);
+uint32_t inl(uint16_t port);
+void outl(uint16_t port, uint32_t val);
+
+FILE *romfopen(char *fn, char *mode);
+extern int shadowbios,shadowbios_write;
+extern int cache;
+extern int mem_size;
+extern int readlnum,writelnum;
+extern int memwaitstate;
+
+
+/*Processor*/
+#define EAX regs[0].l
+#define ECX regs[1].l
+#define EDX regs[2].l
+#define EBX regs[3].l
+#define ESP regs[4].l
+#define EBP regs[5].l
+#define ESI regs[6].l
+#define EDI regs[7].l
+#define AX regs[0].w
+#define CX regs[1].w
+#define DX regs[2].w
+#define BX regs[3].w
+#define SP regs[4].w
+#define BP regs[5].w
+#define SI regs[6].w
+#define DI regs[7].w
+#define AL regs[0].b.l
+#define AH regs[0].b.h
+#define CL regs[1].b.l
+#define CH regs[1].b.h
+#define DL regs[2].b.l
+#define DH regs[2].b.h
+#define BL regs[3].b.l
+#define BH regs[3].b.h
+
+typedef union
+{
+        uint32_t l;
+        uint16_t w;
+        struct
+        {
+                uint8_t l,h;
+        } b;
+} x86reg;
+
+x86reg regs[8];
+uint16_t flags,eflags;
+uint32_t /*cs,ds,es,ss,*/oldds,oldss,pc,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
+//uint16_t msw;
+
+extern int ins,output;
+extern int cycdiff;
+
+typedef struct
+{
+        uint32_t base;
+        uint32_t limit,limitw;
+        uint8_t access;
+        uint16_t seg;
+} x86seg;
+
+x86seg gdt,ldt,idt,tr;
+x86seg _cs,_ds,_es,_ss,_fs,_gs;
+x86seg _oldds;
+
+uint32_t pccache;
+uint8_t *pccache2;
+/*Segments -
+  _cs,_ds,_es,_ss are the segment structures
+  CS,DS,ES,SS is the 16-bit data
+  cs,ds,es,ss are defines to the bases*/
+//uint16_t CS,DS,ES,SS;
+#define CS _cs.seg
+#define DS _ds.seg
+#define ES _es.seg
+#define SS _ss.seg
+#define FS _fs.seg
+#define GS _gs.seg
+#define cs _cs.base
+#define ds _ds.base
+#define es _es.base
+#define ss _ss.base
+#define fs _fs.base
+#define gs _gs.base
+
+#define CPL ((_cs.access>>5)&3)
+
+void loadseg(uint16_t seg, x86seg *s);
+void loadcs(uint16_t seg);
+
+union
+{
+        uint32_t l;
+        uint16_t w;
+} CR0;
+
+#define cr0 CR0.l
+#define msw CR0.w
+
+uint32_t cr2,cr3;
+
+#define C_FLAG  0x0001
+#define P_FLAG  0x0004
+#define A_FLAG  0x0010
+#define Z_FLAG  0x0040
+#define N_FLAG  0x0080
+#define T_FLAG  0x0100
+#define I_FLAG  0x0200
+#define D_FLAG  0x0400
+#define V_FLAG  0x0800
+#define NT_FLAG 0x4000
+#define VM_FLAG 0x0002 /*In EFLAGS*/
+
+#define WP_FLAG 0x10000 /*In CR0*/
+
+#define IOPL ((flags>>12)&3)
+
+#define IOPLp ((!(msw&1)) || (CPL<=IOPL))
+//#define IOPLp 1
+
+//#define IOPLV86 ((!(msw&1)) || (CPL<=IOPL))
+extern int cycles;
+extern int cycles_lost;
+extern int is486;
+extern uint8_t opcode;
+extern int insc;
+extern int fpucount;
+extern float mips,flops;
+extern int clockrate;
+extern int cgate16;
+extern int CPUID;
+
+extern int cpl_override;
+
+/*Timer*/
+typedef struct PIT
+{
+        uint32_t l[3];
+        double c[3];
+        uint8_t m[3];
+        uint8_t ctrl,ctrls[2];
+        int wp,rm[3],wm[3];
+        uint16_t rl[3];
+        int thit[3];
+        int delay[3];
+        int rereadlatch[3];
+} PIT;
+
+PIT pit;
+void setpitclock(float clock);
+int pitcount;
+
+float pit_timer0_freq();
+
+
+
+/*DMA*/
+typedef struct DMA
+{
+        uint16_t ab[4],ac[4];
+        uint16_t cb[4];
+        int cc[4];
+        int wp;
+        uint8_t m,mode[4];
+        uint8_t page[4];
+        uint8_t stat;
+        uint8_t command;
+} DMA;
+
+DMA dma,dma16;
+
+
+/*PPI*/
+typedef struct PPI
+{
+        int s2;
+        uint8_t pa,pb;
+} PPI;
+
+PPI ppi;
+extern int key_inhibit;
+
+
+/*PIC*/
+typedef struct PIC
+{
+        uint8_t icw1,mask,ins,pend,mask2;
+        int icw;
+        uint8_t vector;
+        int read;
+} PIC;
+
+PIC pic,pic2;
+extern int pic_intpending;
+int intcount;
+
+
+/*FDC*/
+typedef struct FDC
+{
+        uint8_t dor,stat,command,dat,st0;
+        int head,track[256],sector,drive,lastdrive;
+        int pos;
+        uint8_t params[256];
+        uint8_t res[256];
+        int pnum,ptot;
+        int rate;
+        uint8_t specify[256];
+        int eot[256];
+        int lock;
+        int perp;
+        uint8_t config, pretrk;
+} FDC;
+
+FDC fdc;
+int disctime;
+char discfns[2][256];
+int driveempty[2];
+
+
+/*Config stuff*/
+#define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
+#define HERCULES (gfxcard==GFX_HERCULES && (romset<ROM_TANDY || romset>=ROM_IBMAT))
+#define AMSTRAD (romset==ROM_PC1512 || romset==ROM_PC1640 || romset==ROM_PC3086)
+#define AMSTRADIO (romset==ROM_PC1512 || romset==ROM_PC1640 || romset==ROM_PC200 || romset==ROM_PC2086 || romset == ROM_PC3086)
+#define TANDY (romset==ROM_TANDY/* || romset==ROM_IBMPCJR*/)
+#define VID_EGA (gfxcard==GFX_EGA)
+#define EGA (romset==ROM_PC1640 || VID_EGA || VGA)
+#define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200)
+#define SVGA (gfxcard==GFX_ET4000 && VGA)
+#define TRIDENT (gfxcard==GFX_TVGA && !OTI067)
+#define OTI067 (romset==ROM_ACER386)
+#define ET4000 (gfxcard==GFX_ET4000 && VGA)
+#define ET4000W32 (gfxcard==GFX_ET4000W32 && VGA)
+#define AT (romset>=ROM_IBMAT)
+#define PCI (romset == ROM_PCI486)
+
+#define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
+int FASTDISC;
+int ADLIB;
+int GAMEBLASTER;
+
+enum
+{
+        ROM_IBMPC = 0,  /*301 keyboard error, 131 cassette (!!!) error*/
+        ROM_IBMXT,      /*301 keyboard error*/
+        ROM_GENXT,      /*'Generic XT BIOS'*/
+        ROM_DTKXT,
+        ROM_EUROPC,
+        ROM_OLIM24,
+        ROM_TANDY,
+        ROM_PC1512,
+        ROM_PC200,
+        ROM_PC1640,
+        ROM_PC2086,
+        ROM_PC3086,        
+        ROM_IBMAT,
+        ROM_CMDPC30,
+        ROM_AMI286,
+        ROM_DELL200,
+        ROM_MISC286,
+        ROM_IBMAT386,
+        ROM_ACER386,
+        ROM_MEGAPC,
+        ROM_AMI386,
+        ROM_AMI486,
+        ROM_WIN486,
+        ROM_PCI486
+};
+
+//#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
+#define is386 (romset>=ROM_IBMAT386)
+#define is386sx 0
+
+int hasfpu;
+int romset;
+
+#define GFX_CGA 0
+#define GFX_MDA 1
+#define GFX_HERCULES 2
+#define GFX_EGA 3     /*Using IBM EGA BIOS*/
+//#define GFX_OTI067 3    /*Using BIOS from Acer 386SX/25N - edit - only works with Acer BIOS! Stupid integrated systems*/
+#define GFX_TVGA 4      /*Using Trident 8900D BIOS*/
+#define GFX_ET4000 5    /*Tseng ET4000*/
+#define GFX_ET4000W32 6 /*Tseng ET4000/W32p (Diamond Stealth 32)*/
+#define GFX_BAHAMAS64 7 /*S3 Vision864 (Paradise Bahamas 64)*/
+#define GFX_N9_9FX    8 /*S3 764/Trio64 (Number Nine 9FX)*/
+#define GFX_STEALTH64 9 /*S3 Vision964 (Diamond Stealth 64 VRAM PCI)*/
+
+int gfxcard;
+
+int cpuspeed;
+
+
+/*Video*/
+void (*pollvideo)();
+void pollega();
+int readflash;
+uint8_t hercctrl;
+int slowega,egacycles,egacycles2;
+extern uint8_t gdcreg[16];
+extern int incga;
+extern int egareads,egawrites;
+extern int cga_comp;
+extern int vid_resize;
+extern int winsizex,winsizey;
+extern int chain4;
+
+uint8_t readvram(uint16_t addr);
+void writevram(uint16_t addr, uint8_t val);
+void writevramgen(uint16_t addr, uint8_t val);
+
+uint8_t readtandyvram(uint16_t addr);
+void writetandy(uint16_t addr, uint8_t val);
+void writetandyvram(uint16_t addr, uint8_t val);
+
+extern int et4k_b8000;
+extern int changeframecount;
+extern uint8_t changedvram[(8192*1024)/1024];
+
+void writeega_chain4(uint32_t addr, uint8_t val);
+extern uint32_t svgarbank,svgawbank;
+
+/*Serial*/
+extern int mousedelay;
+
+
+/*Sound*/
+uint8_t spkstat;
+
+float spktime,soundtime,gustime,gustime2,vidtime,rtctime;
+int ppispeakon;
+//#define SPKCONST (8000000.0/44100.0)
+float SPKCONST;
+float SOUNDCONST;
+float CASCONST;
+float GUSCONST,GUSCONST2;
+float CGACONST;
+float MDACONST;
+float VGACONST1,VGACONST2;
+float RTCCONST;
+int gated,speakval,speakon;
+
+#define SOUNDBUFLEN (48000/10)
+
+
+/*Sound Blaster*/
+int sbenable,sblatchi,sblatcho,sbcount,sb_enable_i,sb_count_i;
+int16_t sbdat;
+void setsbclock(float clock);
+
+#define SADLIB 1 /*No DSP*/
+#define SB1    2 /*DSP v1.05*/
+#define SB15   3 /*DSP v2.00*/
+#define SB2    4 /*DSP v2.01 - needed for high-speed DMA*/
+#define SBPRO  5 /*DSP v3.00*/
+#define SBPRO2 6 /*DSP v3.02 + OPL3*/
+#define SB16   7 /*DSP v4.05 + OPL3*/
+int sbtype;
+
+struct
+{
+        int vocl,vocr,voc;
+        int midl,midr,mid;
+        int masl,masr,mas;
+} sbpmixer;
+extern int sb_freq;
+
+struct
+{
+        int master_l,master_r;
+        int voice_l,voice_r;
+        int fm_l,fm_r;
+        int bass_l,bass_r;
+        int treble_l,treble_r;
+        int filter;
+} mixer;
+
+
+int clocks[3][12][4];
+int at70hz;
+
+char pcempath[512];
+
+
+/*Hard disc*/
+
+typedef struct
+{
+        FILE *f;
+        int spt,hpc; /*Sectors per track, heads per cylinder*/
+        int tracks;
+} PcemHDC;
+
+PcemHDC hdc[2];
+
+/*Keyboard*/
+int keybsenddelay;
+extern int kb_win;
+
+
+/*CD-ROM*/
+extern int cdrom_drive;
+extern int idecallback[2];
+extern int cdrom_enabled;
+
+void pclog(const char *format, ...);
+extern int nmi;
+
+extern int times;
+
+
+extern float isa_timing, bus_timing;

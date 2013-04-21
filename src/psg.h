@@ -1,0 +1,1 @@
+void psg_init();

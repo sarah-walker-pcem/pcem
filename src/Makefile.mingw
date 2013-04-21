@@ -1,0 +1,43 @@
+VPATH = . mame
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+CFLAGS = -O3 -march=i686 -fomit-frame-pointer
+OBJ = 286.o 386.o acer386sx.o adlib.o ali1429.o amstrad.o cdrom-ioctl.o cms.o \
+	config.o cpu.o dac.o dma.o ega.o fdc.o gus.o harddisk.o \
+	headland.o ide.o io.o jim.o keyboard.o keyboard_amstrad.o keyboard_at.o \
+	keyboard_olim24.o keyboard_xt.o lpt.o mcr.o mem.o model.o \
+	mouse.o mouse_ps2.o mouse_serial.o neat.o nvr.o olivetti_m24.o \
+     opti.o pc.o pci.o pic.o pit.o \
+	ppi.o psg.o sblaster.o serial.o sound.o soundopenal.o um8881f.o \
+	vid_cga.o vid_ega.o vid_et4000.o vid_et4000w32.o \
+	vid_et4000w32i.o vid_hercules.o vid_icd2061.o vid_mda.o vid_olivetti_m24.o \
+	vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o \
+	vid_pc200.o vid_s3.o vid_sdac_ramdac.o vid_stg_ramdac.o \
+	vid_svga.o vid_tandy.o vid_tkd8001_ramdac.o vid_tvga.o \
+	vid_unk_ramdac.o video.o wd76c10.o win.o win-ddraw.o \
+	win-keyboard.o win-mouse.o win-timer.o win-video.o x86.o \
+	x86seg.o x87.o xtide.o pc.res
+FMOBJ = fmopl.o ymf262.o
+
+
+LIBS = -mwindows -lwinmm -lalut -lopenal32 -lddraw -ldinput -ldxguid
+
+PCem.exe: $(OBJ) $(FMOBJ)
+	$(CC) $(OBJ) $(FMOBJ) -o "PCem.exe" $(LIBS)
+
+all : PCem.exe
+
+clean :
+	del *.o
+	del *.exe
+	del *.res
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $<
+
+%.o : %.cc
+	$(CPP) $(CFLAGS) -c $<
+
+pc.res: pc.rc
+	$(WINDRES) -i pc.rc --input-format=rc -o pc.res -O coff 

@@ -1,0 +1,158 @@
+#include <windows.h>
+#include "resources.h"
+
+MainMenu MENU DISCARDABLE
+BEGIN
+        POPUP "&File"
+        BEGIN
+                MENUITEM "&Hard Reset",           IDM_FILE_HRESET
+                MENUITEM "E&xit",                 IDM_FILE_EXIT
+        END
+        POPUP "&Disc"
+        BEGIN
+                MENUITEM "Change drive &A:...", IDM_DISC_A
+                MENUITEM "Change drive &B:...", IDM_DISC_B
+                MENUITEM "&Eject drive A:",     IDM_EJECT_A
+                MENUITEM "Eject drive B:",      IDM_EJECT_B
+                MENUITEM "&Configure hard discs...",IDM_HDCONF
+        END
+        POPUP "&Settings"
+        BEGIN
+                MENUITEM "&Configure...", IDM_CONFIG
+                POPUP "&CD-ROM"
+                BEGIN
+                        MENUITEM "&Disabled", IDM_CDROM_DISABLED
+                        MENUITEM "&Empty",IDM_CDROM_EMPTY
+                END
+                POPUP "&Video"
+                BEGIN
+                        MENUITEM "&Resizeable window",IDM_VID_RESIZE
+                END
+        END
+        POPUP "&Misc"
+        BEGIN
+                MENUITEM "&Status", IDM_STATUS
+        END
+END
+
+ConfigureDlg DIALOGEX 0, 0, 182, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configure PCem"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,17,216,50,14, WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,71,216,50,14, WS_TABSTOP
+    COMBOBOX        IDC_COMBO1,62,16,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO2,62,36,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBOCPUM,62,56,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO3,62,76,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBOCHC,62,96,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBOSPD,62,116,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBOSND,62,136,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBOMEM,62,152,107,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Game Blaster",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,172,118,10
+    CONTROL         "Composite CGA",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,188,118,10
+    LTEXT           "Machine :",IDC_STATIC,15,16,40,10
+    LTEXT           "Video :",IDC_STATIC,15,36,34,10
+    LTEXT           "CPU type :",IDC_STATIC,15,56,34,10
+    LTEXT           "CPU :",IDC_STATIC,15,76,34,10
+    LTEXT           "Cache :",IDC_STATIC,15,96,40,10
+    LTEXT           "Video speed :",IDC_STATIC,15,116,40,10    
+    LTEXT           "Soundcard :",IDC_STATIC,15,136,40,10
+    LTEXT           "Memory :",IDC_STATIC,15,156,40,10
+END
+
+HdConfDlg DIALOGEX 0, 0, 186, 172
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configure Hard Discs"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,31,152,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,101,152,50,14
+    
+    LTEXT           "C:",IDC_STATIC,7,6,27,10
+    EDITTEXT        IDC_EDITC, 7, 22, 136, 12, WS_DISABLED
+    PUSHBUTTON      "...",IDC_CFILE,7 + 136,      22, 16, 14
+    PUSHBUTTON      "New",IDC_CNEW,7 + 136 + 16, 22, 24, 14
+    
+    EDITTEXT        IDC_EDIT1,36,38,16,12, WS_DISABLED
+    EDITTEXT        IDC_EDIT2,94,38,16,12, WS_DISABLED
+    EDITTEXT        IDC_EDIT3,152,38,28,12, WS_DISABLED
+    LTEXT           "Sectors:",IDC_STATIC,7,38,27,10
+    LTEXT           "Heads:",IDC_STATIC,63,38,29,8
+    LTEXT           "Cylinders:",IDC_STATIC,120,38,32,12
+    LTEXT           "", IDC_TEXT1, 7, 54, 136, 12
+    
+    LTEXT           "D:",IDC_STATIC,7,76,27,10
+    EDITTEXT        IDC_EDITD, 7, 92, 136, 12, WS_DISABLED
+    PUSHBUTTON      "...",IDC_DFILE,7 + 136,     92, 16, 14
+    PUSHBUTTON      "New",IDC_DNEW,7 + 136 + 16, 92, 24, 14
+    
+    EDITTEXT        IDC_EDIT4,36,108,16,12, WS_DISABLED
+    EDITTEXT        IDC_EDIT5,94,108,16,12, WS_DISABLED
+    EDITTEXT        IDC_EDIT6,152,108,28,12, WS_DISABLED
+    LTEXT           "Sectors:",IDC_STATIC,7,108,27,10
+    LTEXT           "Heads:",IDC_STATIC,63,108,29,8
+    LTEXT           "Cylinders:",IDC_STATIC,120,108,32,12
+    LTEXT           "", IDC_TEXT2, 7, 124, 136, 12    
+    
+END
+
+HdNewDlg DIALOGEX 0, 0, 186, 86
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Hard Disc"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,31,66,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,101,66,50,14
+    
+    EDITTEXT        IDC_EDITC, 7, 6, 136, 12
+    PUSHBUTTON      "...",IDC_CFILE,7 + 136,      6, 16, 14
+    
+    EDITTEXT        IDC_EDIT1,36,22,16,12
+    EDITTEXT        IDC_EDIT2,94,22,16,12
+    EDITTEXT        IDC_EDIT3,152,22,28,12
+    LTEXT           "Sectors:",IDC_STATIC,7,22,27,10
+    LTEXT           "Heads:",IDC_STATIC,63,22,29,8
+    LTEXT           "Cylinders:",IDC_STATIC,120,22,32,12
+    LTEXT           "", IDC_TEXT1, 7, 38, 136, 12
+END
+
+HdSizeDlg DIALOGEX 0, 0, 186, 86
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hard disc parameters"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,31,66,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,101,66,50,14
+    
+    LTEXT           "Initial settings are based on file size",IDC_STATIC,7,6,170,10
+    
+    EDITTEXT        IDC_EDIT1,36,22,16,12
+    EDITTEXT        IDC_EDIT2,94,22,16,12
+    EDITTEXT        IDC_EDIT3,152,22,28,12
+    LTEXT           "Sectors:",IDC_STATIC,7,22,27,10
+    LTEXT           "Heads:",IDC_STATIC,63,22,29,8
+    LTEXT           "Cylinders:",IDC_STATIC,120,22,32,12
+    LTEXT           "", IDC_TEXT1, 7, 38, 136, 12
+END
+
+StatusDlg DIALOGEX 0,0,186,186
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "1",IDC_STEXT1,16,16,180,10
+    LTEXT           "2",IDC_STEXT2,16,28,180,10
+    LTEXT           "3",IDC_STEXT3,16,40,180,10
+    LTEXT           "4",IDC_STEXT4,16,52,180,10
+    LTEXT           "5",IDC_STEXT5,16,64,180,10
+    LTEXT           "6",IDC_STEXT6,16,76,180,10
+    LTEXT           "7",IDC_STEXT7,16,88,180,10
+    LTEXT           "8",IDC_STEXT8,16,100,180,10
+    LTEXT           "9",IDC_STEXT9,16,112,180,10
+    LTEXT           "10",IDC_STEXT10,16,124,180,10
+    LTEXT           "11",IDC_STEXT11,16,136,180,10
+    LTEXT           "12",IDC_STEXT12,16,148,180,10
+    LTEXT           "13",IDC_STEXT13,16,160,180,10
+END
