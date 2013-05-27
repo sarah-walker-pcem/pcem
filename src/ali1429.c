@@ -9,7 +9,7 @@
 static int ali1429_index;
 static uint8_t ali1429_regs[256];
 
-void ali1429_write(uint16_t port, uint8_t val)
+void ali1429_write(uint16_t port, uint8_t val, void *priv)
 {
 //        return;
         if (!(port&1)) ali1429_index=val;
@@ -31,9 +31,9 @@ void ali1429_write(uint16_t port, uint8_t val)
                                 {
                                        shadowbios=0;
                                         if (!shadowbios_write)
-                                           mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL          );
+                                           mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL,           NULL);
                                         else
-                                           mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml);
+                                           mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
                                         flushmmucache();
                                 }                                        
                                 break;
@@ -42,10 +42,10 @@ void ali1429_write(uint16_t port, uint8_t val)
                         shadowbios_write=val&2;
                         switch (val & 3)
                         {
-                                case 0: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL          ); break;
-                                case 1: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL          ); break;
-                                case 2: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml); break;
-                                case 3: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml); break;
+                                case 0: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL,              NULL); break;
+                                case 1: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL,              NULL); break;
+                                case 2: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,    NULL); break;
+                                case 3: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,    NULL); break;
                         }                                                                                                
                         
 //                        if (val==0x43) shadowbios=1;
@@ -56,7 +56,7 @@ void ali1429_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t ali1429_read(uint16_t port)
+uint8_t ali1429_read(uint16_t port, void *priv)
 {
         if (!(port&1)) return ali1429_index;
         if ((ali1429_index >= 0xc0 || ali1429_index == 0x20) && cpu_iscyrix)
@@ -72,5 +72,5 @@ void ali1429_reset()
 
 void ali1429_init()
 {
-        io_sethandler(0x0022, 0x0002, ali1429_read, NULL, NULL, ali1429_write, NULL, NULL);
+        io_sethandler(0x0022, 0x0002, ali1429_read, NULL, NULL, ali1429_write, NULL, NULL, NULL);
 }

@@ -1,12 +1,17 @@
 /*Olivetti M24 video emulation
   Essentially double-res CGA*/
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
+#include "timer.h"
 #include "video.h"
+
+void m24_recalctimings();
 
 static uint8_t  m24_ctrl;
 static uint32_t m24_base;
 
-void m24_out(uint16_t addr, uint8_t val)
+void m24_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
         switch (addr)
@@ -39,7 +44,7 @@ void m24_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t m24_in(uint16_t addr)
+uint8_t m24_in(uint16_t addr, void *priv)
 {
         switch (addr)
         {
@@ -55,35 +60,38 @@ uint8_t m24_in(uint16_t addr)
 
 static uint8_t charbuffer[256];
 
-void m24_write(uint32_t addr, uint8_t val)
+void m24_write(uint32_t addr, uint8_t val, void *priv)
 {
         vram[addr & 0x7FFF]=val;
         charbuffer[ ((int)(((dispontime - vidtime) * 2) / (CGACONST / 2))) & 0xfc] = val;
         charbuffer[(((int)(((dispontime - vidtime) * 2) / (CGACONST / 2))) & 0xfc) | 1] = val;        
 }
 
-uint8_t m24_read(uint32_t addr)
+uint8_t m24_read(uint32_t addr, void *priv)
 {
         return vram[addr & 0x7FFF];
 }
 
 void m24_recalctimings()
 {
+	double _dispontime, _dispofftime;
         if (cgamode & 1)
         {
                 disptime   = crtc[0] + 1;
-                dispontime = crtc[1];
+                _dispontime = crtc[1];
         }
         else
         {
                 disptime   = (crtc[0] + 1) << 1;
-                dispontime = crtc[1] << 1;
+                _dispontime = crtc[1] << 1;
         }
-        dispofftime = disptime - dispontime;
+        _dispofftime = disptime - _dispontime;
 //        printf("%i %f %f %f  %i %i\n",cgamode&1,disptime,dispontime,dispofftime,crtc[0],crtc[1]);
-        dispontime  *= CGACONST / 2;
-        dispofftime *= CGACONST / 2;
+        _dispontime  *= CGACONST / 2;
+        _dispofftime *= CGACONST / 2;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
 static int linepos,displine;
@@ -92,7 +100,7 @@ static int cgadispon;
 static int con,coff,cursoron,cgablink;
 static int vsynctime,vadj;
 static int m24_lineff = 0;
-static uint16_t ma,maback,ca;
+static uint16_t ma,maback;
 
 void m24_poll()
 {
@@ -101,7 +109,7 @@ void m24_poll()
         int x,c;
         int oldvc;
         uint8_t chr,attr;
-        uint16_t dat,dat2,dat3,dat4;
+        uint16_t dat,dat2;
         int cols[4];
         int col;
         int oldsc;
@@ -401,7 +409,7 @@ endblit();
 
 int m24_init()
 {
-        mem_sethandler(0xb8000, 0x08000, m24_read, NULL, NULL, m24_write, NULL, NULL);
+        mem_sethandler(0xb8000, 0x08000, m24_read, NULL, NULL, m24_write, NULL, NULL,  NULL);
         return 0;
 }
 

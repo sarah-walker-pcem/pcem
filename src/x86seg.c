@@ -1,8 +1,11 @@
 //#if 0
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "ibm.h"
+#include "mem.h"
 #include "x86.h"
+#include "386.h"
 
 /*Controls whether the accessed bit in a descriptor is set when CS is loaded. The
   386 PRM is ambiguous on this subject, but BOCHS doesn't set it and Windows 98
@@ -29,7 +32,6 @@ int intgatesize;
 void taskswitch286(uint16_t seg, uint16_t *segdat, int is32);
 void taskswitch386(uint16_t seg, uint16_t *segdat);
 
-int notpresent=0;
 int output;
 void pmodeint(int num, int soft);
 /*NOT PRESENT is INT 0B
@@ -125,8 +127,6 @@ void x86ts(char *s, uint16_t error)
 void x86np(char *s, uint16_t error)
 {
 //        pclog("NP %04X : %s\n", error, s);
-//        dumpregs();
-//        exit(-1);
         abrt = ABRT_NP;
         abrt_error = error;
 }
@@ -325,8 +325,6 @@ void loadcs(uint16_t seg)
 {
         uint16_t segdat[4];
         uint32_t addr;
-        int count;
-        uint16_t oldss,oldsp;
         if (output) pclog("Load CS %04X\n",seg);
         if (msw&1 && !(eflags&VM_FLAG))
         {
@@ -452,10 +450,9 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
         uint16_t segdat[4];
         uint32_t addr;
         int count;
-        uint16_t oldss,oldsp;
         uint16_t type,seg2;
         uint32_t newpc;
-        if (output) pclog("Load CS JMP %04X\n",seg);
+//        pclog("Load CS JMP %04X\n",seg);
         if (msw&1 && !(eflags&VM_FLAG))
         {
                 if (!(seg&~3))
@@ -495,6 +492,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                 if (output) pclog("%04X %04X %04X %04X\n",segdat[0],segdat[1],segdat[2],segdat[3]);
                 if (segdat[2]&0x1000) /*Normal code segment*/
                 {
+//                        pclog("Normal CS\n");
                         if (!(segdat[2]&0x400)) /*Not conforming*/
                         {
                                 if ((seg&3)>CPL)
@@ -528,7 +526,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
 #endif
                         
                         CS = (seg & ~3) | CPL;
-                        segdat[2] = (segdat[2] & ~(3 << 5+8)) | (CPL << 5+8);
+                        segdat[2] = (segdat[2] & ~(3 << (5+8))) | (CPL << (5+8));
                         
                         _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
                         if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
@@ -541,6 +539,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                 }
                 else /*System segment*/
                 {
+//                        pclog("System CS\n");
                         if (!(segdat[2]&0x8000))
                         {
                                 x86np("Load CS JMP system selector not present\n", seg & 0xfffc);
@@ -553,6 +552,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                         {
                                 case 0x400: /*Call gate*/
                                 case 0xC00:
+//                                pclog("Call gate\n");
                                 cgate32=(type&0x800);
                                 cgate16=!cgate32;
                                 oldcs=CS;
@@ -654,6 +654,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
 
                                 
                                 case 0x900: /*386 Task gate*/
+//                                pclog("Task gate\n");
                                 pc=oxpc;
                                 cpl_override=1;
                                 taskswitch286(seg,segdat,segdat[2]&0x800);
@@ -853,7 +854,7 @@ void loadcscall(uint16_t seg)
                         if (segdat[2]&0x400)
                         {
                                 seg = (seg & ~3) | CPL;
-                                segdat[2] = (segdat[2] & ~(3 << 5+8)) | (CPL << 5+8);
+                                segdat[2] = (segdat[2] & ~(3 << (5+8))) | (CPL << (5+8));
                         }
                         else /*On non-conforming segments, set RPL = CPL*/
                                 seg = (seg & ~3) | CPL;
@@ -1332,7 +1333,7 @@ void pmoderetf(int is32, uint16_t off)
                                 
                 pc=newpc;
                 if (segdat[2] & 0x400)
-                   segdat[2] = (segdat[2] & ~(3 << 5+8)) | ((seg & 3) << 5+8);
+                   segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
                 CS = seg;
                 _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
                 if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
@@ -1493,7 +1494,7 @@ void pmoderetf(int is32, uint16_t off)
 #endif                
                         /*Conforming segments don't change CPL, so CPL = RPL*/
                         if (segdat[2]&0x400)
-                           segdat[2] = (segdat[2] & ~(3 << 5+8)) | ((seg & 3) << 5+8);
+                           segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
 
                 pc=newpc;
                 CS=seg;
@@ -1521,14 +1522,11 @@ void pmodeint(int num, int soft)
 {
         uint16_t segdat[4],segdat2[4],segdat3[4];
         uint32_t addr, oaddr;
-        int dpl;
-        uint16_t oldcs=CPL,oldcs2,newss;
+        uint16_t newss;
         uint32_t oldss,oldsp;
-        uint8_t oldaccess;
         int type;
         uint32_t newsp;
         uint16_t seg;
-        int v86int=eflags&VM_FLAG;
         int stack_changed=0;
 //        if (!num) pclog("Pmode int 0 at %04X(%06X):%08X\n",CS,cs,pc);
 //        pclog("Pmode int %02X %i %04X:%08X %04X:%08X %i\n",num,soft,CS,pc, SS, ESP, abrt);
@@ -1910,12 +1908,10 @@ void pmodeint(int num, int soft)
         }
 }
 
-int inint;
 void pmodeiret(int is32)
 {
         uint32_t newsp;
-        uint16_t oldcs=CPL,newss;
-        uint16_t tempw,tempw2;
+        uint16_t newss;
         uint32_t tempflags,flagmask;
         uint32_t newpc;
         uint16_t segdat[4],segdat2[4];
@@ -1991,7 +1987,6 @@ void pmodeiret(int is32)
                 cpl_override=0;
                 return;
         }
-        inint=0;
         oxpc=pc;
         flagmask=0xFFFF;
         if (CPL) flagmask&=~0x3000;
@@ -2254,7 +2249,7 @@ void pmodeiret(int is32)
 #endif                
                         /*Conforming segments don't change CPL, so CPL = RPL*/
                         if (segdat[2]&0x400)
-                           segdat[2] = (segdat[2] & ~(3 << 5+8)) | ((seg & 3) << 5+8);
+                           segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
 
                 CS=seg;
                 _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
@@ -2295,12 +2290,10 @@ void pmodeiret(int is32)
 
 void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 {
-        uint32_t base,obase=tr.base;
+        uint32_t base;
         uint32_t limit;
-        int x386;
         uint32_t templ;
         uint16_t tempw;
-        int c;
 
 	uint32_t new_cr3=0;
 	uint16_t new_es,new_cs,new_ss,new_ds,new_fs,new_gs;
@@ -2310,8 +2303,6 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 
         uint32_t addr;
         
-	uint16_t oldflags;
-	
 	uint16_t segdat2[4];
 
 //output=3;
@@ -2361,6 +2352,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 if (optype==IRET) flags&=~NT_FLAG;
                 
 //                if (output) pclog("Write PC %08X %08X\n",tr.base,pc);
+                cpu_386_flags_rebuild();
                 writememl(tr.base,0x1C,cr3);
                 writememl(tr.base,0x20,pc);
                 writememl(tr.base,0x24,flags|(eflags<<16));
@@ -2402,7 +2394,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 
                 
                 cr3=new_cr3;
-//                pclog("New CR3 %08X\n",cr3);
+                pclog("TS New CR3 %08X\n",cr3);
                 flushmmucache();
                 
                 
@@ -2411,6 +2403,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 //                if (output) pclog("New pc %08X\n",new_pc);
                 flags=new_flags;
                 eflags=new_flags>>16;
+                cpu_386_flags_extract();
 
 //                if (output) pclog("Load LDT %04X\n",new_ldt);
                 ldt.seg=new_ldt;

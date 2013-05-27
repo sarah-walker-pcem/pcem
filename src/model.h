@@ -14,3 +14,7 @@ typedef struct
 extern MODEL models[];
 
 extern int model;
+
+int model_getromset();
+char *model_getname();
+void model_init();

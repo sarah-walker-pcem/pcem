@@ -2,7 +2,7 @@
 #include "io.h"
 #include "olivetti_m24.h"
 
-uint8_t olivetti_m24_read(uint16_t port)
+uint8_t olivetti_m24_read(uint16_t port, void *priv)
 {
         switch (port)
         {
@@ -16,5 +16,5 @@ uint8_t olivetti_m24_read(uint16_t port)
 
 void olivetti_m24_init()
 {
-        io_sethandler(0x0066, 0x0002, olivetti_m24_read, NULL, NULL, NULL, NULL, NULL);
+        io_sethandler(0x0066, 0x0002, olivetti_m24_read, NULL, NULL, NULL, NULL, NULL, NULL);
 }

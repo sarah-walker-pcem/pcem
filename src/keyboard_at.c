@@ -1,7 +1,9 @@
 #include "ibm.h"
 #include "io.h"
 #include "mem.h"
+#include "pic.h"
 #include "sound.h"
+#include "timer.h"
 
 #include "keyboard.h"
 #include "keyboard_at.h"
@@ -44,22 +46,23 @@ int mouse_queue_start = 0, mouse_queue_end = 0;
 
 void keyboard_at_poll()
 {
+	keybsenddelay += (1000 * TIMER_USEC);
         if (keyboard_at.wantirq)
         {
                 keyboard_at.wantirq = 0;
                 picint(2);
-                pclog("keyboard_at : take IRQ\n");
+//                pclog("keyboard_at : take IRQ\n");
         }
         else if (keyboard_at.wantirq12)
         {
                 keyboard_at.wantirq12 = 0;
                 picint(0x1000);
-                pclog("keyboard_at : take IRQ 12\n");
+//                pclog("keyboard_at : take IRQ 12\n");
         }
         if (!(keyboard_at.status & STAT_OFULL) && !(keyboard_at.mem[0] & 0x10) &&
             mouse_queue_start != mouse_queue_end)
         {
-                pclog("Reading %02X from the mouse queue at %i\n", keyboard_at.out, key_queue_start);
+//                pclog("Reading %02X from the mouse queue at %i\n", keyboard_at.out, key_queue_start);
                 keyboard_at.out = mouse_queue[mouse_queue_start];
                 mouse_queue_start = (mouse_queue_start + 1) & 0xf;
                 keyboard_at.status |=  STAT_OFULL | STAT_MFULL;
@@ -70,7 +73,7 @@ void keyboard_at_poll()
         else if (!(keyboard_at.status & STAT_OFULL) && !(keyboard_at.mem[0] & 0x10) &&
             key_queue_start != key_queue_end)
         {
-                pclog("Reading %02X from the key queue at %i\n", keyboard_at.out, key_queue_start);
+//                pclog("Reading %02X from the key queue at %i\n", keyboard_at.out, key_queue_start);
                 keyboard_at.out = key_queue[key_queue_start];
                 key_queue_start = (key_queue_start + 1) & 0xf;
                 keyboard_at.status |=  STAT_OFULL;
@@ -81,7 +84,7 @@ void keyboard_at_poll()
         else if (!(keyboard_at.status & STAT_OFULL) && 
             key_ctrl_queue_start != key_ctrl_queue_end)
         {
-                pclog("Reading %02X from the key ctrl_queue at %i\n", keyboard_at.out, key_ctrl_queue_start);
+//                pclog("Reading %02X from the key ctrl_queue at %i\n", keyboard_at.out, key_ctrl_queue_start);
                 keyboard_at.out = key_ctrl_queue[key_ctrl_queue_start];
                 key_ctrl_queue_start = (key_ctrl_queue_start + 1) & 0xf;
                 keyboard_at.status |=  STAT_OFULL;
@@ -97,7 +100,7 @@ void keyboard_at_adddata(uint8_t val)
 //        {
                 key_ctrl_queue[key_ctrl_queue_end] = val;
                 key_ctrl_queue_end = (key_ctrl_queue_end + 1) & 0xf;
-                pclog("keyboard_at : %02X added to queue\n", val);                
+//                pclog("keyboard_at : %02X added to queue\n", val);                
 /*                return;
         }
         keyboard_at.out = val;
@@ -110,9 +113,15 @@ void keyboard_at_adddata(uint8_t val)
 
 void keyboard_at_adddata_keyboard(uint8_t val)
 {
+/*        if (val == 0x1c)
+        {
+                key_1c++;
+                if (key_1c == 4)
+                        output = 3;
+        }*/
         key_queue[key_queue_end] = val;
         key_queue_end = (key_queue_end + 1) & 0xf;
-        pclog("keyboard_at : %02X added to key queue\n", val);
+//        pclog("keyboard_at : %02X added to key queue\n", val);
         return;
 }
 
@@ -120,13 +129,13 @@ void keyboard_at_adddata_mouse(uint8_t val)
 {
         mouse_queue[mouse_queue_end] = val;
         mouse_queue_end = (mouse_queue_end + 1) & 0xf;
-        pclog("keyboard_at : %02X added to mouse queue\n", val);
+//        pclog("keyboard_at : %02X added to mouse queue\n", val);
         return;
 }
 
-void keyboard_at_write(uint16_t port, uint8_t val)
+void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 {
-        pclog("keyboard_at : write %04X %02X %i  %02X\n", port, val, keyboard_at.key_wantdata, ram[8]);
+//        pclog("keyboard_at : write %04X %02X %i  %02X\n", port, val, keyboard_at.key_wantdata, ram[8]);
 /*        if (ram[8] == 0xc3) 
         {
                 output = 3;
@@ -165,7 +174,7 @@ void keyboard_at_write(uint16_t port, uint8_t val)
                                 break;
                                 
                                 case 0xd1: /*Write output port*/
-                                pclog("Write output port - %02X %02X %04X:%04X\n", keyboard_at.output_port, val, CS, pc);
+//                                pclog("Write output port - %02X %02X %04X:%04X\n", keyboard_at.output_port, val, CS, pc);
                                 if ((keyboard_at.output_port ^ val) & 0x02) /*A20 enable change*/
                                 {
                                         mem_a20_key = val & 0x02;
@@ -384,7 +393,7 @@ void keyboard_at_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t keyboard_at_read(uint16_t port)
+uint8_t keyboard_at_read(uint16_t port, void *priv)
 {
         uint8_t temp = 0xff;
         cycles -= 4;
@@ -428,9 +437,11 @@ void keyboard_at_reset()
 void keyboard_at_init()
 {
         //return;
-        io_sethandler(0x0060, 0x0005, keyboard_at_read, NULL, NULL, keyboard_at_write, NULL, NULL);
+        io_sethandler(0x0060, 0x0005, keyboard_at_read, NULL, NULL, keyboard_at_write, NULL, NULL,  NULL);
         keyboard_at_reset();
         keyboard_send = keyboard_at_adddata_keyboard;
         keyboard_poll = keyboard_at_poll;
         mouse_write = NULL;
+        
+        timer_add(keyboard_at_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }

@@ -1,7 +1,9 @@
 #include "ibm.h"
 #include "io.h"
 #include "mem.h"
+#include "pic.h"
 #include "sound.h"
+#include "timer.h"
 
 #include "keyboard.h"
 #include "keyboard_xt.h"
@@ -28,6 +30,7 @@ static int key_queue_start = 0, key_queue_end = 0;
 
 void keyboard_xt_poll()
 {
+        keybsenddelay += (1000 * TIMER_USEC);
         if (keyboard_xt.wantirq)
         {
                 keyboard_xt.wantirq = 0;
@@ -51,7 +54,7 @@ void keyboard_xt_adddata(uint8_t val)
         return;
 }
 
-void keyboard_xt_write(uint16_t port, uint8_t val)
+void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
 {
         pclog("keyboard_xt : write %04X %02X %02X\n", port, val, keyboard_xt.pb);
 /*        if (ram[8] == 0xc3) 
@@ -86,10 +89,10 @@ void keyboard_xt_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t keyboard_xt_read(uint16_t port)
+uint8_t keyboard_xt_read(uint16_t port, void *priv)
 {
         uint8_t temp;
-//        pclog("keyboard_xt : read %04X ", port);
+        pclog("keyboard_xt : read %04X ", port);
         switch (port)
         {
                 case 0x60:
@@ -142,7 +145,7 @@ uint8_t keyboard_xt_read(uint16_t port)
                 //dumpregs();
                 //exit(-1);
         }
-//        pclog("%02X\n", temp);
+        pclog("%02X\n", temp);
         return temp;
 }
 
@@ -156,8 +159,10 @@ void keyboard_xt_reset()
 void keyboard_xt_init()
 {
         //return;
-        io_sethandler(0x0060, 0x0004, keyboard_xt_read, NULL, NULL, keyboard_xt_write, NULL, NULL);
+        io_sethandler(0x0060, 0x0004, keyboard_xt_read, NULL, NULL, keyboard_xt_write, NULL, NULL,  NULL);
         keyboard_xt_reset();
         keyboard_send = keyboard_xt_adddata;
         keyboard_poll = keyboard_xt_poll;
+
+        timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }

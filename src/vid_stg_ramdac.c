@@ -15,7 +15,7 @@ struct
 int stg_state_read[2][8]={{1,2,3,4,0,0,0,0}, {1,2,3,4,5,6,7,7}};
 int stg_state_write[8]={0,0,0,0,0,6,7,7};
 
-void stg_ramdac_out(uint16_t addr, uint8_t val)
+void stg_ramdac_out(uint16_t addr, uint8_t val, void *priv)
 {
         int didwrite;
         //if (CS!=0xC000) pclog("OUT RAMDAC %04X %02X %i %04X:%04X\n",addr,val,stg_ramdac.magic_count,CS,pc);
@@ -64,10 +64,10 @@ void stg_ramdac_out(uint16_t addr, uint8_t val)
                 stg_ramdac.magic_count=0;
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t stg_ramdac_in(uint16_t addr)
+uint8_t stg_ramdac_in(uint16_t addr, void *priv)
 {
         uint8_t temp;
         //if (CS!=0xC000) pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
@@ -100,5 +100,5 @@ uint8_t stg_ramdac_in(uint16_t addr)
                 stg_ramdac.magic_count=0;
                 break;
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }

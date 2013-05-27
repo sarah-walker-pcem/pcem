@@ -15,6 +15,8 @@
 #include "video.h"
 #include "resources.h"
 #include "ide.h"
+#include "nvr.h"
+#include "sound.h"
 
 #include "plat-keyboard.h"
 
@@ -25,7 +27,7 @@
 #define TIMER_1SEC 1
 
 int winsizex=640,winsizey=480;
-int svgapresent, et4000w32_present, bahamas64_present, n9_9fx_present;
+int gfx_present[18];
 int wakeups,wokeups;
 #undef cs
 CRITICAL_SECTION cs;
@@ -44,8 +46,6 @@ void endmainthread();
 void endsoundthread();
 void silencesound();
 void restoresound();
-static HANDLE soundobject;
-
 static HANDLE frameobject;
 
 int infocus=1;
@@ -61,7 +61,7 @@ void vsyncint()
 //        }
 }
 
-int romspresent[25];
+int romspresent[26];
 int quited=0;
 
 RECT oldclip,pcclip;
@@ -98,11 +98,6 @@ void releasemouse()
                 mousecapture = 0;
         }
 }
-
-static LARGE_INTEGER counter_base;
-static LARGE_INTEGER counter_freq;
-static LARGE_INTEGER counter_pos;
-static LARGE_INTEGER counter_posold;
 
 void setrefresh(int rate)
 {
@@ -155,6 +150,7 @@ int pause=0;
 void mainthread(LPVOID param)
 {
         int t = 0;
+        int frames = 0;
         DWORD old_time, new_time;
         mainthreadon=1;
 //        Sleep(500);
@@ -190,12 +186,19 @@ void mainthread(LPVOID param)
                                 runpc();
 //                                ddraw_draw();
                                 endblit();
+                                frames++;
+                                if (frames >= 200 && nvr_dosave)
+                                {
+                                        frames = 0;
+                                        nvr_dosave = 0;
+                                        savenvr();
+                                }
 //#if 0                                
 //#endif
                         }
                         else
                         {
-//                                Sleep(1);
+                                Sleep(1);
                         }
 //                }
         }
@@ -246,9 +249,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
     WNDCLASSEX wincl;        /* Data structure for the windowclass */
-    int c,d;
-    FILE *f;
-    int oldinfocus=0;
+    int c, d;
 
         hinstance=hThisInstance;
     /* The Window structure */
@@ -317,19 +318,19 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
-        for (c=0;c<25;c++)
+        for (c=0;c<26;c++)
         {
                 romset=c;
                 romspresent[c]=loadbios();
                 pclog("romset %i - %i\n", c, romspresent[c]);
         }
         
-        for (c = 0; c < 25; c++)
+        for (c = 0; c < 26; c++)
         {
                 if (romspresent[c])
                    break;
         }
-        if (c == 25)
+        if (c == 26)
         {
                 MessageBox(hwnd,"No ROMs present!\nYou must have at least one romset to use PCem.","PCem fatal error",MB_OK);
                 return 0;
@@ -340,8 +341,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
         if (!c)
         {
-                if (romset!=-1) MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCemu error",MB_OK);
-                for (c=0;c<25;c++)
+                if (romset!=-1) MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCem error",MB_OK);
+                for (c=0;c<26;c++)
                 {
                         if (romspresent[c])
                         {
@@ -352,60 +353,26 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 }
         }
         
-        f=romfopen("roms/trident.bin","rb");
-        if (f)
+        d = gfxcard;
+        for (c = 0; c < 18; c++)
         {
-                fclose(f);
-                vgapresent=1;
+                gfxcard = c;
+                gfx_present[c] = mem_load_video_bios();
         }
-        else
+        gfxcard = d;
+        c = mem_load_video_bios();
+        if (!c)
         {
-                vgapresent=0;
-                if (gfxcard==GFX_TVGA) gfxcard=GFX_CGA;
-        }
-        f=romfopen("roms/et4000.bin","rb");
-        if (f)
-        {
-                fclose(f);
-                svgapresent=1;
-        }
-        else
-        {
-                svgapresent=0;
-                if (gfxcard==GFX_ET4000) gfxcard=(svgapresent)?GFX_TVGA:GFX_CGA;
-        }
-        f=romfopen("roms/et4000w32.bin","rb");
-        if (f)
-        {
-                fclose(f);
-                et4000w32_present=1;
-        }
-        else
-        {
-                et4000w32_present=0;
-                if (gfxcard==GFX_ET4000W32) gfxcard=(svgapresent)?GFX_TVGA:GFX_CGA;
-        }
-        f=romfopen("roms/bahamas64.bin","rb");
-        if (f)
-        {
-                fclose(f);
-                bahamas64_present=1;
-        }
-        else
-        {
-                bahamas64_present=0;
-                if (gfxcard==GFX_BAHAMAS64) gfxcard=(svgapresent)?GFX_TVGA:GFX_CGA;
-        }
-        f=romfopen("roms/s3_764.bin","rb");
-        if (f)
-        {
-                fclose(f);
-                n9_9fx_present=1;
-        }
-        else
-        {
-                n9_9fx_present=0;
-                if (gfxcard==GFX_N9_9FX) gfxcard=(svgapresent)?GFX_TVGA:GFX_CGA;
+                if (romset!=-1) MessageBox(hwnd,"Configured video BIOS not available.\nDefaulting to available romset.","PCem error",MB_OK);
+                for (c=0;c<18;c++)
+                {
+                        if (gfx_present[c])
+                        {
+                                gfxcard = c;
+                                mem_load_video_bios();
+                                break;
+                        }
+                }
         }
         timeBeginPeriod(1);
 //        soundobject=CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -505,7 +472,6 @@ char openfilestring[260];
 int getfile(HWND hwnd, char *f, char *fn)
 {
         OPENFILENAME ofn;       // common dialog box structure
-        char szFile[260];       // buffer for file name
         BOOL r;
         DWORD err;
 
@@ -546,7 +512,6 @@ int getfile(HWND hwnd, char *f, char *fn)
 int getsfile(HWND hwnd, char *f, char *fn)
 {
         OPENFILENAME ofn;       // common dialog box structure
-        char szFile[260];       // buffer for file name
         BOOL r;
         DWORD err;
 
@@ -585,12 +550,18 @@ int getsfile(HWND hwnd, char *f, char *fn)
 }
 
 extern int is486;
-int romstolist[25], listtomodel[23], romstomodel[25], modeltolist[23];
-int vidtolist[10],listtovid[10];
+int romstolist[26], listtomodel[26], romstomodel[26], modeltolist[26];
+int vidtolist[20],listtovid[20];
 
-int mem_list_to_size[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,32,48,64};
+int mem_list_to_size[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,32,48,64,256};
 int mem_size_to_list[]={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,
-                        16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,18};
+                        16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,18,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
+                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19, 19};
 
 #include "cpu.h"
 #include "model.h"
@@ -601,13 +572,14 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
         int c, d;
         int rom,gfx,mem,fpu;
         int temp_cpu, temp_cpu_m, temp_model;
+        int temp_GAMEBLASTER, temp_GUS, temp_sound_card_current;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
         {
                 case WM_INITDIALOG:
                         pause=1;
                 h=GetDlgItem(hdlg,IDC_COMBO1);
-                for (c=0;c<25;c++) romstolist[c]=0;
+                for (c=0;c<26;c++) romstolist[c]=0;
                 c = d = 0;
                 while (models[c].id != -1)
                 {
@@ -632,11 +604,19 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"MDA"); vidtolist[GFX_MDA]=1; listtovid[1]=1;
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Hercules"); vidtolist[GFX_HERCULES]=2; listtovid[2]=2;
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"EGA"); vidtolist[GFX_EGA]=3; listtovid[3]=3;
-                if (vgapresent)                 { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Trident 8900D");           vidtolist[GFX_TVGA]=c;          listtovid[c]=GFX_TVGA;          c++;       }
-                if (svgapresent)                { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Tseng ET4000AX");          vidtolist[GFX_ET4000]=c;        listtovid[c]=GFX_ET4000;        c++;       }
-                if (et4000w32_present)          { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Diamond Stealth 32");      vidtolist[GFX_ET4000W32]=c;     listtovid[c]=GFX_ET4000W32;     c++;       }
-                if (bahamas64_present)          { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Paradise Bahamas 64");     vidtolist[GFX_BAHAMAS64]=c;     listtovid[c]=GFX_BAHAMAS64;     c++;       }
-                if (n9_9fx_present)             { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Number Nine 9FX");         vidtolist[GFX_N9_9FX]=c;        listtovid[c]=GFX_N9_9FX;        c++;       }
+                if (gfx_present[GFX_TVGA])       { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Trident 8900D");           vidtolist[GFX_TVGA]=c;          listtovid[c]=GFX_TVGA;          c++;       }
+                if (gfx_present[GFX_ET4000])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Tseng ET4000AX");          vidtolist[GFX_ET4000]=c;        listtovid[c]=GFX_ET4000;        c++;       }
+                if (gfx_present[GFX_ET4000W32])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Diamond Stealth 32");      vidtolist[GFX_ET4000W32]=c;     listtovid[c]=GFX_ET4000W32;     c++;       }
+                if (gfx_present[GFX_BAHAMAS64])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Paradise Bahamas 64");     vidtolist[GFX_BAHAMAS64]=c;     listtovid[c]=GFX_BAHAMAS64;     c++;       }
+                if (gfx_present[GFX_N9_9FX])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Number Nine 9FX");         vidtolist[GFX_N9_9FX]=c;        listtovid[c]=GFX_N9_9FX;        c++;       }
+                if (gfx_present[GFX_VIRGE])      { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"S3 VIRGE");                vidtolist[GFX_VIRGE]=c;         listtovid[c]=GFX_VIRGE;         c++;       }
+                if (gfx_present[GFX_TGUI9440])   { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Trident TGUI9440");        vidtolist[GFX_TGUI9440]=c;      listtovid[c]=GFX_TGUI9440;      c++;       }
+                if (gfx_present[GFX_VGA])        { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"VGA");                     vidtolist[GFX_VGA]=c;           listtovid[c]=GFX_VGA;           c++;       }
+                if (gfx_present[GFX_VGAEDGE16])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI VGA Edge-16");         vidtolist[GFX_VGAEDGE16]=c;     listtovid[c]=GFX_VGAEDGE16;     c++;       }                
+                if (gfx_present[GFX_VGACHARGER]) { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI VGA Charger");         vidtolist[GFX_VGACHARGER]=c;    listtovid[c]=GFX_VGACHARGER;    c++;       }                
+                if (gfx_present[GFX_OTI067])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Oak OTI-067");             vidtolist[GFX_OTI067]=c;        listtovid[c]=GFX_OTI067;        c++;       }
+                if (gfx_present[GFX_MACH64GX])   { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI Graphics Pro Turbo");  vidtolist[GFX_MACH64GX]=c;      listtovid[c]=GFX_MACH64GX;      c++;       }
+                if (gfx_present[GFX_CL_GD5429])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Cirrus Logic CL-GD5429");  vidtolist[GFX_CL_GD5429]=c;     listtovid[c]=GFX_CL_GD5429;     c++;       }
                 SendMessage(h,CB_SETCURSEL,vidtolist[gfxcard],0);
                 if (models[model].fixed_gfxcard) EnableWindow(h,FALSE);
 
@@ -663,30 +643,30 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h, CB_SETCURSEL, cpu, 0);
 
                 h=GetDlgItem(hdlg,IDC_COMBOSND);
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"None");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"AdLib");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SoundBlaster v1.0");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SoundBlaster v1.5");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SoundBlaster v2.0");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SB Pro v1");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SB Pro v2");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"SoundBlaster 16");
-                SendMessage(h,CB_SETCURSEL,sbtype,0);
+                c = 0;
+                while (1)
+                {
+                        char *s = sound_card_getname(c);
 
-//                h=GetDlgItem(hdlg,IDC_CHECK2);
-//                SendMessage(h,BM_SETCHECK,ADLIB,0);
+                        if (!s[0])
+                                break;
+                                
+                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                        c++;
+                }
+                SendMessage(h, CB_SETCURSEL, sound_card_current, 0);
+
+                h=GetDlgItem(hdlg, IDC_CHECK3);
+                SendMessage(h, BM_SETCHECK, GAMEBLASTER, 0);
+
+                h=GetDlgItem(hdlg, IDC_CHECKGUS);
+                SendMessage(h, BM_SETCHECK, GUS, 0);
                 
-                h=GetDlgItem(hdlg,IDC_CHECK3);
-                SendMessage(h,BM_SETCHECK,GAMEBLASTER,0);
-                
-                h=GetDlgItem(hdlg,IDC_CHECK1);
-                SendMessage(h,BM_SETCHECK,FASTDISC,0);
+                h=GetDlgItem(hdlg, IDC_CHECK2);
+                SendMessage(h, BM_SETCHECK, slowega, 0);
 
-                h=GetDlgItem(hdlg,IDC_CHECK2);
-                SendMessage(h,BM_SETCHECK,slowega,0);
-
-                h=GetDlgItem(hdlg,IDC_CHECK4);
-                SendMessage(h,BM_SETCHECK,cga_comp,0);
+                h=GetDlgItem(hdlg, IDC_CHECK4);
+                SendMessage(h, BM_SETCHECK, cga_comp, 0);
 
                 h=GetDlgItem(hdlg,IDC_COMBOCHC);
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"A little");
@@ -725,6 +705,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"32 MB");
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"48 MB");
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"64 MB");
+                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"256 MB");                
                 SendMessage(h,CB_SETCURSEL,mem_size_to_list[mem_size-1],0);
                 
                 pclog("Init cpuspeed %i\n",cpuspeed);
@@ -750,7 +731,16 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         fpu = (models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type >= CPU_i486DX) ? 1 : 0;
                         pclog("newcpu - %i %i %i  %i\n",temp_cpu_m,temp_cpu,fpu,models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type);
 
-                        if (temp_model != model || gfx!=gfxcard || mem!=mem_size || fpu!=hasfpu)
+                        h = GetDlgItem(hdlg, IDC_CHECK3);
+                        temp_GAMEBLASTER = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                        h = GetDlgItem(hdlg, IDC_CHECKGUS);
+                        temp_GUS = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                        h = GetDlgItem(hdlg, IDC_COMBOSND);
+                        temp_sound_card_current = SendMessage(h, CB_GETCURSEL, 0, 0);
+
+                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_sound_card_current != sound_card_current)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -760,9 +750,13 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                                         mem_size=mem;
                                         cpu_manufacturer = temp_cpu_m;
                                         cpu = temp_cpu;
+                                        GAMEBLASTER = temp_GAMEBLASTER;
+                                        GUS = temp_GUS;
+                                        sound_card_current = temp_sound_card_current;
                                         
                                         mem_resize();
                                         loadbios();
+                                        mem_load_video_bios();
                                         resetpchard();
                                 }
                                 else
@@ -776,12 +770,6 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         h=GetDlgItem(hdlg,IDC_COMBOSPD);
                         video_speed = SendMessage(h,CB_GETCURSEL,0,0);
 
-                        h=GetDlgItem(hdlg,IDC_CHECK3);
-                        GAMEBLASTER=SendMessage(h,BM_GETCHECK,0,0);
-
-                        h=GetDlgItem(hdlg,IDC_CHECK1);
-                        FASTDISC=SendMessage(h,BM_GETCHECK,0,0);
-
                         h=GetDlgItem(hdlg,IDC_CHECK4);
                         cga_comp=SendMessage(h,BM_GETCHECK,0,0);
 
@@ -789,9 +777,6 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         cpu = temp_cpu;
                         cpu_set();
                         
-                        h=GetDlgItem(hdlg,IDC_COMBOSND);
-                        sbtype=SendMessage(h,CB_GETCURSEL,0,0);
-
                         h=GetDlgItem(hdlg,IDC_COMBOCHC);
                         cache=SendMessage(h,CB_GETCURSEL,0,0);
                         mem_updatecache();
@@ -890,7 +875,6 @@ BOOL CALLBACK hdnewdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam
         HWND h;
         int c;
         PcemHDC hd[2];
-        int changeddrv=0;
         FILE *f;
         uint8_t buf[512];
         switch (message)
@@ -1004,11 +988,7 @@ BOOL CALLBACK hdsizedlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 {
         char s[260];
         HWND h;
-        int c;
         PcemHDC hd[2];
-        int changeddrv=0;
-        FILE *f;
-        uint8_t buf[512];
         switch (message)
         {
                 case WM_INITDIALOG:
@@ -1090,9 +1070,7 @@ BOOL CALLBACK hdconfdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 {
         char s[260];
         HWND h;
-        int c;
         PcemHDC hd[2];
-        int changeddrv=0;
         FILE *f;
         off64_t sz;
         switch (message)
@@ -1344,8 +1322,6 @@ BOOL CALLBACK hdconfdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 
 BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-        HWND h;
-        int c;
         int egasp;
         char s[256];
         switch (message)
@@ -1374,12 +1350,12 @@ BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 if (chain4) sprintf(s,"VGA chained (possibly mode 13h)");
                 else        sprintf(s,"VGA unchained (possibly mode-X)");
                 SendDlgItemMessage(hdlg,IDC_STEXT9,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                if (!video_bpp) sprintf(s,"VGA in text mode");
-                else            sprintf(s,"VGA colour depth : %i bpp", video_bpp);
+/*                if (!video_bpp) sprintf(s,"VGA in text mode");
+                else            */sprintf(s,"VGA colour depth : %i bpp", video_bpp);
                 SendDlgItemMessage(hdlg,IDC_STEXT10,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
                 sprintf(s,"VGA resolution : %i x %i", video_res_x, video_res_y);
                 SendDlgItemMessage(hdlg,IDC_STEXT11,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"SB frequency : %i Hz",sb_freq);
+                sprintf(s,"SB frequency : %i Hz",0);
                 SendDlgItemMessage(hdlg,IDC_STEXT12,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
                 sprintf(s,"Video refresh rate : %i Hz", emu_fps);
                 SendDlgItemMessage(hdlg,IDC_STEXT13,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
@@ -1421,9 +1397,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
         HMENU hmenu;
         RECT rect;
-        int c;
-        int x, y;
-        POINT po;
 //        pclog("Message %i %08X\n",message,message);
         switch (message)
         {

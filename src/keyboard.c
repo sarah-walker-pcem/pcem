@@ -248,7 +248,7 @@ void keyboard_process()
                            continue;
                         if (!key[c] && scancodes[c].scancodes_break[0] == -1)
                            continue;
-                        pclog("Key %02X start\n", c);
+//                        pclog("Key %02X start\n", c);
                         d = 0;
                         if (key[c])
                         {

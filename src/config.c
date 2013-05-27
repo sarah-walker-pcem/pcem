@@ -26,7 +26,7 @@ int get_config_int(char *head, char *name, int def)
         if (!f)
            return def;
            
-        pclog("Searching for %s\n", name);
+//        pclog("Searching for %s\n", name);
         
         while (1)
         {
@@ -46,9 +46,9 @@ int get_config_int(char *head, char *name, int def)
                 if (!buffer[c]) continue;
                 name2[d] = 0;
                 
-                pclog("Comparing %s and %s\n", name, name2);
+//                pclog("Comparing %s and %s\n", name, name2);
                 if (strcmp(name, name2)) continue;
-                pclog("Found!\n");
+//                pclog("Found!\n");
 
                 while ((buffer[c] == '=' || buffer[c] == ' ') && buffer[c])                
                         c++;
@@ -56,7 +56,7 @@ int get_config_int(char *head, char *name, int def)
                 if (!buffer[c]) continue;
                 
                 sscanf(&buffer[c], "%i", &res);
-                pclog("Reading value - %i\n", res);
+//                pclog("Reading value - %i\n", res);
                 break;
         }
         
@@ -78,7 +78,7 @@ char *get_config_string(char *head, char *name, char *def)
         if (!f)
            return config_return_string;
            
-        pclog("Searching for %s\n", name);
+//        pclog("Searching for %s\n", name);
         
         while (1)
         {
@@ -98,9 +98,9 @@ char *get_config_string(char *head, char *name, char *def)
                 if (!buffer[c]) continue;
                 name2[d] = 0;
                 
-                pclog("Comparing %s and %s\n", name, name2);
+//                pclog("Comparing %s and %s\n", name, name2);
                 if (strcmp(name, name2)) continue;
-                pclog("Found!\n");
+//                pclog("Found!\n");
 
                 while ((buffer[c] == '=' || buffer[c] == ' ') && buffer[c])                
                         c++;
@@ -110,11 +110,11 @@ char *get_config_string(char *head, char *name, char *def)
                 strcpy(config_return_string, &buffer[c]);
                 
                 c = strlen(config_return_string) - 1;
-                pclog("string len %i\n", c);
+//                pclog("string len %i\n", c);
                 while (config_return_string[c] <= 32 && config_return_string[c]) 
                       config_return_string[c--] = 0;
 
-                pclog("Reading value - %s\n", config_return_string);
+//                pclog("Reading value - %s\n", config_return_string);
                 break;
         }
         
@@ -125,19 +125,19 @@ char *get_config_string(char *head, char *name, char *def)
 void set_config_int(char *head, char *name, int val)
 {
         FILE *f = fopen(config_file, "at");
-        if (!f) pclog("set_config_int - !f\n");
+//        if (!f) pclog("set_config_int - !f\n");
         fprintf(f, "%s = %i\n", name, val);
-        pclog("Write %s = %i\n", name, val);
+//        pclog("Write %s = %i\n", name, val);
         fclose(f);
-        pclog("fclose\n");
+//        pclog("fclose\n");
 }
 
 void set_config_string(char *head, char *name, char *val)
 {
         FILE *f = fopen(config_file, "at");
-        if (!f) pclog("set_config_string - !f\n");
+//        if (!f) pclog("set_config_string - !f\n");
         fprintf(f, "%s = %s\n", name, val);
-        pclog("Write %s = %s\n", name, val);
+//        pclog("Write %s = %s\n", name, val);
         fclose(f);
 }
 

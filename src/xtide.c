@@ -1,10 +1,12 @@
 #include "ibm.h"
-#include "xtide.h"
+
+#include "io.h"
 #include "ide.h"
+#include "xtide.h"
 
 uint8_t xtide_high;
 
-void xtide_write(uint16_t port, uint8_t val)
+void xtide_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port & 0xf)
         {
@@ -27,7 +29,7 @@ void xtide_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t xtide_read(uint16_t port)
+uint8_t xtide_read(uint16_t port, void *priv)
 {
         uint16_t tempw;
         switch (port & 0xf)
@@ -51,5 +53,6 @@ uint8_t xtide_read(uint16_t port)
 
 void xtide_init()
 {
-        io_sethandler(0x0300, 0x0010, xtide_read, NULL, NULL, xtide_write, NULL, NULL);
+        ide_init();
+        io_sethandler(0x0300, 0x0010, xtide_read, NULL, NULL, xtide_write, NULL, NULL, NULL);
 }

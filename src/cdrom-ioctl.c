@@ -44,7 +44,7 @@ void ioctl_audio_callback(int16_t *output, int len)
 {
 	RAW_READ_INFO in;
 	DWORD count;
-	int c;
+
 //	return;
 //        pclog("Audio callback %08X %08X %i %i %i %04X %i\n", ioctl_cd_pos, ioctl_cd_end, ioctl_cd_state, cd_buflen, len, cd_buffer[4], GetTickCount());
         if (ioctl_cd_state != CD_PLAYING) 
@@ -143,7 +143,6 @@ static void ioctl_playaudio(uint32_t pos, uint32_t len, int ismsf)
 
 static void ioctl_pause(void)
 {
-        long size;
         if (!cdrom_drive) return;
         if (ioctl_cd_state == CD_PLAYING)
            ioctl_cd_state = CD_PAUSED;
@@ -154,7 +153,6 @@ static void ioctl_pause(void)
 
 static void ioctl_resume(void)
 {
-        long size;
         if (!cdrom_drive) return;
         if (ioctl_cd_state == CD_PAUSED)
            ioctl_cd_state = CD_PLAYING;
@@ -165,7 +163,6 @@ static void ioctl_resume(void)
 
 static void ioctl_stop(void)
 {
-        long size;
         if (!cdrom_drive) return;
         ioctl_cd_state = CD_STOPPED;
 //        ioctl_open(0);
@@ -175,7 +172,6 @@ static void ioctl_stop(void)
 
 static void ioctl_seek(uint32_t pos)
 {
-        long size;
         if (!cdrom_drive) return;
  //       ioctl_cd_state = CD_STOPPED;
         pclog("Seek %08X\n", pos);
@@ -229,8 +225,7 @@ static uint8_t ioctl_getcurrentsubchannel(uint8_t *b, int msf)
 	SUB_Q_CHANNEL_DATA sub;
 	long size;
 	int pos=0;
-	int c;
-	uint32_t temp, cdpos;
+	uint32_t cdpos;
         if (!cdrom_drive) return 0;
 	insub.Format = IOCTL_CDROM_CURRENT_POSITION;
         ioctl_open(0);

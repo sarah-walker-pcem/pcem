@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #define printf pclog
 
 /*Memory*/
@@ -291,9 +292,8 @@ int driveempty[2];
 #define PCI (romset == ROM_PCI486)
 
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
-int FASTDISC;
-int ADLIB;
-int GAMEBLASTER;
+
+int GAMEBLASTER, GUS;
 
 enum
 {
@@ -320,7 +320,8 @@ enum
         ROM_AMI386,
         ROM_AMI486,
         ROM_WIN486,
-        ROM_PCI486
+        ROM_PCI486,
+        ROM_430VX
 };
 
 //#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
@@ -337,10 +338,18 @@ int romset;
 //#define GFX_OTI067 3    /*Using BIOS from Acer 386SX/25N - edit - only works with Acer BIOS! Stupid integrated systems*/
 #define GFX_TVGA 4      /*Using Trident 8900D BIOS*/
 #define GFX_ET4000 5    /*Tseng ET4000*/
-#define GFX_ET4000W32 6 /*Tseng ET4000/W32p (Diamond Stealth 32)*/
-#define GFX_BAHAMAS64 7 /*S3 Vision864 (Paradise Bahamas 64)*/
-#define GFX_N9_9FX    8 /*S3 764/Trio64 (Number Nine 9FX)*/
-#define GFX_STEALTH64 9 /*S3 Vision964 (Diamond Stealth 64 VRAM PCI)*/
+#define GFX_ET4000W32  6 /*Tseng ET4000/W32p (Diamond Stealth 32)*/
+#define GFX_BAHAMAS64  7 /*S3 Vision864 (Paradise Bahamas 64)*/
+#define GFX_N9_9FX     8 /*S3 764/Trio64 (Number Nine 9FX)*/
+#define GFX_STEALTH64  9 /*S3 Vision964 (Diamond Stealth 64 VRAM PCI)*/
+#define GFX_VIRGE      10 /*S3 Virge*/
+#define GFX_TGUI9440   11 /*Trident TGUI9440*/
+#define GFX_VGA        12 /*IBM VGA*/
+#define GFX_VGAEDGE16  13 /*ATI VGA Edge-16 (18800-1)*/
+#define GFX_VGACHARGER 14 /*ATI VGA Charger (28800-5)*/
+#define GFX_OTI067     15 /*Oak OTI-067*/
+#define GFX_MACH64GX   16 /*ATI Graphics Pro Turbo (Mach64)*/
+#define GFX_CL_GD5429  17 /*Cirrus Logic CL-GD5429*/
 
 int gfxcard;
 
@@ -354,7 +363,6 @@ int readflash;
 uint8_t hercctrl;
 int slowega,egacycles,egacycles2;
 extern uint8_t gdcreg[16];
-extern int incga;
 extern int egareads,egawrites;
 extern int cga_comp;
 extern int vid_resize;
@@ -383,13 +391,10 @@ extern int mousedelay;
 /*Sound*/
 uint8_t spkstat;
 
-float spktime,soundtime,gustime,gustime2,vidtime,rtctime;
+float spktime;
+int rtctime;
+int soundtime,gustime,gustime2,vidtime;
 int ppispeakon;
-//#define SPKCONST (8000000.0/44100.0)
-float SPKCONST;
-float SOUNDCONST;
-float CASCONST;
-float GUSCONST,GUSCONST2;
 float CGACONST;
 float MDACONST;
 float VGACONST1,VGACONST2;
@@ -400,37 +405,22 @@ int gated,speakval,speakon;
 
 
 /*Sound Blaster*/
-int sbenable,sblatchi,sblatcho,sbcount,sb_enable_i,sb_count_i;
-int16_t sbdat;
+/*int sbenable,sblatchi,sblatcho,sbcount,sb_enable_i,sb_count_i;
+int16_t sbdat;*/
 void setsbclock(float clock);
 
-#define SADLIB 1 /*No DSP*/
-#define SB1    2 /*DSP v1.05*/
-#define SB15   3 /*DSP v2.00*/
-#define SB2    4 /*DSP v2.01 - needed for high-speed DMA*/
-#define SBPRO  5 /*DSP v3.00*/
-#define SBPRO2 6 /*DSP v3.02 + OPL3*/
-#define SB16   7 /*DSP v4.05 + OPL3*/
+#define SADLIB    1     /*No DSP*/
+#define SB1       2     /*DSP v1.05*/
+#define SB15      3     /*DSP v2.00*/
+#define SB2       4     /*DSP v2.01 - needed for high-speed DMA*/
+#define SBPRO     5     /*DSP v3.00*/
+#define SBPRO2    6     /*DSP v3.02 + OPL3*/
+#define SB16      7     /*DSP v4.05 + OPL3*/
+#define SADGOLD   8     /*AdLib Gold*/
+#define SND_WSS   9     /*Windows Sound System*/
+#define SND_PAS16 10    /*Pro Audio Spectrum 16*/
+
 int sbtype;
-
-struct
-{
-        int vocl,vocr,voc;
-        int midl,midr,mid;
-        int masl,masr,mas;
-} sbpmixer;
-extern int sb_freq;
-
-struct
-{
-        int master_l,master_r;
-        int voice_l,voice_r;
-        int fm_l,fm_r;
-        int bass_l,bass_r;
-        int treble_l,treble_r;
-        int filter;
-} mixer;
-
 
 int clocks[3][12][4];
 int at70hz;
@@ -466,3 +456,5 @@ extern int times;
 
 
 extern float isa_timing, bus_timing;
+
+extern int frame;

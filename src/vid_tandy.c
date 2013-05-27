@@ -2,6 +2,7 @@
 #include "video.h"
 #include "io.h"
 #include "mem.h"
+#include "timer.h"
 
 static int      tandy_array_index;
 static uint8_t  tandy_array[32];
@@ -14,7 +15,7 @@ static uint8_t *tandy_vram, *tandy_b8000;
 void tandy_recalcaddress();
 void tandy_recalctimings();
         
-void tandy_out(uint16_t addr, uint8_t val)
+void tandy_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
 //        pclog("Tandy OUT %04X %02X\n",addr,val);
@@ -59,7 +60,7 @@ void tandy_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t tandy_in(uint16_t addr)
+uint8_t tandy_in(uint16_t addr, void *priv)
 {
 //        if (addr!=0x3DA) pclog("Tandy IN %04X\n",addr);
         switch (addr)
@@ -90,14 +91,14 @@ void tandy_recalcaddress()
         }
 }
 
-void tandy_write(uint32_t addr, uint8_t val)
+void tandy_write(uint32_t addr, uint8_t val, void *priv)
 {
         if (tandy_memctrl==-1) return;
 //        pclog("Tandy VRAM write %05X %02X %04X:%04X  %04X:%04X\n",addr,val,CS,pc,DS,SI);
         tandy_b8000[addr&0x7FFF]=val;
 }
 
-uint8_t tandy_read(uint32_t addr)
+uint8_t tandy_read(uint32_t addr, void *priv)
 {
         if (tandy_memctrl==-1) return 0xFF;
 //        pclog("Tandy VRAM read  %05X %02X %04X:%04X\n",addr,tandy_b8000[addr&0x7FFF],CS,pc);
@@ -106,19 +107,22 @@ uint8_t tandy_read(uint32_t addr)
 
 void tandy_recalctimings()
 {
+	double _dispontime, _dispofftime;
         if (tandy_mode&1)
         {
                 disptime=crtc[0]+1;
-                dispontime=crtc[1];
+                _dispontime=crtc[1];
         }
         else
         {
                 disptime=(crtc[0]+1)<<1;
-                dispontime=crtc[1]<<1;
+                _dispontime=crtc[1]<<1;
         }
-        dispofftime=disptime-dispontime;
-        dispontime*=CGACONST;
-        dispofftime*=CGACONST;
+        _dispofftime=disptime-_dispontime;
+        _dispontime*=CGACONST;
+        _dispofftime*=CGACONST;
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
 
@@ -127,7 +131,7 @@ static int sc,vc;
 static int cgadispon;
 static int con,coff,cursoron,cgablink;
 static int vsynctime,vadj;
-static uint16_t ma,maback,ca;
+static uint16_t ma,maback;
 
 static int ntsc_col[8][8]=
 {
@@ -157,7 +161,7 @@ void tandy_poll()
         int x,c;
         int oldvc;
         uint8_t chr,attr;
-        uint16_t dat,dat2,dat3,dat4;
+        uint16_t dat;
         int cols[4];
         int col;
         int oldsc;
@@ -582,8 +586,8 @@ void tandy_poll()
 
 int tandy_init()
 {
-        mem_sethandler(0xb8000, 0x8000, tandy_read, NULL, NULL, tandy_write, NULL, NULL);
-        io_sethandler(0x00a0, 0x0002, tandy_in, NULL, NULL, tandy_out, NULL, NULL);
+        mem_sethandler(0xb8000, 0x8000, tandy_read, NULL, NULL, tandy_write, NULL, NULL,        NULL);
+        io_sethandler(0x00a0, 0x0002, tandy_in, NULL, NULL, tandy_out, NULL, NULL, NULL);
         tandy_memctrl = -1;
         return 0;
 }

@@ -1,5 +1,8 @@
 /*MDA emulation*/
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
+#include "timer.h"
 #include "video.h"
 
 void mda_recalctimings();
@@ -7,7 +10,7 @@ void mda_recalctimings();
 static uint8_t mda_ctrl,mda_stat;
 uint8_t crtcm[32],crtcmreg;
 
-void mda_out(uint16_t addr, uint8_t val)
+void mda_out(uint16_t addr, uint8_t val, void *priv)
 {
         switch (addr)
         {
@@ -29,7 +32,7 @@ void mda_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t mda_in(uint16_t addr)
+uint8_t mda_in(uint16_t addr, void *priv)
 {
         switch (addr)
         {
@@ -40,32 +43,36 @@ uint8_t mda_in(uint16_t addr)
                 case 0x3BA:
                 return mda_stat | 0xF0;
         }
+        return 0xff;
 }
 
-void mda_write(uint32_t addr, uint8_t val)
+void mda_write(uint32_t addr, uint8_t val, void *priv)
 {
         vram[addr&0xFFF]=val;
 }
 
-uint8_t mda_read(uint32_t addr)
+uint8_t mda_read(uint32_t addr, void *priv)
 {
         return vram[addr&0xFFF];
 }
 
 void mda_recalctimings()
 {
+	double _dispontime, _dispofftime;
         disptime=crtc[0]+1;
-        dispontime=crtc[1];
-        dispofftime=disptime-dispontime;
-        dispontime*=MDACONST;
-        dispofftime*=MDACONST;
+        _dispontime=crtc[1];
+        _dispofftime=disptime-_dispontime;
+        _dispontime*=MDACONST;
+        _dispofftime*=MDACONST;
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
 int mdacols[256][2][2];
 
 static int linepos,displine;
 static int vc,sc;
-static uint16_t ma,maback,ca;
+static uint16_t ma,maback;
 static int con,coff,cursoron;
 static int cgadispon,cgablink;
 static int vsynctime,vadj;
@@ -77,9 +84,7 @@ void mda_poll()
         int x,c;
         int oldvc;
         uint8_t chr,attr;
-        uint16_t dat,dat2,dat3,dat4;
         int cols[4];
-        int col;
         int oldsc;
         int blink;
         if (!linepos)
@@ -227,7 +232,7 @@ void mda_poll()
 
 int mda_init()
 {
-        mem_sethandler(0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL);
+        mem_sethandler(0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL,  NULL);
         return 0;
 }
 

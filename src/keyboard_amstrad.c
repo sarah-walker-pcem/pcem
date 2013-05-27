@@ -1,6 +1,7 @@
 #include "ibm.h"
 #include "io.h"
 #include "mem.h"
+#include "pic.h"
 #include "sound.h"
 
 #include "keyboard.h"
@@ -53,7 +54,7 @@ void keyboard_amstrad_adddata(uint8_t val)
         return;
 }
 
-void keyboard_amstrad_write(uint16_t port, uint8_t val)
+void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
 {
         pclog("keyboard_amstrad : write %04X %02X %02X\n", port, val, keyboard_amstrad.pb);
 /*        if (ram[8] == 0xc3) 
@@ -102,7 +103,7 @@ void keyboard_amstrad_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t keyboard_amstrad_read(uint16_t port)
+uint8_t keyboard_amstrad_read(uint16_t port, void *priv)
 {
         uint8_t temp;
 //        pclog("keyboard_amstrad : read %04X ", port);
@@ -161,7 +162,7 @@ void keyboard_amstrad_init()
 {
         //return;
         pclog("keyboard_amstrad_init\n");
-        io_sethandler(0x0060, 0x0006, keyboard_amstrad_read, NULL, NULL, keyboard_amstrad_write, NULL, NULL);
+        io_sethandler(0x0060, 0x0006, keyboard_amstrad_read, NULL, NULL, keyboard_amstrad_write, NULL, NULL,  NULL);
         keyboard_amstrad_reset();
         keyboard_send = keyboard_amstrad_adddata;
         keyboard_poll = keyboard_amstrad_poll;

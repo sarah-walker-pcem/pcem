@@ -8,17 +8,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ibm.h"
+
+#include "config.h"
 #include "mem.h"
 #include "video.h"
 #include "x86.h"
 #include "cpu.h"
 
-static uint8_t  (*_mem_read_b[0x20000])(uint32_t addr);
-static uint16_t (*_mem_read_w[0x20000])(uint32_t addr);
-static uint32_t (*_mem_read_l[0x20000])(uint32_t addr);
-static void    (*_mem_write_b[0x20000])(uint32_t addr, uint8_t  val);
-static void    (*_mem_write_w[0x20000])(uint32_t addr, uint16_t val);
-static void    (*_mem_write_l[0x20000])(uint32_t addr, uint32_t val);
+static uint8_t  (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
+static uint16_t (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
+static uint32_t (*_mem_read_l[0x40000])(uint32_t addr, void *priv);
+static void    (*_mem_write_b[0x40000])(uint32_t addr, uint8_t  val, void *priv);
+static void    (*_mem_write_w[0x40000])(uint32_t addr, uint16_t val, void *priv);
+static void    (*_mem_write_l[0x40000])(uint32_t addr, uint32_t val, void *priv);
+static void        *_mem_priv[0x40000];
 
 int shadowbios,shadowbios_write;
 
@@ -40,14 +43,14 @@ uint8_t romext[32768];
 FILE *romfopen(char *fn, char *mode)
 {
         char s[512];
-        pclog("romfopen %s\n", fn);
+//        pclog("romfopen %s\n", fn);
         strcpy(s,pcempath);
-        pclog("s = %s\n", s);
+//        pclog("s = %s\n", s);
         put_backslash(s);
-        pclog("s = %s\n", s);
-        pclog("strcat %s %s\n", s, fn);
+//        pclog("s = %s\n", s);
+//        pclog("strcat %s %s\n", s, fn);
         strcat(s,fn);
-        pclog("s = %s\n", s);
+//        pclog("s = %s\n", s);
         return fopen(s,mode);
 }
 
@@ -76,18 +79,14 @@ static void mem_load_atide_bios()
                 fclose(f);
         }
 }
-        
-int loadbios()
+
+int mem_load_video_bios()
 {
-        FILE *f=NULL,*ff=NULL;
+        FILE *f = NULL;
         int c;
-        
-        loadfont("mda.rom", 0);
-        
-        memset(vrom,0x63,0x8000);
-//        printf("Loadrom - VGA %i\n",VGA);
-        if (VID_EGA)
+        switch (gfxcard)
         {
+                case GFX_EGA:
                 f=romfopen("roms/ibm_6277356_ega_card_u44_27128.bin","rb");
                 if (f)
                 {
@@ -101,66 +100,169 @@ int loadbios()
                                     vrom[c]=getc(f);
                         }
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (VGA)
-        {
+                break;
+                
+                case GFX_TVGA:
                 f=romfopen("roms/trident.bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (ET4000)
-        {
+                break;
+                
+                case GFX_ET4000:
                 f=romfopen("roms/et4000.bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (ET4000W32)
-        {
+                break;
+
+                case GFX_ET4000W32:
                 f=romfopen("roms/et4000w32.bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (gfxcard == GFX_BAHAMAS64)
-        {
+                break;
+                
+                case GFX_BAHAMAS64:
                 f=romfopen("roms/bahamas64.bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (gfxcard == GFX_N9_9FX)
-        {
+                break;
+                
+                case GFX_N9_9FX:
                 f=romfopen("roms/s3_764.bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
-        if (gfxcard == GFX_STEALTH64)
-        {
+                break;
+                
+                case GFX_STEALTH64:
                 f=romfopen("roms/TRIO64 (Ver. 1.5-07) [VGA] (S3 Incorporated).bin","rb");
                 if (f)
                 {
                         fread(vrom,32768,1,f);
                         fclose(f);
+                        return 1;
                 }
-        }
+                break;
+                
+                case GFX_VIRGE:
+                f=romfopen("roms/s3virge.bin","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
 
-        memset(romext,0x63,0x8000);
+                case GFX_TGUI9440:
+                f=romfopen("roms/9440.vbi","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+                
+                case GFX_VGA:
+                f=romfopen("roms/ibm_vga.bin","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case GFX_VGAEDGE16:
+                f=romfopen("roms/vgaedge16.vbi","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case GFX_VGACHARGER:
+                f=romfopen("roms/bios.bin","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case GFX_OTI067:
+                f=romfopen("roms/oti067/bios.bin","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case GFX_MACH64GX:
+                f=romfopen("roms/mach64gx/bios.bin","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case GFX_CL_GD5429:
+                f=romfopen("roms/5429.vbi","rb");
+                if (f)
+                {
+                        fread(vrom,32768,1,f);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                default:
+                memset(vrom,0x63,0x8000);
+                return 1;
+        }
+        pclog("mem_load_video_bios : failed to load video BIOS for gfxcard %i\n", gfxcard);
+        memset(vrom,0x63,0x8000);
+        return 0;
+}
+        
+int loadbios()
+{
+        FILE *f=NULL,*ff=NULL;
+        int c;
+        
+        loadfont("mda.rom", 0);
         
         biosmask = 0xffff;
+        
+        memset(romext,0x63,0x4000);
         
         pclog("Starting with romset %i\n", romset);
         
@@ -484,6 +586,17 @@ int loadbios()
                 //is486=1;
                 return 1;
 
+                case ROM_430VX:
+//                f = romfopen("roms/430vx/Ga586atv.bin", "rb");
+//                f = fopen("roms/430vx/vx29.BIN", "rb");
+                f = romfopen("roms/430vx/55XWUQ0E.BIN", "rb");
+//                f=romfopen("roms/430vx/430vx","rb");               
+                if (!f) break;
+                fread(rom,           0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                //is486=1;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
@@ -663,20 +776,23 @@ extern uint32_t testr[9];
 
 uint32_t mmutranslatereal(uint32_t addr, int rw)
 {
-        int mmuout=0;
         uint32_t addr2;
         uint32_t temp,temp2,temp3;
-                if (abrt) return -1;
+                if (abrt) 
+                {
+//                        pclog("Translate recursive abort\n");
+                        return -1;
+                }
 /*                if ((addr&~0xFFFFF)==0x77f00000) pclog("Do translate %08X %i  %08X  %08X\n",addr,rw,EAX,pc);
                 if (addr==0x77f61000) output = 3;
                 if (addr==0x77f62000) { dumpregs(); exit(-1); }
                 if (addr==0x77f9a000) { dumpregs(); exit(-1); }*/
         addr2=(cr3+((addr>>20)&0xFFC));
         temp=temp2=((uint32_t *)ram)[addr2>>2];
-//        pclog("Do translate %08X %i %08X\n", addr, rw, temp);
+//        if (output == 3) pclog("Do translate %08X %i %08X\n", addr, rw, temp);
         if (!(temp&1))// || (CPL==3 && !(temp&4) && !cpl_override) || (rw && !(temp&2) && (CPL==3 || cr0&WP_FLAG)))
         {
-//                if (/*output==3 && */!nopageerrors) pclog("Section not present! %08X  %08X  %02X  %04X:%08X  %i %i\n",addr,temp,opcode,CS,pc,CPL,rw);
+//                /*if (!nopageerrors && opcode != 0xf3 && opcode != 0x89) */pclog("Section not present! %08X  %08X  %02X  %04X:%08X  %i %i\n",addr,temp,opcode,CS,pc,CPL,rw);
 
                 cr2=addr;
                 temp&=1;
@@ -693,13 +809,16 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
         }
         temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
         temp3=temp&temp2;
-//        pclog("Do translate %08X %08X\n", temp, temp3);
+//        if (output == 3) pclog("Do translate %08X %08X\n", temp, temp3);
         if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && (CPL==3 || cr0&WP_FLAG)))
         {
-//                if (!nopageerrors) pclog("Page not present!  %08X   %08X   %02X %02X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,CS,pc,SS,ESP,ins,CPL,rw);
+//                /*if (!nopageerrors && opcode != 0xf3 && opcode != 0x89) */pclog("Page not present!  %08X   %08X   %02X %02X  %i  %08X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,frame,rmdat32, CS,pc,SS,ESP,ins,CPL,rw);
+               
+//                dumpregs();
+//                exit(-1);
 //                if (addr == 0x815F6E90) output = 3;
-/*                if (addr == 0x10ADE020) output = 3;
-                if (addr == 0x10000008)
+/*                if (addr == 0x10ADE020) output = 3;*/
+/*                if (addr == 0x10150010 && !nopageerrors)
                 {
                         dumpregs();
                         exit(-1);
@@ -816,7 +935,7 @@ uint8_t *getpccache(uint32_t a)
 {
 //        int logit=(a>0xFFFFF);
         uint32_t a2=a;
-        if (readlookup2[a>>12]!=0xFFFFFFFF) return &ram[(uint8_t *)readlookup2[a>>12] - (uint8_t *)(a&~0xFFF)];
+        //if (readlookup2[a>>12]!=0xFFFFFFFF) return &ram[(uint8_t *)readlookup2[a>>12] - (uint8_t *)(a&~0xFFF)];
         if (cr0>>31)
         {
 //                if (output==3) pclog("Translate GetPCCache %08X\n",a);
@@ -870,12 +989,8 @@ uint8_t readmembl(uint32_t addr)
         }
         addr &= rammask;
 
-        switch (addr>>16)
-        {
-                case 13: if (romset==ROM_AMI286) return neat_readems(addr); return 0xFF;
-//                case 14: pclog("Read %06X\n", addr); if (shadowbios) { /*printf("Read shadow RAM %08X %02X\n",addr,ram[addr]);*/ return ram[addr]; }
-        }
-        if (_mem_read_b[addr >> 15]) return _mem_read_b[addr >> 15](addr);
+        if (_mem_read_b[addr >> 14]) return _mem_read_b[addr >> 14](addr, _mem_priv[addr >> 14]);
+//        pclog("Bad readmembl %08X %04X:%08X\n", addr, CS, pc);
         return 0xFF;
 }
 
@@ -890,15 +1005,8 @@ void writemembl(uint32_t addr, uint8_t val)
         }
         addr &= rammask;
 
-        switch (addr>>16)
-        {
-                case 13: if (romset==ROM_AMI286) neat_writeems(addr,val); return;
-//                case 14: printf("Write %08X %02X\n",addr,val); //ram[addr]=val;
-//                if (isram[(addr>>16)&0xFF]) ram[addr]=val;
-//                return;
-        }
-        if (_mem_write_b[addr >> 15]) _mem_write_b[addr >> 15](addr, val);
-//        else                            pclog("Bad write %08X %02X\n", addr, val);
+        if (_mem_write_b[addr >> 14]) _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
+//        else                            pclog("Bad write %08X %02X  %04X:%08X\n", addr, val, CS, pc);
 }
 
 uint8_t readmemb386l(uint32_t seg, uint32_t addr)
@@ -910,10 +1018,10 @@ uint8_t readmemb386l(uint32_t seg, uint32_t addr)
                 return -1;
         }
         mem_logical_addr = addr = addr + seg;
-        if (readlookup2[mem_logical_addr >> 12] != 0xFFFFFFFF)
+/*        if (readlookup2[mem_logical_addr >> 12] != 0xFFFFFFFF)
         {
                 return ram[readlookup2[mem_logical_addr >> 12] + (mem_logical_addr & 0xFFF)];
-        }
+        }*/
         
         if (cr0 >> 31)
         {
@@ -923,7 +1031,8 @@ uint8_t readmemb386l(uint32_t seg, uint32_t addr)
 
         addr &= rammask;
 
-        if (_mem_read_b[addr >> 15]) return _mem_read_b[addr >> 15](addr);
+        if (_mem_read_b[addr >> 14]) return _mem_read_b[addr >> 14](addr, _mem_priv[addr >> 14]);
+//        pclog("Bad readmemb386l %08X %04X:%08X\n", addr, CS, pc);
         return 0xFF;
 }
 
@@ -945,8 +1054,11 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
 
         addr &= rammask;
 
-        if (_mem_write_b[addr >> 15]) _mem_write_b[addr >> 15](addr, val);
-//        else                            pclog("Bad write %08X %02X\n", addr, val);
+/*        if (addr >= 0xa0000 && addr < 0xc0000)
+           pclog("writemembl %08X %02X\n", addr, val);*/
+
+        if (_mem_write_b[addr >> 14]) _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
+//        else                            pclog("Bad write %08X %02X %04X:%08X\n", addr, val, CS, pc);
 }
 
 uint16_t readmemwl(uint32_t seg, uint32_t addr)
@@ -956,8 +1068,8 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   0) == 0xffffffff) return;
-                        if (mmutranslate(addr2+1, 0) == 0xffffffff) return;
+                        if (mmutranslate(addr2,   0) == 0xffffffff) return 0xffff;
+                        if (mmutranslate(addr2+1, 0) == 0xffffffff) return 0xffff;
                 }
                 if (is386) return readmemb386l(seg,addr)|(readmemb386l(seg,addr+1)<<8);
                 else       return readmembl(seg+addr)|(readmembl(seg+addr+1)<<8);
@@ -976,12 +1088,12 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
 
         addr2 &= rammask;
 
-        if (_mem_read_w[addr2 >> 15]) return _mem_read_w[addr2 >> 15](addr2);
+        if (_mem_read_w[addr2 >> 14]) return _mem_read_w[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]);
 
-        if (_mem_read_b[addr2 >> 15])
+        if (_mem_read_b[addr2 >> 14])
         {
-                if (AT) return _mem_read_b[addr2 >> 15](addr2) | (_mem_read_b[(addr2 + 1) >> 15](addr2 + 1) << 8);
-                else    return _mem_read_b[addr2 >> 15](addr2) | (_mem_read_b[(seg + ((addr + 1) & 0xffff)) >> 15](seg + ((addr + 1) & 0xffff)) << 8);
+                if (AT) return _mem_read_b[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]) | (_mem_read_b[(addr2 + 1) >> 14](addr2 + 1, _mem_priv[addr2 >> 14]) << 8);
+                else    return _mem_read_b[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]) | (_mem_read_b[(seg + ((addr + 1) & 0xffff)) >> 14](seg + ((addr + 1) & 0xffff), _mem_priv[addr2 >> 14]) << 8);
         }
         return 0xffff;
 }
@@ -1022,19 +1134,20 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
         }
         
         addr2 &= rammask;
+
+/*        if (addr2 >= 0xa0000 && addr2 < 0xc0000)
+           pclog("writememwl %08X %02X\n", addr2, val);*/
         
-        if (_mem_write_w[addr2 >> 15]) 
+        if (_mem_write_w[addr2 >> 14]) 
         {
-                _mem_write_w[addr2 >> 15](addr2, val);
+                _mem_write_w[addr2 >> 14](addr2, val, _mem_priv[addr2 >> 14]);
                 return;
         }
 
-        if (_mem_write_b[addr2 >> 15]) 
+        if (_mem_write_b[addr2 >> 14]) 
         {
-                _mem_write_b[addr2 >> 15](addr2, val);
-                _mem_write_b[(addr2 + 1) >> 15](addr2 + 1, val >> 8);
-//                if (AT) _
-//                else    _mem_write_b[(seg + ((addr + 1) & 0xffff)) >> 15](seg + ((addr + 1) & 0xffff), val >> 8);
+                _mem_write_b[addr2 >> 14](addr2, val, _mem_priv[addr2 >> 14]);
+                _mem_write_b[(addr2 + 1) >> 14](addr2 + 1, val >> 8, _mem_priv[addr2 >> 14]);
                 return;
         }
 //        pclog("Bad write %08X %04X\n", addr, val);
@@ -1047,8 +1160,8 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   0) == 0xffffffff) return;
-                        if (mmutranslate(addr2+3, 0) == 0xffffffff) return;
+                        if (mmutranslate(addr2,   0) == 0xffffffff) return 0xffffffff;
+                        if (mmutranslate(addr2+3, 0) == 0xffffffff) return 0xffffffff;
                 }
                 return readmemwl(seg,addr)|(readmemwl(seg,addr+2)<<16);
         }
@@ -1068,11 +1181,11 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
 
         addr2&=rammask;
 
-        if (_mem_read_l[addr2 >> 15]) return _mem_read_l[addr2 >> 15](addr2);
+        if (_mem_read_l[addr2 >> 14]) return _mem_read_l[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]);
 
-        if (_mem_read_w[addr2 >> 15]) return _mem_read_w[addr2 >> 15](addr2) | (_mem_read_w[addr2 >> 15](addr2 + 2) << 16);
+        if (_mem_read_w[addr2 >> 14]) return _mem_read_w[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]) | (_mem_read_w[addr2 >> 14](addr2 + 2, _mem_priv[addr2 >> 14]) << 16);
         
-        if (_mem_read_b[addr2 >> 15]) return _mem_read_b[addr2 >> 15](addr2) | (_mem_read_b[addr2 >> 15](addr2 + 1) << 8) | (_mem_read_b[addr2 >> 15](addr2 + 2) << 16) | (_mem_read_b[addr2 >> 15](addr2 + 3) << 24);
+        if (_mem_read_b[addr2 >> 14]) return _mem_read_b[addr2 >> 14](addr2, _mem_priv[addr2 >> 14]) | (_mem_read_b[addr2 >> 14](addr2 + 1, _mem_priv[addr2 >> 14]) << 8) | (_mem_read_b[addr2 >> 14](addr2 + 2, _mem_priv[addr2 >> 14]) << 16) | (_mem_read_b[addr2 >> 14](addr2 + 3, _mem_priv[addr2 >> 14]) << 24);
 
         return 0xffffffff;
 }
@@ -1106,67 +1219,70 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
         
         addr2&=rammask;
 
-        if (_mem_write_l[addr2 >> 15]) 
+/*        if (addr >= 0xa0000 && addr < 0xc0000)
+           pclog("writememll %08X %08X\n", addr, val);*/
+
+        if (_mem_write_l[addr2 >> 14]) 
         {
-                _mem_write_l[addr2 >> 15](addr2, val);
+                _mem_write_l[addr2 >> 14](addr2, val,           _mem_priv[addr2 >> 14]);
                 return;
         }
-        if (_mem_write_w[addr2 >> 15]) 
+        if (_mem_write_w[addr2 >> 14]) 
         {
-                _mem_write_w[addr2 >> 15](addr2,     val);
-                _mem_write_w[addr2 >> 15](addr2 + 2, val >> 16);
+                _mem_write_w[addr2 >> 14](addr2,     val,       _mem_priv[addr2 >> 14]);
+                _mem_write_w[addr2 >> 14](addr2 + 2, val >> 16, _mem_priv[addr2 >> 14]);
                 return;
         }
-        if (_mem_write_b[addr2 >> 15]) 
+        if (_mem_write_b[addr2 >> 14]) 
         {
-                _mem_write_b[addr2 >> 15](addr2,     val);
-                _mem_write_b[addr2 >> 15](addr2 + 1, val >> 8);
-                _mem_write_b[addr2 >> 15](addr2 + 2, val >> 16);
-                _mem_write_b[addr2 >> 15](addr2 + 3, val >> 24);
+                _mem_write_b[addr2 >> 14](addr2,     val,       _mem_priv[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 1, val >> 8,  _mem_priv[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 2, val >> 16, _mem_priv[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 3, val >> 24, _mem_priv[addr2 >> 14]);
                 return;
         }
 //        pclog("Bad write %08X %08X\n", addr, val);
 }
 
-uint8_t mem_read_ram(uint32_t addr)
+uint8_t mem_read_ram(uint32_t addr, void *priv)
 {
-//        if (addr < 0xa0000) pclog("Read RAMb %08X\n", addr);
+//        if (addr >= 0xe0000 && addr < 0x100000) pclog("Read RAMb %08X\n", addr);
         addreadlookup(mem_logical_addr, addr);
         return ram[addr];
 }
-uint16_t mem_read_ramw(uint32_t addr)
+uint16_t mem_read_ramw(uint32_t addr, void *priv)
 {
-//        if (addr < 0xa0000) pclog("Read RAMw %08X\n", addr);
+//        if (addr >= 0xe0000 && addr < 0x100000)  pclog("Read RAMw %08X\n", addr);
         addreadlookup(mem_logical_addr, addr);
         return *(uint16_t *)&ram[addr];
 }
-uint32_t mem_read_raml(uint32_t addr)
+uint32_t mem_read_raml(uint32_t addr, void *priv)
 {
-//        if (addr < 0xa0000) pclog("Read RAMl %08X\n", addr);
+//        if (addr >= 0xe0000 && addr < 0x100000) pclog("Read RAMl %08X\n", addr);
         addreadlookup(mem_logical_addr, addr);
         return *(uint32_t *)&ram[addr];
 }
 
-void mem_write_ram(uint32_t addr, uint8_t val)
+void mem_write_ram(uint32_t addr, uint8_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
         ram[addr] = val;
 //        if (addr >= 0xe0000 && addr < 0x100000) pclog("Write RAMb %08X\n", addr);
 }
-void mem_write_ramw(uint32_t addr, uint16_t val)
+void mem_write_ramw(uint32_t addr, uint16_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
         *(uint16_t *)&ram[addr] = val;
-//        if (addr >= 0xe0000 && addr < 0x100000)  pclog("Write RAMw %08X %04X:%04X\n", addr, CS, pc);
+//        if (addr >= 0xe0000 && addr < 0x100000)  pclog("Write RAMw %08X %04X:%04X %i %04X  %04X:%04X  %04X:%04X\n", addr, CS, pc, ins, val, DS,SI, ES,DI);
 }
-void mem_write_raml(uint32_t addr, uint32_t val)
+void mem_write_raml(uint32_t addr, uint32_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
         *(uint32_t *)&ram[addr] = val;
 //        if (addr >= 0xe0000 && addr < 0x100000) pclog("Write RAMl %08X  %04X:%04X  %04X:%04X  %04X:%04X\n", addr, CS, pc, DS,SI, ES,DI);
 }
 
-uint8_t mem_read_bios(uint32_t addr)
+uint8_t mem_read_bios(uint32_t addr, void *priv)
 {
                         if (AMIBIOS && (addr&0xFFFFF)==0xF8281) /*This is read constantly during AMIBIOS POST, but is never written to. It's clearly a status register of some kind, but for what?*/
                         {
@@ -1177,39 +1293,39 @@ uint8_t mem_read_bios(uint32_t addr)
 //        if (output) pclog("Read BIOS %08X %02X %04X:%04X\n", addr, rom[addr & biosmask], CS, pc);
         return rom[addr & biosmask];
 }
-uint16_t mem_read_biosw(uint32_t addr)
+uint16_t mem_read_biosw(uint32_t addr, void *priv)
 {
-//        if (output) pclog("Read BIOS %08X %04X %04X:%04X\n", addr, *(uint16_t *)&rom[addr & biosmask], CS, pc);
+//        /*if (output) */pclog("Read BIOS %08X %04X %04X:%04X\n", addr, *(uint16_t *)&rom[addr & biosmask], CS, pc);
         return *(uint16_t *)&rom[addr & biosmask];
 }
-uint32_t mem_read_biosl(uint32_t addr)
+uint32_t mem_read_biosl(uint32_t addr, void *priv)
 {
-//        if (output) pclog("Read BIOS %08X %02X %04X:%04X\n", addr, *(uint32_t *)&rom[addr & biosmask], CS, pc);
+//        pclog("Read BIOS %08X %02X %04X:%04X\n", addr, *(uint32_t *)&rom[addr & biosmask], CS, pc);
         return *(uint32_t *)&rom[addr & biosmask];
 }
 
-uint8_t mem_read_vrom(uint32_t addr)
+uint8_t mem_read_vrom(uint32_t addr, void *priv)
 {
         return vrom[addr & 0x7fff];
 }
-uint16_t mem_read_vromw(uint32_t addr)
+uint16_t mem_read_vromw(uint32_t addr, void *priv)
 {
         return *(uint16_t *)&vrom[addr & 0x7fff];
 }
-uint32_t mem_read_vroml(uint32_t addr)
+uint32_t mem_read_vroml(uint32_t addr, void *priv)
 {
         return *(uint32_t *)&vrom[addr & 0x7fff];
 }
 
-uint8_t mem_read_romext(uint32_t addr)
+uint8_t mem_read_romext(uint32_t addr, void *priv)
 {
         return romext[addr & 0x7fff];
 }
-uint16_t mem_read_romextw(uint32_t addr)
+uint16_t mem_read_romextw(uint32_t addr, void *priv)
 {
         return *(uint16_t *)&romext[addr & 0x7fff];
 }
-uint32_t mem_read_romextl(uint32_t addr)
+uint32_t mem_read_romextl(uint32_t addr, void *priv)
 {
         return *(uint32_t *)&romext[addr & 0x7fff];
 }
@@ -1233,16 +1349,16 @@ void mem_init()
                 isram[c]=1;
                 if (c >= 0xa && c<=0xF) isram[c]=0;
         }
-        for (c = 0; c < 0x20000; c++)
-            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = NULL;
+        for (c = 0; c < 0x40000; c++)
+            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = _mem_priv[c] = NULL;
 
-        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml);
+        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
         if (mem_size > 1)
-           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml);            
+           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
            
-        mem_sethandler(0xc0000, 0x08000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL);
-        mem_sethandler(0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL);
-        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml);
+        mem_sethandler(0xc0000, 0x08000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
+        mem_sethandler(0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);
+        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
@@ -1258,16 +1374,16 @@ void mem_resize()
                 isram[c]=1;
                 if (c >= 0xa && c<=0xF) isram[c]=0;
         }
-        for (c = 0; c < 0x20000; c++)
-            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = NULL;
+        for (c = 0; c < 0x40000; c++)
+            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = _mem_priv[c] = NULL;
 
-        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml);
+        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
         if (mem_size > 1)
-           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml);            
+           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
 
-        mem_sethandler(0xc0000, 0x8000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL);
-        mem_sethandler(0xc8000, 0x8000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL);        
-        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml);
+        mem_sethandler(0xc0000, 0x8000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
+        mem_sethandler(0xc8000, 0x8000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);        
+        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
@@ -1295,44 +1411,62 @@ void mem_updatecache()
 }
 
 void mem_sethandler(uint32_t base, uint32_t size, 
-                    uint8_t  (*read_b)(uint32_t addr),
-                    uint16_t (*read_w)(uint32_t addr),
-                    uint32_t (*read_l)(uint32_t addr),
-                    void (*write_b)(uint32_t addr, uint8_t  val),
-                    void (*write_w)(uint32_t addr, uint16_t val),
-                    void (*write_l)(uint32_t addr, uint32_t val))
+                    uint8_t  (*read_b)(uint32_t addr, void *priv),
+                    uint16_t (*read_w)(uint32_t addr, void *priv),
+                    uint32_t (*read_l)(uint32_t addr, void *priv),
+                    void (*write_b)(uint32_t addr, uint8_t  val, void *priv),
+                    void (*write_w)(uint32_t addr, uint16_t val, void *priv),
+                    void (*write_l)(uint32_t addr, uint32_t val, void *priv),
+                    void *priv)
 {
         uint32_t c;
-        for (c = base; c < base + size; c += 0x8000)
+//        printf("mem_sethandler : %05X %04X  %08X  %08X   %08X   %08X %08X\n", base, size, read_w, write_w,  mem_read_biosw, mem_read_ramw, mem_write_ramw);
+        for (c = base; c < base + size; c += 0x4000)
         {
-                _mem_read_b[ c >> 15] =  read_b;
-                _mem_read_w[ c >> 15] =  read_w;
-                _mem_read_l[ c >> 15] =  read_l;
-                _mem_write_b[c >> 15] = write_b;
-                _mem_write_w[c >> 15] = write_w;
-                _mem_write_l[c >> 15] = write_l;
+                _mem_read_b[ c >> 14] =  read_b;
+                _mem_read_w[ c >> 14] =  read_w;
+                _mem_read_l[ c >> 14] =  read_l;
+                _mem_write_b[c >> 14] = write_b;
+                _mem_write_w[c >> 14] = write_w;
+                _mem_write_l[c >> 14] = write_l;
+                _mem_priv[c >> 14] = priv;
+        }
+        for (c = base; c < base + size; c += 0x1000)
+        {
+                readlookup2[c >> 12]  = 0xFFFFFFFF;
+                writelookup2[c >> 12] = 0xFFFFFFFF;
         }
 }
 
 void mem_removehandler(uint32_t base, uint32_t size, 
-                       uint8_t  (*read_b)(uint32_t addr),
-                       uint16_t (*read_w)(uint32_t addr),
-                       uint32_t (*read_l)(uint32_t addr),
-                       void (*write_b)(uint32_t addr, uint8_t  val),
-                       void (*write_w)(uint32_t addr, uint16_t val),
-                       void (*write_l)(uint32_t addr, uint32_t val))
+                       uint8_t  (*read_b)(uint32_t addr, void *priv),
+                       uint16_t (*read_w)(uint32_t addr, void *priv),
+                       uint32_t (*read_l)(uint32_t addr, void *priv),
+                       void (*write_b)(uint32_t addr, uint8_t  val, void *priv),
+                       void (*write_w)(uint32_t addr, uint16_t val, void *priv),
+                       void (*write_l)(uint32_t addr, uint32_t val, void *priv),
+                       void *priv)
 {
         uint32_t c;
         if ((base + size) > 0xffff8000)
            size = 0xffff0000 - base;
-        for (c = base; c < base + size; c += 0x8000)
+        for (c = base; c < base + size; c += 0x4000)
         {
-                if ( _mem_read_b[c >> 15]  == read_b)  _mem_read_b[c >> 15] = NULL;
-                if ( _mem_read_w[c >> 15]  == read_w)  _mem_read_w[c >> 15] = NULL;
-                if ( _mem_read_l[c >> 15]  == read_l)  _mem_read_l[c >> 15] = NULL;
-                if (_mem_write_b[c >> 15] == write_b) _mem_write_b[c >> 15] = NULL;
-                if (_mem_write_w[c >> 15] == write_w) _mem_write_w[c >> 15] = NULL;
-                if (_mem_write_l[c >> 15] == write_l) _mem_write_l[c >> 15] = NULL;                                
+                if (_mem_priv[c >> 14] == priv)
+                {
+                        if ( _mem_read_b[c >> 14]  == read_b)  _mem_read_b[c >> 14] = NULL;
+                        if ( _mem_read_w[c >> 14]  == read_w)  _mem_read_w[c >> 14] = NULL;
+                        if ( _mem_read_l[c >> 14]  == read_l)  _mem_read_l[c >> 14] = NULL;
+                        if (_mem_write_b[c >> 14] == write_b) _mem_write_b[c >> 14] = NULL;
+                        if (_mem_write_w[c >> 14] == write_w) _mem_write_w[c >> 14] = NULL;
+                        if (_mem_write_l[c >> 14] == write_l) _mem_write_l[c >> 14] = NULL;
+                        _mem_priv[c >> 14] = NULL;
+                }
+        }
+        for (c = base; c < base + size; c += 0x1000)
+        {
+                readlookup2[c >> 12]  = 0xFFFFFFFF;
+                writelookup2[c >> 12] = 0xFFFFFFFF;
         }
 }
 
@@ -1342,7 +1476,7 @@ static int mem_a20_state = 0;
 void mem_a20_recalc()
 {
         int state = mem_a20_key | mem_a20_alt;
-        pclog("A20 recalc %i %i\n", state, mem_a20_state);
+//        pclog("A20 recalc %i %i\n", state, mem_a20_state);
         if (state && !mem_a20_state)
         {
                 rammask = 0xffffffff;
@@ -1353,6 +1487,6 @@ void mem_a20_recalc()
                 rammask = 0xffefffff;
                 flushmmucache();
         }
-        pclog("rammask now %08X\n", rammask);
+//        pclog("rammask now %08X\n", rammask);
         mem_a20_state = state;
 }

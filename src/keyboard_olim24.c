@@ -2,6 +2,7 @@
 #include "io.h"
 #include "mem.h"
 #include "mouse.h"
+#include "pic.h"
 
 #include "keyboard.h"
 #include "keyboard_olim24.h"
@@ -63,7 +64,7 @@ void keyboard_olim24_adddata(uint8_t val)
         return;
 }
 
-void keyboard_olim24_write(uint16_t port, uint8_t val)
+void keyboard_olim24_write(uint16_t port, uint8_t val, void *priv)
 {
         pclog("keyboard_olim24 : write %04X %02X\n", port, val);
 /*        if (ram[8] == 0xc3) 
@@ -138,7 +139,7 @@ void keyboard_olim24_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t keyboard_olim24_read(uint16_t port)
+uint8_t keyboard_olim24_read(uint16_t port, void *priv)
 {
         uint8_t temp;
 //        pclog("keyboard_olim24 : read %04X ", port);
@@ -276,8 +277,8 @@ void mouse_olim24_poll(int x, int y, int b)
 void keyboard_olim24_init()
 {
         //return;
-        io_sethandler(0x0060, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL);
-        io_sethandler(0x0064, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL);
+        io_sethandler(0x0060, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL,  NULL);
+        io_sethandler(0x0064, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL,  NULL);
         keyboard_olim24_reset();
         keyboard_send = keyboard_olim24_adddata;
         keyboard_poll = keyboard_olim24_poll;

@@ -1,180 +1,146 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "ibm.h"
+#include "device.h"
+
 #include "filters.h"
 
-int soundon = 1;
-int16_t *adbuffer,*adbuffer2;
-int16_t *psgbuffer;
-uint16_t *cmsbuffer;
-int16_t *spkbuffer;
-int16_t *outbuffer;
-uint16_t *gusbuffer;
+#include "sound_opl.h"
 
-void initsound()
+#include "sound.h"
+#include "sound_adlib.h"
+#include "sound_adlibgold.h"
+#include "sound_pas16.h"
+#include "sound_sb.h"
+#include "sound_sb_dsp.h"
+#include "sound_wss.h"
+
+#include "timer.h"
+
+int sound_card_current = 0;
+static int sound_card_last = 0;
+
+typedef struct
+{
+        char name[32];
+        device_t *device;
+} SOUND_CARD;
+
+static SOUND_CARD sound_cards[] =
+{
+        {"None",                  NULL},
+        {"Adlib",                 &adlib_device},
+        {"Sound Blaster 1.0",     &sb_1_device},
+        {"Sound Blaster 1.5",     &sb_15_device},
+        {"Sound Blaster 2.0",     &sb_2_device},
+        {"Sound Blaster Pro v1",  &sb_pro_v1_device},
+        {"Sound Blaster Pro v2",  &sb_pro_v1_device},
+        {"Sound Blaster 16",      &sb_16_device},
+        {"Adlib Gold",            &adgold_device},
+        {"Windows Sound System",  &wss_device},        
+        {"Pro Audio Spectrum 16", &pas16_device},
+        {"", NULL}
+};
+
+char *sound_card_getname(int card)
+{
+        return sound_cards[card].name;
+}
+
+void sound_card_init()
+{
+        if (sound_cards[sound_card_current].device)
+                device_add(sound_cards[sound_card_current].device);
+        sound_card_last = sound_card_current;
+}
+
+static struct
+{
+        void (*poll)(void *p);
+        void (*get_buffer)(int16_t *buffer, int len, void *p);
+        void *priv;
+} sound_handlers[8];
+
+static int sound_handlers_num;
+
+static int sound_poll_time = 0, sound_get_buffer_time = 0;
+
+int soundon = 1;
+
+
+static int16_t cd_buffer[SOUNDBUFLEN * 2];
+
+void sound_cd_poll(void *p)
+{
+}
+
+void sound_cd_get_buffer(int16_t *buffer, int len, void *p)
+{
+        int pos, c;
+        ioctl_audio_callback(cd_buffer, (len * 2  * 441) / 480);
+        pos = 0;
+
+        for (c = 0; c < len * 2; c+=2)
+        {
+                buffer[c]     += cd_buffer[((pos >> 16) << 1)]     / 2;
+                buffer[c + 1] += cd_buffer[((pos >> 16) << 1) + 1] / 2;                        
+                pos += 60211; //(44100 * 65536) / 48000;
+        }
+}
+
+static uint16_t *outbuffer;
+
+void sound_init()
 {
         initalmain(0,NULL);
         inital();
-//        install_sound(DIGI_AUTODETECT,MIDI_NONE,0);
-//        as=play_audio_stream(SOUNDBUFLEN,16,1,48000,255,128);
-        adbuffer=malloc((SOUNDBUFLEN)*2);
-        adbuffer2=malloc((SOUNDBUFLEN)*2);
-        psgbuffer=malloc((SOUNDBUFLEN)*2);
-        cmsbuffer=malloc((SOUNDBUFLEN)*2*2);
-        gusbuffer=malloc((SOUNDBUFLEN)*2*2);
-        spkbuffer=malloc(((SOUNDBUFLEN)*2)+32);
-        outbuffer=malloc((SOUNDBUFLEN)*2*2);
+
+        outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int16_t));
+        
+        sound_add_handler(sound_cd_poll, sound_cd_get_buffer, NULL);
 }
 
-int adpoll=0;
-void pollad()
+void sound_add_handler(void (*poll)(void *p), void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
 {
-/*        if (adpoll>=20) return;
-        getadlibl(adbuffer+(adpoll*(48000/200)),48000/200);
-        getadlibr(adbuffer2+(adpoll*(48000/200)),48000/200);
-        adpoll++;*/
-//        printf("ADPOLL %i\n",adpoll);
+        sound_handlers[sound_handlers_num].poll = poll;
+        sound_handlers[sound_handlers_num].get_buffer = get_buffer;
+        sound_handlers[sound_handlers_num].priv = p;
+        sound_handlers_num++;
 }
 
-void polladlib()
+void sound_poll(void *priv)
 {
-        getadlib(adbuffer+(adpoll),adbuffer2+(adpoll),1);
-        adpoll++;
-}
+        int c;
 
-int psgpoll=0;
-void pollpsg()
-{
-        if (psgpoll>=20) return;
-        getpsg(psgbuffer+(psgpoll*(48000/200)),48000/200);
-        psgpoll++;
-}
-
-int cmspoll=0;
-void pollcms()
-{
-        if (cmspoll>=20) return;
-        getcms(cmsbuffer+(cmspoll*(48000/200)*2),48000/200);
-        cmspoll++;
-}
-
-int guspoll=0;
-void pollgussnd()
-{
-        if (guspoll>=20) return;
-        getgus(gusbuffer+(guspoll*(48000/200)*2),48000/200);
-        guspoll++;
-}
-
-int spkpos=0;
-int wasgated = 0;
-void pollspk()
-{
-        if (spkpos>=SOUNDBUFLEN) return;
-//        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
-        if (gated)
-        {
-                if (!pit.m[2] || pit.m[2]==4)
-                   spkbuffer[spkpos]=speakval;
-                else 
-                   spkbuffer[spkpos]=(speakon)?0x1400:0;
-        }
-        else
-           spkbuffer[spkpos]=(wasgated)?0x1400:0;
-        spkpos++;
-        wasgated=0;
+        sound_poll_time += (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
+         
+        for (c = 0; c < sound_handlers_num; c++)
+                sound_handlers[c].poll(sound_handlers[c].priv);
 }
 
 FILE *soundf;
 
-static int16_t cd_buffer[(SOUNDBUFLEN) * 2];
-void pollsound()
+void sound_get_buffer(void *priv)
 {
         int c;
-        int16_t t[4];
-        uint32_t pos;
-//        printf("Pollsound! %i\n",soundon);
-//        if (soundon)
-//        {
-                for (c=0;c<(SOUNDBUFLEN);c++) outbuffer[c<<1]=outbuffer[(c<<1)+1]=0;
-                for (c=0;c<(SOUNDBUFLEN);c++)
-                {
-                        outbuffer[c<<1]+=((adbuffer[c]*mixer.fm_l)>>16);
-                        outbuffer[(c<<1)+1]+=((adbuffer[c]*mixer.fm_r)>>16);
-//                        if (!c) pclog("F %04X %04X %04X\n",adbuffer[c],outbuffer[c<<1],mixer.fm_l);
-                }
-                addsb(outbuffer);
-                for (c=0;c<(SOUNDBUFLEN);c++)
-                {
-//                        if (!c) pclog("M %04X ",outbuffer[c<<1]);
-                        outbuffer[c<<1]=(outbuffer[c<<1]*mixer.master_l)>>16;
-                        outbuffer[(c<<1)+1]=(outbuffer[(c<<1)+1]*mixer.master_r)>>16;
-//                        if (!c) pclog("%04X %04X\n",outbuffer[c<<1],mixer.master_l);
-                }
-                if (mixer.bass_l!=8 || mixer.bass_r!=8 || mixer.treble_l!=8 || mixer.treble_r!=8)
-                {
-                        for (c=0;c<(SOUNDBUFLEN);c++)
-                        {
-                                if (mixer.bass_l>8)   outbuffer[c<<1]    =(outbuffer[c<<1]    +(((int16_t)low_iir(0,(float)outbuffer[c<<1])         *(mixer.bass_l-8))>>1))*((15-mixer.bass_l)+16)>>5;
-                                if (mixer.bass_r>8)   outbuffer[(c<<1)+1]=(outbuffer[(c<<1)+1]+(((int16_t)low_iir(1,(float)outbuffer[(c<<1)+1])     *(mixer.bass_r-8))>>1))*((15-mixer.bass_r)+16)>>5;
-                                if (mixer.treble_l>8) outbuffer[c<<1]    =(outbuffer[c<<1]    +(((int16_t)high_iir(0,(float)outbuffer[c<<1])        *(mixer.treble_l-8))>>1))*((15-mixer.treble_l)+16)>>5;
-                                if (mixer.treble_r>8) outbuffer[(c<<1)+1]=(outbuffer[(c<<1)+1]+(((int16_t)high_iir(1,(float)outbuffer[(c<<1)+1])    *(mixer.treble_r-8))>>1))*((15-mixer.treble_r)+16)>>5;
-                                if (mixer.bass_l<8)   outbuffer[c<<1]    =(outbuffer[c<<1]    +(((int16_t)low_cut_iir(0,(float)outbuffer[c<<1])     *(8-mixer.bass_l))>>1))*(mixer.bass_l+16)>>5;
-                                if (mixer.bass_r<8)   outbuffer[(c<<1)+1]=(outbuffer[(c<<1)+1]+(((int16_t)low_cut_iir(1,(float)outbuffer[(c<<1)+1]) *(8-mixer.bass_r))>>1))*(mixer.bass_r+16)>>5;
-                                if (mixer.treble_l<8) outbuffer[c<<1]    =(outbuffer[c<<1]    +(((int16_t)high_cut_iir(0,(float)outbuffer[c<<1])    *(8-mixer.treble_l))>>1))*(mixer.treble_l+16)>>5;
-                                if (mixer.treble_r<8) outbuffer[(c<<1)+1]=(outbuffer[(c<<1)+1]+(((int16_t)high_cut_iir(1,(float)outbuffer[(c<<1)+1])*(8-mixer.treble_r))>>1))*(mixer.treble_r+16)>>5;
-                        }
-                }
-                for (c=0;c<(SOUNDBUFLEN);c++)
-                {
-                        outbuffer[c<<1]+=(spkbuffer[c]/2);
-                        outbuffer[(c<<1)+1]+=(spkbuffer[c]/2);
-                }
-                for (c=0;c<(SOUNDBUFLEN);c++)
-                {
-                        outbuffer[c<<1]+=(psgbuffer[c]/2);
-                        outbuffer[(c<<1)+1]+=(psgbuffer[c]/2);
-                }
-                for (c=0;c<((SOUNDBUFLEN)*2);c++)
-                    outbuffer[c]+=(cmsbuffer[c]/2);
-                for (c=0;c<((SOUNDBUFLEN)*2);c++)
-                    outbuffer[c]+=(gusbuffer[c]);
-                adddac(outbuffer);
-                ioctl_audio_callback(cd_buffer, ((SOUNDBUFLEN) * 2  * 441) / 480);
-                pos = 0;
-                for (c = 0; c < (SOUNDBUFLEN) * 2; c+=2)
-                {
-                        outbuffer[c]     += cd_buffer[((pos >> 16) << 1)]     / 2;
-                        outbuffer[c + 1] += cd_buffer[((pos >> 16) << 1) + 1] / 2;                        
-//                        outbuffer[c] += (int16_t)((int32_t)cd_buffer[pos >> 16] * (65536 - (pos & 0xffff))) / 65536;
-//                        outbuffer[c] += (int16_t)((int32_t)cd_buffer[(pos >> 16) + 1] * (pos & 0xffff)) / 65536;                        
-                        pos += 60211; //(44100 * 65536) / 48000;
-                }
-                
-//                if (!soundf) soundf=fopen("sound.pcm","wb");
-//                fwrite(outbuffer,(SOUNDBUFLEN)*2*2,1,soundf);
-                if (soundon) givealbuffer(outbuffer);
-//        }
-//        addsb(outbuffer);
-//        adddac(outbuffer);
-        adpoll=0;
-        psgpoll=0;
-        cmspoll=0;
-        spkpos=0;
-        guspoll=0;
+
+        sound_get_buffer_time += (TIMER_USEC * (1000000 / 10));
+
+        memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int16_t));
+
+        for (c = 0; c < sound_handlers_num; c++)
+                sound_handlers[c].get_buffer(outbuffer, SOUNDBUFLEN, sound_handlers[c].priv);
+
+/*        if (!soundf) soundf=fopen("sound.pcm","wb");
+        fwrite(outbuffer,(SOUNDBUFLEN)*2*2,1,soundf);*/
+        
+        if (soundon) givealbuffer(outbuffer);
 }
 
-int sndcount;
-void pollsound60hz()
+void sound_reset()
 {
-//        printf("Poll sound %i\n",sndcount);
-//                pollad();
-                pollpsg();
-                pollcms();
-                pollgussnd();
-                sndcount++;
-                if (sndcount==20)
-                {
-                        sndcount=0;
-                        pollsound();
-                }
+        timer_add(sound_poll, &sound_poll_time, TIMER_ALWAYS_ENABLED, NULL);
+	timer_add(sound_get_buffer, &sound_get_buffer_time, TIMER_ALWAYS_ENABLED, NULL);
+
+        sound_handlers_num = 0;
 }

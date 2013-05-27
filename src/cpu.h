@@ -22,9 +22,13 @@ extern int cpu, cpu_manufacturer;
 #define CPU_Cx486DX 12
 #define CPU_Cx5x86  13
 
+/*586 class CPUs*/
+#define CPU_WINCHIP 14
+
 #define MANU_INTEL 0
 #define MANU_AMD   1
 #define MANU_CYRIX 2
+#define MANU_IDT   3
 
 extern int timing_rr;
 extern int timing_mr, timing_mrl;
@@ -55,6 +59,7 @@ extern CPU cpus_486SDLC[];
 extern CPU cpus_i486[];
 extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
+extern CPU cpus_WinChip[];
 
 extern CPU cpus_pc1512[];
 extern CPU cpus_ibmat[];
@@ -65,7 +70,9 @@ extern int cpu_16bitbus;
 extern int cpu_busspeed;
 extern int cpu_multi;
 
-void cyrix_write(uint16_t addr, uint8_t val);
-uint8_t cyrix_read(uint16_t addr);
+extern int cpu_hasrdtsc;
+
+void cyrix_write(uint16_t addr, uint8_t val, void *priv);
+uint8_t cyrix_read(uint16_t addr, void *priv);
 
 extern int is8086;

@@ -1,6 +1,8 @@
 #include "ibm.h"
 #include "mouse.h"
+#include "pic.h"
 #include "serial.h"
+#include "timer.h"
 
 static int oldb=0;
 
@@ -37,11 +39,12 @@ void mouse_serial_poll(int x, int y, int b)
 void mouse_serial_rcr()
 {
         mousepos=-1;
-        mousedelay=1000;
+        mousedelay=5000 * (1 << TIMER_SHIFT);
 }
         
 void mousecallback()
 {
+	mousedelay = 0;
         if (mousepos == -1)
         {
                 mousepos = 0;
@@ -62,5 +65,6 @@ void mouse_serial_init()
 {
         mouse_poll = mouse_serial_poll;
         serial_rcr = mouse_serial_rcr;
+        timer_add(mousecallback, &mousedelay, &mousedelay,  NULL);
 }
 

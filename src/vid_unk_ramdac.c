@@ -9,7 +9,7 @@
 static int unk_state=0;
 static uint8_t unk_ctrl;
 
-void unk_ramdac_out(uint16_t addr, uint8_t val)
+void unk_ramdac_out(uint16_t addr, uint8_t val, void *priv)
 {
         //pclog("OUT RAMDAC %04X %02X\n",addr,val);
         switch (addr)
@@ -42,10 +42,10 @@ void unk_ramdac_out(uint16_t addr, uint8_t val)
                 unk_state = 0;
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t unk_ramdac_in(uint16_t addr)
+uint8_t unk_ramdac_in(uint16_t addr, void *priv)
 {
         //pclog("IN RAMDAC %04X\n",addr);
         switch (addr)
@@ -62,5 +62,5 @@ uint8_t unk_ramdac_in(uint16_t addr)
                 unk_state = 0;
                 break;
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }

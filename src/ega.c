@@ -16,7 +16,6 @@ uint8_t svga3d8;
 
 uint8_t oldvram=0;
 int frames;
-int incga=1;
 int hsync;
 uint8_t cgastat;
 
@@ -36,7 +35,7 @@ uint8_t *vram;
 
 int egares;
 
-uint8_t seqregs[32];
+uint8_t seqregs[64];
 int seqaddr;
 
 uint8_t oak_regs[32];
@@ -54,7 +53,8 @@ int palchange=1;
 
 int fullchange;
 
-float dispontime,dispofftime,disptime;
+int dispontime,dispofftime;
+double disptime;
 
 int ega_vtotal,ega_dispend,ega_vsyncstart,ega_split,ega_hdisp,ega_rowoffset;
 int vidclock;
@@ -135,8 +135,6 @@ void initega()
                 }
         }
         crtc[0xC]=crtc[0xD]=0;
-        if (romset==ROM_PC1640 || romset==ROM_PC1512) incga=1;
-        else                    incga=0;
         for (c=0;c<4;c++)
         {
                 for (d=0;d<4;d++)
@@ -277,6 +275,7 @@ int ega_getdepth()
                 if (TRIDENT || ET4000W32) return bpp;
                 return 8;
         }
+        return 0;
 }
 
 int ega_getx()

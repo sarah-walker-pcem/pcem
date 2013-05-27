@@ -31,6 +31,7 @@
 #define IDC_CHECK2 1011
 #define IDC_CHECK3 1012
 #define IDC_CHECK4 1013
+#define IDC_CHECKGUS 1014
 #define IDC_STATIC 1020
 #define IDC_EDIT1  1030
 #define IDC_EDIT2  1031

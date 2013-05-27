@@ -1,9 +1,11 @@
 /*Vertical timings*/
 extern int svga_vtotal, svga_dispend, svga_vsyncstart, svga_split;
 /*Horizontal timings*/
-extern int svga_hdisp, svga_htotal, svga_rowoffset;
+extern int svga_hdisp, svga_htotal, svga_hdisp_time, svga_rowoffset;
 /*Flags - svga_lowres = 1/2 clock in 256+ colour modes, svga_interlace = interlace mode enabled*/
 extern int svga_lowres, svga_interlace;
+
+extern int svga_linedbl, svga_rowcount;
 
 /*Status of display on*/
 extern int svga_hdisp_on;
@@ -35,19 +37,24 @@ extern SVGA_HWCURSOR svga_hwcursor, svga_hwcursor_latch;
 extern int      svga_hwcursor_on;
 extern void   (*svga_hwcursor_draw)(int displine);
 
-uint8_t  svga_read(uint32_t addr);
-uint16_t svga_readw(uint32_t addr);
-uint32_t svga_readl(uint32_t addr);
-void     svga_write(uint32_t addr, uint8_t val);
-void     svga_writew(uint32_t addr, uint16_t val);
-void     svga_writel(uint32_t addr, uint32_t val);
-uint8_t  svga_read_linear(uint32_t addr);
-uint16_t svga_readw_linear(uint32_t addr);
-uint32_t svga_readl_linear(uint32_t addr);
-void     svga_write_linear(uint32_t addr, uint8_t val);
-void     svga_writew_linear(uint32_t addr, uint16_t val);
-void     svga_writel_linear(uint32_t addr, uint32_t val);
+uint8_t  svga_read(uint32_t addr, void *priv);
+uint16_t svga_readw(uint32_t addr, void *priv);
+uint32_t svga_readl(uint32_t addr, void *priv);
+void     svga_write(uint32_t addr, uint8_t val, void *priv);
+void     svga_writew(uint32_t addr, uint16_t val, void *priv);
+void     svga_writel(uint32_t addr, uint32_t val, void *priv);
+uint8_t  svga_read_linear(uint32_t addr, void *priv);
+uint16_t svga_readw_linear(uint32_t addr, void *priv);
+uint32_t svga_readl_linear(uint32_t addr, void *priv);
+void     svga_write_linear(uint32_t addr, uint8_t val, void *priv);
+void     svga_writew_linear(uint32_t addr, uint16_t val, void *priv);
+void     svga_writel_linear(uint32_t addr, uint32_t val, void *priv);
 
 void svga_doblit(int y1, int y2);
 
 extern uint32_t svga_vram_limit;
+
+extern uint8_t svga_rotate[8][256];
+
+void svga_out(uint16_t addr, uint8_t val, void *priv);
+uint8_t svga_in(uint16_t addr, void *priv);

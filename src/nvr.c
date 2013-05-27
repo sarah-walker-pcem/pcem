@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <windows.h>
 #include "ibm.h"
+#include "io.h"
 #include "nvr.h"
+#include "pic.h"
+#include "timer.h"
 
 int oldromset;
 int nvrmask=63;
@@ -9,6 +12,8 @@ uint8_t nvrram[128];
 int nvraddr;
 
 SYSTEMTIME systemtime;
+
+int nvr_dosave = 0;
 
 void getnvrtime()
 {
@@ -51,9 +56,9 @@ void getnvrtime()
 void nvr_recalc()
 {
         int c;
-        float newrtctime;
+        int newrtctime;
         c=1<<((nvrram[0xA]&0xF)-1);
-        newrtctime=RTCCONST*(float)c;
+        newrtctime=(int)(RTCCONST * c * (1 << TIMER_SHIFT));
         if (rtctime>newrtctime) rtctime=newrtctime;
 }
 
@@ -62,11 +67,11 @@ void nvr_rtc()
         int c;
         if (!(nvrram[0xA]&0xF))
         {
-                rtctime=99999999;
+                rtctime=0x7fffffff;
                 return;
         }
         c=1<<((nvrram[0xA]&0xF)-1);
-        rtctime+=RTCCONST*(float)c;
+        rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
 //        pclog("RTCtime now %f\n",rtctime);
         nvrram[0xC]=0x40;
         if (nvrram[0xB]&0x40)
@@ -78,7 +83,7 @@ void nvr_rtc()
         }
 }
 
-void writenvr(uint16_t addr, uint8_t val)
+void writenvr(uint16_t addr, uint8_t val, void *priv)
 {
         int c;
 //        printf("Write NVR %03X %02X %02X %04X:%04X %i\n",addr,nvraddr,val,cs>>4,pc,ins);
@@ -86,7 +91,7 @@ void writenvr(uint16_t addr, uint8_t val)
         {
 //                if (nvraddr == 0x33) pclog("NVRWRITE33 %02X %04X:%04X %i\n",val,CS,pc,ins);
                 if (nvraddr >= 0xe && nvrram[nvraddr] != val) 
-                   savenvr();
+                   nvr_dosave = 1;
                 if (nvraddr!=0xC && nvraddr!=0xD) nvrram[nvraddr]=val;
                 
                 if (nvraddr==0xA)
@@ -95,16 +100,16 @@ void writenvr(uint16_t addr, uint8_t val)
                         if (val&0xF)
                         {
                                 c=1<<((val&0xF)-1);
-                                rtctime+=RTCCONST*(float)c;
+                                rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
                         }
                         else
-                           rtctime=99999999;
+                           rtctime = 0x7fffffff;
                 }
         }
         else        nvraddr=val&nvrmask;
 }
 
-uint8_t readnvr(uint16_t addr)
+uint8_t readnvr(uint16_t addr, void *priv)
 {
         uint8_t temp;
 //        printf("Read NVR %03X %02X %02X %04X:%04X\n",addr,nvraddr,nvrram[nvraddr],cs>>4,pc);
@@ -157,6 +162,7 @@ void loadnvr()
                 case ROM_AMI486:   f = romfopen("ami486.nvr",  "rb"); nvrmask = 127; break;
                 case ROM_WIN486:   f = romfopen("win486.nvr",  "rb"); nvrmask = 127; break;
                 case ROM_PCI486:   f = romfopen("hot-433.nvr", "rb"); nvrmask = 127; break;
+                case ROM_430VX:    f = romfopen("hot-433.nvr", "rb"); nvrmask = 127; break;
                 default: return;
         }
         if (!f)
@@ -169,7 +175,7 @@ void loadnvr()
         nvrram[0xA]=6;
         nvrram[0xB]=0;
         c=1<<((6&0xF)-1);
-        rtctime+=RTCCONST*(float)c;
+        rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
 }
 void savenvr()
 {
@@ -178,7 +184,7 @@ void savenvr()
         {
                 case ROM_PC1512:   f = romfopen("pc1512.nvr" , "wb"); break;
                 case ROM_PC1640:   f = romfopen("pc1640.nvr" , "wb"); break;
-                case ROM_PC200:    f = romfopen("pc200.nvr"  , "wb");  break;
+                case ROM_PC200:    f = romfopen("pc200.nvr"  , "wb"); break;
                 case ROM_PC2086:   f = romfopen("pc2086.nvr" , "wb"); break;
                 case ROM_PC3086:   f = romfopen("pc3086.nvr" , "wb"); break;
                 case ROM_IBMAT:    f = romfopen("at.nvr"     , "wb"); break;
@@ -192,6 +198,7 @@ void savenvr()
                 case ROM_AMI486:   f = romfopen("ami486.nvr" , "wb"); break;
                 case ROM_WIN486:   f = romfopen("win486.nvr" , "wb"); break;
                 case ROM_PCI486:   f = romfopen("hot-433.nvr", "wb"); break;                
+                case ROM_430VX:    f = romfopen("hot-433.nvr", "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);
@@ -200,5 +207,6 @@ void savenvr()
 
 void nvr_init()
 {
-        io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL);
+        io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL,  NULL);
+        timer_add(nvr_rtc, &rtctime, TIMER_ALWAYS_ENABLED, NULL);
 }

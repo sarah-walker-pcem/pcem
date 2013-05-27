@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "model.h"
 #include "io.h"
+#include "x86_ops.h"
 
 int cpu = 3, cpu_manufacturer = 0;
 CPU *cpu_s;
@@ -9,6 +10,7 @@ int cpu_multi;
 int cpu_iscyrix;
 int cpu_16bitbus;
 int cpu_busspeed;
+int cpu_hasrdtsc;
 
 int timing_rr;
 int timing_mr, timing_mrl;
@@ -32,6 +34,9 @@ int timing_bt, timing_bnt;
         12 = 133 MHz
         13 = 150 MHz
         14 = 160 MHz
+        15 = 166 MHz
+        16 = 180 MHz
+        17 = 200 MHz
 */
 
 CPU cpus_8088[] =
@@ -197,6 +202,23 @@ CPU cpus_Cx486[] =
         {"",             -1,        0, 0, 0}
 };
 
+CPU cpus_WinChip[] =
+{
+        /*IDT WinChip*/
+        {"WinChip 75",   CPU_WINCHIP,  7,  75000000, 2, 0x540, 0x540, 0},
+        {"WinChip 90",   CPU_WINCHIP,  9,  90000000, 2, 0x540, 0x540, 0},
+        {"WinChip 100",  CPU_WINCHIP, 10, 100000000, 2, 0x540, 0x540, 0},
+        {"WinChip 120",  CPU_WINCHIP, 11, 120000000, 2, 0x540, 0x540, 0},
+        {"WinChip 133",  CPU_WINCHIP, 12, 133333333, 2, 0x540, 0x540, 0},
+        {"WinChip 150",  CPU_WINCHIP, 13, 150000000, 3, 0x540, 0x540, 0},        
+        {"WinChip 166",  CPU_WINCHIP, 15, 166666666, 3, 0x540, 0x540, 0},
+        {"WinChip 180",  CPU_WINCHIP, 16, 180000000, 3, 0x540, 0x540, 0},
+        {"WinChip 200",  CPU_WINCHIP, 17, 200000000, 3, 0x540, 0x540, 0},
+        {"WinChip 225",  CPU_WINCHIP, 17, 225000000, 3, 0x540, 0x540, 0},
+        {"WinChip 240",  CPU_WINCHIP, 17, 240000000, 6, 0x540, 0x540, 0},
+        {"",             -1,        0, 0, 0}
+};
+
 void cpu_set_edx()
 {
         EDX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
@@ -216,17 +238,37 @@ void cpu_set()
         if (cpu_s->multi) 
            cpu_busspeed = cpu_s->rspeed / cpu_s->multi;
         cpu_multi = cpu_s->multi;
+        cpu_hasrdtsc = 0;
         
         if (cpu_iscyrix)
-           io_sethandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL);
+           io_sethandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL, NULL);
         else
-           io_removehandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL);
+           io_removehandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL, NULL);
         
         pclog("hasfpu - %i\n",hasfpu);
         pclog("is486 - %i  %i\n",is486,cpu_s->cpu_type);
-        
+
+        x86_setopcodes(ops_386, ops_386_0f);
+                        
         switch (cpu_s->cpu_type)
         {
+                case CPU_8088:
+                case CPU_8086:
+                break;
+                
+                case CPU_286:
+                x86_setopcodes(ops_286, ops_286_0f);
+                timing_rr  = 2;   /*register dest - register src*/
+                timing_rm  = 7;   /*register dest - memory src*/
+                timing_mr  = 7;   /*memory dest   - register src*/
+                timing_mm  = 7;   /*memory dest   - memory src*/
+                timing_rml = 9;   /*register dest - memory src long*/
+                timing_mrl = 11;  /*memory dest   - register src long*/
+                timing_mml = 11;  /*memory dest   - memory src*/
+                timing_bt  = 7-3; /*branch taken*/
+                timing_bnt = 3;   /*branch not taken*/
+                break;
+
                 case CPU_386SX:
                 timing_rr  = 2;   /*register dest - register src*/
                 timing_rm  = 6;   /*register dest - memory src*/
@@ -326,6 +368,22 @@ void cpu_set()
                 timing_bt  = 5-1; /*branch taken*/
                 timing_bnt = 1; /*branch not taken*/
                 break;
+
+                case CPU_WINCHIP:
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 3-1; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                cpu_hasrdtsc = 1;
+                break;
+                
+                default:
+                fatal("cpu_set : unknown CPU type %i\n", cpu_s->cpu_type);
         }
 }
 
@@ -354,6 +412,7 @@ void cpu_CPUID()
                 case CPU_Am486SX:
                 if (!EAX)
                 {
+                        EAX = 1;
                         EBX = 0x68747541;
                         ECX = 0x444D4163;
                         EDX = 0x69746E65;
@@ -370,9 +429,28 @@ void cpu_CPUID()
                 case CPU_Am486DX:
                 if (!EAX)
                 {
+                        EAX = 1;
                         EBX = 0x68747541;
                         ECX = 0x444D4163;
                         EDX = 0x69746E65;
+                }
+                else if (EAX == 1)
+                {
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = 1; /*FPU*/
+                }
+                else
+                   EAX = 0;
+                break;
+                
+                case CPU_WINCHIP:
+                if (!EAX)
+                {
+                        EAX = 1;
+                        EBX = 0x746e6543; /*CentaurHauls*/
+                        ECX = 0x736c7561;                        
+                        EDX = 0x48727561;
                 }
                 else if (EAX == 1)
                 {
@@ -389,13 +467,13 @@ void cpu_CPUID()
 
 static int cyrix_addr;
 
-void cyrix_write(uint16_t addr, uint8_t val)
+void cyrix_write(uint16_t addr, uint8_t val, void *priv)
 {
         if (!(addr & 1)) cyrix_addr = val;
 //        else pclog("Write Cyrix %02X %02X\n",cyrix_addr,val);
 }
 
-uint8_t cyrix_read(uint16_t addr)
+uint8_t cyrix_read(uint16_t addr, void *priv)
 {
         if (addr & 1)
         {

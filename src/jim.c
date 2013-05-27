@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "ibm.h"
+#include "io.h"
 
 uint8_t europcdat[16];
 struct 
@@ -10,7 +11,7 @@ struct
         int addr;
 } europc_rtc;
 
-void writejim(uint16_t addr, uint8_t val)
+void writejim(uint16_t addr, uint8_t val, void *p)
 {
         if ((addr&0xFF0)==0x250) europcdat[addr&0xF]=val;
         switch (addr)
@@ -38,7 +39,7 @@ void writejim(uint16_t addr, uint8_t val)
 //        printf("Write JIM %04X %02X\n",addr,val);
 }
 
-uint8_t readjim(uint16_t addr)
+uint8_t readjim(uint16_t addr, void *p)
 {
 //        printf("Read JIM %04X\n",addr);
         switch (addr)
@@ -74,5 +75,5 @@ void jim_init()
         else viddat=0x10;
         europc_rtc.dat[0xB]=viddat;
         europc_rtc.dat[0xD]=viddat; /*Checksum*/
-        io_sethandler(0x250, 0x10, readjim, NULL, NULL, writejim, NULL, NULL);
+        io_sethandler(0x250, 0x10, readjim, NULL, NULL, writejim, NULL, NULL, NULL);
 }

@@ -1,7 +1,9 @@
 #include "ibm.h"
-#include "video.h"
-#include "io.h"
+
 #include "dma.h"
+#include "fdc.h"
+#include "io.h"
+#include "video.h"
 
 extern int ins;
 int output;
@@ -38,10 +40,10 @@ void dma_reset()
         dma16.m=0;
 }
 
-uint8_t dma_read(uint16_t addr)
+uint8_t dma_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
-//        printf("Read DMA %04X %04X:%04X\n",addr,cs>>4,pc);
+//        printf("Read DMA %04X %04X:%04X %i %02X\n",addr,CS,pc, pic_intpending, pic.pend);
         switch (addr&0xF)
         {
                 case 0:
@@ -69,7 +71,8 @@ uint8_t dma_read(uint16_t addr)
                 case 8: /*Status register*/
                 temp=dma.stat;
                 dma.stat=0;
-                return temp|1;
+//                pclog("Read DMA status %02X\n", temp);
+                return temp;
                 case 0xD:
                 return 0;
         }
@@ -77,9 +80,9 @@ uint8_t dma_read(uint16_t addr)
         return dmaregs[addr&0xF];
 }
 
-void dma_write(uint16_t addr, uint8_t val)
+void dma_write(uint16_t addr, uint8_t val, void *priv)
 {
-//        printf("Write DMA %04X %02X %04X:%04X\n",addr,val,CS,pc);
+        printf("Write DMA %04X %02X %04X:%04X\n",addr,val,CS,pc);
         dmaregs[addr&0xF]=val;
         switch (addr&0xF)
         {
@@ -122,7 +125,7 @@ void dma_write(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t dma16_read(uint16_t addr)
+uint8_t dma16_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
 //        printf("Read DMA %04X %04X:%04X\n",addr,cs>>4,pc);
@@ -154,12 +157,12 @@ uint8_t dma16_read(uint16_t addr)
                 case 8: /*Status register*/
                 temp=dma16.stat;
                 dma16.stat=0;
-                return temp|1;
+                return temp;
         }
         return dma16regs[addr&0xF];
 }
 
-void dma16_write(uint16_t addr, uint8_t val)
+void dma16_write(uint16_t addr, uint8_t val, void *priv)
 {
 //        printf("Write dma16 %04X %02X %04X:%04X\n",addr,val,CS,pc);
         addr>>=1;
@@ -205,14 +208,14 @@ void dma16_write(uint16_t addr, uint8_t val)
 }
 
 uint8_t dmapages[16];
-static int primed = 0;
-void dma_page_write(uint16_t addr, uint8_t val)
+
+void dma_page_write(uint16_t addr, uint8_t val, void *priv)
 {
-        if (!(addr&0xF))
-        {
-//                printf("Write page %03X %02X %04X:%04X\n",addr,val,CS,pc);
+/*        if (!(addr&0xF))
+        {*/
+                pclog("Write page %03X %02X %04X:%04X\n",addr,val,CS,pc);
 //                if (val==0x29 && pc==0xD25) output=1;
-        }
+//        }
         dmapages[addr&0xF]=val;
         switch (addr&0xF)
         {
@@ -233,21 +236,21 @@ void dma_page_write(uint16_t addr, uint8_t val)
 //        printf("Page write %04X %02X\n",addr,val);
 }
 
-uint8_t dma_page_read(uint16_t addr)
+uint8_t dma_page_read(uint16_t addr, void *priv)
 {
         return dmapages[addr&0xF];
 }
 
 void dma_init()
 {
-        io_sethandler(0x0000, 0x0010, dma_read,      NULL, NULL, dma_write,      NULL, NULL);
-        io_sethandler(0x0080, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL);
+        io_sethandler(0x0000, 0x0010, dma_read,      NULL, NULL, dma_write,      NULL, NULL,  NULL);
+        io_sethandler(0x0080, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL,  NULL);
 }
 
 void dma16_init()
 {
-        io_sethandler(0x00C0, 0x0020, dma16_read,    NULL, NULL, dma16_write,    NULL, NULL);
-        io_sethandler(0x0088, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL);
+        io_sethandler(0x00C0, 0x0020, dma16_read,    NULL, NULL, dma16_write,    NULL, NULL,  NULL);
+        io_sethandler(0x0088, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL,  NULL);
 }
 
 
@@ -256,11 +259,11 @@ uint8_t _dma_read(uint32_t addr)
         switch (addr&0xFFFF8000)
         {
                 case 0xA0000: case 0xA8000:
-                return video_read_a000(addr);
+                return video_read_a000(addr, NULL);
                 case 0xB0000:
-                return video_read_b000(addr);
+                return video_read_b000(addr, NULL);
                 case 0xB8000:
-                return video_read_b800(addr);
+                return video_read_b800(addr, NULL);
         }
         if (isram[addr>>16]) return ram[addr];
         return 0xff;
@@ -271,19 +274,20 @@ void _dma_write(uint32_t addr, uint8_t val)
         switch (addr&0xFFFF8000)
         {
                 case 0xA0000: case 0xA8000:
-                video_write_a000(addr,val);
+                video_write_a000(addr,val, NULL);
                 return;
                 case 0xB0000:
-                video_write_b000(addr,val);
+                video_write_b000(addr,val, NULL);
                 return;
                 case 0xB8000:
-                video_write_b800(addr,val);
+                video_write_b800(addr,val, NULL);
                 return;
                 case 0xC0000: case 0xC8000: case 0xD0000: case 0xD8000:
                 case 0xE0000: case 0xE8000: case 0xF0000: case 0xF8000:
                 return;
         }
-        if (isram[addr>>16]) ram[addr]=val;
+        if (isram[addr >> 16]) 
+                ram[addr] = val;
 }
 /*void writedma2(uint8_t val)
 {
@@ -301,10 +305,144 @@ void _dma_write(uint32_t addr, uint8_t val)
         }
 }*/
 
+int dma_channel_read(int channel)
+{
+        uint16_t temp;
+
+        if (channel < 4)
+        {
+//                pclog("Read DMA channel %i\n", channel);
+                if (dma.m & (1 << channel))
+                        return DMA_NODATA;
+                if ((dma.mode[channel] & 0xC) != 8)
+                        return DMA_NODATA;
+                temp = _dma_read(dma.ac[channel] + (dma.page[channel] << 16)); //ram[(dma.ac[2]+(dma.page[2]<<16))&rammask];
+//                pclog("                - %02X %05X\n", temp, dma.ac[channel] + (dma.page[channel] << 16));
+                if (dma.mode[channel] & 0x20) dma.ac[channel]--;
+                else                          dma.ac[channel]++;
+                dma.cc[channel]--;
+                if (!dma.cc[channel] && (dma.mode[channel] & 0x10))
+                {
+                        dma.cc[channel] = dma.cb[channel] + 1;
+                        dma.ac[channel] = dma.ab[channel];
+                        dma.stat |= (1 << channel);
+                }
+                else if (dma.cc[channel]<=-1)
+                {
+                        dma.m |= (1 << channel);
+                        dma.stat |= (1 << channel);
+                }
+                return temp;
+        }
+        else
+        {
+                channel &= 3;
+                if (dma16.m & (1 << channel))
+                        return DMA_NODATA;
+                if ((dma16.mode[channel] & 0xC) != 8)
+                        return DMA_NODATA;
+                temp =  _dma_read((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16)) |
+                       (_dma_read((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16) + 1) << 8);
+                if (dma16.mode[channel] & 0x20) dma16.ac[channel]--;
+                else                            dma16.ac[channel]++;
+                dma16.cc[channel]--;
+                if (!dma16.cc[channel] && (dma16.mode[channel] & 0x10))
+                {
+                        dma16.cc[channel] = dma16.cb[channel] + 1;
+                        dma16.ac[channel] = dma16.ab[channel];
+                        dma16.stat |= (1 << channel);
+                }
+                else if (dma16.cc[channel]<=-1)
+                {
+                        dma16.m |= (1 << channel);
+                        dma16.stat |= (1 << channel);
+                }
+                return temp;
+        }
+}
+
+int dma_channel_write(int channel, uint16_t val)
+{
+        if (channel < 4)
+        {
+                if (dma.m & (1 << channel))
+                        return DMA_NODATA;
+                if ((dma.mode[channel] & 0xC) != 4)
+                        return DMA_NODATA;
+                _dma_write(dma.ac[channel] + (dma.page[channel] << 16), val);
+                if (dma.mode[channel]&0x20) dma.ac[channel]--;
+                else                        dma.ac[channel]++;
+                dma.cc[channel]--;
+                if (!dma.cc[channel] && (dma.mode[channel] & 0x10))
+                {
+                        dma.cc[channel] = dma.cb[channel] + 1;
+                        dma.ac[channel] = dma.ab[channel];
+                        dma.stat |= (1 << channel);
+                }
+                else if (dma.cc[channel]<=-1)
+                {
+                        dma.m    |= (1 << channel);
+                        dma.stat |= (1 << channel);
+                }
+        }
+        else
+        {
+                channel &= 3;
+                if (dma16.m & (1 << channel))
+                        return DMA_NODATA;
+                if ((dma16.mode[channel] & 0xC) != 4)
+                        return DMA_NODATA;
+                _dma_write((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16),     val);
+                _dma_write((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16) + 1, val >> 8);                
+                if (dma16.mode[channel]&0x20) dma16.ac[channel]--;
+                else                          dma16.ac[channel]++;
+                dma16.cc[channel]--;
+                if (!dma16.cc[channel] && (dma16.mode[channel] & 0x10))
+                {
+                        dma16.cc[channel] = dma16.cb[channel] + 1;
+                        dma16.ac[channel] = dma16.ab[channel];
+                        dma16.stat |= (1 << channel);
+                }
+                else if (dma16.cc[channel] <= -1)
+                {
+                        dma16.m    |= (1 << channel);
+                        dma16.stat |= (1 << channel);
+                }
+        }
+        return 0;
+}
+
+extern int sbbufferpos;
+int readdma1()
+{
+        uint8_t temp;
+        pclog("readdma1 : Read DMA1 %02X %02X %i\n",dma.m,dma.mode[1], dma.cc[1]);
+        if (dma.m & (1 << 1))
+                return DMA_NODATA;
+        if ((dma.mode[1]&0xC)!=8)
+                return DMA_NODATA;
+        temp=_dma_read((dma.ac[1]+(dma.page[1]<<16))&rammask); //ram[(dma.ac[2]+(dma.page[2]<<16))&rammask];
+        pclog("readdma1 : DMA1 %02X %05X\n",temp,(dma.ac[1]+(dma.page[1]<<16))&rammask);
+        if (dma.mode[1]&0x20) dma.ac[1]--;
+        else                  dma.ac[1]++;
+        dma.cc[1]--;
+        if (!dma.cc[1] && (dma.mode[1]&0x10))
+        {
+                dma.cc[1]=dma.cb[1]+1;
+                dma.ac[1]=dma.ab[1];
+                dma.stat |= (1 << 1);
+        }
+        else if (dma.cc[1]<=-1)
+        {
+                dma.m |= (1 << 1);
+                dma.stat |= (1 << 1);
+        }
+        return temp;
+}
 uint8_t readdma2()
 {
         uint8_t temp;
-//        pclog("Read DMA2 %02X %02X\n",dma.m,dma.mode[2]);
+//        pclog("Read DMA2 %02X %02X %i\n",dma.m,dma.mode[2], dma.cc[2]);
         if (dma.m&4)
         {
                 fdc_abort();
@@ -324,12 +462,68 @@ uint8_t readdma2()
         {
                 dma.cc[2]=dma.cb[2]+1;
                 dma.ac[2]=dma.ab[2];
+                dma.stat |= (1 << 2);
         }
         else if (dma.cc[2]<=-1)
-           dma.m|=4;
+        {
+                dma.m|=4;
+                dma.stat |= (1 << 2);
+        }
+        return temp;
+}
+int readdma3()
+{
+        uint8_t temp;
+//        pclog("Read DMA1 %02X %02X %i\n",dma.m,dma.mode[1], dma.cc[1]);
+        if (dma.m & (1 << 3))
+                return DMA_NODATA;
+        if ((dma.mode[3]&0xC)!=8)
+                return DMA_NODATA;
+        temp=_dma_read((dma.ac[3]+(dma.page[3]<<16))&rammask); //ram[(dma.ac[2]+(dma.page[2]<<16))&rammask];
+        //pclog("DMA3 %02X %05X\n",temp,(dma.ac[3]+(dma.page[3]<<16))&rammask);
+        if (dma.mode[3]&0x20) dma.ac[3]--;
+        else                  dma.ac[3]++;
+        dma.cc[3]--;
+        if (!dma.cc[3] && (dma.mode[3]&0x10))
+        {
+                dma.cc[3]=dma.cb[3]+1;
+                dma.ac[3]=dma.ab[3];
+                dma.stat |= (1 << 3);
+        }
+        else if (dma.cc[3]<=-1)
+        {
+                dma.m |= (1 << 3);
+                dma.stat |= (1 << 3);
+        }
         return temp;
 }
 
+void writedma1(uint8_t temp)
+{
+//        pclog("Write DMA1 %02X %02X %04X\n",dma.m,dma.mode[1],dma.cc[1]);
+        if (dma.m & (1 << 1))
+                return;
+        if ((dma.mode[1] & 0xC) != 4)
+                return;
+//        pclog("Write %05X %05X %02X\n",(dma.ac[2]+(dma.page[2]<<16)),rammask,temp);
+//        ram[(dma.ac[2]+(dma.page[2]<<16))&rammask]=temp;
+        _dma_write((dma.ac[1]+(dma.page[1]<<16))&rammask,temp);
+        if (dma.mode[1]&0x20) dma.ac[1]--;
+        else                  dma.ac[1]++;
+        dma.cc[1]--;
+        if (!dma.cc[1] && (dma.mode[1]&0x10))
+        {
+                dma.cc[1]=dma.cb[1]+1;
+                dma.ac[1]=dma.ab[1];
+                dma.stat |= (1 << 1);
+        }
+        else if (dma.cc[1]<=-1)
+        {
+//                pclog("Reached TC\n");
+                dma.m |= (1 << 1);
+                dma.stat |= (1 << 1);
+        }
+}
 void writedma2(uint8_t temp)
 {
 //        pclog("Write DMA2 %02X %02X %04X\n",dma.m,dma.mode[2],dma.cc[2]);
@@ -353,35 +547,41 @@ void writedma2(uint8_t temp)
         {
                 dma.cc[2]=dma.cb[2]+1;
                 dma.ac[2]=dma.ab[2];
+                dma.stat |= (1 << 2);
         }
         else if (dma.cc[2]<=-1)
         {
 //                pclog("Reached TC\n");
                 fdc_abort();
                 dma.m|=4;
+                dma.stat |= (1 << 2);
         }
 }
-
-uint8_t readdma1()
+void writedma3(uint8_t temp)
 {
-        uint8_t temp=0;
-        /*if ((dma.ac[1]+(dma.page[1]<<16))<0x800000)  */temp=ram[(dma.ac[1]+(dma.page[1]<<16))&rammask];
-//        printf("Read DMA1 from %05X %02X %04X %02X %i\n",dma.ac[1]+(dma.page[1]<<16),dma.mode[1],dma.cc[1],temp,dmaon[1]);
-        if (!dmaon[1])
+//        pclog("Write DMA3 %02X %02X %04X\n",dma.m,dma.mode[3],dma.cc[3]);
+        if (dma.m & (1 << 3))
+                return;
+        if ((dma.mode[3] & 0xC) != 4)
+                return;
+//        pclog("Write %05X %05X %02X\n",(dma.ac[2]+(dma.page[2]<<16)),rammask,temp);
+//        ram[(dma.ac[2]+(dma.page[2]<<16))&rammask]=temp;
+        _dma_write((dma.ac[3]+(dma.page[3]<<16))&rammask,temp);
+        if (dma.mode[3]&0x20) dma.ac[3]--;
+        else                  dma.ac[3]++;
+        dma.cc[3]--;
+        if (!dma.cc[3] && (dma.mode[3]&0x10))
         {
-//                printf("DMA off!\n");
-                return temp;
+                dma.cc[3]=dma.cb[3]+1;
+                dma.ac[3]=dma.ab[3];
+                dma.stat |= (1 << 3);
         }
-        dma.ac[1]++;
-        dma.cc[1]--;
-        if (dma.cc[1]<=-1 && (dma.mode[1]&0x10))
+        else if (dma.cc[3]<=-1)
         {
-                dma.cc[1]=dma.cb[1];
-                dma.ac[1]=dma.ab[1];
+//                pclog("Reached TC\n");
+                dma.m |= (1 << 3);
+                dma.stat |= (1 << 3);
         }
-        else if (dma.cc[1]<=-1)
-           dmaon[1]=0;
-        return temp;
 }
 
 uint16_t readdma5()
@@ -402,26 +602,16 @@ uint16_t readdma5()
         {
                 dma16.cc[1]=dma16.cb[1];
                 dma16.ac[1]=dma16.ab[1];
+                dma16.stat |= (1 << 1);
         }
         else if (dma16.cc[1]<=-1)
-           dma16on[1]=0;
+        {
+                dma16on[1]=0;
+                dma16.stat |= (1 << 1);
+        }
         return temp;
 }
 
-void writedma1(uint8_t temp)
-{
-        if (!dmaon[1]) return;
-        ram[(dma.ac[1]+(dma.page[1]<<16))&rammask]=temp;
-        dma.ac[1]++;
-        dma.cc[1]--;
-        if (!dma.cc[1] && (dma.mode[1]&0x10))
-        {
-                dma.cc[1]=dma.cb[1]+1;
-                dma.ac[1]=dma.ab[1];
-        }
-        else if (dma.cc[1]<=-1)
-           dmaon[1]=0;
-}
 void writedma5(uint16_t temp)
 {
         if (!dma16on[1]) return;
@@ -434,31 +624,15 @@ void writedma5(uint16_t temp)
         {
                 dma16.cc[1]=dma16.cb[1];
                 dma16.ac[1]=dma16.ab[1];
+                dma16.stat |= (1 << 1);
         }
         else if (dma16.cc[1]<=-1)
-           dma16on[1]=0;
+        {
+                dma16on[1]=0;
+                dma16.stat |= (1 << 1);
+        }
 }
 
-int readdma3()
-{
-        uint8_t temp=ram[((dma.page[3]<<16)+dma.ac[3])&rammask];
-        if (dma.m&8)
-        {
-                return -1;
-        }
-//        printf("Read DMA 3 - %02X %05X %i\n",temp,(dma.page[3]<<16)+dma.ac[3],dma.cc[3]);
-        if (!(dma.m&8))
-        {
-                dma.ac[3]++;
-                dma.cc[3]--;
-                if (dma.cc[3]==-1)
-                {
-                        dma.m|=8;
-                        dma.stat|=8;
-                }
-        }
-        return temp;
-}
 void readdma0()
 {
         if (AT) ppi.pb^=0x10;        
@@ -474,9 +648,9 @@ void readdma0()
                 dma.cc[0]--;
                 if (dma.cc[0]==-1)
                 {
-                        dma.stat|=1;
                         dma.ac[0]=dma.ab[0];
                         dma.cc[0]=dma.cb[0];
+                        dma.stat |= 1;
                 }
 //        }
 //        ppi.pb^=0x10;

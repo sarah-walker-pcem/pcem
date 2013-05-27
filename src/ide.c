@@ -2,7 +2,7 @@
   IDE emulation*/
 //#define RPCEMU_IDE
 
-#define IDE_TIME 5
+#define IDE_TIME (5 * 100 * (1 << TIMER_SHIFT))
 
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
@@ -20,6 +20,9 @@
         #include "arm.h"
 #else
         #include "ibm.h"
+        #include "io.h"
+        #include "pic.h"
+        #include "timer.h"
 #endif
 #include "ide.h"
 
@@ -50,6 +53,11 @@
 #define WIN_SPECIFY			0x91 /* Initialize Drive Parameters */
 #define WIN_PACKETCMD			0xA0 /* Send a packet command. */
 #define WIN_PIDENTIFY			0xA1 /* Identify ATAPI device */
+#define WIN_READ_MULTIPLE               0xC4
+#define WIN_WRITE_MULTIPLE              0xC5
+#define WIN_SET_MULTIPLE_MODE           0xC6
+#define WIN_READ_DMA                    0xC8
+#define WIN_WRITE_DMA                   0xCA
 #define WIN_SETIDLE1			0xE3
 #define WIN_IDENTIFY			0xEC /* Ask drive to identify itself */
 
@@ -134,6 +142,7 @@ typedef struct IDE
         int lba;
         uint32_t lba_addr;
         int skip512;
+        int blocksize, blockcount;
 } IDE;
 
 IDE ide_drives[4];
@@ -141,6 +150,10 @@ IDE ide_drives[4];
 IDE *ext_ide;
 
 char ide_fn[2][512];
+
+int (*ide_bus_master_read_sector)(int channel, uint8_t *data);
+int (*ide_bus_master_write_sector)(int channel, uint8_t *data);
+void (*ide_bus_master_set_irq)(int channel);
 
 static void callreadcd(IDE *ide);
 static void atapicommand(int ide_board);
@@ -272,8 +285,15 @@ static void ide_identify(IDE *ide)
 #else
 	ide_padstr((char *) (ide->buffer + 27), "PCemHD", 40); /* Model */
 #endif
-	ide->buffer[49] = (1<<9); /* LBA supported */
+        ide->buffer[20] = 3;   /*Buffer type*/
+        ide->buffer[21] = 512; /*Buffer size*/
+        ide->buffer[47] = 16;  /*Max sectors on multiple transfer command*/
+        ide->buffer[48] = 1;   /*Dword transfers supported*/
+	ide->buffer[49] = (1 << 9) | (1 << 8); /* LBA and DMA supported */
 	ide->buffer[50] = 0x4000; /* Capabilities */
+	ide->buffer[51] = 2 << 8; /*PIO timing mode*/
+	ide->buffer[52] = 2 << 8; /*DMA timing mode*/
+	ide->buffer[59] = ide->blocksize ? (ide->blocksize | 0x100) : 0;
 #ifdef RPCEMU_IDE
 	ide->buffer[60] = (65535 * 16 * 63) & 0xFFFF; /* Total addressable sectors (LBA) */
 	ide->buffer[61] = (65535 * 16 * 63) >> 16;
@@ -281,6 +301,8 @@ static void ide_identify(IDE *ide)
 	ide->buffer[60] = (hdc[cur_ide[0]].tracks * hdc[cur_ide[0]].hpc * hdc[cur_ide[0]].spt) & 0xFFFF; /* Total addressable sectors (LBA) */
 	ide->buffer[61] = (hdc[cur_ide[0]].tracks * hdc[cur_ide[0]].hpc * hdc[cur_ide[0]].spt) >> 16;
 #endif
+	ide->buffer[63] = 7; /*Multiword DMA*/
+	ide->buffer[80] = 0xe; /*ATA-1 to ATA-3 supported*/
 }
 
 /**
@@ -571,7 +593,9 @@ void writeidew(int ide_board, uint16_t val)
                 if (ide->pos>=(ide->packlen+2))
                 {
                         ide->packetstatus=5;
+                        timer_process();
                         idecallback[ide_board]=6*IDE_TIME;
+                        timer_update_outstanding();
 //                        pclog("Packet over!\n");
                         ide_irq_lower(ide);
                 }
@@ -583,8 +607,10 @@ void writeidew(int ide_board, uint16_t val)
                 ide->pos=0;
                 ide->atastat = BUSY_STAT;
                 ide->packetstatus=1;
-                idecallback[ide_board]=6*IDE_TIME;
+/*                idecallback[ide_board]=6*IDE_TIME;*/
+		timer_process();
                 callbackide(ide_board);
+                timer_update_outstanding();
 //                idecallback[ide_board]=60*IDE_TIME;
 //                if ((ide->buffer[0]&0xFF)==0x43) idecallback[ide_board]=1*IDE_TIME;
 //                pclog("Packet now waiting!\n");
@@ -598,15 +624,25 @@ void writeidew(int ide_board, uint16_t val)
         {
                 ide->pos=0;
                 ide->atastat = BUSY_STAT;
-                idecallback[ide_board]=6*IDE_TIME;
-//                callbackide(ide_board);
+                timer_process();
+                if (ide->command == WIN_WRITE_MULTIPLE)
+                   callbackide(ide_board);
+                else
+              	   idecallback[ide_board]=6*IDE_TIME;
+                timer_update_outstanding();
         }
+}
+
+void writeidel(int ide_board, uint32_t val)
+{
+//        pclog("WriteIDEl %08X\n", val);
+        writeidew(ide_board, val);
+        writeidew(ide_board, val >> 16);
 }
 
 void writeide(int ide_board, uint16_t addr, uint8_t val)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
-        uint8_t *idebufferb = (uint8_t *) ide->buffer;
 #ifndef RPCEMU_IDE
 /*        if (ide_board && (cr0&1) && !(eflags&VM_FLAG))
         {
@@ -614,6 +650,8 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 return;
         }*/
 #endif
+//        if ((cr0&1) && !(eflags&VM_FLAG))
+//           pclog("WriteIDE %04X %02X from %04X(%08X):%08X\n", addr, val, CS, cs, pc);
 //        return;
         addr|=0x80;
 //        if (ide_board) pclog("Write IDEb %04X %02X %04X(%08X):%04X %i  %02X %02X\n",addr,val,CS,cs,pc,ins,ide->atastat,ide_drives[0].atastat);
@@ -660,9 +698,26 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 dumpregs();
                 exit(-1);
         }*/
-                cur_ide[ide_board]=((val>>4)&1)+(ide_board<<1);
-                ide = &ide_drives[cur_ide[ide_board]];
-                
+        
+                if (cur_ide[ide_board] != ((val>>4)&1)+(ide_board<<1))
+                {
+                        cur_ide[ide_board]=((val>>4)&1)+(ide_board<<1);
+
+                        if (ide->reset)
+                        {
+                                ide->atastat = READY_STAT | DSC_STAT;
+                                ide->error=1;
+                                ide->secount=1;
+                                ide->sector=1;
+                                ide->head=0;
+                                ide->cylinder=0;
+                                ide->reset = 0;
+                                return;
+                        }
+
+                        ide = &ide_drives[cur_ide[ide_board]];
+                }
+                                
                 ide->head=val&0xF;
                 ide->lba=val&0x40;
                 
@@ -684,17 +739,32 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 case WIN_SRST: /* ATAPI Device Reset */
                         if (IDE_DRIVE_IS_CDROM(ide)) ide->atastat = BUSY_STAT;
                         else                         ide->atastat = READY_STAT;
+                        timer_process();
                         idecallback[ide_board]=100*IDE_TIME;
+                        timer_update_outstanding();
                         return;
 
                 case WIN_RESTORE:
                 case WIN_SEEK:
+//                        pclog("WIN_RESTORE start\n");
                         ide->atastat = READY_STAT;
+                        timer_process();
                         idecallback[ide_board]=100*IDE_TIME;
+                        timer_update_outstanding();
                         return;
 
+                case WIN_READ_MULTIPLE:
+                        if (!ide->blocksize)
+                           fatal("READ_MULTIPLE - blocksize = 0\n");
+#if 0
+                        if (ide->lba) pclog("Read Multiple %i sectors from LBA addr %07X\n",ide->secount,ide->lba_addr);
+                        else          pclog("Read Multiple %i sectors from sector %i cylinder %i head %i  %i\n",ide->secount,ide->sector,ide->cylinder,ide->head,ins);
+#endif
+                        ide->blockcount = 0;
+                        
                 case WIN_READ:
                 case WIN_READ_NORETRY:
+                case WIN_READ_DMA:
 /*                        if (ide.secount>1)
                         {
                                 fatal("Read %i sectors from sector %i cylinder %i head %i\n",ide.secount,ide.sector,ide.cylinder,ide.head);
@@ -704,12 +774,23 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         else          pclog("Read %i sectors from sector %i cylinder %i head %i  %i\n",ide->secount,ide->sector,ide->cylinder,ide->head,ins);
 #endif
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
                         return;
-
+                        
+                case WIN_WRITE_MULTIPLE:
+                        if (!ide->blocksize)
+                           fatal("Write_MULTIPLE - blocksize = 0\n");
+#if 0
+                        if (ide->lba) pclog("Write Multiple %i sectors from LBA addr %07X\n",ide->secount,ide->lba_addr);
+                        else          pclog("Write Multiple %i sectors to sector %i cylinder %i head %i\n",ide->secount,ide->sector,ide->cylinder,ide->head);
+#endif
+                        ide->blockcount = 0;
+                        
                 case WIN_WRITE:
-                case WIN_WRITE_NORETRY:                        
-/*                        if (ide.secount>1)
+                case WIN_WRITE_NORETRY:
+                /*                        if (ide.secount>1)
                         {
                                 fatal("Write %i sectors to sector %i cylinder %i head %i\n",ide.secount,ide.sector,ide.cylinder,ide.head);
                         }*/
@@ -721,13 +802,26 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         ide->pos=0;
                         return;
 
+                case WIN_WRITE_DMA:
+#if 0
+                        if (ide->lba) pclog("Write %i sectors from LBA addr %07X\n",ide->secount,ide->lba_addr);
+                        else          pclog("Write %i sectors to sector %i cylinder %i head %i\n",ide->secount,ide->sector,ide->cylinder,ide->head);
+#endif
+                        ide->atastat = BUSY_STAT;
+                        timer_process();
+                        idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
+                        return;
+
                 case WIN_VERIFY:
 #if 0
                         if (ide->lba) pclog("Read verify %i sectors from LBA addr %07X\n",ide->secount,ide->lba_addr);
                         else          pclog("Read verify %i sectors from sector %i cylinder %i head %i\n",ide->secount,ide->sector,ide->cylinder,ide->head);
 #endif
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
                         return;
 
                 case WIN_FORMAT:
@@ -739,17 +833,22 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 
                 case WIN_SPECIFY: /* Initialize Drive Parameters */
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
 //                        pclog("SPECIFY\n");
 //                        output=1;
                         return;
 
                 case WIN_DRIVE_DIAGNOSTICS: /* Execute Drive Diagnostics */
                 case WIN_PIDENTIFY: /* Identify Packet Device */
+                case WIN_SET_MULTIPLE_MODE: /*Set Multiple Mode*/
 //                output=1;
                 case WIN_SETIDLE1: /* Idle */
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
                         return;
 
                 case WIN_IDENTIFY: /* Identify Device */
@@ -757,13 +856,17 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 //                        output=3;
 //                        timetolive=500;
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
                         return;
 
                 case WIN_PACKETCMD: /* ATAPI Packet */
                         ide->packetstatus=0;
                         ide->atastat = BUSY_STAT;
+                        timer_process();
                         idecallback[ide_board]=1;//30*IDE_TIME;
+                        timer_update_outstanding();
                         ide->pos=0;
                         return;
                         
@@ -772,15 +875,18 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 	ide->atastat = READY_STAT | ERR_STAT | DSC_STAT;
                 	ide->error = ABRT_ERR;
                         ide_irq_raise(ide);
+/*                        fatal("Bad IDE command %02X\n", val);*/
                         return;
                 }
-//                fatal("Bad IDE command %02X\n", val);
+                
                 return;
 
         case 0x3F6: /* Device control */
                 if ((ide->fdisk&4) && !(val&4) && (ide->type != IDE_NONE))
                 {
+			timer_process();
                         idecallback[ide_board]=500*IDE_TIME;
+                        timer_update_outstanding();
                         ide->reset = 1;
                         ide->atastat = BUSY_STAT;
 //                        pclog("IDE Reset\n");
@@ -795,7 +901,6 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 uint8_t readide(int ide_board, uint16_t addr)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
-        const uint8_t *idebufferb = (const uint8_t *) ide->buffer;
         uint8_t temp;
         uint16_t tempw;
 
@@ -807,6 +912,8 @@ uint8_t readide(int ide_board, uint16_t addr)
                 return 0xFF;
         }*/
 #endif
+//        if ((cr0&1) && !(eflags&VM_FLAG))
+//           pclog("ReadIDE %04X  from %04X(%08X):%08X\n", addr, CS, cs, pc);
 //        return 0xFF;
 
         if (ide->type == IDE_NONE && addr != 0x1f6) return 0xff;
@@ -866,7 +973,7 @@ uint8_t readide(int ide_board, uint16_t addr)
                 else
                 {
 //                 && ide->service) return ide.atastat[ide.board]|SERVICE_STAT;
-//                pclog("Return status %02X\n",ide->atastat);
+//                pclog("Return status %02X %04X:%04X %02X %02X\n",ide->atastat, CS ,pc, AH, BH);
                         temp = ide->atastat;
                 }
                 break;
@@ -910,7 +1017,7 @@ uint16_t readidew(int ide_board)
         }*/
 #endif
 //        return 0xFFFF;
-//        pclog("Read IDEw %04X %04X:%04X %02X %i\n",ide->buffer[ide->pos >> 1],CS,pc,opcode,ins);
+//        pclog("Read IDEw %04X %04X:%04X %02X %i %i\n",ide->buffer[ide->pos >> 1],CS,pc,opcode,ins, ide->pos);
         
 //if (idedebug) pclog("Read IDEW %08X\n",PC);
 
@@ -921,7 +1028,7 @@ uint16_t readidew(int ide_board)
         ide->pos+=2;
         if ((ide->pos>=512 && ide->command != WIN_PACKETCMD) || (ide->command == WIN_PACKETCMD && ide->pos>=ide->packlen))
         {
-//                pclog("Over! packlen %i %i\n",ide.packlen,ide.pos);
+//                pclog("Over! packlen %i %i\n",ide->packlen,ide->pos);
                 ide->pos=0;
                 if (ide->command == WIN_PACKETCMD)// && ide.packetstatus==6)
                 {
@@ -932,21 +1039,35 @@ uint16_t readidew(int ide_board)
                 {
                         ide->atastat = READY_STAT | DSC_STAT;
                         ide->packetstatus=0;
-                        if (ide->command == WIN_READ || ide->command == WIN_READ_NORETRY)
+                        if (ide->command == WIN_READ || ide->command == WIN_READ_NORETRY || ide->command == WIN_READ_MULTIPLE)
                         {
                                 ide->secount--;
                                 if (ide->secount)
                                 {
                                         ide_next_sector(ide);
                                         ide->atastat = BUSY_STAT;
-                                        idecallback[ide_board]=6*IDE_TIME;
+                                        timer_process();
+                                        if (ide->command == WIN_READ_MULTIPLE)
+                                           callbackide(ide_board);
+                                        else
+                                           idecallback[ide_board]=6*IDE_TIME;
+                                        timer_update_outstanding();
+//                                        pclog("set idecallback\n");
 //                                        callbackide(ide_board);
                                 }
+//                                else
+//                                   pclog("readidew done %02X\n", ide->atastat);
                         }
                 }
         }
 //        if (ide_board) pclog("Read IDEw %04X\n",temp);
         return temp;
+}
+
+uint32_t readidel(int ide_board)
+{
+        uint16_t temp = readidew(ide_board);
+        return temp | (readidew(ide_board) << 16);
 }
 
 int times30=0;
@@ -972,6 +1093,7 @@ void callbackide(int ide_board)
                 ide->head=0;
                 ide->cylinder=0;
                 ide->reset = 0;
+                ide->blocksize = 0;
 //                pclog("Reset callback\n");
                 return;
         }
@@ -996,9 +1118,10 @@ void callbackide(int ide_board)
         case WIN_RESTORE:
         case WIN_SEEK:
                 if (IDE_DRIVE_IS_CDROM(ide)) {
+                        pclog("WIN_RESTORE callback on CD-ROM\n");
                         goto abort_cmd;
                 }
-//                pclog("Restore callback\n");
+//                pclog("WIN_RESTORE callback\n");
                 ide->atastat = READY_STAT | DSC_STAT;
                 ide_irq_raise(ide);
                 return;
@@ -1026,6 +1149,66 @@ void callbackide(int ide_board)
 #endif
                 return;
 
+        case WIN_READ_DMA:
+                if (IDE_DRIVE_IS_CDROM(ide)) {
+                        goto abort_cmd;
+                }
+                addr = ide_get_sector(ide) * 512;
+                fseeko64(ide->hdfile, addr, SEEK_SET);
+                fread(ide->buffer, 512, 1, ide->hdfile);
+                ide->pos=0;
+                
+                if (ide_bus_master_read_sector)
+                {
+                        if (ide_bus_master_read_sector(ide_board, (uint8_t *)ide->buffer))
+                           idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
+                        else
+                        {
+                                /*DMA successful*/
+                                ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
+
+                                ide->secount--;
+                                if (ide->secount)
+                                {
+                                        ide_next_sector(ide);
+                                        ide->atastat = BUSY_STAT;
+                                        idecallback[ide_board]=6*IDE_TIME;
+                                }
+                                else
+                                {
+                                        ide_irq_raise(ide);
+                                        ide_bus_master_set_irq(ide_board);
+                                }
+                        }
+                }
+#ifndef RPCEMU_IDE
+                readflash=1;
+#endif
+                return;
+
+        case WIN_READ_MULTIPLE:
+                if (IDE_DRIVE_IS_CDROM(ide)) {
+                        goto abort_cmd;
+                }
+                addr = ide_get_sector(ide) * 512;
+//                pclog("Read multiple from %08X %i (%i) %i\n", addr, ide->blockcount, ide->blocksize, ide->secount);
+                fseeko64(ide->hdfile, addr, SEEK_SET);
+                fread(ide->buffer, 512, 1, ide->hdfile);
+                ide->pos=0;
+                ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
+                if (!ide->blockcount)// || ide->secount == 1)
+                {
+//                        pclog("Read multiple int\n");
+                        ide_irq_raise(ide);
+                }                        
+                ide->blockcount++;
+                if (ide->blockcount >= ide->blocksize)
+                   ide->blockcount = 0;
+#ifndef RPCEMU_IDE
+                readflash=1;
+#endif
+                return;
+
         case WIN_WRITE:
         case WIN_WRITE_NORETRY:
                 if (IDE_DRIVE_IS_CDROM(ide)) {
@@ -1036,6 +1219,71 @@ void callbackide(int ide_board)
                 fseeko64(ide->hdfile, addr, SEEK_SET);
                 fwrite(ide->buffer, 512, 1, ide->hdfile);
                 ide_irq_raise(ide);
+                ide->secount--;
+                if (ide->secount)
+                {
+                        ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
+                        ide->pos=0;
+                        ide_next_sector(ide);
+                }
+                else
+                   ide->atastat = READY_STAT | DSC_STAT;
+#ifndef RPCEMU_IDE
+                readflash=1;
+#endif
+                return;
+                
+        case WIN_WRITE_DMA:
+                if (IDE_DRIVE_IS_CDROM(ide)) {
+                        goto abort_cmd;
+                }
+
+                if (ide_bus_master_write_sector)
+                {
+                        if (ide_bus_master_write_sector(ide_board, (uint8_t *)ide->buffer))
+                           idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
+                        else
+                        {
+                                /*DMA successful*/
+                                addr = ide_get_sector(ide) * 512;
+                                fseeko64(ide->hdfile, addr, SEEK_SET);
+                                fwrite(ide->buffer, 512, 1, ide->hdfile);
+                                
+                                ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
+
+                                ide->secount--;
+                                if (ide->secount)
+                                {
+                                        ide_next_sector(ide);
+                                        ide->atastat = BUSY_STAT;
+                                        idecallback[ide_board]=6*IDE_TIME;
+                                }
+                                else
+                                {
+                                        ide_irq_raise(ide);
+                                        ide_bus_master_set_irq(ide_board);
+                                }
+                        }
+                }
+#ifndef RPCEMU_IDE
+                readflash=1;
+#endif
+                return;
+
+        case WIN_WRITE_MULTIPLE:
+                if (IDE_DRIVE_IS_CDROM(ide)) {
+                        goto abort_cmd;
+                }
+                addr = ide_get_sector(ide) * 512;
+//                pclog("Write sector callback %i %i %i offset %08X %i left %i\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount,ide.spt);
+                fseeko64(ide->hdfile, addr, SEEK_SET);
+                fwrite(ide->buffer, 512, 1, ide->hdfile);
+                ide->blockcount++;
+                if (ide->blockcount >= ide->blocksize || ide->secount == 1)
+                {
+                        ide->blockcount = 0;
+                        ide_irq_raise(ide);
+                }
                 ide->secount--;
                 if (ide->secount)
                 {
@@ -1117,6 +1365,21 @@ void callbackide(int ide_board)
 //                pclog("Not ATAPI\n");
                 goto abort_cmd;
 
+        case WIN_SET_MULTIPLE_MODE:
+                if (IDE_DRIVE_IS_CDROM(ide)) {
+#ifndef RPCEMU_IDE
+                        pclog("IS CDROM - ABORT\n");
+#endif
+                        goto abort_cmd;
+                }
+                ide->blocksize = ide->secount;
+                ide->atastat = READY_STAT | DSC_STAT;
+#ifndef RPCEMU_IDE
+                pclog("Set multiple mode - %i\n", ide->blocksize);
+#endif
+                ide_irq_raise(ide);
+                return;
+                
         case WIN_SETIDLE1: /* Idle */
         case 0xEF:
                 goto abort_cmd;
@@ -1205,6 +1468,18 @@ abort_cmd:
 	ide->atastat = READY_STAT | ERR_STAT | DSC_STAT;
 	ide->error = ABRT_ERR;
 	ide_irq_raise(ide);
+}
+
+void ide_callback_pri()
+{
+	idecallback[0] = 0;
+	callbackide(0);
+}
+
+void ide_callback_sec()
+{
+	idecallback[1] = 0;
+	callbackide(1);
 }
 
 /*ATAPI CD-ROM emulation
@@ -1714,44 +1989,93 @@ static void callreadcd(IDE *ide)
 
 
 
-void ide_write_pri(uint16_t addr, uint8_t val)
+void ide_write_pri(uint16_t addr, uint8_t val, void *priv)
 {
         writeide(0, addr, val);
 }
-void ide_write_pri_w(uint16_t addr, uint16_t val)
+void ide_write_pri_w(uint16_t addr, uint16_t val, void *priv)
 {
         writeidew(0, val);
 }
-uint8_t ide_read_pri(uint16_t addr)
+void ide_write_pri_l(uint16_t addr, uint32_t val, void *priv)
+{
+        writeidel(0, val);
+}
+uint8_t ide_read_pri(uint16_t addr, void *priv)
 {
         return readide(0, addr);
 }
-uint16_t ide_read_pri_w(uint16_t addr)
+uint16_t ide_read_pri_w(uint16_t addr, void *priv)
 {
         return readidew(0);
 }
+uint32_t ide_read_pri_l(uint16_t addr, void *priv)
+{
+        return readidel(0);
+}
 
-void ide_write_sec(uint16_t addr, uint8_t val)
+void ide_write_sec(uint16_t addr, uint8_t val, void *priv)
 {
         writeide(1, addr, val);
 }
-void ide_write_sec_w(uint16_t addr, uint16_t val)
+void ide_write_sec_w(uint16_t addr, uint16_t val, void *priv)
 {
         writeidew(1, val);
 }
-uint8_t ide_read_sec(uint16_t addr)
+void ide_write_sec_l(uint16_t addr, uint32_t val, void *priv)
+{
+        writeidel(1, val);
+}
+uint8_t ide_read_sec(uint16_t addr, void *priv)
 {
         return readide(1, addr);
 }
-uint16_t ide_read_sec_w(uint16_t addr)
+uint16_t ide_read_sec_w(uint16_t addr, void *priv)
 {
         return readidew(1);
+}
+uint32_t ide_read_sec_l(uint16_t addr, void *priv)
+{
+        return readidel(1);
+}
+
+void ide_pri_enable()
+{
+        io_sethandler(0x01f0, 0x0008, ide_read_pri, ide_read_pri_w, ide_read_pri_l, ide_write_pri, ide_write_pri_w, ide_write_pri_l, NULL);
+        io_sethandler(0x03f6, 0x0001, ide_read_pri, NULL,           NULL,           ide_write_pri, NULL,            NULL           , NULL);
+}
+
+void ide_pri_disable()
+{
+        io_removehandler(0x01f0, 0x0008, ide_read_pri, ide_read_pri_w, ide_read_pri_l, ide_write_pri, ide_write_pri_w, ide_write_pri_l, NULL);
+        io_removehandler(0x03f6, 0x0001, ide_read_pri, NULL,           NULL,           ide_write_pri, NULL,            NULL           , NULL);
+}
+
+void ide_sec_enable()
+{
+        io_sethandler(0x0170, 0x0008, ide_read_sec, ide_read_sec_w, ide_read_sec_l, ide_write_sec, ide_write_sec_w, ide_write_sec_l, NULL);
+        io_sethandler(0x0376, 0x0001, ide_read_sec, NULL,           NULL,           ide_write_sec, NULL,            NULL           , NULL);
+}
+
+void ide_sec_disable()
+{
+        io_removehandler(0x0170, 0x0008, ide_read_sec, ide_read_sec_w, ide_read_sec_l, ide_write_sec, ide_write_sec_w, ide_write_sec_l, NULL);
+        io_removehandler(0x0376, 0x0001, ide_read_sec, NULL,           NULL,           ide_write_sec, NULL,            NULL           , NULL);
 }
 
 void ide_init()
 {
-        io_sethandler(0x01f0, 0x0008, ide_read_pri, ide_read_pri_w, NULL, ide_write_pri, ide_write_pri_w, NULL);
-        io_sethandler(0x03f6, 0x0001, ide_read_pri, NULL,           NULL, ide_write_pri, NULL,            NULL);
-        io_sethandler(0x0170, 0x0008, ide_read_sec, ide_read_sec_w, NULL, ide_write_sec, ide_write_sec_w, NULL);
-        io_sethandler(0x0376, 0x0001, ide_read_sec, NULL,           NULL, ide_write_sec, NULL,            NULL);
+        ide_pri_enable();
+        ide_sec_enable();
+        ide_bus_master_read_sector = ide_bus_master_write_sector = NULL;
+        
+        timer_add(ide_callback_pri, &idecallback[0], &idecallback[0],  NULL);
+        timer_add(ide_callback_sec, &idecallback[1], &idecallback[1],  NULL);
+}
+
+void ide_set_bus_master(int (*read_sector)(int channel, uint8_t *data), int (*write_sector)(int channel, uint8_t *data), void (*set_irq)(int channel))
+{
+        ide_bus_master_read_sector = read_sector;
+        ide_bus_master_write_sector = write_sector;
+        ide_bus_master_set_irq = set_irq;
 }

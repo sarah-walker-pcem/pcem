@@ -1,19 +1,36 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include "ibm.h"
-#include "video.h"
+#include "device.h"
+
+#include "ali1429.h"
 #include "amstrad.h"
+#include "cdrom-ioctl.h"
+#include "config.h"
+#include "cpu.h"
 #include "dma.h"
-#include "mem.h"
+#include "fdc.h"
+#include "sound_gus.h"
 #include "ide.h"
+#include "keyboard.h"
+#include "mem.h"
+#include "model.h"
 #include "mouse.h"
+#include "nvr.h"
 #include "pic.h"
 #include "pit.h"
-#include "serial.h"
-#include "cdrom-ioctl.h"
-#include "cpu.h"
-#include "model.h"
 #include "plat-mouse.h"
+#include "serial.h"
+#include "sound.h"
+#include "sound_cms.h"
+#include "sound_opl.h"
+#include "sound_sb.h"
+#include "timer.h"
+#include "vid_voodoo.h"
+#include "video.h"
+
+int frame = 0;
 
 int cdrom_enabled;
 int CPUID;
@@ -42,8 +59,8 @@ int mousecapture;
 FILE *pclogf;
 void pclog(const char *format, ...)
 {
-   char buf[256];
-   return;
+   char buf[1024];
+   //return;
    if (!pclogf)
       pclogf=fopen("pclog.txt","wt");
 //return;
@@ -79,6 +96,7 @@ int pollmouse_delay = 2;
 void pollmouse()
 {
         int x,y;
+//        return;
         pollmouse_delay--;
         if (pollmouse_delay) return;
         pollmouse_delay = 2;
@@ -149,6 +167,7 @@ void pc_reset()
 {
         resetx86();
         cpu_set();
+        //timer_reset();
         dma_reset();
         fdc_reset();
         pic_reset();
@@ -157,8 +176,7 @@ void pc_reset()
 
         setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
         
-        adlib_reset();
-        sb_reset();
+//        sb_reset();
 
         ali1429_reset();
         et4000w32_reset();
@@ -185,31 +203,39 @@ void initpc()
         cpuspeed2=(AT)?2:1;
 //        cpuspeed2=cpuspeed;
         atfullspeed=0;
-        
+
+        device_init();        
         pclog("Initvideo\n");
         
         initvideo();
         mem_init();
         loadbios();
+        mem_load_video_bios();
 
         loaddisc(0,discfns[0]);
         loaddisc(1,discfns[1]);
+        
+        timer_reset();
+        sound_reset();
+	fdc_init();
+        
         //loadfont();
         loadnvr();
         resetvideo();
-        initsound();
-        initpsg();
+        sound_init();
         inithdc();
         initega();
-        initgus();
         resetide();
         ioctl_open(cdrom_drive);
         model_init();        
         video_init();
-        adlib_init();
-        sb_init();
-        gus_init();
-        
+        speaker_init();        
+        sound_card_init(sound_card_current);
+        if (GUS)
+                device_add(&gus_device);
+        if (GAMEBLASTER)
+                device_add(&cms_device);
+       
         pc_reset();
         
         pit_reset();        
@@ -222,7 +248,7 @@ void initpc()
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
         shadowbios=0;
-        
+        voodoo_init();
 }
 
 void resetpc()
@@ -236,13 +262,22 @@ void resetpc()
 
 void resetpchard()
 {
+        device_close_all();
+        device_init();
+        
+        timer_reset();
+        sound_reset();
         mem_resize();
+        fdc_init();
         model_init();
         pclog("Video_init\n");
         video_init();
-        adlib_init();
-        sb_init();
-        gus_init();
+        speaker_init();        
+        sound_card_init(sound_card_current);
+        if (GUS)
+                device_add(&gus_device);
+        if (GAMEBLASTER)
+                device_add(&cms_device);
         
         pc_reset();
         
@@ -278,14 +313,14 @@ int sreadlnum,swritelnum,segareads,segawrites, scycles_lost;
 int serial_fifo_read, serial_fifo_write;
 
 int emu_fps = 0;
-
+extern int totaldiff;
 void runpc()
 {
         char s[200];
         int done=0;
         clockrate = models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed;
                 if (is386)   exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
-                else if (AT) exec286(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                else if (AT) exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
                 else         execx86(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
                 keyboard_poll_host();
                 keyboard_process();
@@ -320,10 +355,12 @@ void runpc()
                 if (win_title_update)
                 {
                         win_title_update=0;
-                        sprintf(s, "PCem v0.7 - %s - %s - %s - %i%%  %i %04X %i", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps, et4000w32p_getclock(), ECX, ins);
+                        sprintf(s, "PCem v0.7 - %s - %s - %s - %i%% - %i", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps, totaldiff);
+                        totaldiff = 0;
                         set_window_title(s);
                 }
                 done++;
+                frame++;
 /*                if ((at70hz && VGA)!=oldat70hz)
                 {
                         oldat70hz=(at70hz && VGA);
@@ -369,7 +406,6 @@ void closepc()
 //        ioctl_close();
         dumpegaregs();
         dumppic();
-        dumpgus();
 //        output=7;
 //        setpitclock(clocks[0][0][0]);
 //        while (1) runpc();
@@ -377,6 +413,7 @@ void closepc()
         savedisc(1);
         dumpregs();
         closevideo();
+        device_close_all();
 }
 
 /*int main()
@@ -398,94 +435,86 @@ void loadconfig()
 {
         char s[512];
         char *p;
-        append_filename(s,pcempath,"pcem.cfg",511);
+        append_filename(s, pcempath, "pcem.cfg", 511);
         set_config_file(s);
-        ADLIB=get_config_int(NULL,"adlib",1);
-        GAMEBLASTER=get_config_int(NULL,"gameblaster",0);
-        FASTDISC=get_config_int(NULL,"fast_disc",1);
+        GAMEBLASTER = get_config_int(NULL, "gameblaster", 0);
+        GUS = get_config_int(NULL, "gus", 0);
         
         model = get_config_int(NULL, "model", 14);
-        pclog("Model %i\n", model);
+
         romset = model_getromset();
         cpu_manufacturer = get_config_int(NULL, "cpu_manufacturer", 0);
         cpu = get_config_int(NULL, "cpu", 0);
         
-        gfxcard=get_config_int(NULL,"gfxcard",0);
+        gfxcard = get_config_int(NULL, "gfxcard", 0);
         video_speed = get_config_int(NULL, "video_speed", 3);
-        sbtype=get_config_int(NULL,"sndcard",SB2);
-        pclog("Model1 %i\n", model);
-        p=(char *)get_config_string(NULL,"disc_a","");
-        if (p) strcpy(discfns[0],p);
-        else   strcpy(discfns[0],"");
-        pclog("Model2 %i\n", model);        
-        p=(char *)get_config_string(NULL,"disc_b","");
-        if (p) strcpy(discfns[1],p);
-        else   strcpy(discfns[1],"");
-        pclog("Model3 %i\n", model);        
-        mem_size=get_config_int(NULL,"mem_size",4);
-        cdrom_drive=get_config_int(NULL,"cdrom_drive",0);
-        cdrom_enabled=get_config_int(NULL,"cdrom_enabled",0);
-        
-        slowega=get_config_int(NULL,"slow_video",1);
-        cache=get_config_int(NULL,"cache",3);
-        cga_comp=get_config_int(NULL,"cga_composite",0);
-        
-        kb_win=get_config_int(NULL,"kb_win",0);
-        vid_resize=get_config_int(NULL,"vid_resize",0);
-//        cpuspeed=2;
+        sound_card_current = get_config_int(NULL, "sndcard", SB2);
 
-        hdc[0].spt=get_config_int(NULL,"hdc_sectors",0);
-        hdc[0].hpc=get_config_int(NULL,"hdc_heads",0);
-        hdc[0].tracks=get_config_int(NULL,"hdc_cylinders",0);
+        p = (char *)get_config_string(NULL, "disc_a", "");
+        if (p) strcpy(discfns[0], p);
+        else   strcpy(discfns[0], "");
+
+        p = (char *)get_config_string(NULL, "disc_b", "");
+        if (p) strcpy(discfns[1], p);
+        else   strcpy(discfns[1], "");
+
+        mem_size = get_config_int(NULL, "mem_size", 4);
+        cdrom_drive = get_config_int(NULL, "cdrom_drive", 0);
+        cdrom_enabled = get_config_int(NULL, "cdrom_enabled", 0);
+        
+        slowega = get_config_int(NULL, "slow_video", 1);
+        cache = get_config_int(NULL, "cache", 3);
+        cga_comp = get_config_int(NULL, "cga_composite", 0);
+        
+        kb_win = get_config_int(NULL, "kb_win", 0);
+        vid_resize = get_config_int(NULL, "vid_resize", 0);
+
+        hdc[0].spt = get_config_int(NULL, "hdc_sectors", 0);
+        hdc[0].hpc = get_config_int(NULL, "hdc_heads", 0);
+        hdc[0].tracks = get_config_int(NULL, "hdc_cylinders", 0);
         p = (char *)get_config_string(NULL, "hdc_fn", "");
         if (p) strcpy(ide_fn[0], p);
         else   strcpy(ide_fn[0], "");
-        hdc[1].spt=get_config_int(NULL,"hdd_sectors",0);
-        hdc[1].hpc=get_config_int(NULL,"hdd_heads",0);
-        hdc[1].tracks=get_config_int(NULL,"hdd_cylinders",0);
+        hdc[1].spt = get_config_int(NULL, "hdd_sectors", 0);
+        hdc[1].hpc = get_config_int(NULL, "hdd_heads", 0);
+        hdc[1].tracks = get_config_int(NULL, "hdd_cylinders", 0);
         p = (char *)get_config_string(NULL, "hdd_fn", "");
         if (p) strcpy(ide_fn[1], p);
         else   strcpy(ide_fn[1], "");
-        pclog("Model4 %i\n", model);
 }
 
 void saveconfig()
 {
-        pclog("saveconfig\n");
         config_new();
-        pclog("config_new\n");
-        set_config_int(NULL,"adlib",ADLIB);
-        pclog("sci 1\n");
-        set_config_int(NULL,"gameblaster",GAMEBLASTER);
-        set_config_int(NULL,"fast_disc",FASTDISC);
+        set_config_int(NULL, "gameblaster", GAMEBLASTER);
+        set_config_int(NULL, "gus", GUS);
         
         set_config_int(NULL, "model", model);
         set_config_int(NULL, "cpu_manufacturer", cpu_manufacturer);
         set_config_int(NULL, "cpu", cpu);
         
-        set_config_int(NULL,"gfxcard",gfxcard);
-        set_config_int(NULL,"video_speed", video_speed);
-        set_config_int(NULL,"sndcard",sbtype);
-        set_config_int(NULL,"cpu_speed",cpuspeed);
-        set_config_int(NULL,"has_fpu",hasfpu);
-        set_config_int(NULL,"slow_video",slowega);
-        set_config_int(NULL,"cache",cache);
-        set_config_int(NULL,"cga_composite",cga_comp);
-        set_config_string(NULL,"disc_a",discfns[0]);
-        set_config_string(NULL,"disc_b",discfns[1]);
-        set_config_int(NULL,"mem_size",mem_size);
-        set_config_int(NULL,"cdrom_drive",cdrom_drive);
-        set_config_int(NULL,"cdrom_enabled",cdrom_enabled);
-        set_config_int(NULL,"kb_win",kb_win);
-        set_config_int(NULL,"vid_resize",vid_resize);
+        set_config_int(NULL, "gfxcard", gfxcard);
+        set_config_int(NULL, "video_speed", video_speed);
+        set_config_int(NULL, "sndcard", sound_card_current);
+        set_config_int(NULL, "cpu_speed", cpuspeed);
+        set_config_int(NULL, "has_fpu", hasfpu);
+        set_config_int(NULL, "slow_video", slowega);
+        set_config_int(NULL, "cache", cache);
+        set_config_int(NULL, "cga_composite", cga_comp);
+        set_config_string(NULL, "disc_a", discfns[0]);
+        set_config_string(NULL, "disc_b", discfns[1]);
+        set_config_int(NULL, "mem_size", mem_size);
+        set_config_int(NULL, "cdrom_drive", cdrom_drive);
+        set_config_int(NULL, "cdrom_enabled", cdrom_enabled);
+        set_config_int(NULL, "kb_win", kb_win);
+        set_config_int(NULL, "vid_resize", vid_resize);
         
-        set_config_int(NULL,"hdc_sectors",hdc[0].spt);
-        set_config_int(NULL,"hdc_heads",hdc[0].hpc);
-        set_config_int(NULL,"hdc_cylinders",hdc[0].tracks);
+        set_config_int(NULL, "hdc_sectors", hdc[0].spt);
+        set_config_int(NULL, "hdc_heads", hdc[0].hpc);
+        set_config_int(NULL, "hdc_cylinders", hdc[0].tracks);
         set_config_string(NULL, "hdc_fn", ide_fn[0]);
-        set_config_int(NULL,"hdd_sectors",hdc[1].spt);
-        set_config_int(NULL,"hdd_heads",hdc[1].hpc);
-        set_config_int(NULL,"hdd_cylinders",hdc[1].tracks);
+        set_config_int(NULL, "hdd_sectors", hdc[1].spt);
+        set_config_int(NULL, "hdd_heads", hdc[1].hpc);
+        set_config_int(NULL, "hdd_cylinders", hdc[1].tracks);
         set_config_string(NULL, "hdd_fn", ide_fn[1]);
-        pclog("saveconfig done\n");
 }

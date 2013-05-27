@@ -8,6 +8,9 @@
   and 46 cycles. PCem currently always uses the lower number.*/
 
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
+#include "timer.h"
 #include "video.h"
 #include "vid_cga.h"
 
@@ -15,7 +18,7 @@ static uint8_t pc1512_plane_write,pc1512_plane_read,pc1512_border;
 
 void pc1512_recalctimings();
 
-void pc1512_out(uint16_t addr, uint8_t val)
+void pc1512_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
 //        pclog("PC1512 out %04X %02X %04X:%04X\n",addr,val,CS,pc);
@@ -59,7 +62,7 @@ void pc1512_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t pc1512_in(uint16_t addr)
+uint8_t pc1512_in(uint16_t addr, void *priv)
 {
 //        pclog("PC1512 in %04X %02X %04X:%04X\n",addr,CS,pc);
         switch (addr)
@@ -74,7 +77,7 @@ uint8_t pc1512_in(uint16_t addr)
         return 0xFF;
 }
 
-void pc1512_write(uint32_t addr, uint8_t val)
+void pc1512_write(uint32_t addr, uint8_t val, void *priv)
 {
 /*        if (CS==0x023E && pc==0x524E)
         {
@@ -95,7 +98,7 @@ void pc1512_write(uint32_t addr, uint8_t val)
            vram[addr]=val;
 }
 
-uint8_t pc1512_read(uint32_t addr)
+uint8_t pc1512_read(uint32_t addr, void *priv)
 {
 //        pclog("PC1512 read %08X %02X %01X\n",addr,cgamode&0x12,pc1512_plane_read);
         cycles-=12;
@@ -111,32 +114,23 @@ static int sc,vc;
 static int cgadispon;
 static int con,coff,cursoron,cgablink;
 static int vsynctime,vadj;
-static uint16_t ma,maback,ca;
-
-static int ntsc_col[8][8]=
-{
-        {0,0,0,0,0,0,0,0}, /*Black*/
-        {0,0,1,1,1,1,0,0}, /*Blue*/
-        {1,0,0,0,0,1,1,1}, /*Green*/
-        {0,0,0,0,1,1,1,1}, /*Cyan*/
-        {1,1,1,1,0,0,0,0}, /*Red*/
-        {0,1,1,1,1,0,0,0}, /*Magenta*/
-        {1,1,0,0,0,0,1,1}, /*Yellow*/
-        {1,1,1,1,1,1,1,1}  /*White*/
-};
+static uint16_t ma,maback;
 
 int i_filt[8],q_filt[8];
 
 
 void pc1512_recalctimings()
 {
+	double _dispontime, _dispofftime;
         disptime = 128; /*Fixed on PC1512*/
-        dispontime = 80;
-        dispofftime=disptime-dispontime;
+        _dispontime = 80;
+        _dispofftime=disptime-_dispontime;
 //        printf("%i %f %f %f  %i %i\n",cgamode&1,disptime,dispontime,dispofftime,crtc[0],crtc[1]);
-        dispontime*=CGACONST;
-        dispofftime*=CGACONST;
+        _dispontime*=CGACONST;
+        _dispofftime*=CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
 void pc1512_poll()
@@ -417,7 +411,7 @@ endblit();
 
 int pc1512_init()
 {
-        mem_sethandler(0xb8000, 0x08000, pc1512_read, NULL, NULL, pc1512_write, NULL, NULL);
+        mem_sethandler(0xb8000, 0x08000, pc1512_read, NULL, NULL, pc1512_write, NULL, NULL,  NULL);
         return 0;
 }
 

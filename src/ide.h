@@ -10,6 +10,11 @@ extern uint16_t readidew(int ide_board);
 extern void callbackide(int ide_board);
 extern void resetide(void);
 extern void ide_init();
+extern void ide_pri_enable();
+extern void ide_sec_enable();
+extern void ide_pri_disable();
+extern void ide_sec_disable();
+extern void ide_set_bus_master(int (*read_sector)(int channel, uint8_t *data), int (*write_sector)(int channel, uint8_t *data), void (*set_irq)(int channel));
 
 /*ATAPI stuff*/
 typedef struct ATAPI

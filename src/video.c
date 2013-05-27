@@ -5,6 +5,9 @@
 #include "vid_svga.h"
 #include "io.h"
 #include "cpu.h"
+#include "timer.h"
+
+int video_timer;
 
 /*Video timing settings -
 
@@ -81,46 +84,46 @@ int video_res_x, video_res_y, video_bpp;
 void (*video_blit_memtoscreen)(int x, int y, int y1, int y2, int w, int h);
 void (*video_blit_memtoscreen_8)(int x, int y, int w, int h);
 
-void (*video_out)     (uint16_t addr, uint8_t val);
-void (*video_mono_out)(uint16_t addr, uint8_t val);
-uint8_t (*video_in)     (uint16_t addr);
-uint8_t (*video_mono_in)(uint16_t addr);
+void (*video_out)     (uint16_t addr, uint8_t val, void *priv);
+void (*video_mono_out)(uint16_t addr, uint8_t val, void *priv);
+uint8_t (*video_in)     (uint16_t addr, void *priv);
+uint8_t (*video_mono_in)(uint16_t addr, void *priv);
 
-void (*video_write_a000)(uint32_t addr, uint8_t val);
-void (*video_write_b000)(uint32_t addr, uint8_t val);
-void (*video_write_b800)(uint32_t addr, uint8_t val);
+void (*video_write_a000)(uint32_t addr, uint8_t val, void *priv);
+void (*video_write_b000)(uint32_t addr, uint8_t val, void *priv);
+void (*video_write_b800)(uint32_t addr, uint8_t val, void *priv);
 
-void (*video_write_a000_w)(uint32_t addr, uint16_t val);
-void (*video_write_a000_l)(uint32_t addr, uint32_t val);
+void (*video_write_a000_w)(uint32_t addr, uint16_t val, void *priv);
+void (*video_write_a000_l)(uint32_t addr, uint32_t val, void *priv);
 
-uint8_t (*video_read_a000)(uint32_t addr);
-uint8_t (*video_read_b000)(uint32_t addr);
-uint8_t (*video_read_b800)(uint32_t addr);
+uint8_t (*video_read_a000)(uint32_t addr, void *priv);
+uint8_t (*video_read_b000)(uint32_t addr, void *priv);
+uint8_t (*video_read_b800)(uint32_t addr, void *priv);
 
 void (*video_recalctimings)();
 
-void video_out_null(uint16_t addr, uint8_t val)
+void video_out_null(uint16_t addr, uint8_t val, void *priv)
 {
 }
 
-uint8_t video_in_null(uint16_t addr)
+uint8_t video_in_null(uint16_t addr, void *priv)
 {
         return 0xFF;
 }
 
-void video_write_null(uint32_t addr, uint8_t val)
+void video_write_null(uint32_t addr, uint8_t val, void *priv)
 {
 }
 
-uint8_t video_read_null(uint32_t addr)
+uint8_t video_read_null(uint32_t addr, void *priv)
 {
         return 0xff;
 }
 
 void video_load(GFXCARD g)
 {
-        io_sethandler(0x03a0, 0x0020, g.mono_in, NULL, NULL, g.mono_out, NULL, NULL);
-        io_sethandler(0x03c0, 0x0020, g.in,      NULL, NULL, g.out,      NULL, NULL);        
+        io_sethandler(0x03a0, 0x0020, g.mono_in, NULL, NULL, g.mono_out, NULL, NULL, NULL);
+        io_sethandler(0x03c0, 0x0020, g.in,      NULL, NULL, g.out,      NULL, NULL, NULL);        
         
         video_out      = g.out;
         video_in       = g.in;
@@ -141,6 +144,8 @@ void video_load(GFXCARD g)
         video_write_a000_w = video_write_a000_l = NULL;
         
         g.init();
+        
+        video_timer = timer_add(pollvideo, &vidtime, TIMER_ALWAYS_ENABLED, NULL);
 }
 
 void video_init()
@@ -221,6 +226,38 @@ void video_init()
                 video_load(vid_s3);
                 break;
                 
+                case GFX_VIRGE:
+                video_load(vid_s3_virge);
+                break;
+                
+                case GFX_TGUI9440:
+                video_load(vid_tgui9440);
+                break;
+                
+                case GFX_VGA:
+                video_load(vid_vga);
+                break;
+
+                case GFX_VGAEDGE16:
+                video_load(vid_ati18800);
+                break;
+
+                case GFX_VGACHARGER:
+                video_load(vid_ati28800);
+                break;
+                                
+                case GFX_OTI067:
+                video_load(vid_oti067);
+                return;
+
+                case GFX_MACH64GX:
+                video_load(vid_mach64);
+                return;
+
+                case GFX_CL_GD5429:
+                video_load(vid_gd5429);
+                return;
+
                 default:
                 fatal("Bad gfx card %i\n",gfxcard);
         }
@@ -235,7 +272,8 @@ int speshul=0;
 uint8_t fontdat[256][8];
 uint8_t fontdatm[256][16];
 
-float dispontime,dispofftime,disptime;
+int dispontime,dispofftime;
+double disptime;
 int svgaon;
 uint8_t cgamode=1,cgastat,cgacol=7,ocgamode;
 int linepos=0;
@@ -404,7 +442,7 @@ PALETTE comppal=
 
 void initvideo()
 {
-        int c,d;
+        int c;
 //        set_color_depth(desktop_color_depth());
 //        if (set_gfx_mode(GFX_AUTODETECT_WINDOWED,2048,2048,0,0))
 //           set_gfx_mode(GFX_AUTODETECT_WINDOWED,1024,768,0,0);
@@ -473,18 +511,6 @@ void resetvideo()
         mdacols[0x08][0][1] = mdacols[0x08][1][1] = 16;
         mdacols[0x80][0][1] = mdacols[0x80][1][1] = 16;
         mdacols[0x88][0][1] = mdacols[0x88][1][1] = 16;
-/*        switch (gfxcard)
-        {
-                case GFX_CGA: pollvideo=pollcga; break;
-                case GFX_MDA:
-                case GFX_HERCULES: pollvideo=pollmda; break;
-        }
-        if (TANDY) pollvideo=polltandy;
-        if (EGA) pollvideo=pollega;
-        if (romset==ROM_PC1512 || romset==ROM_PC200) pollvideo=pollcga;*/
-//        tandyvram=&ram[0x9C000];
-//        printf("Tandy VRAM %08X\n",tandyvram);
-//        tandyb8000=&ram[0x9C000];
 }
 
 void closevideo()

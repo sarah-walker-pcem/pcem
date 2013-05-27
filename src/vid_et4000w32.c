@@ -5,6 +5,8 @@
 */
 
 #include "ibm.h"
+#include "io.h"
+#include "pci.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_icd2061.h"
@@ -15,14 +17,14 @@ int et4k_b8000;
 
 void et4000w32p_recalcmapping();
 
-uint8_t et4000w32p_mmu_read(uint32_t addr);
-void et4000w32p_mmu_write(uint32_t addr, uint8_t val);
+uint8_t et4000w32p_mmu_read(uint32_t addr, void *priv);
+void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *priv);
 
 static int et4000w32p_index;
 static uint8_t et4000w32p_regs[256];
 static uint32_t et4000w32p_linearbase, et4000w32p_linearbase_old;
 
-void et4000w32p_out(uint16_t addr, uint8_t val)
+void et4000w32p_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
 
@@ -39,7 +41,7 @@ void et4000w32p_out(uint16_t addr, uint8_t val)
                 break;
                 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                stg_ramdac_out(addr,val);
+                stg_ramdac_out(addr, val, NULL);
                 return;
                 
                 case 0x3CB: /*Banking extension*/
@@ -111,10 +113,10 @@ void et4000w32p_out(uint16_t addr, uint8_t val)
                 return;
 
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t et4000w32p_in(uint16_t addr)
+uint8_t et4000w32p_in(uint16_t addr, void *priv)
 {
         uint8_t temp;
 //        if (addr==0x3DA) pclog("In 3DA %04X(%06X):%04X\n",CS,cs,pc);
@@ -132,7 +134,7 @@ uint8_t et4000w32p_in(uint16_t addr)
                 break;
 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                return stg_ramdac_in(addr);
+                return stg_ramdac_in(addr, NULL);
 
                 case 0x3CB:
                 return svgaseg2;
@@ -166,15 +168,14 @@ uint8_t et4000w32p_in(uint16_t addr)
                 }
                 return et4000w32p_regs[et4000w32p_index];
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }
 
 void et4000w32p_recalctimings()
 {
-        double clk;
 //        pclog("Recalc %08X  ",svga_ma);
         svga_ma|=(crtc[0x33]&0x7)<<16;
-        pclog("SVGA_MA %08X %i\n", svga_ma, (svga_miscout >> 2) & 3);
+//        pclog("SVGA_MA %08X %i\n", svga_ma, (svga_miscout >> 2) & 3);
         if (crtc[0x35]&2)    svga_vtotal+=0x400;
         if (crtc[0x35]&4)    svga_dispend+=0x400;
         if (crtc[0x35]&8)    svga_vsyncstart+=0x400;
@@ -205,12 +206,12 @@ void et4000w32p_recalcmapping()
 {
         int map;
         
-        mem_removehandler(et4000w32p_linearbase_old, 0x200000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
-        mem_removehandler(0xb0000, 0x10000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL);    
+        mem_removehandler(et4000w32p_linearbase_old, 0x200000,    svga_read_linear, svga_readw_linear, svga_readl_linear,    svga_write_linear, svga_writew_linear, svga_writel_linear,         NULL);
+        mem_removehandler(                  0xa0000,  0x20000,           svga_read,        svga_readw,        svga_readl,           svga_write,        svga_writew,        svga_writel,         NULL);
+        mem_removehandler(                  0xb0000,  0x10000, et4000w32p_mmu_read,              NULL,              NULL, et4000w32p_mmu_write,               NULL,               NULL,         NULL);    
         if (crtc[0x36] & 0x10) /*Linear frame buffer*/
         {
-                mem_sethandler(et4000w32p_linearbase, 0x200000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
+                mem_sethandler(et4000w32p_linearbase, 0x200000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,      NULL);
         }
         else
         {
@@ -220,28 +221,28 @@ void et4000w32p_recalcmapping()
                 switch (map)
                 {
                         case 0x0: case 0x4: case 0x8: case 0xC: /*128k at A0000*/
-                        mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                         case 0x1: /*64k at A0000*/
-                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                         case 0x2: /*32k at B0000*/
-                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                         case 0x3: /*32k at B8000*/
-                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                         case 0x5: case 0x9: case 0xD: /*64k at A0000, MMU at B8000*/
-                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
-                        mem_sethandler(0xb8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL);                        
+                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
+                        mem_sethandler(0xb8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL,       NULL);                        
                         break;
                         case 0x6: case 0xA: case 0xE: /*32k at B0000, MMU at A8000*/
-                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL);                        
-                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL,       NULL);
+                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                         case 0x7: case 0xB: case 0xF: /*32k at B8000, MMU at A8000*/
-                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL);    
-                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL,       NULL);
+                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,       NULL);
                         break;
                 }
 //                pclog("ET4K map %02X\n", map);
@@ -295,7 +296,7 @@ void et4000w32_reset()
 void et4000w32_blit_start();
 void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input);
 
-void et4000w32p_mmu_write(uint32_t addr, uint8_t val)
+void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *priv)
 {
         int bank;
 //        pclog("ET4K write %08X %02X %02X %04X(%08X):%08X\n",addr,val,acl.status,acl.internal.ctrl_routing,CS,cs,pc);
@@ -402,7 +403,7 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val)
         }
 }
 
-uint8_t et4000w32p_mmu_read(uint32_t addr)
+uint8_t et4000w32p_mmu_read(uint32_t addr, void *priv)
 {
         int bank;
         uint8_t temp;
@@ -482,6 +483,7 @@ uint8_t et4000w32p_mmu_read(uint32_t addr)
                 }
                 return 0xFF;
         }
+        return 0xff;
 }
 
 int et4000w32_max_x[8]={0,0,4,8,16,32,64,0x70000000};
@@ -846,7 +848,7 @@ void et4000w32p_cursor_draw(int displine)
         svga_hwcursor_latch.addr += 16;
 }
 
-uint8_t et4000w32p_pci_read(int func, int addr)
+uint8_t et4000w32p_pci_read(int func, int addr, void *priv)
 {
         pclog("ET4000 PCI read %08X\n", addr);
         switch (addr)
@@ -880,7 +882,7 @@ uint8_t et4000w32p_pci_read(int func, int addr)
         return 0;
 }
 
-void et4000w32p_pci_write(int func, int addr, uint8_t val)
+void et4000w32p_pci_write(int func, int addr, uint8_t val, void *priv)
 {
         switch (addr)
         {
@@ -893,16 +895,16 @@ int et4000w32p_init()
         svga_recalctimings_ex = et4000w32p_recalctimings;
         svga_hwcursor_draw    = et4000w32p_cursor_draw;
         
-        io_sethandler(0x210A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x211A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x212A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x213A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x214A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x215A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x216A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
-        io_sethandler(0x217A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL);
+        io_sethandler(0x210A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x211A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x212A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x213A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x214A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x215A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x216A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
+        io_sethandler(0x217A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, NULL);
         
-        pci_add(et4000w32p_pci_read, et4000w32p_pci_write);
+        pci_add(et4000w32p_pci_read, et4000w32p_pci_write, NULL);
         
         svga_vram_limit = 2 << 20; /*2mb - chip supports 4mb but can't map both 4mb linear frame buffer and accelerator registers*/
         

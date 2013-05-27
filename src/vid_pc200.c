@@ -2,12 +2,14 @@
   CGA with some NMI stuff. But we don't need that as it's only used for TV and
   LCD displays, and we're emulating a CRT*/
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_cga.h"
 
 uint8_t pc200_3dd, pc200_3de, pc200_3df;
 
-void pc200_out(uint16_t addr, uint8_t val)
+void pc200_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
         switch (addr)
@@ -48,10 +50,10 @@ void pc200_out(uint16_t addr, uint8_t val)
                 if (val&0x80) pc200_3dd|=0x40;
                 return;
         }
-        cga_out(addr,val);
+        cga_out(addr, val, NULL);
 }
 
-uint8_t pc200_in(uint16_t addr)
+uint8_t pc200_in(uint16_t addr, void *priv)
 {
         uint8_t temp;
         switch (addr)
@@ -70,12 +72,12 @@ uint8_t pc200_in(uint16_t addr)
                 case 0x3DF:
                 return pc200_3df;
         }
-        return cga_in(addr);
+        return cga_in(addr, NULL);
 }
 
 int pc200_init()
 {
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL);
+        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL);
         return cga_init();
 }
 

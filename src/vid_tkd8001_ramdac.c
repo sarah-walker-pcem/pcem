@@ -7,7 +7,7 @@
 static int tkd8001_state=0;
 static uint8_t tkd8001_ctrl;
 
-void tkd8001_ramdac_out(uint16_t addr, uint8_t val)
+void tkd8001_ramdac_out(uint16_t addr, uint8_t val, void *priv)
 {
 //        pclog("OUT RAMDAC %04X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr)
@@ -40,10 +40,10 @@ void tkd8001_ramdac_out(uint16_t addr, uint8_t val)
                 tkd8001_state = 0;
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t tkd8001_ramdac_in(uint16_t addr)
+uint8_t tkd8001_ramdac_in(uint16_t addr, void *priv)
 {
 //        pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
         switch (addr)
@@ -60,5 +60,5 @@ uint8_t tkd8001_ramdac_in(uint16_t addr)
                 tkd8001_state = 0;
                 break;
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }

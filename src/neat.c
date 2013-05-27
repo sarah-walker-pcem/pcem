@@ -7,7 +7,7 @@ static uint8_t neat_regs[256];
 static int neat_index;
 static int neat_emspage[4];
 
-void neat_write(uint16_t port, uint8_t val)
+void neat_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port)
         {
@@ -35,7 +35,7 @@ void neat_write(uint16_t port, uint8_t val)
         }
 }
 
-uint8_t neat_read(uint16_t port)
+uint8_t neat_read(uint16_t port, void *priv)
 {
         switch (port)
         {
@@ -60,9 +60,9 @@ uint8_t neat_readems(uint32_t addr)
 
 void neat_init()
 {
-        io_sethandler(0x0022, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL);
-        io_sethandler(0x0208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL);
-        io_sethandler(0x4208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL);
-        io_sethandler(0x8208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL);
-        io_sethandler(0xc208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL);
+        io_sethandler(0x0022, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL,  NULL);
+        io_sethandler(0x0208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL,  NULL);
+        io_sethandler(0x4208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL,  NULL);
+        io_sethandler(0x8208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL,  NULL);
+        io_sethandler(0xc208, 0x0002, neat_read, NULL, NULL, neat_write, NULL, NULL,  NULL);
 }

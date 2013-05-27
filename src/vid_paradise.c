@@ -4,12 +4,14 @@
   MegaPC uses W90C11A
   */
 #include "ibm.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_unk_ramdac.h"
 
-void    paradise_write(uint32_t addr, uint8_t val);
-uint8_t paradise_read(uint32_t addr);
+void    paradise_write(uint32_t addr, uint8_t val, void *priv);
+uint8_t paradise_read(uint32_t addr, void *priv);
+void paradise_remap();
 
 enum
 {
@@ -21,7 +23,7 @@ static int paradise_type;
 
 static uint32_t paradise_bank_r[4], paradise_bank_w[4];
 
-void paradise_out(uint16_t addr, uint8_t val)
+void paradise_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
         
@@ -52,21 +54,21 @@ void paradise_out(uint16_t addr, uint8_t val)
                 {
                         if ((gdcreg[6] & 0xc) != (val & 0xc))
                         {
-                                mem_removehandler(0xa0000, 0x20000, paradise_read, NULL, NULL, svga_write, NULL, NULL);
+                                mem_removehandler(0xa0000, 0x20000, paradise_read, NULL, NULL, paradise_write, NULL, NULL,  NULL);
 //                                pclog("Write mapping %02X\n", val);
                                 switch (val&0xC)
                                 {
                                         case 0x0: /*128k at A0000*/
-                                        mem_sethandler(0xa0000, 0x20000, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+                                        mem_sethandler(0xa0000, 0x20000, paradise_read, NULL, NULL, paradise_write, NULL, NULL,  NULL);
                                         break;
                                         case 0x4: /*64k at A0000*/
-                                        mem_sethandler(0xa0000, 0x10000, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+                                        mem_sethandler(0xa0000, 0x10000, paradise_read, NULL, NULL, paradise_write, NULL, NULL,  NULL);
                                         break;
                                         case 0x8: /*32k at B0000*/
-                                        mem_sethandler(0xb0000, 0x08000, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+                                        mem_sethandler(0xb0000, 0x08000, paradise_read, NULL, NULL, paradise_write, NULL, NULL,  NULL);
                                         break;
                                         case 0xC: /*32k at B8000*/
-                                        mem_sethandler(0xb8000, 0x08000, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+                                        mem_sethandler(0xb8000, 0x08000, paradise_read, NULL, NULL, paradise_write, NULL, NULL,  NULL);
                                         break;
                                 }
                         }
@@ -114,13 +116,11 @@ void paradise_out(uint16_t addr, uint8_t val)
                 }
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t paradise_in(uint16_t addr)
+uint8_t paradise_in(uint16_t addr, void *priv)
 {
-        uint8_t temp;
-        
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga_miscout&1)) addr ^= 0x60;
         
 //        if (addr != 0x3da) pclog("Paradise in %04X\n", addr);
@@ -157,7 +157,7 @@ uint8_t paradise_in(uint16_t addr)
                    return 0xff;
                 return crtc[crtcreg];
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }
 
 void paradise_remap()
@@ -185,8 +185,8 @@ void paradise_remap()
 //                pclog("Remap 3\n");
                         paradise_bank_r[0] = paradise_bank_w[0] =  (gdcreg[0xa] & 0x7f) << 12;
                         paradise_bank_r[1] = paradise_bank_w[1] = ((gdcreg[0xa] & 0x7f) << 12) + ((gdcreg[6] & 0x08) ? 0 : 0x8000);
-                        paradise_bank_w[2] = paradise_bank_w[2] =  (gdcreg[0x9] & 0x7f) << 12;
-                        paradise_bank_w[3] = paradise_bank_w[3] = ((gdcreg[0x9] & 0x7f) << 12) + ((gdcreg[6] & 0x08) ? 0 : 0x8000);
+                        paradise_bank_r[2] = paradise_bank_w[2] =  (gdcreg[0x9] & 0x7f) << 12;
+                        paradise_bank_r[3] = paradise_bank_w[3] = ((gdcreg[0x9] & 0x7f) << 12) + ((gdcreg[6] & 0x08) ? 0 : 0x8000);
                 }
         }
         else
@@ -207,20 +207,20 @@ void paradise_recalctimings()
 
 #define egacycles 1
 #define egacycles2 1
-void paradise_write(uint32_t addr, uint8_t val)
+void paradise_write(uint32_t addr, uint8_t val, void *priv)
 {
 //        pclog("paradise_write : %05X %02X  ", addr, val);
         addr = (addr & 0x7fff) + paradise_bank_w[(addr >> 15) & 3];
 //        pclog("%08X\n", addr);
-        svga_write_linear(addr, val);
+        svga_write_linear(addr, val, priv);
 }
 
-uint8_t paradise_read(uint32_t addr)
+uint8_t paradise_read(uint32_t addr, void *priv)
 {
 //        pclog("paradise_read : %05X ", addr);
         addr = (addr & 0x7fff) + paradise_bank_r[(addr >> 15) & 3];
 //        pclog("%08X\n", addr);
-        return svga_read_linear(addr);
+        return svga_read_linear(addr, priv);
 }
 
 int paradise_init()

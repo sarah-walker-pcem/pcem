@@ -1,14 +1,16 @@
 #include "ibm.h"
+#include "io.h"
+#include "pic.h"
 
 int output;
 int intclear;
 int keywaiting=0;
-int pit0;
 int pic_intpending;
 
 void pic_updatepending()
 {
         pic_intpending = (((pic.pend&~pic.mask)&~pic.mask2) || ((pic2.pend&~pic2.mask)&~pic2.mask2));
+//        pclog("pic_intpending = %i  %02X %02X %02X\n", pic_intpending, pic.pend, pic.mask, pic.mask2);
 }
 
 
@@ -27,7 +29,7 @@ void pic_reset()
         pic_intpending = 0;
 }
 
-void pic_write(uint16_t addr, uint8_t val)
+void pic_write(uint16_t addr, uint8_t val, void *priv)
 {
         int c;
 //        pclog("Write PIC %04X %02X %04X(%06X):%04X\n",addr,val,CS,cs,pc);
@@ -87,7 +89,6 @@ void pic_write(uint16_t addr, uint8_t val)
                                                 pic.ins&=~(1<<c);
                                                 pic.mask2&=~(1<<c);
 //                                                pic.pend&=~(1<<c);
-                                                if (c==0) pit0=1;
                                                 if (c==1 && keywaiting)
                                                 {
                                                         intclear&=~1;
@@ -109,20 +110,20 @@ void pic_write(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t pic_read(uint16_t addr)
+uint8_t pic_read(uint16_t addr, void *priv)
 {
         if (addr&1) { /*pclog("Read PIC mask %02X\n",pic.mask);*/ return pic.mask; }
-        if (pic.read) { /*pclog("Read PIC ins %02X\n",pic.ins);*/ return pic.ins; }
+        if (pic.read) { /*pclog("Read PIC ins %02X\n",pic.ins);*/ return pic.ins | (pic2.ins ? 4 : 0); }
 //        pclog("Read PIC pend %02X %08X\n",pic.pend,EDX);
         return pic.pend;
 }
 
 void pic_init()
 {
-        io_sethandler(0x0020, 0x0002, pic_read, NULL, NULL, pic_write, NULL, NULL);
+        io_sethandler(0x0020, 0x0002, pic_read, NULL, NULL, pic_write, NULL, NULL, NULL);
 }
 
-void pic2_write(uint16_t addr, uint8_t val)
+void pic2_write(uint16_t addr, uint8_t val, void *priv)
 {
         int c;
 //        pclog("Write PIC2 %04X %02X %04X:%04X %i\n",addr,val,CS,pc,ins);
@@ -137,6 +138,7 @@ void pic2_write(uint16_t addr, uint8_t val)
                         break;
                         case 1: /*ICW2*/
                         pic2.vector=val&0xF8;
+//                        pclog("PIC2 vector %02X\n", val & 0xf8);
                         if (pic2.icw1&2) pic2.icw=3;
                         else            pic2.icw=2;
                         break;
@@ -188,17 +190,17 @@ void pic2_write(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t pic2_read(uint16_t addr)
+uint8_t pic2_read(uint16_t addr, void *priv)
 {
         if (addr&1) { /*pclog("Read PIC2 mask %02X %04X:%08X\n",pic2.mask,CS,pc); */return pic2.mask; }
         if (pic2.read) { /*pclog("Read PIC2 ins %02X %04X:%08X\n",pic2.ins,CS,pc); */return pic2.ins; }
-//        pclog("Read PIC2 pend %02X %04X:%08X\n",pic2.pend,CS,pc);
+        /*pclog("Read PIC2 pend %02X %04X:%08X\n",pic2.pend,CS,pc);*/
         return pic2.pend;
 }
 
 void pic2_init()
 {
-        io_sethandler(0x00a0, 0x0002, pic2_read, NULL, NULL, pic2_write, NULL, NULL);
+        io_sethandler(0x00a0, 0x0002, pic2_read, NULL, NULL, pic2_write, NULL, NULL, NULL);
 }
 
 
@@ -213,6 +215,7 @@ int pic_current[16];
 
 void picint(uint16_t num)
 {
+//        pclog("picint : %04X\n", num);
 //        if (num == 0x10) pclog("PICINT 10\n");
         if (num>0xFF)
         {
@@ -222,6 +225,7 @@ void picint(uint16_t num)
         {
                 pic.pend|=num;
         }
+//        pclog("picint : PEND now %02X %02X\n", pic.pend, pic2.pend);
         pic_updatepending();
 }
 
@@ -248,7 +252,7 @@ void picintc(uint16_t num)
 {
         int c = 0;
         while (!(num & (1 << c))) c++;
-//        pclog("INTC %04X %i\n", num, c);
+        //pclog("INTC %04X %i\n", num, c);
         pic_current[c]=0;
         if (num>0xFF) pic2.pend&=~(num>>8);
         else
@@ -270,6 +274,7 @@ uint8_t picinterrupt()
                         pic.mask2|=(1<<c);
                         
                         pic_updatepending();
+//                        pclog("picinterrupt : Taking PIC1 int %i\n", c);
 //                        if (!c) pclog("Taking timer int\n");
 //                        if (c==5) printf("GUS IRQ!\n");
 //                        if (c==1) printf("Keyboard int!\n");
@@ -277,6 +282,8 @@ uint8_t picinterrupt()
                         return c+pic.vector;
                 }
         }
+/*        if (pic.mask2 & 4)
+                return 0xff;*/
         temp=pic2.pend&~pic2.mask;
         for (c=0;c<8;c++)
         {
@@ -286,6 +293,7 @@ uint8_t picinterrupt()
                         pic2.ins|=(1<<c);
                         pic2.mask2|=(1<<c);
                         pic_updatepending();
+                        //pclog("Taking PIC2 int %i\n", c);                        
 //                        if (c==(14-8)) pclog("Taking IRQ 14 %02X\n",c+pic2.vector);
 //                        printf("Taking high IRQ! %i\n",c);
 //                        if (c==1) printf("Keyboard int!\n");
@@ -298,10 +306,9 @@ uint8_t picinterrupt()
 
 void picclear(int num)
 {
-//        printf("Pic clear %02X\n",num);
+//        pclog("Pic clear %02X\n",num);
         pic.pend&=~num;
         pic.ins&=~num;
-        if (num==1) pit0=1;
         pic_updatepending();
 }
 

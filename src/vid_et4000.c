@@ -1,5 +1,6 @@
 /*ET4000 emulation*/
 #include "ibm.h"
+#include "io.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_unk_ramdac.h"
@@ -7,7 +8,7 @@
 int et4k_b8000;
 
 
-void et4000_out(uint16_t addr, uint8_t val)
+void et4000_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
         
@@ -18,7 +19,7 @@ void et4000_out(uint16_t addr, uint8_t val)
         switch (addr)
         {
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                unk_ramdac_out(addr,val);
+                unk_ramdac_out(addr, val, NULL);
                 return;
                 
                 case 0x3CD: /*Banking*/
@@ -57,13 +58,11 @@ void et4000_out(uint16_t addr, uint8_t val)
                 if (val==0x29) svgaon=0;
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, priv);
 }
 
-uint8_t et4000_in(uint16_t addr)
+uint8_t et4000_in(uint16_t addr, void *priv)
 {
-        uint8_t temp;
-                
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga_miscout&1)) addr ^= 0x60;
         
         if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
@@ -75,7 +74,7 @@ uint8_t et4000_in(uint16_t addr)
                 break;
 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                return unk_ramdac_in(addr);
+                return unk_ramdac_in(addr, NULL);
                 
                 case 0x3CD: /*Banking*/
                 return svgaseg;
@@ -84,7 +83,7 @@ uint8_t et4000_in(uint16_t addr)
                 case 0x3D5:
                 return crtc[crtcreg];
         }
-        return svga_in(addr);
+        return svga_in(addr, priv);
 }
 
 void et4000_recalctimings()
@@ -98,6 +97,7 @@ void et4000_recalctimings()
 //        if (crtc[0x3F]&0x80) svga_rowoffset+=0x100;
         if (crtc[0x3F]&1)    svga_htotal+=256;
         if (attrregs[0x16]&0x20) svga_hdisp<<=1;
+
 //        pclog("Rowoffset %i\n",svga_rowoffset);
 
         switch (((svga_miscout >> 2) & 3) | ((crtc[0x34] << 1) & 4))

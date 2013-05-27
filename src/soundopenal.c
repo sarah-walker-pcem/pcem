@@ -1,6 +1,7 @@
 #define USE_OPENAL
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #ifdef USE_OPENAL
 #include <AL/al.h>
 #include <AL/alut.h>
@@ -91,7 +92,6 @@ void givealbuffer(int16_t *buf)
 #ifdef USE_OPENAL
         int processed;
         int state;
-        int c;
         
         //return;
         

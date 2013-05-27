@@ -10,7 +10,7 @@ extern uint8_t gdcreg[16];
 extern int gdcaddr;
 extern uint8_t attrregs[32];
 extern int attraddr,attrff;
-extern uint8_t seqregs[32];
+extern uint8_t seqregs[64];
 extern int seqaddr;
 extern int svgaon;
 
@@ -34,30 +34,33 @@ extern int changeframecount;
 
 extern int firstline,lastline;
 extern int ega_hdisp,ega_rowoffset,ega_split,ega_dispend,ega_vsyncstart,ega_vtotal;
-extern float dispontime,dispofftime,disptime;
+extern int dispontime,dispofftime;
+extern double disptime;
 
-extern void (*video_out)     (uint16_t addr, uint8_t val);
-extern void (*video_mono_out)(uint16_t addr, uint8_t val);
-extern uint8_t (*video_in)     (uint16_t addr);
-extern uint8_t (*video_mono_in)(uint16_t addr);
+extern void (*video_out)     (uint16_t addr, uint8_t val, void *priv);
+extern void (*video_mono_out)(uint16_t addr, uint8_t val, void *priv);
+extern uint8_t (*video_in)     (uint16_t addr, void *priv);
+extern uint8_t (*video_mono_in)(uint16_t addr, void *priv);
 
-extern void (*video_write_a000)(uint32_t addr, uint8_t val);
-extern void (*video_write_b000)(uint32_t addr, uint8_t val);
-extern void (*video_write_b800)(uint32_t addr, uint8_t val);
+extern void (*video_write_a000)(uint32_t addr, uint8_t val, void *priv);
+extern void (*video_write_b000)(uint32_t addr, uint8_t val, void *priv);
+extern void (*video_write_b800)(uint32_t addr, uint8_t val, void *priv);
 
-extern uint8_t (*video_read_a000)(uint32_t addr);
-extern uint8_t (*video_read_b000)(uint32_t addr);
-extern uint8_t (*video_read_b800)(uint32_t addr);
+extern uint8_t (*video_read_a000)(uint32_t addr, void *priv);
+extern uint8_t (*video_read_b000)(uint32_t addr, void *priv);
+extern uint8_t (*video_read_b800)(uint32_t addr, void *priv);
 
-extern void (*video_write_a000_w)(uint32_t addr, uint16_t val);
-extern void (*video_write_a000_l)(uint32_t addr, uint32_t val);
+extern void (*video_write_a000_w)(uint32_t addr, uint16_t val, void *priv);
+extern void (*video_write_a000_l)(uint32_t addr, uint32_t val, void *priv);
 
-extern void    video_out_null(uint16_t addr, uint8_t val);
-extern uint8_t video_in_null(uint16_t addr);
+extern void    video_out_null(uint16_t addr, uint8_t val, void *priv);
+extern uint8_t video_in_null(uint16_t addr, void *priv);
 
-extern void    video_write_null(uint32_t addr, uint8_t val);
-extern uint8_t video_read_null (uint32_t addr);
+extern void    video_write_null(uint32_t addr, uint8_t val, void *priv);
+extern uint8_t video_read_null (uint32_t addr, void *priv);
 
+
+extern int video_timer;
 
 extern uint8_t tridentoldctrl2,tridentnewctrl2;
 extern int rowdbl;
@@ -72,6 +75,8 @@ typedef struct
 extern BITMAP *buffer,*buffer32,*vbuf;
 
 extern BITMAP *screen;
+
+BITMAP *create_bitmap(int w, int h);
 
 extern int wx,wy;
 
@@ -98,18 +103,18 @@ extern uint32_t vrammask;
 typedef struct
 {
         int     (*init)();
-        void    (*out)(uint16_t addr, uint8_t val);
-        uint8_t (*in)(uint16_t addr);
-        void    (*mono_out)(uint16_t addr, uint8_t val);
-        uint8_t (*mono_in)(uint16_t addr);
+        void    (*out)(uint16_t addr, uint8_t val, void *priv);
+        uint8_t (*in)(uint16_t addr, void *priv);
+        void    (*mono_out)(uint16_t addr, uint8_t val, void *priv);
+        uint8_t (*mono_in)(uint16_t addr, void *priv);
         void    (*poll)();
         void    (*recalctimings)();
-        void    (*write_a000)(uint32_t addr, uint8_t val);
-        void    (*write_b000)(uint32_t addr, uint8_t val);
-        void    (*write_b800)(uint32_t addr, uint8_t val);
-        uint8_t (*read_a000)(uint32_t addr);
-        uint8_t (*read_b000)(uint32_t addr);
-        uint8_t (*read_b800)(uint32_t addr);
+        void    (*write_a000)(uint32_t addr, uint8_t val, void *priv);
+        void    (*write_b000)(uint32_t addr, uint8_t val, void *priv);
+        void    (*write_b800)(uint32_t addr, uint8_t val, void *priv);
+        uint8_t (*read_a000)(uint32_t addr, void *priv);
+        uint8_t (*read_b000)(uint32_t addr, void *priv);
+        uint8_t (*read_b800)(uint32_t addr, void *priv);
 } GFXCARD;
 
 extern GFXCARD vid_cga;
@@ -127,7 +132,13 @@ extern GFXCARD vid_tvga;
 extern GFXCARD vid_et4000;
 extern GFXCARD vid_et4000w32p;
 extern GFXCARD vid_s3;
-
+extern GFXCARD vid_s3_virge;
+extern GFXCARD vid_tgui9440;
+extern GFXCARD vid_vga;
+extern GFXCARD vid_ati18800;
+extern GFXCARD vid_ati28800;
+extern GFXCARD vid_mach64;
+extern GFXCARD vid_gd5429;
 
 extern float cpuclock;
 

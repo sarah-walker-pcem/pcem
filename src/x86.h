@@ -1,4 +1,3 @@
-uint32_t old8,old82,old83;
 uint16_t oldcs;
 uint32_t oldpc;
 extern uint32_t rmdat32;
@@ -16,11 +15,9 @@ int skipnextprint;
 int inhlt;
 
 uint8_t opcode;
-int ins,noint,notpresent;
-int inint;
+int ins,noint;
 
 uint16_t lastcs,lastpc;
-int lldt;
 int timetolive,keyboardtimer;
 
 #define setznp168 setznp16
@@ -96,3 +93,7 @@ extern uint8_t opcode2;
 
 extern uint16_t rds;
 extern uint32_t rmdat32;
+
+extern int inscounts[256];
+
+void x86illegal();

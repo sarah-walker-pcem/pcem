@@ -1,10 +1,11 @@
 /*EGA emulation*/
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
+#include "timer.h"
 #include "video.h"
-
-void    ega_recalctimings();
-void    ega_write(uint32_t addr, uint8_t val);
-uint8_t ega_read(uint32_t addr);
+#include "vid_ega.h"
+#include "vid_svga.h"
 
 extern uint8_t edatlookup[4][4];
 
@@ -16,7 +17,7 @@ static uint8_t ega_rotate[8][256];
 /*3C2 controls default mode on EGA. On VGA, it determines monitor type (mono or colour)*/
 int egaswitchread,egaswitches=9; /*7=CGA mode (200 lines), 9=EGA mode (350 lines), 8=EGA mode (200 lines)*/
 
-void ega_out(uint16_t addr, uint8_t val)
+void ega_out(uint16_t addr, uint8_t val, void *priv)
 {
         int c;
         uint8_t o,old;
@@ -73,21 +74,21 @@ void ega_out(uint16_t addr, uint8_t val)
                         case 4: readplane=val&3; break;
                         case 5: writemode=val&3; readmode=val&8; break;
                         case 6:
-                        mem_removehandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL);
+                        mem_removehandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL,        NULL);
 //                                pclog("Write mapping %02X\n", val);
                         switch (val&0xC)
                         {
                                 case 0x0: /*128k at A0000*/
-                                mem_sethandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL);
+                                mem_sethandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL,   NULL);
                                 break;
                                 case 0x4: /*64k at A0000*/
-                                mem_sethandler(0xa0000, 0x10000, ega_read, NULL, NULL, ega_write, NULL, NULL);
+                                mem_sethandler(0xa0000, 0x10000, ega_read, NULL, NULL, ega_write, NULL, NULL,   NULL);
                                 break;
                                 case 0x8: /*32k at B0000*/
-                                mem_sethandler(0xb0000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL);
+                                mem_sethandler(0xb0000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL,   NULL);
                                 break;
                                 case 0xC: /*32k at B8000*/
-                                mem_sethandler(0xb8000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL);
+                                mem_sethandler(0xb8000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL,   NULL);
                                 break;
                         }
 
@@ -114,9 +115,8 @@ void ega_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t ega_in(uint16_t addr)
+uint8_t ega_in(uint16_t addr, void *priv)
 {
-        uint8_t temp;
         if ((addr&0xFFF0) == 0x3B0) addr |= 0x20;
         switch (addr)
         {
@@ -161,8 +161,9 @@ static int scrollcache;
 
 void ega_recalctimings()
 {
-        float crtcconst;
-        int temp;
+	double _dispontime, _dispofftime;
+        double crtcconst;
+
         ega_vtotal=crtc[6];
         ega_dispend=crtc[0x12];
         ega_vsyncstart=crtc[0x10];
@@ -195,14 +196,16 @@ void ega_recalctimings()
         else          crtcconst=(seqregs[1]&1)?(CGACONST*(8.0/9.0)):CGACONST;
 
         disptime=crtc[0]+2;
-        dispontime=crtc[1]+1;
+        _dispontime=crtc[1]+1;
 
-        printf("Disptime %f dispontime %f hdisp %i\n",disptime,dispontime,crtc[1]*8);
-        if (seqregs[1]&8) { disptime*=2; dispontime*=2; }
-        dispofftime=disptime-dispontime;
-        dispontime*=crtcconst;
-        dispofftime*=crtcconst;
+        printf("Disptime %f dispontime %f hdisp %i\n",disptime,_dispontime,crtc[1]*8);
+        if (seqregs[1]&8) { disptime*=2; _dispontime*=2; }
+        _dispofftime=disptime-_dispontime;
+        _dispontime*=crtcconst;
+        _dispofftime*=crtcconst;
 
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 
 //        printf("EGA horiz total %i display end %i clock rate %i vidclock %i %i\n",crtc[0],crtc[1],egaswitchread,vidclock,((ega3c2>>2)&3) | ((tridentnewctrl2<<2)&4));
 //        printf("EGA vert total %i display end %i max row %i vsync %i\n",ega_vtotal,ega_dispend,(crtc[9]&31)+1,ega_vsyncstart);
@@ -525,11 +528,9 @@ void ega_poll()
 }
 
 
-void ega_write(uint32_t addr, uint8_t val)
+void ega_write(uint32_t addr, uint8_t val, void *priv)
 {
-        int x,y;
-        char s[2]={0,0};
-        uint8_t vala,valb,valc,vald,wm=writemask;
+        uint8_t vala,valb,valc,vald;
 
         egawrites++;
         cycles -= video_timing_b;
@@ -647,10 +648,9 @@ void ega_write(uint32_t addr, uint8_t val)
                 }
 }
 
-uint8_t ega_read(uint32_t addr)
+uint8_t ega_read(uint32_t addr, void *priv)
 {
         uint8_t temp,temp2,temp3,temp4;
-        uint32_t addr2;
         egareads++;
         cycles -= video_timing_b;
         cycles_lost += video_timing_b;

@@ -8,7 +8,7 @@
 
 static uint8_t amstrad_dead;
 
-uint8_t amstrad_read(uint16_t port)
+uint8_t amstrad_read(uint16_t port, void *priv)
 {
         pclog("amstrad_read : %04X\n",port);
         switch (port)
@@ -25,7 +25,7 @@ uint8_t amstrad_read(uint16_t port)
         return 0xff;
 }
 
-void amstrad_write(uint16_t port, uint8_t val)
+void amstrad_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port)
         {
@@ -37,16 +37,15 @@ void amstrad_write(uint16_t port, uint8_t val)
 
 static uint8_t mousex,mousey;
 
-void amstrad_mouse_write(uint16_t addr, uint8_t val)
+void amstrad_mouse_write(uint16_t addr, uint8_t val, void *priv)
 {
 //        pclog("Write mouse %04X %02X %04X:%04X\n", addr, val, CS, pc);
         if (addr==0x78) mousex=0;
         else            mousey=0;
 }
 
-uint8_t amstrad_mouse_read(uint16_t addr)
+uint8_t amstrad_mouse_read(uint16_t addr, void *priv)
 {
-        uint8_t temp;
 //        printf("Read mouse %04X %04X:%04X %02X\n", addr, CS, pc, (addr == 0x78) ? mousex : mousey);
         if (addr==0x78) return mousex;
         return mousey;
@@ -73,12 +72,12 @@ void amstrad_mouse_poll(int x, int y, int b)
 
 void amstrad_init()
 {
-        lpt2_remove();
+        lpt2_remove_ams();
         
-        io_sethandler(0x0078, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL);
-        io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL);
-        io_sethandler(0x0379, 0x0002, amstrad_read,       NULL, NULL, NULL,                NULL, NULL);
-        io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL);        
+        io_sethandler(0x0078, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
+        io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
+        io_sethandler(0x0379, 0x0002, amstrad_read,       NULL, NULL, NULL,                NULL, NULL,  NULL);
+        io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
 
         mouse_poll = amstrad_mouse_poll;
 }

@@ -15,9 +15,8 @@ struct
         int rs2;
 } sdac_ramdac;
 
-void sdac_ramdac_out(uint16_t addr, uint8_t val)
+void sdac_ramdac_out(uint16_t addr, uint8_t val, void *priv)
 {
-        int didwrite;
 //        /*if (CS!=0xC000) */pclog("OUT RAMDAC %04X %02X %i %04X:%04X  %i\n",addr,val,sdac_ramdac.magic_count,CS,pc, sdac_ramdac.rs2);
         switch (addr)
         {
@@ -68,10 +67,10 @@ void sdac_ramdac_out(uint16_t addr, uint8_t val)
                 }
                 break;
         }
-        svga_out(addr,val);
+        svga_out(addr, val, NULL);
 }
 
-uint8_t sdac_ramdac_in(uint16_t addr)
+uint8_t sdac_ramdac_in(uint16_t addr, void *priv)
 {
         uint8_t temp;
 //        /*if (CS!=0xC000) */pclog("IN RAMDAC %04X %04X:%04X %i\n",addr,CS,pc, sdac_ramdac.rs2);
@@ -128,7 +127,7 @@ uint8_t sdac_ramdac_in(uint16_t addr)
                 }
                 break;
         }
-        return svga_in(addr);
+        return svga_in(addr, NULL);
 }
 
 float sdac_getclock(int clock)

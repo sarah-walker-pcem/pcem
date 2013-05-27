@@ -1,8 +1,15 @@
 /*CGA emulation*/
+#include <math.h>
 #include "ibm.h"
+#include "io.h"
+#include "mem.h"
+#include "timer.h"
 #include "video.h"
+#include "vid_cga.h"
 
-void cga_out(uint16_t addr, uint8_t val)
+void cga_recalctimings();
+
+void cga_out(uint16_t addr, uint8_t val, void *priv)
 {
         uint8_t old;
 //        pclog("CGA_OUT %04X %02X\n", addr, val);
@@ -32,7 +39,7 @@ void cga_out(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t cga_in(uint16_t addr)
+uint8_t cga_in(uint16_t addr, void *priv)
 {
 //        pclog("CGA_IN %04X\n", addr);
         switch (addr)
@@ -49,7 +56,7 @@ uint8_t cga_in(uint16_t addr)
 
 extern uint8_t charbuffer[256];
 
-void cga_write(uint32_t addr, uint8_t val)
+void cga_write(uint32_t addr, uint8_t val, void *priv)
 {
 //        pclog("CGA_WRITE %04X %02X\n", addr, val);
         vram[addr&0x3FFF]=val;
@@ -58,7 +65,7 @@ void cga_write(uint32_t addr, uint8_t val)
         cycles -= 4;
 }
 
-uint8_t cga_read(uint32_t addr)
+uint8_t cga_read(uint32_t addr, void *priv)
 {
         cycles -= 4;        
         charbuffer[ ((int)(((dispontime - vidtime) * 2) / CGACONST)) & 0xfc] = vram[addr&0x3FFF];
@@ -69,22 +76,25 @@ uint8_t cga_read(uint32_t addr)
 
 void cga_recalctimings()
 {
+	double _dispontime, _dispofftime;
         pclog("Recalc - %i %i %i\n", crtc[0], crtc[1], cgamode & 1);
         if (cgamode&1)
         {
                 disptime=crtc[0]+1;
-                dispontime=crtc[1];
+                _dispontime=crtc[1];
         }
         else
         {
                 disptime=(crtc[0]+1)<<1;
-                dispontime=crtc[1]<<1;
+                _dispontime=crtc[1]<<1;
         }
-        dispofftime=disptime-dispontime;
+        _dispofftime=disptime-_dispontime;
 //        printf("%i %f %f %f  %i %i\n",cgamode&1,disptime,dispontime,dispofftime,crtc[0],crtc[1]);
-        dispontime*=CGACONST;
-        dispofftime*=CGACONST;
+        _dispontime*=CGACONST;
+        _dispofftime*=CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
+	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
 static int linepos,displine;
@@ -92,7 +102,7 @@ static int sc,vc;
 static int cgadispon;
 static int con,coff,cursoron,cgablink;
 static int vsynctime,vadj;
-static uint16_t ma,maback,ca;
+static uint16_t ma,maback;
 static int oddeven = 0;
 
 static int ntsc_col[8][8]=
@@ -117,7 +127,7 @@ void cga_poll()
         int x,c;
         int oldvc;
         uint8_t chr,attr;
-        uint16_t dat,dat2,dat3,dat4;
+        uint16_t dat;
         int cols[4];
         int col;
         int oldsc;
@@ -467,7 +477,7 @@ int cga_init()
                 i_filt[c]=512.0*cos((3.14*(cga_tint+c*4)/16.0) - 33.0/180.0);
                 q_filt[c]=512.0*sin((3.14*(cga_tint+c*4)/16.0) - 33.0/180.0);
         }
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL);
+        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL);
         return 0;
 }
 

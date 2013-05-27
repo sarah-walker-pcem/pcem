@@ -5,9 +5,15 @@
 
 #include <string.h>
 #include "ibm.h"
-#include "pit.h"
-#include "video.h"
+
 #include "cpu.h"
+#include "dma.h"
+#include "io.h"
+#include "pic.h"
+#include "pit.h"
+#include "timer.h"
+#include "video.h"
+
 /*B0 to 40, two writes to 43, then two reads - value does not change!*/
 /*B4 to 40, two writes to 43, then two reads - value _does_ change!*/
 //Tyrian writes 4300 or 17512
@@ -21,31 +27,25 @@ float isa_timing, bus_timing;
 int firsttime=1;
 void setpitclock(float clock)
 {
-        float temp;
 //        printf("PIT clock %f\n",clock);
         cpuclock=clock;
         PITCONST=clock/1193182.0;
-        SPKCONST=clock/48000.0;
         CGACONST=(clock/(19687500.0/11.0));
         MDACONST=(clock/1813000.0);
         VGACONST1=(clock/25175000.0);
         VGACONST2=(clock/28322000.0);
-        setsbclock(clock);
-        SOUNDCONST=clock/200.0;
-        CASCONST=PITCONST*1192;
         isa_timing = clock/8000000.0;
         bus_timing = clock/(double)cpu_busspeed;
         video_updatetiming();
 //        pclog("egacycles %i egacycles2 %i temp %f clock %f\n",egacycles,egacycles2,temp,clock);
-        GUSCONST=(clock/3125.0)/4.0;
-        GUSCONST2=(clock/3125.0)/4.0; //Timer 2 at different rate to 1?
         video_recalctimings();
         RTCCONST=clock/32768.0;
+        TIMER_USEC = (int)((clock / 1000000.0f) * (float)(1 << TIMER_SHIFT));
+        device_speed_changed();
 }
 
 //#define PITCONST (8000000.0/1193000.0)
 //#define PITCONST (cpuclock/1193000.0)
-int pit0;
 void pit_reset()
 {
         memset(&pit,0,sizeof(PIT));
@@ -69,12 +69,10 @@ float pit_timer0_freq()
         return 1193182.0f/(float)pit.l[0];
 }
 extern int ins;
-void pit_write(uint16_t addr, uint8_t val)
+void pit_write(uint16_t addr, uint8_t val, void *priv)
 {
         int t;
-        uint8_t oldctrl=pit.ctrl;
         cycles -= (int)PITCONST;
-        pit0=1;
 //        printf("Write PIT %04X %02X %04X:%08X %i %i\n",addr,val,CS,pc,ins);
         switch (addr&3)
         {
@@ -135,13 +133,15 @@ void pit_write(uint16_t addr, uint8_t val)
                         pit.l[t]=val;
                         pit.thit[t]=0;
                         pit.c[t]=pit.l[t]*PITCONST;
-                        picintc(1);
+                        if (!t)
+                                picintc(1);
                         break;
                         case 2:
                         pit.l[t]=(val<<8);
                         pit.thit[t]=0;
                         pit.c[t]=pit.l[t]*PITCONST;
-                        picintc(1);
+                        if (!t)
+                                picintc(1);
                         break;
                         case 0:
                         pit.l[t]&=0xFF;
@@ -150,7 +150,8 @@ void pit_write(uint16_t addr, uint8_t val)
 //                        pclog("%04X %f\n",pit.l[t],pit.c[t]);                        
                         pit.thit[t]=0;
                         pit.wm[t]=3;
-                        picintc(1);
+                        if (!t)
+                                picintc(1);
                         break;
                         case 3:
                         pit.l[t]&=0xFF00;
@@ -190,7 +191,7 @@ void pit_write(uint16_t addr, uint8_t val)
         }
 }
 
-uint8_t pit_read(uint16_t addr)
+uint8_t pit_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
         cycles -= (int)PITCONST;        
@@ -250,8 +251,8 @@ void pit_poll()
                         else          pit.c[0]+=((float)(0x10000*PITCONST));
                 }
 //                pit.c[0]+=(pit.l[0]*PITCONST);
-//                printf("PIT over! %f %i\n",pit.c[0],pit.m[0]);
-                if (!pit.thit[0] && (pit.l[0]>0x14))
+//                if (output) printf("PIT over! %f %i\n",pit.c[0],pit.m[0]);
+                if (!pit.thit[0])// && (pit.l[0]>0x14))
                 {
 //                        printf("PIT int!\n");
 ///                        printf("%05X %05X %02X\n",pit.c[0],pit.l[0],pit.ctrls[0]);
@@ -259,7 +260,6 @@ void pit_poll()
                 }
                 if (!pit.m[0] || pit.m[0]==4) pit.thit[0]=1;
 //                if ((pit.ctrls[0]&0xE)==2) pit.thit[0]=1;
-                pit0=0;
                 pitcount++;
         }
         if (pit.c[1]<1)
@@ -301,5 +301,5 @@ void pit_poll()
 
 void pit_init()
 {
-        io_sethandler(0x0040, 0x0004, pit_read, NULL, NULL, pit_write, NULL, NULL);
+        io_sethandler(0x0040, 0x0004, pit_read, NULL, NULL, pit_write, NULL, NULL, NULL);
 }
