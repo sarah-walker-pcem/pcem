@@ -1,0 +1,42 @@
+#include "ibm.h"
+#include "sound.h"
+#include "sound_speaker.h"
+
+static int16_t speaker_buffer[SOUNDBUFLEN];
+
+static int speaker_pos = 0;
+
+int wasgated = 0;
+
+static void speaker_poll(void *p)
+{
+        if (speaker_pos >= SOUNDBUFLEN) return;
+
+//        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
+        if (gated)
+        {
+                if (!pit.m[2] || pit.m[2]==4)
+                   speaker_buffer[speaker_pos] = speakval;
+                else 
+                   speaker_buffer[speaker_pos] = speakon ? 0x1400 : 0;
+        }
+        else
+           speaker_buffer[speaker_pos] = wasgated ? 0x1400 : 0;
+        speaker_pos++;
+        wasgated = 0;
+}
+
+static void speaker_get_buffer(int16_t *buffer, int len, void *p)
+{
+        int c;
+
+        for (c = 0; c < len * 2; c++)
+                buffer[c] += speaker_buffer[c >> 1];
+
+        speaker_pos = 0;
+}
+
+void speaker_init()
+{
+        sound_add_handler(speaker_poll, speaker_get_buffer, NULL);
+}

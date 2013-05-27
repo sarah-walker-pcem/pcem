@@ -11,9 +11,13 @@
         2 clocks - fetch opcode 2  etc*/
 #include <stdio.h>
 #include "ibm.h"
-#include "x86.h"
-#include "mem.h"
+
+#include "cpu.h"
 #include "keyboard.h"
+#include "mem.h"
+#include "pic.h"
+#include "timer.h"
+#include "x86.h"
 
 int nextcyc=0;
 int cycdiff;
@@ -21,7 +25,6 @@ int is8086=0;
 
 int memcycs;
 int nopageerrors=0;
-float cassettetime;
 
 void FETCHCOMPLETE();
 
@@ -84,40 +87,21 @@ void writememl(uint32_t s, uint32_t a, uint32_t v)
         else *((uint32_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v;
 }
 
-int lldt=0;
-int notpresent;
-uint16_t oldflags;
+
 void dumpregs();
-int incga;
-uint32_t old8,old82,old83;
 uint16_t oldcs;
 int oldcpl;
 
-int dlE=0;
-/*#define CS (cs>>4)
-#define DS (ds>>4)
-#define ES (es>>4)
-#define SS (ss>>4)*/
-
-//#define loadseg(a) ((a)<<4)
-
-int keyboardtimer;
 int tempc;
-int bxcheck=0,spcheck=0;
-uint16_t getword();
-int count40=0;
-int dosfunc;
 uint8_t opcode;
 int times=0;
 uint16_t pc2,pc3;
-int pit0=1;
 int noint=0;
 
 int output=0;
 
 int shadowbios=0;
 
-int inint=0;
 int ins=0;
 //#define readmemb(a) (((a)<0xA0000)?ram[a]:readmembl(a))
 
@@ -266,6 +250,13 @@ inline void FETCHCLEAR()
         }*/
 }
 
+static uint16_t getword()
+{
+        uint8_t temp=FETCH();
+        return temp|(FETCH()<<8);
+}
+
+
 /*EA calculation*/
 
 /*R/M - bits 0-2 - R/M   bits 3-5 - Reg   bits 6-7 - mod
@@ -366,7 +357,7 @@ void makemod1table()
         mod1seg[4]=&ds; mod1seg[5]=&ds; mod1seg[6]=&ss; mod1seg[7]=&ds;
 }
 
-void fetcheal()
+static void fetcheal()
 {
         if (!mod && rm==6) { eaaddr=getword(); easeg=ds; FETCHADD(6); }
         else
@@ -394,67 +385,6 @@ void fetcheal()
                 eaaddr&=0xFFFF;
         }
 }
-
-/*void fetchea()
-{
-        rmdat=readmemb(cs+pc); pc++;
-        reg=(rmdat>>3)&7;
-        mod=rmdat>>6;
-        rm=rmdat&7;
-        switch (mod)
-        {
-                case 0:
-                switch (rm)
-                {
-                        case 0: eaaddr=BX+SI; easeg=ds; if (!AT) cycles-=7; break;
-                        case 1: eaaddr=BX+DI; easeg=ds; if (!AT) cycles-=8; break;
-                        case 2: eaaddr=BP+SI; easeg=ss; if (!AT) cycles-=8; break;
-                        case 3: eaaddr=BP+DI; easeg=ss; if (!AT) cycles-=7; break;
-                        case 4: eaaddr=SI; easeg=ds; if (!AT) cycles-=5; break;
-                        case 5: eaaddr=DI; easeg=ds; if (!AT) cycles-=5; break;
-                        case 6: eaaddr=getword(); easeg=ds; if (!AT) cycles-=6; break;
-                        case 7: eaaddr=BX; easeg=ds; if (!AT) cycles-=5; break;
-                }
-                if (AT && !(rm&4)) cycles--;
-                break;
-
-                case 1:
-                eaaddr=readmemb(cs+pc); pc++;
-                if (eaaddr&0x80) eaaddr|=0xFF00;
-//                if (output) printf("EAADDR %04X ",eaaddr);
-                switch (rm)
-                {
-                        case 0: eaaddr+=BX+SI; easeg=ds; if (!AT) cycles-=11; break;
-                        case 1: eaaddr+=BX+DI; easeg=ds; if (!AT) cycles-=12; break;
-                        case 2: eaaddr+=BP+SI; easeg=ss; if (!AT) cycles-=12; break;
-                        case 3: eaaddr+=BP+DI; easeg=ss; if (!AT) cycles-=11; break;
-                        case 4: eaaddr+=SI; easeg=ds; if (!AT) cycles-=9; break;
-                        case 5: eaaddr+=DI; easeg=ds; if (!AT) cycles-=9; break;
-                        case 6: eaaddr+=BP; easeg=ss; if (!AT) cycles-=9; break;
-                        case 7: eaaddr+=BX; easeg=ds; if (!AT) cycles-=9; break;
-                }
-                if (AT && !(rm&4)) cycles--;
-//                if (output) printf("%04X %04X",eaaddr,BX);
-                break;
-
-                case 2:
-                eaaddr=getword();
-                switch (rm)
-                {
-                        case 0: eaaddr+=BX+SI; easeg=ds; if (!AT) cycles-=11; break;
-                        case 1: eaaddr+=BX+DI; easeg=ds; if (!AT) cycles-=12; break;
-                        case 2: eaaddr+=BP+SI; easeg=ss; if (!AT) cycles-=12; break;
-                        case 3: eaaddr+=BP+DI; easeg=ss; if (!AT) cycles-=11; break;
-                        case 4: eaaddr+=SI; easeg=ds; if (!AT) cycles-=9; break;
-                        case 5: eaaddr+=DI; easeg=ds; if (!AT) cycles-=9; break;
-                        case 6: eaaddr+=BP; easeg=ss; if (!AT) cycles-=9; break;
-                        case 7: eaaddr+=BX; easeg=ds; if (!AT) cycles-=9; break;
-                }
-                if (AT && !(rm&4)) cycles--;
-                break;
-        }
-        eaaddr&=0xFFFF;
-}*/
 
 static inline uint8_t geteab()
 {
@@ -562,56 +492,39 @@ void makeznptable()
 }
 int timetolive=0;
 
-uint8_t cpu_readop(uint32_t addr) { return readmemb(addr); }
-uint8_t cpu_readmem20(uint32_t addr) { return readmemb(addr); }
-
-void cpu_writemem20(uint32_t addr, uint8_t val) { writememb(addr,val); }
-
-uint16_t getword()
-{
-        uint8_t temp=FETCH();
-        return temp|(FETCH()<<8);
-//        pc+=2;
-//        return readmemw(cs,(pc-2));
-}
-
-uint16_t getword286()
-{
-        uint16_t temp=readmemw(cs,pc); pc+=2;
-        return temp;
-}
-
-int ratio1=0,ratio2=0;
-
 extern uint32_t oldcs2;
 extern uint32_t oldpc2;
+
+int indump = 0;
 
 void dumpregs()
 {
         FILE *f;
-        int c,d=0,e=0;
+        int c,d=0,e=0,ff;
+        if (indump) return;
+        indump = 1;
 //        return;
         output=0;
 //        return;
 //        savenvr();
-/*        printf("The ratio is %i %i\n",ratio1,ratio2);
-        for (c=0;c<256;c++)
-        {
-                printf("ISRAM : %06X %i\n",c<<16,isram[c]);
-        }*/
 //        return;
 chdir(pcempath);
         nopageerrors=1;
 /*        f=fopen("rram3.dmp","wb");
         for (c=0;c<0x8000000;c++) putc(readmemb(c+0x10000000),f);
         fclose(f);*/
-/*        f=fopen("ram.dmp","wb");
+        f=fopen("ram.dmp","wb");
         fwrite(ram,mem_size*1024*1024,1,f);
+        fclose(f);
+/*        pclog("Dumping rram5.dmp\n");
+        f=fopen("rram5.dmp","wb");
+        for (c=0;c<0x1000000;c++) putc(readmemb(c+0x10150000),f);
         fclose(f);*/
-/*        f=fopen("rram.dmp","wb");
+        pclog("Dumping rram.dmp\n");
+        f=fopen("rram.dmp","wb");
         for (c=0;c<0x1000000;c++) putc(readmemb(c),f);
         fclose(f);
-        f=fopen("rram2.dmp","wb");
+/*        f=fopen("rram2.dmp","wb");
         for (c=0;c<0x100000;c++) putc(readmemb(c+0xbff00000),f);
         fclose(f);
         f = fopen("stack.dmp","wb");
@@ -623,12 +536,15 @@ chdir(pcempath);
         f = fopen("tempx2.dmp","wb");
         for (c = 0; c < 0x10000; c++) putc(readmemb(c+0xFDEF5000), f);
         fclose(f);*/
-/*        f=fopen("rram4.dmp","wb");
-        for (c=0;c<0x3000000;c++) putc(readmemb(c+0x80000000),f);
-        fclose(f);*/
-/*        f=fopen("rram5.dmp","wb");
-        for (c=0;c<0x1000000;c++) putc(readmemb(c+0x10000000),f);
-        fclose(f);*/
+        pclog("Dumping rram4.dmp\n");
+        f=fopen("rram4.dmp","wb");
+        for (c=0;c<0x0050000;c++) 
+        {
+                abrt = 0;
+                putc(readmemb386l(0,c+0x80000000),f);
+        }
+        fclose(f);
+        pclog("Dumping done\n");        
 /*        f=fopen("rram6.dmp","wb");
         for (c=0;c<0x1000000;c++) putc(readmemb(c+0xBF000000),f);
         fclose(f);*/
@@ -644,10 +560,10 @@ chdir(pcempath);
         f=fopen("ram8.bin","wb");
         fwrite(ram+0x3D210,0x200,1,f);
         fclose(f);        */
-/*        f=fopen("vram.dmp","wb");
+        f=fopen("vram.dmp","wb");
         fwrite(vram,0x400000,1,f);
         fclose(f);
-        f=fopen("bios.dmp","wb");
+/*        f=fopen("bios.dmp","wb");
         fwrite(rom,0x20000,1,f);
         fclose(f);
         f=fopen("vbios.dmp","wb");
@@ -670,7 +586,7 @@ chdir(pcempath);
         else
            printf("AX=%04X BX=%04X CX=%04X DX=%04X DI=%04X SI=%04X BP=%04X SP=%04X\n",AX,BX,CX,DX,DI,SI,BP,SP);
         printf("PC=%04X CS=%04X DS=%04X ES=%04X SS=%04X FLAGS=%04X\n",pc,CS,DS,ES,SS,flags);
-        printf("%04X:%04X %04X:%04X %08X %08X %08X\n",oldcs,oldpc, oldcs2, oldpc2, old8,old82,old83);
+        printf("%04X:%04X %04X:%04X\n",oldcs,oldpc, oldcs2, oldpc2);
         printf("%i ins\n",ins);
         if (is386)
            printf("In %s mode\n",(msw&1)?((eflags&VM_FLAG)?"V86":"protected"):"real");
@@ -703,14 +619,28 @@ chdir(pcempath);
         printf("Entries in readlookup : %i    writelookup : %i\n",d,e);
         d=0;
         x87_dumpregs();
+        for (c = 0; c < 256; c++)
+        {
+                e = -1;
+                for (d = 0; d < 256; d++)
+                {
+                        if (inscounts[d] > e)
+                        {
+                                e = inscounts[d];
+                                ff = d;
+                        }
+                }
+                inscounts[ff] = -1;
+//                printf("Opcode %02x - %i\n", ff, e);
+        }
 /*        for (c=0;c<1024*1024;c++)
         {
                 if (mmucache[c]!=0xFFFFFFFF) d++;
         }
         printf("Entries in MMU cache : %i\n",d);*/
+        indump = 0;
 }
 
-int isAT;
 int resets = 0;
 void resetx86()
 {
@@ -733,12 +663,12 @@ void resetx86()
         resetreadlookup();
         makemod1table();
         resetmcr();
-        isAT=AT;
         FETCHCLEAR();
         x87_reset();
         cpu_set_edx();
         ESP=0;
         mmu_perm=4;
+        memset(inscounts, 0, sizeof(inscounts));
 }
 
 void softresetx86()
@@ -759,32 +689,19 @@ void softresetx86()
         flags=2;
 }
 
-#undef AT
-#define AT isAT
-
-extern int is486;
-void setznp8(uint8_t val)
+static void setznp8(uint8_t val)
 {
         flags&=~0xC4;
         flags|=znptable8[val];
 }
 
-#define setznp168 setznp16
-void setznp16(uint16_t val)
+static void setznp16(uint16_t val)
 {
         flags&=~0xC4;
-//        flags|=((val&0x8000)?N_FLAG:((!val)?Z_FLAG:0));
-//        flags|=(((znptable8[val&0xFF]&P_FLAG)==(znptable8[val>>8]&P_FLAG))?P_FLAG:0);
         flags|=znptable16[val];
 }
 
-/*void setznp168(uint16_t val)
-{
-        flags&=~0xC4;
-        flags|=(znptable16[val]&0xC0)|(znptable8[val&0xFF]&4);
-}*/
-
-void setadd8(uint8_t a, uint8_t b)
+static void setadd8(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a+(uint16_t)b;
         flags&=~0x8D5;
@@ -793,7 +710,7 @@ void setadd8(uint8_t a, uint8_t b)
         if (!((a^b)&0x80)&&((a^c)&0x80)) flags|=V_FLAG;
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setadd8nc(uint8_t a, uint8_t b)
+static void setadd8nc(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a+(uint16_t)b;
         flags&=~0x8D4;
@@ -801,7 +718,7 @@ void setadd8nc(uint8_t a, uint8_t b)
         if (!((a^b)&0x80)&&((a^c)&0x80)) flags|=V_FLAG;
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setadc8(uint8_t a, uint8_t b)
+static void setadc8(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a+(uint16_t)b+tempc;
         flags&=~0x8D5;
@@ -810,7 +727,7 @@ void setadc8(uint8_t a, uint8_t b)
         if (!((a^b)&0x80)&&((a^c)&0x80)) flags|=V_FLAG;
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setadd16(uint16_t a, uint16_t b)
+static void setadd16(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a+(uint32_t)b;
         flags&=~0x8D5;
@@ -819,7 +736,7 @@ void setadd16(uint16_t a, uint16_t b)
         if (!((a^b)&0x8000)&&((a^c)&0x8000)) flags|=V_FLAG;
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setadd16nc(uint16_t a, uint16_t b)
+static void setadd16nc(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a+(uint32_t)b;
         flags&=~0x8D4;
@@ -827,7 +744,7 @@ void setadd16nc(uint16_t a, uint16_t b)
         if (!((a^b)&0x8000)&&((a^c)&0x8000)) flags|=V_FLAG;
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setadc16(uint16_t a, uint16_t b)
+static void setadc16(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a+(uint32_t)b+tempc;
         flags&=~0x8D5;
@@ -837,7 +754,7 @@ void setadc16(uint16_t a, uint16_t b)
         if (((a&0xF)+(b&0xF))&0x10)      flags|=A_FLAG;
 }
 
-void setsub8(uint8_t a, uint8_t b)
+static void setsub8(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a-(uint16_t)b;
         flags&=~0x8D5;
@@ -846,7 +763,7 @@ void setsub8(uint8_t a, uint8_t b)
         if ((a^b)&(a^c)&0x80) flags|=V_FLAG;
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setsub8nc(uint8_t a, uint8_t b)
+static void setsub8nc(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a-(uint16_t)b;
         flags&=~0x8D4;
@@ -854,7 +771,7 @@ void setsub8nc(uint8_t a, uint8_t b)
         if ((a^b)&(a^c)&0x80) flags|=V_FLAG;
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setsbc8(uint8_t a, uint8_t b)
+static void setsbc8(uint8_t a, uint8_t b)
 {
         uint16_t c=(uint16_t)a-(((uint16_t)b)+tempc);
         flags&=~0x8D5;
@@ -863,7 +780,7 @@ void setsbc8(uint8_t a, uint8_t b)
         if ((a^b)&(a^c)&0x80) flags|=V_FLAG;
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setsub16(uint16_t a, uint16_t b)
+static void setsub16(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a-(uint32_t)b;
         flags&=~0x8D5;
@@ -873,7 +790,7 @@ void setsub16(uint16_t a, uint16_t b)
 //        if (output) printf("%04X %04X %i\n",a^b,a^c,flags&V_FLAG);
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setsub16nc(uint16_t a, uint16_t b)
+static void setsub16nc(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a-(uint32_t)b;
         flags&=~0x8D4;
@@ -882,7 +799,7 @@ void setsub16nc(uint16_t a, uint16_t b)
         if ((a^b)&(a^c)&0x8000) flags|=V_FLAG;
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
-void setsbc16(uint16_t a, uint16_t b)
+static void setsbc16(uint16_t a, uint16_t b)
 {
         uint32_t c=(uint32_t)a-(((uint32_t)b)+tempc);
         flags&=~0x8D5;
@@ -893,107 +810,31 @@ void setsbc16(uint16_t a, uint16_t b)
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
 
-
+int totaldiff = 0;
+int current_diff = 0;
 void clockhardware()
 {
-                cycdiff-=cycles;
-                
-                keybsenddelay--;
-                if (keybsenddelay<1)
-                {
-                        keybsenddelay = 1000;//2500;
-                        keyboard_poll();
-                }
-
-                pit.c[0]-=cycdiff;
-                pit.c[1]-=cycdiff;
-                if (ppi.pb&1) pit.c[2]-=cycdiff;
-
-                if ((pit.c[0]<1)||(pit.c[1]<1)||(pit.c[2]<1)) pit_poll();
-
-                spktime-=cycdiff;
-                if (spktime<=0.0)
-                {
-                        spktime+=SPKCONST;
-                        pollspk();
-                        pollgussamp();
-                        getsbsamp();
-                        getdacsamp();
-                        polladlib();
-                }
-                soundtime-=cycdiff;
-                if (soundtime<=0.0)
-                {
-                        soundtime+=SOUNDCONST;
-                        pollsound60hz();
-                }
-                gustime-=cycdiff;
-                while (gustime<=0.0)
-                {
-                        gustime+=GUSCONST;
-//                        printf("1Poll GUS %f %f\n",gustime,GUSCONST);
-                        pollgus();
-//                        printf("2Poll GUS\n");
-                }
-                vidtime-=cycdiff;
-                if (vidtime<=0.0)
-                {
-                        pollvideo();
-//                        polltandy();
-//                        pollmda();
-//                        pollcga();
-                }
-                if (disctime)
-                {
-                        disctime-=(cycdiff/2);
-                        if (disctime<=0)
-                        {
-                                disctime=0;
-                                fdc_poll();
-                        }
-                }
-                if (mousedelay)
-                {
-                        mousedelay--;
-                        if (!mousedelay)
-                           mousecallback();
-                }
-                if (sbenable)
-                {
-                        sbcount-=cycdiff;
-                        if (sbcount<0)
-                        {
-                                sbcount+=sblatcho;
-                                pollsb();
-                        }
-                }
-                rtctime-=cycdiff;
-                if (rtctime<0)
-                {
-                        nvr_rtc();
-                }
-                cycdiff=cycles;
-                if (idecallback[0])
-                {
-                        idecallback[0]--;
-                        if (idecallback[0]<=0)
-                        {
-//                                pclog("IDE time over\n");
-                                idecallback[0]=0;
-                                callbackide(0);
-                        }
-                }
+        int diff = cycdiff - cycles - current_diff;
+        
+        current_diff += diff;
+        totaldiff += diff;
+        pit.c[0] -= diff;
+        pit.c[1] -= diff;
+        if (ppi.pb & 1) pit.c[2] -= diff;
+        if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
+        
+        timer_clock(diff);
 }
 
 
-                int firstrepcycle=1;
-void cpu_writeport(uint32_t port, uint8_t val) { outb(port,val); }
+int firstrepcycle=1;
+
 void rep(int fv)
 {
         uint8_t temp;
         int c=CX;
         uint8_t temp2;
-        uint16_t tempw,tempw2,tempw3;
+        uint16_t tempw,tempw2;
         uint16_t ipc=oldpc;//pc-1;
         int changeds=0;
         uint32_t oldds;
@@ -1051,9 +892,9 @@ void rep(int fv)
                         if (flags&D_FLAG) { DI--; SI--; }
                         else              { DI++; SI++; }
                         c--;
-                        cycles-=((AT)?4:17);
+                        cycles-=17;
                         clockhardware();
-                        FETCHADD(((AT)?4:17)-memcycs);
+                        FETCHADD(17-memcycs);
                 }
                 if (IRQTEST && c>0) pc=ipc;
 //                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1069,9 +910,9 @@ void rep(int fv)
                         if (flags&D_FLAG) { DI-=2; SI-=2; }
                         else              { DI+=2; SI+=2; }
                         c--;
-                        cycles-=((AT)?4:17);
+                        cycles-=17;
                         clockhardware();
-                        FETCHADD(((AT)?4:17)-memcycs);
+                        FETCHADD(17 - memcycs);
                 }
                 if (IRQTEST && c>0) pc=ipc;
 //                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1090,11 +931,10 @@ void rep(int fv)
                         if (flags&D_FLAG) { DI--; SI--; }
                         else              { DI++; SI++; }
                         c--;
-                        if (!AT) cycles-=30;
-                        else     cycles-=9;
+                        cycles -= 30;
                         setsub8(temp,temp2);
                         clockhardware();
-                        FETCHADD(((AT)?9:30)-memcycs);
+                        FETCHADD(30 - memcycs);
                 }
                 if (IRQTEST && c>0 && (fv==((flags&Z_FLAG)?1:0))) pc=ipc;
 //                if ((c>0) && (fv==((flags&Z_FLAG)?1:0))) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1111,11 +951,10 @@ void rep(int fv)
                         if (flags&D_FLAG) { DI-=2; SI-=2; }
                         else              { DI+=2; SI+=2; }
                         c--;
-                        if (!AT) cycles-=30;
-                        else     cycles-=9;
+                        cycles -= 30;
                         setsub16(tempw,tempw2);
                         clockhardware();
-                        FETCHADD(((AT)?9:30)-memcycs);
+                        FETCHADD(30 - memcycs);
                 }
                 if (IRQTEST && c>0 && (fv==((flags&Z_FLAG)?1:0))) pc=ipc;
 //                if ((c>0) && (fv==((flags&Z_FLAG)?1:0))) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1130,9 +969,9 @@ void rep(int fv)
                         if (flags&D_FLAG) DI--;
                         else              DI++;
                         c--;
-                        cycles-=((AT)?3:10);
+                        cycles -= 10;
                         clockhardware();
-                        FETCHADD(((AT)?3:10)-memcycs);
+                        FETCHADD(10 - memcycs);
                 }
                 if (IRQTEST && c>0) pc=ipc;
 //                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1146,14 +985,13 @@ void rep(int fv)
                         if (flags&D_FLAG) DI-=2;
                         else              DI+=2;
                         c--;
-                        cycles-=((AT)?3:10);
+                        cycles -= 10;
                         clockhardware();
-                        FETCHADD(((AT)?3:10)-memcycs);
+                        FETCHADD(10 - memcycs);
                 }
                 if (IRQTEST && c>0) pc=ipc;
 //                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; FETCHCLEAR(); }
 //                else firstrepcycle=1;
-//                printf("REP STOSW %04X:%04X %04X:%04X %04X %04X\n",CS,pc,ES,DI,AX,CX); }
                 break;
                 case 0xAC: /*REP LODSB*/
                 if (c>0)
@@ -1191,7 +1029,7 @@ void rep(int fv)
                         if (flags&D_FLAG) DI--;
                         else              DI++;
                         c--;
-                        cycles-=((AT)?8:15);
+                        cycles -= 15;
                 }
 //if (output)                printf("%i %i %i %i\n",c,(c>0),(fv==((flags&Z_FLAG)?1:0)),((c>0) && (fv==((flags&Z_FLAG)?1:0))));
                 if ((c>0) && (fv==((flags&Z_FLAG)?1:0)))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; FETCHCLEAR(); }
@@ -1208,7 +1046,7 @@ void rep(int fv)
                         if (flags&D_FLAG) DI-=2;
                         else              DI+=2;
                         c--;
-                        cycles-=((AT)?8:15);
+                        cycles -= 15;
                 }
                 if ((c>0) && (fv==((flags&Z_FLAG)?1:0)))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; FETCHCLEAR(); }
                 else firstrepcycle=1;
@@ -1233,7 +1071,7 @@ int firstrepcycle;
 int skipnextprint=0;
 
 
-int instime=0,instimer=0;
+int instime=0;
 //#if 0
 void execx86(int cycs)
 {
@@ -1245,7 +1083,7 @@ void execx86(int cycs)
         int c;
         int tempi;
         int trap;
-        FILE *f;
+
 //        printf("Run x86! %i %i\n",cycles,cycs);
         cycles+=cycs;
 //        i86_Execute(cycs);
@@ -1258,6 +1096,7 @@ void execx86(int cycs)
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
 //                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
+                current_diff = 0;
                 cycles-=nextcyc;
 //                if (instime) pclog("Cycles %i %i\n",cycles,cycdiff);
                 nextcyc=0;
@@ -1273,14 +1112,14 @@ void execx86(int cycs)
 //                output=1;
 //                if (output) printf("%04X:%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X\n",cs>>4,pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags&~0x200,rmdat);
 //#if 0
-                if (output && /*cs<0xF0000 && */!ssegs && (pc<0x43A || pc>0x44A))//opcode!=0x26 && opcode!=0x36 && opcode!=0x2E && opcode!=0x3E)
+                if (output)
                 {
-                        if ((opcode!=0xF2 && opcode!=0xF3) || firstrepcycle)
-                        {
+//                        if ((opcode!=0xF2 && opcode!=0xF3) || firstrepcycle)
+//                        {
                                 if (!skipnextprint) printf("%04X:%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X  %02X %02X %02X %02X\n",cs,pc,AX,BX,CX,DX,CS,DS,ES,SS,DI,SI,BP,SP,opcode,flags, ram[0x413], ram[0x414], ram[0x415], ram[0x416]);
                                 skipnextprint=0;
 //                                ins++;
-                        }
+//                        }
                 }
 //#endif
                 pc++;
@@ -2549,74 +2388,24 @@ void execx86(int cycs)
                         lastcs=CS;
                         temp=FETCH();
                         
-//                        if (temp == 0x13  && AX == 0x0201  && ES == 0x0BF5 && CX == 0x1D06) output = 3;
-//                        if (temp==0x10 && !AH) printf("Entering mode %02X\n",AL);
-//                        if (temp==0x18 || temp==0x19) { printf("INT %02X\n",temp); output=1; }
-//                        /*if (temp==0x13) */printf("INT %02X %04X %04X:%04X %04X %04X:%04X %04X:%04X\n",temp,AX,ES,BX,CX,DS,DX,CS,pc);
-                        //if (temp == 0x13 && AH == 2) output = 3;
-/*                        if (CS==0xC800 && temp==0x13)
-                        {
-                                output=3;
-                                timetolive=100000;
-                        }*/
-/*                        if (temp==0x10) printf("INT 10 %04X %04X %04X %04X %04X:%04X %06X %06X %c\n",AX,BX,CX,DX,cs>>4,pc,ds,ds+DX, (AL > 31) ? AL : '.');
-                        if (temp == 0x10 && AX == 0xe35)
-                        {
-                                dumpregs();
+                        if (ssegs) ss=oldss;
+                        writememw(ss,((SP-2)&0xFFFF),flags|0xF000);
+                        writememw(ss,((SP-4)&0xFFFF),CS);
+                        writememw(ss,((SP-6)&0xFFFF),pc);
+                        flags&=~T_FLAG;
+                        SP-=6;
+                        addr=temp<<2;
+                        pc=readmemw(0,addr);
 
-                        }*/
-/*                        if (temp==0x21 && AH==9)
-                        {
-                                addr=0;
-                                while (ram[ds+DX+addr]!='$')
-                                {
-                                        printf("%c",ram[ds+DX+addr]);
-                                        addr++;
-                                }
-                                printf("\n");
-                                printf("Called from %04X\n",readmemw(ss,SP));
-                        }*/
-//                        output=0;
-//                        if (temp==0x13 && AH==3) printf("Write sector %04X:%04X %05X\n",es>>4,BX,es+BX);
-/*                        if (temp==0x13 && (DL==0x80 || DL==0x81) && AH>0)
-                        {
-                                int13hdc();
-                        }
-                        else *//*if (temp==0x13 && AH==2 && DL<2)// && FASTDISC)
-                        {
-                                int13read();
-                                //output=1;
-                        }
-                        else if (temp==0x13 && AH==3 && DL<2)// && FASTDISC)
-                        {
-                                int13write();
-                        }
-                        else if (temp==0x13 && AH==4 && DL<2)// && FASTDISC)
-                        {
-                                AH=0;
-                                flags&=~C_FLAG;
-                        }
-                        else
-                        {*/
-                                if (ssegs) ss=oldss;
-                                writememw(ss,((SP-2)&0xFFFF),flags|0xF000);
-                                writememw(ss,((SP-4)&0xFFFF),CS);
-                                writememw(ss,((SP-6)&0xFFFF),pc);
-                                flags&=~T_FLAG;
-                                SP-=6;
-                                addr=temp<<2;
-                                pc=readmemw(0,addr);
-//                        printf("CD\n");
-                                loadcs(readmemw(0,addr+2));
-                                FETCHCLEAR();
-//                        }
+                        loadcs(readmemw(0,addr+2));
+                        FETCHCLEAR();
+
                         cycles-=71;
                         break;
                         case 0xCF: /*IRET*/
                         if (ssegs) ss=oldss;
                         tempw=CS;
                         tempw2=pc;
-                        inint=0;
                         pc=readmemw(ss,SP);
 //                        printf("CF\n");
                         loadcs(readmemw(ss,((SP+2)&0xFFFF)));
@@ -3063,14 +2852,14 @@ void execx86(int cycs)
                         tempws=FETCH();
                         AH=AL/tempws;
                         AL%=tempws;
-                        setznp168(AX);
+                        setznp16(AX);
                         cycles-=83;
                         break;
                         case 0xD5: /*AAD*/
                         tempws=FETCH();
                         AL=(AH*tempws)+AL;
                         AH=0;
-                        setznp168(AX);
+                        setznp16(AX);
                         cycles-=60;
                         break;
                         case 0xD7: /*XLAT*/
@@ -3669,7 +3458,6 @@ void execx86(int cycs)
 //                        printf("INT INT INT\n");
                                 loadcs(readmemw(0,addr+2));
                                 FETCHCLEAR();
-                                inint=1;
 //                                printf("INTERRUPT\n");
                         }
                 }
