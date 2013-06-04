@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "sound_mpu401_uart.h"
+#include "sound_opl.h"
 #include "sound_sb.h"
 #include "sound_sb_dsp.h"
-#include "sound_opl.h"
 
 #include "filters.h"
 
@@ -22,9 +23,10 @@ typedef struct sb_mixer_t
 
 typedef struct sb_t
 {
-        opl_t      opl;
-        sb_dsp_t   dsp;
-        sb_mixer_t mixer;
+        opl_t           opl;
+        sb_dsp_t        dsp;
+        sb_mixer_t      mixer;
+        mpu401_uart_t   mpu;
 
         int16_t opl_buffer[SOUNDBUFLEN * 2];
         int16_t dsp_buffer[SOUNDBUFLEN * 2];
@@ -336,6 +338,7 @@ void *sb_16_init()
         io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0224, 0x0002, sb_16_mixer_read, NULL, NULL, sb_16_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_opl3_poll, sb_get_buffer, sb);
+        mpu401_uart_init(&sb->mpu, 0x330);
 
         sb->mixer.regs[0x30] = 31 << 3;
         sb->mixer.regs[0x31] = 31 << 3;

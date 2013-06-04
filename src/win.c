@@ -18,6 +18,7 @@
 #include "nvr.h"
 #include "sound.h"
 
+#include "plat-midi.h"
 #include "plat-keyboard.h"
 
 #include "win-ddraw.h"
@@ -300,6 +301,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         ghwnd=hwnd;
         
         ddraw_init(hwnd);
+        midi_init();
+        atexit(midi_close);
 //        d3d_init(hwnd);
 //        opengl_init(hwnd);
         
