@@ -593,5 +593,6 @@ device_t adgold_device =
         "AdLib Gold",
         adgold_init,
         adgold_close,
+        NULL,
         NULL
 };

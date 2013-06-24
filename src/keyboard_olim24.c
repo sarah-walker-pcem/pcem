@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "mouse.h"
 #include "pic.h"
+#include "timer.h"
 
 #include "keyboard.h"
 #include "keyboard_olim24.h"
@@ -38,6 +39,7 @@ static uint8_t mouse_scancodes[7];
 
 void keyboard_olim24_poll()
 {
+        keybsenddelay += (1000 * TIMER_USEC);
         //pclog("poll %i\n", keyboard_olim24.wantirq);
         if (keyboard_olim24.wantirq)
         {
@@ -283,4 +285,6 @@ void keyboard_olim24_init()
         keyboard_send = keyboard_olim24_adddata;
         keyboard_poll = keyboard_olim24_poll;
         mouse_poll    = mouse_olim24_poll;
+        
+        timer_add(keyboard_olim24_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }

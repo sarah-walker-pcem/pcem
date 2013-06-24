@@ -179,8 +179,6 @@ void pc_reset()
 //        sb_reset();
 
         ali1429_reset();
-        et4000w32_reset();
-        
 //        video_init();
 }
 
@@ -209,8 +207,8 @@ void initpc()
         
         initvideo();
         mem_init();
-        loadbios();
         mem_load_video_bios();
+        loadbios();
 
         loaddisc(0,discfns[0]);
         loaddisc(1,discfns[1]);
@@ -221,10 +219,8 @@ void initpc()
         
         //loadfont();
         loadnvr();
-        resetvideo();
         sound_init();
         inithdc();
-        initega();
         resetide();
         ioctl_open(cdrom_drive);
         model_init();        
@@ -244,7 +240,6 @@ void initpc()
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
         mem_updatecache();
         ali1429_reset();
-        et4000w32_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
         shadowbios=0;
@@ -330,6 +325,7 @@ void runpc()
                 framecount++;
                 if (framecountx>=100)
                 {
+                        pclog("onesec\n");
                         framecountx=0;
                         mips=(float)insc/1000000.0f;
                         insc=0;
@@ -404,7 +400,6 @@ void closepc()
 {
         atapi->exit();
 //        ioctl_close();
-        dumpegaregs();
         dumppic();
 //        output=7;
 //        setpitclock(clocks[0][0][0]);

@@ -9,22 +9,22 @@ extern int scrollcache;
 
 extern uint8_t edatlookup[4][4];
 
-void svga_render_blank();
-void svga_render_text_40();
-void svga_render_text_80();
+void svga_render_blank(svga_t *svga);
+void svga_render_text_40(svga_t *svga);
+void svga_render_text_80(svga_t *svga);
 
-void svga_render_2bpp_lowres();
-void svga_render_4bpp_lowres();
-void svga_render_4bpp_highres();
-void svga_render_8bpp_lowres();
-void svga_render_8bpp_highres();
-void svga_render_15bpp_lowres();
-void svga_render_15bpp_highres();
-void svga_render_16bpp_lowres();
-void svga_render_16bpp_highres();
-void svga_render_24bpp_lowres();
-void svga_render_24bpp_highres();
-void svga_render_32bpp_lowres();
-void svga_render_32bpp_highres();
+void svga_render_2bpp_lowres(svga_t *svga);
+void svga_render_4bpp_lowres(svga_t *svga);
+void svga_render_4bpp_highres(svga_t *svga);
+void svga_render_8bpp_lowres(svga_t *svga);
+void svga_render_8bpp_highres(svga_t *svga);
+void svga_render_15bpp_lowres(svga_t *svga);
+void svga_render_15bpp_highres(svga_t *svga);
+void svga_render_16bpp_lowres(svga_t *svga);
+void svga_render_16bpp_highres(svga_t *svga);
+void svga_render_24bpp_lowres(svga_t *svga);
+void svga_render_24bpp_highres(svga_t *svga);
+void svga_render_32bpp_lowres(svga_t *svga);
+void svga_render_32bpp_highres(svga_t *svga);
 
-extern void (*svga_render)();
+extern void (*svga_render)(svga_t *svga);

@@ -272,6 +272,12 @@ void sb_exec_command(sb_dsp_t *dsp)
         pclog("sb_exec_command : SB command %02X\n", dsp->sb_command);
         switch (dsp->sb_command)
         {
+                case 0x01: /*???*/
+                sb_add_data(dsp, 0);
+                break;
+                case 0x03: /*ASP status*/
+                sb_add_data(dsp, 0);
+                break;
                 case 0x10: /*8-bit direct mode*/
                 dsp->sbdat = dsp->sbdatl = dsp->sbdatr = (dsp->sb_data[0] ^ 0x80) << 8;
                 break;

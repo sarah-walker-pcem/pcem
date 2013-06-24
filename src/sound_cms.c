@@ -175,5 +175,6 @@ device_t cms_device =
         "Creative Music System / Game Blaster",
         cms_init,
         cms_close,
+        NULL,
         NULL
 };

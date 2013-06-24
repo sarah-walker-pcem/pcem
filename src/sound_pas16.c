@@ -749,5 +749,6 @@ device_t pas16_device =
         "Pro Audio Spectrum 16",
         pas16_init,
         pas16_close,
+        NULL,
         NULL
 };

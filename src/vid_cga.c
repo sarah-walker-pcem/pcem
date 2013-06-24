@@ -1,109 +1,114 @@
 /*CGA emulation*/
+#include <stdlib.h>
 #include <math.h>
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "mem.h"
 #include "timer.h"
 #include "video.h"
 #include "vid_cga.h"
 
-void cga_recalctimings();
+static int i_filt[8],q_filt[8];
 
-void cga_out(uint16_t addr, uint8_t val, void *priv)
+static uint8_t crtcmask[32] = 
 {
+        0xff, 0xff, 0xff, 0xff, 0x7f, 0x1f, 0x7f, 0x7f, 0xf3, 0x1f, 0x7f, 0x1f, 0x3f, 0xff, 0x3f, 0xff,
+        0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+void cga_recalctimings(cga_t *cga);
+
+void cga_out(uint16_t addr, uint8_t val, void *p)
+{
+        cga_t *cga = (cga_t *)p;
         uint8_t old;
 //        pclog("CGA_OUT %04X %02X\n", addr, val);
         switch (addr)
         {
                 case 0x3D4:
-                crtcreg=val&31;
+                cga->crtcreg = val & 31;
                 return;
                 case 0x3D5:
-                old=crtc[crtcreg];
-                crtc[crtcreg]=val&crtcmask[crtcreg];
-                if (old!=val)
+                old = cga->crtc[cga->crtcreg];
+                cga->crtc[cga->crtcreg] = val & crtcmask[cga->crtcreg];
+                if (old != val)
                 {
-                        if (crtcreg<0xE || crtcreg>0x10)
+                        if (cga->crtcreg < 0xe || cga->crtcreg > 0x10)
                         {
-                                fullchange=changeframecount;
-                                cga_recalctimings();
+                                fullchange = changeframecount;
+                                cga_recalctimings(cga);
                         }
                 }
                 return;
                 case 0x3D8:
-                cgamode=val;
+                cga->cgamode = val;
                 return;
                 case 0x3D9:
-                cgacol=val;
+                cga->cgacol = val;
                 return;
         }
 }
 
-uint8_t cga_in(uint16_t addr, void *priv)
+uint8_t cga_in(uint16_t addr, void *p)
 {
+        cga_t *cga = (cga_t *)p;
 //        pclog("CGA_IN %04X\n", addr);
         switch (addr)
         {
                 case 0x3D4:
-                return crtcreg;
+                return cga->crtcreg;
                 case 0x3D5:
-                return crtc[crtcreg];
+                return cga->crtc[cga->crtcreg];
                 case 0x3DA:
-                return cgastat;
+                return cga->cgastat;
         }
         return 0xFF;
 }
 
-extern uint8_t charbuffer[256];
-
-void cga_write(uint32_t addr, uint8_t val, void *priv)
+void cga_write(uint32_t addr, uint8_t val, void *p)
 {
+        cga_t *cga = (cga_t *)p;
 //        pclog("CGA_WRITE %04X %02X\n", addr, val);
-        vram[addr&0x3FFF]=val;
-        charbuffer[ ((int)(((dispontime - vidtime) * 2) / CGACONST)) & 0xfc] = val;
-        charbuffer[(((int)(((dispontime - vidtime) * 2) / CGACONST)) & 0xfc) | 1] = val;
+        cga->vram[addr & 0x3fff] = val;
+        cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = val;
+        cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = val;
         cycles -= 4;
 }
 
-uint8_t cga_read(uint32_t addr, void *priv)
+uint8_t cga_read(uint32_t addr, void *p)
 {
+        cga_t *cga = (cga_t *)p;
         cycles -= 4;        
-        charbuffer[ ((int)(((dispontime - vidtime) * 2) / CGACONST)) & 0xfc] = vram[addr&0x3FFF];
-        charbuffer[(((int)(((dispontime - vidtime) * 2) / CGACONST)) & 0xfc) | 1] = vram[addr&0x3FFF];
+        cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = cga->vram[addr & 0x3fff];
+        cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = cga->vram[addr & 0x3fff];
 //        pclog("CGA_READ %04X\n", addr);
-        return vram[addr&0x3FFF];
+        return cga->vram[addr & 0x3fff];
 }
 
-void cga_recalctimings()
+void cga_recalctimings(cga_t *cga)
 {
+        double disptime;
 	double _dispontime, _dispofftime;
-        pclog("Recalc - %i %i %i\n", crtc[0], crtc[1], cgamode & 1);
-        if (cgamode&1)
+        pclog("Recalc - %i %i %i\n", cga->crtc[0], cga->crtc[1], cga->cgamode & 1);
+        if (cga->cgamode & 1)
         {
-                disptime=crtc[0]+1;
-                _dispontime=crtc[1];
+                disptime = cga->crtc[0] + 1;
+                _dispontime = cga->crtc[1];
         }
         else
         {
-                disptime=(crtc[0]+1)<<1;
-                _dispontime=crtc[1]<<1;
+                disptime = (cga->crtc[0] + 1) << 1;
+                _dispontime = cga->crtc[1] << 1;
         }
-        _dispofftime=disptime-_dispontime;
+        _dispofftime = disptime - _dispontime;
 //        printf("%i %f %f %f  %i %i\n",cgamode&1,disptime,dispontime,dispofftime,crtc[0],crtc[1]);
-        _dispontime*=CGACONST;
-        _dispofftime*=CGACONST;
+        _dispontime *= CGACONST;
+        _dispofftime *= CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
-	dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	cga->dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
+	cga->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
-
-static int linepos,displine;
-static int sc,vc;
-static int cgadispon;
-static int con,coff,cursoron,cgablink;
-static int vsynctime,vadj;
-static uint16_t ma,maback;
-static int oddeven = 0;
 
 static int ntsc_col[8][8]=
 {
@@ -117,326 +122,331 @@ static int ntsc_col[8][8]=
         {1,1,1,1,1,1,1,1}  /*White*/
 };
 
-int i_filt[8],q_filt[8];
-
-
-void cga_poll()
+void cga_poll(void *p)
 {
-        uint16_t ca=(crtc[15]|(crtc[14]<<8))&0x3FFF;
+        cga_t *cga = (cga_t *)p;
+        uint16_t ca = (cga->crtc[15] | (cga->crtc[14] << 8)) & 0x3fff;
         int drawcursor;
-        int x,c;
+        int x, c;
         int oldvc;
-        uint8_t chr,attr;
+        uint8_t chr, attr;
         uint16_t dat;
         int cols[4];
         int col;
         int oldsc;
-        int y_buf[8]={0,0,0,0,0,0,0,0},y_val,y_tot;
-        int i_buf[8]={0,0,0,0,0,0,0,0},i_val,i_tot;
-        int q_buf[8]={0,0,0,0,0,0,0,0},q_val,q_tot;
-        int r,g,b;
-        if (!linepos)
+        int y_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, y_val, y_tot;
+        int i_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, i_val, i_tot;
+        int q_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, q_val, q_tot;
+        int r, g, b;
+        if (!cga->linepos)
         {
-                vidtime+=dispofftime;
-                cgastat|=1;
-                linepos=1;
-                oldsc=sc;
-                if ((crtc[8] & 3) == 3) 
-                   sc = ((sc << 1) + oddeven) & 7;
-                if (cgadispon)
+                cga->vidtime += cga->dispofftime;
+                cga->cgastat |= 1;
+                cga->linepos = 1;
+                oldsc = cga->sc;
+                if ((cga->crtc[8] & 3) == 3) 
+                   cga->sc = ((cga->sc << 1) + cga->oddeven) & 7;
+                if (cga->cgadispon)
                 {
-                        if (displine<firstline)
+                        if (cga->displine < cga->firstline)
                         {
-                                firstline=displine;
+                                cga->firstline = cga->displine;
 //                                printf("Firstline %i\n",firstline);
                         }
-                        lastline=displine;
-                        for (c=0;c<8;c++)
+                        cga->lastline = cga->displine;
+                        for (c = 0; c < 8; c++)
                         {
-                                if ((cgamode&0x12)==0x12)
+                                if ((cga->cgamode & 0x12) == 0x12)
                                 {
-                                        buffer->line[displine][c]=0;
-                                        if (cgamode&1) buffer->line[displine][c+(crtc[1]<<3)+8]=0;
-                                        else           buffer->line[displine][c+(crtc[1]<<4)+8]=0;
+                                        buffer->line[cga->displine][c] = 0;
+                                        if (cga->cgamode & 1) buffer->line[cga->displine][c + (cga->crtc[1] << 3) + 8] = 0;
+                                        else                  buffer->line[cga->displine][c + (cga->crtc[1] << 4) + 8] = 0;
                                 }
                                 else
                                 {
-                                        buffer->line[displine][c]=(cgacol&15)+16;
-                                        if (cgamode&1) buffer->line[displine][c+(crtc[1]<<3)+8]=(cgacol&15)+16;
-                                        else           buffer->line[displine][c+(crtc[1]<<4)+8]=(cgacol&15)+16;
+                                        buffer->line[cga->displine][c] = (cga->cgacol & 15) + 16;
+                                        if (cga->cgamode & 1) buffer->line[cga->displine][c + (cga->crtc[1] << 3) + 8] = (cga->cgacol & 15) + 16;
+                                        else                  buffer->line[cga->displine][c + (cga->crtc[1] << 4) + 8] = (cga->cgacol & 15) + 16;
                                 }
                         }
-                        if (cgamode&1)
+                        if (cga->cgamode & 1)
                         {
-                                for (x=0;x<crtc[1];x++)
+                                for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        chr=charbuffer[x<<1];
-                                        attr=charbuffer[(x<<1)+1];
-                                        drawcursor=((ma==ca) && con && cursoron);
-                                        if (cgamode&0x20)
+                                        chr = cga->charbuffer[x << 1];
+                                        attr = cga->charbuffer[(x << 1) + 1];
+                                        drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
+                                        if (cga->cgamode & 0x20)
                                         {
-                                                cols[1]=(attr&15)+16;
-                                                cols[0]=((attr>>4)&7)+16;
-                                                if ((cgablink&8) && (attr&0x80) && !drawcursor) cols[1]=cols[0];
+                                                cols[1] = (attr & 15) + 16;
+                                                cols[0] = ((attr >> 4) & 7) + 16;
+                                                if ((cga->cgablink & 8) && (attr & 0x80) && !cga->drawcursor) 
+                                                        cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1]=(attr&15)+16;
-                                                cols[0]=(attr>>4)+16;
+                                                cols[1] = (attr & 15) + 16;
+                                                cols[0] = (attr >> 4) + 16;
                                         }
                                         if (drawcursor)
                                         {
-                                                for (c=0;c<8;c++)
-                                                    buffer->line[displine][(x<<3)+c+8]=cols[(fontdat[chr][sc&7]&(1<<(c^7)))?1:0]^15;
+                                                for (c = 0; c < 8; c++)
+                                                    buffer->line[cga->displine][(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
                                         }
                                         else
                                         {
-                                                for (c=0;c<8;c++)
-                                                    buffer->line[displine][(x<<3)+c+8]=cols[(fontdat[chr][sc&7]&(1<<(c^7)))?1:0];
+                                                for (c = 0; c < 8; c++)
+                                                    buffer->line[cga->displine][(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
-                                        ma++;
+                                        cga->ma++;
                                 }
                         }
-                        else if (!(cgamode&2))
+                        else if (!(cga->cgamode & 2))
                         {
-                                for (x=0;x<crtc[1];x++)
+                                for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        chr=vram[((ma<<1)&0x3FFF)];
-                                        attr=vram[(((ma<<1)+1)&0x3FFF)];
-                                        drawcursor=((ma==ca) && con && cursoron);
-                                        if (cgamode&0x20)
+                                        chr  = cga->vram[((cga->ma << 1) & 0x3fff)];
+                                        attr = cga->vram[(((cga->ma << 1) + 1) & 0x3fff)];
+                                        drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
+                                        if (cga->cgamode & 0x20)
                                         {
-                                                cols[1]=(attr&15)+16;
-                                                cols[0]=((attr>>4)&7)+16;
-                                                if ((cgablink&8) && (attr&0x80)) cols[1]=cols[0];
+                                                cols[1] = (attr & 15) + 16;
+                                                cols[0] = ((attr >> 4) & 7) + 16;
+                                                if ((cga->cgablink & 8) && (attr & 0x80)) cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1]=(attr&15)+16;
-                                                cols[0]=(attr>>4)+16;
+                                                cols[1] = (attr & 15) + 16;
+                                                cols[0] = (attr >> 4) + 16;
                                         }
-                                        ma++;
+                                        cga->ma++;
                                         if (drawcursor)
                                         {
-                                                for (c=0;c<8;c++)
-                                                    buffer->line[displine][(x<<4)+(c<<1)+8]=buffer->line[displine][(x<<4)+(c<<1)+1+8]=cols[(fontdat[chr][sc&7]&(1<<(c^7)))?1:0]^15;
+                                                for (c = 0; c < 8; c++)
+                                                    buffer->line[cga->displine][(x << 4)+(c << 1) + 8] = buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
                                         }
                                         else
                                         {
-                                                for (c=0;c<8;c++)
-                                                    buffer->line[displine][(x<<4)+(c<<1)+8]=buffer->line[displine][(x<<4)+(c<<1)+1+8]=cols[(fontdat[chr][sc&7]&(1<<(c^7)))?1:0];
+                                                for (c = 0; c < 8; c++)
+                                                    buffer->line[cga->displine][(x << 4) + (c << 1) + 8] = buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                 }
                         }
-                        else if (!(cgamode&16))
+                        else if (!(cga->cgamode & 16))
                         {
-                                cols[0]=(cgacol&15)|16;
-                                col=(cgacol&16)?24:16;
-                                if (cgamode&4)
+                                cols[0] = (cga->cgacol & 15) | 16;
+                                col = (cga->cgacol & 16) ? 24 : 16;
+                                if (cga->cgamode & 4)
                                 {
-                                        cols[1]=col|3;
-                                        cols[2]=col|4;
-                                        cols[3]=col|7;
+                                        cols[1] = col | 3;
+                                        cols[2] = col | 4;
+                                        cols[3] = col | 7;
                                 }
-                                else if (cgacol&32)
+                                else if (cga->cgacol & 32)
                                 {
-                                        cols[1]=col|3;
-                                        cols[2]=col|5;
-                                        cols[3]=col|7;
+                                        cols[1] = col | 3;
+                                        cols[2] = col | 5;
+                                        cols[3] = col | 7;
                                 }
                                 else
                                 {
-                                        cols[1]=col|2;
-                                        cols[2]=col|4;
-                                        cols[3]=col|6;
+                                        cols[1] = col | 2;
+                                        cols[2] = col | 4;
+                                        cols[3] = col | 6;
                                 }
-                                for (x=0;x<crtc[1];x++)
+                                for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        dat=(vram[((ma<<1)&0x1FFF)+((sc&1)*0x2000)]<<8)|vram[((ma<<1)&0x1FFF)+((sc&1)*0x2000)+1];
-                                        ma++;
-                                        for (c=0;c<8;c++)
+                                        dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        cga->ma++;
+                                        for (c = 0; c < 8; c++)
                                         {
-                                                buffer->line[displine][(x<<4)+(c<<1)+8]=
-                                                  buffer->line[displine][(x<<4)+(c<<1)+1+8]=cols[dat>>14];
-                                                dat<<=2;
+                                                buffer->line[cga->displine][(x << 4) + (c << 1) + 8] =
+                                                  buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
+                                                dat <<= 2;
                                         }
                                 }
                         }
                         else
                         {
-                                cols[0]=0; cols[1]=(cgacol&15)+16;
-                                for (x=0;x<crtc[1];x++)
+                                cols[0] = 0; cols[1] = (cga->cgacol & 15) + 16;
+                                for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        dat=(vram[((ma<<1)&0x1FFF)+((sc&1)*0x2000)]<<8)|vram[((ma<<1)&0x1FFF)+((sc&1)*0x2000)+1];
-                                        ma++;
-                                        for (c=0;c<16;c++)
+                                        dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        cga->ma++;
+                                        for (c = 0; c < 16; c++)
                                         {
-                                                buffer->line[displine][(x<<4)+c+8]=cols[dat>>15];
-                                                dat<<=1;
+                                                buffer->line[cga->displine][(x << 4) + c + 8] = cols[dat >> 15];
+                                                dat <<= 1;
                                         }
                                 }
                         }
                 }
                 else
                 {
-                        cols[0]=((cgamode&0x12)==0x12)?0:(cgacol&15)+16;
-                        if (cgamode&1) hline(buffer,0,displine,(crtc[1]<<3)+16,cols[0]);
-                        else           hline(buffer,0,displine,(crtc[1]<<4)+16,cols[0]);
+                        cols[0] = ((cga->cgamode & 0x12) == 0x12) ? 0 : (cga->cgacol & 15) + 16;
+                        if (cga->cgamode & 1) hline(buffer, 0, cga->displine, (cga->crtc[1] << 3) + 16, cols[0]);
+                        else                  hline(buffer, 0, cga->displine, (cga->crtc[1] << 4) + 16, cols[0]);
                 }
 
-                if (cgamode&1) x=(crtc[1]<<3)+16;
-                else           x=(crtc[1]<<4)+16;
+                if (cga->cgamode & 1) x = (cga->crtc[1] << 3) + 16;
+                else                  x = (cga->crtc[1] << 4) + 16;
                 if (cga_comp)
                 {
-                        for (c=0;c<x;c++)
+                        for (c = 0; c < x; c++)
                         {
-                                y_buf[(c<<1)&6]=ntsc_col[buffer->line[displine][c]&7][(c<<1)&6]?0x6000:0;
-                                y_buf[(c<<1)&6]+=(buffer->line[displine][c]&8)?0x3000:0;
-                                i_buf[(c<<1)&6]=y_buf[(c<<1)&6]*i_filt[(c<<1)&6];
-                                q_buf[(c<<1)&6]=y_buf[(c<<1)&6]*q_filt[(c<<1)&6];
-                                y_tot=y_buf[0]+y_buf[1]+y_buf[2]+y_buf[3]+y_buf[4]+y_buf[5]+y_buf[6]+y_buf[7];
-                                i_tot=i_buf[0]+i_buf[1]+i_buf[2]+i_buf[3]+i_buf[4]+i_buf[5]+i_buf[6]+i_buf[7];
-                                q_tot=q_buf[0]+q_buf[1]+q_buf[2]+q_buf[3]+q_buf[4]+q_buf[5]+q_buf[6]+q_buf[7];
+                                y_buf[(c << 1) & 6] = ntsc_col[buffer->line[cga->displine][c] & 7][(c << 1) & 6] ? 0x6000 : 0;
+                                y_buf[(c << 1) & 6] += (buffer->line[cga->displine][c] & 8) ? 0x3000 : 0;
+                                i_buf[(c << 1) & 6] = y_buf[(c << 1) & 6] * i_filt[(c << 1) & 6];
+                                q_buf[(c << 1) & 6] = y_buf[(c << 1) & 6] * q_filt[(c << 1) & 6];
+                                y_tot = y_buf[0] + y_buf[1] + y_buf[2] + y_buf[3] + y_buf[4] + y_buf[5] + y_buf[6] + y_buf[7];
+                                i_tot = i_buf[0] + i_buf[1] + i_buf[2] + i_buf[3] + i_buf[4] + i_buf[5] + i_buf[6] + i_buf[7];
+                                q_tot = q_buf[0] + q_buf[1] + q_buf[2] + q_buf[3] + q_buf[4] + q_buf[5] + q_buf[6] + q_buf[7];
 
-                                y_val=y_tot>>10;
-                                if (y_val>255) y_val=255;
-                                y_val<<=16;
-                                i_val=i_tot>>12;
-                                if (i_val>39041) i_val=39041;
-                                if (i_val<-39041) i_val=-39041;
-                                q_val=q_tot>>12;
-                                if (q_val>34249) q_val=34249;
-                                if (q_val<-34249) q_val=-34249;
+                                y_val = y_tot >> 10;
+                                if (y_val > 255) y_val = 255;
+                                y_val <<= 16;
+                                i_val = i_tot >> 12;
+                                if (i_val >  39041) i_val =  39041;
+                                if (i_val < -39041) i_val = -39041;
+                                q_val = q_tot >> 12;
+                                if (q_val >  34249) q_val =  34249;
+                                if (q_val < -34249) q_val = -34249;
 
-                                r=(y_val+249*i_val+159*q_val)>>16;
-                                g=(y_val-70*i_val-166*q_val)>>16;
-                                b=(y_val-283*i_val+436*q_val)>>16;
+                                r = (y_val + 249*i_val + 159*q_val) >> 16;
+                                g = (y_val -  70*i_val - 166*q_val) >> 16;
+                                b = (y_val - 283*i_val + 436*q_val) >> 16;
 
-                                y_buf[((c<<1)&6)+1]=ntsc_col[buffer->line[displine][c]&7][((c<<1)&6)+1]?0x6000:0;
-                                y_buf[((c<<1)&6)+1]+=(buffer->line[displine][c]&8)?0x3000:0;
-                                i_buf[((c<<1)&6)+1]=y_buf[((c<<1)&6)+1]*i_filt[((c<<1)&6)+1];
-                                q_buf[((c<<1)&6)+1]=y_buf[((c<<1)&6)+1]*q_filt[((c<<1)&6)+1];
-                                y_tot=y_buf[0]+y_buf[1]+y_buf[2]+y_buf[3]+y_buf[4]+y_buf[5]+y_buf[6]+y_buf[7];
-                                i_tot=i_buf[0]+i_buf[1]+i_buf[2]+i_buf[3]+i_buf[4]+i_buf[5]+i_buf[6]+i_buf[7];
-                                q_tot=q_buf[0]+q_buf[1]+q_buf[2]+q_buf[3]+q_buf[4]+q_buf[5]+q_buf[6]+q_buf[7];
+                                y_buf[((c << 1) & 6) + 1] = ntsc_col[buffer->line[cga->displine][c] & 7][((c << 1) & 6) + 1] ? 0x6000 : 0;
+                                y_buf[((c << 1) & 6) + 1] += (buffer->line[cga->displine][c] & 8) ? 0x3000 : 0;
+                                i_buf[((c << 1) & 6) + 1] = y_buf[((c << 1) & 6) + 1] * i_filt[((c << 1) & 6) + 1];
+                                q_buf[((c << 1) & 6) + 1] = y_buf[((c << 1) & 6) + 1] * q_filt[((c << 1) & 6) + 1];
+                                y_tot = y_buf[0] + y_buf[1] + y_buf[2] + y_buf[3] + y_buf[4] + y_buf[5] + y_buf[6] + y_buf[7];
+                                i_tot = i_buf[0] + i_buf[1] + i_buf[2] + i_buf[3] + i_buf[4] + i_buf[5] + i_buf[6] + i_buf[7];
+                                q_tot = q_buf[0] + q_buf[1] + q_buf[2] + q_buf[3] + q_buf[4] + q_buf[5] + q_buf[6] + q_buf[7];
 
-                                y_val=y_tot>>10;
-                                if (y_val>255) y_val=255;
-                                y_val<<=16;
-                                i_val=i_tot>>12;
-                                if (i_val>39041) i_val=39041;
-                                if (i_val<-39041) i_val=-39041;
-                                q_val=q_tot>>12;
-                                if (q_val>34249) q_val=34249;
-                                if (q_val<-34249) q_val=-34249;
+                                y_val = y_tot >> 10;
+                                if (y_val > 255) y_val = 255;
+                                y_val <<= 16;
+                                i_val = i_tot >> 12;
+                                if (i_val >  39041) i_val =  39041;
+                                if (i_val < -39041) i_val = -39041;
+                                q_val = q_tot >> 12;
+                                if (q_val >  34249) q_val =  34249;
+                                if (q_val < -34249) q_val = -34249;
 
-                                r+=(y_val+249*i_val+159*q_val)>>16;
-                                g+=(y_val-70*i_val-166*q_val)>>16;
-                                b+=(y_val-283*i_val+436*q_val)>>16;
-                                if (r>511) r=511;
-                                if (g>511) g=511;
-                                if (b>511) b=511;
+                                r = (y_val + 249*i_val + 159*q_val) >> 16;
+                                g = (y_val -  70*i_val - 166*q_val) >> 16;
+                                b = (y_val - 283*i_val + 436*q_val) >> 16;
+                                if (r > 511) r = 511;
+                                if (g > 511) g = 511;
+                                if (b > 511) b = 511;
 
-                                ((uint32_t *)buffer32->line[displine])[c]=makecol32(r/2,g/2,b/2);
+                                ((uint32_t *)buffer32->line[cga->displine])[c] = makecol32(r / 2, g / 2, b / 2);
                         }
                 }
 
-                sc=oldsc;
-                if (vc==crtc[7] && !sc)
-                   cgastat|=8;
-                displine++;
-                if (displine>=360) displine=0;
+                cga->sc = oldsc;
+                if (cga->vc == cga->crtc[7] && !cga->sc)
+                   cga->cgastat |= 8;
+                cga->displine++;
+                if (cga->displine >= 360) 
+                        cga->displine = 0;
         }
         else
         {
-                vidtime+=dispontime;
-                if (cgadispon) cgastat&=~1;
-                linepos=0;
-                if (vsynctime)
+                cga->vidtime += cga->dispontime;
+                if (cga->cgadispon) cga->cgastat &= ~1;
+                cga->linepos = 0;
+                if (cga->vsynctime)
                 {
-                        vsynctime--;
-                        if (!vsynctime)
-                           cgastat&=~8;
+                        cga->vsynctime--;
+                        if (!cga->vsynctime)
+                           cga->cgastat &= ~8;
                 }
-                if (sc==(crtc[11]&31) || ((crtc[8]&3)==3 && sc==((crtc[11]&31)>>1))) { con=0; coff=1; }
-                if ((crtc[8] & 3) == 3 && sc == (crtc[9] >> 1))
-                   maback = ma;
-                if (vadj)
+                if (cga->sc == (cga->crtc[11] & 31) || ((cga->crtc[8] & 3) == 3 && cga->sc == ((cga->crtc[11] & 31) >> 1))) 
+                { 
+                        cga->con = 0; 
+                        cga->coff = 1; 
+                }
+                if ((cga->crtc[8] & 3) == 3 && cga->sc == (cga->crtc[9] >> 1))
+                   cga->maback = cga->ma;
+                if (cga->vadj)
                 {
-                        sc++;
-                        sc&=31;
-                        ma=maback;
-                        vadj--;
-                        if (!vadj)
+                        cga->sc++;
+                        cga->sc &= 31;
+                        cga->ma = cga->maback;
+                        cga->vadj--;
+                        if (!cga->vadj)
                         {
-                                cgadispon=1;
-                                ma=maback=(crtc[13]|(crtc[12]<<8))&0x3FFF;
-                                sc=0;
+                                cga->cgadispon = 1;
+                                cga->ma = cga->maback = (cga->crtc[13] | (cga->crtc[12] << 8)) & 0x3fff;
+                                cga->sc = 0;
                         }
                 }
-                else if (sc==crtc[9])
+                else if (cga->sc == cga->crtc[9])
                 {
-                        maback=ma;
-                        sc=0;
-                        oldvc=vc;
-                        vc++;
-                        vc&=127;
+                        cga->maback = cga->ma;
+                        cga->sc = 0;
+                        oldvc = cga->vc;
+                        cga->vc++;
+                        cga->vc &= 127;
 
-                        if (vc==crtc[6]) cgadispon=0;
+                        if (cga->vc == cga->crtc[6]) 
+                                cga->cgadispon = 0;
 
-                        if (oldvc==crtc[4])
+                        if (oldvc == cga->crtc[4])
                         {
-                                vc=0;
-                                vadj=crtc[5];
-                                if (!vadj) cgadispon=1;
-                                if (!vadj) ma=maback=(crtc[13]|(crtc[12]<<8))&0x3FFF;
-                                if ((crtc[10]&0x60)==0x20) cursoron=0;
-                                else                       cursoron=cgablink&8;
+                                cga->vc = 0;
+                                cga->vadj = cga->crtc[5];
+                                if (!cga->vadj) cga->cgadispon = 1;
+                                if (!cga->vadj) cga->ma = cga->maback = (cga->crtc[13] | (cga->crtc[12] << 8)) & 0x3fff;
+                                if ((cga->crtc[10] & 0x60) == 0x20) cga->cursoron = 0;
+                                else                                cga->cursoron = cga->cgablink & 8;
                         }
 
-                        if (vc==crtc[7])
+                        if (cga->vc == cga->crtc[7])
                         {
-                                cgadispon=0;
-                                displine=0;
-                                vsynctime=(crtc[3]>>4)+1;
-                                if (crtc[7])
+                                cga->cgadispon = 0;
+                                cga->displine = 0;
+                                cga->vsynctime = (cga->crtc[3] >> 4) + 1;
+                                if (cga->crtc[7])
                                 {
-                                        if (cgamode&1) x=(crtc[1]<<3)+16;
-                                        else           x=(crtc[1]<<4)+16;
-                                        lastline++;
-                                        if (x!=xsize || (lastline-firstline)!=ysize)
+                                        if (cga->cgamode & 1) x = (cga->crtc[1] << 3) + 16;
+                                        else                  x = (cga->crtc[1] << 4) + 16;
+                                        cga->lastline++;
+                                        if (x != xsize || (cga->lastline - cga->firstline) != ysize)
                                         {
-                                                xsize=x;
-                                                ysize=lastline-firstline;
-                                                if (xsize<64) xsize=656;
-                                                if (ysize<32) ysize=200;
-                                                updatewindowsize(xsize,(ysize<<1)+16);
+                                                xsize = x;
+                                                ysize = cga->lastline - cga->firstline;
+                                                if (xsize < 64) xsize = 656;
+                                                if (ysize < 32) ysize = 200;
+                                                updatewindowsize(xsize, (ysize << 1) + 16);
                                         }
                                         
 startblit();
                                         if (cga_comp) 
-                                           video_blit_memtoscreen(0, firstline-4, 0, (lastline-firstline)+8, xsize, (lastline-firstline)+8);
+                                           video_blit_memtoscreen(0, cga->firstline - 4, 0, (cga->lastline - cga->firstline) + 8, xsize, (cga->lastline - cga->firstline) + 8);
                                         else          
-                                           video_blit_memtoscreen_8(0, firstline-4, xsize, (lastline-firstline)+8);
-                                        if (readflash) rectfill(screen,winsizex-40,8,winsizex-8,14,0xFFFFFFFF);
-                                        readflash=0;
+                                           video_blit_memtoscreen_8(0, cga->firstline - 4, xsize, (cga->lastline - cga->firstline) + 8);
+                                        if (readflash) rectfill(screen, winsizex - 40, 8, winsizex - 8, 14, 0xffffffff);
+                                        readflash = 0;
                                         frames++;
 endblit();
                                         video_res_x = xsize - 16;
                                         video_res_y = ysize;
-                                        if (cgamode & 1)
+                                        if (cga->cgamode & 1)
                                         {
                                                 video_res_x /= 8;
-                                                video_res_y /= crtc[9] + 1;
+                                                video_res_y /= cga->crtc[9] + 1;
                                                 video_bpp = 0;
                                         }
-                                        else if (!(cgamode & 2))
+                                        else if (!(cga->cgamode & 2))
                                         {
                                                 video_res_x /= 16;
-                                                video_res_y /= crtc[9] + 1;
+                                                video_res_y /= cga->crtc[9] + 1;
                                                 video_bpp = 0;
                                         }
-                                        else if (!(cgamode&16))
+                                        else if (!(cga->cgamode & 16))
                                         {
                                                 video_res_x /= 2;
                                                 video_bpp = 2;
@@ -446,59 +456,72 @@ endblit();
                                                 video_bpp = 1;
                                         }
                                 }
-                                firstline=1000;
-                                lastline=0;
-                                cgablink++;
-                                oddeven ^= 1;
+                                cga->firstline = 1000;
+                                cga->lastline = 0;
+                                cga->cgablink++;
+                                cga->oddeven ^= 1;
                         }
                 }
                 else
                 {
-                        sc++;
-                        sc&=31;
-                        ma=maback;
+                        cga->sc++;
+                        cga->sc &= 31;
+                        cga->ma = cga->maback;
                 }
-                if ((sc==(crtc[10]&31) || ((crtc[8]&3)==3 && sc==((crtc[10]&31)>>1)))) con=1;
-                if (cgadispon && (cgamode&1))
+                if ((cga->sc == (cga->crtc[10] & 31) || ((cga->crtc[8] & 3) == 3 && cga->sc == ((cga->crtc[10] & 31) >> 1)))) 
+                        cga->con = 1;
+                if (cga->cgadispon && (cga->cgamode & 1))
                 {
-                        for (x=0;x<(crtc[1]<<1);x++)
-                            charbuffer[x]=vram[(((ma<<1)+x)&0x3FFF)];
+                        for (x = 0; x < (cga->crtc[1] << 1); x++)
+                            cga->charbuffer[x] = cga->vram[(((cga->ma << 1) + x) & 0x3fff)];
                 }
         }
 }
 
+void cga_init(cga_t *cga)
+{
+}
 
-int cga_init()
+void *cga_standalone_init()
 {
         int c;
         int cga_tint = -2;
-        for (c=0;c<8;c++)
+        cga_t *cga = malloc(sizeof(cga_t));
+        memset(cga, 0, sizeof(cga_t));
+
+        cga->vram = malloc(0x4000);
+                
+        for (c = 0; c < 8; c++)
         {
-                i_filt[c]=512.0*cos((3.14*(cga_tint+c*4)/16.0) - 33.0/180.0);
-                q_filt[c]=512.0*sin((3.14*(cga_tint+c*4)/16.0) - 33.0/180.0);
+                i_filt[c] = 512.0 * cos((3.14 * (cga_tint + c * 4) / 16.0) - 33.0 / 180.0);
+                q_filt[c] = 512.0 * sin((3.14 * (cga_tint + c * 4) / 16.0) - 33.0 / 180.0);
         }
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL);
-        return 0;
+        timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
+        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
+        io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, cga);
+        return cga;
 }
 
-GFXCARD vid_cga =
+void cga_close(void *p)
 {
-        cga_init,
-        /*IO at 3Cx/3Dx*/
-        cga_out,
-        cga_in,
-        /*IO at 3Ax/3Bx*/
-        video_out_null,
-        video_in_null,
+        cga_t *cga = (cga_t *)p;
 
-        cga_poll,
-        cga_recalctimings,
+        free(cga->vram);
+        free(cga);
+}
 
-        video_write_null,
-        video_write_null,
-        cga_write,
+void cga_speed_changed(void *p)
+{
+        cga_t *cga = (cga_t *)p;
+        
+        cga_recalctimings(cga);
+}
 
-        video_read_null,
-        video_read_null,
-        cga_read
+device_t cga_device =
+{
+        "CGA",
+        cga_standalone_init,
+        cga_close,
+        cga_speed_changed,
+        NULL
 };

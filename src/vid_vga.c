@@ -1,92 +1,116 @@
 /*IBM VGA emulation*/
+#include <stdlib.h>
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "video.h"
 #include "vid_svga.h"
+#include "vid_vga.h"
 
-void vga_out(uint16_t addr, uint8_t val, void *priv)
+typedef struct vga_t
 {
+        svga_t svga;
+} vga_t;
+
+void vga_out(uint16_t addr, uint8_t val, void *p)
+{
+        vga_t *vga = (vga_t *)p;
+        svga_t *svga = &vga->svga;
         uint8_t old;
         
         pclog("vga_out : %04X %02X  %04X:%04X  %02X  %i\n", addr, val, CS,pc, ram[0x489], ins);
                 
-        if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga_miscout&1)) addr ^= 0x60;
+        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
+                addr ^= 0x60;
 
         switch (addr)
         {
                 case 0x3D4:
-                crtcreg = val & 0x1f;
+                svga->crtcreg = val & 0x1f;
                 return;
                 case 0x3D5:
-                if (crtcreg <= 7 && crtc[0x11] & 0x80) return;
-                old=crtc[crtcreg];
-                crtc[crtcreg]=val;
-                if (old!=val)
+                if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
+                old = svga->crtc[svga->crtcreg];
+                svga->crtc[svga->crtcreg] = val;
+                if (old != val)
                 {
-                        if (crtcreg<0xE || crtcreg>0x10)
+                        if (svga->crtcreg < 0xe || svga->crtcreg > 0x10)
                         {
-                                fullchange=changeframecount;
-                                svga_recalctimings();
+                                fullchange = changeframecount;
+                                svga_recalctimings(svga);
                         }
                 }
                 break;
         }
-        svga_out(addr, val, NULL);
+        svga_out(addr, val, svga);
 }
 
-uint8_t vga_in(uint16_t addr, void *priv)
+uint8_t vga_in(uint16_t addr, void *p)
 {
+        vga_t *vga = (vga_t *)p;
+        svga_t *svga = &vga->svga;
         uint8_t temp;
 
         if (addr != 0x3da) pclog("vga_in : %04X ", addr);
                 
-        if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga_miscout&1)) addr ^= 0x60;
+        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
+                addr ^= 0x60;
              
         switch (addr)
         {
                 case 0x3D4:
-                temp = crtcreg;
+                temp = svga->crtcreg;
                 break;
                 case 0x3D5:
-                temp = crtc[crtcreg];
+                temp = svga->crtc[svga->crtcreg];
                 break;
                 default:
-                temp = svga_in(addr, NULL);
+                temp = svga_in(addr, svga);
                 break;
         }
         if (addr != 0x3da) pclog("%02X  %04X:%04X\n", temp, CS,pc);
         return temp;
 }
 
-int vga_init()
+void *vga_init()
 {
-        svga_recalctimings_ex = NULL;
-        svga_vram_limit = 1 << 18; /*256kb*/
-        vrammask = 0x3ffff;
-        svgawbank = svgarbank = 0;
-        bpp = 8;
-        svga_miscout = 1;
-        return svga_init();
+        vga_t *vga = malloc(sizeof(vga_t));
+        memset(vga, 0, sizeof(vga_t));
+
+        svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
+                   NULL,
+                   vga_in, vga_out,
+                   NULL);
+
+        io_sethandler(0x03c0, 0x0020, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);
+
+        vga->svga.bpp = 8;
+        vga->svga.miscout = 1;
+        
+        return vga;
 }
 
-GFXCARD vid_vga =
+void vga_close(void *p)
 {
+        vga_t *vga = (vga_t *)p;
+
+        svga_close(&vga->svga);
+        
+        free(vga);
+}
+
+void vga_speed_changed(void *p)
+{
+        vga_t *vga = (vga_t *)p;
+        
+        svga_recalctimings(&vga->svga);
+}
+
+device_t vga_device =
+{
+        "VGA",
         vga_init,
-        /*IO at 3Cx/3Dx*/
-        vga_out,
-        vga_in,
-        /*IO at 3Ax/3Bx*/
-        video_out_null,
-        video_in_null,
-
-        svga_poll,
-        svga_recalctimings,
-
-        svga_write,
-        video_write_null,
-        video_write_null,
-
-        svga_read,
-        video_read_null,
-        video_read_null
+        vga_close,
+        vga_speed_changed,
+        svga_add_status_info
 };

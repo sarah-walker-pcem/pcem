@@ -6,61 +6,58 @@
 #include "vid_svga.h"
 #include "vid_unk_ramdac.h"
 
-static int unk_state=0;
-static uint8_t unk_ctrl;
-
-void unk_ramdac_out(uint16_t addr, uint8_t val, void *priv)
+void unk_ramdac_out(uint16_t addr, uint8_t val, unk_ramdac_t *ramdac, svga_t *svga)
 {
         //pclog("OUT RAMDAC %04X %02X\n",addr,val);
         switch (addr)
         {
                 case 0x3C6:
-                if (unk_state == 4)
+                if (ramdac->state == 4)
                 {
-                        unk_state = 0;
-                        unk_ctrl = val;
+                        ramdac->state = 0;
+                        ramdac->ctrl = val;
                         switch ((val&1)|((val&0xE0)>>4))
                         {
                                 case 0: case 1: case 2: case 3:
-                                bpp = 8;
+                                svga->bpp = 8;
                                 break;
                                 case 6: case 7:
-                                bpp = 24;
+                                svga->bpp = 24;
                                 break;
                                 case 8: case 9: case 0xA: case 0xB:
-                                bpp = 15;
+                                svga->bpp = 15;
                                 break;
                                 case 0xC: case 0xD: case 0xE: case 0xF:
-                                bpp = 16;
+                                svga->bpp = 16;
                                 break;
                         }
                         return;
                 }
-                unk_state = 0;
+                ramdac->state = 0;
                 break;
                 case 0x3C7: case 0x3C8: case 0x3C9:
-                unk_state = 0;
+                ramdac->state = 0;
                 break;
         }
-        svga_out(addr, val, NULL);
+        svga_out(addr, val, svga);
 }
 
-uint8_t unk_ramdac_in(uint16_t addr, void *priv)
+uint8_t unk_ramdac_in(uint16_t addr, unk_ramdac_t *ramdac, svga_t *svga)
 {
         //pclog("IN RAMDAC %04X\n",addr);
         switch (addr)
         {
                 case 0x3C6:
-                if (unk_state == 4)
+                if (ramdac->state == 4)
                 {
-                        unk_state = 0;
-                        return unk_ctrl;
+                        ramdac->state = 0;
+                        return ramdac->ctrl;
                 }
-                unk_state++;
+                ramdac->state++;
                 break;
                 case 0x3C7: case 0x3C8: case 0x3C9:
-                unk_state = 0;
+                ramdac->state = 0;
                 break;
         }
-        return svga_in(addr, NULL);
+        return svga_in(addr, svga);
 }

@@ -213,7 +213,7 @@ void dma_page_write(uint16_t addr, uint8_t val, void *priv)
 {
 /*        if (!(addr&0xF))
         {*/
-                pclog("Write page %03X %02X %04X:%04X\n",addr,val,CS,pc);
+//                pclog("Write page %03X %02X %04X:%04X\n",addr,val,CS,pc);
 //                if (val==0x29 && pc==0xD25) output=1;
 //        }
         dmapages[addr&0xF]=val;
@@ -258,12 +258,12 @@ uint8_t _dma_read(uint32_t addr)
 {
         switch (addr&0xFFFF8000)
         {
-                case 0xA0000: case 0xA8000:
+/*                case 0xA0000: case 0xA8000:
                 return video_read_a000(addr, NULL);
                 case 0xB0000:
                 return video_read_b000(addr, NULL);
                 case 0xB8000:
-                return video_read_b800(addr, NULL);
+                return video_read_b800(addr, NULL);*/
         }
         if (isram[addr>>16]) return ram[addr];
         return 0xff;
@@ -271,9 +271,10 @@ uint8_t _dma_read(uint32_t addr)
 
 void _dma_write(uint32_t addr, uint8_t val)
 {
+        pclog("_dma_write %08X %02X\n", addr, val);
         switch (addr&0xFFFF8000)
         {
-                case 0xA0000: case 0xA8000:
+/*                case 0xA0000: case 0xA8000:
                 video_write_a000(addr,val, NULL);
                 return;
                 case 0xB0000:
@@ -284,7 +285,7 @@ void _dma_write(uint32_t addr, uint8_t val)
                 return;
                 case 0xC0000: case 0xC8000: case 0xD0000: case 0xD8000:
                 case 0xE0000: case 0xE8000: case 0xF0000: case 0xF8000:
-                return;
+                return;*/
         }
         if (isram[addr >> 16]) 
                 ram[addr] = val;

@@ -376,40 +376,46 @@ device_t sb_1_device =
         "Sound Blaster v1.0",
         sb_1_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };
 device_t sb_15_device =
 {
         "Sound Blaster v1.5",
         sb_15_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };
 device_t sb_2_device =
 {
         "Sound Blaster v2.0",
         sb_2_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };
 device_t sb_pro_v1_device =
 {
         "Sound Blaster Pro v1",
         sb_pro_v1_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };
 device_t sb_pro_v2_device =
 {
         "Sound Blaster Pro v2",
         sb_pro_v2_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };
 device_t sb_16_device =
 {
         "Sound Blaster 16",
         sb_16_init,
         sb_close,
-        sb_speed_changed
+        sb_speed_changed,
+        NULL
 };

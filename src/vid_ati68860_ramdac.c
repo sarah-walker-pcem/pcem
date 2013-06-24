@@ -23,46 +23,45 @@ bit   0  Controls 6/8bit DAC. 0: 8bit DAC/LUT, 1: 6bit DAC/LUT
 #include "vid_svga.h"
 #include "vid_ati68860_ramdac.h"
 
-static uint8_t ramdac_regs[16];
-void ati68860_ramdac_out(uint16_t addr, uint8_t val, void *priv)
+void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, svga_t *svga)
 {
 //        pclog("ati68860_out : addr %04X val %02X  %04X:%04X\n", addr, val, CS,pc);
         switch (addr)
         {
                 case 0: 
-                svga_out(0x3c8, val, NULL); 
+                svga_out(0x3c8, val, svga);
                 break;
                 case 1: 
-                svga_out(0x3c9, val, NULL); 
+                svga_out(0x3c9, val, svga); 
                 break;
                 case 2: 
-                svga_out(0x3c6, val, NULL); 
+                svga_out(0x3c6, val, svga); 
                 break;
                 case 3: 
-                svga_out(0x3c7, val, NULL); 
+                svga_out(0x3c7, val, svga); 
                 break;
                 default:
-                ramdac_regs[addr & 0xf] = val;
+                ramdac->regs[addr & 0xf] = val;
                 break;
         }
 }
 
-uint8_t ati68860_ramdac_in(uint16_t addr, void *priv)
+uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svga)
 {
         uint8_t ret = 0;
         switch (addr)
         {
                 case 0:
-                ret = svga_in(0x3c8, NULL);
+                ret = svga_in(0x3c8, svga);
                 break;
                 case 1:
-                ret = svga_in(0x3c9, NULL);
+                ret = svga_in(0x3c9, svga);
                 break;
                 case 2:
-                ret = svga_in(0x3c6, NULL);
+                ret = svga_in(0x3c6, svga);
                 break;
                 case 3:
-                ret = svga_in(0x3c7, NULL);
+                ret = svga_in(0x3c7, svga);
                 break;
                 case 4: case 8:
                 ret = 2; 
@@ -75,7 +74,7 @@ uint8_t ati68860_ramdac_in(uint16_t addr, void *priv)
                 break;
                 
                 default:
-                ret = ramdac_regs[addr & 0xf];
+                ret = ramdac->regs[addr & 0xf];
                 break;
         }
 //        pclog("ati68860_in  : addr %04X ret %02X  %04X:%04X\n", addr, ret, CS,pc);

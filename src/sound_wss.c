@@ -303,5 +303,6 @@ device_t wss_device =
         "Windows Sound System",
         wss_init,
         wss_close,
+        NULL,
         NULL
 };

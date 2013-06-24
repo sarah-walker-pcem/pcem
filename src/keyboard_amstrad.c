@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "pic.h"
 #include "sound.h"
+#include "timer.h"
 
 #include "keyboard.h"
 #include "keyboard_amstrad.h"
@@ -31,6 +32,7 @@ static uint8_t amstrad_systemstat_1, amstrad_systemstat_2;
 
 void keyboard_amstrad_poll()
 {
+        keybsenddelay += (1000 * TIMER_USEC);
         if (keyboard_amstrad.wantirq)
         {
                 keyboard_amstrad.wantirq = 0;
@@ -166,4 +168,6 @@ void keyboard_amstrad_init()
         keyboard_amstrad_reset();
         keyboard_send = keyboard_amstrad_adddata;
         keyboard_poll = keyboard_amstrad_poll;
+
+        timer_add(keyboard_amstrad_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }

@@ -7,29 +7,29 @@
 static int tkd8001_state=0;
 static uint8_t tkd8001_ctrl;
 
-void tkd8001_ramdac_out(uint16_t addr, uint8_t val, void *priv)
+void tkd8001_ramdac_out(uint16_t addr, uint8_t val, tkd8001_ramdac_t *ramdac, svga_t *svga)
 {
 //        pclog("OUT RAMDAC %04X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr)
         {
                 case 0x3C6:
-                if (tkd8001_state == 4)
+                if (ramdac->state == 4)
                 {
-                        tkd8001_state = 0;
-                        tkd8001_ctrl = val;
-                        switch (val>>5)
+                        ramdac->state = 0;
+                        ramdac->ctrl = val;
+                        switch (val >> 5)
                         {
                                 case 0: case 1: case 2: case 3:
-                                bpp = 8;
+                                svga->bpp = 8;
                                 break;
                                 case 5:
-                                bpp = 15;
+                                svga->bpp = 15;
                                 break;
                                 case 6:
-                                bpp = 24;
+                                svga->bpp = 24;
                                 break;
                                 case 7:
-                                bpp = 16;
+                                svga->bpp = 16;
                                 break;
                         }
                         return;
@@ -37,28 +37,28 @@ void tkd8001_ramdac_out(uint16_t addr, uint8_t val, void *priv)
                // tkd8001_state = 0;
                 break;
                 case 0x3C7: case 0x3C8: case 0x3C9:
-                tkd8001_state = 0;
+                ramdac->state = 0;
                 break;
         }
-        svga_out(addr, val, NULL);
+        svga_out(addr, val, svga);
 }
 
-uint8_t tkd8001_ramdac_in(uint16_t addr, void *priv)
+uint8_t tkd8001_ramdac_in(uint16_t addr, tkd8001_ramdac_t *ramdac, svga_t *svga)
 {
 //        pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
         switch (addr)
         {
                 case 0x3C6:
-                if (tkd8001_state == 4)
+                if (ramdac->state == 4)
                 {
                         //tkd8001_state = 0;
-                        return tkd8001_ctrl;
+                        return ramdac->ctrl;
                 }
-                tkd8001_state++;
+                ramdac->state++;
                 break;
                 case 0x3C7: case 0x3C8: case 0x3C9:
-                tkd8001_state = 0;
+                ramdac->state = 0;
                 break;
         }
-        return svga_in(addr, NULL);
+        return svga_in(addr, svga);
 }

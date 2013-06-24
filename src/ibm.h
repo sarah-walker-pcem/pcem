@@ -458,3 +458,6 @@ extern int times;
 extern float isa_timing, bus_timing;
 
 extern int frame;
+
+
+uint8_t *vramp;

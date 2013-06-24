@@ -31,14 +31,15 @@ void setpitclock(float clock)
         cpuclock=clock;
         PITCONST=clock/1193182.0;
         CGACONST=(clock/(19687500.0/11.0));
-        MDACONST=(clock/1813000.0);
+        MDACONST=(clock/2032125.0);
         VGACONST1=(clock/25175000.0);
         VGACONST2=(clock/28322000.0);
         isa_timing = clock/8000000.0;
         bus_timing = clock/(double)cpu_busspeed;
         video_updatetiming();
 //        pclog("egacycles %i egacycles2 %i temp %f clock %f\n",egacycles,egacycles2,temp,clock);
-        video_recalctimings();
+/*        if (video_recalctimings)
+                video_recalctimings();*/
         RTCCONST=clock/32768.0;
         TIMER_USEC = (int)((clock / 1000000.0f) * (float)(1 << TIMER_SHIFT));
         device_speed_changed();

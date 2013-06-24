@@ -377,6 +377,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         }
                 }
         }
+
+        loadbios();
+
         timeBeginPeriod(1);
 //        soundobject=CreateEvent(NULL, FALSE, FALSE, NULL);
 //        soundthreadh=CreateThread(NULL,0,soundthread,NULL,NULL,NULL);
@@ -758,8 +761,8 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                                         sound_card_current = temp_sound_card_current;
                                         
                                         mem_resize();
-                                        loadbios();
                                         mem_load_video_bios();
+                                        loadbios();
                                         resetpchard();
                                 }
                                 else
@@ -1327,6 +1330,7 @@ BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 {
         int egasp;
         char s[256];
+        char device_s[4096];
         switch (message)
         {
                 case WM_INITDIALOG:
@@ -1350,18 +1354,8 @@ BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendDlgItemMessage(hdlg,IDC_STEXT7,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
                 sprintf(s,"Timer 0 frequency : %fHz",pit_timer0_freq());
                 SendDlgItemMessage(hdlg,IDC_STEXT8,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                if (chain4) sprintf(s,"VGA chained (possibly mode 13h)");
-                else        sprintf(s,"VGA unchained (possibly mode-X)");
-                SendDlgItemMessage(hdlg,IDC_STEXT9,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-/*                if (!video_bpp) sprintf(s,"VGA in text mode");
-                else            */sprintf(s,"VGA colour depth : %i bpp", video_bpp);
-                SendDlgItemMessage(hdlg,IDC_STEXT10,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"VGA resolution : %i x %i", video_res_x, video_res_y);
-                SendDlgItemMessage(hdlg,IDC_STEXT11,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"SB frequency : %i Hz",0);
-                SendDlgItemMessage(hdlg,IDC_STEXT12,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Video refresh rate : %i Hz", emu_fps);
-                SendDlgItemMessage(hdlg,IDC_STEXT13,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
+                device_add_status_info(device_s, 4096);
+                SendDlgItemMessage(hdlg,IDC_STEXT_DEVICE,WM_SETTEXT,(WPARAM)NULL,(LPARAM)device_s);
                 return TRUE;
                 case WM_COMMAND:
                 switch (LOWORD(wParam))

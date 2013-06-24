@@ -58,5 +58,6 @@ device_t adlib_device =
         "AdLib",
         adlib_init,
         adlib_close,
+        NULL,
         NULL
 };

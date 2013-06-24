@@ -19,6 +19,8 @@
 #include "timer.h"
 #include "x86.h"
 
+int nmi = 0;
+
 int nextcyc=0;
 int cycdiff;
 int is8086=0;

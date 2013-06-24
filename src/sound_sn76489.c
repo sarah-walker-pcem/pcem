@@ -194,5 +194,6 @@ device_t sn76489_device =
         "TI SN74689 PSG",
         sn76489_init,
         sn76489_close,
+        NULL,
         NULL
 };
