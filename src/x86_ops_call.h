@@ -13,13 +13,15 @@
         oldss = ss;                                                             \
         if (cgate32)                                                            \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_L(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; return 0; }     \
-                PUSH_L(old_pc);                                                 \
+                PUSH_L(old_pc);                         if (abrt) ESP = old_esp; \
         }                                                                       \
         else                                                                    \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_W(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; return 0; }     \
-                PUSH_W(old_pc);                                                 \
+                PUSH_W(old_pc);                         if (abrt) ESP = old_esp; \
         }
         
 #define CALL_FAR_l(new_seg, new_pc)                                             \
@@ -37,13 +39,15 @@
         oldss = ss;                                                             \
         if (cgate16)                                                            \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_W(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; return 0; }     \
-                PUSH_W(old_pc);                                                 \
+                PUSH_W(old_pc);                         if (abrt) ESP = old_esp; \
         }                                                                       \
         else                                                                    \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_L(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; return 0; }     \
-                PUSH_L(old_pc);                                                 \
+                PUSH_L(old_pc);                         if (abrt) ESP = old_esp; \
         }
         
 
@@ -58,17 +62,19 @@
         if (msw & 1) loadcscall(new_seg);                                       \
         else         loadcs(new_seg);                                           \
         optype = 0;                                                             \
-        if (abrt) { cgate16 = cgate32 = 0; break; }                          \
+        if (abrt) { cgate16 = cgate32 = 0; break; }                             \
         oldss = ss;                                                             \
         if (cgate32)                                                            \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_L(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; break; }     \
-                PUSH_L(old_pc);                                                 \
+                PUSH_L(old_pc);                         if (abrt) ESP = old_esp; \
         }                                                                       \
         else                                                                    \
         {                                                                       \
+                uint32_t old_esp = ESP;                                         \
                 PUSH_W(old_cs);                         if (abrt) { cgate16 = cgate32 = 0; break; }     \
-                PUSH_W(old_pc);                                                 \
+                PUSH_W(old_pc);                         if (abrt) ESP = old_esp; \
         }                                                                       \
         
 static int opCALL_far_w(uint32_t fetchdat)
