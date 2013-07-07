@@ -158,16 +158,22 @@ double x87_ld80()
 	test.eind.ll |= (uint64_t)readmeml(easeg,eaaddr+4)<<32;
 	test.begin = readmemw(easeg,eaaddr+8);
 
-	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
-	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
+       	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
+       	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
+       	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
 
-	int64_t mant64 = (test.eind.ll >> 11) & (0xfffffffffffff);
-	int64_t sign = (test.begin&0x8000)?1:0;
+       	int64_t mant64 = (test.eind.ll >> 11) & (0xfffffffffffff);
+       	int64_t sign = (test.begin&0x8000)?1:0;
 
-        if (test.eind.ll&0x400) mant64++;
-//        pclog("LD80 %08X %08X\n",test.eind.ll,mant64);
-	test.eind.ll = (sign <<63)|(exp64final << 52)| mant64;
+        if ((test.begin & 0x7fff) == 0x7fff)
+                exp64final = 0x7ff;
+        if ((test.begin & 0x7fff) == 0)
+                exp64final = 0;
+        if (test.eind.ll & 0x400) 
+                mant64++;
+
+        test.eind.ll = (sign <<63)|(exp64final << 52)| mant64;
+
 	return test.eind.d;
 }
 
@@ -181,20 +187,29 @@ void x87_st80(double d)
                         uint64_t ll;
                 } eind;
 	} test;
+	
 	test.eind.d=d;
-	int64_t sign80 = (test.eind.ll&(0x8000000000000000))?1:0;
-	int64_t exp80 =  test.eind.ll&(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52);
-	int64_t mant80 = test.eind.ll&(0x000fffffffffffff);
-	int64_t mant80final = (mant80 << 11);
-	if(d != 0){ //Zero is a special case
-		// Elvira wants the 8 and tcalc doesn't
-		mant80final |= (0x8000000000000000);
-		//Ca-cyber doesn't like this when result is zero.
-		exp80final += (BIAS80 - BIAS64);
-	}
-	test.begin = (((int16_t)sign80)<<15)| (int16_t)exp80final;
-	test.eind.ll = mant80final;
+	
+       	int64_t sign80 = (test.eind.ll&(0x8000000000000000))?1:0;
+       	int64_t exp80 =  test.eind.ll&(0x7ff0000000000000);
+       	int64_t exp80final = (exp80>>52);
+       	int64_t mant80 = test.eind.ll&(0x000fffffffffffff);
+       	int64_t mant80final = (mant80 << 11);
+
+       	if (exp80final == 0x7ff) /*Infinity / Nan*/
+       	{
+                exp80final = 0x7fff;
+                mant80final |= (0x8000000000000000);
+        }
+       	else if (d != 0){ //Zero is a special case
+       		// Elvira wants the 8 and tcalc doesn't
+       		mant80final |= (0x8000000000000000);
+       		//Ca-cyber doesn't like this when result is zero.
+       		exp80final += (BIAS80 - BIAS64);
+       	}
+       	test.begin = (((int16_t)sign80)<<15)| (int16_t)exp80final;
+       	test.eind.ll = mant80final;
+
 	writememl(easeg,eaaddr,test.eind.ll);
 	writememl(easeg,eaaddr+4,test.eind.ll>>32);
 	writememw(easeg,eaaddr+8,test.begin);
@@ -983,9 +998,14 @@ void x87_dd()
                         ST(6)=x87_ld80(); eaaddr+=10;
                         ST(7)=x87_ld80();
                         cycles-=(cr0&1)?34:44;
+/*                        pclog("new TOP %i\n", TOP);
+                        pclog("%04X %04X %04X  %f %f %f %f  %f %f %f %f\n", npxc, npxs, tag, ST(0), ST(1), ST(2), ST(3), ST(4), ST(5), ST(6), ST(7));*/
                         return;
                         case 6: /*FSAVE*/
                         if (fplog) pclog("FSAVE %08X:%08X\n", easeg, eaaddr);
+                        npxs = (npxs & ~(7 << 11)) | (TOP << 11);
+/*                        pclog("old TOP %i %04X\n", TOP, npxs);
+                        pclog("%04X %04X %04X  %f %f %f %f  %f %f %f %f\n", npxc, npxs, tag, ST(0), ST(1), ST(2), ST(3), ST(4), ST(5), ST(6), ST(7));*/
                         switch ((cr0&1)|(op32&0x100))
                         {
                                 case 0x000: /*16-bit real mode*/
