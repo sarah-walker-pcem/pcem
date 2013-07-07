@@ -162,7 +162,7 @@ void loadnvr()
                 case ROM_AMI486:   f = romfopen("ami486.nvr",  "rb"); nvrmask = 127; break;
                 case ROM_WIN486:   f = romfopen("win486.nvr",  "rb"); nvrmask = 127; break;
                 case ROM_PCI486:   f = romfopen("hot-433.nvr", "rb"); nvrmask = 127; break;
-                case ROM_430VX:    f = romfopen("hot-433.nvr", "rb"); nvrmask = 127; break;
+                case ROM_430VX:    f = romfopen("430vx.nvr", "rb"); nvrmask = 127; break;
                 default: return;
         }
         if (!f)
@@ -198,7 +198,7 @@ void savenvr()
                 case ROM_AMI486:   f = romfopen("ami486.nvr" , "wb"); break;
                 case ROM_WIN486:   f = romfopen("win486.nvr" , "wb"); break;
                 case ROM_PCI486:   f = romfopen("hot-433.nvr", "wb"); break;                
-                case ROM_430VX:    f = romfopen("hot-433.nvr", "wb"); break;
+                case ROM_430VX:    f = romfopen("430vx.nvr", "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);
