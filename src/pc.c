@@ -220,7 +220,6 @@ void initpc()
         //loadfont();
         loadnvr();
         sound_init();
-        inithdc();
         resetide();
         ioctl_open(cdrom_drive);
         model_init();        
