@@ -298,7 +298,10 @@ void svga_recalctimings(svga_t *svga)
                                         svga->render = svga_render_4bpp_highres;
                                 break;
                                 case 0x20: /*4 colours*/
-                                svga->render = svga_render_2bpp_lowres;
+                                if (svga->seqregs[1] & 8) /*Low res (320)*/
+                                        svga->render = svga_render_2bpp_lowres;
+                                else
+                                        svga->render = svga_render_2bpp_highres;
                                 break;
                                 case 0x40: case 0x60: /*256+ colours*/
                                 switch (svga->bpp)
@@ -497,7 +500,7 @@ void svga_poll(void *p)
                                 svga->fullchange = 2;
                         svga->blink++;
 
-                        for (x = 0; x < 2048; x++) 
+                        for (x = 0; x < (svga->vram_limit >> 10); x++) 
                         {
                                 if (svga->changedvram[x]) 
                                         svga->changedvram[x]--;

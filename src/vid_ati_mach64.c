@@ -230,7 +230,7 @@ void mach64_out(uint16_t addr, uint8_t val, void *p)
                 {
                         if (svga->crtcreg < 0xe || svga->crtcreg > 0x10)
                         {
-                                fullchange = changeframecount;
+                                svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
                 }
@@ -1151,7 +1151,7 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 case 0x14: case 0x15: case 0x16: case 0x17:
                 WRITE8(addr, mach64->crtc_off_pitch, val);
                 svga_recalctimings(&mach64->svga);
-                fullchange = changeframecount;
+                svga->fullchange = changeframecount;
                 break;
                 
                 case 0x18:

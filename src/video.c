@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "ibm.h"
@@ -29,6 +30,8 @@
 #include "vid_tandy.h"
 #include "vid_tvga.h"
 #include "vid_vga.h"
+
+uint32_t *video_15to32, *video_16to32;
 
 int egareads=0,egawrites=0;
 int changeframecount=2;
@@ -380,9 +383,21 @@ void initvideo()
 //                        printf("Edat %i,%i now %02X\n",c,d,edatlookup[c][d]);
                 }
         }
+
+        video_15to32 = malloc(4 * 65536);
+        for (c = 0; c < 65536; c++)
+                video_15to32[c] = ((c & 31) << 3) | (((c >> 5) & 31) << 11) | (((c >> 10) & 31) << 19);
+
+        video_16to32 = malloc(4 * 65536);
+        for (c = 0; c < 65536; c++)
+                video_16to32[c] = ((c & 31) << 3) | (((c >> 5) & 63) << 10) | (((c >> 11) & 31) << 19);
+
 }
 
 void closevideo()
 {
+        free(video_15to32);
+        free(video_16to32);
         destroy_bitmap(buffer);
+        destroy_bitmap(buffer32);
 }

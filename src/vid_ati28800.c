@@ -65,7 +65,7 @@ void ati28800_out(uint16_t addr, uint8_t val, void *p)
                 {
                         if (svga->crtcreg < 0xe || svga->crtcreg > 0x10)
                         {
-                                fullchange = changeframecount;
+                                svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
                 }

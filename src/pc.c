@@ -307,7 +307,7 @@ int sreadlnum,swritelnum,segareads,segawrites, scycles_lost;
 int serial_fifo_read, serial_fifo_write;
 
 int emu_fps = 0;
-extern int totaldiff;
+
 void runpc()
 {
         char s[200];
@@ -350,8 +350,7 @@ void runpc()
                 if (win_title_update)
                 {
                         win_title_update=0;
-                        sprintf(s, "PCem v0.7 - %s - %s - %s - %i%% - %i", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps, totaldiff);
-                        totaldiff = 0;
+                        sprintf(s, "PCem v0.7 - %s - %s - %s - %i%%", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps);
                         set_window_title(s);
                 }
                 done++;

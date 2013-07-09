@@ -143,7 +143,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                 {
                         if (svga->crtcreg < 0xe || svga->crtcreg > 0x10)
                         {
-                                fullchange = changeframecount;
+                                svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
                 }
@@ -323,7 +323,7 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         
 //        if (svga_output) pclog("Write LFB %08X %02X ", addr, val);
         if (!(svga->gdcreg[6] & 1)) 
-                fullchange = 2;
+                svga->fullchange = 2;
         if (svga->chain4 && (svga->writemode < 4))
         {
                 writemask2 = 1 << (addr & 3);

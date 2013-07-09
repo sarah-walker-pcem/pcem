@@ -19,6 +19,8 @@ BITMAP *create_bitmap(int w, int h);
 extern uint8_t fontdat[256][8];
 extern uint8_t fontdatm[256][16];
 
+extern uint32_t *video_15to32, *video_16to32;
+
 extern int xsize,ysize;
 
 typedef struct

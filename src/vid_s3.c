@@ -107,7 +107,7 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 0x31:
                         s3->ma_ext = (s3->ma_ext & 0x1c) | ((val & 0x30) >> 4);
-                        svga->vrammask = (val & 8) ? 0x3fffff : 0x3ffff;
+                        svga->vrammask = /*(val & 8) ? */0x3fffff/* : 0x3ffff*/;
                         break;
                         
                         case 0x50:
@@ -134,6 +134,7 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         case 0x51:
                         s3->bank = (s3->bank & 0x4f) | ((val & 0xc) << 2);
+//                        pclog("CRTC write R51 %02X\n", val);
                         if (svga->chain4) svga->write_bank = svga->read_bank = s3->bank << 16;
                         else              svga->write_bank = svga->read_bank = s3->bank << 14;
                         s3->ma_ext = (s3->ma_ext & ~0xc) | ((val & 3) << 2);
@@ -189,7 +190,7 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                 {
                         if (svga->crtcreg < 0xe || svga->crtcreg > 0x10)
                         {
-                                fullchange = changeframecount;
+                                svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
                 }

@@ -812,14 +812,12 @@ static void setsbc16(uint16_t a, uint16_t b)
         if (((a&0xF)-(b&0xF))&0x10)      flags|=A_FLAG;
 }
 
-int totaldiff = 0;
 int current_diff = 0;
 void clockhardware()
 {
         int diff = cycdiff - cycles - current_diff;
         
         current_diff += diff;
-        totaldiff += diff;
         pit.c[0] -= diff;
         pit.c[1] -= diff;
         if (ppi.pb & 1) pit.c[2] -= diff;
