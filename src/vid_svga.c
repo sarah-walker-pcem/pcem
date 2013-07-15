@@ -552,7 +552,7 @@ void svga_poll(void *p)
 
                         svga->video_res_x = wx;
                         svga->video_res_y = wy + 1;
-                        pclog("%i %i %i\n", svga->video_res_x, svga->video_res_y, svga->lowres);
+//                        pclog("%i %i %i\n", svga->video_res_x, svga->video_res_y, svga->lowres);
                         if (!(svga->gdcreg[6] & 1)) /*Text mode*/
                         {
                                 svga->video_res_x /= (svga->seqregs[1] & 1) ? 8 : 9;

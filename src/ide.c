@@ -651,7 +651,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
         }*/
 #endif
 //        if ((cr0&1) && !(eflags&VM_FLAG))
-//           pclog("WriteIDE %04X %02X from %04X(%08X):%08X\n", addr, val, CS, cs, pc);
+//         pclog("WriteIDE %04X %02X from %04X(%08X):%08X %i\n", addr, val, CS, cs, pc, ins);
 //        return;
         addr|=0x80;
 //        if (ide_board) pclog("Write IDEb %04X %02X %04X(%08X):%04X %i  %02X %02X\n",addr,val,CS,cs,pc,ins,ide->atastat,ide_drives[0].atastat);
@@ -847,7 +847,8 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 case WIN_SETIDLE1: /* Idle */
                         ide->atastat = BUSY_STAT;
                         timer_process();
-                        idecallback[ide_board]=200*IDE_TIME;
+                        callbackide(ide_board);
+//                        idecallback[ide_board]=200*IDE_TIME;
                         timer_update_outstanding();
                         return;
 
@@ -913,7 +914,7 @@ uint8_t readide(int ide_board, uint16_t addr)
         }*/
 #endif
 //        if ((cr0&1) && !(eflags&VM_FLAG))
-//           pclog("ReadIDE %04X  from %04X(%08X):%08X\n", addr, CS, cs, pc);
+//         pclog("ReadIDE %04X  from %04X(%08X):%08X\n", addr, CS, cs, pc);
 //        return 0xFF;
 
         if (ide->type == IDE_NONE && addr != 0x1f6) return 0xff;
@@ -1060,13 +1061,15 @@ uint16_t readidew(int ide_board)
                         }
                 }
         }
-//        if (ide_board) pclog("Read IDEw %04X\n",temp);
+//        pclog("Read IDEw %04X\n",temp);
         return temp;
 }
 
 uint32_t readidel(int ide_board)
 {
-        uint16_t temp = readidew(ide_board);
+        uint16_t temp;
+//        pclog("Read IDEl %i\n", ide_board);
+        temp = readidew(ide_board);
         return temp | (readidew(ide_board) << 16);
 }
 

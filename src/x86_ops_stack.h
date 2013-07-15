@@ -304,7 +304,7 @@ static int opENTER_w(uint32_t fetchdat)
         int count = (fetchdat >> 16) & 0xff; pc++;
         uint32_t tempEBP = EBP, tempESP = ESP, frame_ptr;
         
-        PUSH_W(BP);
+        PUSH_W(BP); if (abrt) return 0;
         frame_ptr = ESP;
         
         if (count > 0)
@@ -337,7 +337,7 @@ static int opENTER_l(uint32_t fetchdat)
         int count = (fetchdat >> 16) & 0xff; pc++;
         uint32_t tempEBP = EBP, tempESP = ESP, frame_ptr;
         
-        PUSH_L(EBP);
+        PUSH_L(EBP); if (abrt) return 0;
         frame_ptr = ESP;
         
         if (count > 0)

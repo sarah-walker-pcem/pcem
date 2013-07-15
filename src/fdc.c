@@ -310,7 +310,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                         fdc.stat =  1 << fdc.drive;
 //                                        disctime = 8000000;
                                 }
-                                if (discint == 0xf)
+                                if (discint == 0xf || discint == 10)
                                 {
                                         fdc.head = (fdc.params[0] & 4) ? 1 : 0;
                                 }

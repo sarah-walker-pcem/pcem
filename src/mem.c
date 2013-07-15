@@ -586,6 +586,14 @@ int loadbios()
                 //is486=1;
                 return 1;
 
+                case ROM_SIS496:
+                f = romfopen("roms/sis496/SIS496-1.AWA", "rb");
+                if (!f) break;
+                fread(rom,           0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+                
                 case ROM_430VX:
 //                f = romfopen("roms/430vx/Ga586atv.bin", "rb");
 //                f = fopen("roms/430vx/vx29.BIN", "rb");
@@ -792,7 +800,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
 //        if (output == 3) pclog("Do translate %08X %i %08X\n", addr, rw, temp);
         if (!(temp&1))// || (CPL==3 && !(temp&4) && !cpl_override) || (rw && !(temp&2) && (CPL==3 || cr0&WP_FLAG)))
         {
-//                /*if (!nopageerrors && opcode != 0xf3 && opcode != 0x89) */pclog("Section not present! %08X  %08X  %02X  %04X:%08X  %i %i\n",addr,temp,opcode,CS,pc,CPL,rw);
+//                if (!nopageerrors) pclog("Section not present! %08X  %08X  %02X  %04X:%08X  %i %i\n",addr,temp,opcode,CS,pc,CPL,rw);
 
                 cr2=addr;
                 temp&=1;
@@ -812,7 +820,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
 //        if (output == 3) pclog("Do translate %08X %08X\n", temp, temp3);
         if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && (CPL==3 || cr0&WP_FLAG)))
         {
-//                /*if (!nopageerrors && opcode != 0xf3 && opcode != 0x89) */pclog("Page not present!  %08X   %08X   %02X %02X  %i  %08X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,frame,rmdat32, CS,pc,SS,ESP,ins,CPL,rw);
+//                if (!nopageerrors) pclog("Page not present!  %08X   %08X   %02X %02X  %i  %08X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,frame,rmdat32, CS,pc,SS,ESP,ins,CPL,rw);
                
 //                dumpregs();
 //                exit(-1);
@@ -1006,7 +1014,7 @@ void writemembl(uint32_t addr, uint8_t val)
         addr &= rammask;
 
         if (_mem_write_b[addr >> 14]) _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
-//        else                            pclog("Bad write %08X %02X  %04X:%08X\n", addr, val, CS, pc);
+//        else                          pclog("Bad write %08X %02X  %04X:%08X\n", addr, val, CS, pc);
 }
 
 uint8_t readmemb386l(uint32_t seg, uint32_t addr)
@@ -1058,7 +1066,7 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
            pclog("writemembl %08X %02X\n", addr, val);*/
 
         if (_mem_write_b[addr >> 14]) _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
-//        else                            pclog("Bad write %08X %02X %04X:%08X\n", addr, val, CS, pc);
+//        else                          pclog("Bad write %08X %02X %04X:%08X\n", addr, val, CS, pc);
 }
 
 uint16_t readmemwl(uint32_t seg, uint32_t addr)
@@ -1150,7 +1158,7 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
                 _mem_write_b[(addr2 + 1) >> 14](addr2 + 1, val >> 8, _mem_priv[addr2 >> 14]);
                 return;
         }
-//        pclog("Bad write %08X %04X\n", addr, val);
+//        pclog("Bad write %08X %04X\n", addr2, val);
 }
 
 uint32_t readmemll(uint32_t seg, uint32_t addr)
@@ -1241,7 +1249,7 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
                 _mem_write_b[addr2 >> 14](addr2 + 3, val >> 24, _mem_priv[addr2 >> 14]);
                 return;
         }
-//        pclog("Bad write %08X %08X\n", addr, val);
+//        pclog("Bad write %08X %08X\n", addr2, val);
 }
 
 uint8_t mem_read_ram(uint32_t addr, void *priv)
@@ -1290,12 +1298,12 @@ uint8_t mem_read_bios(uint32_t addr, void *priv)
 //                                if (pc==0x547D) output=3;
                                 return 0x40;
                         }
-//        if (output) pclog("Read BIOS %08X %02X %04X:%04X\n", addr, rom[addr & biosmask], CS, pc);
+//        pclog("Read BIOS %08X %02X %04X:%04X\n", addr, rom[addr & biosmask], CS, pc);
         return rom[addr & biosmask];
 }
 uint16_t mem_read_biosw(uint32_t addr, void *priv)
 {
-//        /*if (output) */pclog("Read BIOS %08X %04X %04X:%04X\n", addr, *(uint16_t *)&rom[addr & biosmask], CS, pc);
+//        pclog("Read BIOS %08X %04X %04X:%04X\n", addr, *(uint16_t *)&rom[addr & biosmask], CS, pc);
         return *(uint16_t *)&rom[addr & biosmask];
 }
 uint32_t mem_read_biosl(uint32_t addr, void *priv)

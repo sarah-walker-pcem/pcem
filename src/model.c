@@ -28,6 +28,7 @@
 #include "piix.h"
 #include "pit.h"
 #include "serial.h"
+#include "sis496.h"
 #include "sound_sn76489.h"
 #include "um8669f.h"
 #include "um8881f.h"
@@ -46,6 +47,7 @@ void   at_wd76c10_init();
 void   at_ali1429_init();
 void  at_headland_init();
 void   at_um8881f_init();
+void    at_sis496_init();
 void    at_i430vx_init();
 
 int model;
@@ -74,6 +76,7 @@ MODEL models[] =
         {"AMI 486 clone",       ROM_AMI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
         {"AMI WinBIOS 486",     ROM_WIN486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
         {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_um8881f_init},
+        {"Award SiS 496/497",   ROM_SIS496,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,    at_sis496_init},
         {"Award 430VX PCI",     ROM_430VX,     { "IDT",   cpus_WinChip, "",    NULL,       "",      NULL},         0,    at_i430vx_init},
         {"", -1, {"", 0, "", 0, "", 0}, 0}
 };
@@ -196,6 +199,14 @@ void at_um8881f_init()
         mouse_serial_init();
         pci_init();
         um8881f_init();
+}
+
+void at_sis496_init()
+{
+        at_init();
+        mouse_serial_init();
+        pci_init();
+        device_add(&sis496_device);
 }
 
 void at_i430vx_init()

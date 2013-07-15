@@ -321,6 +321,7 @@ enum
         ROM_AMI486,
         ROM_WIN486,
         ROM_PCI486,
+        ROM_SIS496,
         ROM_430VX
 };
 
