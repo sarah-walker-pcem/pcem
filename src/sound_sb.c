@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "sound_emu8k.h"
 #include "sound_mpu401_uart.h"
 #include "sound_opl.h"
 #include "sound_sb.h"
@@ -27,9 +28,11 @@ typedef struct sb_t
         sb_dsp_t        dsp;
         sb_mixer_t      mixer;
         mpu401_uart_t   mpu;
+        emu8k_t         emu8k;
 
         int16_t opl_buffer[SOUNDBUFLEN * 2];
         int16_t dsp_buffer[SOUNDBUFLEN * 2];
+        int16_t emu8k_buffer[SOUNDBUFLEN * 2];
 
         int pos;
 } sb_t;
@@ -65,6 +68,18 @@ static void sb_opl3_poll(void *p)
         sb->pos++;
 }
 
+static void sb_emu8k_poll(void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        
+        if (sb->pos >= SOUNDBUFLEN) return;
+        
+        opl3_poll(&sb->opl, &sb->opl_buffer[sb->pos * 2], &sb->opl_buffer[(sb->pos * 2) + 1]);
+        sb_dsp_poll(&sb->dsp, &sb->dsp_buffer[sb->pos * 2], &sb->dsp_buffer[(sb->pos * 2) + 1]);
+        emu8k_poll_getsamp(&sb->emu8k, &sb->emu8k_buffer[sb->pos * 2], &sb->emu8k_buffer[(sb->pos * 2) + 1]);
+        sb->pos++;
+}
+
 static void sb_get_buffer(int16_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
@@ -78,6 +93,10 @@ static void sb_get_buffer(int16_t *buffer, int len, void *p)
                 
                 out_l = ((sb->opl_buffer[c]     * mixer->fm_l) >> 16);
                 out_r = ((sb->opl_buffer[c + 1] * mixer->fm_r) >> 16);
+
+                out_l += ((sb->emu8k_buffer[c]     * mixer->fm_l) >> 16);
+                out_r += ((sb->emu8k_buffer[c + 1] * mixer->fm_l) >> 16);
+
                 if (sb->mixer.filter)
                 {
                         out_l += (int)(((sb_iir(0, (float)sb->dsp_buffer[c])     / 1.3) * mixer->voice_l) / 3) >> 16;
@@ -357,6 +376,40 @@ void *sb_16_init()
         return sb;
 }
 
+void *sb_awe32_init()
+{
+        sb_t *sb = malloc(sizeof(sb_t));
+        memset(sb, 0, sizeof(sb_t));
+
+        opl3_init(&sb->opl);
+        sb_dsp_init(&sb->dsp, SB16);
+        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_mixer_init(&sb->mixer);
+        io_sethandler(0x0220, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_sethandler(0x0228, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_sethandler(0x0224, 0x0002, sb_16_mixer_read, NULL, NULL, sb_16_mixer_write, NULL, NULL, sb);
+        sound_add_handler(sb_emu8k_poll, sb_get_buffer, sb);
+        mpu401_uart_init(&sb->mpu, 0x330);       
+        emu8k_init(&sb->emu8k);
+
+        sb->mixer.regs[0x30] = 31 << 3;
+        sb->mixer.regs[0x31] = 31 << 3;
+        sb->mixer.regs[0x32] = 31 << 3;
+        sb->mixer.regs[0x33] = 31 << 3;
+        sb->mixer.regs[0x34] = 31 << 3;
+        sb->mixer.regs[0x35] = 31 << 3;
+        sb->mixer.regs[0x44] =  8 << 4;
+        sb->mixer.regs[0x45] =  8 << 4;
+        sb->mixer.regs[0x46] =  8 << 4;
+        sb->mixer.regs[0x47] =  8 << 4;
+        sb->mixer.regs[0x22] = (sb->mixer.regs[0x30] & 0xf0) | (sb->mixer.regs[0x31] >> 4);
+        sb->mixer.regs[0x04] = (sb->mixer.regs[0x32] & 0xf0) | (sb->mixer.regs[0x33] >> 4);
+        sb->mixer.regs[0x26] = (sb->mixer.regs[0x34] & 0xf0) | (sb->mixer.regs[0x35] >> 4);
+        
+        return sb;
+}
+
 void sb_close(void *p)
 {
         sb_t *sb = (sb_t *)p;
@@ -415,6 +468,14 @@ device_t sb_16_device =
 {
         "Sound Blaster 16",
         sb_16_init,
+        sb_close,
+        sb_speed_changed,
+        NULL
+};
+device_t sb_awe32_device =
+{
+        "Sound Blaster AWE32",
+        sb_awe32_init,
         sb_close,
         sb_speed_changed,
         NULL

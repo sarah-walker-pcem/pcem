@@ -8,8 +8,8 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	headland.o i430vx.o ide.o io.o jim.o keyboard.o keyboard_amstrad.o keyboard_at.o \
 	keyboard_olim24.o keyboard_xt.o lpt.o mcr.o mem.o model.o \
 	mouse.o mouse_ps2.o mouse_serial.o neat.o nvr.o olivetti_m24.o \
-     opti.o pc.o pci.o pic.o piix.o pit.o ppi.o serial.o sound.o sound_adlib.o \
-	sound_adlibgold.o sound_cms.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
+     opti.o pc.o pci.o pic.o piix.o pit.o ppi.o serial.o sis496.o sound.o sound_adlib.o \
+	sound_adlibgold.o sound_cms.o sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
 	sound_pas16.o sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o \
 	sound_wss.o soundopenal.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o \
 	vid_ati_mach64.o vid_ati18800.o vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o \
