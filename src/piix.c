@@ -36,19 +36,17 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         case 0x41:
                         if ((val ^ card_piix_ide[0x41]) & 0x80)
                         {
+                                ide_pri_disable();
                                 if (val & 0x80)
                                    ide_pri_enable();
-                                else
-                                   ide_pri_disable();
                         }
                         break;
                         case 0x43:
                         if ((val ^ card_piix_ide[0x43]) & 0x80)
                         {
+                                ide_sec_disable();
                                 if (val & 0x80)
-                                   ide_sec_enable();
-                                else
-                                   ide_sec_disable();
+                                   ide_sec_enable();                                  
                         }
                         break;
                 }
