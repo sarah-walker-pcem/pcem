@@ -112,20 +112,13 @@ static int op0F_w_a16(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
         pc++;
-        if (x86_opcodes_0f[opcode] == ILLEGAL && opcode != 0xff)
-        {
-                fatal("Illegal 0f instruction %02X w_a16\n", opcode);
-        }
+
         return x86_opcodes_0f[opcode](fetchdat >> 8);
 }
 static int op0F_l_a16(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
         pc++;
-        if (x86_opcodes_0f[opcode | 0x100] == ILLEGAL && opcode != 0xff)
-        {
-                fatal("Illegal 0f instruction %02X l_a16\n", opcode);
-        }
         
         return x86_opcodes_0f[opcode | 0x100](fetchdat >> 8);
 }
@@ -133,10 +126,6 @@ static int op0F_w_a32(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
         pc++;
-        if (x86_opcodes_0f[opcode | 0x200] == ILLEGAL && opcode != 0xff)
-        {
-                fatal("Illegal 0f instruction %02X w_a32\n", opcode);
-        }
         
         return x86_opcodes_0f[opcode | 0x200](fetchdat >> 8);
 }
@@ -144,10 +133,6 @@ static int op0F_l_a32(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
         pc++;
-        if (x86_opcodes_0f[opcode | 0x300] == ILLEGAL && opcode != 0xff)
-        {
-                fatal("Illegal 0f instruction %02X l_a32\n", opcode);
-        }
         
         return x86_opcodes_0f[opcode | 0x300](fetchdat >> 8);
 }
