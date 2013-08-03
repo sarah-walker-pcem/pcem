@@ -10,3 +10,5 @@ extern OpFn ops_286_0f[1024];
 
 extern OpFn ops_386[1024];
 extern OpFn ops_386_0f[1024];
+
+extern OpFn ops_winchip_0f[1024];

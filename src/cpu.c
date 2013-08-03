@@ -4,6 +4,14 @@
 #include "io.h"
 #include "x86_ops.h"
 
+enum
+{
+        CPUID_FPU = (1 << 0),
+        CPUID_TSC = (1 << 4),
+        CPUID_MSR = (1 << 5),
+        CPUID_MMX = (1 << 23)
+};
+
 int cpu = 3, cpu_manufacturer = 0;
 CPU *cpu_s;
 int cpu_multi;
@@ -11,12 +19,22 @@ int cpu_iscyrix;
 int cpu_16bitbus;
 int cpu_busspeed;
 int cpu_hasrdtsc;
+int cpu_hasMMX, cpu_hasMSR;
+uint64_t tsc = 0;
 
 int timing_rr;
 int timing_mr, timing_mrl;
 int timing_rm, timing_rml;
 int timing_mm, timing_mml;
 int timing_bt, timing_bnt;
+
+static struct
+{
+        uint32_t tr1, tr12;
+        uint32_t cesr;
+        uint32_t fcr;
+        uint64_t fcr2, fcr3;
+} msr;
 
 /*Available cpuspeeds :
         0 = 16 MHz
@@ -239,6 +257,8 @@ void cpu_set()
            cpu_busspeed = cpu_s->rspeed / cpu_s->multi;
         cpu_multi = cpu_s->multi;
         cpu_hasrdtsc = 0;
+        cpu_hasMMX = 0;
+        cpu_hasMSR = 0;
         
         if (cpu_iscyrix)
            io_sethandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL, NULL);
@@ -250,6 +270,8 @@ void cpu_set()
 
         x86_setopcodes(ops_386, ops_386_0f);
                         
+        memset(&msr, 0, sizeof(msr));
+        
         switch (cpu_s->cpu_type)
         {
                 case CPU_8088:
@@ -370,6 +392,7 @@ void cpu_set()
                 break;
 
                 case CPU_WINCHIP:
+                x86_setopcodes(ops_386, ops_winchip_0f);
                 timing_rr  = 1; /*register dest - register src*/
                 timing_rm  = 2; /*register dest - memory src*/
                 timing_mr  = 3; /*memory dest   - register src*/
@@ -380,6 +403,8 @@ void cpu_set()
                 timing_bt  = 3-1; /*branch taken*/
                 timing_bnt = 1; /*branch not taken*/
                 cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                cpu_hasMMX = cpu_hasMSR = 1;
                 break;
                 
                 default:
@@ -403,7 +428,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = 1; /*FPU*/
+                        EDX = CPUID_FPU; /*FPU*/
                 }
                 else
                    EAX = 0;
@@ -438,7 +463,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = 1; /*FPU*/
+                        EDX = CPUID_FPU; /*FPU*/
                 }
                 else
                    EAX = 0;
@@ -448,15 +473,26 @@ void cpu_CPUID()
                 if (!EAX)
                 {
                         EAX = 1;
-                        EBX = 0x746e6543; /*CentaurHauls*/
-                        ECX = 0x736c7561;                        
-                        EDX = 0x48727561;
+                        if (msr.fcr2 & (1 << 14))
+                        {
+                                EBX = msr.fcr3 >> 32;
+                                ECX = msr.fcr3 & 0xffffffff;
+                                EDX = msr.fcr2 >> 32;
+                        }
+                        else
+                        {
+                                EBX = 0x746e6543; /*CentaurHauls*/
+                                ECX = 0x736c7561;                        
+                                EDX = 0x48727561;
+                        }
                 }
                 else if (EAX == 1)
                 {
-                        EAX = CPUID;
+                        EAX = 0x540;
                         EBX = ECX = 0;
-                        EDX = 1; /*FPU*/
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
+                        if (msr.fcr & (1 << 9))
+                                EDX |= CPUID_MMX;
                 }
                 else
                    EAX = 0;
@@ -464,6 +500,80 @@ void cpu_CPUID()
         }
 }
 
+void cpu_RDMSR()
+{
+        switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
+        {
+                case CPU_WINCHIP:
+                EAX = EDX = 0;
+                switch (ECX)
+                {
+                        case 0x02:
+                        EAX = msr.tr1;
+                        break;
+                        case 0x0e:
+                        EAX = msr.tr12;
+                        break;
+                        case 0x10:
+                        EAX = tsc & 0xffffffff;
+                        EDX = tsc >> 32;
+                        break;
+                        case 0x11:
+                        EAX = msr.cesr;
+                        break;
+                        case 0x107:
+                        EAX = msr.fcr;
+                        break;
+                        case 0x108:
+                        EAX = msr.fcr2 & 0xffffffff;
+                        EDX = msr.fcr2 >> 32;
+                        break;
+                        case 0x10a:
+                        EAX = cpu_multi & 3;
+                        break;
+                }
+                break;
+        }
+}
+
+void cpu_WRMSR()
+{
+        switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
+        {
+                case CPU_WINCHIP:
+                EAX = EDX = 0;
+                switch (ECX)
+                {
+                        case 0x02:
+                        msr.tr1 = EAX & 2;
+                        break;
+                        case 0x0e:
+                        msr.tr12 = EAX & 0x228;
+                        break;
+                        case 0x10:
+                        tsc = EAX | ((uint64_t)EDX << 32);
+                        break;
+                        case 0x11:
+                        msr.cesr = EAX & 0xff00ff;
+                        break;
+                        case 0x107:
+                        msr.fcr = EAX;
+                        cpu_hasMMX = EAX & (1 << 9);
+                        if (EAX & (1 << 29))
+                                CPUID = 0;
+                        else
+                                CPUID = models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
+                        break;
+                        case 0x108:
+                        msr.fcr2 = EAX | ((uint64_t)EDX << 32);
+                        break;
+                        case 0x109:
+                        msr.fcr3 = EAX | ((uint64_t)EDX << 32);
+                        break;
+                }
+                break;
+        }
+}
 
 static int cyrix_addr;
 

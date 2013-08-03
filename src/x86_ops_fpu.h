@@ -2,7 +2,7 @@
         static int opESCAPE_ ## num ##_a16(uint32_t fetchdat)                   \
         {                                                                       \
                 flags_rebuild();                                                \
-                if ((cr0 & 6) == 4)                                             \
+                if (cr0 & 0xc)                                                    \
                 {                                                               \
                         x86_int(7);                                             \
                 }                                                               \
@@ -24,7 +24,7 @@
         static int opESCAPE_ ## num ## _a32(uint32_t fetchdat)                  \
         {                                                                       \
                 flags_rebuild();                                                \
-                if ((cr0 & 6) == 4)                                             \
+                if (cr0 & 0xc)                                                    \
                 {                                                               \
                         x86_int(7);                                             \
                 }                                                               \
@@ -55,6 +55,11 @@ opESCAPE(df);
 
 static int opWAIT(uint32_t fetchdat)
 {
+        if ((cr0 & 0xa) == 0xa)
+        {
+                x86_int(7);
+                return 0;
+        }
         cycles -= 4;
         return 0;
 }

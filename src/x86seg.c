@@ -2394,7 +2394,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 
                 
                 cr3=new_cr3;
-                pclog("TS New CR3 %08X\n",cr3);
+//                pclog("TS New CR3 %08X\n",cr3);
                 flushmmucache();
                 
                 

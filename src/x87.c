@@ -60,6 +60,8 @@ static inline uint32_t geteal()
 
 
 double ST[8];
+MMX_REG MM[8];
+int ismmx = 0;
 uint16_t npxs,npxc,tag;
 
 int TOP;
@@ -90,6 +92,19 @@ int TOP;
                         dst = src1 / (double)src2;              \
         } while (0)
         
+void x87_set_mmx()
+{
+        TOP = 0;
+        tag = 0;
+        ismmx = 1;
+}
+
+void x87_emms()
+{
+        tag = 0xffff;
+        ismmx = 0;
+}
+
 void x87_checkexceptions()
 {
 }
@@ -100,15 +115,31 @@ void x87_reset()
 
 void x87_dumpregs()
 {
-        pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",ST[TOP],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
-        pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7]);
+        if (ismmx)
+        {
+                pclog("MM0=%016llX\tMM1=%016llX\tMM2=%016llX\tMM3=%016llX\n", MM[0].q, MM[1].q, MM[2].q, MM[3].q);
+                pclog("MM4=%016llX\tMM5=%016llX\tMM6=%016llX\tMM7=%016llX\n", MM[4].q, MM[5].q, MM[6].q, MM[7].q);
+        }
+        else
+        {
+                pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",ST[TOP],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7]);
+        }
         pclog("Status = %04X  Control = %04X  Tag = %04X\n",npxs,npxc,tag);
 }
 
 void x87_print()
 {
-        pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t",ST[TOP&7],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
-        pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t TOP=%i CR=%04X SR=%04X TAG=%04X\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7], TOP, npxc, npxs, tag);
+        if (ismmx)
+        {
+                pclog("\tMM0=%016llX\tMM1=%016llX\tMM2=%016llX\tMM3=%016llX\t", MM[0].q, MM[1].q, MM[2].q, MM[3].q);
+                pclog("MM4=%016llX\tMM5=%016llX\tMM6=%016llX\tMM7=%016llX\n", MM[4].q, MM[5].q, MM[6].q, MM[7].q);
+        }
+        else
+        {
+                pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t",ST[TOP&7],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t TOP=%i CR=%04X SR=%04X TAG=%04X\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7], TOP, npxc, npxs, tag);
+        }
 }
 
 void x87_push(double i)
@@ -213,6 +244,20 @@ void x87_st80(double d)
 	writememl(easeg,eaaddr,test.eind.ll);
 	writememl(easeg,eaaddr+4,test.eind.ll>>32);
 	writememw(easeg,eaaddr+8,test.begin);
+}
+
+void x87_ldmmx(MMX_REG *r)
+{
+        r->l[0] = readmeml(easeg, eaaddr);
+        r->l[1] = readmeml(easeg, eaaddr + 4);
+        r->w[4] = readmemw(easeg, eaaddr + 8);
+}
+
+void x87_stmmx(MMX_REG r)
+{
+        writememl(easeg, eaaddr,     r.l[0]);
+        writememl(easeg, eaaddr + 4, r.l[1]);
+        writememw(easeg, eaaddr + 8, 0xffff);
 }
 
 void x87_d8()
@@ -545,7 +590,7 @@ void x87_d9()
                         cycles-=7;
                         return;
                         case 3: /*FSTP single-precision*/
-                        if (fplog) pclog("FSTPs %08X:%08X\n", easeg, eaaddr);
+                        if (fplog) pclog("FSTPs %08X:%08X %f\n", easeg, eaaddr, ST(0));
                         ts.s=(float)ST(0);
                         seteal(ts.i); if (abrt) { pclog("FSTP sp abort\n"); return; }
   //                      if (pc==0x3f50c) pclog("FSTP %f %f %08X\n",ST(0),ts.s,ts.i);
@@ -969,7 +1014,6 @@ void x87_dd()
                         cycles-=8;
                         return;
                         case 4: /*FRSTOR*/
-                        if (fplog) pclog("FRSTOR %08X:%08X\n", easeg, eaaddr);
                         switch ((cr0&1)|(op32&0x100))
                         {
                                 case 0x000: /*16-bit real mode*/
@@ -989,23 +1033,33 @@ void x87_dd()
                                 eaaddr+=28;
                                 break;
                         }
-                        ST(0)=x87_ld80(); eaaddr+=10;
-                        ST(1)=x87_ld80(); eaaddr+=10;
-                        ST(2)=x87_ld80(); eaaddr+=10;
-                        ST(3)=x87_ld80(); eaaddr+=10;
-                        ST(4)=x87_ld80(); eaaddr+=10;
-                        ST(5)=x87_ld80(); eaaddr+=10;
-                        ST(6)=x87_ld80(); eaaddr+=10;
-                        ST(7)=x87_ld80();
+                        x87_ldmmx(&MM[0]); ST(0)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[1]); ST(1)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[2]); ST(2)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[3]); ST(3)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[4]); ST(4)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[5]); ST(5)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[6]); ST(6)=x87_ld80(); eaaddr += 10;
+                        x87_ldmmx(&MM[7]); ST(7)=x87_ld80();
+                        ismmx = 0;
+                        /*Horrible hack, but as PCem doesn't keep the FPU stack in 80-bit precision at all times
+                          something like this is needed*/
+                        if (MM[0].w == 0xffff && MM[1].w == 0xffff && MM[2].w == 0xffff && MM[3].w == 0xffff &&
+                            MM[4].w == 0xffff && MM[5].w == 0xffff && MM[6].w == 0xffff && MM[7].w == 0xffff &&
+                            !TOP && !tag)
+                                ismmx = 1;
+                                
                         cycles-=(cr0&1)?34:44;
+                        if (fplog) pclog("FRSTOR %08X:%08X %i %i %04X\n", easeg, eaaddr, ismmx, TOP, tag);
 /*                        pclog("new TOP %i\n", TOP);
                         pclog("%04X %04X %04X  %f %f %f %f  %f %f %f %f\n", npxc, npxs, tag, ST(0), ST(1), ST(2), ST(3), ST(4), ST(5), ST(6), ST(7));*/
                         return;
                         case 6: /*FSAVE*/
-                        if (fplog) pclog("FSAVE %08X:%08X\n", easeg, eaaddr);
+                        if (fplog) pclog("FSAVE %08X:%08X %i\n", easeg, eaaddr, ismmx);
                         npxs = (npxs & ~(7 << 11)) | (TOP << 11);
 /*                        pclog("old TOP %i %04X\n", TOP, npxs);
                         pclog("%04X %04X %04X  %f %f %f %f  %f %f %f %f\n", npxc, npxs, tag, ST(0), ST(1), ST(2), ST(3), ST(4), ST(5), ST(6), ST(7));*/
+
                         switch ((cr0&1)|(op32&0x100))
                         {
                                 case 0x000: /*16-bit real mode*/
@@ -1015,14 +1069,28 @@ void x87_dd()
                                 writememw(easeg,eaaddr+6,x87_pc_off);
                                 writememw(easeg,eaaddr+10,x87_op_off);
                                 eaaddr+=14;
-                                x87_st80(ST(0)); eaaddr+=10;
-                                x87_st80(ST(1)); eaaddr+=10;
-                                x87_st80(ST(2)); eaaddr+=10;
-                                x87_st80(ST(3)); eaaddr+=10;
-                                x87_st80(ST(4)); eaaddr+=10;
-                                x87_st80(ST(5)); eaaddr+=10;
-                                x87_st80(ST(6)); eaaddr+=10;
-                                x87_st80(ST(7));
+                                if (ismmx)
+                                {
+                                        x87_stmmx(MM[0]); eaaddr+=10;
+                                        x87_stmmx(MM[1]); eaaddr+=10;
+                                        x87_stmmx(MM[2]); eaaddr+=10;
+                                        x87_stmmx(MM[3]); eaaddr+=10;
+                                        x87_stmmx(MM[4]); eaaddr+=10;
+                                        x87_stmmx(MM[5]); eaaddr+=10;
+                                        x87_stmmx(MM[6]); eaaddr+=10;
+                                        x87_stmmx(MM[7]);
+                                }
+                                else
+                                {
+                                        x87_st80(ST(0)); eaaddr+=10;
+                                        x87_st80(ST(1)); eaaddr+=10;
+                                        x87_st80(ST(2)); eaaddr+=10;
+                                        x87_st80(ST(3)); eaaddr+=10;
+                                        x87_st80(ST(4)); eaaddr+=10;
+                                        x87_st80(ST(5)); eaaddr+=10;
+                                        x87_st80(ST(6)); eaaddr+=10;
+                                        x87_st80(ST(7));
+                                }
                                 break;
                                 case 0x001: /*16-bit protected mode*/
                                 writememw(easeg,eaaddr,npxc);
@@ -1033,14 +1101,28 @@ void x87_dd()
                                 writememw(easeg,eaaddr+10,x87_op_off);
                                 writememw(easeg,eaaddr+12,x87_op_seg);
                                 eaaddr+=14;
-                                x87_st80(ST(0)); eaaddr+=10;
-                                x87_st80(ST(1)); eaaddr+=10;
-                                x87_st80(ST(2)); eaaddr+=10;
-                                x87_st80(ST(3)); eaaddr+=10;
-                                x87_st80(ST(4)); eaaddr+=10;
-                                x87_st80(ST(5)); eaaddr+=10;
-                                x87_st80(ST(6)); eaaddr+=10;
-                                x87_st80(ST(7));
+                                if (ismmx)
+                                {
+                                        x87_stmmx(MM[0]); eaaddr+=10;
+                                        x87_stmmx(MM[1]); eaaddr+=10;
+                                        x87_stmmx(MM[2]); eaaddr+=10;
+                                        x87_stmmx(MM[3]); eaaddr+=10;
+                                        x87_stmmx(MM[4]); eaaddr+=10;
+                                        x87_stmmx(MM[5]); eaaddr+=10;
+                                        x87_stmmx(MM[6]); eaaddr+=10;
+                                        x87_stmmx(MM[7]);
+                                }
+                                else
+                                {
+                                        x87_st80(ST(0)); eaaddr+=10;
+                                        x87_st80(ST(1)); eaaddr+=10;
+                                        x87_st80(ST(2)); eaaddr+=10;
+                                        x87_st80(ST(3)); eaaddr+=10;
+                                        x87_st80(ST(4)); eaaddr+=10;
+                                        x87_st80(ST(5)); eaaddr+=10;
+                                        x87_st80(ST(6)); eaaddr+=10;
+                                        x87_st80(ST(7));
+                                }
                                 break;
                                 case 0x100: /*32-bit real mode*/
                                 writememw(easeg,eaaddr,npxc);
@@ -1050,14 +1132,28 @@ void x87_dd()
                                 writememw(easeg,eaaddr+20,x87_op_off);
                                 writememl(easeg,eaaddr+24,(x87_op_off>>16)<<12);
                                 eaaddr+=28;
-                                x87_st80(ST(0)); eaaddr+=10;
-                                x87_st80(ST(1)); eaaddr+=10;
-                                x87_st80(ST(2)); eaaddr+=10;
-                                x87_st80(ST(3)); eaaddr+=10;
-                                x87_st80(ST(4)); eaaddr+=10;
-                                x87_st80(ST(5)); eaaddr+=10;
-                                x87_st80(ST(6)); eaaddr+=10;
-                                x87_st80(ST(7));
+                                if (ismmx)
+                                {
+                                        x87_stmmx(MM[0]); eaaddr+=10;
+                                        x87_stmmx(MM[1]); eaaddr+=10;
+                                        x87_stmmx(MM[2]); eaaddr+=10;
+                                        x87_stmmx(MM[3]); eaaddr+=10;
+                                        x87_stmmx(MM[4]); eaaddr+=10;
+                                        x87_stmmx(MM[5]); eaaddr+=10;
+                                        x87_stmmx(MM[6]); eaaddr+=10;
+                                        x87_stmmx(MM[7]);
+                                }
+                                else
+                                {
+                                        x87_st80(ST(0)); eaaddr+=10;
+                                        x87_st80(ST(1)); eaaddr+=10;
+                                        x87_st80(ST(2)); eaaddr+=10;
+                                        x87_st80(ST(3)); eaaddr+=10;
+                                        x87_st80(ST(4)); eaaddr+=10;
+                                        x87_st80(ST(5)); eaaddr+=10;
+                                        x87_st80(ST(6)); eaaddr+=10;
+                                        x87_st80(ST(7));
+                                }
                                 break;
                                 case 0x101: /*32-bit protected mode*/
                                 writememw(easeg,eaaddr,npxc);
@@ -1068,14 +1164,28 @@ void x87_dd()
                                 writememl(easeg,eaaddr+20,x87_op_off);
                                 writememl(easeg,eaaddr+24,x87_op_seg);
                                 eaaddr+=28;
-                                x87_st80(ST(0)); eaaddr+=10;
-                                x87_st80(ST(1)); eaaddr+=10;
-                                x87_st80(ST(2)); eaaddr+=10;
-                                x87_st80(ST(3)); eaaddr+=10;
-                                x87_st80(ST(4)); eaaddr+=10;
-                                x87_st80(ST(5)); eaaddr+=10;
-                                x87_st80(ST(6)); eaaddr+=10;
-                                x87_st80(ST(7));
+                                if (ismmx)
+                                {
+                                        x87_stmmx(MM[0]); eaaddr+=10;
+                                        x87_stmmx(MM[1]); eaaddr+=10;
+                                        x87_stmmx(MM[2]); eaaddr+=10;
+                                        x87_stmmx(MM[3]); eaaddr+=10;
+                                        x87_stmmx(MM[4]); eaaddr+=10;
+                                        x87_stmmx(MM[5]); eaaddr+=10;
+                                        x87_stmmx(MM[6]); eaaddr+=10;
+                                        x87_stmmx(MM[7]);
+                                }
+                                else
+                                {
+                                        x87_st80(ST(0)); eaaddr+=10;
+                                        x87_st80(ST(1)); eaaddr+=10;
+                                        x87_st80(ST(2)); eaaddr+=10;
+                                        x87_st80(ST(3)); eaaddr+=10;
+                                        x87_st80(ST(4)); eaaddr+=10;
+                                        x87_st80(ST(5)); eaaddr+=10;
+                                        x87_st80(ST(6)); eaaddr+=10;
+                                        x87_st80(ST(7));
+                                }
                                 break;
                         }
                         cycles-=(cr0&1)?56:67;
@@ -1293,3 +1403,4 @@ void x87_df()
 //        fatal("Bad x87 DF opcode %i %02X\n",reg,rmdat32&0xFF);
         x86illegal();
 }
+

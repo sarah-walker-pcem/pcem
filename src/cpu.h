@@ -71,8 +71,15 @@ extern int cpu_busspeed;
 extern int cpu_multi;
 
 extern int cpu_hasrdtsc;
+extern int cpu_hasMSR;
+extern int cpu_hasMMX;
+
+extern uint64_t tsc;
 
 void cyrix_write(uint16_t addr, uint8_t val, void *priv);
 uint8_t cyrix_read(uint16_t addr, void *priv);
 
 extern int is8086;
+
+void cpu_RDMSR();
+void cpu_WRMSR();

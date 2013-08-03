@@ -675,4 +675,29 @@ static int opCPUID(uint32_t fetchdat)
         return 0;
 }
 
-        
+static int opRDMSR(uint32_t fetchdat)
+{
+        if (cpu_hasMSR)
+        {
+                cpu_RDMSR();
+                cycles -= 9;
+                return 0;
+        }
+        pc = oldpc;
+        x86illegal();
+        return 0;
+}
+
+static int opWRMSR(uint32_t fetchdat)
+{
+        if (cpu_hasMSR)
+        {
+                cpu_WRMSR();
+                cycles -= 9;
+                return 0;
+        }
+        pc = oldpc;
+        x86illegal();
+        return 0;
+}
+

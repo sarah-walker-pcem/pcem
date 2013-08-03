@@ -1210,8 +1210,6 @@ void cpu_386_flags_rebuild()
 
 int oldi;
 
-static uint64_t tsc = 0;
-
 uint32_t testr[9];
 int dontprint=0;
 
