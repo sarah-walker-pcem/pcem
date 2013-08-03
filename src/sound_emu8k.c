@@ -45,9 +45,9 @@ static inline int16_t EMU8K_READ(emu8k_t *emu8k, uint32_t addr)
         addr &= 0xffffff;
         if (addr < 0x80000)
                 return emu8k->rom[addr];
-        if (addr < 0x200000 || addr >= 0x240000)
+        if (addr < 0x200000 || addr >= 0x400000)
                 return 0;
-        return emu8k->ram[addr & 0x3ffff];
+        return emu8k->ram[addr & 0x1fffff];
 }
 
 static inline int16_t EMU8K_READ_INTERP(emu8k_t *emu8k, uint32_t addr)
@@ -60,15 +60,18 @@ static inline int16_t EMU8K_READ_INTERP(emu8k_t *emu8k, uint32_t addr)
 static inline void EMU8K_WRITE(emu8k_t *emu8k, uint32_t addr, uint16_t val)
 {
         addr &= 0xffffff;
-        if (addr >= 0x200000 && addr <= 0x240000)
-                emu8k->ram[addr & 0x3ffff] = val;
+        if (addr >= 0x200000 && addr < 0x400000)
+                emu8k->ram[addr & 0x1fffff] = val;
 }
+static int ff = 0;
+static int voice_count = 0;
 
 uint16_t emu8k_inw(uint32_t addr, void *p)
 {
         emu8k_t *emu8k = (emu8k_t *)p;
         uint16_t ret;
 /*        pclog("emu8k_inw %04X  reg=%i voice=%i\n", addr, emu8k->cur_reg, emu8k->cur_voice);*/
+
         addr -= 0x220;
         switch (addr & 0xc02)
         {
@@ -134,16 +137,17 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                                 {
                                         uint16_t val = emu8k->smld_buffer;
                                         emu8k->smld_buffer = EMU8K_READ(emu8k, emu8k->smalr);
+/*                                        pclog("emu8k_SMLR in %04X (%04X) %08X\n", val, emu8k->smld_buffer, emu8k->smalr);*/
                                         emu8k->smalr++;
                                         return val;
                                 }
-
+                                /*The EMU8000 PGM describes the return values of these registers as 'a VLSI error'*/
                                 case 29: /*Configuration Word 1*/
-                                return emu8k->hwcf1;
+                                return (emu8k->hwcf1 & 0xfe) | (emu8k->hwcf3 & 0x01);
                                 case 30: /*Configuration Word 2*/
-                                return emu8k->hwcf2 | 3;
+                                return ((emu8k->hwcf2 >> 4) & 0x0e) | (emu8k->hwcf1 & 0x01) | ((emu8k->hwcf3 & 0x02) ? 0x10 : 0) | ((emu8k->hwcf3 & 0x04) ? 0x40 : 0) | ((emu8k->hwcf3 & 0x08) ? 0x20 : 0) | ((emu8k->hwcf3 & 0x10) ? 0x80 : 0);
                                 case 31: /*Configuration Word 3*/
-                                return emu8k->hwcf3;
+                                return emu8k->hwcf2 & 0x1f;
                         }
                         break;
 
@@ -173,10 +177,12 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                         switch (emu8k->cur_voice)
                         {
                                 case 20:
-                                READ16(addr, emu8k->smalr);
+                                READ16(addr, emu8k->smalr | ff);
+                                ff ^= 0x80000000;
                                 return ret;
                                 case 21:
-                                READ16(addr, emu8k->smarr);
+                                READ16(addr, emu8k->smarr | ff);
+                                ff ^= 0x80000000;
                                 return ret;
                                 case 22:
                                 READ16(addr, emu8k->smalw);
@@ -189,6 +195,7 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                                 {
                                         uint16_t val = emu8k->smrd_buffer;
                                         emu8k->smrd_buffer = EMU8K_READ(emu8k, emu8k->smarr);
+/*                                        pclog("emu8k_SMRR in %04X (%04X) %08X\n", val, emu8k->smrd_buffer, emu8k->smarr);*/
                                         emu8k->smarr++;
                                         return val;
                                 }
@@ -232,12 +239,14 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                         return 0xffff;
                         
                         case 7: /*ID?*/
-                        return 0xc;
+                        return 0x1c | ((emu8k->id & 0x0002) ? 0xff02 : 0);
                 }
                 break;
                 case 0xc02: /*Status - I think!*/
-                emu8k->c02_read ^= 0x1000;
-                return emu8k->c02_read;
+                voice_count = (voice_count + 1) & 0x1f;
+/*                emu8k->c02_read ^= 0x1000;
+                pclog("Read status %04X\n", 0x803f | (voice_count << 8));*/
+                return 0x803f | (voice_count << 8);
         }
 /*        fatal("Bad EMU8K inw from %08X\n", addr);*/
         return 0xffff;
@@ -248,6 +257,7 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
         emu8k_t *emu8k = (emu8k_t *)p;
 
 /*        pclog("emu8k_outw : addr=%08X reg=%i voice=%i  val=%04X\n", addr, emu8k->cur_reg, emu8k->cur_voice, val);*/
+//emu8k_outw : addr=00000A22 reg=3 voice=21  val=0265
         addr -= 0x220;
         switch (addr & 0xc02)
         {
@@ -316,6 +326,9 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
                                 
                                 case 26:
                                 EMU8K_WRITE(emu8k, emu8k->smalw, val);
+/*                                pclog("emu8k_SMLW %04X %08X\n", val, emu8k->smalw);*/
+/*                                if (val = 0xffff && emu8k->smalw == 0x200000)
+                                        output = 3;*/
                                 emu8k->smalw++;
                                 break;
 
@@ -399,6 +412,7 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
 
                                 case 26:
                                 EMU8K_WRITE(emu8k, emu8k->smarw, val);
+/*                                pclog("emu8k_SMRW %04X %08X\n", val, emu8k->smarw);*/
                                 emu8k->smarw++;
                                 break;
                         }
@@ -456,6 +470,10 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
                         emu8k->voice[emu8k->cur_voice].fm2frq2 = val;
                         emu8k->voice[emu8k->cur_voice].lfo2_fmmod = (val >> 8);
                         return;
+
+                        case 7: /*ID?*/
+                        emu8k->id = val;
+                        return;
                 }
                 break;
                 
@@ -464,6 +482,21 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
                 emu8k->cur_reg   = ((val >> 5) & 7);
                 return;
         }
+}
+
+uint8_t emu8k_inb(uint32_t addr, void *p)
+{
+        if (addr & 1)
+                return emu8k_inw(addr & ~1, p) >> 1;
+        return emu8k_inw(addr, p) & 0xff;
+}
+
+void emu8k_outb(uint32_t addr, uint8_t val, void *p)
+{
+        if (addr & 1)
+                emu8k_outw(addr & ~1, val << 8, p);
+        else
+                emu8k_outw(addr, val, p);
 }
 
 void emu8k_poll(void *p)
@@ -610,15 +643,15 @@ void emu8k_init(emu8k_t *emu8k)
         if (!f)
                 fatal("ROMS/AWE32.RAW not found\n");
                 
-        emu8k->ram = malloc(512 * 1024);
+        emu8k->ram = malloc(4096 * 1024);
         emu8k->rom = malloc(1024 * 1024);        
         
         fread(emu8k->rom, 1024 * 1024, 1, f);
         fclose(f);
         
-        io_sethandler(0x0620, 0x0004, NULL, emu8k_inw, NULL, NULL, emu8k_outw, NULL, emu8k);
-        io_sethandler(0x0a20, 0x0004, NULL, emu8k_inw, NULL, NULL, emu8k_outw, NULL, emu8k);
-        io_sethandler(0x0e20, 0x0004, NULL, emu8k_inw, NULL, NULL, emu8k_outw, NULL, emu8k);
+        io_sethandler(0x0620, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
+        io_sethandler(0x0a20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
+        io_sethandler(0x0e20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
 
         timer_add(emu8k_poll, &emu8k->timer_count, TIMER_ALWAYS_ENABLED, emu8k);
                         
@@ -663,6 +696,7 @@ void emu8k_init(emu8k_t *emu8k)
         }
         
         emu8k->hwcf1 = 0x59;
-        emu8k->hwcf2 = 0x03;
+        emu8k->hwcf2 = 0x20;
+        emu8k->hwcf3 = 0x04;
 }
 

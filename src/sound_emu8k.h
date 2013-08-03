@@ -67,6 +67,8 @@ typedef struct emu8k_t
         uint16_t wc;
         
         uint16_t c02_read;
+
+	uint16_t id;
         
         int16_t *ram, *rom;
         
