@@ -1848,11 +1848,19 @@ void mach64_speed_changed(void *p)
         svga_recalctimings(&mach64->svga);
 }
 
+void mach64_force_redraw(void *p)
+{
+        mach64_t *mach64 = (mach64_t *)p;
+
+        mach64->svga.fullchange = changeframecount;
+}
+
 device_t mach64gx_device =
 {
         "ATI Mach64GX",
         mach64gx_init,
         mach64_close,
         mach64_speed_changed,
+        mach64_force_redraw,
         svga_add_status_info
 };

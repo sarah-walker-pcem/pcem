@@ -141,5 +141,6 @@ device_t pc1640_device =
         pc1640_init,
         pc1640_close,
         pc1640_speed_changed,
+        NULL,
         NULL
 };

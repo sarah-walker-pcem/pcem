@@ -133,5 +133,6 @@ device_t sis496_device =
         sis496_init,
         sis496_close,
         NULL,
+        NULL,
         NULL
 };

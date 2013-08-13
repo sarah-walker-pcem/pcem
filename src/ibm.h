@@ -367,6 +367,7 @@ extern uint8_t gdcreg[16];
 extern int egareads,egawrites;
 extern int cga_comp;
 extern int vid_resize;
+extern int vid_api;
 extern int winsizex,winsizey;
 extern int chain4;
 

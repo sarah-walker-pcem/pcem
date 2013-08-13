@@ -1605,12 +1605,20 @@ void s3_speed_changed(void *p)
         svga_recalctimings(&s3->svga);
 }
 
+void s3_force_redraw(void *p)
+{
+        s3_t *s3 = (s3_t *)p;
+
+        s3->svga.fullchange = changeframecount;
+}
+
 device_t s3_bahamas64_device =
 {
         "Paradise Bahamas 64 (S3 Vision864)",
         s3_bahamas64_init,
         s3_close,
         s3_speed_changed,
+        s3_force_redraw,
         svga_add_status_info
 };
 
@@ -1620,5 +1628,6 @@ device_t s3_9fx_device =
         s3_9fx_init,
         s3_close,
         s3_speed_changed,
+        s3_force_redraw,
         svga_add_status_info
 };

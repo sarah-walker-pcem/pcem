@@ -420,12 +420,20 @@ void tvga_speed_changed(void *p)
         svga_recalctimings(&tvga->svga);
 }
 
+void tvga_force_redraw(void *p)
+{
+        tvga_t *tvga = (tvga_t *)p;
+
+        tvga->svga.fullchange = changeframecount;
+}
+
 device_t tvga8900d_device =
 {
         "Trident TVGA 8900D",
         tvga8900d_init,
         tvga_close,
         tvga_speed_changed,
+        tvga_force_redraw,
         svga_add_status_info
 };
 device_t tgui9440_device =
@@ -434,6 +442,7 @@ device_t tgui9440_device =
         tgui9440_init,
         tvga_close,
         tvga_speed_changed,
+        tvga_force_redraw,
         svga_add_status_info
 };
 

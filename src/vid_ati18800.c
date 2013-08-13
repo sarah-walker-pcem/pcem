@@ -152,12 +152,20 @@ void ati18800_speed_changed(void *p)
         svga_recalctimings(&ati18800->svga);
 }
 
+void ati18800_force_redraw(void *p)
+{
+        ati18800_t *ati18800 = (ati18800_t *)p;
+
+        ati18800->svga.fullchange = changeframecount;
+}
+
 device_t ati18800_device =
 {
         "ATI-18800",
         ati18800_init,
         ati18800_close,
         ati18800_speed_changed,
+        ati18800_force_redraw,
         svga_add_status_info
 };
 

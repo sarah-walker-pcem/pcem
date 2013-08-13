@@ -840,5 +840,6 @@ device_t ega_device =
         ega_standalone_init,
         ega_close,
         ega_speed_changed,
+        NULL,
         NULL
 };

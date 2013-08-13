@@ -135,5 +135,6 @@ device_t pc200_device =
         pc200_init,
         pc200_close,
         pc200_speed_changed,
+        NULL,
         NULL
 };

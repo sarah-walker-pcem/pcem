@@ -58,6 +58,22 @@ void device_speed_changed()
         }
 }
 
+void device_force_redraw()
+{
+        int c;
+        
+        for (c = 0; c < 256; c++)
+        {
+                if (devices[c] != NULL)
+                {
+                        if (devices[c]->force_redraw != NULL)
+                        {
+                                devices[c]->force_redraw(device_priv[c]);
+                        }
+                }
+        }
+}
+
 char *device_add_status_info(char *s, int max_len)
 {
         int c;

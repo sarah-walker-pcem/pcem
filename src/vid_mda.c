@@ -312,5 +312,6 @@ device_t mda_device =
         mda_init,
         mda_close,
         mda_speed_changed,
+        NULL,
         NULL
 };

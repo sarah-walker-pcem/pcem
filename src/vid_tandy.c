@@ -692,5 +692,6 @@ device_t tandy_device =
         tandy_init,
         tandy_close,
         tandy_speed_changed,
+        NULL,
         NULL
 };

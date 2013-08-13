@@ -1116,16 +1116,15 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
 
 void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
 {
+        pclog("svga_doblit start\n");
         svga->frames++;
 //        pclog("doblit %i %i\n", y1, y2);
         if (y1 > y2) 
         {
-                startblit();
                 video_blit_memtoscreen(32, 0, 0, 0, xsize, ysize);
-                endblit();
                 return;   
         }     
-        startblit();
+
         if ((wx!=xsize || wy!=ysize) && !vid_resize)
         {
                 xsize=wx;
@@ -1141,9 +1140,8 @@ void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
                 ysize = wy + 1;
         }
         video_blit_memtoscreen(32, 0, y1, y2, xsize, ysize);
-        if (readflash) rectfill(screen,winsizex-40,8,winsizex-8,14,0xFFFFFFFF);
-        endblit();
-        
+        if (readflash) rectfill(screen,winsizex-40,8,winsizex-8,14,0xFFFFFFFF);      
+        pclog("svga_doblit end\n");
 }
 
 void svga_writew(uint32_t addr, uint16_t val, void *p)

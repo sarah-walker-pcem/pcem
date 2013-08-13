@@ -176,5 +176,6 @@ device_t cms_device =
         cms_init,
         cms_close,
         NULL,
+        NULL,
         NULL
 };

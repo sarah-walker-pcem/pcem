@@ -48,3 +48,5 @@ extern int video_timing_b, video_timing_w, video_timing_l;
 extern int video_speed;
 
 extern int video_res_x, video_res_y, video_bpp;
+
+extern int vid_resize;

@@ -482,5 +482,6 @@ device_t pc1512_device =
         pc1512_init,
         pc1512_close,
         pc1512_speed_changed,
+        NULL,
         NULL
 };

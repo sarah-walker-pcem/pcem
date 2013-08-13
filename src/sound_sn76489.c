@@ -195,5 +195,6 @@ device_t sn76489_device =
         sn76489_init,
         sn76489_close,
         NULL,
+        NULL,
         NULL
 };

@@ -141,11 +141,19 @@ void oti067_speed_changed(void *p)
         svga_recalctimings(&oti067->svga);
 }
         
+void oti067_force_redraw(void *p)
+{
+        oti067_t *oti067 = (oti067_t *)p;
+
+        oti067->svga.fullchange = changeframecount;
+}
+
 device_t oti067_device =
 {
         "Oak OTI-067",
         oti067_init,
         oti067_close,
         oti067_speed_changed,
+        oti067_force_redraw,
         svga_add_status_info
 };

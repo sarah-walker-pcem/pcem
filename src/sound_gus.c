@@ -1104,5 +1104,6 @@ device_t gus_device =
         gus_init,
         gus_close,
         gus_speed_changed,
+        NULL,
         NULL
 };

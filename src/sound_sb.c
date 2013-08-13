@@ -430,6 +430,7 @@ device_t sb_1_device =
         sb_1_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_15_device =
@@ -438,6 +439,7 @@ device_t sb_15_device =
         sb_15_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_2_device =
@@ -446,6 +448,7 @@ device_t sb_2_device =
         sb_2_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_pro_v1_device =
@@ -454,6 +457,7 @@ device_t sb_pro_v1_device =
         sb_pro_v1_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_pro_v2_device =
@@ -462,6 +466,7 @@ device_t sb_pro_v2_device =
         sb_pro_v2_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_16_device =
@@ -470,6 +475,7 @@ device_t sb_16_device =
         sb_16_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };
 device_t sb_awe32_device =
@@ -478,5 +484,6 @@ device_t sb_awe32_device =
         sb_awe32_init,
         sb_close,
         sb_speed_changed,
+        NULL,
         NULL
 };

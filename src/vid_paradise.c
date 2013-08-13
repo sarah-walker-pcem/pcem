@@ -319,12 +319,20 @@ void paradise_speed_changed(void *p)
         svga_recalctimings(&paradise->svga);
 }
 
+void paradise_force_redraw(void *p)
+{
+        paradise_t *paradise = (paradise_t *)p;
+
+        paradise->svga.fullchange = changeframecount;
+}
+
 device_t paradise_pvga1a_device =
 {
         "Paradise PVGA1A",
         paradise_pvga1a_init,
         paradise_close,
         paradise_speed_changed,
+        paradise_force_redraw,
         svga_add_status_info
 };
 device_t paradise_wd90c11_device =
@@ -333,5 +341,6 @@ device_t paradise_wd90c11_device =
         paradise_wd90c11_init,
         paradise_close,
         paradise_speed_changed,
+        paradise_force_redraw,
         svga_add_status_info
 };

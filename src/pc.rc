@@ -27,6 +27,9 @@ BEGIN
                 POPUP "&Video"
                 BEGIN
                         MENUITEM "&Resizeable window",IDM_VID_RESIZE
+                        MENUITEM SEPARATOR
+                        MENUITEM "&DirectDraw", IDM_VID_DDRAW
+                        MENUITEM "Direct&3D",   IDM_VID_D3D
                 END
         END
         POPUP "&Misc"

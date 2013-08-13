@@ -146,11 +146,19 @@ void et4000_speed_changed(void *p)
         svga_recalctimings(&et4000->svga);
 }
 
+void et4000_force_redraw(void *p)
+{
+        et4000_t *et4000 = (et4000_t *)p;
+
+        et4000->svga.fullchange = changeframecount;
+}
+
 device_t et4000_device =
 {
         "Tseng Labs ET4000AX",
         et4000_init,
         et4000_close,
         et4000_speed_changed,
+        et4000_force_redraw,
         svga_add_status_info
 };

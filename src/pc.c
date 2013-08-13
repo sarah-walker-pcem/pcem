@@ -35,7 +35,7 @@ int frame = 0;
 int cdrom_enabled;
 int CPUID;
 int kb_win;
-int vid_resize;
+int vid_resize, vid_api;
 
 int cycles_lost = 0;
 
@@ -203,7 +203,6 @@ void initpc()
         atfullspeed=0;
 
         device_init();        
-        pclog("Initvideo\n");
         
         initvideo();
         mem_init();
@@ -264,7 +263,6 @@ void resetpchard()
         mem_resize();
         fdc_init();
         model_init();
-        pclog("Video_init\n");
         video_init();
         speaker_init();        
         sound_card_init(sound_card_current);
@@ -312,6 +310,8 @@ void runpc()
 {
         char s[200];
         int done=0;
+
+        startblit();
         clockrate = models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed;
                 if (is386)   exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
                 else if (AT) exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
@@ -320,6 +320,8 @@ void runpc()
                 keyboard_process();
 //                checkkeys();
                 pollmouse();
+        endblit();
+
                 framecountx++;
                 framecount++;
                 if (framecountx>=100)
@@ -461,6 +463,7 @@ void loadconfig()
         
         kb_win = get_config_int(NULL, "kb_win", 0);
         vid_resize = get_config_int(NULL, "vid_resize", 0);
+        vid_api = get_config_int(NULL, "vid_api", 0);
 
         hdc[0].spt = get_config_int(NULL, "hdc_sectors", 0);
         hdc[0].hpc = get_config_int(NULL, "hdc_heads", 0);
@@ -501,6 +504,7 @@ void saveconfig()
         set_config_int(NULL, "cdrom_enabled", cdrom_enabled);
         set_config_int(NULL, "kb_win", kb_win);
         set_config_int(NULL, "vid_resize", vid_resize);
+        set_config_int(NULL, "vid_api", vid_api);
         
         set_config_int(NULL, "hdc_sectors", hdc[0].spt);
         set_config_int(NULL, "hdc_heads", hdc[0].hpc);

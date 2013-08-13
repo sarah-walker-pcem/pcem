@@ -354,5 +354,6 @@ device_t hercules_device =
         hercules_init,
         hercules_close,
         hercules_speed_changed,
+        NULL,
         NULL
 };

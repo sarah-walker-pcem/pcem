@@ -8,6 +8,8 @@
 extern "C" void fatal(const char *format, ...);
 extern "C" void pclog(const char *format, ...);
 
+extern "C" void device_force_redraw();
+
 extern "C" void ddraw_init(HWND h);
 extern "C" void ddraw_close();
 extern "C" void ddraw_draw();
@@ -157,7 +159,7 @@ void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         {
                 lpdds_back->Restore();
                 lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-                fullchange = changeframecount;
+                device_force_redraw();
         }
         if (!ddsd.lpSurface) return;
         for (yy = y1; yy < y2; yy++)
@@ -190,7 +192,7 @@ void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                 {
                         lpdds_back2->Restore();
                         lpdds_back2->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-                        fullchange = changeframecount;
+                        device_force_redraw();
                 }
                 if (!ddsd.lpSurface) return;
                 for (yy = 8; yy < 14; yy++)
@@ -229,7 +231,7 @@ void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
         {
                 lpdds_back->Restore();
                 lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-                fullchange = changeframecount;
+                device_force_redraw();
         }
         if (!ddsd.lpSurface) return;
         for (yy = 0; yy < h; yy++)
@@ -270,7 +272,7 @@ void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
                 {
                         lpdds_back2->Restore();
                         lpdds_back2->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-                        fullchange = changeframecount;
+                        device_force_redraw();
                 }
                 if (!ddsd.lpSurface) return;
                 for (yy = 8; yy < 14; yy++)

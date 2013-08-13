@@ -173,11 +173,19 @@ void ati28800_speed_changed(void *p)
         svga_recalctimings(&ati28800->svga);
 }
 
+void ati28800_force_redraw(void *p)
+{
+        ati28800_t *ati28800 = (ati28800_t *)p;
+
+        ati28800->svga.fullchange = changeframecount;
+}
+
 device_t ati28800_device =
 {
         "ATI-28800",
         ati28800_init,
         ati28800_close,
         ati28800_speed_changed,
+        ati28800_force_redraw,
         svga_add_status_info
 };

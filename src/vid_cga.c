@@ -523,5 +523,6 @@ device_t cga_device =
         cga_standalone_init,
         cga_close,
         cga_speed_changed,
+        NULL,
         NULL
 };

@@ -22,8 +22,19 @@
 #include "plat-keyboard.h"
 
 #include "win-ddraw.h"
-//#include "win-d3d.h"
+#include "win-d3d.h"
 //#include "win-opengl.h"
+
+static struct
+{
+        void (*init)(HWND h);
+        void (*close)();
+        void (*resize)(int x, int y);
+} vid_apis[] =
+{
+        ddraw_init, ddraw_close, NULL,
+        d3d_init, d3d_close, d3d_resize
+};
 
 #define TIMER_1SEC 1
 
@@ -75,19 +86,15 @@ LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 char szClassName[ ] = "WindowsApp";
 
 HWND ghwnd;
+static int win_doresize = 0;
+
 void updatewindowsize(int x, int y)
 {
         RECT r;
         if (vid_resize) return;
+
         winsizex=x; winsizey=y;
-        GetWindowRect(ghwnd,&r);
-        MoveWindow(ghwnd,r.left,r.top,
-                     x+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),
-                     y+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,
-                     TRUE);
-//        startblit();
-//        d3d_resize(x, y);
-//        endblit();
+        win_doresize = 1;
 }
 
 void releasemouse()
@@ -153,55 +160,49 @@ void mainthread(LPVOID param)
         int t = 0;
         int frames = 0;
         DWORD old_time, new_time;
+
         mainthreadon=1;
 //        Sleep(500);
         drawits=0;
         old_time = GetTickCount();
         while (!quited)
         {
-//                if (infocus)
-//                {
-/*                        if (!drawits)
+                if (updatestatus)
+                {
+                        updatestatus=0;
+                        if (statusopen) SendMessage(statushwnd,WM_USER,0,0);
+                }
+                new_time = GetTickCount();
+                drawits += new_time - old_time;
+                old_time = new_time;
+                if (drawits > 0 && !pause)
+                {
+                        drawits-=10;        if (drawits>50) drawits=0;
+                        wokeups++;
+                        runpc();
+                        frames++;
+                        if (frames >= 200 && nvr_dosave)
                         {
-                                while (!drawits)
-                                {
-                                        ResetEvent(frameobject);
-                                        WaitForSingleObject(frameobject,10);
-                                }
-                        }*/
-                        if (updatestatus)
-                        {
-                                updatestatus=0;
-                                if (statusopen) SendMessage(statushwnd,WM_USER,0,0);
+                                frames = 0;
+                                nvr_dosave = 0;
+                                savenvr();
                         }
-                        new_time = GetTickCount();
-                        drawits += new_time - old_time;
-                        old_time = new_time;
-                        if (drawits > 0 && !pause)
-                        {
-//                                printf("Drawits %i\n",drawits);
-                                drawits-=10;
-                                if (drawits>50) drawits=0;
-                                wokeups++;
-                                startblit();
-                                runpc();
-//                                ddraw_draw();
-                                endblit();
-                                frames++;
-                                if (frames >= 200 && nvr_dosave)
-                                {
-                                        frames = 0;
-                                        nvr_dosave = 0;
-                                        savenvr();
-                                }
-//#if 0                                
-//#endif
-                        }
-                        else
-                        {
-                                Sleep(1);
-                        }
-//                }
+                }
+                else
+                {
+                        Sleep(1);
+                }
+
+                if (win_doresize)
+                {
+                        RECT r;
+                        GetWindowRect(ghwnd, &r);
+                        MoveWindow(ghwnd, r.left, r.top,
+                                   winsizex + (GetSystemMetrics(SM_CXFIXEDFRAME) * 2),
+                                   winsizey + (GetSystemMetrics(SM_CYFIXEDFRAME) * 2) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 1,
+                                   TRUE);
+                        win_doresize = 0;
+                }
         }
         mainthreadon=0;
 }
@@ -300,13 +301,12 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         
         ghwnd=hwnd;
         
-        ddraw_init(hwnd);
         midi_init();
         atexit(midi_close);
-//        d3d_init(hwnd);
-//        opengl_init(hwnd);
         
         initpc();
+        
+        vid_apis[vid_api].init(ghwnd);
 
         if (vid_resize) SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
         else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
@@ -317,7 +317,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
            CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
         CheckMenuItem(menu, IDM_KEY_ALLEGRO + kb_win, MF_CHECKED);
         if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
-        
+        CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);        
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
@@ -462,6 +462,9 @@ InitializeCriticalSection(&cs);
 //        pclog("Closepc\n");
         closepc();
 //        pclog("dumpregs\n");
+
+        vid_apis[vid_api].close();
+        
         timeEndPeriod(1);
 //        endsoundthread();
 //        dumpregs();
@@ -1470,6 +1473,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_FRAMECHANGED);
                         saveconfig();
                         break;
+                        
+                        case IDM_VID_DDRAW: case IDM_VID_D3D:
+                        startblit();
+                        CheckMenuItem(hmenu, IDM_VID_DDRAW + vid_api, MF_UNCHECKED);
+                        vid_apis[vid_api].close();
+                        vid_api = LOWORD(wParam) - IDM_VID_DDRAW;
+                        CheckMenuItem(hmenu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
+                        vid_apis[vid_api].init(ghwnd);
+                        endblit();
+                        saveconfig();
+                        device_force_redraw();
+                        break;
+
                         case IDM_KEY_ALLEGRO: case IDM_KEY_WINDOWS:
                         CheckMenuItem(hmenu,LOWORD(wParam),MF_CHECKED);
                         CheckMenuItem(hmenu,LOWORD(wParam)^1,MF_UNCHECKED);
@@ -1583,14 +1599,24 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case WM_SIZE:
                 winsizex=lParam&0xFFFF;
                 winsizey=lParam>>16;
-//                startblit();
-//                d3d_resize(winsizex, winsizey);
-//                endblit();
+
+                if (vid_apis[vid_api].resize)
+                {
+                        startblit();
+                        vid_apis[vid_api].resize(winsizex, winsizey);
+                        endblit();
+                }
                 break;
 
                 case WM_TIMER:
                 if (wParam == TIMER_1SEC)
-                   onesec();
+                        onesec();
+                break;
+                
+                case WM_RESETD3D:
+                startblit();
+                d3d_reset();
+                endblit();
                 break;
 
                 case WM_KEYDOWN:

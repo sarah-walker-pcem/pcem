@@ -483,5 +483,6 @@ device_t m24_device =
         m24_init,
         m24_close,
         m24_speed_changed,
+        NULL,
         NULL
 };

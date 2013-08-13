@@ -106,11 +106,19 @@ void vga_speed_changed(void *p)
         svga_recalctimings(&vga->svga);
 }
 
+void vga_force_redraw(void *p)
+{
+        vga_t *vga = (vga_t *)p;
+
+        vga->svga.fullchange = changeframecount;
+}
+
 device_t vga_device =
 {
         "VGA",
         vga_init,
         vga_close,
         vga_speed_changed,
+        vga_force_redraw,
         svga_add_status_info
 };
