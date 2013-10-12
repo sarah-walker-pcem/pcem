@@ -99,11 +99,11 @@ void keyboard_poll_host()
         }
         for (c = 0; c < 256; c++)
         {
-                if (dinput_key[c] & 0x80) pclog("Dinput key down %i %02X\n", c, c);
+//                if (dinput_key[c] & 0x80) pclog("Dinput key down %i %02X\n", c, c);
                 if (keyboard_lookup[c] != -1)
                 {
                         key[c] = dinput_key[keyboard_lookup[c]] & 0x80;
-                        if (key[c]) pclog("Key down %i %02X  %i %02X\n", c, c, keyboard_lookup[c], keyboard_lookup[c]);
+//                        if (key[c]) pclog("Key down %i %02X  %i %02X\n", c, c, keyboard_lookup[c], keyboard_lookup[c]);
                 }
         }
 }
