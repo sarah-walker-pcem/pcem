@@ -15,6 +15,9 @@
 
 typedef struct virge_t
 {
+        mem_mapping_t linear_mapping;
+        mem_mapping_t   mmio_mapping;
+        
         svga_t svga;
         
         uint8_t bank;
@@ -263,26 +266,20 @@ void s3_virge_updatemapping(virge_t *virge)
 {
         svga_t *svga = &virge->svga;
         
-        mem_removehandler(virge->linear_base, virge->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
-        
-//        video_write_a000_w = video_write_a000_l = NULL;
-
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
-        mem_removehandler(0xa0000, 0x20000, s3_virge_mmio_read, s3_virge_mmio_read_w, s3_virge_mmio_read_l, s3_virge_mmio_write, s3_virge_mmio_write_w, s3_virge_mmio_write_l, virge);
         pclog("Update mapping - bank %02X ", svga->gdcreg[6] & 0xc);        
         switch (svga->gdcreg[6] & 0xc) /*Banked framebuffer*/
         {
                 case 0x0: /*128k at A0000*/
-                mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                 break;
                 case 0x4: /*64k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 break;
                 case 0x8: /*32k at B0000*/
-                mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                 break;
                 case 0xC: /*32k at B8000*/
-                mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                 break;
         }
         
@@ -309,20 +306,26 @@ void s3_virge_updatemapping(virge_t *virge)
 //                pclog("%08X %08X  %02X %02X %02X\n", linear_base, linear_size, crtc[0x58], crtc[0x59], crtc[0x5a]);
                 pclog("Linear framebuffer at %08X size %08X\n", virge->linear_base, virge->linear_size);
                 if (virge->linear_base == 0xa0000)
-                   mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                {
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        mem_mapping_disable(&virge->linear_mapping);
+                }
                 else
-                   mem_sethandler(virge->linear_base, virge->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
+                        mem_mapping_set_addr(&svga->mapping, virge->linear_base, virge->linear_size);
         }
+        else
+                mem_mapping_disable(&virge->linear_mapping);
         
         pclog("Memory mapped IO %02X\n", svga->crtc[0x53] & 0x18);
         if ((svga->crtc[0x53] & 0x18) == 0x10) /*Memory mapped IO*/
         {
                 if (svga->crtc[0x53] & 0x20)
-                   mem_sethandler(0xb8000, 0x8000, s3_virge_mmio_read, s3_virge_mmio_read_w, s3_virge_mmio_read_l, s3_virge_mmio_write, s3_virge_mmio_write_w, s3_virge_mmio_write_l, virge);
+                        mem_mapping_set_addr(&virge->mmio_mapping, 0xb8000, 0x8000);
                 else
-                   mem_sethandler(0xa8000, 0x8000, s3_virge_mmio_read, s3_virge_mmio_read_w, s3_virge_mmio_read_l, s3_virge_mmio_write, s3_virge_mmio_write_w, s3_virge_mmio_write_l, virge);
+                        mem_mapping_set_addr(&virge->mmio_mapping, 0xa8000, 0x8000);
         }
-
+        else
+                mem_mapping_disable(&virge->mmio_mapping);
 }
 
 
@@ -450,6 +453,9 @@ void *s3_virge_init()
                    s3_virge_recalctimings,
                    s3_virge_in, s3_virge_out,
                    s3_virge_hwcursor_draw);
+
+        mem_mapping_add(&virge->mmio_mapping,   0, 0, s3_virge_mmio_read, s3_virge_mmio_read_w, s3_virge_mmio_read_l, s3_virge_mmio_write, s3_virge_mmio_write_w, s3_virge_mmio_write_l, virge);
+        mem_mapping_add(&virge->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &virge->svga);
 
         io_sethandler(0x03c0, 0x0020, s3_virge_in, NULL, NULL, s3_virge_out, NULL, NULL, virge);
 

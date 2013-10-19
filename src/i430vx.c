@@ -13,10 +13,10 @@ static void i430vx_map(uint32_t addr, uint32_t size, int state)
 {
         switch (state & 3)
         {
-                case 0x0: mem_sethandler(addr, size, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL          , NULL); break; /*DRAM disabled, accesses directed to PCI bus*/
-                case 0x1: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL          , NULL); break; /*Read only, DRAM write protected, non-cacheable*/
-                case 0x2: mem_sethandler(addr, size, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL); break; /*Write only*/
-                case 0x3: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL); break; /*Read/write, non-cacheable*/
+                case 0x0: mem_bios_set_state(addr, size, 0, 0); break; /*DRAM disabled, accesses directed to PCI bus*/
+                case 0x1: mem_bios_set_state(addr, size, 1, 0); break; /*Read only, DRAM write protected, non-cacheable*/
+                case 0x2: mem_bios_set_state(addr, size, 0, 1); break; /*Write only*/
+                case 0x3: mem_bios_set_state(addr, size, 1, 1); break; /*Read/write, non-cacheable*/
                 /*Below are redundant*/
 //                case 0x5: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL          ); break; /*Read only, DRAM write protected, cacheable*/
 //                case 0x7: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml); break; /*Read/write, non-cacheable*/                

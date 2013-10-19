@@ -497,7 +497,7 @@ void *cga_standalone_init()
                 q_filt[c] = 512.0 * sin((3.14 * (cga_tint + c * 4) / 16.0) - 33.0 / 180.0);
         }
         timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
+        mem_mapping_add(&cga->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
         io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, cga);
         return cga;
 }

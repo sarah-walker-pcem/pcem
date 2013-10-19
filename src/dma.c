@@ -3,6 +3,7 @@
 #include "dma.h"
 #include "fdc.h"
 #include "io.h"
+#include "mem.h"
 #include "video.h"
 
 extern int ins;
@@ -256,39 +257,12 @@ void dma16_init()
 
 uint8_t _dma_read(uint32_t addr)
 {
-        switch (addr&0xFFFF8000)
-        {
-/*                case 0xA0000: case 0xA8000:
-                return video_read_a000(addr, NULL);
-                case 0xB0000:
-                return video_read_b000(addr, NULL);
-                case 0xB8000:
-                return video_read_b800(addr, NULL);*/
-        }
-        if (isram[addr>>16]) return ram[addr];
-        return 0xff;
+        return mem_readb_phys(addr);
 }
 
 void _dma_write(uint32_t addr, uint8_t val)
 {
-        pclog("_dma_write %08X %02X\n", addr, val);
-        switch (addr&0xFFFF8000)
-        {
-/*                case 0xA0000: case 0xA8000:
-                video_write_a000(addr,val, NULL);
-                return;
-                case 0xB0000:
-                video_write_b000(addr,val, NULL);
-                return;
-                case 0xB8000:
-                video_write_b800(addr,val, NULL);
-                return;
-                case 0xC0000: case 0xC8000: case 0xD0000: case 0xD8000:
-                case 0xE0000: case 0xE8000: case 0xF0000: case 0xF8000:
-                return;*/
-        }
-        if (isram[addr >> 16]) 
-                ram[addr] = val;
+        mem_writeb_phys(addr, val);
 }
 /*void writedma2(uint8_t val)
 {

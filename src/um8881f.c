@@ -15,9 +15,9 @@ void um8881f_write(int func, int addr, uint8_t val, void *priv)
                 if ((card_16[0x54] ^ val) & 0x01)
                 {
                         if (val & 1)
-                           mem_sethandler(0xe0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
+                                mem_bios_set_state(0xe0000, 0x10000, 1, 1);
                         else
-                           mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL          , NULL);
+                                mem_bios_set_state(0xe0000, 0x10000, 0, 0);
                 }
                 flushmmucache_nopc();
         }
@@ -27,10 +27,10 @@ void um8881f_write(int func, int addr, uint8_t val, void *priv)
                 {
                         switch (val & 0xc0)
                         {
-                                case 0x00: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL); break;
-                                case 0x40: mem_sethandler(0xf0000, 0x10000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   NULL,          NULL,           NULL          , NULL); break;
-                                case 0x80: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL); break;
-                                case 0xc0: mem_sethandler(0xf0000, 0x10000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL          , NULL); break;
+                                case 0x00: mem_bios_set_state(0xf0000, 0x10000, 0, 1); break;
+                                case 0x40: mem_bios_set_state(0xf0000, 0x10000, 0, 0); break;
+                                case 0x80: mem_bios_set_state(0xf0000, 0x10000, 1, 1); break;
+                                case 0xc0: mem_bios_set_state(0xf0000, 0x10000, 1, 0); break;
                         }
                         shadowbios = val & 0x80;
                         shadowbios_write = !(val & 0x40);
@@ -56,9 +56,7 @@ uint8_t um8886f_read(int func, int addr, void *priv)
 {
         return card_18[addr];
 }
- 
- 
-     
+
 void um8881f_init()
 {
         pci_add_specific(16, um8881f_read, um8881f_write, NULL);

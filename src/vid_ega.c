@@ -96,21 +96,20 @@ void ega_out(uint16_t addr, uint8_t val, void *p)
                         ega->readmode = val & 8; 
                         break;
                         case 6:
-                        mem_removehandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
 //                                pclog("Write mapping %02X\n", val);
                         switch (val & 0xc)
                         {
                                 case 0x0: /*128k at A0000*/
-                                mem_sethandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
+                                mem_mapping_set_addr(&ega->mapping, 0xa0000, 0x20000);
                                 break;
                                 case 0x4: /*64k at A0000*/
-                                mem_sethandler(0xa0000, 0x10000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
+                                mem_mapping_set_addr(&ega->mapping, 0xa0000, 0x10000);
                                 break;
                                 case 0x8: /*32k at B0000*/
-                                mem_sethandler(0xb0000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
+                                mem_mapping_set_addr(&ega->mapping, 0xb0000, 0x08000);
                                 break;
                                 case 0xC: /*32k at B8000*/
-                                mem_sethandler(0xb8000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
+                                mem_mapping_set_addr(&ega->mapping, 0xb8000, 0x08000);
                                 break;
                         }
                         break;
@@ -814,6 +813,7 @@ void *ega_standalone_init()
 
         ega_init(ega);        
 
+        mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
         timer_add(ega_poll, &ega->vidtime, TIMER_ALWAYS_ENABLED, ega);
         io_sethandler(0x03a0, 0x0040, ega_in, NULL, NULL, ega_out, NULL, NULL, ega);
         return ega;

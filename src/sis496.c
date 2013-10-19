@@ -17,42 +17,42 @@ void sis496_recalcmapping(sis496_t *sis496)
         if (sis496->pci_conf[0x44] & 0x10)
         {
                 if (sis496->pci_conf[0x45] & 0x01)
-                        mem_sethandler(0xe0000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL,           NULL);
+                        mem_bios_set_state(0xe0000, 0x08000, 1, 0);
                 else
-                        mem_sethandler(0xe0000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
+                        mem_bios_set_state(0xe0000, 0x08000, 1, 1);
         }
         else
-                mem_sethandler(0xe0000, 0x8000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL);        
+                mem_bios_set_state(0xe0000, 0x08000, 0, 1);
 
         if (sis496->pci_conf[0x44] & 0x20)
         {
                 if (sis496->pci_conf[0x45] & 0x01)
-                        mem_sethandler(0xe8000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL,           NULL);
+                        mem_bios_set_state(0xe8000, 0x08000, 1, 0);
                 else
-                        mem_sethandler(0xe8000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
+                        mem_bios_set_state(0xe8000, 0x08000, 1, 1);
         }
         else
-                mem_sethandler(0xe8000, 0x8000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL);        
+                mem_bios_set_state(0xe8000, 0x08000, 0, 1);
                 
         if (sis496->pci_conf[0x44] & 0x40)
         {
                 if (sis496->pci_conf[0x45] & 0x01)
-                        mem_sethandler(0xf0000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL,           NULL);
+                        mem_bios_set_state(0xf0000, 0x08000, 1, 0);
                 else
-                        mem_sethandler(0xf0000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
+                        mem_bios_set_state(0xf0000, 0x08000, 1, 1);
         }
         else
-                mem_sethandler(0xf0000, 0x8000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL);        
+                mem_bios_set_state(0xf0000, 0x08000, 0, 1);
                 
         if (sis496->pci_conf[0x44] & 0x80)
         {
                 if (sis496->pci_conf[0x45] & 0x01)
-                        mem_sethandler(0xf8000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL,           NULL);
+                        mem_bios_set_state(0xf8000, 0x08000, 1, 0);
                 else
-                        mem_sethandler(0xf8000, 0x8000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml, NULL);
+                        mem_bios_set_state(0xf8000, 0x08000, 1, 1);
         }
         else
-                mem_sethandler(0xf8000, 0x8000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml, NULL);        
+                mem_bios_set_state(0xf8000, 0x08000, 0, 1);
 
         flushmmucache();
         shadowbios = (sis496->pci_conf[0x44] & 0xf0);

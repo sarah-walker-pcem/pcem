@@ -1,5 +1,7 @@
 typedef struct svga_t
 {
+        mem_mapping_t mapping;
+        
         uint8_t crtcreg;
         uint8_t crtc[128];
         uint8_t gdcreg[16];

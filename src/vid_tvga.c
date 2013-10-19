@@ -12,6 +12,9 @@
 
 typedef struct tvga_t
 {
+        mem_mapping_t linear_mapping;
+        mem_mapping_t accel_mapping;
+
         svga_t svga;
         tkd8001_ramdac_t ramdac;
 
@@ -314,37 +317,37 @@ void tvga_recalcmapping(tvga_t *tvga)
 {
         svga_t *svga = &tvga->svga;
         
-	pclog("tvga_recalcmapping : %02X %02X\n", svga->crtc[0x21], svga->gdcreg[6]);
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,    svga);
-	mem_removehandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    svga);
-	mem_removehandler(0xbc000, 0x4000, tvga_accel_read, NULL, NULL, tvga_accel_write, NULL, NULL,    tvga);
+//	pclog("tvga_recalcmapping : %02X %02X\n", svga->crtc[0x21], svga->gdcreg[6]);
 
 	if (svga->crtc[0x21] & 0x20)
 	{
+                mem_mapping_disable(&svga->mapping);
 		tvga->linear_base = ((svga->crtc[0x21] & 0xf) | ((svga->crtc[0x21] >> 2) & 0x30)) << 20;
 		tvga->linear_size = (svga->crtc[0x21] & 0x10) ? 0x200000 : 0x100000;
-		mem_sethandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    svga);
-		pclog("Trident linear framebuffer at %08X - size %06X\n", tvga->linear_base, tvga->linear_size);
-		mem_sethandler(0xbc000, 0x4000, tvga_accel_read, tvga_accel_read_w, tvga_accel_read_l, tvga_accel_write, tvga_accel_write_w, tvga_accel_write_l,    tvga);
+                mem_mapping_set_addr(&tvga->linear_mapping, tvga->linear_base, tvga->linear_size);
+//		pclog("Trident linear framebuffer at %08X - size %06X\n", tvga->linear_base, tvga->linear_size);
+                mem_mapping_enable(&tvga->accel_mapping);
 	}
 	else
 	{
 //                                pclog("Write mapping %02X\n", val);
+                mem_mapping_disable(&tvga->linear_mapping);
+                mem_mapping_disable(&tvga->accel_mapping);
                 switch (svga->gdcreg[6] & 0xC)
                 {
                         case 0x0: /*128k at A0000*/
-                        mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,    svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                         break;
                         case 0x4: /*64k at A0000*/
-                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,    svga);
-                        mem_sethandler(0xbc000, 0x4000, tvga_accel_read, NULL, NULL, tvga_accel_write, NULL, NULL,    tvga);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        mem_mapping_enable(&tvga->accel_mapping);
                         break;
                         case 0x8: /*32k at B0000*/
-                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,    svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                         break;
                         case 0xC: /*32k at B8000*/
-                	mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,    svga);
-                	break;
+                        mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                        break;
 		}
         }
 }
@@ -385,6 +388,11 @@ void *tvga8900d_init()
                    tvga_in, tvga_out,
                    NULL);
 
+        mem_mapping_add(&tvga->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &tvga->svga);
+        mem_mapping_add(&tvga->accel_mapping,  0xbc000, 0x4000, tvga_accel_read,  tvga_accel_read_w, tvga_accel_read_l, tvga_accel_write,  tvga_accel_write_w, tvga_accel_write_l,  tvga);
+        mem_mapping_disable(&tvga->linear_mapping);
+        mem_mapping_disable(&tvga->accel_mapping);
+        
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);
 
         return tvga;
@@ -398,6 +406,10 @@ void *tgui9440_init()
                    tvga_recalctimings,
                    tvga_in, tvga_out,
                    tvga_hwcursor_draw);
+
+        mem_mapping_add(&tvga->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &tvga->svga);
+        mem_mapping_add(&tvga->accel_mapping,  0xbc000, 0x4000, tvga_accel_read,  tvga_accel_read_w, tvga_accel_read_l, tvga_accel_write,  tvga_accel_write_w, tvga_accel_write_l,  tvga);
+        mem_mapping_disable(&tvga->accel_mapping);
 
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);
 
@@ -549,15 +561,15 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 			}
 		}
 	}
-	for (y = 0; y < 8; y++)
+/*	for (y = 0; y < 8; y++)
 	{
 		if (count == -1) pclog("Pattern %i : %02X %02X %02X %02X %02X %02X %02X %02X\n", y, tvga->accel.tvga_pattern[y][0], tvga->accel.tvga_pattern[y][1], tvga->accel.tvga_pattern[y][2], tvga->accel.tvga_pattern[y][3], tvga->accel.tvga_pattern[y][4], tvga->accel.tvga_pattern[y][5], tvga->accel.tvga_pattern[y][6], tvga->accel.tvga_pattern[y][7]);
-	}
-	if (count == -1) pclog("Command %i %i\n", tvga->accel.command, TGUI_BITBLT);
-	switch (tvga->accel.command)
+	}*/
+//	if (count == -1) pclog("Command %i %i %p\n", tvga->accel.command, TGUI_BITBLT, tvga);
+        switch (tvga->accel.command)
 	{
 		case TGUI_BITBLT:
-		if (count == -1) pclog("BITBLT src %i,%i dst %i,%i size %i,%i flags %04X\n", tvga->accel.src_x, tvga->accel.src_y, tvga->accel.dst_x, tvga->accel.dst_y, tvga->accel.size_x, tvga->accel.size_y, tvga->accel.flags);
+//		if (count == -1) pclog("BITBLT src %i,%i dst %i,%i size %i,%i flags %04X\n", tvga->accel.src_x, tvga->accel.src_y, tvga->accel.dst_x, tvga->accel.dst_y, tvga->accel.size_x, tvga->accel.size_y, tvga->accel.flags);
 		if (count == -1)
 		{
 			tvga->accel.src = tvga->accel.src_old = tvga->accel.src_x + (tvga->accel.src_y * tvga->accel.pitch);
@@ -571,17 +583,16 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 			case TGUI_SRCCPU:
 			if (count == -1)
 			{
-//				pclog("Blit start\n");
+//				pclog("Blit start  TGUI_SRCCPU\n");
 				if (svga->crtc[0x21] & 0x20)
-				{
-					mem_removehandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    NULL);
-					mem_sethandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l,    NULL);
-				}
+                                        mem_mapping_set_handler(&tvga->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l);
+
 				if (tvga->accel.use_src)
                                         return;
 			}
 			else
 			     count >>= 3;
+//			pclog("TGUI_SRCCPU\n");
 			while (count)
 			{
 				if (tvga->accel.bpp == 0)
@@ -628,8 +639,7 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 						if (svga->crtc[0x21] & 0x20)
 						{
 //							pclog("Blit end\n");
-							mem_removehandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l,    NULL);
-							mem_sethandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    NULL);
+                                                        mem_mapping_set_handler(&tvga->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
 						}
 						return;
 					}
@@ -643,12 +653,11 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 			case TGUI_SRCMONO | TGUI_SRCCPU:
 			if (count == -1)
 			{
-//				pclog("Blit start\n");
+//				pclog("Blit start  TGUI_SRCMONO | TGUI_SRCCPU\n");
 				if (svga->crtc[0x21] & 0x20)
-				{
-					mem_removehandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    NULL);
-					mem_sethandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l,    NULL);
-				}
+                                        mem_mapping_set_handler(&tvga->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l);
+
+//                                pclog(" %i\n", tvga->accel.command);
 				if (tvga->accel.use_src)
                                         return;
 			}
@@ -691,8 +700,7 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 						if (svga->crtc[0x21] & 0x20)
 						{
 //							pclog("Blit end\n");
-							mem_removehandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, tvga_accel_write_fb_b, tvga_accel_write_fb_w, tvga_accel_write_fb_l,    NULL);
-							mem_sethandler(tvga->linear_base, tvga->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,    NULL);
+                                                        mem_mapping_set_handler(&tvga->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
 						}
 						return;
 					}
@@ -748,7 +756,7 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 void tvga_accel_write(uint32_t addr, uint8_t val, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
-	pclog("tvga_accel_write : %08X %02X  %04X(%08X):%08X %02X\n", addr, val, CS,cs,pc, opcode);
+//	pclog("tvga_accel_write : %08X %02X  %04X(%08X):%08X %02X\n", addr, val, CS,cs,pc, opcode);
 	if ((addr & ~0xff) != 0xbff00)
 		return;
 	switch (addr & 0xff)
@@ -875,7 +883,7 @@ void tvga_accel_write(uint32_t addr, uint8_t val, void *p)
 void tvga_accel_write_w(uint32_t addr, uint16_t val, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
-	pclog("tvga_accel_write_w %08X %04X\n", addr, val);
+//	pclog("tvga_accel_write_w %08X %04X\n", addr, val);
 	tvga_accel_write(addr, val, tvga);
 	tvga_accel_write(addr + 1, val >> 8, tvga);
 }
@@ -883,7 +891,7 @@ void tvga_accel_write_w(uint32_t addr, uint16_t val, void *p)
 void tvga_accel_write_l(uint32_t addr, uint32_t val, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
-	pclog("tvga_accel_write_l %08X %08X\n", addr, val);
+//	pclog("tvga_accel_write_l %08X %08X\n", addr, val);
 	tvga_accel_write(addr, val, tvga);
 	tvga_accel_write(addr + 1, val >> 8, tvga);
 	tvga_accel_write(addr + 2, val >> 16, tvga);
@@ -989,34 +997,37 @@ uint8_t tvga_accel_read(uint32_t addr, void *p)
 uint16_t tvga_accel_read_w(uint32_t addr, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
-	pclog("tvga_accel_read_w %08X\n", addr);
+//	pclog("tvga_accel_read_w %08X\n", addr);
 	return tvga_accel_read(addr, tvga) | (tvga_accel_read(addr + 1, tvga) << 8);
 }
 
 uint32_t tvga_accel_read_l(uint32_t addr, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
-	pclog("tvga_accel_read_l %08X\n", addr);
+//	pclog("tvga_accel_read_l %08X\n", addr);
 	return tvga_accel_read_w(addr, tvga) | (tvga_accel_read_w(addr + 2, tvga) << 16);
 }
 
 void tvga_accel_write_fb_b(uint32_t addr, uint8_t val, void *p)
 {
-        tvga_t *tvga = (tvga_t *)p;
+        svga_t *svga = (svga_t *)p;
+        tvga_t *tvga = (tvga_t *)svga->p;
 //	pclog("tvga_accel_write_fb_b %08X %02X\n", addr, val);
 	tvga_accel_command(8, val << 24, tvga);
 }
 
 void tvga_accel_write_fb_w(uint32_t addr, uint16_t val, void *p)
 {
-        tvga_t *tvga = (tvga_t *)p;
+        svga_t *svga = (svga_t *)p;
+        tvga_t *tvga = (tvga_t *)svga->p;
 //	pclog("tvga_accel_write_fb_w %08X %04X\n", addr, val);
 	tvga_accel_command(16, (((val & 0xff00) >> 8) | ((val & 0x00ff) << 8)) << 16, tvga);
 }
 
 void tvga_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
 {
-        tvga_t *tvga = (tvga_t *)p;
+        svga_t *svga = (svga_t *)p;
+        tvga_t *tvga = (tvga_t *)svga->p;
 //	pclog("tvga_accel_write_fb_l %08X %08X\n", addr, val);
 	tvga_accel_command(32, ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), tvga);
 }

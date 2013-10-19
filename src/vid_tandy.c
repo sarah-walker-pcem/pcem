@@ -12,6 +12,8 @@ static int i_filt[8],q_filt[8];
 
 typedef struct tandy_t
 {
+        mem_mapping_t mapping;
+        
         uint8_t crtc[32];
         int crtcreg;
         
@@ -665,7 +667,7 @@ void *tandy_init()
                 q_filt[c] = 512.0 * sin((3.14 * (tandy_tint + c * 4) / 16.0) - 33.0 / 180.0);
         }
         timer_add(tandy_poll, &tandy->vidtime, TIMER_ALWAYS_ENABLED, tandy);
-        mem_sethandler(0xb8000, 0x08000, tandy_read, NULL, NULL, tandy_write, NULL, NULL,  tandy);
+        mem_mapping_add(&tandy->mapping, 0xb8000, 0x08000, tandy_read, NULL, NULL, tandy_write, NULL, NULL,  tandy);
         io_sethandler(0x03d0, 0x0010, tandy_in, NULL, NULL, tandy_out, NULL, NULL, tandy);
         io_sethandler(0x00a0, 0x0001, tandy_in, NULL, NULL, tandy_out, NULL, NULL, tandy);
         return tandy;

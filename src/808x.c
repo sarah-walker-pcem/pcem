@@ -487,8 +487,6 @@ void makeznptable()
                 if (!c) znptable16[c]|=Z_FLAG;
                 if (c&0x8000) znptable16[c]|=N_FLAG;
       }
-//        isram[0xF]=1;
-//        printf("isram 0 = %i\n",isram[0]);
       
 //      makemod1table();
 }
@@ -661,6 +659,7 @@ void resetx86()
         loadcs(0xFFFF);
         rammask=0xFFFFFFFF;
         flags=2;
+        makeznptable();
         initmmucache();
         resetreadlookup();
         makemod1table();

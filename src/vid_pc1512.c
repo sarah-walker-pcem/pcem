@@ -17,6 +17,8 @@
 
 typedef struct pc1512_t
 {
+        mem_mapping_t mapping;
+        
         uint8_t crtc[32];
         int crtcreg;
 
@@ -456,7 +458,7 @@ static void *pc1512_init()
         pc1512->cgamode = 0x12;
                 
         timer_add(pc1512_poll, &pc1512->vidtime, TIMER_ALWAYS_ENABLED, pc1512);
-        mem_sethandler(0xb8000, 0x08000, pc1512_read, NULL, NULL, pc1512_write, NULL, NULL,  pc1512);
+        mem_mapping_add(&pc1512->mapping, 0xb8000, 0x08000, pc1512_read, NULL, NULL, pc1512_write, NULL, NULL,  pc1512);
         io_sethandler(0x03d0, 0x0010, pc1512_in, NULL, NULL, pc1512_out, NULL, NULL, pc1512);
         return pc1512;
 }

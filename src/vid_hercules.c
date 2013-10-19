@@ -9,6 +9,8 @@
 
 typedef struct hercules_t
 {
+        mem_mapping_t mapping;
+        
         uint8_t crtc[32];
         int crtcreg;
 
@@ -59,9 +61,10 @@ void hercules_out(uint16_t addr, uint8_t val, void *p)
                 return;
                 case 0x3bf:
                 hercules->ctrl2 = val;
-                mem_removehandler(0xb8000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  hercules);
                 if (val & 2)
-                        mem_sethandler(0xb8000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  hercules);
+                        mem_mapping_set_addr(&hercules->mapping, 0xb0000, 0x10000);
+                else
+                        mem_mapping_set_addr(&hercules->mapping, 0xb0000, 0x08000);
                 return;
         }
 }
@@ -308,7 +311,7 @@ void *hercules_init()
         hercules->vram = malloc(0x10000);
 
         timer_add(hercules_poll, &hercules->vidtime, TIMER_ALWAYS_ENABLED, hercules);
-        mem_sethandler(0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  hercules);
+        mem_mapping_add(&hercules->mapping, 0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  hercules);
         io_sethandler(0x03b0, 0x0010, hercules_in, NULL, NULL, hercules_out, NULL, NULL, hercules);
 
         for (c = 0; c < 256; c++)

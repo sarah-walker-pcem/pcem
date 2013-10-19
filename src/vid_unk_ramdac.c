@@ -2,6 +2,7 @@
   It is possibly a Sierra 1502x
   It's addressed by the TLIVESA1 driver for ET4000*/
 #include "ibm.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_unk_ramdac.h"

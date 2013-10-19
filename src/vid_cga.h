@@ -1,5 +1,7 @@
 typedef struct cga_t
 {
+        mem_mapping_t mapping;
+        
         int crtcreg;
         uint8_t crtc[32];
         

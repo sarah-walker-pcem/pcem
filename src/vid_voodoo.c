@@ -8,6 +8,10 @@ static int tris = 0;
 
 static struct voodoo
 {
+        mem_mapping_t mmio_mapping;
+        mem_mapping_t   fb_mapping;
+        mem_mapping_t  tex_mapping;
+        
         int pci_enable;
 
         uint32_t color0, color1;
@@ -669,18 +673,20 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *priv)
 
 static void voodoo_recalcmapping()
 {
-        mem_removehandler(0x00000000, 0xffffffff, NULL, NULL, voodoo_readl, NULL, NULL, voodoo_writel, NULL);
-        mem_removehandler(0x00000000, 0xffffffff, NULL, voodoo_fb_readw, voodoo_fb_readl, NULL, voodoo_fb_writew, voodoo_fb_writel, NULL);
-        mem_removehandler(0x00000000, 0xffffffff, NULL, NULL, NULL, NULL, voodoo_tex_writew, voodoo_tex_writel, NULL);
         if (voodoo.pci_enable)
         {
                 pclog("voodoo_recalcmapping : memBaseAddr %08X\n", voodoo.memBaseAddr);
-                mem_sethandler(voodoo.memBaseAddr,              0x003fffff, NULL, NULL, voodoo_readl, NULL, NULL, voodoo_writel, NULL);
-                mem_sethandler(voodoo.memBaseAddr + 0x00400000, 0x003fffff, NULL, voodoo_fb_readw, voodoo_fb_readl, NULL, voodoo_fb_writew, voodoo_fb_writel, NULL);
-                mem_sethandler(voodoo.memBaseAddr + 0x00800000, 0x007fffff, NULL, NULL, NULL, NULL, voodoo_tex_writew, voodoo_tex_writel, NULL);
+                mem_mapping_set_addr(&voodoo.mmio_mapping, voodoo.memBaseAddr,              0x00400000);
+                mem_mapping_set_addr(&voodoo.fb_mapping,   voodoo.memBaseAddr + 0x00400000, 0x00400000);
+                mem_mapping_set_addr(&voodoo.tex_mapping,  voodoo.memBaseAddr + 0x00800000, 0x00800000);
         }
         else
+        {
                 pclog("voodoo_recalcmapping : disabled\n");
+                mem_mapping_disable(&voodoo.mmio_mapping);
+                mem_mapping_disable(&voodoo.fb_mapping);
+                mem_mapping_disable(&voodoo.tex_mapping);
+        }
 }
 
 uint8_t voodoo_pci_read(int func, int addr, void *priv)
@@ -727,6 +733,11 @@ void voodoo_init()
         return;
         voodoo_make_dither();
         pci_add(voodoo_pci_read, voodoo_pci_write, NULL);
+
+        mem_mapping_add(&voodoo.mmio_mapping, 0, 0, NULL, NULL,            voodoo_readl,    NULL,       NULL,              voodoo_writel,     NULL);
+        mem_mapping_add(&voodoo.fb_mapping,   0, 0, NULL, voodoo_fb_readw, voodoo_fb_readl, NULL,       voodoo_fb_writew,  voodoo_fb_writel,  NULL);
+        mem_mapping_add(&voodoo.tex_mapping,  0, 0, NULL, NULL,            NULL,            NULL,       voodoo_tex_writew, voodoo_tex_writel, NULL);
+
         voodoo.fb_mem = malloc(2 * 1024 * 1024);
         voodoo.tex_mem = malloc(2 * 1024 * 1024);        
 }

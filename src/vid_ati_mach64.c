@@ -16,6 +16,10 @@
 
 typedef struct mach64_t
 {
+        mem_mapping_t linear_mapping;
+        mem_mapping_t mmio_mapping;
+        mem_mapping_t mmio_linear_mapping;
+
         ati68860_ramdac_t ramdac;
         ati_eeprom_t eeprom;
         ics2595_t ics2595;
@@ -321,38 +325,43 @@ void mach64_recalctimings(svga_t *svga)
 void mach64_updatemapping(mach64_t *mach64)
 {
         svga_t *svga = &mach64->svga;
-        mem_removehandler(0xa0000, 0x10000, mach64_read, NULL, NULL, mach64_write, NULL, NULL,  mach64);
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
-        mem_removehandler(0xbc000, 0x04000, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl, mach64_ext_writeb, mach64_ext_writew, mach64_ext_writel,  mach64);
-        if (mach64->old_linear_base >= (mem_size << 20))
-        {
-                mem_removehandler(mach64->old_linear_base, (8 << 20) - 0x4000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,  svga);
-                mem_removehandler(mach64->old_linear_base + ((8 << 20) - 0x4000), 0x4000, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl, mach64_ext_writeb, mach64_ext_writew, mach64_ext_writel,  mach64);
-        }
+
+        mem_mapping_disable(&mach64->mmio_mapping);
 //        pclog("Write mapping %02X\n", val);
         switch (svga->gdcreg[6] & 0xc)
         {
                 case 0x0: /*128k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, mach64_read, NULL, NULL, mach64_write, NULL, NULL,  mach64);
-                mem_sethandler(0xbc000, 0x04000, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl, mach64_ext_writeb, mach64_ext_writew, mach64_ext_writel,  mach64);
+                mem_mapping_set_handler(&mach64->svga.mapping, mach64_read, NULL, NULL, mach64_write, NULL, NULL);
+                mem_mapping_set_p(&mach64->svga.mapping, mach64);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
+                mem_mapping_enable(&mach64->mmio_mapping);
                 break;
                 case 0x4: /*64k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, mach64_read, NULL, NULL, mach64_write, NULL, NULL,  mach64);
+                mem_mapping_set_handler(&mach64->svga.mapping, mach64_read, NULL, NULL, mach64_write, NULL, NULL);
+                mem_mapping_set_p(&mach64->svga.mapping, mach64);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 break;
                 case 0x8: /*32k at B0000*/
-                mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
+                mem_mapping_set_handler(&mach64->svga.mapping, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                mem_mapping_set_p(&mach64->svga.mapping, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                 break;
                 case 0xC: /*32k at B8000*/
-                mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
+                mem_mapping_set_handler(&mach64->svga.mapping, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
+                mem_mapping_set_p(&mach64->svga.mapping, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                 break;
         }
-        if (mach64->linear_base >= (mem_size << 20))
+        if (mach64->linear_base)
         {
-                mem_sethandler(mach64->linear_base, (8 << 20) - 0x4000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear,  svga);
-                mem_sethandler(mach64->linear_base + ((8 << 20) - 0x4000), 0x4000, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl, mach64_ext_writeb, mach64_ext_writew, mach64_ext_writel,  mach64);
-//                pclog("Mach64 LFB %08X\n", mach64->linear_base);
+                mem_mapping_set_addr(&mach64->linear_mapping, mach64->linear_base, (8 << 20) - 0x4000);
+                mem_mapping_set_addr(&mach64->mmio_linear_mapping, mach64->linear_base + ((8 << 20) - 0x4000), 0x4000);
         }
-        mach64->old_linear_base = mach64->linear_base;
+        else
+        {
+                mem_mapping_disable(&mach64->linear_mapping);
+                mem_mapping_disable(&mach64->mmio_linear_mapping);
+        }
 }
 
 #define READ8(addr, var)        switch ((addr) & 3)                                     \
@@ -2018,6 +2027,11 @@ void *mach64gx_init()
                    mach64_recalctimings,
                    mach64_in, mach64_out,
                    mach64_hwcursor_draw); 
+
+        mem_mapping_add(&mach64->linear_mapping,      0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &mach64->svga);
+        mem_mapping_add(&mach64->mmio_linear_mapping, 0,       0,       mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,   mach64);
+        mem_mapping_add(&mach64->mmio_mapping,        0xbc000, 0x04000, mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,   mach64);
+        mem_mapping_disable(&mach64->mmio_mapping);
 
         io_sethandler(0x03c0, 0x0020, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
         

@@ -1,5 +1,7 @@
 typedef struct ega_t
 {
+        mem_mapping_t mapping;
+        
         uint8_t crtcreg;
         uint8_t crtc[32];
         uint8_t gdcreg[16];

@@ -13,6 +13,8 @@
 
 typedef struct pc200_t
 {
+        mem_mapping_t mapping;
+        
         cga_t cga;
 
         uint8_t reg_3dd, reg_3de, reg_3df;
@@ -109,7 +111,7 @@ void *pc200_init()
         cga_init(&pc200->cga);
                         
         timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
+        mem_mapping_add(&pc200->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
         io_sethandler(0x03d0, 0x0010, pc200_in, NULL, NULL, pc200_out, NULL, NULL, pc200);
         return cga;
 }

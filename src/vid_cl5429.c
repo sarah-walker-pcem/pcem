@@ -12,6 +12,8 @@
 
 typedef struct gd5429_t
 {
+        mem_mapping_t mmio_mapping;
+        
         svga_t svga;
         
         uint32_t bank[2];
@@ -220,25 +222,25 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
 {
         svga_t *svga = &gd5429->svga;
         
-        mem_removehandler(0xa0000, 0x20000, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL,  gd5429);
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
-        mem_removehandler(0xb8000, 0x00100, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  gd5429);
         pclog("Write mapping %02X %i\n", svga->gdcreg[6], svga->seqregs[0x17] & 0x04);
         switch (svga->gdcreg[6] & 0x0C)
         {
                 case 0x0: /*128k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL,  gd5429);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                mem_mapping_disable(&gd5429->mmio_mapping);
                 break;
                 case 0x4: /*64k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL,  gd5429);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 if (svga->seqregs[0x17] & 0x04)
-                        mem_sethandler(0xb8000, 0x00100, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  gd5429);
+                        mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
                 break;
                 case 0x8: /*32k at B0000*/
-                mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                mem_mapping_disable(&gd5429->mmio_mapping);
                 break;
                 case 0xC: /*32k at B8000*/
-                mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel,  svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                mem_mapping_disable(&gd5429->mmio_mapping);
                 break;
         }
 }
@@ -539,13 +541,14 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 if (gd5429->blt.mode & 0x04)
                 {
 //                        pclog("blt.mode & 0x04\n");
-                        mem_removehandler(0xa0000, 0x10000, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL,  gd5429);
-                        mem_sethandler(0xa0000, 0x10000, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l,  gd5429);
+                        mem_mapping_set_handler(&svga->mapping, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l);
+                        mem_mapping_set_p(&svga->mapping, gd5429);
                         return;
                 }
                 else
                 {
-                        mem_removehandler(0xa0000, 0x10000, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l,  gd5429);
+                        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
+                        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
                         gd5429_recalc_mapping(gd5429);
                 }                
         }
@@ -666,7 +669,8 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         {
                                 if (gd5429->blt.mode & 0x04)
                                 {
-                                        mem_removehandler(0xa0000, 0x10000, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l,  gd5429);
+                                        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
+                                        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
                                         gd5429_recalc_mapping(gd5429);
                                 }
                                 return;
@@ -807,6 +811,11 @@ void *gd5429_init()
                    gd5429_recalctimings,
                    gd5429_in, gd5429_out,
                    gd5429_hwcursor_draw);
+
+        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
+        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
+
+        mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  gd5429);
 
         io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
 

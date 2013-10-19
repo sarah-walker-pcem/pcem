@@ -1,5 +1,6 @@
 /*Trident TKD8001 RAMDAC emulation*/
 #include "ibm.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_tkd8001_ramdac.h"

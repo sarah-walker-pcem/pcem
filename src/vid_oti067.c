@@ -3,6 +3,7 @@
 #include "ibm.h"
 #include "device.h"
 #include "io.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_oti067.h"
 #include "vid_svga.h"

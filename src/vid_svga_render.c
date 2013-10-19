@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "mem.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"

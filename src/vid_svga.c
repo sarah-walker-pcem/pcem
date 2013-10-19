@@ -139,21 +139,20 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                                 pclog("svga_out recalcmapping %p\n", svga);
                         if ((svga->gdcreg[6] & 0xc) != (val & 0xc))
                         {
-                                mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, p);
                                 pclog("Write mapping %02X\n", val);
                                 switch (val&0xC)
                                 {
                                         case 0x0: /*128k at A0000*/
-                                        mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, p);
+                                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                                         break;
                                         case 0x4: /*64k at A0000*/
-                                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, p);
+                                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                                         break;
                                         case 0x8: /*32k at B0000*/
-                                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, p);
+                                        mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                                         break;
                                         case 0xC: /*32k at B8000*/
-                                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, p);
+                                        mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                                         break;
                                 }
                         }
@@ -641,7 +640,9 @@ int svga_init(svga_t *svga, void *p, int memsize,
         svga->video_out = video_out;
         svga->hwcursor_draw = hwcursor_draw;
 //        _svga_recalctimings(svga);
-        
+
+        mem_mapping_add(&svga->mapping, 0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+
         timer_add(svga_poll, &svga->vidtime, TIMER_ALWAYS_ENABLED, svga);
         vramp = svga->vram;
         return 0;
@@ -1161,7 +1162,7 @@ void svga_writew(uint32_t addr, uint16_t val, void *p)
         cycles -= video_timing_w;
         cycles_lost += video_timing_w;
 
-        if (svga_output) pclog("Writew %05X ", addr);
+        if (svga_output) pclog("svga_writew: %05X ", addr);
         addr = (addr & 0xffff) + svga->write_bank;
         addr &= 0x7FFFFF;        
         if (addr >= svga->vram_limit)
@@ -1189,7 +1190,7 @@ void svga_writel(uint32_t addr, uint32_t val, void *p)
         cycles -= video_timing_l;
         cycles_lost += video_timing_l;
 
-        if (svga_output) pclog("Writel %05X ", addr);
+        if (svga_output) pclog("svga_writel: %05X ", addr);
         addr = (addr & 0xffff) + svga->write_bank;
         addr &= 0x7FFFFF;
         if (addr >= svga->vram_limit)

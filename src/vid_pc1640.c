@@ -13,6 +13,9 @@
 
 typedef struct pc1640_t
 {
+        mem_mapping_t cga_mapping;
+        mem_mapping_t ega_mapping;
+
         cga_t cga;
         ega_t ega;
         
@@ -28,25 +31,27 @@ void pc1640_out(uint16_t addr, uint8_t val, void *p)
         {
                 case 0x3db:
                 pc1640->cga_enabled = val & 0x40;
-                mem_removehandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL,  &pc1640->ega);
-                mem_removehandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  &pc1640->cga);
                 if (pc1640->cga_enabled)
-                   mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  &pc1640->cga);
+                {
+                        mem_mapping_enable(&pc1640->cga_mapping);
+                        mem_mapping_disable(&pc1640->ega_mapping);
+                }
                 else
-                {                
+                {
+                        mem_mapping_disable(&pc1640->cga_mapping);
                         switch (pc1640->ega.gdcreg[6] & 0xc)
                         {
                                 case 0x0: /*128k at A0000*/
-                                mem_sethandler(0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL,  &pc1640->ega);
+                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x20000);
                                 break;
                                 case 0x4: /*64k at A0000*/
-                                mem_sethandler(0xa0000, 0x10000, ega_read, NULL, NULL, ega_write, NULL, NULL,  &pc1640->ega);
+                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x10000);
                                 break;
                                 case 0x8: /*32k at B0000*/
-                                mem_sethandler(0xb0000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL,  &pc1640->ega);
+                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xb0000, 0x08000);
                                 break;
                                 case 0xC: /*32k at B8000*/
-                                mem_sethandler(0xb8000, 0x08000, ega_read, NULL, NULL, ega_write, NULL, NULL,  &pc1640->ega);
+                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xb8000, 0x08000);
                                 break;
                         }
                 }                
@@ -115,7 +120,8 @@ void *pc1640_init()
         cga_init(&pc1640->cga);
                         
         timer_add(pc1640_poll, &pc1640->vidtime, TIMER_ALWAYS_ENABLED, pc1640);
-        mem_sethandler(0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
+        mem_mapping_add(&pc1640->cga_mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
+        mem_mapping_add(&pc1640->ega_mapping, 0,       0,       ega_read, NULL, NULL, ega_write, NULL, NULL,  ega);
         io_sethandler(0x03a0, 0x0040, pc1640_in, NULL, NULL, pc1640_out, NULL, NULL, pc1640);
         return cga;
 }

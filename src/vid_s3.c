@@ -13,6 +13,9 @@
 
 typedef struct s3_t
 {
+        mem_mapping_t linear_mapping;
+        mem_mapping_t mmio_mapping;
+        
         svga_t svga;
         sdac_ramdac_t ramdac;
 
@@ -239,7 +242,7 @@ void s3_recalctimings(svga_t *svga)
         s3_t *s3 = (s3_t *)svga->p;
         svga->hdisp = svga->hdisp_old;
 
-        pclog("%i %i\n", svga->hdisp, svga->hdisp_time);
+//        pclog("%i %i\n", svga->hdisp, svga->hdisp_time);
 //        pclog("recalctimings\n");
         svga->ma_latch |= (s3->ma_ext << 16);
 //        pclog("SVGA_MA %08X\n", svga_ma);
@@ -287,41 +290,38 @@ void s3_recalctimings(svga_t *svga)
         }
 
        // if (svga->bpp == 32) svga->hdisp *= 3;
-        pclog("svga->hdisp %i %02X %i\n", svga->hdisp, svga->crtc[0x5d], svga->hdisp_time);
+//        pclog("svga->hdisp %i %02X %i\n", svga->hdisp, svga->crtc[0x5d], svga->hdisp_time);
 }
 
 void s3_updatemapping(s3_t *s3)
 {
         svga_t *svga = &s3->svga;
         
-        mem_removehandler(s3->linear_base, s3->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
-        
 //        video_write_a000_w = video_write_a000_l = NULL;
 
-        mem_removehandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
 
-        mem_removehandler(0xa0000, 0x10000, s3_accel_read, NULL, NULL, s3_accel_write, s3_accel_write_w, s3_accel_write_l, s3);
-
-//        pclog("Update mapping - bank %02X ", gdcreg[6] & 0xc);        
+//        pclog("Update mapping - bank %02X ", svga->gdcreg[6] & 0xc);
         switch (svga->gdcreg[6] & 0xc) /*Banked framebuffer*/
         {
                 case 0x0: /*128k at A0000*/
-                mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                 break;
                 case 0x4: /*64k at A0000*/
-                mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 break;
                 case 0x8: /*32k at B0000*/
-                mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                 break;
                 case 0xC: /*32k at B8000*/
-                mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                 break;
         }
         
-//        pclog("Linear framebuffer %02X ", crtc[0x58] & 0x10);
+//        pclog("Linear framebuffer %02X ", svga->crtc[0x58] & 0x10);
         if (svga->crtc[0x58] & 0x10) /*Linear framebuffer*/
         {
+                mem_mapping_disable(&svga->mapping);
+                
                 s3->linear_base = (svga->crtc[0x5a] << 16) | (svga->crtc[0x59] << 24);
                 switch (svga->crtc[0x58] & 3)
                 {
@@ -340,16 +340,24 @@ void s3_updatemapping(s3_t *s3)
                 }
                 s3->linear_base &= ~(s3->linear_size - 1);
 //                pclog("%08X %08X  %02X %02X %02X\n", linear_base, linear_size, crtc[0x58], crtc[0x59], crtc[0x5a]);
-//                pclog("Linear framebuffer at %08X size %08X\n", linear_base, linear_size);
+//                pclog("Linear framebuffer at %08X size %08X\n", s3->linear_base, s3->linear_size);
                 if (s3->linear_base == 0xa0000)
-                   mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                {
+                        mem_mapping_disable(&s3->linear_mapping);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+//                        mem_mapping_set_addr(&s3->linear_mapping, 0xa0000, 0x10000);
+                }
                 else
-                   mem_sethandler(s3->linear_base, s3->linear_size, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
+                        mem_mapping_set_addr(&s3->linear_mapping, s3->linear_base, s3->linear_size);
         }
+        else
+                mem_mapping_disable(&s3->linear_mapping);
         
-//        pclog("Memory mapped IO %02X\n", crtc[0x53] & 0x10);
+//        pclog("Memory mapped IO %02X\n", svga->crtc[0x53] & 0x10);
         if (svga->crtc[0x53] & 0x10) /*Memory mapped IO*/
-                mem_sethandler(0xa0000, 0x10000, s3_accel_read, NULL, NULL, s3_accel_write, s3_accel_write_w, s3_accel_write_l, s3);
+                mem_mapping_enable(&s3->mmio_mapping);
+        else
+                mem_mapping_disable(&s3->mmio_mapping);
 }
 
 
@@ -1533,6 +1541,10 @@ static void *s3_init()
         svga_t *svga = &s3->svga;
         memset(s3, 0, sizeof(s3_t));
         
+        mem_mapping_add(&s3->linear_mapping, 0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &s3->svga);
+        mem_mapping_add(&s3->mmio_mapping,   0xa0000, 0x10000, s3_accel_read, NULL, NULL, s3_accel_write, s3_accel_write_w, s3_accel_write_l, s3);
+        mem_mapping_disable(&s3->mmio_mapping);
+
         svga_init(&s3->svga, s3, 1 << 22, /*4mb - 864 supports 8mb but buggy VESA driver reports 0mb*/
                    s3_recalctimings,
                    s3_in, s3_out,

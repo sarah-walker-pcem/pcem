@@ -7,15 +7,18 @@
 #include "ibm.h"
 #include "device.h"
 #include "io.h"
+#include "mem.h"
 #include "pci.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_icd2061.h"
 #include "vid_stg_ramdac.h"
-#include "mem.h"
 
 typedef struct et4000w32p_t
 {
+        mem_mapping_t linear_mapping;
+        mem_mapping_t    mmu_mapping;
+        
         svga_t svga;
         stg_ramdac_t ramdac;
         icd2061_t icd2061;
@@ -258,12 +261,11 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
         svga_t *svga = &et4000->svga;
         
         pclog("recalcmapping %p\n", svga);
-        mem_removehandler(et4000->linearbase_old, 0x200000,    svga_read_linear, svga_readw_linear, svga_readl_linear,    svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
-        mem_removehandler(               0xa0000,  0x20000,           svga_read,        svga_readw,        svga_readl,           svga_write,        svga_writew,        svga_writel, svga);
-        mem_removehandler(               0xb0000,  0x10000, et4000w32p_mmu_read,              NULL,              NULL, et4000w32p_mmu_write,               NULL,               NULL, et4000);
         if (svga->crtc[0x36] & 0x10) /*Linear frame buffer*/
         {
-                mem_sethandler(et4000->linearbase, 0x200000, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, svga);
+                mem_mapping_set_addr(&et4000->linear_mapping, et4000->linearbase, 0x200000);
+                mem_mapping_disable(&svga->mapping);
+                mem_mapping_disable(&et4000->mmu_mapping);
         }
         else
         {
@@ -273,30 +275,36 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
                 switch (map)
                 {
                         case 0x0: case 0x4: case 0x8: case 0xC: /*128k at A0000*/
-                        mem_sethandler(0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
+                        mem_mapping_disable(&et4000->mmu_mapping);
                         break;
                         case 0x1: /*64k at A0000*/
-                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        mem_mapping_disable(&et4000->mmu_mapping);
                         break;
                         case 0x2: /*32k at B0000*/
-                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                        mem_mapping_disable(&et4000->mmu_mapping);
                         break;
                         case 0x3: /*32k at B8000*/
-                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                        mem_mapping_disable(&et4000->mmu_mapping);
                         break;
                         case 0x5: case 0x9: case 0xD: /*64k at A0000, MMU at B8000*/
-                        mem_sethandler(0xa0000, 0x10000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
-                        mem_sethandler(0xb8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, et4000);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        mem_mapping_set_addr(&et4000->mmu_mapping, 0xb8000, 0x08000);
                         break;
                         case 0x6: case 0xA: case 0xE: /*32k at B0000, MMU at A8000*/
-                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, et4000);
-                        mem_sethandler(0xb0000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                        mem_mapping_set_addr(&et4000->mmu_mapping, 0xa8000, 0x08000);
                         break;
                         case 0x7: case 0xB: case 0xF: /*32k at B8000, MMU at A8000*/
-                        mem_sethandler(0xa8000, 0x08000, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, et4000);
-                        mem_sethandler(0xb8000, 0x08000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, svga);
+                        mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                        mem_mapping_set_addr(&et4000->mmu_mapping, 0xa8000, 0x08000);
                         break;
                 }
+                
+                mem_mapping_disable(&et4000->linear_mapping);
 //                pclog("ET4K map %02X\n", map);
         }
         et4000->linearbase_old = et4000->linearbase;
@@ -932,6 +940,9 @@ void *et4000w32p_init()
                    et4000w32p_recalctimings,
                    et4000w32p_in, et4000w32p_out,
                    et4000w32p_hwcursor_draw); 
+
+        mem_mapping_add(&et4000->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &et4000->svga);
+        mem_mapping_add(&et4000->mmu_mapping,    0, 0, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, et4000);
 
         io_sethandler(0x03c0, 0x0020, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
 

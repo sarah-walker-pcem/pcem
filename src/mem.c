@@ -15,21 +15,25 @@
 #include "x86.h"
 #include "cpu.h"
 
-static uint8_t  (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
-static uint16_t (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
-static uint32_t (*_mem_read_l[0x40000])(uint32_t addr, void *priv);
-static void    (*_mem_write_b[0x40000])(uint32_t addr, uint8_t  val, void *priv);
-static void    (*_mem_write_w[0x40000])(uint32_t addr, uint16_t val, void *priv);
-static void    (*_mem_write_l[0x40000])(uint32_t addr, uint32_t val, void *priv);
-static void        *_mem_priv[0x40000];
+static uint8_t       (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
+static uint16_t      (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
+static uint32_t      (*_mem_read_l[0x40000])(uint32_t addr, void *priv);
+static void         (*_mem_write_b[0x40000])(uint32_t addr, uint8_t  val, void *priv);
+static void         (*_mem_write_w[0x40000])(uint32_t addr, uint16_t val, void *priv);
+static void         (*_mem_write_l[0x40000])(uint32_t addr, uint32_t val, void *priv);
+static void             *_mem_priv[0x40000];
+static mem_mapping_t *_mem_mapping[0x40000];
+
+static mem_mapping_t base_mapping;
+static mem_mapping_t ram_low_mapping;
+static mem_mapping_t ram_high_mapping;
+static mem_mapping_t bios_mapping[8];
+static mem_mapping_t vrom_mapping;
+static mem_mapping_t romext_mapping;
 
 int shadowbios,shadowbios_write;
 
-uint32_t oldpc;
-extern uint8_t opcode2;
-unsigned char isram[0x10000];
-extern int ins;
-extern int timetolive;
+static unsigned char isram[0x10000];
 
 int mem_size;
 int cache=4;
@@ -1252,6 +1256,20 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
 //        pclog("Bad write %08X %08X\n", addr2, val);
 }
 
+uint8_t mem_readb_phys(uint32_t addr)
+{
+        if (_mem_read_b[addr >> 14]) 
+                return _mem_read_b[addr >> 14](addr, _mem_priv[addr >> 14]);
+                
+        return 0xff;
+}
+
+void mem_writeb_phys(uint32_t addr, uint8_t val)
+{
+        if (_mem_write_b[addr >> 14]) 
+                _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
+}
+
 uint8_t mem_read_ram(uint32_t addr, void *priv)
 {
 //        if (addr >= 0xe0000 && addr < 0x100000) pclog("Read RAMb %08X\n", addr);
@@ -1338,62 +1356,6 @@ uint32_t mem_read_romextl(uint32_t addr, void *priv)
         return *(uint32_t *)&romext[addr & 0x7fff];
 }
 
-void mem_init()
-{
-        int c;
-        ram=malloc(mem_size*1024*1024);
-        rom=malloc(0x20000);
-        vram=malloc(0x800000);
-        vrom=malloc(0x8000);
-        readlookup2=malloc(1024*1024*4);
-        writelookup2=malloc(1024*1024*4);
-        cachelookup2=malloc(1024*1024);
-        biosmask=65535;
-        makeznptable();
-        memset(ram,0,mem_size*1024*1024);
-        for (c = 0; c < 0x10000; c++) isram[c] = 0;
-        for (c=0;c<(mem_size*16);c++)
-        {
-                isram[c]=1;
-                if (c >= 0xa && c<=0xF) isram[c]=0;
-        }
-        for (c = 0; c < 0x40000; c++)
-            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = _mem_priv[c] = NULL;
-
-        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-        if (mem_size > 1)
-           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-           
-        mem_sethandler(0xc0000, 0x08000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
-        mem_sethandler(0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);
-        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-//        pclog("Mem resize %i %i\n",mem_size,c);
-}
-
-void mem_resize()
-{
-        int c;
-        free(ram);
-        ram=malloc(mem_size*1024*1024);
-        memset(ram,0,mem_size*1024*1024);
-        for (c = 0; c < 0x10000; c++) isram[c] = 0;
-        for (c=0;c<(mem_size*16);c++)
-        {
-                isram[c]=1;
-                if (c >= 0xa && c<=0xF) isram[c]=0;
-        }
-        for (c = 0; c < 0x40000; c++)
-            _mem_read_b[c] = _mem_read_w[c] = _mem_read_l[c] = _mem_write_b[c] = _mem_write_w[c] = _mem_write_l[c] = _mem_priv[c] = NULL;
-
-        mem_sethandler(0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-        if (mem_size > 1)
-           mem_sethandler(0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-
-        mem_sethandler(0xc0000, 0x8000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
-        mem_sethandler(0xc8000, 0x8000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);        
-        mem_sethandler(0xe0000, 0x20000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
-//        pclog("Mem resize %i %i\n",mem_size,c);
-}
 
 void mem_updatecache()
 {
@@ -1418,63 +1380,266 @@ void mem_updatecache()
         }
 }
 
-void mem_sethandler(uint32_t base, uint32_t size, 
-                    uint8_t  (*read_b)(uint32_t addr, void *priv),
-                    uint16_t (*read_w)(uint32_t addr, void *priv),
-                    uint32_t (*read_l)(uint32_t addr, void *priv),
-                    void (*write_b)(uint32_t addr, uint8_t  val, void *priv),
-                    void (*write_w)(uint32_t addr, uint16_t val, void *priv),
-                    void (*write_l)(uint32_t addr, uint32_t val, void *priv),
-                    void *priv)
+static void mem_mapping_recalc(uint32_t base, uint32_t size)
 {
         uint32_t c;
-//        printf("mem_sethandler : %05X %04X  %08X  %08X   %08X   %08X %08X\n", base, size, read_w, write_w,  mem_read_biosw, mem_read_ramw, mem_write_ramw);
-        for (c = base; c < base + size; c += 0x4000)
-        {
-                _mem_read_b[ c >> 14] =  read_b;
-                _mem_read_w[ c >> 14] =  read_w;
-                _mem_read_l[ c >> 14] =  read_l;
-                _mem_write_b[c >> 14] = write_b;
-                _mem_write_w[c >> 14] = write_w;
-                _mem_write_l[c >> 14] = write_l;
-                _mem_priv[c >> 14] = priv;
-        }
-        for (c = base; c < base + size; c += 0x1000)
-        {
-                readlookup2[c >> 12]  = 0xFFFFFFFF;
-                writelookup2[c >> 12] = 0xFFFFFFFF;
-        }
-}
-
-void mem_removehandler(uint32_t base, uint32_t size, 
-                       uint8_t  (*read_b)(uint32_t addr, void *priv),
-                       uint16_t (*read_w)(uint32_t addr, void *priv),
-                       uint32_t (*read_l)(uint32_t addr, void *priv),
-                       void (*write_b)(uint32_t addr, uint8_t  val, void *priv),
-                       void (*write_w)(uint32_t addr, uint16_t val, void *priv),
-                       void (*write_l)(uint32_t addr, uint32_t val, void *priv),
-                       void *priv)
-{
-        uint32_t c;
+        mem_mapping_t *mapping = base_mapping.next;
+        
         if ((base + size) > 0xffff8000)
            size = 0xffff0000 - base;
+        
+        /*Clear out old mappings*/
         for (c = base; c < base + size; c += 0x4000)
         {
-                if (_mem_priv[c >> 14] == priv)
-                {
-                        if ( _mem_read_b[c >> 14]  == read_b)  _mem_read_b[c >> 14] = NULL;
-                        if ( _mem_read_w[c >> 14]  == read_w)  _mem_read_w[c >> 14] = NULL;
-                        if ( _mem_read_l[c >> 14]  == read_l)  _mem_read_l[c >> 14] = NULL;
-                        if (_mem_write_b[c >> 14] == write_b) _mem_write_b[c >> 14] = NULL;
-                        if (_mem_write_w[c >> 14] == write_w) _mem_write_w[c >> 14] = NULL;
-                        if (_mem_write_l[c >> 14] == write_l) _mem_write_l[c >> 14] = NULL;
-                        _mem_priv[c >> 14] = NULL;
-                }
+                _mem_read_b[c >> 14] = NULL;
+                _mem_read_w[c >> 14] = NULL;
+                _mem_read_l[c >> 14] = NULL;
+                _mem_write_b[c >> 14] = NULL;
+                _mem_write_w[c >> 14] = NULL;
+                _mem_write_l[c >> 14] = NULL;
+                _mem_priv[c >> 14] = NULL;
+                _mem_mapping[c >> 14] = NULL;
         }
-        for (c = base; c < base + size; c += 0x1000)
+//        pclog("mem_mapping_recalc %08X %08X\n", base, size);
+        /*Walk mapping list*/
+        while (mapping != NULL)
         {
-                readlookup2[c >> 12]  = 0xFFFFFFFF;
-                writelookup2[c >> 12] = 0xFFFFFFFF;
+//                pclog("mapping=%p next=%p base=%08X size=%08X enable=%i\n", mapping, mapping->next, mapping->base, mapping->size, mapping->enable);
+                /*In range?*/
+                if (mapping->enable && mapping->base < (base + size) && (mapping->base + mapping->size) >= base)
+                {
+                        uint32_t start = (mapping->base < base) ? mapping->base : base;
+                        uint32_t end   = ((mapping->base + mapping->size) < (base + size)) ? (mapping->base + mapping->size) : (base + size);
+
+                        for (c = start; c < end; c += 0x4000)
+                        {
+                                if (_mem_mapping[c >> 14] == NULL)
+                                {
+//                                        pclog(" Add %08X\n", c);
+                                        _mem_read_b[c >> 14] = mapping->read_b;
+                                        _mem_read_w[c >> 14] = mapping->read_w;
+                                        _mem_read_l[c >> 14] = mapping->read_l;
+                                        _mem_write_b[c >> 14] = mapping->write_b;
+                                        _mem_write_w[c >> 14] = mapping->write_w;
+                                        _mem_write_l[c >> 14] = mapping->write_l;
+                                        _mem_priv[c >> 14] = mapping->p;
+                                        _mem_mapping[c >> 14] = mapping;
+                                }
+                        }
+                }
+                mapping = mapping->next;
+        }       
+}
+
+void mem_mapping_add(mem_mapping_t *mapping,
+                    uint32_t base, 
+                    uint32_t size, 
+                    uint8_t  (*read_b)(uint32_t addr, void *p),
+                    uint16_t (*read_w)(uint32_t addr, void *p),
+                    uint32_t (*read_l)(uint32_t addr, void *p),
+                    void (*write_b)(uint32_t addr, uint8_t  val, void *p),
+                    void (*write_w)(uint32_t addr, uint16_t val, void *p),
+                    void (*write_l)(uint32_t addr, uint32_t val, void *p),
+                    void *p)
+{
+        mem_mapping_t *dest = &base_mapping;
+
+        /*Add mapping to the end of the list*/
+        while (dest->next)
+                dest = dest->next;        
+        dest->next = mapping;
+        
+        if (size)
+                mapping->enable  = 1;
+        else
+                mapping->enable  = 0;
+        mapping->base    = base;
+        mapping->size    = size;
+        mapping->read_b  = read_b;
+        mapping->read_w  = read_w;
+        mapping->read_l  = read_l;
+        mapping->write_b = write_b;
+        mapping->write_w = write_w;
+        mapping->write_l = write_l;
+        mapping->p       = p;
+        mapping->next    = NULL;
+        
+        mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_mapping_set_handler(mem_mapping_t *mapping,
+                    uint8_t  (*read_b)(uint32_t addr, void *p),
+                    uint16_t (*read_w)(uint32_t addr, void *p),
+                    uint32_t (*read_l)(uint32_t addr, void *p),
+                    void (*write_b)(uint32_t addr, uint8_t  val, void *p),
+                    void (*write_w)(uint32_t addr, uint16_t val, void *p),
+                    void (*write_l)(uint32_t addr, uint32_t val, void *p))
+{
+        mapping->read_b  = read_b;
+        mapping->read_w  = read_w;
+        mapping->read_l  = read_l;
+        mapping->write_b = write_b;
+        mapping->write_w = write_w;
+        mapping->write_l = write_l;
+        
+        mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_mapping_set_addr(mem_mapping_t *mapping, uint32_t base, uint32_t size)
+{
+        /*Remove old mapping*/
+        mapping->enable = 0;
+        mem_mapping_recalc(mapping->base, mapping->size);
+        
+        /*Set new mapping*/
+        mapping->enable = 1;
+        mapping->base = base;
+        mapping->size = size;
+        
+        mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_mapping_set_p(mem_mapping_t *mapping, void *p)
+{
+        mapping->p = p;
+}
+
+void mem_mapping_disable(mem_mapping_t *mapping)
+{
+        mapping->enable = 0;
+        
+        mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_mapping_enable(mem_mapping_t *mapping)
+{
+        mapping->enable = 1;
+        
+        mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_init()
+{
+        int c;
+
+        ram = malloc(mem_size * 1024 * 1024);
+        rom = malloc(0x20000);
+        vram = malloc(0x800000);
+        vrom = malloc(0x8000);
+        readlookup2  = malloc(1024 * 1024 * 4);
+        writelookup2 = malloc(1024 * 1024 * 4);
+        cachelookup2 = malloc(1024 * 1024);
+        biosmask = 0xffff;
+
+        memset(ram, 0, mem_size * 1024 * 1024);
+
+        memset(isram, 0, sizeof(isram));
+        for (c = 0; c < (mem_size * 16); c++)
+        {
+                isram[c] = 1;
+                if (c >= 0xa && c <= 0xf) 
+                        isram[c] = 0;
+        }
+
+        memset(_mem_read_b,  0, sizeof(_mem_read_b));
+        memset(_mem_read_w,  0, sizeof(_mem_read_w));
+        memset(_mem_read_l,  0, sizeof(_mem_read_l));
+        memset(_mem_write_b, 0, sizeof(_mem_write_b));
+        memset(_mem_write_w, 0, sizeof(_mem_write_w));
+        memset(_mem_write_l, 0, sizeof(_mem_write_l));
+
+        memset(&base_mapping, 0, sizeof(base_mapping));
+
+        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        if (mem_size > 1)
+                mem_mapping_add(&ram_low_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+
+        mem_mapping_add(&bios_mapping[0], 0xe0000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[1], 0xe4000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[2], 0xe8000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[3], 0xec000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[4], 0xf0000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[5], 0xf4000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[6], 0xf8000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[7], 0xfc000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+
+        mem_mapping_add(&vrom_mapping,    0xc0000, 0x08000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
+        mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);
+//        pclog("Mem resize %i %i\n",mem_size,c);
+}
+
+void mem_resize()
+{
+        int c;
+        
+        free(ram);
+        ram = malloc(mem_size * 1024 * 1024);
+        memset(ram, 0, mem_size * 1024 * 1024);
+        
+        memset(isram, 0, sizeof(isram));
+        for (c = 0; c < (mem_size * 16); c++)
+        {
+                isram[c] = 1;
+                if (c >= 0xa && c <= 0xf) 
+                        isram[c] = 0;
+        }
+
+        memset(_mem_read_b,  0, sizeof(_mem_read_b));
+        memset(_mem_read_w,  0, sizeof(_mem_read_w));
+        memset(_mem_read_l,  0, sizeof(_mem_read_l));
+        memset(_mem_write_b, 0, sizeof(_mem_write_b));
+        memset(_mem_write_w, 0, sizeof(_mem_write_w));
+        memset(_mem_write_l, 0, sizeof(_mem_write_l));
+
+        memset(&base_mapping, 0, sizeof(base_mapping));
+
+        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        if (mem_size > 1)
+                mem_mapping_add(&ram_low_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+           
+        mem_mapping_add(&bios_mapping[0], 0xe0000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[1], 0xe4000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[2], 0xe8000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[3], 0xec000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[4], 0xf0000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[5], 0xf4000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[6], 0xf8000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+        mem_mapping_add(&bios_mapping[7], 0xfc000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_ram, mem_write_ramw, mem_write_raml,   NULL);
+
+        mem_mapping_add(&vrom_mapping,    0xc0000, 0x08000, mem_read_vrom,   mem_read_vromw,   mem_read_vroml,   NULL, NULL, NULL,   NULL);
+        mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   NULL);
+
+//        pclog("Mem resize %i %i\n",mem_size,c);
+}
+
+void mem_bios_set_state(uint32_t base, uint32_t size, int read_ram, int write_ram)
+{
+        uint32_t c;
+        int state = (read_ram ? 1 : 0) | (write_ram ? 2: 0);
+        
+        if (base < 0xe0000 || base > 0xfffff)
+                return;
+        if ((base + size) > 0x100000)
+                size = 0x100000 - base;
+        
+        for (c = base; c < (base + size); c+= 0x4000)
+        {
+//                pclog("mem_bios_set_state: c=%08X base=%08X size=%08X bios=%i\n", c, base, size, (c - 0xe0000) >> 14);
+                switch (state)
+                {
+                        case 0:
+                        mem_mapping_set_handler(&bios_mapping[(c - 0xe0000) >> 14], mem_read_bios, mem_read_biosw, mem_read_biosl, NULL, NULL, NULL);
+                        break;
+                        case 1:
+                        mem_mapping_set_handler(&bios_mapping[(c - 0xe0000) >> 14], mem_read_ram,  mem_read_ramw,  mem_read_raml,  NULL, NULL, NULL);
+                        break;
+                        case 2:
+                        mem_mapping_set_handler(&bios_mapping[(c - 0xe0000) >> 14], mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_ram, mem_write_ramw, mem_write_raml);
+                        break;
+                        case 3:
+                        mem_mapping_set_handler(&bios_mapping[(c - 0xe0000) >> 14], mem_read_ram,  mem_read_ramw,  mem_read_raml,  mem_write_ram, mem_write_ramw, mem_write_raml);
+                        break;
+                }
         }
 }
 

@@ -6,8 +6,6 @@
 /*Memory*/
 uint8_t *ram,*vram;
 
-unsigned char isram[0x10000];
-
 uint32_t rammask;
 
 int readlookup[256],readlookupp[256];
