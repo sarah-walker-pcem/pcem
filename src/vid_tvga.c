@@ -69,7 +69,7 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
 
         uint8_t old;
 
-//	pclog("tvga_out : %04X %02X  %04X:%04X  %i\n", addr, val, CS,pc, bpp);
+//	pclog("tvga_out : %04X %02X  %04X:%04X  %i\n", addr, val, CS,pc, svga->bpp);
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout & 1)) addr ^= 0x60;
 
         switch (addr)
@@ -151,7 +151,14 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 {
 			case 0x21:
 			if (old != val)
-				tvga_recalcmapping(tvga);
+			{
+                                if (!PCI)
+                                {
+                                        tvga->linear_base = ((val & 0xf) | ((val >> 2) & 0x30)) << 20;
+                                        tvga->linear_size = (val & 0x10) ? 0x200000 : 0x100000;
+                                }
+        			tvga_recalcmapping(tvga);
+                        }
 			break;
 
 
@@ -322,8 +329,6 @@ void tvga_recalcmapping(tvga_t *tvga)
 	if (svga->crtc[0x21] & 0x20)
 	{
                 mem_mapping_disable(&svga->mapping);
-		tvga->linear_base = ((svga->crtc[0x21] & 0xf) | ((svga->crtc[0x21] >> 2) & 0x30)) << 20;
-		tvga->linear_size = (svga->crtc[0x21] & 0x10) ? 0x200000 : 0x100000;
                 mem_mapping_set_addr(&tvga->linear_mapping, tvga->linear_base, tvga->linear_size);
 //		pclog("Trident linear framebuffer at %08X - size %06X\n", tvga->linear_base, tvga->linear_size);
                 mem_mapping_enable(&tvga->accel_mapping);
@@ -378,6 +383,68 @@ void tvga_hwcursor_draw(svga_t *svga, int displine)
         svga->hwcursor_latch.addr += 8;
 }
 
+uint8_t tvga_pci_read(int func, int addr, void *p)
+{
+        tvga_t *tvga = (tvga_t *)p;
+        svga_t *svga = &tvga->svga;
+
+//        pclog("Trident PCI read %08X\n", addr);
+
+        switch (addr)
+        {
+                case 0x00: return 0x23; /*Trident*/
+                case 0x01: return 0x10;
+                
+                case 0x02: return 0x40; /*TGUI9440 (9682)*/
+                case 0x03: return 0x94;
+                
+                case 0x04: return 0x03; /*Respond to IO and memory accesses*/
+
+                case 0x07: return 1 << 1; /*Medium DEVSEL timing*/
+                
+                case 0x08: return 0; /*Revision ID*/
+                case 0x09: return 0; /*Programming interface*/
+                
+                case 0x0a: return 0x01; /*Supports VGA interface, XGA compatible*/
+                case 0x0b: return 0x03;
+                
+                case 0x10: return 0x00; /*Linear frame buffer address*/
+                case 0x11: return 0x00;
+                case 0x12: return tvga->linear_base >> 16;
+                case 0x13: return tvga->linear_base >> 24;
+
+                case 0x30: return 0x01; /*BIOS ROM address*/
+                case 0x31: return 0x00;
+                case 0x32: return 0x0C;
+                case 0x33: return 0x00;
+        }
+        return 0;
+}
+
+void tvga_pci_write(int func, int addr, uint8_t val, void *p)
+{
+        tvga_t *tvga = (tvga_t *)p;
+        svga_t *svga = &tvga->svga;
+
+//        pclog("Trident PCI write %08X %02X\n", addr, val);
+        
+        switch (addr)
+        {
+                case 0x12:
+                tvga->linear_base = (tvga->linear_base & 0xff000000) | ((val & 0xe0) << 16);
+                tvga->linear_size = 2 << 20;
+                svga->crtc[0x21] = (svga->crtc[0x21] & ~0xf) | (val >> 4);
+                tvga_recalcmapping(tvga);
+                break;
+                case 0x13:
+                tvga->linear_base = (tvga->linear_base & 0xe00000) | (val << 24);
+                tvga->linear_size = 2 << 20;
+                svga->crtc[0x21] = (svga->crtc[0x21] & ~0xc0) | (val >> 6);
+                tvga_recalcmapping(tvga);
+                break;
+        }
+}
+
 void *tvga8900d_init()
 {
         tvga_t *tvga = malloc(sizeof(tvga_t));
@@ -412,6 +479,8 @@ void *tgui9440_init()
         mem_mapping_disable(&tvga->accel_mapping);
 
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);
+
+        pci_add(tvga_pci_read, tvga_pci_write, tvga);
 
         return tvga;
 }
