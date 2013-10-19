@@ -138,7 +138,7 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
-                //if (crtcreg!=0xE && crtcreg!=0xF) pclog("CRTC R%02X = %02X\n",crtcreg,val);
+//                if (svga->crtcreg != 0xE && svga->crtcreg != 0xF) pclog("CRTC R%02X = %02X\n", svga->crtcreg, val);
                 if (old != val)
                 {
                         if (svga->crtcreg < 0xE || svga->crtcreg > 0x10)
@@ -263,7 +263,12 @@ void tvga_recalctimings(svga_t *svga)
         if (!svga->rowoffset) svga->rowoffset = 0x100; /*This is the only sensible way I can see this being handled,
                                                          given that TVGA8900D has no overflow bits.
                                                          Some sort of overflow is required for 320x200x24 and 1024x768x16*/
+        if (svga->crtc[0x29] & 0x10)
+                svga->rowoffset += 0x100;
 
+        if (gfxcard == GFX_TGUI9440 && svga->bpp == 24)
+                svga->hdisp = (svga->crtc[1] + 1) * 8;
+        
         if ((svga->crtc[0x1e] & 0xA0) == 0xA0) svga->ma_latch |= 0x10000;
         if ((svga->crtc[0x27] & 0x01) == 0x01) svga->ma_latch |= 0x20000;
         if ((svga->crtc[0x27] & 0x02) == 0x02) svga->ma_latch |= 0x40000;
@@ -621,13 +626,27 @@ void tvga_accel_command(int count, uint32_t cpu_dat, tvga_t *tvga)
 	}
 	else
 	{
-//		pclog("OTHER\n");
-		for (y = 0; y < 8; y++)
-		{
-			for (x = 0; x < 8; x++)
-			{
-				tvga->accel.tvga_pattern[y][x] = tvga->accel.pattern[x + y*8];
-			}
+                if (tvga->accel.bpp == 0)
+                {
+//        		pclog("OTHER 8-bit\n");
+        		for (y = 0; y < 8; y++)
+        		{
+        			for (x = 0; x < 8; x++)
+        			{
+        				tvga->accel.tvga_pattern[y][x] = tvga->accel.pattern[x + y*8];
+        			}
+                        }
+		}
+		else
+                {
+//        		pclog("OTHER 16-bit\n");
+        		for (y = 0; y < 8; y++)
+        		{
+        			for (x = 0; x < 8; x++)
+        			{
+        				tvga->accel.tvga_pattern[y][x] = tvga->accel.pattern[x*2 + y*16] | (tvga->accel.pattern[x*2 + y*16 + 1] << 8);
+        			}
+                        }
 		}
 	}
 /*	for (y = 0; y < 8; y++)
@@ -845,7 +864,7 @@ void tvga_accel_write(uint32_t addr, uint8_t val, void *p)
 		case 0x27: /*ROP*/
 		tvga->accel.rop = val;
 		tvga->accel.use_src = (val & 0x33) ^ ((val >> 2) & 0x33);
-		pclog("Write ROP %02X %i\n", val, tvga->accel.use_src);
+//		pclog("Write ROP %02X %i\n", val, tvga->accel.use_src);
 		break;
 		
 		case 0x28: /*Flags*/
