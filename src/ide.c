@@ -516,12 +516,14 @@ static void loadhd(IDE *ide, int d, const char *fn)
                                         ide->type = IDE_NONE;
 /*					fatal("Cannot create file '%s': %s",
 					      fn, strerror(errno));*/
+					return;
 				}
 			} else {
 				/* Failed for another reason */
                                 ide->type = IDE_NONE;
 /*				fatal("Cannot open file '%s': %s",
 				      fn, strerror(errno));*/
+				return;
 			}
 		}
 	}
