@@ -870,6 +870,9 @@ void addreadlookup(uint32_t virt, uint32_t phys)
 {
 //        return;
 //        printf("Addreadlookup %08X %08X %08X %08X %08X %08X %02X %08X\n",virt,phys,cs,ds,es,ss,opcode,pc);
+        if (virt == 0xffffffff)
+                return;
+                
         if (readlookup2[virt>>12]!=0xFFFFFFFF) 
         {
 /*                if (readlookup2[virt>>12] != phys&~0xfff)
@@ -908,6 +911,9 @@ void addwritelookup(uint32_t virt, uint32_t phys)
 {
 //        return;
 //        printf("Addwritelookup %08X %08X\n",virt,phys);
+        if (virt == 0xffffffff)
+                return;
+
         if (writelookup2[virt>>12]!=0xFFFFFFFF)
         {
 /*                if (writelookup2[virt>>12] != phys&~0xfff)
@@ -1258,6 +1264,8 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
 
 uint8_t mem_readb_phys(uint32_t addr)
 {
+        mem_logical_addr = 0xffffffff;
+        
         if (_mem_read_b[addr >> 14]) 
                 return _mem_read_b[addr >> 14](addr, _mem_priv[addr >> 14]);
                 
@@ -1266,6 +1274,8 @@ uint8_t mem_readb_phys(uint32_t addr)
 
 void mem_writeb_phys(uint32_t addr, uint8_t val)
 {
+        mem_logical_addr = 0xffffffff;
+        
         if (_mem_write_b[addr >> 14]) 
                 _mem_write_b[addr >> 14](addr, val, _mem_priv[addr >> 14]);
 }
