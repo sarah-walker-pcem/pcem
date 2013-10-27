@@ -3,6 +3,7 @@ void dma16_init();
 void dma_reset();
 
 #define DMA_NODATA -1
+#define DMA_OVER 0x10000
 
 void readdma0();
 int readdma1();

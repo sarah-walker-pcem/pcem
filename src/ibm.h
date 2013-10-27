@@ -264,6 +264,7 @@ typedef struct FDC
         int lock;
         int perp;
         uint8_t config, pretrk;
+        int abort;
 } FDC;
 
 FDC fdc;

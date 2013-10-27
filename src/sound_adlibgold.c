@@ -86,14 +86,14 @@ void adgold_getsamp_dma(adgold_t *adgold, int channel)
         if ((adgold->adgold_mma_regs[channel][0xc] & 0x60) && (((adgold->adgold_mma_fifo_end[channel] - adgold->adgold_mma_fifo_start[channel]) & 255) >= 127))
                 return;
                 
-        temp = readdma1();
+        temp = dma_channel_read(1);
 //        pclog("adgold DMA1 return %02X %i L\n", temp, channel);
-        if (temp == -1) return;
+        if (temp == DMA_NODATA) return;
         adgold->adgold_mma_fifo[channel][adgold->adgold_mma_fifo_end[channel]] = temp;
         adgold->adgold_mma_fifo_end[channel] = (adgold->adgold_mma_fifo_end[channel] + 1) & 255;
         if (adgold->adgold_mma_regs[channel][0xc] & 0x60)
         {
-                temp = readdma1();
+                temp = dma_channel_read(1);
 //                pclog("adgold DMA1 return %02X %i H\n", temp, channel);
                 adgold->adgold_mma_fifo[channel][adgold->adgold_mma_fifo_end[channel]] = temp;
                 adgold->adgold_mma_fifo_end[channel] = (adgold->adgold_mma_fifo_end[channel] + 1) & 255;

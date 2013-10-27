@@ -276,7 +276,9 @@ void pit_poll()
                 }
 //                if (output) pclog("%f %04X %02X\n",pit.c[1],pit.l[1],pit.ctrls[1]);
 //                printf("DMA0!\n");
-                readdma0();
+                dma_channel_read(0);
+                if (AT) 
+                        ppi.pb ^= 0x10;
         }
         if (pit.c[2]<1)
         {

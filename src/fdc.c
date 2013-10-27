@@ -104,6 +104,7 @@ void fdc_reset()
         fdc.st0=0xC0;
         fdc.lock = 0;
         fdc.head = 0;
+        fdc.abort = 0;
         if (!AT)
            fdc.rate=2;
 //        pclog("Reset FDC\n");
@@ -400,14 +401,6 @@ uint8_t fdc_read(uint16_t addr, void *priv)
         return temp;
 }
 
-int fdc_abort_f = 0;
-
-void fdc_abort()
-{
-        fdc_abort_f = 1;
-//        pclog("FDC ABORT\n");
-}
-
 static int fdc_reset_stat = 0;
 void fdc_poll()
 {
@@ -437,7 +430,7 @@ void fdc_poll()
                 {
                         fdc.dat=disc[fdc.drive][fdc.head][fdc.track[fdc.drive]][fdc.sector-1][fdc.pos];
 //                        pclog("Read %i %i %i %i %02X\n",fdc.head,fdc.track,fdc.sector,fdc.pos,fdc.dat);
-                        writedma2(fdc.dat);
+                        dma_channel_write(2, fdc.dat);
                         timer_process();
                         disctime = 60 * (1 << TIMER_SHIFT);
                         timer_update_outstanding();
@@ -495,10 +488,9 @@ void fdc_poll()
                 }
                 if (fdc.pos<512)
                 {
-                        temp=readdma2();
-                        if (fdc_abort_f)
+                        temp = dma_channel_read(2);
+                        if (temp == DMA_NODATA)
                         {
-                                fdc_abort_f=0;
                                 discint=0xFD;
                                 timer_process();
                                 disctime = 50 * (1 << TIMER_SHIFT);
@@ -541,21 +533,22 @@ void fdc_poll()
                 case 6: /*Read data*/
                 if (!fdc.pos)
                 {
-//                        printf("Reading sector %i track %i side %i drive %i %02X to %05X\n",fdc.sector,fdc.track[fdc.drive],fdc.head,fdc.drive,fdc.params[5],(dma.ac[2]+(dma.page[2]<<16))&rammask);
+//                        printf("Reading sector %i track %i side %i drive %i %02X to %05X %04X\n",fdc.sector,fdc.track[fdc.drive],fdc.head,fdc.drive,fdc.params[5],(dma.ac[2]+(dma.page[2]<<16))&rammask, dma.cc[2]);
                 }
                 if (fdc.pos<512)
                 {
                         fdc.dat=disc[fdc.drive][fdc.head][fdc.track[fdc.drive]][fdc.sector-1][fdc.pos];
 //                        printf("Read disc %i %i %i %i %02X\n",fdc.head,fdc.track,fdc.sector,fdc.pos,fdc.dat);
-                        writedma2(fdc.dat);
+                        if (dma_channel_write(2, fdc.dat) & DMA_OVER)
+                                fdc.abort = 1;
                         timer_process();
                         disctime = 60 * (1 << TIMER_SHIFT);
                         timer_update_outstanding();
                 }
                 else
                 {
-//                        printf("End of command - params to go!\n");
-                        fdc_abort_f = 0;
+//                        printf("End of command - params to go! %i %i %i\n", fdc.track[fdc.drive], fdc.head, fdc.sector);
+                        fdc.abort = 0;
                         disctime=0;
                         discint=-2;
                         picint(0x40);
@@ -606,8 +599,8 @@ void fdc_poll()
                                 else
                                    fdc.pos = 512;
                         }
-                        if (fdc_abort_f)
-                           fdc.pos = 512;
+                        if (fdc.abort)
+                                fdc.pos = 512;
                 }
                 return;
 /*                printf("Read data\n");
