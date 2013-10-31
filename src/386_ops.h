@@ -63,6 +63,38 @@ static inline uint32_t POP_L()
         return ret;
 }
 
+static inline uint16_t POP_W_seg(uint32_t seg)
+{
+        uint16_t ret;
+        if (stack32)
+        {
+                ret = readmemw(seg, ESP);                       if (abrt) return 0;
+                ESP += 2;
+        }
+        else
+        {
+                ret = readmemw(seg, SP);                        if (abrt) return 0;
+                SP += 2;
+        }
+        return ret;
+}
+
+static inline uint32_t POP_L_seg(uint32_t seg)
+{
+        uint32_t ret;
+        if (stack32)
+        {
+                ret = readmeml(seg, ESP);                       if (abrt) return 0;
+                ESP += 4;
+        }
+        else
+        {
+                ret = readmeml(seg, SP);                        if (abrt) return 0;
+                SP += 4;
+        }
+        return ret;
+}
+
 #include "x86_ops_arith.h"
 #include "x86_ops_atomic.h"
 #include "x86_ops_bcd.h"

@@ -226,9 +226,10 @@ static int opPUSH_imm_bl(uint32_t fetchdat)
 static int opPOPW_a16(uint32_t fetchdat)
 {
         uint16_t temp;
+        uint32_t tempseg = ssegs ? oldss : ss;
         
-        if (ssegs) ss=oldss;
-        temp = POP_W();                                 if (abrt) return 0;
+        temp = POP_W_seg(tempseg);                      if (abrt) return 0;
+
         fetch_ea_16(fetchdat);
         seteaw(temp);
         if (abrt)
@@ -244,9 +245,10 @@ static int opPOPW_a16(uint32_t fetchdat)
 static int opPOPW_a32(uint32_t fetchdat)
 {
         uint16_t temp;
+        uint32_t tempseg = ssegs ? oldss : ss;
+                
+        temp = POP_W_seg(tempseg);                      if (abrt) return 0;
         
-        if (ssegs) ss=oldss;
-        temp = POP_W();                                 if (abrt) return 0;
         fetch_ea_32(fetchdat);
         seteaw(temp);
         if (abrt)
@@ -263,10 +265,11 @@ static int opPOPW_a32(uint32_t fetchdat)
 static int opPOPL_a16(uint32_t fetchdat)
 {
         uint32_t temp;
+        uint32_t tempseg = ssegs ? oldss : ss;
 
-        if (ssegs) ss=oldss;
-        temp = POP_L();                                 if (abrt) return 0;
-        fetch_ea_16(fetchdat);
+        temp = POP_L_seg(tempseg);                      if (abrt) return 0;
+
+        fetch_ea_16(fetchdat);        
         seteal(temp);
         if (abrt)
         {
@@ -281,9 +284,10 @@ static int opPOPL_a16(uint32_t fetchdat)
 static int opPOPL_a32(uint32_t fetchdat)
 {
         uint32_t temp;
+        uint32_t tempseg = ssegs ? oldss : ss;
 
-        if (ssegs) ss=oldss;
-        temp = POP_L();                                 if (abrt) return 0;
+        temp = POP_L_seg(tempseg);                      if (abrt) return 0;
+
         fetch_ea_32(fetchdat);
         seteal(temp);
         if (abrt)
@@ -291,7 +295,7 @@ static int opPOPL_a32(uint32_t fetchdat)
                 if (stack32) ESP -= 4;
                 else         SP -= 4;
         }
-                        
+
         if (is486) cycles -= ((mod == 3) ? 1 : 6);
         else       cycles -= ((mod == 3) ? 4 : 5);
         return 0;
