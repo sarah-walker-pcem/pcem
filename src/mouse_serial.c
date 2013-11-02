@@ -58,7 +58,6 @@ void mousecallback()
                 serial.linestat|=1;
                 if (serial.mctrl&8) picint(0x10);
         }
-//        printf("Mouse callback\n");
 }
 
 void mouse_serial_init()

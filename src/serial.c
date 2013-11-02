@@ -29,17 +29,20 @@ void serial_write_fifo(uint8_t dat)
         if (!(serial.linestat & 1))
         {
                 serial.linestat|=1;
-                if (serial.mctrl&8) picint(0x10);
+                if ((serial.mctrl & 8) && (serial.ier & 1))
+                        picint(0x10);
                 serial.iir=4;
         }
 }
 
 uint8_t serial_read_fifo()
 {
-        uint8_t temp = serial_fifo[serial_fifo_read];
         if (serial_fifo_read != serial_fifo_write)
-           serial_fifo_read = (serial_fifo_read + 1) & 0xFF;
-        return temp;
+        {
+                serial.dat = serial_fifo[serial_fifo_read];
+                serial_fifo_read = (serial_fifo_read + 1) & 0xFF;
+        }
+        return serial.dat;
 }
 
 void sendserial(uint8_t dat)
@@ -52,7 +55,7 @@ void sendserial(uint8_t dat)
 
 void serial_write(uint16_t addr, uint8_t val, void *priv)
 {
-//        printf("Write serial %03X %02X %04X:%04X\n",addr,val,CS,pc);
+//        pclog("Write serial %03X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr&7)
         {
                 case 0:
@@ -84,7 +87,7 @@ void serial_write(uint16_t addr, uint8_t val, void *priv)
                 {
                         if (serial_rcr)
                            serial_rcr();
-//                        printf("RCR raised! sending M\n");
+//                        pclog("RCR raised! sending M\n");
                 }
                 serial.mctrl=val;
                 break;
@@ -94,7 +97,7 @@ void serial_write(uint16_t addr, uint8_t val, void *priv)
 uint8_t serial_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
-//        printf("Read serial %03X %04X(%08X):%04X %i %i  ", addr, CS, cs, pc, mousedelay, ins);
+//        pclog("Read serial %03X %04X(%08X):%04X %i %i  ", addr, CS, cs, pc, mousedelay, ins);
         switch (addr&7)
         {
                 case 0:
@@ -112,7 +115,7 @@ uint8_t serial_read(uint16_t addr, void *priv)
                 break;
                 case 1:
                 if (serial.lcr&0x80 && !AMSTRADIO) temp = serial.dlab2;
-                else                               temp = 0;
+                else                               temp = serial.ier;
                 break;
                 case 2: temp=serial.iir; break;
                 case 3: temp=serial.lcr; break;
@@ -120,13 +123,13 @@ uint8_t serial_read(uint16_t addr, void *priv)
                 case 5: temp=serial.linestat; serial.linestat|=0x60; break;
                 default: temp=0;
         }
-//        printf("%02X\n",temp);
+//        pclog("%02X\n",temp);
         return temp;
 }
 
 void serial2_write(uint16_t addr, uint8_t val, void *priv)
 {
-//        printf("Write serial2 %03X %02X %04X:%04X\n",addr,val,cs>>4,pc);
+//        pclog("Write serial2 %03X %02X %04X:%04X\n",addr,val,cs>>4,pc);
         switch (addr&7)
         {
                 case 0:
@@ -161,7 +164,7 @@ void serial2_write(uint16_t addr, uint8_t val, void *priv)
 uint8_t serial2_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
-//        printf("Read serial2 %03X %04X:%04X\n",addr,cs>>4,pc);
+//        pclog("Read serial2 %03X %04X:%04X\n",addr,cs>>4,pc);
         switch (addr&7)
         {
                 case 0:
@@ -180,7 +183,7 @@ uint8_t serial2_read(uint16_t addr, void *priv)
                 case 5: temp=serial2.linestat; break;
                 default: temp=0;
         }
-//        printf("%02X\n",temp);
+//        pclog("%02X\n",temp);
         return temp;
 }
 

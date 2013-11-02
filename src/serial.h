@@ -8,6 +8,7 @@ typedef struct
 {
         uint8_t linestat,thr,mctrl,rcr,iir,ier,lcr;
         uint8_t dlab1,dlab2;
+        uint8_t dat;
 } SERIAL;
 
 extern SERIAL serial,serial2;
