@@ -522,6 +522,7 @@ device_t cga_device =
         "CGA",
         cga_standalone_init,
         cga_close,
+        NULL,
         cga_speed_changed,
         NULL,
         NULL

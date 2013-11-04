@@ -43,6 +43,16 @@ static SOUND_CARD sound_cards[] =
         {"", NULL}
 };
 
+int sound_card_available(int card)
+{
+        if (sound_cards[card].device)
+        {
+                if (sound_cards[card].device->available)
+                        return sound_cards[card].device->available();
+        }
+        return 1;
+}
+
 char *sound_card_getname(int card)
 {
         return sound_cards[card].name;

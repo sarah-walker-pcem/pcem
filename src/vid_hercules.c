@@ -356,6 +356,7 @@ device_t hercules_device =
         "Hercules",
         hercules_init,
         hercules_close,
+        NULL,
         hercules_speed_changed,
         NULL,
         NULL

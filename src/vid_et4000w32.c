@@ -988,6 +988,7 @@ device_t et4000w32p_device =
         "Tseng Labs ET4000/w32p",
         et4000w32p_init,
         et4000w32p_close,
+        NULL,
         et4000w32p_speed_changed,
         et4000w32p_force_redraw,
         svga_add_status_info

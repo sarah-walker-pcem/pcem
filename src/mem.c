@@ -14,6 +14,7 @@
 #include "video.h"
 #include "x86.h"
 #include "cpu.h"
+#include "rom.h"
 
 static uint8_t       (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
 static uint16_t      (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
@@ -43,20 +44,6 @@ int cachesize=256;
 
 uint8_t *ram,*rom,*vram,*vrom;
 uint8_t romext[32768];
-
-FILE *romfopen(char *fn, char *mode)
-{
-        char s[512];
-//        pclog("romfopen %s\n", fn);
-        strcpy(s,pcempath);
-//        pclog("s = %s\n", s);
-        put_backslash(s);
-//        pclog("s = %s\n", s);
-//        pclog("strcat %s %s\n", s, fn);
-        strcat(s,fn);
-//        pclog("s = %s\n", s);
-        return fopen(s,mode);
-}
 
 static void mem_load_xtide_bios()
 {

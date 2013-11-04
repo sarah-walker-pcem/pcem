@@ -2084,6 +2084,7 @@ device_t mach64gx_device =
         "ATI Mach64GX",
         mach64gx_init,
         mach64_close,
+        NULL,
         mach64_speed_changed,
         mach64_force_redraw,
         svga_add_status_info

@@ -134,5 +134,6 @@ device_t sis496_device =
         sis496_close,
         NULL,
         NULL,
+        NULL,
         NULL
 };

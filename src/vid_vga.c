@@ -119,6 +119,7 @@ device_t vga_device =
         "VGA",
         vga_init,
         vga_close,
+        NULL,
         vga_speed_changed,
         vga_force_redraw,
         svga_add_status_info

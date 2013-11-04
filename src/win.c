@@ -561,6 +561,7 @@ int getsfile(HWND hwnd, char *f, char *fn)
 extern int is486;
 int romstolist[26], listtomodel[26], romstomodel[26], modeltolist[26];
 int vidtolist[20],listtovid[20];
+static int settings_sound_to_list[20], settings_list_to_sound[20];
 
 int mem_list_to_size[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,32,48,64,256};
 int mem_size_to_list[]={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,
@@ -607,7 +608,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h, CB_SETCURSEL, modeltolist[model], 0);
                 
                 h=GetDlgItem(hdlg,IDC_COMBO2);
-                for (c=0;c<6;c++) vidtolist[c]=0;
+                memset(vidtolist, 0, sizeof(vidtolist));
                 c=4;
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"CGA"); vidtolist[GFX_CGA]=0; listtovid[0]=0;
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"MDA"); vidtolist[GFX_MDA]=1; listtovid[1]=1;
@@ -652,18 +653,26 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h, CB_SETCURSEL, cpu, 0);
 
                 h=GetDlgItem(hdlg,IDC_COMBOSND);
-                c = 0;
+                c = d = 0;
                 while (1)
                 {
                         char *s = sound_card_getname(c);
 
                         if (!s[0])
                                 break;
-                                
-                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+
+                        settings_sound_to_list[c] = d;
+                        
+                        if (sound_card_available(c))
+                        {
+                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                settings_list_to_sound[d] = c;
+                                d++;
+                        }
+
                         c++;
                 }
-                SendMessage(h, CB_SETCURSEL, sound_card_current, 0);
+                SendMessage(h, CB_SETCURSEL, settings_sound_to_list[sound_card_current], 0);
 
                 h=GetDlgItem(hdlg, IDC_CHECK3);
                 SendMessage(h, BM_SETCHECK, GAMEBLASTER, 0);
@@ -747,7 +756,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         temp_GUS = SendMessage(h, BM_GETCHECK, 0, 0);
 
                         h = GetDlgItem(hdlg, IDC_COMBOSND);
-                        temp_sound_card_current = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
 
                         if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_sound_card_current != sound_card_current)
                         {

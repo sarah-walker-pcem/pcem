@@ -146,6 +146,7 @@ device_t pc1640_device =
         "Amstrad PC1640 (video)",
         pc1640_init,
         pc1640_close,
+        NULL,
         pc1640_speed_changed,
         NULL,
         NULL

@@ -5,5 +5,6 @@ extern int sbtype;
 
 extern int sound_card_current;
 
+int sound_card_available(int card);
 char *sound_card_getname(int card);
 void sound_card_init();

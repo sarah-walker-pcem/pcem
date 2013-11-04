@@ -1629,6 +1629,7 @@ device_t s3_bahamas64_device =
         "Paradise Bahamas 64 (S3 Vision864)",
         s3_bahamas64_init,
         s3_close,
+        NULL,
         s3_speed_changed,
         s3_force_redraw,
         svga_add_status_info
@@ -1639,6 +1640,7 @@ device_t s3_9fx_device =
         "Number 9 9FX (S3 Trio64)",
         s3_9fx_init,
         s3_close,
+        NULL,
         s3_speed_changed,
         s3_force_redraw,
         svga_add_status_info

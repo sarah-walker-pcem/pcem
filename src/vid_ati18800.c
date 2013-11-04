@@ -165,6 +165,7 @@ device_t ati18800_device =
         "ATI-18800",
         ati18800_init,
         ati18800_close,
+        NULL,
         ati18800_speed_changed,
         ati18800_force_redraw,
         svga_add_status_info

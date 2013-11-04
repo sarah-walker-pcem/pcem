@@ -839,6 +839,7 @@ device_t ega_device =
         "EGA",
         ega_standalone_init,
         ega_close,
+        NULL,
         ega_speed_changed,
         NULL,
         NULL

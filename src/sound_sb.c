@@ -376,6 +376,11 @@ void *sb_16_init()
         return sb;
 }
 
+int sb_awe32_available()
+{
+        return rom_present("roms/awe32.raw");
+}
+
 void *sb_awe32_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
@@ -429,6 +434,7 @@ device_t sb_1_device =
         "Sound Blaster v1.0",
         sb_1_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -438,6 +444,7 @@ device_t sb_15_device =
         "Sound Blaster v1.5",
         sb_15_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -447,6 +454,7 @@ device_t sb_2_device =
         "Sound Blaster v2.0",
         sb_2_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -456,6 +464,7 @@ device_t sb_pro_v1_device =
         "Sound Blaster Pro v1",
         sb_pro_v1_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -465,6 +474,7 @@ device_t sb_pro_v2_device =
         "Sound Blaster Pro v2",
         sb_pro_v2_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -474,6 +484,7 @@ device_t sb_16_device =
         "Sound Blaster 16",
         sb_16_init,
         sb_close,
+        NULL,
         sb_speed_changed,
         NULL,
         NULL
@@ -483,6 +494,7 @@ device_t sb_awe32_device =
         "Sound Blaster AWE32",
         sb_awe32_init,
         sb_close,
+        sb_awe32_available,
         sb_speed_changed,
         NULL,
         NULL

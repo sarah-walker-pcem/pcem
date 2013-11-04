@@ -751,5 +751,6 @@ device_t pas16_device =
         pas16_close,
         NULL,
         NULL,
+        NULL,
         NULL
 };

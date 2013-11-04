@@ -1105,6 +1105,7 @@ device_t gus_device =
         "Gravis UltraSound",
         gus_init,
         gus_close,
+        NULL,
         gus_speed_changed,
         NULL,
         NULL

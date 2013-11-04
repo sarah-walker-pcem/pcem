@@ -136,6 +136,7 @@ device_t pc200_device =
         "Amstrad PC200 (video)",
         pc200_init,
         pc200_close,
+        NULL,
         pc200_speed_changed,
         NULL,
         NULL

@@ -60,5 +60,6 @@ device_t adlib_device =
         adlib_close,
         NULL,
         NULL,
+        NULL,
         NULL
 };

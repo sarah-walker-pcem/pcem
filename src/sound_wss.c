@@ -305,5 +305,6 @@ device_t wss_device =
         wss_close,
         NULL,
         NULL,
+        NULL,
         NULL
 };

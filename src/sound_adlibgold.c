@@ -595,5 +595,6 @@ device_t adgold_device =
         adgold_close,
         NULL,
         NULL,
+        NULL,
         NULL
 };

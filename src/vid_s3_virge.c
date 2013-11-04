@@ -508,6 +508,7 @@ device_t s3_virge_device =
         "Diamond Stealth 3D 2000 (S3 VIRGE)",
         s3_virge_init,
         s3_virge_close,
+        NULL,
         s3_virge_speed_changed,
         s3_virge_force_redraw,
         svga_add_status_info

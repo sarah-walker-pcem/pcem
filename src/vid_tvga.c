@@ -513,25 +513,6 @@ void tvga_force_redraw(void *p)
         tvga->svga.fullchange = changeframecount;
 }
 
-device_t tvga8900d_device =
-{
-        "Trident TVGA 8900D",
-        tvga8900d_init,
-        tvga_close,
-        tvga_speed_changed,
-        tvga_force_redraw,
-        svga_add_status_info
-};
-device_t tgui9440_device =
-{
-        "Trident TGUI 9440",
-        tgui9440_init,
-        tvga_close,
-        tvga_speed_changed,
-        tvga_force_redraw,
-        svga_add_status_info
-};
-
 enum
 {
 	TGUI_BITBLT = 1
@@ -1119,3 +1100,25 @@ void tvga_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
 //	pclog("tvga_accel_write_fb_l %08X %08X\n", addr, val);
 	tvga_accel_command(32, ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), tvga);
 }
+
+device_t tvga8900d_device =
+{
+        "Trident TVGA 8900D",
+        tvga8900d_init,
+        tvga_close,
+        NULL,
+        tvga_speed_changed,
+        tvga_force_redraw,
+        svga_add_status_info
+};
+
+device_t tgui9440_device =
+{
+        "Trident TGUI 9440",
+        tgui9440_init,
+        tvga_close,
+        NULL,
+        tvga_speed_changed,
+        tvga_force_redraw,
+        svga_add_status_info
+};

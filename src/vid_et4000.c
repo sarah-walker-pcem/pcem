@@ -159,6 +159,7 @@ device_t et4000_device =
         "Tseng Labs ET4000AX",
         et4000_init,
         et4000_close,
+        NULL,
         et4000_speed_changed,
         et4000_force_redraw,
         svga_add_status_info

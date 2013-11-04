@@ -313,6 +313,7 @@ device_t mda_device =
         "MDA",
         mda_init,
         mda_close,
+        NULL,
         mda_speed_changed,
         NULL,
         NULL

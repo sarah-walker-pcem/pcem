@@ -693,6 +693,7 @@ device_t tandy_device =
         "Tandy 1000 (video)",
         tandy_init,
         tandy_close,
+        NULL,
         tandy_speed_changed,
         NULL,
         NULL

@@ -855,6 +855,7 @@ device_t gd5429_device =
         "Cirrus Logic GD5429",
         gd5429_init,
         gd5429_close,
+        NULL,
         gd5429_speed_changed,
         gd5429_force_redraw,
         svga_add_status_info

@@ -336,6 +336,7 @@ device_t paradise_pvga1a_device =
         "Paradise PVGA1A",
         paradise_pvga1a_init,
         paradise_close,
+        NULL,
         paradise_speed_changed,
         paradise_force_redraw,
         svga_add_status_info
@@ -345,6 +346,7 @@ device_t paradise_wd90c11_device =
         "Paradise WD90C11",
         paradise_wd90c11_init,
         paradise_close,
+        NULL,
         paradise_speed_changed,
         paradise_force_redraw,
         svga_add_status_info

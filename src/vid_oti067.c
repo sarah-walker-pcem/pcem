@@ -154,6 +154,7 @@ device_t oti067_device =
         "Oak OTI-067",
         oti067_init,
         oti067_close,
+        NULL,
         oti067_speed_changed,
         oti067_force_redraw,
         svga_add_status_info
