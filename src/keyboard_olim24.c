@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "mouse.h"
 #include "pic.h"
+#include "sound.h"
 #include "timer.h"
 
 #include "keyboard.h"
@@ -137,7 +138,16 @@ void keyboard_olim24_write(uint16_t port, uint8_t val, void *priv)
                         }
                 }
                         
-                break;                
+                break;
+                
+                case 0x61:
+                ppi.pb = val;
+                
+                gated = ((val & 3) == 3);
+                if (gated) 
+                        wasgated = 1;
+                pit_set_gate(2, val & 1);
+                break;
         }
 }
 
@@ -163,6 +173,9 @@ uint8_t keyboard_olim24_read(uint16_t port, void *priv)
                         keyboard_olim24.wantirq = 1;        
                 }        
                 break;
+                
+                case 0x61:
+                return ppi.pb;
                 
                 case 0x64:
                 temp = keyboard_olim24.status;
@@ -279,7 +292,7 @@ void mouse_olim24_poll(int x, int y, int b)
 void keyboard_olim24_init()
 {
         //return;
-        io_sethandler(0x0060, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL,  NULL);
+        io_sethandler(0x0060, 0x0002, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL,  NULL);
         io_sethandler(0x0064, 0x0001, keyboard_olim24_read, NULL, NULL, keyboard_olim24_write, NULL, NULL,  NULL);
         keyboard_olim24_reset();
         keyboard_send = keyboard_olim24_adddata;

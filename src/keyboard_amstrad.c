@@ -2,6 +2,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pic.h"
+#include "pit.h"
 #include "sound.h"
 #include "timer.h"
 
@@ -59,10 +60,7 @@ void keyboard_amstrad_adddata(uint8_t val)
 void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
 {
         pclog("keyboard_amstrad : write %04X %02X %02X\n", port, val, keyboard_amstrad.pb);
-/*        if (ram[8] == 0xc3) 
-        {
-                output = 3;
-        }*/
+
         switch (port)
         {
                 case 0x61:
@@ -75,16 +73,13 @@ void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
                 keyboard_amstrad.pb = val;
                 ppi.pb = val;
 
-/*                if (AMSTRADIO) 
-                   keyboard_amstrad.s2 = val & 4;
-                else           
-                   keyboard_amstrad.s2 = val & 8;*/
                 gated = ((val & 3) == 3);
                 if (gated) 
-                   wasgated = 1;
-                   
+                        wasgated = 1;
+                pit_set_gate(2, val & 1);
+                
                 if (val & 0x80)
-                   keyboard_amstrad.pa = 0;
+                        keyboard_amstrad.pa = 0;
                 break;
                 
                 case 0x63:

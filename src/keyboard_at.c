@@ -2,6 +2,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pic.h"
+#include "pit.h"
 #include "sound.h"
 #include "timer.h"
 
@@ -268,9 +269,11 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                 break;
                
                 case 0x61:
-                ppi.pb=val;
-                gated=((val&3)==3);
-                if (gated) wasgated=1;                         
+                ppi.pb = val;
+                gated = ((val & 3) == 3);
+                if (gated) 
+                        wasgated = 1;
+                pit_set_gate(2, val & 1);
                 break;
                 
                 case 0x64:

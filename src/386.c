@@ -1418,10 +1418,11 @@ opcodestart:
                         keyboard_at_poll();
                 }*/
                 
-                pit.c[0]-=cycdiff;
-                pit.c[1]-=cycdiff;
-                if (ppi.pb&1) pit.c[2]-=cycdiff;
-                if ((pit.c[0]<1)||(pit.c[1]<1)||(pit.c[2]<1)) pit_poll();
+                pit.c[0] -= cycdiff;
+                pit.c[1] -= cycdiff;
+                if (pit.gate[2]) pit.c[2] -= cycdiff;
+                if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
+
                 timer_clock(cycdiff);
         }
 }

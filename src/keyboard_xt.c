@@ -72,13 +72,11 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
                 }
                 keyboard_xt.pb = val;
                 ppi.pb = val;
-/*                if (AMSTRADIO) 
-                   keyboard_xt.s2 = val & 4;
-                else           
-                   keyboard_xt.s2 = val & 8;*/
+
                 gated = ((val & 3) == 3);
                 if (gated) 
-                   wasgated = 1;
+                        wasgated = 1;
+                pit_set_gate(2, val & 1);
                    
                 if (val & 0x80)
                 {

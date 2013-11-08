@@ -302,7 +302,26 @@ void pit_poll()
         }
 }
 
+void pit_set_gate(int channel, int gate)
+{
+        if (gate && !pit.gate[channel])
+        {
+                switch (pit.m[channel])
+                {
+                        case 1: /*Hardware retriggerable one-shot*/
+                        case 2: /*Rate generator*/
+                        case 3: /*Square wave mode*/
+                        case 5: /*Hardware triggered strobe (retriggerable)*/
+                        pit.c[channel] = pit.l[2] * PITCONST;
+                        break;
+                }
+        }
+        pit.gate[channel] = gate;
+}
+
 void pit_init()
 {
         io_sethandler(0x0040, 0x0004, pit_read, NULL, NULL, pit_write, NULL, NULL, NULL);
+        pit.gate[0] = pit.gate[1] = 1;
+        pit.gate[2] = 0;
 }

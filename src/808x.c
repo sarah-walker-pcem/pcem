@@ -819,7 +819,7 @@ void clockhardware()
         current_diff += diff;
         pit.c[0] -= diff;
         pit.c[1] -= diff;
-        if (ppi.pb & 1) pit.c[2] -= diff;
+        if (pit.gate[2]) pit.c[2] -= diff;
         if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
         
         timer_clock(diff);

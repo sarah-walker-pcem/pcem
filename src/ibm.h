@@ -198,6 +198,7 @@ typedef struct PIT
         int thit[3];
         int delay[3];
         int rereadlatch[3];
+        int gate[3];
 } PIT;
 
 PIT pit;
