@@ -387,7 +387,7 @@ void *sb_awe32_init()
         memset(sb, 0, sizeof(sb_t));
 
         opl3_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SB16);
+        sb_dsp_init(&sb->dsp, SB16 + 1);
         sb_dsp_setaddr(&sb->dsp, 0x0220);
         sb_mixer_init(&sb->mixer);
         io_sethandler(0x0220, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);

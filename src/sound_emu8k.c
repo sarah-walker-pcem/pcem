@@ -554,6 +554,7 @@ void emu8k_poll(void *p)
                 {
                         case ENV_ATTACK:
                         emu8k->voice[c].env_vol += emu8k->voice[c].env_attack;
+                        emu8k->voice[c].vtft |= 0xffff0000;
                         if (emu8k->voice[c].env_vol >= (1 << 21))
                         {
                                 emu8k->voice[c].env_vol = 1 << 21;
@@ -563,6 +564,7 @@ void emu8k_poll(void *p)
                         
                         case ENV_DECAY:
                         emu8k->voice[c].env_vol -= emu8k->voice[c].env_decay;
+                        emu8k->voice[c].vtft = (emu8k->voice[c].vtft & ~0xffff0000) | ((emu8k->voice[c].env_sustain >> 5) << 16);
                         if (emu8k->voice[c].env_vol <= emu8k->voice[c].env_sustain)
                         {
                                 emu8k->voice[c].env_vol = emu8k->voice[c].env_sustain;
@@ -572,6 +574,7 @@ void emu8k_poll(void *p)
 
                         case ENV_RELEASE:
                         emu8k->voice[c].env_vol -= emu8k->voice[c].env_release;
+                        emu8k->voice[c].vtft &= ~0xffff0000;
                         if (emu8k->voice[c].env_vol <= 0)
                         {
                                 emu8k->voice[c].env_vol = 0;
@@ -579,6 +582,11 @@ void emu8k_poll(void *p)
                         }
                         break;
                 }
+
+                if (emu8k->voice[c].env_vol >= (1 << 21))
+                        emu8k->voice[c].cvcf &= ~0xffff0000;
+                else
+                        emu8k->voice[c].cvcf = (emu8k->voice[c].cvcf & ~0xffff0000) | ((emu8k->voice[c].env_vol >> 5) << 16);
 
                 switch (emu8k->voice[c].menv_state)
                 {
@@ -649,6 +657,13 @@ void emu8k_init(emu8k_t *emu8k)
         fread(emu8k->rom, 1024 * 1024, 1, f);
         fclose(f);
         
+        /*AWE-DUMP creates ROM images offset by 2 bytes, so if we detect this
+          then correct it*/
+        if (emu8k->rom[3] == 0x314d && emu8k->rom[4] == 0x474d)
+        {
+                memcpy(&emu8k->rom[0], &emu8k->rom[1], (1024 * 1024) - 2);
+                emu8k->rom[0x7ffff] = 0;
+        }
         io_sethandler(0x0620, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
         io_sethandler(0x0a20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
         io_sethandler(0x0e20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);

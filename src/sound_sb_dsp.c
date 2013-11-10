@@ -49,7 +49,7 @@ static int sb_commands[256]=
 };
 
 char sb16_copyright[] = "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
-uint16_t sb_dsp_versions[] = {0, 0, 0x105, 0x200, 0x201, 0x300, 0x302, 0x405};
+uint16_t sb_dsp_versions[] = {0, 0, 0x105, 0x200, 0x201, 0x300, 0x302, 0x405, 0x40d};
 
 /*These tables were 'borrowed' from DOSBox*/
 	int8_t scaleMap4[64] = {
