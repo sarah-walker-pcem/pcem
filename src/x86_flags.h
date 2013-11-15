@@ -12,7 +12,19 @@ enum
         
         FLAGS_SUB8,
         FLAGS_SUB16,
-        FLAGS_SUB32
+        FLAGS_SUB32,
+        
+        FLAGS_SHL8,
+        FLAGS_SHL16,
+        FLAGS_SHL32,
+
+        FLAGS_SHR8,
+        FLAGS_SHR16,
+        FLAGS_SHR32,
+
+        FLAGS_SAR8,
+        FLAGS_SAR16,
+        FLAGS_SAR32,
 };
 
 static int flags_op;
@@ -32,6 +44,15 @@ static inline int ZF_SET()
                 case FLAGS_SUB8:
                 case FLAGS_SUB16:
                 case FLAGS_SUB32:
+                case FLAGS_SHL8:
+                case FLAGS_SHL16:
+                case FLAGS_SHL32:
+                case FLAGS_SHR8:
+                case FLAGS_SHR16:
+                case FLAGS_SHR32:
+                case FLAGS_SAR8:
+                case FLAGS_SAR16:
+                case FLAGS_SAR32:
                 return !flags_res;
                 
                 case FLAGS_UNKNOWN:
@@ -46,16 +67,25 @@ static inline int NF_SET()
                 case FLAGS_ZN8: 
                 case FLAGS_ADD8:
                 case FLAGS_SUB8:
+                case FLAGS_SHL8:
+                case FLAGS_SHR8:
+                case FLAGS_SAR8:
                 return flags_res & 0x80;
                 
                 case FLAGS_ZN16:
                 case FLAGS_ADD16:
                 case FLAGS_SUB16:
+                case FLAGS_SHL16:
+                case FLAGS_SHR16:
+                case FLAGS_SAR16:
                 return flags_res & 0x8000;
                 
                 case FLAGS_ZN32:
                 case FLAGS_ADD32:
                 case FLAGS_SUB32:
+                case FLAGS_SHL32:
+                case FLAGS_SHR32:
+                case FLAGS_SAR32:
                 return flags_res & 0x80000000;
                 
                 case FLAGS_UNKNOWN:
@@ -76,6 +106,15 @@ static inline int PF_SET()
                 case FLAGS_SUB8:
                 case FLAGS_SUB16:
                 case FLAGS_SUB32:
+                case FLAGS_SHL8:
+                case FLAGS_SHL16:
+                case FLAGS_SHL32:
+                case FLAGS_SHR8:
+                case FLAGS_SHR16:
+                case FLAGS_SHR32:
+                case FLAGS_SAR8:
+                case FLAGS_SAR16:
+                case FLAGS_SAR32:
                 return znptable8[flags_res & 0xff] & P_FLAG;
                 
                 case FLAGS_UNKNOWN:
@@ -87,9 +126,12 @@ static inline int VF_SET()
 {
         switch (flags_op)
         {
-                case FLAGS_ZN8: 
+                case FLAGS_ZN8:
                 case FLAGS_ZN16:
                 case FLAGS_ZN32:
+                case FLAGS_SAR8:
+                case FLAGS_SAR16:
+                case FLAGS_SAR32:
                 return 0;
                 
                 case FLAGS_ADD8:
@@ -105,7 +147,21 @@ static inline int VF_SET()
                 return ((flags_op1 ^ flags_op2) & (flags_op1 ^ flags_res) & 0x8000);
                 case FLAGS_SUB32:
                 return ((flags_op1 ^ flags_op2) & (flags_op1 ^ flags_res) & 0x80000000);
-                        
+
+                case FLAGS_SHL8:
+                return (((flags_op1 << flags_op2) ^ (flags_op1 << (flags_op2 - 1))) & 0x80);
+                case FLAGS_SHL16:
+                return (((flags_op1 << flags_op2) ^ (flags_op1 << (flags_op2 - 1))) & 0x8000);
+                case FLAGS_SHL32:
+                return (((flags_op1 << flags_op2) ^ (flags_op1 << (flags_op2 - 1))) & 0x80000000);
+                
+                case FLAGS_SHR8:
+                return ((flags_op2 == 1) && (flags_op1 & 0x80));
+                case FLAGS_SHR16:
+                return ((flags_op2 == 1) && (flags_op1 & 0x8000));
+                case FLAGS_SHR32:
+                return ((flags_op2 == 1) && (flags_op1 & 0x80000000));
+                
                 case FLAGS_UNKNOWN:
                 return flags & V_FLAG;
         }
@@ -118,6 +174,15 @@ static inline int AF_SET()
                 case FLAGS_ZN8: 
                 case FLAGS_ZN16:
                 case FLAGS_ZN32:
+                case FLAGS_SHL8:
+                case FLAGS_SHL16:
+                case FLAGS_SHL32:
+                case FLAGS_SHR8:
+                case FLAGS_SHR16:
+                case FLAGS_SHR32:
+                case FLAGS_SAR8:
+                case FLAGS_SAR16:
+                case FLAGS_SAR32:
                 return 0;
                 
                 case FLAGS_ADD8:
@@ -213,6 +278,13 @@ static inline void setznp32(uint32_t val)
         flags_res = val;
         flags &= ~C_FLAG;
 }
+
+#define set_flags_shift(op, orig, shift, res) \
+        flags_op = op;                  \
+        flags_res = res;                \
+        flags_op1 = orig;               \
+        flags_op2 = shift;              \
+        flags &= ~C_FLAG;
 
 static inline void setadd8(uint8_t a, uint8_t b)
 {
