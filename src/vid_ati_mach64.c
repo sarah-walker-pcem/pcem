@@ -723,6 +723,7 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                 mach64->accel.src_x = 0;
                                 mach64->accel.dst_x = 0;
                                 mach64->accel.src_x_start = (mach64->src_y_x >> 16) & 0xfff;
+                                mach64->accel.src_x_count = mach64->accel.src_width1;
 
                                 mach64->accel.src_y += mach64->accel.yinc;                        
                                 mach64->accel.dst_y += mach64->accel.yinc;
