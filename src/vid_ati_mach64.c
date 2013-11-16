@@ -165,7 +165,7 @@ enum
         SRC_LINEAR_EN   = 4
 };
 
-static int mach64_width[6] = {0, 0, 0, 1, 1, 2};
+static int mach64_width[8] = {0, 0, 0, 1, 1, 2, 2, 0};
 
 enum
 {
@@ -315,6 +315,7 @@ void mach64_recalctimings(svga_t *svga)
                         case 6: 
                         svga->render = svga_render_32bpp_highres; 
                         svga->hdisp *= 8;
+                        svga->rowoffset *= 2;
                         break;
                 }
                 
