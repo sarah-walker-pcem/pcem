@@ -149,6 +149,13 @@ void oti067_force_redraw(void *p)
         oti067->svga.fullchange = changeframecount;
 }
 
+int oti067_add_status_info(char *s, int max_len, void *p)
+{
+        oti067_t *oti067 = (oti067_t *)p;
+        
+        return svga_add_status_info(s, max_len, &oti067->svga);
+}
+
 device_t oti067_device =
 {
         "Oak OTI-067",
@@ -157,5 +164,5 @@ device_t oti067_device =
         NULL,
         oti067_speed_changed,
         oti067_force_redraw,
-        svga_add_status_info
+        oti067_add_status_info
 };

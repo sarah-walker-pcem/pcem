@@ -336,21 +336,25 @@ void mach64_updatemapping(mach64_t *mach64)
                 mem_mapping_set_p(&mach64->svga.mapping, mach64);
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                 mem_mapping_enable(&mach64->mmio_mapping);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x4: /*64k at A0000*/
                 mem_mapping_set_handler(&mach64->svga.mapping, mach64_read, NULL, NULL, mach64_write, NULL, NULL);
                 mem_mapping_set_p(&mach64->svga.mapping, mach64);
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x8: /*32k at B0000*/
                 mem_mapping_set_handler(&mach64->svga.mapping, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
                 mem_mapping_set_p(&mach64->svga.mapping, svga);
                 mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
                 case 0xC: /*32k at B8000*/
                 mem_mapping_set_handler(&mach64->svga.mapping, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel);
                 mem_mapping_set_p(&mach64->svga.mapping, svga);
                 mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
         }
         if (mach64->linear_base)
@@ -2081,6 +2085,13 @@ void mach64_force_redraw(void *p)
         mach64->svga.fullchange = changeframecount;
 }
 
+int mach64_add_status_info(char *s, int max_len, void *p)
+{
+        mach64_t *mach64 = (mach64_t *)p;
+        
+        return svga_add_status_info(s, max_len, &mach64->svga);
+}
+
 device_t mach64gx_device =
 {
         "ATI Mach64GX",
@@ -2089,5 +2100,5 @@ device_t mach64gx_device =
         NULL,
         mach64_speed_changed,
         mach64_force_redraw,
-        svga_add_status_info
+        mach64_add_status_info
 };

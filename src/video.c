@@ -29,6 +29,7 @@
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
 #include "vid_tandy.h"
+#include "vid_tgui9440.h"
 #include "vid_tvga.h"
 #include "vid_vga.h"
 

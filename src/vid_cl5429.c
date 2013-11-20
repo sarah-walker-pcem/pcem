@@ -17,6 +17,7 @@ typedef struct gd5429_t
         svga_t svga;
         
         uint32_t bank[2];
+        uint32_t mask;
 
         struct
         {
@@ -228,19 +229,23 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
                 case 0x0: /*128k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 mem_mapping_disable(&gd5429->mmio_mapping);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x4: /*64k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                 if (svga->seqregs[0x17] & 0x04)
                         mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x8: /*32k at B0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                 mem_mapping_disable(&gd5429->mmio_mapping);
+                svga->banked_mask = 0x7fff;
                 break;
                 case 0xC: /*32k at B8000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                 mem_mapping_disable(&gd5429->mmio_mapping);
+                svga->banked_mask = 0x7fff;
                 break;
         }
 }
@@ -294,7 +299,9 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p);
 void gd5429_write(uint32_t addr, uint8_t val, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
 //        pclog("gd5429_write : %05X %02X  ", addr, val);
+        addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
 //        pclog("%08X\n", addr);
         gd5429_write_linear(addr, val, p);
@@ -303,8 +310,10 @@ void gd5429_write(uint32_t addr, uint8_t val, void *p)
 uint8_t gd5429_read(uint32_t addr, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
         uint8_t ret;
 //        pclog("gd5429_read : %05X ", addr);
+        addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
         ret = svga_read_linear(addr, &gd5429->svga);
 //        pclog("%08X %02X\n", addr, ret);  
@@ -850,6 +859,13 @@ void gd5429_force_redraw(void *p)
         gd5429->svga.fullchange = changeframecount;
 }
 
+int gd5429_add_status_info(char *s, int max_len, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        
+        return svga_add_status_info(s, max_len, &gd5429->svga);
+}
+
 device_t gd5429_device =
 {
         "Cirrus Logic GD5429",
@@ -858,5 +874,5 @@ device_t gd5429_device =
         NULL,
         gd5429_speed_changed,
         gd5429_force_redraw,
-        svga_add_status_info
+        gd5429_add_status_info
 };

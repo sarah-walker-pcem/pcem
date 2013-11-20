@@ -271,15 +271,19 @@ void s3_virge_updatemapping(virge_t *virge)
         {
                 case 0x0: /*128k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x4: /*64k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x8: /*32k at B0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
                 case 0xC: /*32k at B8000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
         }
         
@@ -503,6 +507,13 @@ void s3_virge_force_redraw(void *p)
         virge->svga.fullchange = changeframecount;
 }
 
+int s3_virge_add_status_info(char *s, int max_len, void *p)
+{
+        virge_t *virge = (virge_t *)p;
+        
+        return svga_add_status_info(s, max_len, &virge->svga);
+}
+
 device_t s3_virge_device =
 {
         "Diamond Stealth 3D 2000 (S3 VIRGE)",
@@ -511,5 +522,5 @@ device_t s3_virge_device =
         NULL,
         s3_virge_speed_changed,
         s3_virge_force_redraw,
-        svga_add_status_info
+        s3_virge_add_status_info
 };

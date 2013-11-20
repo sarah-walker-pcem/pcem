@@ -113,7 +113,16 @@ void et4000_recalctimings(svga_t *svga)
                 case 5: svga->clock = cpuclock / 65000000.0; break;
                 default: svga->clock = cpuclock / 36000000.0; break;
         }
-
+        
+        switch (svga->bpp)
+        {
+                case 15: case 16:
+                svga->hdisp /= 2;
+                break;
+                case 24:
+                svga->hdisp /= 3;
+                break;
+        }
 }
 
 void *et4000_init()
@@ -154,6 +163,13 @@ void et4000_force_redraw(void *p)
         et4000->svga.fullchange = changeframecount;
 }
 
+int et4000_add_status_info(char *s, int max_len, void *p)
+{
+        et4000_t *et4000 = (et4000_t *)p;
+        
+        return svga_add_status_info(s, max_len, &et4000->svga);
+}
+
 device_t et4000_device =
 {
         "Tseng Labs ET4000AX",
@@ -162,5 +178,5 @@ device_t et4000_device =
         NULL,
         et4000_speed_changed,
         et4000_force_redraw,
-        svga_add_status_info
+        et4000_add_status_info
 };

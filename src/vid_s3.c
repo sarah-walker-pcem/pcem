@@ -28,6 +28,9 @@ typedef struct s3_t
 
         uint32_t linear_base, linear_size;
 
+        float (*getclock)(int clock, void *p);
+        void *getclock_p;
+
         struct
         {
                 uint8_t subsys_cntl;
@@ -85,6 +88,16 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
         switch (addr)
         {
                 case 0x3c5:
+                if (svga->seqaddr >= 0x10 && svga->seqaddr < 0x20)
+                {
+                        svga->seqregs[svga->seqaddr] = val;
+                        switch (svga->seqaddr)
+                        {
+                                case 0x12: case 0x13:
+                                svga_recalctimings(svga);
+                                return;
+                        }
+                }
                 if (svga->seqaddr == 4) /*Chain-4 - update banking*/
                 {
                         if (val & 8) svga->write_bank = svga->read_bank = s3->bank << 16;
@@ -213,6 +226,11 @@ uint8_t s3_in(uint16_t addr, void *p)
 //        if (addr != 0x3da) pclog("S3 in %04X\n", addr);
         switch (addr)
         {
+                case 0x3c5:
+                if (svga->seqaddr >= 0x10 && svga->seqaddr < 0x20)
+                        return svga->seqregs[svga->seqaddr];
+                break;
+                
                 case 0x3c6: case 0x3c7: case 0x3c8: case 0x3c9:
 //                pclog("Read RAMDAC %04X  %04X:%04X\n", addr, CS, pc);
                 return sdac_ramdac_in(addr, &s3->ramdac, svga);
@@ -260,9 +278,14 @@ void s3_recalctimings(svga_t *svga)
         else if (svga->crtc[0x43] & 0x04) svga->rowoffset  += 0x100;
         if (!svga->rowoffset) svga->rowoffset = 256;
         svga->interlace = svga->crtc[0x42] & 0x20;
-        svga->clock = cpuclock / sdac_getclock((svga->miscout >> 2) & 3, &s3->ramdac);
-//        pclog("SVGA_CLOCK = %f  %02X  %f\n", svga_clock, svga_miscout, cpuclock);
-        if (svga->bpp > 8) svga->clock /= 2;
+        svga->clock = cpuclock / s3->getclock((svga->miscout >> 2) & 3, s3->getclock_p);
+
+        switch (svga->crtc[0x67] >> 4)
+        {
+                case 3: case 5: case 7:
+                svga->clock /= 2;
+                break;
+        }                
 
         svga->lowres = !((svga->gdcreg[5] & 0x40) && (svga->crtc[0x3a] & 0x10));
         if ((svga->gdcreg[5] & 0x40) && (svga->crtc[0x3a] & 0x10))
@@ -274,23 +297,23 @@ void s3_recalctimings(svga_t *svga)
                         break;
                         case 15: 
                         svga->render = svga_render_15bpp_highres; 
+                        svga->hdisp /= 2;
                         break;
                         case 16: 
                         svga->render = svga_render_16bpp_highres; 
+                        svga->hdisp /= 2;
                         break;
                         case 24: 
                         svga->render = svga_render_24bpp_highres; 
+                        svga->hdisp /= 3;
                         break;
                         case 32:
                         svga->render = svga_render_32bpp_highres; 
-                        if (gfxcard == GFX_N9_9FX) /*Trio64*/
-                                svga->hdisp *= 4;
+                        if (gfxcard != GFX_N9_9FX) /*Trio64*/
+                                svga->hdisp /= 4;
                         break;
                 }
         }
-
-       // if (svga->bpp == 32) svga->hdisp *= 3;
-//        pclog("svga->hdisp %i %02X %i\n", svga->hdisp, svga->crtc[0x5d], svga->hdisp_time);
 }
 
 void s3_updatemapping(s3_t *s3)
@@ -305,15 +328,19 @@ void s3_updatemapping(s3_t *s3)
         {
                 case 0x0: /*128k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x4: /*64k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                svga->banked_mask = 0xffff;
                 break;
                 case 0x8: /*32k at B0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
                 case 0xC: /*32k at B8000*/
                 mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                svga->banked_mask = 0x7fff;
                 break;
         }
         
@@ -345,6 +372,7 @@ void s3_updatemapping(s3_t *s3)
                 {
                         mem_mapping_disable(&s3->linear_mapping);
                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        svga->banked_mask = 0xffff;
 //                        mem_mapping_set_addr(&s3->linear_mapping, 0xa0000, 0x10000);
                 }
                 else
@@ -358,6 +386,23 @@ void s3_updatemapping(s3_t *s3)
                 mem_mapping_enable(&s3->mmio_mapping);
         else
                 mem_mapping_disable(&s3->mmio_mapping);
+}
+
+static float s3_trio64_getclock(int clock, void *p)
+{
+        s3_t *s3 = (s3_t *)p;
+        svga_t *svga = &s3->svga;
+        float t;
+        int m, n1, n2;
+//        pclog("Trio64_getclock %i %02X %02X\n", clock, svga->seqregs[0x13], svga->seqregs[0x12]);
+        if (clock == 0) return 25175000.0;
+        if (clock == 1) return 28322000.0;
+        m  = svga->seqregs[0x13] + 2;
+        n1 = (svga->seqregs[0x12] & 0x1f) + 2;
+        n2 = ((svga->seqregs[0x12] >> 5) & 0x07);
+        t = (14318184.0 * ((float)m / (float)n1)) / (float)(1 << n2);
+//        pclog("TRIO64 clock %i %i %i %f  %f %i\n", m, n1, n2, t, 14318184.0 * ((float)m / (float)n1), 1 << n2);
+        return t;
 }
 
 
@@ -1591,7 +1636,10 @@ void *s3_bahamas64_init()
 
         s3->id = 0xc1; /*Vision864P*/
         s3->id_ext = 0xc1; /*Trio64*/
-        
+
+        s3->getclock = sdac_getclock;
+        s3->getclock_p = &s3->ramdac;
+
         return s3;
 }
 
@@ -1601,7 +1649,10 @@ void *s3_9fx_init()
 
         s3->id = 0xe1;
         s3->id_ext = 0x11; /*Trio64*/
-        
+
+        s3->getclock = s3_trio64_getclock;
+        s3->getclock_p = s3;
+
         return s3;
 }
 
@@ -1628,6 +1679,13 @@ void s3_force_redraw(void *p)
         s3->svga.fullchange = changeframecount;
 }
 
+int s3_add_status_info(char *s, int max_len, void *p)
+{
+        s3_t *s3 = (s3_t *)p;
+        
+        return svga_add_status_info(s, max_len, &s3->svga);
+}
+
 device_t s3_bahamas64_device =
 {
         "Paradise Bahamas 64 (S3 Vision864)",
@@ -1636,7 +1694,7 @@ device_t s3_bahamas64_device =
         NULL,
         s3_speed_changed,
         s3_force_redraw,
-        svga_add_status_info
+        s3_add_status_info
 };
 
 device_t s3_9fx_device =
@@ -1647,5 +1705,5 @@ device_t s3_9fx_device =
         NULL,
         s3_speed_changed,
         s3_force_redraw,
-        svga_add_status_info
+        s3_add_status_info
 };

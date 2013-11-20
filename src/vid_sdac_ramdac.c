@@ -121,8 +121,9 @@ uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga)
         return svga_in(addr, svga);
 }
 
-float sdac_getclock(int clock, sdac_ramdac_t *ramdac)
+float sdac_getclock(int clock, void *p)
 {
+        sdac_ramdac_t *ramdac = (sdac_ramdac_t *)p;
         float t;
         int m, n1, n2;
 //        pclog("SDAC_Getclock %i %04X\n", clock, ramdac->regs[clock]);

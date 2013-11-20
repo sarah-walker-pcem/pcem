@@ -64,6 +64,7 @@ typedef struct svga_t
         uint8_t *vram;
         uint8_t *changedvram;
         int vrammask;
+        uint32_t banked_mask;
 
         uint32_t write_bank, read_bank;
                 

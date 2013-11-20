@@ -251,7 +251,7 @@ void et4000w32p_recalctimings(svga_t *svga)
                 svga->hdisp >>= 1;
                 break;
                 case 24:
-                svga->hdisp /= 8;
+                svga->hdisp /= 3;
                 break;
         }
 }
@@ -277,30 +277,37 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
                         case 0x0: case 0x4: case 0x8: case 0xC: /*128k at A0000*/
                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
                         mem_mapping_disable(&et4000->mmu_mapping);
+                        svga->banked_mask = 0xffff;
                         break;
                         case 0x1: /*64k at A0000*/
                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                         mem_mapping_disable(&et4000->mmu_mapping);
+                        svga->banked_mask = 0xffff;
                         break;
                         case 0x2: /*32k at B0000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                         mem_mapping_disable(&et4000->mmu_mapping);
+                        svga->banked_mask = 0x7fff;
                         break;
                         case 0x3: /*32k at B8000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                         mem_mapping_disable(&et4000->mmu_mapping);
+                        svga->banked_mask = 0x7fff;
                         break;
                         case 0x5: case 0x9: case 0xD: /*64k at A0000, MMU at B8000*/
                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
                         mem_mapping_set_addr(&et4000->mmu_mapping, 0xb8000, 0x08000);
+                        svga->banked_mask = 0xffff;
                         break;
                         case 0x6: case 0xA: case 0xE: /*32k at B0000, MMU at A8000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
                         mem_mapping_set_addr(&et4000->mmu_mapping, 0xa8000, 0x08000);
+                        svga->banked_mask = 0x7fff;
                         break;
                         case 0x7: case 0xB: case 0xF: /*32k at B8000, MMU at A8000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
                         mem_mapping_set_addr(&et4000->mmu_mapping, 0xa8000, 0x08000);
+                        svga->banked_mask = 0x7fff;
                         break;
                 }
                 
@@ -983,6 +990,13 @@ void et4000w32p_force_redraw(void *p)
         et4000w32p->svga.fullchange = changeframecount;
 }
 
+int et4000w32p_add_status_info(char *s, int max_len, void *p)
+{
+        et4000w32p_t *et4000w32p = (et4000w32p_t *)p;
+        
+        return svga_add_status_info(s, max_len, &et4000w32p->svga);
+}
+
 device_t et4000w32p_device =
 {
         "Tseng Labs ET4000/w32p",
@@ -991,5 +1005,5 @@ device_t et4000w32p_device =
         NULL,
         et4000w32p_speed_changed,
         et4000w32p_force_redraw,
-        svga_add_status_info
+        et4000w32p_add_status_info
 };

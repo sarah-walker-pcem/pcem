@@ -70,15 +70,19 @@ void paradise_out(uint16_t addr, uint8_t val, void *p)
                                 {
                                         case 0x0: /*128k at A0000*/
                                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
+                                        svga->banked_mask = 0xffff;
                                         break;
                                         case 0x4: /*64k at A0000*/
                                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                                        svga->banked_mask = 0xffff;
                                         break;
                                         case 0x8: /*32k at B0000*/
                                         mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                                        svga->banked_mask = 0x7fff;
                                         break;
                                         case 0xC: /*32k at B8000*/
                                         mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                                        svga->banked_mask = 0x7fff;
                                         break;
                                 }
                         }
@@ -331,6 +335,13 @@ void paradise_force_redraw(void *p)
         paradise->svga.fullchange = changeframecount;
 }
 
+int paradise_add_status_info(char *s, int max_len, void *p)
+{
+        paradise_t *paradise = (paradise_t *)p;
+        
+        return svga_add_status_info(s, max_len, &paradise->svga);
+}
+
 device_t paradise_pvga1a_device =
 {
         "Paradise PVGA1A",
@@ -339,7 +350,7 @@ device_t paradise_pvga1a_device =
         NULL,
         paradise_speed_changed,
         paradise_force_redraw,
-        svga_add_status_info
+        paradise_add_status_info
 };
 device_t paradise_wd90c11_device =
 {
@@ -349,5 +360,5 @@ device_t paradise_wd90c11_device =
         NULL,
         paradise_speed_changed,
         paradise_force_redraw,
-        svga_add_status_info
+        paradise_add_status_info
 };

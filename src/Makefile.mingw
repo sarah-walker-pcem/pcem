@@ -17,7 +17,7 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	vid_hercules.o vid_icd2061.o vid_ics2595.o vid_mda.o vid_olivetti_m24.o \
 	vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o vid_s3.o \
 	vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o vid_svga_render.o \
-	vid_tandy.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o \
+	vid_tandy.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o \
 	vid_voodoo.o video.o wd76c10.o win.o win-d3d.o win-ddraw.o win-keyboard.o win-midi.o \
 	win-mouse.o win-timer.o win-video.o x86seg.o x87.o xtide.o pc.res
 FMOBJ = fmopl.o ymf262.o

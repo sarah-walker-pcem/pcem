@@ -160,6 +160,13 @@ void ati18800_force_redraw(void *p)
         ati18800->svga.fullchange = changeframecount;
 }
 
+int ati18800_add_status_info(char *s, int max_len, void *p)
+{
+        ati18800_t *ati18800 = (ati18800_t *)p;
+        
+        return svga_add_status_info(s, max_len, &ati18800->svga);
+}
+
 device_t ati18800_device =
 {
         "ATI-18800",
@@ -168,6 +175,6 @@ device_t ati18800_device =
         NULL,
         ati18800_speed_changed,
         ati18800_force_redraw,
-        svga_add_status_info
+        ati18800_add_status_info
 };
 
