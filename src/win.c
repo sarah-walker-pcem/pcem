@@ -76,7 +76,7 @@ void vsyncint()
 int romspresent[26];
 int quited=0;
 
-RECT oldclip,pcclip;
+RECT oldclip;
 int mousecapture=0;
 int drawit;
 /*  Declare Windows procedure  */
@@ -1589,14 +1589,16 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case WM_LBUTTONUP:
                 if (!mousecapture)
                 {
+                        RECT pcclip;
+
                         GetClipCursor(&oldclip);
-                        GetWindowRect(hwnd,&pcclip);
-                        pcclip.left+=GetSystemMetrics(SM_CXFIXEDFRAME)+10;
-                        pcclip.right-=GetSystemMetrics(SM_CXFIXEDFRAME)+10;
-                        pcclip.top+=GetSystemMetrics(SM_CXFIXEDFRAME)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+10;
-                        pcclip.bottom-=GetSystemMetrics(SM_CXFIXEDFRAME)+10;
+                        GetWindowRect(hwnd, &pcclip);
+                        pcclip.left   += GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
+                        pcclip.right  -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
+                        pcclip.top    += GetSystemMetrics(SM_CXFIXEDFRAME) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 10;
+                        pcclip.bottom -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
                         ClipCursor(&pcclip);
-                        mousecapture=1;
+                        mousecapture = 1;
                         ShowCursor(FALSE);
                 }
                 break;
@@ -1614,6 +1616,18 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         startblit();
                         vid_apis[vid_api].resize(winsizex, winsizey);
                         endblit();
+                }
+
+                if (mousecapture)
+                {
+                        RECT pcclip;
+
+                        GetWindowRect(hwnd, &pcclip);
+                        pcclip.left   += GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
+                        pcclip.right  -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
+                        pcclip.top    += GetSystemMetrics(SM_CXFIXEDFRAME) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 10;
+                        pcclip.bottom -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
+                        ClipCursor(&pcclip);
                 }
                 break;
 
