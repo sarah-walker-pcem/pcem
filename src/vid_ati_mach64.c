@@ -2095,6 +2095,7 @@ int mach64_add_status_info(char *s, int max_len, void *p)
 device_t mach64gx_device =
 {
         "ATI Mach64GX",
+        0,
         mach64gx_init,
         mach64_close,
         NULL,

@@ -1689,6 +1689,7 @@ int s3_add_status_info(char *s, int max_len, void *p)
 device_t s3_bahamas64_device =
 {
         "Paradise Bahamas 64 (S3 Vision864)",
+        0,
         s3_bahamas64_init,
         s3_close,
         NULL,
@@ -1700,6 +1701,7 @@ device_t s3_bahamas64_device =
 device_t s3_9fx_device =
 {
         "Number 9 9FX (S3 Trio64)",
+        0,
         s3_9fx_init,
         s3_close,
         NULL,

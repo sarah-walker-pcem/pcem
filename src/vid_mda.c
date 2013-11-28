@@ -311,6 +311,7 @@ void mda_speed_changed(void *p)
 device_t mda_device =
 {
         "MDA",
+        0,
         mda_init,
         mda_close,
         NULL,

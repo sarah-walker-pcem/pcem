@@ -517,6 +517,7 @@ int s3_virge_add_status_info(char *s, int max_len, void *p)
 device_t s3_virge_device =
 {
         "Diamond Stealth 3D 2000 (S3 VIRGE)",
+        DEVICE_NOT_WORKING,
         s3_virge_init,
         s3_virge_close,
         NULL,

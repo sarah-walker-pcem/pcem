@@ -1000,6 +1000,7 @@ int et4000w32p_add_status_info(char *s, int max_len, void *p)
 device_t et4000w32p_device =
 {
         "Tseng Labs ET4000/w32p",
+        0,
         et4000w32p_init,
         et4000w32p_close,
         NULL,

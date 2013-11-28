@@ -46,10 +46,8 @@ static SOUND_CARD sound_cards[] =
 int sound_card_available(int card)
 {
         if (sound_cards[card].device)
-        {
-                if (sound_cards[card].device->available)
-                        return sound_cards[card].device->available();
-        }
+                return device_available(sound_cards[card].device);
+
         return 1;
 }
 

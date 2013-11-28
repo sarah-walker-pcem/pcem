@@ -124,6 +124,7 @@ int vga_add_status_info(char *s, int max_len, void *p)
 device_t vga_device =
 {
         "VGA",
+        DEVICE_NOT_WORKING,
         vga_init,
         vga_close,
         NULL,

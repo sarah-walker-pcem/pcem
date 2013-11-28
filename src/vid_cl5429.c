@@ -869,6 +869,7 @@ int gd5429_add_status_info(char *s, int max_len, void *p)
 device_t gd5429_device =
 {
         "Cirrus Logic GD5429",
+        DEVICE_NOT_WORKING,
         gd5429_init,
         gd5429_close,
         NULL,

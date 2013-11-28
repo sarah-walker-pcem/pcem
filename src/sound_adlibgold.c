@@ -591,6 +591,7 @@ void adgold_close(void *p)
 device_t adgold_device =
 {
         "AdLib Gold",
+        0,
         adgold_init,
         adgold_close,
         NULL,

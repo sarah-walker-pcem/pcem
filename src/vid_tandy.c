@@ -691,6 +691,7 @@ void tandy_speed_changed(void *p)
 device_t tandy_device =
 {
         "Tandy 1000 (video)",
+        0,
         tandy_init,
         tandy_close,
         NULL,

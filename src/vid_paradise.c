@@ -345,6 +345,7 @@ int paradise_add_status_info(char *s, int max_len, void *p)
 device_t paradise_pvga1a_device =
 {
         "Paradise PVGA1A",
+        0,
         paradise_pvga1a_init,
         paradise_close,
         NULL,
@@ -355,6 +356,7 @@ device_t paradise_pvga1a_device =
 device_t paradise_wd90c11_device =
 {
         "Paradise WD90C11",
+        0,
         paradise_wd90c11_init,
         paradise_close,
         NULL,

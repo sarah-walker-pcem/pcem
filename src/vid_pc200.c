@@ -134,6 +134,7 @@ void pc200_speed_changed(void *p)
 device_t pc200_device =
 {
         "Amstrad PC200 (video)",
+        0,
         pc200_init,
         pc200_close,
         NULL,

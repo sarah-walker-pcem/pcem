@@ -159,6 +159,7 @@ int oti067_add_status_info(char *s, int max_len, void *p)
 device_t oti067_device =
 {
         "Oak OTI-067",
+        0,
         oti067_init,
         oti067_close,
         NULL,

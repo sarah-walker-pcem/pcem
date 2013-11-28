@@ -123,6 +123,7 @@ void wss_close(void *p)
 device_t wss_device =
 {
         "Windows Sound System",
+        0,
         wss_init,
         wss_close,
         NULL,

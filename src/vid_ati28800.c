@@ -191,6 +191,7 @@ int ati28800_add_status_info(char *s, int max_len, void *p)
 device_t ati28800_device =
 {
         "ATI-28800",
+        0,
         ati28800_init,
         ati28800_close,
         NULL,

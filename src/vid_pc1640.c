@@ -144,6 +144,7 @@ void pc1640_speed_changed(void *p)
 device_t pc1640_device =
 {
         "Amstrad PC1640 (video)",
+        0,
         pc1640_init,
         pc1640_close,
         NULL,

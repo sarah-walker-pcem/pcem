@@ -837,6 +837,7 @@ void ega_speed_changed(void *p)
 device_t ega_device =
 {
         "EGA",
+        0,
         ega_standalone_init,
         ega_close,
         NULL,

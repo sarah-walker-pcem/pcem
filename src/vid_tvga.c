@@ -284,6 +284,7 @@ int tvga_add_status_info(char *s, int max_len, void *p)
 device_t tvga8900d_device =
 {
         "Trident TVGA 8900D",
+        0,
         tvga8900d_init,
         tvga_close,
         NULL,

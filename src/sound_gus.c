@@ -1103,6 +1103,7 @@ void gus_speed_changed(void *p)
 device_t gus_device =
 {
         "Gravis UltraSound",
+        0,
         gus_init,
         gus_close,
         NULL,

@@ -1124,6 +1124,7 @@ int tgui_add_status_info(char *s, int max_len, void *p)
 device_t tgui9440_device =
 {
         "Trident TGUI 9440",
+        0,
         tgui9440_init,
         tgui_close,
         NULL,

@@ -354,6 +354,7 @@ void hercules_speed_changed(void *p)
 device_t hercules_device =
 {
         "Hercules",
+        0,
         hercules_init,
         hercules_close,
         NULL,

@@ -432,6 +432,7 @@ void sb_speed_changed(void *p)
 device_t sb_1_device =
 {
         "Sound Blaster v1.0",
+        0,
         sb_1_init,
         sb_close,
         NULL,
@@ -442,6 +443,7 @@ device_t sb_1_device =
 device_t sb_15_device =
 {
         "Sound Blaster v1.5",
+        0,
         sb_15_init,
         sb_close,
         NULL,
@@ -452,6 +454,7 @@ device_t sb_15_device =
 device_t sb_2_device =
 {
         "Sound Blaster v2.0",
+        0,
         sb_2_init,
         sb_close,
         NULL,
@@ -462,6 +465,7 @@ device_t sb_2_device =
 device_t sb_pro_v1_device =
 {
         "Sound Blaster Pro v1",
+        0,
         sb_pro_v1_init,
         sb_close,
         NULL,
@@ -472,6 +476,7 @@ device_t sb_pro_v1_device =
 device_t sb_pro_v2_device =
 {
         "Sound Blaster Pro v2",
+        0,
         sb_pro_v2_init,
         sb_close,
         NULL,
@@ -482,6 +487,7 @@ device_t sb_pro_v2_device =
 device_t sb_16_device =
 {
         "Sound Blaster 16",
+        0,
         sb_16_init,
         sb_close,
         NULL,
@@ -492,6 +498,7 @@ device_t sb_16_device =
 device_t sb_awe32_device =
 {
         "Sound Blaster AWE32",
+        0,
         sb_awe32_init,
         sb_close,
         sb_awe32_available,

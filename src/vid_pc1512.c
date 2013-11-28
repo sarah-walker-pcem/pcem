@@ -481,6 +481,7 @@ static void pc1512_speed_changed(void *p)
 device_t pc1512_device =
 {
         "Amstrad PC1512 (video)",
+        0,
         pc1512_init,
         pc1512_close,
         NULL,

@@ -56,6 +56,7 @@ void adlib_close(void *p)
 device_t adlib_device =
 {
         "AdLib",
+        0,
         adlib_init,
         adlib_close,
         NULL,

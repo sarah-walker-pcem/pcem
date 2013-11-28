@@ -482,6 +482,7 @@ void m24_speed_changed(void *p)
 device_t m24_device =
 {
         "Olivetti M24 (video)",
+        0,
         m24_init,
         m24_close,
         NULL,

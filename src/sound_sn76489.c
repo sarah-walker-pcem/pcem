@@ -192,6 +192,7 @@ void sn76489_close(void *p)
 device_t sn76489_device =
 {
         "TI SN74689 PSG",
+        0,
         sn76489_init,
         sn76489_close,
         NULL,

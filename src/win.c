@@ -560,7 +560,6 @@ int getsfile(HWND hwnd, char *f, char *fn)
 
 extern int is486;
 int romstolist[26], listtomodel[26], romstomodel[26], modeltolist[26];
-int vidtolist[20],listtovid[20];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
 
 int mem_list_to_size[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,32,48,64,256};
@@ -578,6 +577,7 @@ int mem_size_to_list[]={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,15,15,15
 
 BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+        char temp_str[256];
         HWND h;
         int c, d;
         int rom,gfx,mem,fpu;
@@ -606,29 +606,27 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         c++;
                 }
                 SendMessage(h, CB_SETCURSEL, modeltolist[model], 0);
-                
-                h=GetDlgItem(hdlg,IDC_COMBO2);
-                memset(vidtolist, 0, sizeof(vidtolist));
-                c=4;
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"CGA"); vidtolist[GFX_CGA]=0; listtovid[0]=0;
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"MDA"); vidtolist[GFX_MDA]=1; listtovid[1]=1;
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Hercules"); vidtolist[GFX_HERCULES]=2; listtovid[2]=2;
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"EGA"); vidtolist[GFX_EGA]=3; listtovid[3]=3;
-                if (gfx_present[GFX_TVGA])       { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Trident 8900D");           vidtolist[GFX_TVGA]=c;          listtovid[c]=GFX_TVGA;          c++;       }
-                if (gfx_present[GFX_ET4000])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Tseng ET4000AX");          vidtolist[GFX_ET4000]=c;        listtovid[c]=GFX_ET4000;        c++;       }
-                if (gfx_present[GFX_ET4000W32])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Diamond Stealth 32");      vidtolist[GFX_ET4000W32]=c;     listtovid[c]=GFX_ET4000W32;     c++;       }
-                if (gfx_present[GFX_BAHAMAS64])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Paradise Bahamas 64");     vidtolist[GFX_BAHAMAS64]=c;     listtovid[c]=GFX_BAHAMAS64;     c++;       }
-                if (gfx_present[GFX_N9_9FX])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Number Nine 9FX");         vidtolist[GFX_N9_9FX]=c;        listtovid[c]=GFX_N9_9FX;        c++;       }
-                if (gfx_present[GFX_VIRGE])      { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"S3 VIRGE");                vidtolist[GFX_VIRGE]=c;         listtovid[c]=GFX_VIRGE;         c++;       }
-                if (gfx_present[GFX_TGUI9440])   { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Trident TGUI9440");        vidtolist[GFX_TGUI9440]=c;      listtovid[c]=GFX_TGUI9440;      c++;       }
-                if (gfx_present[GFX_VGA])        { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"VGA");                     vidtolist[GFX_VGA]=c;           listtovid[c]=GFX_VGA;           c++;       }
-                if (gfx_present[GFX_VGAEDGE16])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI VGA Edge-16");         vidtolist[GFX_VGAEDGE16]=c;     listtovid[c]=GFX_VGAEDGE16;     c++;       }                
-                if (gfx_present[GFX_VGACHARGER]) { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI VGA Charger");         vidtolist[GFX_VGACHARGER]=c;    listtovid[c]=GFX_VGACHARGER;    c++;       }                
-                if (gfx_present[GFX_OTI067])     { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Oak OTI-067");             vidtolist[GFX_OTI067]=c;        listtovid[c]=GFX_OTI067;        c++;       }
-                if (gfx_present[GFX_MACH64GX])   { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"ATI Graphics Pro Turbo");  vidtolist[GFX_MACH64GX]=c;      listtovid[c]=GFX_MACH64GX;      c++;       }
-                if (gfx_present[GFX_CL_GD5429])  { SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Cirrus Logic CL-GD5429");  vidtolist[GFX_CL_GD5429]=c;     listtovid[c]=GFX_CL_GD5429;     c++;       }
-                SendMessage(h,CB_SETCURSEL,vidtolist[gfxcard],0);
-                if (models[model].fixed_gfxcard) EnableWindow(h,FALSE);
+
+                h = GetDlgItem(hdlg, IDC_COMBOVID);
+                c = d = 0;
+                while (1)
+                {
+                        char *s = video_card_getname(c);
+
+                        if (!s[0])
+                                break;
+
+                        if (video_card_available(c))
+                        {
+                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                if (video_new_to_old(c) == gfxcard)
+                                        SendMessage(h, CB_SETCURSEL, d, 0);                                
+
+                                d++;
+                        }
+
+                        c++;
+                }
 
                 h=GetDlgItem(hdlg,IDC_COMBOCPUM);
                 c = 0;
@@ -736,8 +734,9 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         h=GetDlgItem(hdlg,IDC_COMBO1);
                         temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
 
-                        h=GetDlgItem(hdlg,IDC_COMBO2);
-                        gfx=listtovid[SendMessage(h,CB_GETCURSEL,0,0)];
+                        h = GetDlgItem(hdlg, IDC_COMBOVID);
+                        SendMessage(h, CB_GETLBTEXT, SendMessage(h,CB_GETCURSEL,0,0), (LPARAM)temp_str);
+                        gfx = video_new_to_old(video_card_getid(temp_str));
 
                         h=GetDlgItem(hdlg,IDC_COMBOMEM);
                         mem=mem_list_to_size[SendMessage(h,CB_GETCURSEL,0,0)];
@@ -818,11 +817,22 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                                 temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
                                 
                                 /*Enable/disable gfxcard list*/
-                                h = GetDlgItem(hdlg, IDC_COMBO2);
+                                h = GetDlgItem(hdlg, IDC_COMBOVID);
                                 if (!models[temp_model].fixed_gfxcard)
                                 {
+                                        char *s = video_card_getname(video_old_to_new(gfxcard));
+                                        
                                         EnableWindow(h, TRUE);
-                                        SendMessage(h, CB_SETCURSEL, gfxcard, 0);
+                                        
+                                        c = 0;
+                                        while (1)
+                                        {
+                                                SendMessage(h, CB_GETLBTEXT, c, (LPARAM)temp_str);
+                                                if (!strcmp(temp_str, s))
+                                                        break;
+                                                c++;
+                                        }
+                                        SendMessage(h, CB_SETCURSEL, c, 0);
                                 }
                                 else
                                         EnableWindow(h, FALSE);

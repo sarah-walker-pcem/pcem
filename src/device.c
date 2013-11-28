@@ -42,6 +42,18 @@ void device_close_all()
         }
 }
 
+int device_available(device_t *d)
+{
+#ifdef RELEASE_BUILD
+        if (d->flags & DEVICE_NOT_WORKING)
+                return 0;
+#endif
+        if (d->available)
+                return d->available();
+                
+        return 1;        
+}
+
 void device_speed_changed()
 {
         int c;

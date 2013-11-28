@@ -33,6 +33,81 @@
 #include "vid_tvga.h"
 #include "vid_vga.h"
 
+typedef struct
+{
+        char name[64];
+        device_t *device;
+        int legacy_id;
+} VIDEO_CARD;
+
+static VIDEO_CARD video_cards[] =
+{
+        {"CGA",                                    &cga_device,          GFX_CGA},
+        {"MDA",                                    &mda_device,          GFX_MDA},
+        {"Hercules",                               &hercules_device,     GFX_HERCULES},
+        {"EGA",                                    &ega_device,          GFX_EGA},
+        {"Trident TVGA8900D",                      &tvga8900d_device,    GFX_TVGA},
+        {"Tseng ET4000AX",                         &et4000_device,       GFX_ET4000},
+        {"Diamond Stealth 32 (Tseng ET4000/w32p)", &et4000w32p_device,   GFX_ET4000W32},
+        {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device, GFX_BAHAMAS64},
+        {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,       GFX_N9_9FX},
+        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,     GFX_VIRGE},
+        {"Trident TGUI9440",                       &tgui9440_device,     GFX_TGUI9440},
+        {"VGA",                                    &vga_device,          GFX_VGA},
+        {"ATI VGA Edge-16 (ATI-18800)",            &ati18800_device,     GFX_VGAEDGE16},
+        {"ATI VGA Charger",                        &ati28800_device,     GFX_VGACHARGER},
+        {"OAK OTI-067",                            &oti067_device,       GFX_OTI067},
+        {"ATI Graphics Pro Turbo (Mach64 GX)",     &mach64gx_device,     GFX_MACH64GX},
+        {"Cirrus Logic CL-GD5429",                 &gd5429_device,       GFX_CL_GD5429},
+        {"",                                       NULL,                 0}
+};
+
+int video_card_available(int card)
+{
+        if (video_cards[card].device)
+                return device_available(video_cards[card].device);
+
+        return 1;
+}
+
+char *video_card_getname(int card)
+{
+        return video_cards[card].name;
+}
+
+int video_card_getid(char *s)
+{
+        int c = 0;
+
+        while (video_cards[c].device)
+        {
+                if (!strcmp(video_cards[c].name, s))
+                        return c;
+                c++;
+        }
+        
+        return 0;
+}
+
+int video_old_to_new(int card)
+{
+        int c = 0;
+        
+        while (video_cards[c].device)
+        {
+                if (video_cards[c].legacy_id == card)
+                        return c;
+                c++;
+        }
+        
+        return 0;
+}
+
+int video_new_to_old(int card)
+{
+        return video_cards[card].legacy_id;
+}
+
 uint32_t *video_15to32, *video_16to32;
 
 int egareads=0,egawrites=0;
@@ -159,82 +234,7 @@ void video_init()
                 device_add(&oti067_device);
                 return;
         }
-        switch (gfxcard)
-        {
-                case GFX_MDA:
-                device_add(&mda_device);
-                break;
-
-                case GFX_HERCULES:
-                device_add(&hercules_device);
-                break;
-                
-                case GFX_CGA:
-                device_add(&cga_device);
-                break;
-                
-                case GFX_EGA:
-                device_add(&ega_device);
-                break;
-                
-                case GFX_TVGA:
-                device_add(&tvga8900d_device);
-                break;
-                
-                case GFX_ET4000:
-                device_add(&et4000_device);
-                break;
-                
-                case GFX_ET4000W32:
-                device_add(&et4000w32p_device);
-                break;
-
-                case GFX_BAHAMAS64:
-                device_add(&s3_bahamas64_device);
-                break;
-
-                case GFX_N9_9FX:
-                device_add(&s3_9fx_device);
-                break;
-                
-                case GFX_STEALTH64:
-                break;
-                
-                case GFX_VIRGE:
-                device_add(&s3_virge_device);
-                break;
-                
-                case GFX_TGUI9440:
-                device_add(&tgui9440_device);
-                break;
-                
-                case GFX_VGA:
-                device_add(&vga_device);
-                break;
-
-                case GFX_VGAEDGE16:
-                device_add(&ati18800_device);
-                break;
-
-                case GFX_VGACHARGER:
-                device_add(&ati18800_device);
-                break;
-                                
-                case GFX_OTI067:
-                device_add(&oti067_device);
-                return;
-
-                case GFX_MACH64GX:
-                device_add(&mach64gx_device);
-                return;
-
-                case GFX_CL_GD5429:
-                device_add(&gd5429_device);
-                return;
-
-                default:
-                fatal("Bad gfx card %i\n",gfxcard);
-        }
+        device_add(video_cards[video_old_to_new(gfxcard)].device);
 }
 
 
@@ -245,29 +245,7 @@ uint8_t fontdatm[256][16];
 
 int xsize=1,ysize=1;
 
-
-PALETTE cgapal;/* =
-{
-        { 0,  0,  0},{0,42,0},{42,0,0},{42,21,0},
-        { 0,  0,  0},{0,42,42},{42,0,42},{42,42,42},
-        { 0,  0,  0},{21,63,21},{63,21,21},{63,63,21},
-        { 0,  0,  0},{21,63,63},{63,21,63},{63,63,63},
-
-        {0,   0,  0}, { 0,  0, 42}, { 0, 42,  0}, { 0, 42, 42},
-        {42,  0,  0}, {42,  0, 42}, {42, 21, 00}, {42, 42, 42},
-        {21, 21, 21}, {21, 21, 63}, {21, 63, 21}, {21, 63, 63},
-        {63, 21, 21}, {63, 21, 63}, {63, 63, 21}, {63, 63, 63},
-
-        {0,0,0},{0,21,0},{0,0,42},{0,42,42},
-        {42,0,21},{21,10,21},{42,0,42},{42,0,63},
-        {21,21,21},{21,63,21},{42,21,42},{21,63,63},
-        {63,0,0},{42,42,0},{63,21,42},{41,41,41},
-        
-        {0,0,0},{0,42,42},{42,0,0},{42,42,42},
-        {0,0,0},{0,42,42},{42,0,0},{42,42,42},
-        {0,0,0},{0,63,63},{63,0,0},{63,63,63},
-        {0,0,0},{0,63,63},{63,0,0},{63,63,63},
-};*/
+PALETTE cgapal;
 
 void loadfont(char *s, int format)
 {

@@ -1,3 +1,9 @@
+int video_card_available(int card);
+char *video_card_getname(int card);
+int video_card_getid(char *s);
+int video_old_to_new(int card);
+int video_new_to_old(int card);
+
 extern int egareads,egawrites;
 
 extern int fullchange;

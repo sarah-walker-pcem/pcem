@@ -130,6 +130,7 @@ void sis496_close(void *p)
 device_t sis496_device =
 {
         "SiS 496/497",
+        0,
         sis496_init,
         sis496_close,
         NULL,

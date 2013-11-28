@@ -520,6 +520,7 @@ void cga_speed_changed(void *p)
 device_t cga_device =
 {
         "CGA",
+        0,
         cga_standalone_init,
         cga_close,
         NULL,
