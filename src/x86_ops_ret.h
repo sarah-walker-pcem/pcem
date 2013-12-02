@@ -68,6 +68,46 @@ static int opRETF_a32_imm(uint32_t fetchdat)
         return 0;
 }
 
+static int opIRET_286(uint32_t fetchdat)
+{
+        if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
+        {
+                x86gpf(NULL,0);
+                return 0;
+        }
+        if (ssegs) ss = oldss;
+        if (msw&1)
+        {
+                optype = IRET;
+                pmodeiret(0);
+                optype = 0;
+        }
+        else
+        {
+                uint16_t new_cs;
+                oxpc = pc;
+                if (stack32)
+                {
+                        pc = readmemw(ss, ESP);
+                        new_cs = readmemw(ss, ESP + 2);
+                        flags = (flags & 0x7000) | (readmemw(ss, ESP + 4) & 0xffd5) | 2;
+                        ESP += 6;
+                }
+                else
+                {
+                        pc = readmemw(ss, SP);
+                        new_cs = readmemw(ss, ((SP + 2) & 0xffff));
+                        flags = (flags & 0x7000) | (readmemw(ss, ((SP + 4) & 0xffff)) & 0x0fd5) | 2;
+                        SP += 6;
+                }
+                loadcs(new_cs);
+        }
+        flags_extract();
+        cycles -= is486 ? 15 : 22;
+        nmi_enable = 1;
+        return 0;
+}
+
 static int opIRET(uint32_t fetchdat)
 {
         if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))

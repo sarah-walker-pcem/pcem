@@ -117,7 +117,6 @@ static int opPOPF_286(uint32_t fetchdat)
         
         tempw = POP_W();                if (abrt) return 0;
 
-        pclog("POPF_286 %04X:%04X %04X\n", CS, pc, tempw);
         if (!(msw & 1))           flags = (flags & 0x7000) | (tempw & 0x0fd5) | 2;
         else if (!(CPL))          flags = (tempw & 0x7fd5) | 2;
         else if (IOPLp)           flags = (flags & 0x3000) | (tempw & 0x4fd5) | 2;

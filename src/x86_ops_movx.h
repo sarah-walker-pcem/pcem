@@ -42,6 +42,28 @@ static int opMOVZX_l_b_a32(uint32_t fetchdat)
         cycles -= 3;
         return 0;
 }
+static int opMOVZX_w_w_a16(uint32_t fetchdat)
+{
+        uint16_t temp;
+        
+        fetch_ea_16(fetchdat);
+        temp = geteaw();                        if (abrt) return 0;
+        regs[reg].w = temp;
+        
+        cycles -= 3;
+        return 0;
+}
+static int opMOVZX_w_w_a32(uint32_t fetchdat)
+{
+        uint16_t temp;
+        
+        fetch_ea_32(fetchdat);
+        temp = geteaw();                        if (abrt) return 0;
+        regs[reg].w = temp;
+        
+        cycles -= 3;
+        return 0;
+}
 static int opMOVZX_l_w_a16(uint32_t fetchdat)
 {
         uint16_t temp;
