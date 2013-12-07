@@ -44,6 +44,12 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                         }
                         if (svga->attraddr == 0x10) 
                                 svga_recalctimings(svga);
+                        if (svga->attraddr == 0x12)
+                        {
+                                if ((val & 0xf) != svga->plane_mask)
+                                        svga->fullchange = changeframecount;
+                                svga->plane_mask = val & 0xf;
+                        }
                 }
                 svga->attrff ^= 1;
                 break;

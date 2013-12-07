@@ -23,6 +23,8 @@ typedef struct svga_t
         
         uint8_t cgastat;
         
+        uint8_t plane_mask;
+        
         int fast;
         uint8_t colourcompare, colournocare;
         int readmode, writemode, readplane;

@@ -280,17 +280,17 @@ void svga_render_4bpp_lowres(svga_t *svga)
                         svga->ma &= svga->vrammask;
 
                         dat = edatlookup[edat[0] >> 6][edat[1] >> 6] | (edatlookup[edat[2] >> 6][edat[3] >> 6] << 2);
-                        p[0]  = p[1]  = svga->pallook[svga->egapal[dat >> 4]];
-                        p[2]  = p[3]  = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[0]  = p[1]  = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[2]  = p[3]  = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 4) & 3][(edat[1] >> 4) & 3] | (edatlookup[(edat[2] >> 4) & 3][(edat[3] >> 4) & 3] << 2);
-                        p[4]  = p[5]  = svga->pallook[svga->egapal[dat >> 4]];
-                        p[6]  = p[7]  = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[4]  = p[5]  = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[6]  = p[7]  = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 2) & 3][(edat[1] >> 2) & 3] | (edatlookup[(edat[2] >> 2) & 3][(edat[3] >> 2) & 3] << 2);
-                        p[8]  = p[9]  = svga->pallook[svga->egapal[dat >> 4]];
-                        p[10] = p[11] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[8]  = p[9]  = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[10] = p[11] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[edat[0] & 3][edat[1] & 3] | (edatlookup[edat[2] & 3][edat[3] & 3] << 2);
-                        p[12] = p[13] = svga->pallook[svga->egapal[dat >> 4]];
-                        p[14] = p[15] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[12] = p[13] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[14] = p[15] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                                                 
                         p += 16;
                 }
@@ -329,17 +329,17 @@ void svga_render_4bpp_highres(svga_t *svga)
                         svga->ma &= svga->vrammask;
 
                         dat = edatlookup[edat[0] >> 6][edat[1] >> 6] | (edatlookup[edat[2] >> 6][edat[3] >> 6] << 2);
-                        p[0] = svga->pallook[svga->egapal[dat >> 4]];
-                        p[1] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[0] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[1] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 4) & 3][(edat[1] >> 4) & 3] | (edatlookup[(edat[2] >> 4) & 3][(edat[3] >> 4) & 3] << 2);
-                        p[2] = svga->pallook[svga->egapal[dat >> 4]];
-                        p[3] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[2] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[3] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 2) & 3][(edat[1] >> 2) & 3] | (edatlookup[(edat[2] >> 2) & 3][(edat[3] >> 2) & 3] << 2);
-                        p[4] = svga->pallook[svga->egapal[dat >> 4]];
-                        p[5] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[4] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[5] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[edat[0] & 3][edat[1] & 3] | (edatlookup[edat[2] & 3][edat[3] & 3] << 2);
-                        p[6] = svga->pallook[svga->egapal[dat >> 4]];
-                        p[7] = svga->pallook[svga->egapal[dat & 0xf]];
+                        p[6] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        p[7] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         
                         p += 8;
                 }
