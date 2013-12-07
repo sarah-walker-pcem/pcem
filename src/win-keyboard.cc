@@ -2,9 +2,12 @@
 #include <string.h>
 #include <stdint.h>
 #define DIRECTINPUT_VERSION	0x0700
+#define BITMAP WINDOWS_BITMAP
 #include <dinput.h>
+#undef BITMAP
 #include "plat-keyboard.h"
 #include "win.h"
+#include "video.h"
 
 extern "C" int key[256];
 uint8_t dinput_key[256];
@@ -106,4 +109,9 @@ void keyboard_poll_host()
 //                        if (key[c]) pclog("Key down %i %02X  %i %02X\n", c, c, keyboard_lookup[c], keyboard_lookup[c]);
                 }
         }
+        if (((dinput_key[DIK_LCONTROL] | dinput_key[DIK_RCONTROL]) & 0x80) && 
+            ((dinput_key[DIK_LMENU]    | dinput_key[DIK_RMENU])    & 0x80) && 
+             (dinput_key[DIK_NEXT] & 0x80) &&
+            video_fullscreen)
+                leave_fullscreen();
 }

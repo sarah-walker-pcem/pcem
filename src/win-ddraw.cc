@@ -12,17 +12,19 @@ extern "C" void device_force_redraw();
 
 extern "C" void ddraw_init(HWND h);
 extern "C" void ddraw_close();
-extern "C" void ddraw_draw();
 
-LPDIRECTDRAW  lpdd  = NULL;
-LPDIRECTDRAW4 lpdd4 = NULL;
-LPDIRECTDRAWSURFACE4 lpdds_pri = NULL;
-LPDIRECTDRAWSURFACE4 lpdds_back = NULL;
-LPDIRECTDRAWSURFACE4 lpdds_back2 = NULL;
-LPDIRECTDRAWCLIPPER lpdd_clipper = NULL;
-DDSURFACEDESC2 ddsd;
+static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
+static void ddraw_blit_memtoscreen_8(int x, int y, int w, int h);
 
-HWND ddraw_hwnd;
+static LPDIRECTDRAW  lpdd  = NULL;
+static LPDIRECTDRAW4 lpdd4 = NULL;
+static LPDIRECTDRAWSURFACE4 lpdds_pri = NULL;
+static LPDIRECTDRAWSURFACE4 lpdds_back = NULL;
+static LPDIRECTDRAWSURFACE4 lpdds_back2 = NULL;
+static LPDIRECTDRAWCLIPPER lpdd_clipper = NULL;
+static DDSURFACEDESC2 ddsd;
+
+static HWND ddraw_hwnd;
 
 static PALETTE cgapal=
 {
@@ -140,7 +142,7 @@ void ddraw_close()
         }
 }
 
-void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
+static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 {
         RECT r_src;
         RECT r_dest;
@@ -171,7 +173,7 @@ void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         ClientToScreen(ddraw_hwnd, &po);
         GetClientRect(ddraw_hwnd, &r_dest);
         OffsetRect(&r_dest, po.x, po.y);        
-
+        
         r_src.left   = 0;
         r_src.top    = 0;       
         r_src.right  = w;
@@ -213,7 +215,7 @@ void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         }
 }
 
-void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
+static void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
 {
         RECT r_src;
         RECT r_dest;

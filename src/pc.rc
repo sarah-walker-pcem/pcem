@@ -30,6 +30,15 @@ BEGIN
                         MENUITEM SEPARATOR
                         MENUITEM "&DirectDraw", IDM_VID_DDRAW
                         MENUITEM "Direct&3D",   IDM_VID_D3D
+                        MENUITEM SEPARATOR
+                        MENUITEM "&Fullscreen", IDM_VID_FULLSCREEN
+                        POPUP "Fullscreen &stretch mode"
+                        BEGIN
+                                MENUITEM "&Full screen stretch", IDM_VID_FS_FULL
+                                MENUITEM "&4:3", IDM_VID_FS_43
+                                MENUITEM "&Square pixels", IDM_VID_FS_SQ
+                                MENUITEM "&Integer scale", IDM_VID_FS_INT
+                        END
                 END
         END
         POPUP "&Misc"

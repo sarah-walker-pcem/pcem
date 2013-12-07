@@ -1,20 +1,23 @@
-#define IDM_FILE_RESET  40000
-#define IDM_FILE_HRESET 40001
-#define IDM_FILE_EXIT   40002
-#define IDM_DISC_A      40010
-#define IDM_DISC_B      40011
-#define IDM_EJECT_A     40012
-#define IDM_EJECT_B     40013
-#define IDM_HDCONF      40014
-#define IDM_CONFIG      40020
-#define IDM_STATUS      40030
-#define IDM_KEY_ALLEGRO 40040
-#define IDM_KEY_WINDOWS 40041
-#define IDM_VID_RESIZE  40050
-#define IDM_VID_DDRAW   40060
-#define IDM_VID_D3D     40061
-#define IDM_CDROM_EMPTY 40100
-#define IDM_CDROM_REAL  40100
+#define IDM_FILE_RESET     40000
+#define IDM_FILE_HRESET    40001
+#define IDM_FILE_EXIT      40002
+#define IDM_DISC_A         40010
+#define IDM_DISC_B         40011
+#define IDM_EJECT_A        40012
+#define IDM_EJECT_B        40013
+#define IDM_HDCONF         40014
+#define IDM_CONFIG         40020
+#define IDM_STATUS         40030
+#define IDM_VID_RESIZE     40050
+#define IDM_VID_DDRAW      40060
+#define IDM_VID_D3D        40061
+#define IDM_VID_FULLSCREEN 40070
+#define IDM_VID_FS_FULL    40071
+#define IDM_VID_FS_43      40072
+#define IDM_VID_FS_SQ      40073
+#define IDM_VID_FS_INT     40074
+#define IDM_CDROM_EMPTY    40100
+#define IDM_CDROM_REAL     40100
 #define IDM_CDROM_DISABLED 40200
 
 #define IDC_COMBO1 1000
@@ -61,3 +64,4 @@
 #define IDC_STEXT_DEVICE 1108
 
 #define WM_RESETD3D WM_USER
+#define WM_LEAVEFULLSCREEN WM_USER + 1

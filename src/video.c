@@ -108,6 +108,7 @@ int video_new_to_old(int card)
         return video_cards[card].legacy_id;
 }
 
+int video_fullscreen = 0, video_fullscreen_scale, video_fullscreen_first;
 uint32_t *video_15to32, *video_16to32;
 
 int egareads=0,egawrites=0;

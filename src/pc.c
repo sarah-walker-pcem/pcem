@@ -34,7 +34,6 @@ int frame = 0;
 
 int cdrom_enabled;
 int CPUID;
-int kb_win;
 int vid_resize, vid_api;
 
 int cycles_lost = 0;
@@ -461,9 +460,10 @@ void loadconfig()
         cache = get_config_int(NULL, "cache", 3);
         cga_comp = get_config_int(NULL, "cga_composite", 0);
         
-        kb_win = get_config_int(NULL, "kb_win", 0);
         vid_resize = get_config_int(NULL, "vid_resize", 0);
         vid_api = get_config_int(NULL, "vid_api", 0);
+        video_fullscreen_scale = get_config_int(NULL, "video_fullscreen_scale", 0);
+        video_fullscreen_first = get_config_int(NULL, "video_fullscreen_first", 1);
 
         hdc[0].spt = get_config_int(NULL, "hdc_sectors", 0);
         hdc[0].hpc = get_config_int(NULL, "hdc_heads", 0);
@@ -502,9 +502,10 @@ void saveconfig()
         set_config_int(NULL, "mem_size", mem_size);
         set_config_int(NULL, "cdrom_drive", cdrom_drive);
         set_config_int(NULL, "cdrom_enabled", cdrom_enabled);
-        set_config_int(NULL, "kb_win", kb_win);
         set_config_int(NULL, "vid_resize", vid_resize);
         set_config_int(NULL, "vid_api", vid_api);
+        set_config_int(NULL, "video_fullscreen_scale", video_fullscreen_scale);
+        set_config_int(NULL, "video_fullscreen_first", video_fullscreen_first);
         
         set_config_int(NULL, "hdc_sectors", hdc[0].spt);
         set_config_int(NULL, "hdc_heads", hdc[0].hpc);

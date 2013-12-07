@@ -3,6 +3,8 @@
 #include "plat-dinput.h"
 #include "win.h"
 
+extern "C" int video_fullscreen;
+
 extern "C" void fatal(const char *format, ...);
 extern "C" void pclog(const char *format, ...);
 
@@ -23,7 +25,7 @@ void mouse_init()
         
         if (FAILED(lpdi->CreateDevice(GUID_SysMouse, &lpdi_mouse, NULL)))
            fatal("mouse_init : CreateDevice failed\n");
-        if (FAILED(lpdi_mouse->SetCooperativeLevel(ghwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE)))
+        if (FAILED(lpdi_mouse->SetCooperativeLevel(ghwnd, DISCL_FOREGROUND | (video_fullscreen ? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE))))
            fatal("mouse_init : SetCooperativeLevel failed\n");
         if (FAILED(lpdi_mouse->SetDataFormat(&c_dfDIMouse)))
            fatal("mouse_init : SetDataFormat failed\n");
@@ -56,7 +58,7 @@ void poll_mouse()
            mouse_b |= 4;
         mouse_x += mousestate.lX;
         mouse_y += mousestate.lY;        
-        if (!mousecapture)
+        if (!mousecapture && !video_fullscreen)
            mouse_x = mouse_y = mouse_b = 0;
 }
 

@@ -21,8 +21,11 @@
 #include "plat-midi.h"
 #include "plat-keyboard.h"
 
+#include "win.h"
 #include "win-ddraw.h"
+#include "win-ddraw-fs.h"
 #include "win-d3d.h"
+#include "win-d3d-fs.h"
 //#include "win-opengl.h"
 
 static struct
@@ -30,10 +33,16 @@ static struct
         void (*init)(HWND h);
         void (*close)();
         void (*resize)(int x, int y);
-} vid_apis[] =
+} vid_apis[2][2] =
 {
-        ddraw_init, ddraw_close, NULL,
-        d3d_init, d3d_close, d3d_resize
+        {
+                ddraw_init, ddraw_close, NULL,
+                d3d_init, d3d_close, d3d_resize
+        },
+        {
+                ddraw_fs_init, ddraw_fs_close, NULL,
+                d3d_fs_init, d3d_fs_close, NULL
+        },
 };
 
 #define TIMER_1SEC 1
@@ -80,10 +89,8 @@ RECT oldclip;
 int mousecapture=0;
 int drawit;
 /*  Declare Windows procedure  */
-LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
-
-/*  Make the class name into a global variable  */
-char szClassName[ ] = "WindowsApp";
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND ghwnd;
 static int win_doresize = 0;
@@ -128,6 +135,12 @@ void startblit()
 void endblit()
 {
         LeaveCriticalSection(&cs);
+}
+
+static int leave_fullscreen_flag = 0;
+void leave_fullscreen()
+{
+        leave_fullscreen_flag = 1;
 }
 
 int mainthreadon=0;
@@ -189,19 +202,23 @@ void mainthread(LPVOID param)
                         }
                 }
                 else
-                {
                         Sleep(1);
-                }
 
-                if (win_doresize)
+                if (!video_fullscreen && win_doresize)
                 {
                         RECT r;
                         GetWindowRect(ghwnd, &r);
                         MoveWindow(ghwnd, r.left, r.top,
-                                   winsizex + (GetSystemMetrics(SM_CXFIXEDFRAME) * 2),
-                                   winsizey + (GetSystemMetrics(SM_CYFIXEDFRAME) * 2) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 1,
-                                   TRUE);
+                                winsizex + (GetSystemMetrics(SM_CXFIXEDFRAME) * 2),
+                                winsizey + (GetSystemMetrics(SM_CYFIXEDFRAME) * 2) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 1,
+                                TRUE);
                         win_doresize = 0;
+                }
+
+                if (leave_fullscreen_flag)
+                {
+                        leave_fullscreen_flag = 0;
+                        SendMessage(ghwnd, WM_LEAVEFULLSCREEN, 0, 0);
                 }
         }
         mainthreadon=0;
@@ -239,6 +256,8 @@ void get_executable_name(char *s, int size)
 
 void set_window_title(char *s)
 {
+        if (video_fullscreen)
+                return;
         SetWindowText(ghwnd, s);
 }
 
@@ -248,51 +267,57 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                     int nFunsterStil)
 
 {
-    HWND hwnd;               /* This is the handle for our window */
-    MSG messages;            /* Here messages to the application are saved */
-    WNDCLASSEX wincl;        /* Data structure for the windowclass */
-    int c, d;
+        HWND hwnd;               /* This is the handle for our window */
+        MSG messages;            /* Here messages to the application are saved */
+        WNDCLASSEX wincl;        /* Data structure for the windowclass */
+        int c, d;
 
         hinstance=hThisInstance;
-    /* The Window structure */
-    wincl.hInstance = hThisInstance;
-    wincl.lpszClassName = szClassName;
-    wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
-    wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
-    wincl.cbSize = sizeof (WNDCLASSEX);
+        /* The Window structure */
+        wincl.hInstance = hThisInstance;
+        wincl.lpszClassName = szClassName;
+        wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
+        wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
+        wincl.cbSize = sizeof (WNDCLASSEX);
 
-    /* Use default icon and mouse-pointer */
-    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
-    wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-    wincl.hCursor = NULL;//LoadCursor (NULL, IDC_ARROW);
-    wincl.lpszMenuName = NULL;                 /* No menu */
-    wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
-    wincl.cbWndExtra = 0;                      /* structure or the window instance */
-    /* Use Windows's default color as the background of the window */
-    wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+        /* Use default icon and mouse-pointer */
+        wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+        wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
+        wincl.hCursor = NULL;//LoadCursor (NULL, IDC_ARROW);
+        wincl.lpszMenuName = NULL;                 /* No menu */
+        wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
+        wincl.cbWndExtra = 0;                      /* structure or the window instance */
+        /* Use Windows's default color as the background of the window */
+        wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
 
-    /* Register the window class, and if it fails quit the program */
-    if (!RegisterClassEx (&wincl))
-        return 0;
+        /* Register the window class, and if it fails quit the program */
+        if (!RegisterClassEx(&wincl))
+                return 0;
 
-        menu=LoadMenu(hThisInstance,TEXT("MainMenu"));
+        wincl.lpszClassName = szSubClassName;
+        wincl.lpfnWndProc = subWindowProcedure;      /* This function is called by windows */
+
+        if (!RegisterClassEx(&wincl))
+                return 0;
+
+        menu = LoadMenu(hThisInstance, TEXT("MainMenu"));
         initmenu();
         
-    /* The class is registered, let's create the program*/
-    hwnd = CreateWindowEx (
-           0,                   /* Extended possibilites for variation */
-           szClassName,         /* Classname */
-           "PCem v0.7",         /* Title Text */
-           WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
-           CW_USEDEFAULT,       /* Windows decides the position */
-           CW_USEDEFAULT,       /* where the window ends up on the screen */
-           640+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),                 /* The programs width */
-           480+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,                 /* and height in pixels */
-           HWND_DESKTOP,        /* The window is a child-window to desktop */
-           menu,                /* Menu */
-           hThisInstance,       /* Program Instance handler */
-           NULL                 /* No Window Creation data */
-           );
+        /* The class is registered, let's create the program*/
+        hwnd = CreateWindowEx (
+                0,                   /* Extended possibilites for variation */
+                szClassName,         /* Classname */
+                "PCem v0.7",         /* Title Text */
+                WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
+                CW_USEDEFAULT,       /* Windows decides the position */
+                CW_USEDEFAULT,       /* where the window ends up on the screen */
+                640+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),                 /* The programs width */
+                480+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,                 /* and height in pixels */
+                HWND_DESKTOP,        /* The window is a child-window to desktop */
+                menu,                /* Menu */
+                hThisInstance,       /* Program Instance handler */
+                NULL                 /* No Window Creation data */
+        );
 
         /* Make the window visible on the screen */
         ShowWindow (hwnd, nFunsterStil);
@@ -306,7 +331,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         
         initpc();
         
-        vid_apis[vid_api].init(ghwnd);
+        vid_apis[0][vid_api].init(ghwnd);
 
         if (vid_resize) SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
         else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
@@ -315,9 +340,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
            CheckMenuItem(menu, IDM_CDROM_DISABLED, MF_CHECKED);
         else           
            CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
-        CheckMenuItem(menu, IDM_KEY_ALLEGRO + kb_win, MF_CHECKED);
         if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
-        CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);        
+        CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
+        CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
@@ -439,12 +464,12 @@ InitializeCriticalSection(&cs);
                         if (messages.message==WM_QUIT) quited=1;
                         TranslateMessage(&messages);
                         DispatchMessage(&messages);                        
-                                if ((key[KEY_LCONTROL] || key[KEY_RCONTROL]) && key[KEY_END] && mousecapture)
-                                {
-                                        ClipCursor(&oldclip);
-                                        ShowCursor(TRUE);
-                                        mousecapture=0;
-                                }
+                        if ((key[KEY_LCONTROL] || key[KEY_RCONTROL]) && key[KEY_END] && mousecapture)
+                        {
+                                ClipCursor(&oldclip);
+                                ShowCursor(TRUE);
+                                mousecapture=0;
+                        }
                 }
 
                 quited=1;
@@ -463,7 +488,7 @@ InitializeCriticalSection(&cs);
         closepc();
 //        pclog("dumpregs\n");
 
-        vid_apis[vid_api].close();
+        vid_apis[video_fullscreen][vid_api].close();
         
         timeEndPeriod(1);
 //        endsoundthread();
@@ -473,6 +498,10 @@ InitializeCriticalSection(&cs);
                 ClipCursor(&oldclip);
                 ShowCursor(TRUE);
         }
+        
+        UnregisterClass(szSubClassName, hinstance);
+        UnregisterClass(szClassName, hinstance);
+
 //        pclog("Ending! %i %i\n",messages.wParam,quited);
         return messages.wParam;
 }
@@ -1398,12 +1427,13 @@ HHOOK hKeyboardHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 {
-    if (nCode < 0 || nCode != HC_ACTION || !mousecapture) return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam); 
+        if (nCode < 0 || nCode != HC_ACTION || (!mousecapture && !video_fullscreen))
+                return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam); 
 	
 	KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
 
-    if(p->vkCode==VK_TAB && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab
-    if(p->vkCode==VK_SPACE && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab    
+        if (p->vkCode == VK_TAB && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab
+        if (p->vkCode == VK_SPACE && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab    
 	if((p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN)) return 1;//disable windows keys
 	if (p->vkCode == VK_ESCAPE && p->flags & LLKHF_ALTDOWN) return 1;//disable alt-escape
 	BOOL bControlKeyDown = GetAsyncKeyState (VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);//checks ctrl key pressed
@@ -1496,21 +1526,39 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         case IDM_VID_DDRAW: case IDM_VID_D3D:
                         startblit();
                         CheckMenuItem(hmenu, IDM_VID_DDRAW + vid_api, MF_UNCHECKED);
-                        vid_apis[vid_api].close();
+                        vid_apis[0][vid_api].close();
                         vid_api = LOWORD(wParam) - IDM_VID_DDRAW;
                         CheckMenuItem(hmenu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
-                        vid_apis[vid_api].init(ghwnd);
+                        vid_apis[0][vid_api].init(ghwnd);
                         endblit();
                         saveconfig();
                         device_force_redraw();
                         break;
 
-                        case IDM_KEY_ALLEGRO: case IDM_KEY_WINDOWS:
-                        CheckMenuItem(hmenu,LOWORD(wParam),MF_CHECKED);
-                        CheckMenuItem(hmenu,LOWORD(wParam)^1,MF_UNCHECKED);
-//                        if (kb_win && LOWORD(wParam)==IDM_KEY_ALLEGRO) install_keyboard();
-//                        if (!kb_win && LOWORD(wParam)==IDM_KEY_WINDOWS) remove_keyboard();
-                        kb_win=LOWORD(wParam)-IDM_KEY_ALLEGRO;
+                        case IDM_VID_FULLSCREEN:
+                        if (video_fullscreen_first)
+                        {
+                                video_fullscreen_first = 0;
+                                MessageBox(hwnd, "Use CTRL + ALT + PAGE DOWN to return to windowed mode", "PCem", MB_OK);
+                        }
+                        startblit();
+                        mouse_close();
+                        vid_apis[0][vid_api].close();
+                        video_fullscreen = 1;
+                        vid_apis[1][vid_api].init(ghwnd);
+                        mouse_init();
+                        endblit();
+                        device_force_redraw();
+                        break;
+
+                        case IDM_VID_FS_FULL:
+                        case IDM_VID_FS_43:
+                        case IDM_VID_FS_SQ:                                
+                        case IDM_VID_FS_INT:
+                        CheckMenuItem(hmenu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_UNCHECKED);
+                        video_fullscreen_scale = LOWORD(wParam) - IDM_VID_FS_FULL;
+                        CheckMenuItem(hmenu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
+                        saveconfig();
                         break;
                         
                         case IDM_CDROM_DISABLED:
@@ -1597,7 +1645,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 break;
 
                 case WM_LBUTTONUP:
-                if (!mousecapture)
+                if (!mousecapture && !video_fullscreen)
                 {
                         RECT pcclip;
 
@@ -1621,10 +1669,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 winsizex=lParam&0xFFFF;
                 winsizey=lParam>>16;
 
-                if (vid_apis[vid_api].resize)
+                if (vid_apis[video_fullscreen][vid_api].resize)
                 {
                         startblit();
-                        vid_apis[vid_api].resize(winsizex, winsizey);
+                        vid_apis[video_fullscreen][vid_api].resize(winsizex, winsizey);
                         endblit();
                 }
 
@@ -1648,8 +1696,22 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 
                 case WM_RESETD3D:
                 startblit();
-                d3d_reset();
+                if (video_fullscreen)
+                        d3d_fs_reset();
+                else
+                        d3d_reset();
                 endblit();
+                break;
+                
+                case WM_LEAVEFULLSCREEN:
+                startblit();
+                mouse_close();
+                vid_apis[1][vid_api].close();
+                video_fullscreen = 0;
+                vid_apis[0][vid_api].init(ghwnd);
+                mouse_init();
+                endblit();
+                device_force_redraw();
                 break;
 
                 case WM_KEYDOWN:
@@ -1668,6 +1730,16 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 default:
 //                        pclog("Def %08X %i\n",message,message);
                 return DefWindowProc (hwnd, message, wParam, lParam);
+        }
+        return 0;
+}
+
+LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+        switch (message)
+        {
+                default:
+                return DefWindowProc(hwnd, message, wParam, lParam);
         }
         return 0;
 }

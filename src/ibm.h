@@ -443,7 +443,6 @@ PcemHDC hdc[2];
 
 /*Keyboard*/
 int keybsenddelay;
-extern int kb_win;
 
 
 /*CD-ROM*/

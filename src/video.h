@@ -4,6 +4,16 @@ int video_card_getid(char *s);
 int video_old_to_new(int card);
 int video_new_to_old(int card);
 
+extern int video_fullscreen, video_fullscreen_scale, video_fullscreen_first;
+
+enum
+{
+        FULLSCR_SCALE_FULL = 0,
+        FULLSCR_SCALE_43,
+        FULLSCR_SCALE_SQ,
+        FULLSCR_SCALE_INT
+};
+
 extern int egareads,egawrites;
 
 extern int fullchange;
