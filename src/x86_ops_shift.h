@@ -66,7 +66,7 @@
                         break;                                                          \
                         case 0x20: case 0x30: /*SHL b,CL*/                              \
                         seteab(temp << c);      if (abrt) return 0;                     \
-                        set_flags_shift(FLAGS_SHL8, temp_orig, c, temp << c);           \
+                        set_flags_shift(FLAGS_SHL8, temp_orig, c, (temp << c) & 0xff);  \
                         if ((temp << (c - 1)) & 0x80) flags |= C_FLAG;                  \
                         cycles -= ((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
@@ -160,7 +160,7 @@
                         break;                                                          \
                         case 0x20: case 0x30: /*SHL w, c*/                              \
                         seteaw(temp << c);      if (abrt) return 0;                     \
-                        set_flags_shift(FLAGS_SHL16, temp_orig, c, temp << c);          \
+                        set_flags_shift(FLAGS_SHL16, temp_orig, c, (temp << c) & 0xffff); \
                         if ((temp << (c - 1)) & 0x8000) flags |= C_FLAG;                \
                         cycles -= ((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
