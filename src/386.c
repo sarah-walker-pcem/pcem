@@ -1119,7 +1119,7 @@ void rep386(int fv)
                 default:
                         pc=ipc;
                         cycles-=20;
-                fatal("Bad REP %02X %i\n",temp,rep32>>8);
+                pclog("Bad REP %02X %i\n", temp, rep32 >> 8);
                 x86illegal();
         }
         if (rep32&0x200) ECX=c;
