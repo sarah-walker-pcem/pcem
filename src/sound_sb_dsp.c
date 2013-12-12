@@ -269,7 +269,7 @@ void sb_dsp_setdma8(sb_dsp_t *dsp, int dma)
 void sb_exec_command(sb_dsp_t *dsp)
 {
         int temp,c;
-        pclog("sb_exec_command : SB command %02X\n", dsp->sb_command);
+//        pclog("sb_exec_command : SB command %02X\n", dsp->sb_command);
         switch (dsp->sb_command)
         {
                 case 0x01: /*???*/
@@ -516,7 +516,7 @@ void sb_exec_command(sb_dsp_t *dsp)
 void sb_write(uint16_t a, uint8_t v, void *priv)
 {
         sb_dsp_t *dsp = (sb_dsp_t *)priv;
-        printf("sb_write : Write soundblaster %04X %02X %04X:%04X %02X\n",a,v,CS,pc,dsp->sb_command);
+//        printf("sb_write : Write soundblaster %04X %02X %04X:%04X %02X\n",a,v,CS,pc,dsp->sb_command);
         switch (a&0xF)
         {
                 case 6: /*Reset*/
@@ -550,7 +550,7 @@ uint8_t sb_read(uint16_t a, void *priv)
 {
         sb_dsp_t *dsp = (sb_dsp_t *)priv;
 //        if (a==0x224) output=1;
-        pclog("sb_read : Read soundblaster %04X %04X:%04X\n",a,CS,pc);
+//        pclog("sb_read : Read soundblaster %04X %04X:%04X\n",a,CS,pc);
         switch (a & 0xf)
         {
                 case 0xA: /*Read data*/
@@ -594,7 +594,7 @@ void sb_dsp_init(sb_dsp_t *dsp, int type)
 
 void sb_dsp_setaddr(sb_dsp_t *dsp, uint16_t addr)
 {
-        pclog("sb_dsp_setaddr : %04X\n", addr);
+//        pclog("sb_dsp_setaddr : %04X\n", addr);
         io_removehandler(dsp->sb_addr + 6,   0x0002, sb_read, NULL, NULL, sb_write, NULL, NULL, dsp);
         io_removehandler(dsp->sb_addr + 0xa, 0x0006, sb_read, NULL, NULL, sb_write, NULL, NULL, dsp);        
         dsp->sb_addr = addr;
@@ -824,7 +824,7 @@ void pollsb(void *p)
                 {
                         sb_irq(dsp, 1);
                         dsp->sbenable = dsp->sb_8_enable;
-                        pclog("SB pause over\n");
+//                        pclog("SB pause over\n");
                 }
         }
 }
@@ -911,4 +911,74 @@ void sb_dsp_poll(sb_dsp_t *dsp, int16_t *l, int16_t *r)
 {
         *l = dsp->sbdatl;
         *r = dsp->sbdatr;
+}
+
+int sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
+{
+        char temps[128];
+        int cur_len = max_len;
+        int len;
+        int freq;
+
+        if (dsp->sb_timeo < 256)
+                freq = 1000000 / (256 - dsp->sb_timeo);
+        else
+                freq = dsp->sb_timeo - 256;
+
+        if (dsp->sb_8_enable && dsp->sb_8_output)
+        {
+                switch (dsp->sb_8_format)
+                {
+                        case 0x00: /*Mono unsigned*/
+                        case 0x10: /*Mono signed*/
+                        if (dsp->sb_type >= SBPRO && dsp->sb_type < SB16 && dsp->stereo)
+                        {
+                                strcpy(temps, "SB playback format : 8-bit stereo\n");
+                                freq /= 2;
+                        }
+                        else
+                                strcpy(temps, "SB playback format : 8-bit mono\n");
+                        break;
+                        case 0x20: /*Stereo unsigned*/
+                        case 0x30: /*Stereo signed*/
+                        strcpy(temps, "SB playback format : 8-bit stereo\n");
+                        break;
+                        case ADPCM_4:
+                        strcpy(temps, "SB playback format : 4-bit ADPCM\n");
+                        break;
+                        case ADPCM_26:
+                        strcpy(temps, "SB playback format : 2.6-bit ADPCM\n");
+                        break;
+                        case ADPCM_2:
+                        strcpy(temps, "SB playback format : 2-bit ADPCM\n");
+                        break;
+                }
+        }
+        else if (dsp->sb_16_enable && dsp->sb_16_output)
+        {
+                switch (dsp->sb_16_format)
+                {
+                        case 0x00: /*Mono unsigned*/
+                        case 0x10: /*Mono signed*/
+                        strcpy(temps, "SB playback format : 16-bit mono\n");
+                        break;
+                        case 0x20: /*Stereo unsigned*/
+                        case 0x30: /*Stereo signed*/
+                        strcpy(temps, "SB playback format : 16-bit stereo\n");
+                        break;
+                }
+        }
+        else
+                strcpy(temps, "SB playback stopped\n");
+        strncat(s, temps, cur_len);
+        cur_len -= strlen(temps);
+
+        if ((dsp->sb_8_enable && dsp->sb_8_output) || (dsp->sb_16_enable && dsp->sb_16_output))
+        {
+                sprintf(temps, "SB playback frequency : %iHz\n", freq);
+                strncat(s, temps, cur_len);
+                cur_len -= strlen(temps);
+        }
+        
+        return max_len - cur_len;
 }

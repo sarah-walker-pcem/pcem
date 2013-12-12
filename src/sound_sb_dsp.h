@@ -67,3 +67,5 @@ void sb_dsp_speed_changed(sb_dsp_t *dsp);
 void sb_dsp_poll(sb_dsp_t *dsp, int16_t *l, int16_t *r);
 
 void sb_dsp_set_stereo(sb_dsp_t *dsp, int stereo);
+
+int sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp);

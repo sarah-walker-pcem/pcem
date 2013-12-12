@@ -1405,6 +1405,7 @@ BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendDlgItemMessage(hdlg,IDC_STEXT7,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
                 sprintf(s,"Timer 0 frequency : %fHz",pit_timer0_freq());
                 SendDlgItemMessage(hdlg,IDC_STEXT8,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
+                device_s[0] = 0;
                 device_add_status_info(device_s, 4096);
                 SendDlgItemMessage(hdlg,IDC_STEXT_DEVICE,WM_SETTEXT,(WPARAM)NULL,(LPARAM)device_s);
                 return TRUE;

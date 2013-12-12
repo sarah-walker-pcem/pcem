@@ -151,8 +151,8 @@ void sb_pro_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->filter   = !(mixer->regs[0xe] & 0x20);
                 mixer->bass_l   = mixer->bass_r   = 8;
                 mixer->treble_l = mixer->treble_r = 8;
-                pclog("%02X %02X %02X\n", mixer->regs[0x04], mixer->regs[0x22], mixer->regs[0x26]);
-                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
+//                pclog("%02X %02X %02X\n", mixer->regs[0x04], mixer->regs[0x22], mixer->regs[0x26]);
+//                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
                 if (mixer->index == 0xe)
                         sb_dsp_set_stereo(&sb->dsp, val & 2);
         }
@@ -211,8 +211,8 @@ void sb_16_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->treble_l = mixer->regs[0x44] >> 4;
                 mixer->treble_r = mixer->regs[0x45] >> 4;
                 mixer->filter = 0;
-                pclog("%02X %02X %02X %02X %02X %02X\n", mixer->regs[0x30], mixer->regs[0x31], mixer->regs[0x32], mixer->regs[0x33], mixer->regs[0x34], mixer->regs[0x35]);
-                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
+//                pclog("%02X %02X %02X %02X %02X %02X\n", mixer->regs[0x30], mixer->regs[0x31], mixer->regs[0x32], mixer->regs[0x33], mixer->regs[0x34], mixer->regs[0x35]);
+//                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
         }
 }
 
@@ -429,6 +429,13 @@ void sb_speed_changed(void *p)
         sb_dsp_speed_changed(&sb->dsp);
 }
 
+int sb_add_status_info(char *s, int max_len, void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        
+        sb_dsp_add_status_info(s, max_len, &sb->dsp);
+}
+
 device_t sb_1_device =
 {
         "Sound Blaster v1.0",
@@ -438,7 +445,7 @@ device_t sb_1_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_15_device =
 {
@@ -449,7 +456,7 @@ device_t sb_15_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_2_device =
 {
@@ -460,7 +467,7 @@ device_t sb_2_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_pro_v1_device =
 {
@@ -471,7 +478,7 @@ device_t sb_pro_v1_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_pro_v2_device =
 {
@@ -482,7 +489,7 @@ device_t sb_pro_v2_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_16_device =
 {
@@ -493,7 +500,7 @@ device_t sb_16_device =
         NULL,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };
 device_t sb_awe32_device =
 {
@@ -504,5 +511,5 @@ device_t sb_awe32_device =
         sb_awe32_available,
         sb_speed_changed,
         NULL,
-        NULL
+        sb_add_status_info
 };

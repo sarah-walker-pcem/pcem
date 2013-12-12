@@ -2088,8 +2088,48 @@ void mach64_force_redraw(void *p)
 int mach64_add_status_info(char *s, int max_len, void *p)
 {
         mach64_t *mach64 = (mach64_t *)p;
+        int cur_len = max_len;
+
+        if (((mach64->crtc_gen_cntl >> 24) & 3) == 3)
+        {
+                svga_t *svga = &mach64->svga;
+                char temps[128];
+                int bpp = 4;
+                
+                strncat(s, "Mach64 in native mode\n", cur_len);
+                cur_len -= strlen("Mach64 in native mode\n");
+
+                switch ((mach64->crtc_gen_cntl >> 8) & 7)
+                {
+                        case 1: bpp = 4; break;
+                        case 2: bpp = 8; break;
+                        case 3: bpp = 15; break;
+                        case 4: bpp = 16; break;
+                        case 5: bpp = 24; break;
+                        case 6: bpp = 32; break;
+                }
+
+                sprintf(temps, "Mach64 colour depth : %i bpp\n", bpp);
+                strncat(s, temps, cur_len);
+                cur_len -= strlen(temps);
         
-        return svga_add_status_info(s, max_len, &mach64->svga);
+                sprintf(temps, "Mach64 resolution : %i x %i\n", svga->hdisp, svga->dispend);
+                strncat(s, temps, cur_len);
+                cur_len -= strlen(temps);
+        
+                sprintf(temps, "Mach64 refresh rate : %i Hz\n\n", svga->frames);
+                svga->frames = 0;
+                strncat(s, temps, cur_len);
+                cur_len -= strlen(temps);
+                
+                return max_len - cur_len;
+        }
+        else
+        {
+                strncat(s, "Mach64 in SVGA mode\n", cur_len);
+                cur_len -= strlen("Mach64 in SVGA mode\n");
+                return svga_add_status_info(s, cur_len, &mach64->svga);
+        }
 }
 
 device_t mach64gx_device =
