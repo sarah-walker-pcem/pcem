@@ -392,6 +392,7 @@ void x87_d9()
         double td;
         int64_t temp64;
         uint16_t tempw;
+        int temp;
         if (mod==3)
         {
                 switch (rmdat32&0xFF)
@@ -416,6 +417,12 @@ void x87_d9()
                         return;
                         case 0xD8: case 0xD9: case 0xDA: case 0xDB: /*Invalid, but apparently not illegal*/
                         case 0xDC: case 0xDD: case 0xDE: case 0xDF:
+                        if (fplog) pclog("FSTP\n");
+                        ST(rmdat32 & 7) = ST(0);
+                        temp = (tag >> ((TOP & 7) << 1)) & 3;
+                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
+                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
+                        x87_pop();
                         cycles-=3;
                         return;
                         case 0xE0: /*FCHS*/
@@ -548,10 +555,11 @@ void x87_d9()
                         cycles-=330;
                         return;
                         case 0xFC: /*FRNDINT*/
-                        if (fplog) pclog("FRNDINT\n");
+                        if (fplog) pclog("FRNDINT %g ", ST(0));
 //                        pclog("FRNDINT %f %i ",ST(0),(npxc>>10)&3);
                         ST(0)=(double)x87_fround(ST(0));
 //                        pclog("%f\n",ST(0));
+                        if (fplog) pclog("%g\n", ST(0));
                         cycles-=21;
                         return;
                         case 0xFD: /*FSCALE*/
@@ -807,10 +815,11 @@ void x87_db()
                         cycles-=28;
                         return;
                         case 3: /*FISTP short*/
-                        if (fplog) pclog("FISTPs %08X:%08X\n", easeg, eaaddr);
+                        if (fplog) pclog("FISTPs %08X:%08X  %g ", easeg, eaaddr, ST(0));
                         temp64 = x87_fround(ST(0));
 /*                        if (temp64 > 2147483647 || temp64 < -2147483647)
                            fatal("FISTPl out of range! %i\n", temp64);*/
+                        if (fplog) pclog("%lli %llX\n", temp64, temp64);
                         seteal((int32_t)temp64); if (abrt) return;
                         x87_pop();
                         cycles-=28;
@@ -953,23 +962,23 @@ void x87_dd()
                 {
                         case 0: /*FFREE*/
                         if (fplog) pclog("FFREE\n");
-                        tag|=(3<<((rmdat32&7)<<1));
+                        tag |= (3 << (((TOP + rmdat32) & 7) << 1));
                         cycles-=3;
                         return;
                         case 2: /*FST*/
                         if (fplog) pclog("FST\n");
-                        ST(rmdat32&7)=ST(0);
-                        temp=(tag>>((TOP&7)<<1))&3;
-                        tag&=~(3<<((rmdat32&7)<<1));
-                        tag|=(temp<<((rmdat32&7)<<1));
+                        ST(rmdat32 & 7) = ST(0);
+                        temp = (tag >> ((TOP & 7) << 1)) & 3;
+                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
+                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
                         cycles-=3;
                         return;
                         case 3: /*FSTP*/
                         if (fplog) pclog("FSTP\n");
-                        ST(rmdat32&7)=ST(0);
-                        temp=(tag>>((TOP&7)<<1))&3;
-                        tag&=~(3<<((rmdat32&7)<<1));
-                        tag|=(temp<<((rmdat32&7)<<1));
+                        ST(rmdat32 & 7) = ST(0);
+                        temp = (tag >> ((TOP & 7) << 1)) & 3;
+                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
+                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
                         x87_pop();
                         cycles-=3;
                         return;
