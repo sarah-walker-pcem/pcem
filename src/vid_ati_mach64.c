@@ -630,7 +630,7 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         int mix;
                         int dst_x = mach64->accel.dst_x + mach64->accel.dst_x_start;
                         int dst_y = mach64->accel.dst_y + mach64->accel.dst_y_start;
-                
+
                         if (mach64->accel.source_host)
                         {
                                 host_dat = cpu_dat;
@@ -1291,6 +1291,10 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
 
                 case 0x1c: case 0x1d: case 0x1e: case 0x1f:
                 WRITE8(addr, mach64->crtc_gen_cntl, val);
+                if (((mach64->crtc_gen_cntl >> 24) & 3) == 3)
+                        svga->fb_only = 1;
+                else
+                        svga->fb_only = 0;
                 svga_recalctimings(&mach64->svga);
                 break;
 

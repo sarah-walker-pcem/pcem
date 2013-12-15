@@ -660,7 +660,7 @@ void svga_write(uint32_t addr, uint8_t val, void *p)
         addr += svga->write_bank;
 
         if (!(svga->gdcreg[6] & 1)) svga->fullchange=2;
-        if (svga->chain4)
+        if (svga->chain4 || svga->fb_only)
         {
                 writemask2=1<<(addr&3);
                 addr&=~3;
@@ -836,7 +836,7 @@ uint8_t svga_read(uint32_t addr, void *p)
 
 //        pclog("%05X %i %04X:%04X %02X %02X %i\n",addr,svga->chain4,CS,pc, vram[addr & 0x7fffff], vram[(addr << 2) & 0x7fffff], svga->readmode);
 //        pclog("%i\n", svga->readmode);
-        if (svga->chain4) 
+        if (svga->chain4 || svga->fb_only) 
         { 
                 addr &= 0x7fffff;
                 if (addr >= svga->vram_limit)
@@ -888,7 +888,7 @@ void svga_write_linear(uint32_t addr, uint8_t val, void *p)
         if (svga_output) pclog("Write LFB %08X %02X ", addr, val);
         if (!(svga->gdcreg[6] & 1)) 
                 svga->fullchange = 2;
-        if (svga->chain4)
+        if (svga->chain4 || svga->fb_only)
         {
                 writemask2=1<<(addr&3);
                 addr&=~3;
@@ -1057,7 +1057,7 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
 
         egareads++;
         
-        if (svga->chain4) 
+        if (svga->chain4 || svga->fb_only) 
         { 
                 addr &= 0x7fffff;
                 if (addr >= svga->vram_limit)
