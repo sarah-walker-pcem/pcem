@@ -45,6 +45,10 @@ typedef struct mach64_t
 
         uint32_t clock_cntl;
 
+        uint32_t clr_cmp_clr;
+        uint32_t clr_cmp_cntl;
+        uint32_t clr_cmp_mask;
+
         uint32_t cur_horz_vert_off;        
         uint32_t cur_horz_vert_posn;
         uint32_t cur_offset;
@@ -120,6 +124,11 @@ typedef struct mach64_t
 
                 uint32_t dp_bkgd_clr;
                 uint32_t dp_frgd_clr;
+
+                uint32_t clr_cmp_clr;
+                uint32_t clr_cmp_mask;
+                int clr_cmp_fn;
+                int clr_cmp_src;
                 
                 int err;
         } accel;
@@ -169,6 +178,8 @@ static int mach64_width[8] = {0, 0, 0, 1, 1, 2, 2, 0};
 
 enum
 {
+        DST_X_TILE    = 0x08,
+        DST_Y_TILE    = 0x10,
         DST_24_ROT_EN = 0x80
 };
 
@@ -496,10 +507,15 @@ void mach64_start_fill(mach64_t *mach64)
         
         mach64->accel.dp_frgd_clr = mach64->dp_frgd_clr;
         mach64->accel.dp_bkgd_clr = mach64->dp_bkgd_clr;        
+
+        mach64->accel.clr_cmp_clr = mach64->clr_cmp_clr & mach64->clr_cmp_mask;
+        mach64->accel.clr_cmp_mask = mach64->clr_cmp_mask;
+        mach64->accel.clr_cmp_fn = mach64->clr_cmp_cntl & 7;
+        mach64->accel.clr_cmp_src = mach64->clr_cmp_cntl & (1 << 24);
         
         mach64->accel.busy = 1;
 #ifdef MACH64_DEBUG
-        pclog("mach64_start_fill : dst %i, %i  src %i, %i  size %i, %i  src pitch %i offset %X  dst pitch %i offset %X  scissor %i %i %i %i  src_fg %i\n", mach64->accel.dst_x, mach64->accel.dst_y, mach64->accel.src_x, mach64->accel.src_y, mach64->accel.dst_width, mach64->accel.dst_height, mach64->accel.src_pitch, mach64->accel.src_offset, mach64->accel.dst_pitch, mach64->accel.dst_offset, mach64->accel.sc_left, mach64->accel.sc_right, mach64->accel.sc_top, mach64->accel.sc_bottom, mach64->accel.source_fg);
+        pclog("mach64_start_fill : dst %i, %i  src %i, %i  size %i, %i  src pitch %i offset %X  dst pitch %i offset %X  scissor %i %i %i %i  src_fg %i  mix %02X %02X\n", mach64->accel.dst_x_start, mach64->accel.dst_y_start, mach64->accel.src_x_start, mach64->accel.src_y_start, mach64->accel.dst_width, mach64->accel.dst_height, mach64->accel.src_pitch, mach64->accel.src_offset, mach64->accel.dst_pitch, mach64->accel.dst_offset, mach64->accel.sc_left, mach64->accel.sc_right, mach64->accel.sc_top, mach64->accel.sc_bottom, mach64->accel.source_fg, mach64->accel.mix_fg, mach64->accel.mix_bg);
 #endif
         mach64->accel.op = OP_RECT;
 }
@@ -562,6 +578,11 @@ void mach64_start_line(mach64_t *mach64)
         mach64->accel.x_count = mach64->dst_bres_lnth & 0x7fff;
         mach64->accel.err = (mach64->dst_bres_err & 0x3ffff) | ((mach64->dst_bres_err & 0x40000) ? 0xfffc0000 : 0);
         
+        mach64->accel.clr_cmp_clr = mach64->clr_cmp_clr & mach64->clr_cmp_mask;
+        mach64->accel.clr_cmp_mask = mach64->clr_cmp_mask;
+        mach64->accel.clr_cmp_fn = mach64->clr_cmp_cntl & 7;
+        mach64->accel.clr_cmp_src = mach64->clr_cmp_cntl & (1 << 24);
+
         mach64->accel.busy = 1;
 #ifdef MACH64_DEBUG
         pclog("mach64_start_line\n");
@@ -612,6 +633,7 @@ void mach64_start_line(mach64_t *mach64)
 void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
 {
         svga_t *svga = &mach64->svga;
+        int cmp_clr = 0;
         
         if (!mach64->accel.busy)
         {
@@ -694,7 +716,21 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                 
                                 READ(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, dest_dat, mach64->accel.dst_size);
 
-                                MIX
+                                switch (mach64->accel.clr_cmp_fn)
+                                {
+                                        case 1: /*TRUE*/
+                                        cmp_clr = 1;
+                                        break;
+                                        case 4: /*DST_CLR != CLR_CMP_CLR*/
+                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) != mach64->accel.clr_cmp_clr;
+                                        break;
+                                        case 5: /*DST_CLR == CLR_CMP_CLR*/
+                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) == mach64->accel.clr_cmp_clr;
+                                        break;
+                                }
+                                
+                                if (!cmp_clr)
+                                        MIX
 
                                 WRITE(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, mach64->accel.dst_size);
                         }
@@ -754,6 +790,10 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                         pclog("mach64 blit finished\n");
 #endif
                                         mach64->accel.busy = 0;
+                                        if (mach64->dst_cntl & DST_X_TILE)
+                                                mach64->dst_y_x = (mach64->dst_y_x & 0xfff) | ((mach64->dst_y_x + (mach64->accel.dst_width << 16)) & 0xfff0000);
+                                        if (mach64->dst_cntl & DST_Y_TILE)
+                                                mach64->dst_y_x = (mach64->dst_y_x & 0xfff0000) | ((mach64->dst_y_x + mach64->accel.dst_height) & 0xfff);
                                         return;
                                 }
                                 if (mach64->accel.source_host)
@@ -831,7 +871,21 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
 
 //                                pclog("Blit %i,%i %i,%i  %X %X  %i  %02X %02X %i ", mach64->accel.src_x, mach64->accel.src_y, mach64->accel.dst_x, mach64->accel.dst_y,  (mach64->accel.src_offset + (mach64->accel.src_y * mach64->accel.src_pitch) + mach64->accel.src_x) & 0x7fffff, (mach64->accel.dst_offset + (mach64->accel.dst_y * mach64->accel.dst_pitch) + mach64->accel.dst_x) & 0x7fffff, count, src_dat, dest_dat, mix);
                                 
-                                MIX
+                                switch (mach64->accel.clr_cmp_fn)
+                                {
+                                        case 1: /*TRUE*/
+                                        cmp_clr = 1;
+                                        break;
+                                        case 4: /*DST_CLR != CLR_CMP_CLR*/
+                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) != mach64->accel.clr_cmp_clr;
+                                        break;
+                                        case 5: /*DST_CLR == CLR_CMP_CLR*/
+                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) == mach64->accel.clr_cmp_clr;
+                                        break;
+                                }
+                                
+                                if (!cmp_clr)
+                                        MIX
 
 //                                pclog("%02X  %i\n", dest_dat, mach64->accel.dst_height);
 
@@ -1041,6 +1095,9 @@ uint8_t mach64_ext_readb(uint32_t addr, void *p)
                 READ8(addr, mach64->mem_cntl);
                 break;
 
+                case 0xc0: case 0xc1: case 0xc2: case 0xc3:
+                ret = ati68860_ramdac_in((addr & 3) | ((mach64->dac_cntl & 3) << 2), &mach64->ramdac, &mach64->svga);
+                break;
                 case 0xc4: case 0xc5: case 0xc6: case 0xc7:
                 READ8(addr, mach64->dac_cntl);
                 break;
@@ -1174,6 +1231,16 @@ uint8_t mach64_ext_readb(uint32_t addr, void *p)
                 break;
                 case 0x2d8: case 0x2d9: case 0x2da: case 0x2db:
                 READ8(addr, mach64->dp_src);
+                break;
+
+                case 0x300: case 0x301: case 0x302: case 0x303:
+                READ8(addr, mach64->clr_cmp_clr);
+                break;
+                case 0x304: case 0x305: case 0x306: case 0x307:
+                READ8(addr, mach64->clr_cmp_mask);
+                break;
+                case 0x308: case 0x309: case 0x30a: case 0x30b:
+                READ8(addr, mach64->clr_cmp_cntl);
                 break;
 
                 case 0x320: case 0x321: case 0x322: case 0x323:
@@ -1368,6 +1435,9 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
 #endif
                 break;
 
+                case 0xc0: case 0xc1: case 0xc2: case 0xc3:
+                ati68860_ramdac_out((addr & 3) | ((mach64->dac_cntl & 3) << 2), val, &mach64->ramdac, &mach64->svga);
+                break;
                 case 0xc4: case 0xc5: case 0xc6: case 0xc7:
                 WRITE8(addr, mach64->dac_cntl, val);
                 break;
@@ -1394,12 +1464,15 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 WRITE8(addr, mach64->dst_y_x, val);
                 break;
                 case 0x110: case 0x111:
-                addr += 2;
+                WRITE8(addr + 2, mach64->dst_height_width, val);
+                break;
                 case 0x114: case 0x115:
                 case 0x118: case 0x119: case 0x11a: case 0x11b:
                 case 0x11e: case 0x11f:
                 WRITE8(addr, mach64->dst_height_width, val);
-                if ((addr & 0x3ff) == 0x11b || (addr & 0x3ff) == 0x11f)
+                case 0x113:
+                if ((addr & 0x3ff) == 0x11b || (addr & 0x3ff) == 0x11f ||
+                    ((addr & 0x3ff) == 0x113) && !(val & 0x80))
                 {
                         mach64_start_fill(mach64);
 #ifdef MACH64_DEBUG
@@ -1543,6 +1616,16 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0x2d8: case 0x2d9: case 0x2da: case 0x2db:
                 WRITE8(addr, mach64->dp_src, val);
+                break;
+
+                case 0x300: case 0x301: case 0x302: case 0x303:
+                WRITE8(addr, mach64->clr_cmp_clr, val);
+                break;
+                case 0x304: case 0x305: case 0x306: case 0x307:
+                WRITE8(addr, mach64->clr_cmp_mask, val);
+                break;
+                case 0x308: case 0x309: case 0x30a: case 0x30b:
+                WRITE8(addr, mach64->clr_cmp_cntl, val);
                 break;
 
                 case 0x320: case 0x321: case 0x322: case 0x323:
