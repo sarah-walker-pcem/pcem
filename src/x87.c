@@ -1237,8 +1237,12 @@ void x87_de()
                         case 0xD9: /*FCOMPP*/
                         if (fplog) pclog("FCOMPP %f %f\n", ST(0), ST(1));
                         npxs&=~(C0|C2|C3);
-                        if (ST(0)==ST(1))     npxs|=C3;
-                        else if (ST(0)<ST(1)) npxs|=C0;
+                        if (*(uint64_t *)&ST(0) == ((uint64_t)1 << 63) && *(uint64_t *)&ST(1) == 0)
+                                npxs |= C0; /*Nasty hack to fix 80387 detection*/
+                        else if (ST(0) == ST(1))
+                                npxs |= C3;
+                        else if (ST(0) < ST(1))
+                                npxs |= C0;
                         x87_pop();
                         x87_pop();
                         cycles-=5;
