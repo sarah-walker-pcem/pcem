@@ -24,7 +24,7 @@ void ati18800_out(uint16_t addr, uint8_t val, void *p)
         svga_t *svga = &ati18800->svga;
         uint8_t old;
         
-        pclog("ati18800_out : %04X %02X  %04X:%04X\n", addr, val, CS,pc);
+//        pclog("ati18800_out : %04X %02X  %04X:%04X\n", addr, val, CS,pc);
                 
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout&1)) addr ^= 0x60;
 
@@ -79,7 +79,7 @@ uint8_t ati18800_in(uint16_t addr, void *p)
         svga_t *svga = &ati18800->svga;
         uint8_t temp;
 
-        if (addr != 0x3da) pclog("ati18800_in : %04X ", addr);
+//        if (addr != 0x3da) pclog("ati18800_in : %04X ", addr);
                 
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout&1)) addr ^= 0x60;
              

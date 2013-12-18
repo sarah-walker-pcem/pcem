@@ -55,15 +55,15 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                 break;
                 case 0x3C2:
                 svga->miscout = val;
-                svga->vidclock = val & 4; printf("3C2 write %02X\n",val);
+                svga->vidclock = val & 4;// printf("3C2 write %02X\n",val);
                 if (val & 1)
                 {
-                        pclog("Remove mono handler\n");
+//                        pclog("Remove mono handler\n");
                         io_removehandler(0x03a0, 0x0020, svga->video_in, NULL, NULL, svga->video_out, NULL, NULL, svga->p);
                 }
                 else
                 {
-                        pclog("Set mono handler\n");
+//                        pclog("Set mono handler\n");
                         io_sethandler(0x03a0, 0x0020, svga->video_in, NULL, NULL, svga->video_out, NULL, NULL, svga->p);
                 }
                 break;

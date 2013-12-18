@@ -51,7 +51,7 @@ void m24_out(uint16_t addr, uint8_t val, void *p)
 {
         m24_t *m24 = (m24_t *)p;
         uint8_t old;
-        pclog("m24_out %04X %02X\n", addr, val);
+//        pclog("m24_out %04X %02X\n", addr, val);
         switch (addr)
         {
                 case 0x3d4:

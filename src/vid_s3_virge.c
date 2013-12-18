@@ -50,7 +50,7 @@ void s3_virge_out(uint16_t addr, uint8_t val, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
         
-        pclog("S3 out %04X %02X %04X:%08X  %04X %04X %i\n", addr, val, CS, pc, ES, BX, ins);
+//        pclog("S3 out %04X %02X %04X:%08X  %04X %04X %i\n", addr, val, CS, pc, ES, BX, ins);
 
         switch (addr)
         {
@@ -180,7 +180,7 @@ uint8_t s3_virge_in(uint16_t addr, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
 
-        if (addr != 0x3da) pclog("S3 in %04X %04X:%08X\n", addr, CS, pc);
+//        if (addr != 0x3da) pclog("S3 in %04X %04X:%08X\n", addr, CS, pc);
         switch (addr)
         {
                 //case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:

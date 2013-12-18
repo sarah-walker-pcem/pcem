@@ -74,7 +74,7 @@ void et4000w32p_out(uint16_t addr, uint8_t val, void *p)
         svga_t *svga = &et4000->svga;
         uint8_t old;
 
-        pclog("et4000w32p_out: addr %04X val %02X %04X:%04X  %02X %02X\n", addr, val, CS, pc, ram[0x487], ram[0x488]);
+//        pclog("et4000w32p_out: addr %04X val %02X %04X:%04X  %02X %02X\n", addr, val, CS, pc, ram[0x487], ram[0x488]);
         
 /*        if (ram[0x487] == 0x62)
                 fatal("mono\n");*/
@@ -171,8 +171,8 @@ uint8_t et4000w32p_in(uint16_t addr, void *p)
         
 //        pclog("ET4000W32p in  %04X  %04X:%04X  ",addr,CS,pc);
 
-        if (addr != 0x3da && addr != 0x3ba)
-                pclog("et4000w32p_in: addr %04X %04X:%04X %02X %02X\n", addr, CS, pc, ram[0x487], ram[0x488]);
+//        if (addr != 0x3da && addr != 0x3ba)
+//                pclog("et4000w32p_in: addr %04X %04X:%04X %02X %02X\n", addr, CS, pc, ram[0x487], ram[0x488]);
         
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
@@ -892,7 +892,7 @@ uint8_t et4000w32p_pci_read(int func, int addr, void *p)
         et4000w32p_t *et4000 = (et4000w32p_t *)p;
         svga_t *svga = &et4000->svga;
 
-        pclog("ET4000 PCI read %08X\n", addr);
+//        pclog("ET4000 PCI read %08X\n", addr);
 
         switch (addr)
         {

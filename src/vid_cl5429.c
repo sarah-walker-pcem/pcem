@@ -55,7 +55,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
 
-        pclog("gd5429 out %04X %02X\n", addr, val);
+//        pclog("gd5429 out %04X %02X\n", addr, val);
                 
         switch (addr)
         {
@@ -104,7 +104,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                         else
                                 svga->writemode = svga->gdcreg[5] & 3;
                         svga->readmode = val & 8;
-                        pclog("writemode = %i\n", svga->writemode);
+//                        pclog("writemode = %i\n", svga->writemode);
                         return;
                 }
                 if (svga->gdcaddr == 6)
@@ -163,7 +163,7 @@ uint8_t gd5429_in(uint16_t addr, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3d0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
         
-        if (addr != 0x3da) pclog("IN gd5429 %04X\n", addr);
+//        if (addr != 0x3da) pclog("IN gd5429 %04X\n", addr);
         
         switch (addr)
         {

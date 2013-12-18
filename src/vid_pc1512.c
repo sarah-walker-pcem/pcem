@@ -53,7 +53,7 @@ static void pc1512_out(uint16_t addr, uint8_t val, void *p)
 {
         pc1512_t *pc1512 = (pc1512_t *)p;
         uint8_t old;
-        pclog("PC1512 out %04X %02X %04X:%04X\n",addr,val,CS,pc);
+//        pclog("PC1512 out %04X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr)
         {
                 case 0x3d4:

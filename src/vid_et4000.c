@@ -28,7 +28,7 @@ void et4000_out(uint16_t addr, uint8_t val, void *p)
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
 
-        pclog("ET4000 out %04X %02X\n", addr, val);
+//        pclog("ET4000 out %04X %02X\n", addr, val);
                 
         switch (addr)
         {
@@ -40,7 +40,7 @@ void et4000_out(uint16_t addr, uint8_t val, void *p)
                 svga->write_bank = (val & 0xf) * 0x10000;
                 svga->read_bank = ((val >> 4) & 0xf) * 0x10000;
                 et4000->banking = val;
-                pclog("Banking write %08X %08X %02X\n", svga->write_bank, svga->read_bank, val);
+//                pclog("Banking write %08X %08X %02X\n", svga->write_bank, svga->read_bank, val);
                 return;
                 case 0x3D4:
                 svga->crtcreg = val & 0x3f;
@@ -70,7 +70,7 @@ uint8_t et4000_in(uint16_t addr, void *p)
         if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
         
-        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
+//        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
         
         switch (addr)
         {

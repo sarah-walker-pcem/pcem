@@ -40,7 +40,7 @@ void paradise_out(uint16_t addr, uint8_t val, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
 //        output = 3;
-        pclog("Paradise out %04X %02X %04X:%04X\n", addr, val, CS, pc);
+//        pclog("Paradise out %04X %02X %04X:%04X\n", addr, val, CS, pc);
         switch (addr)
         {
                 case 0x3c5:
@@ -141,7 +141,7 @@ uint8_t paradise_in(uint16_t addr, void *p)
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1))
                 addr ^= 0x60;
         
-        if (addr != 0x3da) pclog("Paradise in %04X\n", addr);
+//        if (addr != 0x3da) pclog("Paradise in %04X\n", addr);
         switch (addr)
         {
                 case 0x3c2:

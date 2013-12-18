@@ -19,7 +19,7 @@ void vga_out(uint16_t addr, uint8_t val, void *p)
         svga_t *svga = &vga->svga;
         uint8_t old;
         
-        pclog("vga_out : %04X %02X  %04X:%04X  %02X  %i\n", addr, val, CS,pc, ram[0x489], ins);
+//        pclog("vga_out : %04X %02X  %04X:%04X  %02X  %i\n", addr, val, CS,pc, ram[0x489], ins);
                 
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
@@ -52,7 +52,7 @@ uint8_t vga_in(uint16_t addr, void *p)
         svga_t *svga = &vga->svga;
         uint8_t temp;
 
-        if (addr != 0x3da) pclog("vga_in : %04X ", addr);
+//        if (addr != 0x3da) pclog("vga_in : %04X ", addr);
                 
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
                 addr ^= 0x60;
@@ -69,7 +69,7 @@ uint8_t vga_in(uint16_t addr, void *p)
                 temp = svga_in(addr, svga);
                 break;
         }
-        if (addr != 0x3da) pclog("%02X  %04X:%04X\n", temp, CS,pc);
+//        if (addr != 0x3da) pclog("%02X  %04X:%04X\n", temp, CS,pc);
         return temp;
 }
 
