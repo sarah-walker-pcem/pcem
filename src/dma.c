@@ -267,15 +267,15 @@ int dma_channel_read(int channel)
                 if (dma.mode[channel] & 0x20) dma.ac[channel]--;
                 else                          dma.ac[channel]++;
                 dma.cc[channel]--;
-                if (!dma.cc[channel] && (dma.mode[channel] & 0x10))
+                if (dma.cc[channel] < 0)
                 {
-                        dma.cc[channel] = dma.cb[channel] + 1;
-                        dma.ac[channel] = dma.ab[channel];
-                        dma.stat |= (1 << channel);
-                }
-                else if (dma.cc[channel]<=-1)
-                {
-                        dma.m |= (1 << channel);
+                        if (dma.mode[channel] & 0x10) /*Auto-init*/
+                        {
+                                dma.cc[channel] = dma.cb[channel];
+                                dma.ac[channel] = dma.ab[channel];
+                        }
+                        else
+                                dma.m |= (1 << channel);
                         dma.stat |= (1 << channel);
                 }
 
@@ -297,15 +297,15 @@ int dma_channel_read(int channel)
                 if (dma16.mode[channel] & 0x20) dma16.ac[channel]--;
                 else                            dma16.ac[channel]++;
                 dma16.cc[channel]--;
-                if (!dma16.cc[channel] && (dma16.mode[channel] & 0x10))
+                if (dma16.cc[channel] < 0)
                 {
-                        dma16.cc[channel] = dma16.cb[channel] + 1;
-                        dma16.ac[channel] = dma16.ab[channel];
-                        dma16.stat |= (1 << channel);
-                }
-                else if (dma16.cc[channel] <= -1)
-                {
-                        dma16.m |= (1 << channel);
+                        if (dma16.mode[channel] & 0x10) /*Auto-init*/
+                        {
+                                dma16.cc[channel] = dma16.cb[channel];
+                                dma16.ac[channel] = dma16.ab[channel];
+                        }
+                        else
+                                dma16.m |= (1 << channel);
                         dma16.stat |= (1 << channel);
                 }
 
@@ -332,15 +332,15 @@ int dma_channel_write(int channel, uint16_t val)
                 if (dma.mode[channel]&0x20) dma.ac[channel]--;
                 else                        dma.ac[channel]++;
                 dma.cc[channel]--;
-                if (!dma.cc[channel] && (dma.mode[channel] & 0x10))
+                if (dma.cc[channel] < 0)
                 {
-                        dma.cc[channel] = dma.cb[channel] + 1;
-                        dma.ac[channel] = dma.ab[channel];
-                        dma.stat |= (1 << channel);
-                }
-                else if (dma.cc[channel]<=-1)
-                {
-                        dma.m    |= (1 << channel);
+                        if (dma.mode[channel] & 0x10) /*Auto-init*/
+                        {
+                                dma.cc[channel] = dma.cb[channel];
+                                dma.ac[channel] = dma.ab[channel];
+                        }
+                        else
+                                dma.m |= (1 << channel);
                         dma.stat |= (1 << channel);
                 }
 
@@ -361,15 +361,14 @@ int dma_channel_write(int channel, uint16_t val)
                 if (dma16.mode[channel]&0x20) dma16.ac[channel]--;
                 else                          dma16.ac[channel]++;
                 dma16.cc[channel]--;
-                if (!dma16.cc[channel] && (dma16.mode[channel] & 0x10))
+                if (dma16.cc[channel] < 0)
                 {
-                        dma16.cc[channel] = dma16.cb[channel] + 1;
-                        dma16.ac[channel] = dma16.ab[channel];
-                        dma16.stat |= (1 << channel);
-                }
-                else if (dma16.cc[channel] <= -1)
-                {
-                        dma16.m    |= (1 << channel);
+                        if (dma16.mode[channel] & 0x10) /*Auto-init*/
+                        {
+                                dma16.cc[channel] = dma16.cb[channel] + 1;
+                                dma16.ac[channel] = dma16.ab[channel];
+                        }
+                                dma16.m |= (1 << channel);
                         dma16.stat |= (1 << channel);
                 }
 
