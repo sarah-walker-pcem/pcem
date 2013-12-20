@@ -88,6 +88,7 @@ uint8_t hercules_in(uint16_t addr, void *p)
 void hercules_write(uint32_t addr, uint8_t val, void *p)
 {
         hercules_t *hercules = (hercules_t *)p;
+        egawrites++;
 //        pclog("Herc write %08X %02X\n",addr,val);
         hercules->vram[addr & 0xffff] = val;
 }
@@ -95,6 +96,7 @@ void hercules_write(uint32_t addr, uint8_t val, void *p)
 uint8_t hercules_read(uint32_t addr, void *p)
 {
         hercules_t *hercules = (hercules_t *)p;
+        egareads++;
         return hercules->vram[addr & 0xffff];
 }
 

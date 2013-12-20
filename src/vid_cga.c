@@ -73,6 +73,7 @@ void cga_write(uint32_t addr, uint8_t val, void *p)
         cga->vram[addr & 0x3fff] = val;
         cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = val;
         cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = val;
+        egawrites++;
         cycles -= 4;
 }
 
@@ -82,6 +83,7 @@ uint8_t cga_read(uint32_t addr, void *p)
         cycles -= 4;        
         cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = cga->vram[addr & 0x3fff];
         cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = cga->vram[addr & 0x3fff];
+        egareads++;
 //        pclog("CGA_READ %04X\n", addr);
         return cga->vram[addr & 0x3fff];
 }

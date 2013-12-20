@@ -114,6 +114,7 @@ static void pc1512_write(uint32_t addr, uint8_t val, void *p)
 {
         pc1512_t *pc1512 = (pc1512_t *)p;
 
+        egawrites++;
         cycles -= 12;
         addr &= 0x3fff;
 
@@ -132,6 +133,7 @@ static uint8_t pc1512_read(uint32_t addr, void *p)
 {
         pc1512_t *pc1512 = (pc1512_t *)p;
 
+        egareads++;
         cycles -= 12;
         addr &= 0x3fff;
 
