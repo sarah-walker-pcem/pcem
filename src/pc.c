@@ -58,6 +58,7 @@ int mousecapture;
 FILE *pclogf;
 void pclog(const char *format, ...)
 {
+#ifndef RELEASE_BUILD
    char buf[1024];
    //return;
    if (!pclogf)
@@ -69,6 +70,7 @@ void pclog(const char *format, ...)
    va_end(ap);
    fputs(buf,pclogf);
 fflush(pclogf);
+#endif
 }
 
 void fatal(const char *format, ...)
@@ -351,7 +353,7 @@ void runpc()
                 if (win_title_update)
                 {
                         win_title_update=0;
-                        sprintf(s, "PCem v0.7 - %s - %s - %s - %i%%", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps);
+                        sprintf(s, "PCem v8 - %s - %s - %s - %i%%", model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END to release mouse", fps);
                         set_window_title(s);
                 }
                 done++;
