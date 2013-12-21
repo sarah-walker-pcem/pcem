@@ -656,6 +656,8 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 
                         c++;
                 }
+                if (models[model].fixed_gfxcard)
+                        EnableWindow(h, FALSE);
 
                 h=GetDlgItem(hdlg,IDC_COMBOCPUM);
                 c = 0;
