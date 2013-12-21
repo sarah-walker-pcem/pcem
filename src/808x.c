@@ -499,8 +499,9 @@ int indump = 0;
 
 void dumpregs()
 {
-        FILE *f;
         int c,d=0,e=0,ff;
+#ifndef RELEASE_BUILD
+        FILE *f;
         if (indump) return;
         indump = 1;
 //        return;
@@ -581,6 +582,7 @@ chdir(pcempath);
                 fwrite(ram+0x11E50,0x1000,1,f);
                 fclose(f);
         }*/
+#endif
         if (is386)
            printf("EAX=%08X EBX=%08X ECX=%08X EDX=%08X\nEDI=%08X ESI=%08X EBP=%08X ESP=%08X\n",EAX,EBX,ECX,EDX,EDI,ESI,EBP,ESP);
         else
@@ -617,22 +619,7 @@ chdir(pcempath);
                 if (writelookup2[c]!=0xFFFFFFFF) e++;
         }
         printf("Entries in readlookup : %i    writelookup : %i\n",d,e);
-        d=0;
         x87_dumpregs();
-        for (c = 0; c < 256; c++)
-        {
-                e = -1;
-                for (d = 0; d < 256; d++)
-                {
-                        if (inscounts[d] > e)
-                        {
-                                e = inscounts[d];
-                                ff = d;
-                        }
-                }
-                inscounts[ff] = -1;
-//                printf("Opcode %02x - %i\n", ff, e);
-        }
 /*        for (c=0;c<1024*1024;c++)
         {
                 if (mmucache[c]!=0xFFFFFFFF) d++;
