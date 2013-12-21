@@ -1,22 +1,22 @@
-PCem v0.7
+PCem v8
 
-Changes since v0.6:
+Changes since v0.7:
 
-- New machines - DTK XT clone, Amstrad PC2086, Amstrad PC3086, Olivetti M24, Commodore PC 30 III, 
-  PCI 486 clone
-- New graphics cards - IBM EGA, Diamond Stealth 32 (ET4000/W32p), Paradise Bahamas 64 (S3 Vision864)
-- IDE hard disc emulation. This replaces the old INT 13 trapping emulation on all models. For machines
-  which don't natively have IDE support, the XTIDE board is emulated. See the readme file for details.
-- Fixed wrong code segment on page fault - eliminates some Win95 crashes
-- Fixed trap flag on POPF/IRET - improves DOS box on Win95
-- Fixed various pmode stuff, OS/2 v1.3 works
-- Fixed MMU caching bug, Win95 more stable, IE4 now works, Win98 now works, Linux now appears to work
-- Major improvements to floppy disc emulation - fixed occasional disc corruption, works with OS/2 and Linux
-- ATAPI identify command now returns an ATAPI version, Win95 native CD-ROM drivers now work.
-- CD-ROM emulation now uses raw read for audio - works on Windows 7
-- Major internal changes to graphics emulation
-- Major internal changes to memory and IO emulation
-- Many other changes
+- New machines - SiS496/497, 430VX
+- WinChip emulation (including MMX emulation)
+- New graphics cards - S3 Trio64, Trident TGUI9440AGi, ATI VGA Edge-16, ATI VGA Charger, 
+  OAK OTI-067, ATI Mach64
+- New sound cards - Adlib Gold, Windows Sound System, SB AWE32
+- Improved GUS emulation
+- MPU-401 emulation (UART mode only) on SB16 and AWE32
+- Fixed DMA bug, floppy drives work properly in Windows 3.x
+- Fixed bug in FXAM - fixes Wolf 3D, Dogz, some other stuff as well
+- Other FPU fixes
+- Fixed serial bugs, mouse no longer disappears in Windows 9x hardware detection
+- Major reorganisation of CPU emulation
+- Direct3D output mode
+- Fullscreen mode
+- Various internal changes
 
 
 PCem emulates the following machines:
@@ -245,109 +245,229 @@ ROM files needed:
 hot-433.ami
 
 
+Award SiS 496/497 (1995)
+A 486 clone using the SiS 496/497 chipset, with PCI bus and Award BIOS.
+
+ROM files needed:
+
+SIS496-1.AWA
+
+
+Award 430VX PCI (1996)
+A generic Socket 5/7 board with 430VX chipset.
+
+ROM files needed:
+
+55XWUQ0E.BIN
+
+
+
 PCem emulates the following graphics adapters :
 
-MDA - The original PC adapter. This displays 80x25 text in monochrome.
+MDA
+The original PC adapter. This displays 80x25 text in monochrome.
 
-Hercules - A clone of MDA, with the addition of a high-resolution 720x348 graphics mode.
 
-CGA - The most common of the original adapters, supporting 40x25 and 80x25 text, and 
-    320x200 in 4 colours, 640x200 in 2 colours, and a composite mode giving 160x200 in 16 colours.
+Hercules
+A clone of MDA, with the addition of a high-resolution 720x348 graphics mode.
 
-IBM EGA - The original 1984 IBM EGA card, with 256k VRAM.
 
-Trident 8900D SVGA - A low cost SVGA board circa 1992/1993. Not the greatest board in it's day, but
-    it has a reasonable VESA driver and (buggy) 15/16/24-bit colour modes.
+CGA
+The most common of the original adapters, supporting 40x25 and 80x25 text, and 
+320x200 in 4 colours, 640x200 in 2 colours, and a composite mode giving 160x200
+in 16 colours.
 
-Tseng ET4000AX SVGA - A somewhat better SVGA board than the Trident, here you get better compatibility
-    and speed (on the real card, not the emulator) in exchange for being limited to 8-bit colour.
 
-Diamond Stealth 32 SVGA - An ET4000/W32p based board, has 15/16/24-bit colour modes, plus acceleration.
-    There is an odd bug with this one, where Windows 9x DOS boxes won't open with modes beyond 8-bit 
-    colour. Supports PCI.
+IBM EGA
+The original 1984 IBM EGA card, with 256k VRAM.
 
-Paradise Bahamas 64 - An S3 Vision864 based board. This has the best Windows drivers, but the default
-    VESA driver is poor. Supports PCI.
+ROM files needed:
+
+ibm_6277356_ega_card_u44_27128.bin
+
+
+Trident 8900D SVGA
+A low cost SVGA board circa 1992/1993. Not the greatest board in it's day, but
+it has a reasonable VESA driver and (buggy) 15/16/24-bit colour modes.
+
+ROM files needed:
+
+trident.bin
+
+
+Trident TGUI9440
+A later Trident board with GUI acceleration. Windows 9x doesn't include drivers
+for this, so they have to be downloaded and installed separately.
+
+ROM files needed:
+
+9440.vbi
+
+
+Tseng ET4000AX SVGA
+A somewhat better SVGA board than the Trident, here you get better compatibility
+and speed (on the real card, not the emulator) in exchange for being limited to
+8-bit colour.
+
+ROM files needed:
+
+et4000.bin
+
+
+Diamond Stealth 32 SVGA
+An ET4000/W32p based board, has 15/16/24-bit colour modes, plus acceleration.
+
+ROM files needed:
+
+et4000w32.bin
+
+
+Paradise Bahamas 64
+An S3 Vision864 based board.
+
+ROM files needed:
+
+bahamas64.bin
+
+
+Number Nine 9FX
+An S3 Trio64 based board.
+
+ROM files needed:
+
+s3_764.bin
+
+
+ATI VGA Edge-16
+A basic SVGA clone.
+
+ROM files needed:
+
+vgaedge16.vbi
+
+
+ATI VGA Charger
+A basic SVGA clone, similar to the Edge-16.
+
+ROM files needed:
+
+bios.bin
+
+
+ATI Graphics Pro Turbo
+A Mach64GX based board. Probably the best of the emulated boards for use in
+Windows.
+
+ROM files needed:
+
+mach64gx/bios.bin
+
+
+OAK OTI-067
+A basic SVGA clone.
+
+ROM files needed:
+
+oti067/bios.bin
 
 
 Some models have fixed graphics adapters :
 
-Olivetti M24 - CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
-    ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
-    as it is 14-line instead of 16-line.
+Olivetti M24
+CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
+ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
+as it is 14-line instead of 16-line.
 
-Tandy 1000 - CGA with various new modes - 160x200x16, 320x200x16, 640x200x4. Widely supported in 80s 
-    games.
+Tandy 1000
+CGA with various new modes - 160x200x16, 320x200x16, 640x200x4. Widely supported in 80s 
+games.
 
-Amstrad PC1512 - CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
+Amstrad PC1512
+CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
 
-Amstrad PC1640 - Paradise EGA.
+Amstrad PC1640
+Paradise EGA.
 
-Amstrad PC2086/PC3086 - Paradise PVGA1. An early SVGA clone with 256kb VRAM.
+Amstrad PC2086/PC3086
+Paradise PVGA1. An early SVGA clone with 256kb VRAM.
 
-Amstrad MegaPC - Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
+Amstrad MegaPC
+Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
 
-Acer 386SX/25N - Oak OTI-067. Another 512kb SVGA clone.
+Acer 386SX/25N
+Oak OTI-067. Another 512kb SVGA clone.
 
 
-Pcem emulates the following sound devices :
 
-PC speaker - The standard beeper on all PCs. Supports samples/RealSound.
+PCem emulates the following sound devices :
 
-Tandy PSG - The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus
-    noise. I reused the emulator in B-em for this (slightly modified).
+PC speaker
+The standard beeper on all PCs. Supports samples/RealSound.
 
-Gameblaster - The Creative Labs Gameblaster/Creative Music System, Creative's first sound card
-    introduced in 1987. Has two Philips SAA1099, giving 12 voices of square waves plus 4 noise
-    voices. In stereo!
+Tandy PSG
+The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus
+noise. I reused the emulator in B-em for this (slightly modified).
 
-Adlib - Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a useless drum section. 
-    PCem uses Jarek Burczynski's emulator for this.
+Gameblaster
+The Creative Labs Gameblaster/Creative Music System, Creative's first sound card
+introduced in 1987. Has two Philips SAA1099, giving 12 voices of square waves plus 4 noise
+voices. In stereo!
 
-Sound Blaster - Several Sound Blasters are emulated :
+Adlib
+Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a useless section. PCem
+uses Jarek Burczynski's emulator for this.
+
+Adlib Gold
+OPL3 with YM318Z 12-bit digital section. Possibly some bugs (not a lot of software to test).
+
+Sound Blaster
+Several Sound Blasters are emulated :
     SB v1.0 - The original. Limited to 22khz, and no auto-init DMA (can cause crackles sometimes).
     SB v1.5 - Adds auto-init DMA
     SB v2.0 - Upped to 41khz
     SB Pro v1.0 - Stereo, with twin OPL2 chips.
     SB Pro v2.0 - Stereo, with OPL 3 chip
     SB 16 - 16 bit stereo
-    All are set to Address 220, IRQ 7 and DMA 1 (and High DMA 5). IRQ and DMA can be changed for the 
-    SB16.
-    The relevant SET line for autoexec.bat is
-	SET BLASTER = A220 I7 D1 Tx    - where Tx is T1 for SB v1.0, T3 for SB v2.0, T4 for SB Pro,
-					 and T6 for SB16.
-    The SB16 software seems to work (including Windows drivers), but you must stick to these settings.
+    SB AWE32 - SB 16 + wavetable MIDI. This requires a ROM dump from a real AWE32.
+All are set to Address 220, IRQ 7 and DMA 1 (and High DMA 5). IRQ and DMA can be changed for the 
+SB16 & AWE32 in the drivers.
+The relevant SET line for autoexec.bat is
+  SET BLASTER = A220 I7 D1 Tx    - where Tx is T1 for SB v1.0, T3 for SB v2.0, T4 for SB Pro,
+				   and T6 for SB16.
 
-Gravis Ultrasound - 32 voice sample playback. PCem's emulation of this is a bit preliminary :
-    - Only older ULTRASND setup programs work, ie text mode instead of graphics (3.xx?)
-    - MIDI playback occasionally goes wrong
-    - 16-bit playback only uses top 8 bits of samples
-    - Some games, eg later versions of Epic Pinball, have no music
-    - No stereo
-    - Some clicking in sound output
-    - Does work well in lots of stuff though, eg Worms, Pinball Fantasies, Zone 66 etc.
-    - Settings are hardwired to Address 240, IRQ 5, DMA 3. The relevant SET line for autoexec.bat is
-	SET ULTRASND=240,3,3,5,12
-      This means unlike on a real board, you don't have to run a init program on bootup for sound 
-      to work. You do need to install the ULTRAMID patches if you want MIDI.
+AWE32 requires a ROM dump called awe32.raw. AWE-DUMP is a utility which can get a dump from a real
+card. Most EMU8000 functionality should work, however filters are not correct and reverb/chorus
+effects are not currently emulated.
+
+
+Gravis Ultrasound
+32 voice sample playback. Port address is fixed to 240, IRQ and DMA can be changed from the drivers.
+Emulation is improved significantly over previous versions.
+
+
+Windows Sound System
+16-bit digital + OPL3. Note that this only emulates WSS itself, and should not be used with drivers
+from compatible boards with additional components (eg Turtle Beach Monte Carlo)
 
 
 Other stuff emulated :
 
-Serial mouse - A Microsoft compatible serial mouse on COM1. Compatible drivers are all over the 
-    place for this.
+Serial mouse
+A Microsoft compatible serial mouse on COM1. Compatible drivers are all over the place for this.
 
-M24 mouse - I haven't seen a DOS mouse driver for this yet, but the regular scancode mode works, as
-    does the Windows 1.x driver.
+M24 mouse
+I haven't seen a DOS mouse driver for this yet, but the regular scancode mode works, as does the
+Windows 1.x driver.
 
-PC1512 mouse - The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this
-    one.
+PC1512 mouse
+The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this one.
 
-PS/2 mouse - A PS/2 mouse is emulated on the MegaPC and 386SX/25N model. As with serial, compatible
-    drivers are common.
+PS/2 mouse
+A PS/2 mouse is emulated on the MegaPC and 386SX/25N model. As with serial, compatible drivers are common.
 
-ATAPI CD-ROM - Works with OAKCDROM.SYS and Windows 9x. It can only work with actual CD-ROM drives 
-    at the minute, so to use ISO images you need a virtual CD drive.
+ATAPI CD-ROM
+Works with OAKCDROM.SYS. It can only work with actual CD-ROM drives at the minute, so to use ISO images
+you need a virtual CD drive.
 
 
 XTIDE :
@@ -380,12 +500,11 @@ Notes :
 - Windows 3.x should work okay in all modes now.
 
 - Windows 95/98 run, with the following caveats :
-  - Mouse is not detected. Strangely, it still works - except during setup, when it stops working at one point.
-    Sometimes running the 'Add New Hardware' wizard a couple of times will find it.
-  - The default Trident driver only allows 16 and 256 colour modes. There is an alternative driver which enables
-    high and true colour modes, but it doesn't work with DirectX.
   - Setup sometimes crashes in the first stage (during file copying). This appears to be a side effect of the 
     bugs fixed making OS/2 work. Unfortunately I haven't been able to eliminate this issue.
+  - On some versions of Windows the AWE32 is not set up correctly, claiming a resource conflict. To correct
+    this open the relevant item in Device Manager, choose 'Set Configuration Manually' and accept the
+    options presented.
 
 - OS/2 1.3 seems to work okay, but I haven't tested it very thoroughly.
 
@@ -399,13 +518,6 @@ Software tested:
 
 I removed most of this, and only put the stuff I actually tested on this release.
 
-Booter games :
-
-King's Quest (Tandy)
-King's Quest (CGA)
-
-
-DOS stuff :
 
 MS-DOS 3.30
 PC-DOS 3.30
@@ -414,70 +526,54 @@ MS-DOS 6.22
  - Most of the supplied software seems to work, eg Drivespace, Defrag, Scandisk, QBASIC
    etc
 
-OS/2 v1.3
-
-Windows 3.0 (CGA, Hercules, EGA, VGA) (real and standard modes only)
-Windows 3.1 (VGA, SVGA) (standard & enhanced modes)
+Windows/286
+Windows/386
+Windows 3.0
+Windows 3.1
+Windows 3.11 for Workgroups
 Windows 95
+Windows 95 OSR 2.5
 Windows 98
-
-Works for Windows 3.0
-Microsoft Arcade
-Internet Explorer 4
-
-Jill of the Jungle (CGA,EGA,VGA)
-Tetris
-Zak McKraken (CGA, Tandy)
-
-Brix (VGA)
-Commander Keen 4 (EGA)
-Duke Nukem 2 (VGA)
-Heartlight (VGA)
-Jetpack (VGA)
-
-Cascada - Cronologia (VGA)
-EMF - Verses
-Renaissance - Amnesia
-Future Crew - Second Reality
-
-386/486 stuff :
-
-Jungle Strike (EMM386)
-Dawn Patrol (EMM386) (use ET4000 driver)
-
-Doom
-Doom 2
-Duke Nukem 3D
-Heretic
-Hexen
-Jazz Jackrabbit
-Rise of the Triad
-Simcity 2000
-Terminal Velocity
-Tyrian
-Trasnport Tycoon
-Transport Tycoon Deluxe
-X-Com : Terror From The Deep
-Theme Hospital - DOS and Windows versions
-Zone 66 (don't use DOS 6.22)
-Pro Pinball : Timeshock
+Windows 98 SE
+Windows ME
 
 Actua Soccer
-Grand Theft Auto
-Jazz Jackrabbit 2
-Magic Carpet
-Network Q RAC Rally
-Quake
-WinQuake
-Quake 2 (SLOW - unsurprisingly)
-Tomb Raider
-Screamer
-Screamer Rally
-Virtual Pool (accelerated drivers work with both S3 and ET4000/W32)
-Jedi Knight
+Age of Empires
+All New World of Lemmings
+Bust-a-Move 2
+Civilization
+Colonization
 Command & Conquer : Red Alert
-Simcity 2000
-
-ZSNES
-Genecyst
-Kgen98
+Dawn Patrol
+Doom
+Duke Nukem 3D (not AWE32)
+Epic Pinball
+Final Fantasy 7 (i430VX only)
+Grand Theft Auto
+Lemmings
+Mortal Kombat 2
+Mortal Kombat Trilogy
+Need For Speed II SE
+Network Q RAC Rally
+Oddworld : Abe's Oddysee (with visual errors)
+One Must Fall
+Pro Pinball : Big Race USA (use Mach64 or TGUI9440)
+Quake
+Quake 2 (SLOW - unsurprisingly)
+Screamer 2
+Stargunner
+Syndicate
+System Shock
+Terminal Velocity
+Theme Hospital
+Theme Park
+Tomb Raider
+Tomb Raider 2
+Transport Tycoon
+Wolfenstein 3D
+Worms
+Worms 2
+X-Com : Terror From The Deep
+Xargon
+Zone 66
+Zool 2
