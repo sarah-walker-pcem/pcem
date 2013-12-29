@@ -14,7 +14,9 @@
 #include "ibm.h"
 #include "video.h"
 #include "resources.h"
+#include "cpu.h"
 #include "ide.h"
+#include "model.h"
 #include "nvr.h"
 #include "sound.h"
 
@@ -374,8 +376,10 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 {
                         if (romspresent[c])
                         {
-                                romset=c;
-                                loadbios();
+                                romset = c;
+                                model = model_getmodel(romset);
+                                saveconfig();
+                                resetpchard();
                                 break;
                         }
                 }
@@ -397,7 +401,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         if (gfx_present[c])
                         {
                                 gfxcard = c;
-                                mem_load_video_bios();
+                                saveconfig();
+                                resetpchard();
                                 break;
                         }
                 }
@@ -601,9 +606,6 @@ int mem_size_to_list[]={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,15,15,15
                         19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
                         19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19, 19};
 
-#include "cpu.h"
-#include "model.h"
-
 BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
         char temp_str[256];
@@ -645,7 +647,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         if (!s[0])
                                 break;
 
-                        if (video_card_available(c))
+                        if (video_card_available(c) && gfx_present[video_new_to_old(c)])
                         {
                                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
                                 if (video_new_to_old(c) == gfxcard)

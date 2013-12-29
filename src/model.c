@@ -86,6 +86,20 @@ int model_getromset()
         return models[model].id;
 }
 
+int model_getmodel(int romset)
+{
+	int c = 0;
+	
+	while (models[c].id != -1)
+	{
+		if (models[c].id == romset)
+			return c;
+		c++;
+	}
+	
+	return 0;
+}
+
 char *model_getname()
 {
         return models[model].name;
