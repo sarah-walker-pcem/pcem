@@ -252,12 +252,15 @@ int dma_channel_read(int channel)
 {
         uint16_t temp;
 
+	if (dma.command & 0x04)
+		return DMA_NODATA;
+		
         if (!AT)
                 refreshread();
         
         if (channel < 4)
         {
-                if (dma.m & (1 << channel))
+		if (dma.m & (1 << channel))
                         return DMA_NODATA;
                 if ((dma.mode[channel] & 0xC) != 8)
                         return DMA_NODATA;
@@ -317,6 +320,9 @@ int dma_channel_read(int channel)
 
 int dma_channel_write(int channel, uint16_t val)
 {
+	if (dma.command & 0x04)
+		return DMA_NODATA;
+
         if (!AT)
                 refreshread();
 
