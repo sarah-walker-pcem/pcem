@@ -3,6 +3,7 @@
 #include <windowsx.h>
 #undef BITMAP
 
+#include <commctrl.h>
 #include <commdlg.h>
 
 #include <process.h>
@@ -596,16 +597,6 @@ extern int is486;
 int romstolist[26], listtomodel[26], romstomodel[26], modeltolist[26];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
 
-int mem_list_to_size[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,32,48,64,256};
-int mem_size_to_list[]={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,
-                        16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,18,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
-                        19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19, 19};
-
 BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
         char temp_str[256];
@@ -734,45 +725,32 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Fast VLB/PCI");                
                 SendMessage(h,CB_SETCURSEL,video_speed,0);
 
-                h=GetDlgItem(hdlg,IDC_COMBOMEM);
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"1 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"2 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"3 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"4 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"5 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"6 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"7 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"8 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"9 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"10 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"11 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"12 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"13 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"14 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"15 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"16 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"32 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"48 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"64 MB");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"256 MB");                
-                SendMessage(h,CB_SETCURSEL,mem_size_to_list[mem_size-1],0);
+                h = GetDlgItem(hdlg, IDC_MEMSPIN);
+                SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
+                SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
+                SendMessage(h, UDM_SETPOS, 0, mem_size);
                 
-                pclog("Init cpuspeed %i\n",cpuspeed);
-
                 return TRUE;
                 case WM_COMMAND:
                 switch (LOWORD(wParam))
                 {
                         case IDOK:
+			h = GetDlgItem(hdlg, IDC_MEMTEXT);
+			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
+			sscanf(temp_str, "%i", &mem);
+			if (mem < 1 || mem > 256)
+			{
+				MessageBox(NULL, "Invalid memory size\nMemory must be between 1 and 256 MB", "PCem", MB_OK);
+				break;
+			}
+			
+			
                         h=GetDlgItem(hdlg,IDC_COMBO1);
                         temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
 
                         h = GetDlgItem(hdlg, IDC_COMBOVID);
                         SendMessage(h, CB_GETLBTEXT, SendMessage(h,CB_GETCURSEL,0,0), (LPARAM)temp_str);
                         gfx = video_new_to_old(video_card_getid(temp_str));
-
-                        h=GetDlgItem(hdlg,IDC_COMBOMEM);
-                        mem=mem_list_to_size[SendMessage(h,CB_GETCURSEL,0,0)];
 
                         h = GetDlgItem(hdlg, IDC_COMBOCPUM);
                         temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
