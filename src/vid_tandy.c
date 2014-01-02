@@ -677,7 +677,6 @@ void tandy_close(void *p)
 {
         tandy_t *tandy = (tandy_t *)p;
 
-        free(tandy->vram);
         free(tandy);
 }
 
