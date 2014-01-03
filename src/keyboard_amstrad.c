@@ -22,6 +22,7 @@ struct
 {
         int wantirq;
         
+        uint8_t key_waiting;
         uint8_t pa;        
         uint8_t pb;
 } keyboard_amstrad;
@@ -37,13 +38,14 @@ void keyboard_amstrad_poll()
         if (keyboard_amstrad.wantirq)
         {
                 keyboard_amstrad.wantirq = 0;
+                keyboard_amstrad.pa = keyboard_amstrad.key_waiting;
                 picint(2);
                 pclog("keyboard_amstrad : take IRQ\n");
         }
-        if (key_queue_start != key_queue_end)
+        if (key_queue_start != key_queue_end && !keyboard_amstrad.pa)
         {
-                keyboard_amstrad.pa = key_queue[key_queue_start];
-                pclog("Reading %02X from the key queue at %i\n", keyboard_amstrad.pa, key_queue_start);
+                keyboard_amstrad.key_waiting = key_queue[key_queue_start];
+                pclog("Reading %02X from the key queue at %i\n", keyboard_amstrad.key_waiting, key_queue_start);
                 key_queue_start = (key_queue_start + 1) & 0xf;
                 keyboard_amstrad.wantirq = 1;        
         }                
@@ -120,7 +122,7 @@ uint8_t keyboard_amstrad_read(uint16_t port, void *priv)
                         }
                         else
                         {
-                                keyboard_amstrad.pa = key_queue[key_queue_start];
+                                keyboard_amstrad.key_waiting = key_queue[key_queue_start];
                                 key_queue_start = (key_queue_start + 1) & 0xf;
                                 keyboard_amstrad.wantirq = 1;        
                         }

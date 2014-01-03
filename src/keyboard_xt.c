@@ -20,6 +20,7 @@
 struct
 {
         int wantirq;
+        uint8_t key_waiting;
         
         uint8_t pa;        
         uint8_t pb;
@@ -34,13 +35,14 @@ void keyboard_xt_poll()
         if (keyboard_xt.wantirq)
         {
                 keyboard_xt.wantirq = 0;
+                keyboard_xt.pa = keyboard_xt.key_waiting;
                 picint(2);
                 pclog("keyboard_xt : take IRQ\n");
         }
-        if (key_queue_start != key_queue_end)
+        if (key_queue_start != key_queue_end && !keyboard_xt.pa)
         {
-                keyboard_xt.pa = key_queue[key_queue_start];
-                pclog("Reading %02X from the key queue at %i\n", keyboard_xt.pa, key_queue_start);
+                keyboard_xt.key_waiting = key_queue[key_queue_start];
+                pclog("Reading %02X from the key queue at %i\n", keyboard_xt.key_waiting, key_queue_start);
                 key_queue_start = (key_queue_start + 1) & 0xf;
                 keyboard_xt.wantirq = 1;        
         }                
@@ -112,7 +114,7 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                         }
                         else
                         {
-                                keyboard_xt.pa = key_queue[key_queue_start];
+                                keyboard_xt.key_waiting = key_queue[key_queue_start];
                                 key_queue_start = (key_queue_start + 1) & 0xf;
                                 keyboard_xt.wantirq = 1;        
                         }
