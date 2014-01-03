@@ -326,14 +326,10 @@ int loadbios()
                 f=romfopen("roms/ibmxt/xt.rom","rb");
                 if (!f)
                 {
-                        f=romfopen("roms/ibmxt/xt050986.0","rb");
-                        ff=romfopen("roms/ibmxt/xt050986.1","rb");
-                        if (!f || !ff) break;
-                        for (c=0x0000;c<0x10000;c+=2)
-                        {
-                                rom[c]=getc(f);
-                                rom[c+1]=getc(ff);
-                        }
+                        f = romfopen("roms/ibmxt/5000027.u19", "rb");
+                        ff = romfopen("roms/ibmxt/1501512.u18","rb");
+                        fread(rom, 0x8000, 1, f);
+                        fread(rom + 0x8000, 0x8000, 1, ff);
                         fclose(ff);
                         fclose(f);
                         mem_load_xtide_bios();

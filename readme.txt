@@ -41,8 +41,8 @@ However, this was targetted as businesses and was more successful than the origi
 
 ROM files needed:
 
-xt050986.0
-xt050986.1
+5000027.u19
+1501512.u18
 
 
 IBM AT (1984)
