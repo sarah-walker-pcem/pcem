@@ -1,22 +1,11 @@
-PCem v8
+PCem v8.1
 
-Changes since v0.7:
+Changes since v8:
 
-- New machines - SiS496/497, 430VX
-- WinChip emulation (including MMX emulation)
-- New graphics cards - S3 Trio64, Trident TGUI9440AGi, ATI VGA Edge-16, ATI VGA Charger, 
-  OAK OTI-067, ATI Mach64
-- New sound cards - Adlib Gold, Windows Sound System, SB AWE32
-- Improved GUS emulation
-- MPU-401 emulation (UART mode only) on SB16 and AWE32
-- Fixed DMA bug, floppy drives work properly in Windows 3.x
-- Fixed bug in FXAM - fixes Wolf 3D, Dogz, some other stuff as well
-- Other FPU fixes
-- Fixed serial bugs, mouse no longer disappears in Windows 9x hardware detection
-- Major reorganisation of CPU emulation
-- Direct3D output mode
-- Fullscreen mode
-- Various internal changes
+- Fixed various issues with ROM detection/loading
+- Implemented DMA controller disable, fixed PC2086/3086
+- Switched IBM XT BIOS from 01/10/86 version to 11/08/82
+- Fixed stuck keys on XT and Amstrad machines
 
 
 PCem emulates the following machines:
@@ -499,7 +488,7 @@ Notes :
 
 - Windows 3.x should work okay in all modes now.
 
-- Windows 95/98 run, with the following caveats :
+- Windows 95/98/ME run, with the following caveats :
   - Setup sometimes crashes in the first stage (during file copying). This appears to be a side effect of the 
     bugs fixed making OS/2 work. Unfortunately I haven't been able to eliminate this issue.
   - On some versions of Windows the AWE32 is not set up correctly, claiming a resource conflict. To correct

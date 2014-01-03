@@ -310,7 +310,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         hwnd = CreateWindowEx (
                 0,                   /* Extended possibilites for variation */
                 szClassName,         /* Classname */
-                "PCem v8",           /* Title Text */
+                "PCem v8.1",         /* Title Text */
                 WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
                 CW_USEDEFAULT,       /* Windows decides the position */
                 CW_USEDEFAULT,       /* where the window ends up on the screen */
