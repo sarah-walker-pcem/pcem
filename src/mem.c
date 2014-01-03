@@ -328,6 +328,7 @@ int loadbios()
                 {
                         f = romfopen("roms/ibmxt/5000027.u19", "rb");
                         ff = romfopen("roms/ibmxt/1501512.u18","rb");
+                        if (!f || !ff) break;
                         fread(rom, 0x8000, 1, f);
                         fread(rom + 0x8000, 0x8000, 1, ff);
                         fclose(ff);
