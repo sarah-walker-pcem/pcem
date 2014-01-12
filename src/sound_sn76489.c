@@ -5,6 +5,8 @@
 #include "sound.h"
 #include "sound_sn76489.h"
 
+int sn76489_mute;
+
 static float volslog[16]=
 {
 	0.00000f,0.59715f,0.75180f,0.94650f,
@@ -79,9 +81,12 @@ void sn76489_get_buffer(int16_t *buffer, int len, void *p)
         sn76489_t *sn76489 = (sn76489_t *)p;
         
         int c;
-
-        for (c = 0; c < len * 2; c++)
-                buffer[c] += sn76489->buffer[c >> 1];
+        
+        if (!sn76489_mute)
+        {
+                for (c = 0; c < len * 2; c++)
+                        buffer[c] += sn76489->buffer[c >> 1];
+        }
 
         sn76489->pos = 0;
 }
@@ -178,6 +183,8 @@ void *sn76489_init()
         sn76489->count[3] = (rand()&0x3FF)<<6;
         sn76489->noise = 3;
         sn76489->shift = 0x4000;
+
+        sn76489_mute = 0;
 
         return sn76489;
 }

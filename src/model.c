@@ -16,6 +16,7 @@
 #include "keyboard_amstrad.h"
 #include "keyboard_at.h"
 #include "keyboard_olim24.h"
+#include "keyboard_pcjr.h"
 #include "keyboard_xt.h"
 #include "lpt.h"
 #include "mouse_ps2.h"
@@ -36,6 +37,7 @@
 #include "xtide.h"
 
 void           xt_init();
+void         pcjr_init();
 void      tandy1k_init();
 void          ams_init();
 void       europc_init();
@@ -56,6 +58,7 @@ MODEL models[] =
 {
         {"IBM PC",              ROM_IBMPC,     { "",      cpus_8088,    "",    NULL,       "",      NULL},         0,      xt_init},
         {"IBM XT",              ROM_IBMXT,     { "",      cpus_8088,    "",    NULL,       "",      NULL},         0,      xt_init},
+        {"IBM PCjr",            ROM_IBMPCJR,   { "",      cpus_pcjr,    "",    NULL,       "",      NULL},         1,    pcjr_init},
         {"Generic XT clone",    ROM_GENXT,     { "",      cpus_8088,    "",    NULL,       "",      NULL},         0,      xt_init},
         {"DTK XT clone",        ROM_DTKXT,     { "",      cpus_8088,    "",    NULL,       "",      NULL},         0,      xt_init},        
         {"Tandy 1000",          ROM_TANDY,     { "",      cpus_8088,    "",    NULL,       "",      NULL},         1, tandy1k_init},
@@ -112,16 +115,28 @@ void common_init()
         lpt_init();
         pic_init();
         pit_init();
-        serial1_init(0x3f8);
-        serial2_init(0x2f8);
+        serial1_init(0x3f8, 4);
+        serial2_init(0x2f8, 3);
 }
 
 void xt_init()
 {
         common_init();
+        pit_set_out_func(1, pit_refresh_timer_xt);
         keyboard_xt_init();
         mouse_serial_init();
         xtide_init();
+}
+
+void pcjr_init()
+{
+        fdc_add_pcjr();
+        pic_init();
+        pit_init();
+        pit_set_out_func(0, pit_irq0_timer_pcjr);
+        serial1_init(0x2f8, 3);
+        keyboard_pcjr_init();
+        device_add(&sn76489_device);
 }
 
 void tandy1k_init()
@@ -163,6 +178,7 @@ void olim24_init()
 void at_init()
 {
         common_init();
+        pit_set_out_func(1, pit_refresh_timer_at);
         dma16_init();
         ide_init();
         keyboard_at_init();

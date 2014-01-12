@@ -5,211 +5,251 @@
 #include "serial.h"
 #include "timer.h"
 
-SERIAL serial,serial2;
+enum
+{
+        SERIAL_INT_LSR = 1,
+        SERIAL_INT_RECEIVE = 2,
+        SERIAL_INT_TRANSMIT = 4,
+        SERIAL_INT_MSR = 8
+};
+
+SERIAL serial1, serial2;
 
 int mousepos=-1;
 int mousedelay;
-uint8_t serial_fifo[256];
-int serial_fifo_read, serial_fifo_write;
-
-void (*serial_rcr)();
 
 void serial_reset()
 {
-        serial.iir=serial.ier=serial.lcr=0;
-        serial2.iir=serial2.ier=serial2.lcr=0;
-        mousedelay=0;
-        serial_fifo_read = serial_fifo_write = 0;
+        serial1.iir = serial1.ier = serial1.lcr = 0;
+        serial2.iir = serial2.ier = serial2.lcr = 0;
+        mousedelay = 0;
+        serial1.fifo_read = serial1.fifo_write = 0;
+        serial2.fifo_read = serial2.fifo_write = 0;
 }
 
-void serial_write_fifo(uint8_t dat)
+void serial_update_ints(SERIAL *serial)
 {
-        serial_fifo[serial_fifo_write] = dat;
-        serial_fifo_write = (serial_fifo_write + 1) & 0xFF;
-        if (!(serial.linestat & 1))
+        int stat = 0;
+        
+        serial->iir = 1;
+
+        if ((serial->ier & 4) && (serial->int_status & SERIAL_INT_LSR)) /*Line status interrupt*/
         {
-                serial.linestat|=1;
-                if ((serial.mctrl & 8) && (serial.ier & 1))
-                        picint(0x10);
-                serial.iir=4;
+                stat = 1;
+                serial->iir = 6;
+        }
+        else if ((serial->ier & 1) && (serial->int_status & SERIAL_INT_RECEIVE)) /*Recieved data available*/
+        {
+                stat = 1;
+                serial->iir = 4;
+        }
+        else if ((serial->ier & 2) && (serial->int_status & SERIAL_INT_TRANSMIT)) /*Transmit data empty*/
+        {
+                stat = 1;
+                serial->iir = 2;
+        }
+        else if ((serial->ier & 8) && (serial->int_status & SERIAL_INT_MSR)) /*Modem status interrupt*/
+        {
+                stat = 1;
+                serial->iir = 0;
+        }
+
+        if (stat && ((serial->mctrl & 8) || PCJR))
+                picintlevel(1 << serial->irq);               
+        else
+                picintc(1 << serial->irq);
+}
+
+void serial_write_fifo(SERIAL *serial, uint8_t dat)
+{
+//        pclog("serial_write_fifo %02X\n", serial->lsr);
+        serial->fifo[serial->fifo_write] = dat;
+        serial->fifo_write = (serial->fifo_write + 1) & 0xFF;
+        if (!(serial->lsr & 1))
+        {
+                serial->lsr |= 1;
+                serial->int_status |= SERIAL_INT_RECEIVE;
+                serial_update_ints(serial);
         }
 }
 
-uint8_t serial_read_fifo()
+uint8_t serial_read_fifo(SERIAL *serial)
 {
-        if (serial_fifo_read != serial_fifo_write)
+        if (serial->fifo_read != serial->fifo_write)
         {
-                serial.dat = serial_fifo[serial_fifo_read];
-                serial_fifo_read = (serial_fifo_read + 1) & 0xFF;
+                serial->dat = serial->fifo[serial->fifo_read];
+                serial->fifo_read = (serial->fifo_read + 1) & 0xFF;
         }
-        return serial.dat;
+        return serial->dat;
 }
 
-void sendserial(uint8_t dat)
+void serial_write(uint16_t addr, uint8_t val, void *p)
 {
-        serial.rcr=dat;
-        serial.linestat|=1;
-        if (serial.mctrl&8) picint(0x10);
-        serial.iir=4;
-}
-
-void serial_write(uint16_t addr, uint8_t val, void *priv)
-{
+        SERIAL *serial = (SERIAL *)p;
 //        pclog("Write serial %03X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr&7)
         {
                 case 0:
-                if (serial.lcr&0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80 && !AMSTRADIO)
                 {
-                        serial.dlab1=val;
+                        serial->dlab1 = val;
                         return;
                 }
-                serial.thr=val;
-                serial.linestat|=0x20;
-                if (serial.mctrl&0x10)
+                serial->thr = val;
+                serial->lsr |= 0x20;
+                serial->int_status |= SERIAL_INT_TRANSMIT;
+                serial_update_ints(serial);
+                if (serial->mctrl & 0x10)
                 {
-                        serial_write_fifo(val);
-//                        serial.rcr=val;
-//                        serial.linestat|=1;
+                        serial_write_fifo(serial, val);
                 }
                 break;
                 case 1:
-                if (serial.lcr&0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80 && !AMSTRADIO)
                 {
-                        serial.dlab2=val;
+                        serial->dlab2 = val;
                         return;
                 }
-                serial.ier=val;
+                serial->ier = val;
+                serial_update_ints(serial);
                 break;
-                case 3: serial.lcr=val; break;
+                case 3:
+                serial->lcr = val;
+                break;
                 case 4:
-                if ((val&2) && !(serial.mctrl&2))
+                if ((val & 2) && !(serial->mctrl & 2))
                 {
-                        if (serial_rcr)
-                           serial_rcr();
+                        if (serial->rcr_callback)
+                                serial->rcr_callback(serial);
 //                        pclog("RCR raised! sending M\n");
                 }
-                serial.mctrl=val;
+                serial->mctrl = val;
+                if (val & 0x10)
+                {
+                        uint8_t new_msr;
+                        
+                        new_msr = (val & 0x0c) << 4;
+                        new_msr |= (val & 0x02) ? 0x10: 0;
+                        new_msr |= (val & 0x01) ? 0x20: 0;
+                        
+                        if ((serial->msr ^ new_msr) & 0x10)
+                                new_msr |= 0x01;
+                        if ((serial->msr ^ new_msr) & 0x20)
+                                new_msr |= 0x02;
+                        if ((serial->msr ^ new_msr) & 0x80)
+                                new_msr |= 0x08;
+                        if ((serial->msr & 0x40) && !(new_msr & 0x40))
+                                new_msr |= 0x04;
+                        
+                        serial->msr = new_msr;
+                }
+                break;
+                case 5:
+                serial->lsr = val;
+                if (serial->lsr & 0x01)
+                        serial->int_status |= SERIAL_INT_RECEIVE;
+                if (serial->lsr & 0x1e)
+                        serial->int_status |= SERIAL_INT_LSR;
+                if (serial->lsr & 0x20)
+                        serial->int_status |= SERIAL_INT_TRANSMIT;
+                serial_update_ints(serial);
+                break;
+                case 6:
+                serial->msr = val;
+                if (serial->msr & 0x0f)
+                        serial->int_status |= SERIAL_INT_MSR;
+                serial_update_ints(serial);
                 break;
         }
 }
 
-uint8_t serial_read(uint16_t addr, void *priv)
+uint8_t serial_read(uint16_t addr, void *p)
 {
-        uint8_t temp;
+        SERIAL *serial = (SERIAL *)p;
+        uint8_t temp = 0;
 //        pclog("Read serial %03X %04X(%08X):%04X %i %i  ", addr, CS, cs, pc, mousedelay, ins);
         switch (addr&7)
         {
                 case 0:
-                if (serial.lcr&0x80 && !AMSTRADIO) return serial.dlab1;
-//                picintc(0x10);
-                serial.iir=1;
-                serial.linestat&=~1;
-                temp=serial_read_fifo();
-                if (serial_fifo_read != serial_fifo_write)
-                {
-                        mousepos = 0;
-                        mousedelay = 5000 * (1 << TIMER_SHIFT);
-//                        pclog("Next FIFO\n");
-                }
-                break;
-                case 1:
-                if (serial.lcr&0x80 && !AMSTRADIO) temp = serial.dlab2;
-                else                               temp = serial.ier;
-                break;
-                case 2: temp=serial.iir; break;
-                case 3: temp=serial.lcr; break;
-                case 4: temp=serial.mctrl; break;
-                case 5: temp=serial.linestat; serial.linestat|=0x60; break;
-                default: temp=0;
-        }
-//        pclog("%02X\n",temp);
-        return temp;
-}
+                if (serial->lcr & 0x80 && !AMSTRADIO)
+                        return serial->dlab1;
 
-void serial2_write(uint16_t addr, uint8_t val, void *priv)
-{
-//        pclog("Write serial2 %03X %02X %04X:%04X\n",addr,val,cs>>4,pc);
-        switch (addr&7)
-        {
-                case 0:
-                if (serial2.lcr&0x80 && !AMSTRADIO)
+                serial->lsr &= ~1;
+                serial->int_status &= ~SERIAL_INT_RECEIVE;
+                serial_update_ints(serial);
+                temp = serial_read_fifo(serial);
+                if (serial->fifo_read != serial->fifo_write)
                 {
-                        serial2.dlab1=val;
-                        return;
-                }
-                serial2.thr=val;
-                serial2.linestat|=0x20;
-                if (serial2.mctrl&0x10)
-                {
-                        serial2.rcr=val;
-                        serial2.linestat|=1;
+                        serial->lsr |= 1;
+                        serial->int_status |= SERIAL_INT_RECEIVE;
+                        serial_update_ints(serial);
                 }
                 break;
                 case 1:
-                if (serial2.lcr&0x80 && !AMSTRADIO)
-                {
-                        serial2.dlab2=val;
-                        return;
-                }
-                serial2.ier=val;
+                if (serial->lcr & 0x80 && !AMSTRADIO)
+                        temp = serial->dlab2;
+                else
+                        temp = serial->ier;
                 break;
-                case 3: serial2.lcr=val; break;
+                case 2: 
+                temp = serial->iir;
+                if ((temp & 0xe) == 2)
+                {
+                        serial->int_status &= ~SERIAL_INT_TRANSMIT;
+                        serial_update_ints(serial);
+                }
+                break;
+                case 3:
+                temp = serial->lcr;
+                break;
                 case 4:
-                serial2.mctrl=val;
+                temp = serial->mctrl;
                 break;
-        }
-}
-
-uint8_t serial2_read(uint16_t addr, void *priv)
-{
-        uint8_t temp;
-//        pclog("Read serial2 %03X %04X:%04X\n",addr,cs>>4,pc);
-        switch (addr&7)
-        {
-                case 0:
-                if (serial2.lcr&0x80 && !AMSTRADIO) return serial2.dlab1;
-                serial2.iir=1;
-                serial2.linestat&=~1;
-                temp=serial2.rcr;
+                case 5:
+                serial->lsr |= 0x20;
+                temp = serial->lsr;
+                if (serial->lsr & 0x1f)
+                        serial->lsr &= ~0x1e;
+//                serial.lsr |= 0x60;
+                serial->int_status &= ~SERIAL_INT_LSR;
+                serial_update_ints(serial);
                 break;
-                case 1:
-                if (serial2.lcr&0x80 && !AMSTRADIO) return serial2.dlab2;
-                temp=0;
+                case 6:
+                temp = serial->msr;
+                serial->msr &= ~0x0f;
+                serial->int_status &= ~SERIAL_INT_MSR;
+                serial_update_ints(serial);
                 break;
-                case 2: temp=serial2.iir; break;
-                case 3: temp=serial2.lcr; break;
-                case 4: temp=serial2.mctrl; break;
-                case 5: temp=serial2.linestat; break;
-                default: temp=0;
         }
 //        pclog("%02X\n",temp);
         return temp;
 }
-
 
 /*Tandy might need COM1 at 2f8*/
-void serial1_init(uint16_t addr)
+void serial1_init(uint16_t addr, int irq)
 {
-        io_sethandler(addr, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, NULL);
-        serial_rcr = NULL;
+        io_sethandler(addr, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
+        serial1.irq = irq;
+        serial1.rcr_callback = NULL;
 }
 void serial1_remove()
 {
-        io_removehandler(0x2e8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, NULL);
-        io_removehandler(0x2f8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, NULL);
-        io_removehandler(0x3e8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, NULL);
-        io_removehandler(0x3f8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, NULL);
+        io_removehandler(0x2e8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
+        io_removehandler(0x2f8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
+        io_removehandler(0x3e8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
+        io_removehandler(0x3f8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
 }
 
-void serial2_init(uint16_t addr)
+void serial2_init(uint16_t addr, int irq)
 {
-        io_sethandler(addr, 0x0008, serial2_read, NULL, NULL, serial2_write, NULL, NULL, NULL);
+        io_sethandler(addr, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
+        serial2.irq = irq;
+        serial2.rcr_callback = NULL;
 }
 void serial2_remove()
 {
-        io_removehandler(0x2e8, 0x0008, serial2_read, NULL, NULL, serial2_write, NULL, NULL, NULL);
-        io_removehandler(0x2f8, 0x0008, serial2_read, NULL, NULL, serial2_write, NULL, NULL, NULL);
-        io_removehandler(0x3e8, 0x0008, serial2_read, NULL, NULL, serial2_write, NULL, NULL, NULL);
-        io_removehandler(0x3f8, 0x0008, serial2_read, NULL, NULL, serial2_write, NULL, NULL, NULL);
+        io_removehandler(0x2e8, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
+        io_removehandler(0x2f8, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
+        io_removehandler(0x3e8, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
+        io_removehandler(0x3f8, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
 }

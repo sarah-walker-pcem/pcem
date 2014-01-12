@@ -61,6 +61,7 @@ extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
 extern CPU cpus_WinChip[];
 
+extern CPU cpus_pcjr[];
 extern CPU cpus_pc1512[];
 extern CPU cpus_ibmat[];
 extern CPU cpus_acer[];

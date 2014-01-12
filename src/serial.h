@@ -1,18 +1,23 @@
-void serial1_init(uint16_t addr);
-void serial2_init(uint16_t addr);
+void serial1_init(uint16_t addr, int irq);
+void serial2_init(uint16_t addr, int irq);
 void serial1_remove();
 void serial2_remove();
 void serial_reset();
 
+struct SERIAL;
+
 typedef struct
 {
-        uint8_t linestat,thr,mctrl,rcr,iir,ier,lcr;
+        uint8_t lsr,thr,mctrl,rcr,iir,ier,lcr,msr;
         uint8_t dlab1,dlab2;
         uint8_t dat;
+        uint8_t int_status;
+        
+        int irq;
+
+        void (*rcr_callback)(void *p);
+        uint8_t fifo[256];
+        int fifo_read, fifo_write;
 } SERIAL;
 
-extern SERIAL serial,serial2;
-
-extern int serial_fifo_read, serial_fifo_write;
-
-extern void (*serial_rcr)();
+extern SERIAL serial1, serial2;

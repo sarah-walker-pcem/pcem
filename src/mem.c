@@ -344,6 +344,15 @@ int loadbios()
                         return 1;
                 }
                 break;
+                
+                case ROM_IBMPCJR:
+                f = romfopen("roms/ibmpcjr/bios.rom","rb");
+                if (!f) break;
+                fread(rom, 0x10000, 1, f);
+                fclose(f);
+                memset(vrom,0x63,0x8000);
+                return 1;
+                
                 case ROM_GENXT:
                 f=romfopen("roms/genxt/pcxt.rom","rb");
                 if (!f) break;

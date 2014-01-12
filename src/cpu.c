@@ -68,6 +68,13 @@ CPU cpus_8088[] =
         {"",             -1,        0, 0, 0, 0}
 };
 
+CPU cpus_pcjr[] =
+{
+        /*8088 PCjr*/
+        {"8088/4.77",    CPU_8088,  0,  4772727, 1, 0, 0, 0},
+        {"",             -1,        0, 0, 0, 0}
+};
+
 CPU cpus_8086[] =
 {
         /*8086 standard*/
@@ -259,7 +266,7 @@ void cpu_set()
         cpu_hasrdtsc = 0;
         cpu_hasMMX = 0;
         cpu_hasMSR = 0;
-        
+
         if (cpu_iscyrix)
            io_sethandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL, NULL);
         else

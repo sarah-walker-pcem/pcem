@@ -3,6 +3,8 @@ uint32_t oldpc;
 extern uint32_t rmdat32;
 int oldcpl;
 
+extern int nmi_enable;
+
 int tempc;
 int cycles,output;
 int ssegs;

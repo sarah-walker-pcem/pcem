@@ -10,7 +10,8 @@ void mouse_serial_poll(int x, int y, int b)
 {
         uint8_t mousedat[3];
         
-        if (!(serial.ier&1)) return;
+        if (!(serial1.ier & 1))
+                return;
         if (!x && !y && b==oldb) return;
 
         oldb=b;
@@ -28,42 +29,44 @@ void mouse_serial_poll(int x, int y, int b)
         mousedat[1]=x&0x3F;
         mousedat[2]=y&0x3F;
         
-        if (!(serial.mctrl&0x10))
+        if (!(serial1.mctrl&0x10))
         {
-                serial_write_fifo(mousedat[0]);
-                serial_write_fifo(mousedat[1]);
-                serial_write_fifo(mousedat[2]);
+                pclog("Serial data %02X %02X %02X\n", mousedat[0], mousedat[1], mousedat[2]);
+                serial_write_fifo(&serial1, mousedat[0]);
+                serial_write_fifo(&serial1, mousedat[1]);
+                serial_write_fifo(&serial1, mousedat[2]);
         }
 }
 
-void mouse_serial_rcr()
+void mouse_serial_rcr(void *p)
 {
         mousepos=-1;
         mousedelay=5000 * (1 << TIMER_SHIFT);
 }
         
-void mousecallback()
+void mousecallback(void *p)
 {
+        SERIAL *serial = (SERIAL *)p;
 	mousedelay = 0;
         if (mousepos == -1)
         {
                 mousepos = 0;
-                serial_fifo_read = serial_fifo_write = 0;
-                serial.linestat &= ~1;
-                serial_write_fifo('M');
+/*                serial_fifo_read = serial_fifo_write = 0;
+                serial.lsr &= ~1;*/
+                serial_write_fifo(serial, 'M');
         }
-        else if (serial_fifo_read != serial_fifo_write)
+/*        else if (serial_fifo_read != serial_fifo_write)
         {
                 serial.iir=4;
-                serial.linestat|=1;
+                serial.lsr|=1;
                 if (serial.mctrl&8) picint(0x10);
-        }
+        }*/
 }
 
 void mouse_serial_init()
 {
         mouse_poll = mouse_serial_poll;
-        serial_rcr = mouse_serial_rcr;
-        timer_add(mousecallback, &mousedelay, &mousedelay,  NULL);
+        serial1.rcr_callback = mouse_serial_rcr;
+        timer_add(mousecallback, &mousedelay, &mousedelay, &serial1);
 }
 

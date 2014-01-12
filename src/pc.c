@@ -46,7 +46,6 @@ extern int readlnum,writelnum;
 void fullspeed();
 
 int framecount,fps;
-int pitsec;
 int intcount;
 int wakeups,wokeups;
 int output;
@@ -343,7 +342,6 @@ void runpc()
                         egareads=egawrites=0;
                         cycles_lost = 0;
                         mmuflush=0;
-                        pitsec=0;
                         intcount=0;
                         wakeups=wokeups=0;
                         intcount=pitcount=0;

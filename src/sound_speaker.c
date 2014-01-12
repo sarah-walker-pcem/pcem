@@ -2,6 +2,8 @@
 #include "sound.h"
 #include "sound_speaker.h"
 
+int speaker_mute = 0;
+
 static int16_t speaker_buffer[SOUNDBUFLEN];
 
 static int speaker_pos = 0;
@@ -30,8 +32,11 @@ static void speaker_get_buffer(int16_t *buffer, int len, void *p)
 {
         int c;
 
-        for (c = 0; c < len * 2; c++)
-                buffer[c] += speaker_buffer[c >> 1];
+        if (!speaker_mute)
+        {
+                for (c = 0; c < len * 2; c++)
+                        buffer[c] += speaker_buffer[c >> 1];
+        }
 
         speaker_pos = 0;
 }
@@ -39,4 +44,5 @@ static void speaker_get_buffer(int16_t *buffer, int len, void *p)
 void speaker_init()
 {
         sound_add_handler(speaker_poll, speaker_get_buffer, NULL);
+        speaker_mute = 0;
 }

@@ -804,13 +804,15 @@ void clockhardware()
         int diff = cycdiff - cycles - current_diff;
         
         current_diff += diff;
-        pit.c[0] -= diff;
-        pit.c[1] -= diff;
-        if (pit.gate[2]) pit.c[2] -= diff;
+        if (pit.running[0]) pit.c[0] -= diff;
+        if (pit.running[1]) pit.c[1] -= diff;
+        if (pit.running[2]) pit.c[2] -= diff;
         if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
         
         timer_clock(diff);
 }
+
+static int takeint = 0;
 
 
 int firstrepcycle=1;
@@ -826,6 +828,7 @@ void rep(int fv)
         uint32_t oldds;
         startrep:
         temp=FETCH();
+
 //        if (firstrepcycle && temp==0xA5) printf("REP MOVSW %06X:%04X %06X:%04X\n",ds,SI,es,DI);
 //        if (output) printf("REP %02X %04X\n",temp,ipc);
         switch (temp)
@@ -1047,6 +1050,8 @@ void rep(int fv)
         }
         CX=c;
         if (changeds) ds=oldds;
+        if (IRQTEST)
+                takeint = 1;
 //        if (pc==ipc) FETCHCLEAR();
 }
 
@@ -1055,7 +1060,6 @@ int inhlt=0;
 uint16_t lastpc,lastcs;
 int firstrepcycle;
 int skipnextprint=0;
-
 
 int instime=0;
 //#if 0
@@ -1102,7 +1106,7 @@ void execx86(int cycs)
                 {
 //                        if ((opcode!=0xF2 && opcode!=0xF3) || firstrepcycle)
 //                        {
-                                if (!skipnextprint) printf("%04X:%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X  %02X %02X %02X %02X\n",cs,pc,AX,BX,CX,DX,CS,DS,ES,SS,DI,SI,BP,SP,opcode,flags, ram[0x413], ram[0x414], ram[0x415], ram[0x416]);
+                                if (!skipnextprint) printf("%04X:%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X  %i %p %02X\n",cs,pc,AX,BX,CX,DX,CS,DS,ES,SS,DI,SI,BP,SP,opcode,flags, ins, ram, ram[0x1a925]);
                                 skipnextprint=0;
 //                                ins++;
 //                        }
@@ -2373,7 +2377,7 @@ void execx86(int cycs)
                         lastpc=pc;
                         lastcs=CS;
                         temp=FETCH();
-                        
+
                         if (ssegs) ss=oldss;
                         writememw(ss,((SP-2)&0xFFFF),flags|0xF000);
                         writememw(ss,((SP-4)&0xFFFF),CS);
@@ -2399,6 +2403,7 @@ void execx86(int cycs)
                         SP+=6;
                         cycles-=44;
                         FETCHCLEAR();
+                        nmi_enable = 1;
                         break;
                         case 0xD0:
                         fetchea();
@@ -3427,7 +3432,22 @@ void execx86(int cycs)
                         loadcs(readmemw(0,addr+2));
                         FETCHCLEAR();
                 }
-                else if ((flags&I_FLAG) && (pic.pend&~pic.mask) && !ssegs && !noint)
+                else if (nmi && nmi_enable)
+                {
+//                        output = 3;
+                        writememw(ss,(SP-2)&0xFFFF,flags|0xF000);
+                        writememw(ss,(SP-4)&0xFFFF,CS);
+                        writememw(ss,(SP-6)&0xFFFF,pc);
+                        SP-=6;
+                        addr=2<<2;
+                        flags&=~I_FLAG;
+                        flags&=~T_FLAG;
+                        pc=readmemw(0,addr);
+                        loadcs(readmemw(0,addr+2));
+                        FETCHCLEAR();
+                        nmi_enable = 0;
+                }
+                else if (takeint && !ssegs && !noint)
                 {
                         temp=picinterrupt();
                         if (temp!=0xFF)
@@ -3447,6 +3467,7 @@ void execx86(int cycs)
 //                                printf("INTERRUPT\n");
                         }
                 }
+                takeint = (flags&I_FLAG) && (pic.pend&~pic.mask);
 
                 if (noint) noint=0;
                 ins++;

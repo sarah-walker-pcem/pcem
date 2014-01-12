@@ -26,6 +26,7 @@
 #include "vid_pc1512.h"
 #include "vid_pc1640.h"
 #include "vid_pc200.h"
+#include "vid_pcjr.h"
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
 #include "vid_tandy.h"
@@ -203,6 +204,10 @@ void video_init()
 
         switch (romset)
         {
+                case ROM_IBMPCJR:
+                device_add(&pcjr_video_device);
+                return;
+                
                 case ROM_TANDY:
                 device_add(&tandy_device);
                 return;

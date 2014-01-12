@@ -199,6 +199,13 @@ typedef struct PIT
         int delay[3];
         int rereadlatch[3];
         int gate[3];
+        int out[3];
+        int running[3];
+        int enabled[3];
+        int newcount[3];
+        int count[3];
+        int using_timer[3];
+        int initial[3];
 } PIT;
 
 PIT pit;
@@ -250,25 +257,6 @@ extern int pic_intpending;
 int intcount;
 
 
-/*FDC*/
-typedef struct FDC
-{
-        uint8_t dor,stat,command,dat,st0;
-        int head,track[256],sector,drive,lastdrive;
-        int pos;
-        uint8_t params[256];
-        uint8_t res[256];
-        int pnum,ptot;
-        int rate;
-        uint8_t specify[256];
-        int eot[256];
-        int lock;
-        int perp;
-        uint8_t config, pretrk;
-        int abort;
-} FDC;
-
-FDC fdc;
 int disctime;
 char discfns[2][256];
 int driveempty[2];
@@ -290,6 +278,7 @@ int driveempty[2];
 #define ET4000W32 (gfxcard==GFX_ET4000W32 && VGA)
 #define AT (romset>=ROM_IBMAT)
 #define PCI (romset >= ROM_PCI486)
+#define PCJR (romset == ROM_IBMPCJR)
 
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
 
@@ -299,6 +288,7 @@ enum
 {
         ROM_IBMPC = 0,  /*301 keyboard error, 131 cassette (!!!) error*/
         ROM_IBMXT,      /*301 keyboard error*/
+        ROM_IBMPCJR,
         ROM_GENXT,      /*'Generic XT BIOS'*/
         ROM_DTKXT,
         ROM_EUROPC,

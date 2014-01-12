@@ -6,7 +6,7 @@ CFLAGS = -O3 -march=i686 -fomit-frame-pointer
 OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	config.o cpu.o dac.o device.o dma.o ega.o fdc.o \
 	headland.o i430vx.o ide.o io.o jim.o keyboard.o keyboard_amstrad.o keyboard_at.o \
-	keyboard_olim24.o keyboard_xt.o lpt.o mcr.o mem.o model.o \
+	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o lpt.o mcr.o mem.o model.o \
 	mouse.o mouse_ps2.o mouse_serial.o neat.o nvr.o olivetti_m24.o \
      opti.o pc.o pci.o pic.o piix.o pit.o ppi.o rom.o serial.o sis496.o sound.o sound_ad1848.o sound_adlib.o \
 	sound_adlibgold.o sound_cms.o sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
@@ -15,7 +15,7 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	vid_ati_mach64.o vid_ati18800.o vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o \
 	vid_cl5429.o vid_ega.o vid_et4000.o vid_et4000w32.o vid_et4000w32i.o \
 	vid_hercules.o vid_icd2061.o vid_ics2595.o vid_mda.o vid_olivetti_m24.o \
-	vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o vid_s3.o \
+	vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o vid_pcjr.o vid_s3.o \
 	vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o vid_svga_render.o \
 	vid_tandy.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o \
 	vid_voodoo.o video.o wd76c10.o win.o win-d3d.o win-d3d-fs.o win-ddraw.o win-ddraw-fs.o win-keyboard.o win-midi.o \
