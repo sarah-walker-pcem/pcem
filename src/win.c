@@ -85,7 +85,7 @@ void vsyncint()
 //        }
 }
 
-int romspresent[26];
+int romspresent[ROM_MAX];
 int quited=0;
 
 RECT oldclip;
@@ -349,19 +349,19 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
-        for (c=0;c<26;c++)
+        for (c=0;c<ROM_MAX;c++)
         {
                 romset=c;
                 romspresent[c]=loadbios();
                 pclog("romset %i - %i\n", c, romspresent[c]);
         }
         
-        for (c = 0; c < 26; c++)
+        for (c = 0; c < ROM_MAX; c++)
         {
                 if (romspresent[c])
                    break;
         }
-        if (c == 26)
+        if (c == ROM_MAX)
         {
                 MessageBox(hwnd,"No ROMs present!\nYou must have at least one romset to use PCem.","PCem fatal error",MB_OK);
                 return 0;
@@ -373,7 +373,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         if (!c)
         {
                 if (romset!=-1) MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCem error",MB_OK);
-                for (c=0;c<26;c++)
+                for (c=0;c<ROM_MAX;c++)
                 {
                         if (romspresent[c])
                         {
@@ -594,7 +594,7 @@ int getsfile(HWND hwnd, char *f, char *fn)
 }
 
 extern int is486;
-int romstolist[26], listtomodel[26], romstomodel[26], modeltolist[26];
+int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
 
 BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -611,7 +611,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                 case WM_INITDIALOG:
                         pause=1;
                 h=GetDlgItem(hdlg,IDC_COMBO1);
-                for (c=0;c<26;c++) romstolist[c]=0;
+                for (c=0;c<ROM_MAX;c++) romstolist[c]=0;
                 c = d = 0;
                 while (models[c].id != -1)
                 {

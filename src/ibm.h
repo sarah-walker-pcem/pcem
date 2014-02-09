@@ -312,7 +312,9 @@ enum
         ROM_WIN486,
         ROM_PCI486,
         ROM_SIS496,
-        ROM_430VX
+        ROM_430VX,
+        
+        ROM_MAX
 };
 
 //#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
