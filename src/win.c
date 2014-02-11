@@ -1644,6 +1644,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 }
                 break;
 
+                case WM_MBUTTONUP:
+                releasemouse();
+                break;
+
                 case WM_ENTERMENULOOP:
 //                if (key[KEY_ALT] || key[KEY_ALTGR]) return 0;
                 break;
