@@ -65,6 +65,7 @@ void loaddisc(int d, char *fn)
         else if (ftell(f)<=(320*1024))  { SECTORS[d]=8;  TRACKS[d] = 40; discrate[d]=2; }
         else if (ftell(f)<=(360*1024))  { SECTORS[d]=9;  TRACKS[d] = 40; discrate[d]=2; } /*Double density*/
         else if (ftell(f)<(1024*1024))  { SECTORS[d]=9;  TRACKS[d] = 80; discrate[d]=2; } /*Double density*/
+        else if (ftell(f) <= 1228800)   { SECTORS[d]=15; TRACKS[d] = 80; discrate[d]=0; } /*High density 1.2MB*/
         else if (ftell(f)<(0x1A4000-1)) { SECTORS[d]=18; TRACKS[d] = 80; discrate[d]=0; } /*High density (not supported by Tandy 1000)*/
         else if (ftell(f) == 1884159)   { SECTORS[d]=23; TRACKS[d] = 80; discrate[d]=0; } /*XDF format - used by OS/2 Warp*/
         else if (ftell(f) == 1763327)   { SECTORS[d]=21; TRACKS[d] = 82; discrate[d]=0; } /*XDF format - used by OS/2 Warp*/
