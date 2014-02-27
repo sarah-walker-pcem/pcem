@@ -34,7 +34,7 @@ static SOUND_CARD sound_cards[] =
         {"Sound Blaster 1.5",     &sb_15_device},
         {"Sound Blaster 2.0",     &sb_2_device},
         {"Sound Blaster Pro v1",  &sb_pro_v1_device},
-        {"Sound Blaster Pro v2",  &sb_pro_v1_device},
+        {"Sound Blaster Pro v2",  &sb_pro_v2_device},
         {"Sound Blaster 16",      &sb_16_device},
         {"Sound Blaster AWE32",   &sb_awe32_device},
         {"Adlib Gold",            &adgold_device},

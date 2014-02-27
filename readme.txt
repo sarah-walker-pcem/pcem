@@ -1,5 +1,7 @@
 PCem v8.1
 
+PCem is licensed under the GPL, see COPYING for more details.
+
 Changes since v8:
 
 - Fixed various issues with ROM detection/loading
@@ -403,8 +405,8 @@ introduced in 1987. Has two Philips SAA1099, giving 12 voices of square waves pl
 voices. In stereo!
 
 Adlib
-Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a useless section. PCem
-uses Jarek Burczynski's emulator for this.
+Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a rhythm section. PCem
+uses the DOSBox dbopl emulator.
 
 Adlib Gold
 OPL3 with YM318Z 12-bit digital section. Possibly some bugs (not a lot of software to test).

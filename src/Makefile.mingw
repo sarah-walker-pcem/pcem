@@ -1,4 +1,4 @@
-VPATH = . mame
+VPATH = . dosbox
 CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
@@ -9,7 +9,7 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o lpt.o mcr.o mem.o model.o \
 	mouse.o mouse_ps2.o mouse_serial.o neat.o nvr.o olivetti_m24.o \
      opti.o pc.o pci.o pic.o piix.o pit.o ppi.o rom.o serial.o sis496.o sound.o sound_ad1848.o sound_adlib.o \
-	sound_adlibgold.o sound_cms.o sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
+	sound_adlibgold.o sound_cms.o sound_dbopl.o sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
 	sound_pas16.o sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o \
 	sound_wss.o soundopenal.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o \
 	vid_ati_mach64.o vid_ati18800.o vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o \
@@ -20,7 +20,7 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	vid_tandy.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o \
 	vid_voodoo.o video.o wd76c10.o win.o win-d3d.o win-d3d-fs.o win-ddraw.o win-ddraw-fs.o win-keyboard.o win-midi.o \
 	win-mouse.o win-timer.o win-video.o x86seg.o x87.o xtide.o pc.res
-FMOBJ = fmopl.o ymf262.o
+FMOBJ = dbopl.o
 
 
 LIBS = -mwindows -lwinmm -lalut -lopenal32 -lddraw -ldinput -ldxguid -ld3d9
