@@ -718,9 +718,9 @@ uint8_t s3_accel_in(uint16_t port, void *p)
                 return s3->accel.maj_axis_pcnt >> 8;
 
                 case 0x9ae8:
-                return 0;
+                return 0;    /*FIFO empty*/
                 case 0x9ae9:
-                return 0;
+                return 0x04; /*FIFO empty*/
 
                 case 0xa2e8:
                 return s3->accel.bkgd_color & 0xff;
