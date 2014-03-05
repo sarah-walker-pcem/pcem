@@ -23,7 +23,7 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
         svga_t *svga = (svga_t *)p;
         int c;
         uint8_t o;
-//        printf("OUT SVGA %03X %02X %04X:%04X %i %08X\n",addr,val,CS,pc,TRIDENT,svgawbank);
+//        printf("OUT SVGA %03X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr)
         {
                 case 0x3C0:
@@ -88,8 +88,12 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                         svga->writemask = val & 0xf; 
                         break;
                         case 3:
-                        svga->charseta = (((val >> 2) & 3) * 0x10000) + 2;
-                        svga->charsetb = ((val & 3)  * 0x10000) + 2;
+                        svga->charsetb = (((val >> 2) & 3) * 0x10000) + 2;
+                        svga->charseta = ((val & 3)  * 0x10000) + 2;
+                        if (val & 0x10)
+                                svga->charseta += 0x8000;
+                        if (val & 0x20)
+                                svga->charsetb += 0x8000;
                         break;
                         case 4: 
                         svga->chain4 = val & 8;

@@ -73,8 +73,8 @@ void ega_out(uint16_t addr, uint8_t val, void *p)
                         ega->writemask = val & 0xf; 
                         break;
                         case 3:
-                        ega->charseta = (((val >> 2) & 3) * 0x10000) + 2;
-                        ega->charsetb = ((val & 3)        * 0x10000) + 2;
+                        ega->charsetb = (((val >> 2) & 3) * 0x10000) + 2;
+                        ega->charseta = ((val & 3)        * 0x10000) + 2;
                         break;
                 }
                 break;
