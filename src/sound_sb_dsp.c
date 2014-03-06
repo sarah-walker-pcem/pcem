@@ -318,21 +318,18 @@ void sb_exec_command(sb_dsp_t *dsp)
                 dsp->sblatcho = dsp->sblatchi = TIMER_USEC * (256 - dsp->sb_data[0]);
                 temp = 256 - dsp->sb_data[0];
                 temp = 1000000 / temp;
-//                printf("Sample rate - %ihz (%i)\n",temp, sblatcho);
+//                pclog("Sample rate - %ihz (%i)\n",temp, dsp->sblatcho);
                 dsp->sb_freq = temp;
                 break;
                 case 0x41: /*Set output sampling rate*/
-                if (dsp->sb_type < SB16) break;
-                dsp->sblatcho = (int)(TIMER_USEC * (1000000.0f / (float)(dsp->sb_data[1] + (dsp->sb_data[0] << 8))));
-//                printf("Sample rate - %ihz (%i)\n",sb_data[1]+(sb_data[0]<<8), sblatcho);
-                dsp->sb_freq = dsp->sb_data[1] + (dsp->sb_data[0] << 8);
-                dsp->sb_timeo = 256 + dsp->sb_freq;
-                break;
                 case 0x42: /*Set input sampling rate*/
                 if (dsp->sb_type < SB16) break;
-                dsp->sblatchi = (int)(TIMER_USEC * (1000000.0f / (float)(dsp->sb_data[1] + (dsp->sb_data[0] << 8))));
-//                printf("iample rate - %ihz\n",sb_data[1]+(sb_data[0]<<8));
-                dsp->sb_timei = 256 + dsp->sb_data[1] + (dsp->sb_data[0] << 8);
+                dsp->sblatcho = (int)(TIMER_USEC * (1000000.0f / (float)(dsp->sb_data[1] + (dsp->sb_data[0] << 8))));
+//                pclog("Sample rate - %ihz (%i)\n",dsp->sb_data[1]+(dsp->sb_data[0]<<8), dsp->sblatcho);
+                dsp->sb_freq = dsp->sb_data[1] + (dsp->sb_data[0] << 8);
+                dsp->sb_timeo = 256 + dsp->sb_freq;
+                dsp->sblatchi = dsp->sblatcho;
+                dsp->sb_timei = dsp->sb_timeo;
                 break;
                 case 0x48: /*Set DSP block transfer size*/
                 dsp->sb_8_autolen = dsp->sb_data[0] + (dsp->sb_data[1] << 8);
@@ -516,7 +513,7 @@ void sb_exec_command(sb_dsp_t *dsp)
 void sb_write(uint16_t a, uint8_t v, void *priv)
 {
         sb_dsp_t *dsp = (sb_dsp_t *)priv;
-//        printf("sb_write : Write soundblaster %04X %02X %04X:%04X %02X\n",a,v,CS,pc,dsp->sb_command);
+//        pclog("sb_write : Write soundblaster %04X %02X %04X:%04X %02X\n",a,v,CS,pc,dsp->sb_command);
         switch (a&0xF)
         {
                 case 6: /*Reset*/
@@ -811,7 +808,7 @@ void pollsb(void *p)
 
                 if (dsp->sb_16_length < 0)
                 {
-//                        pclog("16DMA over %i\n",sb_16_autoinit);
+//                        pclog("16DMA over %i\n",dsp->sb_16_autoinit);
                         if (dsp->sb_16_autoinit) dsp->sb_16_length = dsp->sb_16_autolen;
                         else                     dsp->sb_16_enable = dsp->sbenable = 0;
                         sb_irq(dsp, 0);
