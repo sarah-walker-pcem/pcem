@@ -1,7 +1,5 @@
 static int opINT3(uint32_t fetchdat)
 {
-        oldpc = pc;
-        //fatal("INT3\n");
         if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
         {
                 x86gpf(NULL,0);
