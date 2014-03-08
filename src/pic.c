@@ -9,11 +9,15 @@ int pic_intpending;
 
 void pic_updatepending()
 {
+        if ((pic2.pend&~pic2.mask)&~pic2.mask2)
+                pic.pend |= (1 << 2);
+        else
+                pic.pend &= ~(1 << 2);
         pic_intpending = (pic.pend & ~pic.mask) & ~pic.mask2;
         if (!((pic.mask | pic.mask2) & (1 << 2)))
                 pic_intpending |= ((pic2.pend&~pic2.mask)&~pic2.mask2);
 /*        pclog("pic_intpending = %i  %02X %02X %02X %02X\n", pic_intpending, pic.ins, pic.pend, pic.mask, pic.mask2);
-        pclog("                    %02X %02X %02X %02X\n", pic_intpending, pic2.ins, pic2.pend, pic2.mask, pic2.mask2);*/
+        pclog("                    %02X %02X %02X %02X %i %i\n", pic2.ins, pic2.pend, pic2.mask, pic2.mask2, ((pic.mask | pic.mask2) & (1 << 2)), ((pic2.pend&~pic2.mask)&~pic2.mask2));*/
 }
 
 
@@ -217,8 +221,8 @@ void pic2_write(uint16_t addr, uint8_t val, void *priv)
 
 uint8_t pic2_read(uint16_t addr, void *priv)
 {
-        if (addr&1) { /*pclog("Read PIC2 mask %02X %04X:%08X\n",pic2.mask,CS,pc); */return pic2.mask; }
-        if (pic2.read) { /*pclog("Read PIC2 ins %02X %04X:%08X\n",pic2.ins,CS,pc); */return pic2.ins; }
+        if (addr&1) { /*pclog("Read PIC2 mask %02X %04X:%08X\n",pic2.mask,CS,pc);*/ return pic2.mask; }
+        if (pic2.read) { /*pclog("Read PIC2 ins %02X %04X:%08X\n",pic2.ins,CS,pc);*/ return pic2.ins; }
         /*pclog("Read PIC2 pend %02X %04X:%08X\n",pic2.pend,CS,pc);*/
         return pic2.pend;
 }
@@ -279,15 +283,20 @@ void picintc(uint16_t num)
 {
         int c = 0;
         while (!(num & (1 << c))) c++;
-        //pclog("INTC %04X %i\n", num, c);
+//        pclog("INTC %04X %i\n", num, c);
         pic_current[c]=0;
-#if 0
-        if (num>0xFF) pic2.pend&=~(num>>8);
+
+        if (num > 0xff)
+        {
+                pic2.pend &= ~(num >> 8);
+                if (!((pic2.pend&~pic2.mask)&~pic2.mask2))
+                        pic.pend &= ~(1 << 2);
+        }
         else
         {
                 pic.pend&=~num;
         }
-#endif
+        pic_updatepending();
 }
 
 uint8_t picinterrupt()
