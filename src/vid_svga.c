@@ -246,6 +246,7 @@ void svga_recalctimings(svga_t *svga)
         svga->dispend = svga->crtc[0x12];
         svga->vsyncstart = svga->crtc[0x10];
         svga->split = svga->crtc[0x18];
+        svga->vblankstart = svga->crtc[0x15];
 
         if (svga->crtc[7] & 1)  svga->vtotal |= 0x100;
         if (svga->crtc[7] & 32) svga->vtotal |= 0x200;
@@ -262,6 +263,13 @@ void svga_recalctimings(svga_t *svga)
         if (svga->crtc[7] & 0x10) svga->split|=0x100;
         if (svga->crtc[9] & 0x40) svga->split|=0x200;
         svga->split++;
+        
+        if (svga->crtc[7] & 0x08) svga->vblankstart |= 0x100;
+        if (svga->crtc[9] & 0x20) svga->vblankstart |= 0x200;
+        svga->vblankstart++;
+        
+        if (svga->vblankstart < svga->dispend)
+                svga->dispend = svga->vblankstart;
 
         svga->hdisp = svga->crtc[1];
         svga->hdisp++;

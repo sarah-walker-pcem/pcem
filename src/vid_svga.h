@@ -38,7 +38,7 @@ typedef struct svga_t
         uint32_t pallook[256];
         PALETTE vgapal;
 
-        int vtotal, dispend, vsyncstart, split;
+        int vtotal, dispend, vsyncstart, split, vblankstart;
         int hdisp,  hdisp_old, htotal,  hdisp_time, rowoffset;
         int lowres, interlace;
         int linedbl, rowcount;
