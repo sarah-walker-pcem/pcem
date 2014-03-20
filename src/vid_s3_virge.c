@@ -70,6 +70,33 @@ typedef struct virge_t
                 uint32_t pattern_16[8*8];
                 uint32_t pattern_32[8*8];
         } s3d;
+        
+        struct
+        {
+                uint32_t pri_ctrl;
+                uint32_t chroma_ctrl;
+                uint32_t sec_ctrl;
+                uint32_t chroma_upper_bound;
+                uint32_t sec_filter;
+                uint32_t blend_ctrl;
+                uint32_t pri_fb0, pri_fb1;
+                uint32_t pri_stride;
+                uint32_t buffer_ctrl;
+                uint32_t sec_fb0, sec_fb1;
+                uint32_t sec_stride;
+                uint32_t overlay_ctrl;
+                uint32_t k1_vert_scale;
+                uint32_t k2_vert_scale;
+                uint32_t dda_vert_accumulator;
+                uint32_t fifo_ctrl;
+                uint32_t pri_start;
+                uint32_t pri_size;
+                uint32_t sec_start;
+                uint32_t sec_size;
+                
+                int pri_x, pri_y, pri_w, pri_h;
+                int sec_x, sec_y, sec_w, sec_h;
+        } streams;
 } virge_t;
 
 static void s3_virge_updatemapping(virge_t *virge);
@@ -82,13 +109,6 @@ static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p);
 static void     s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p);
 static void     s3_virge_mmio_write_w(uint32_t addr, uint16_t val, void *p);
 static void     s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p);
-
-static uint8_t  s3_virge_new_mmio_read(uint32_t addr, void *p);
-static uint16_t s3_virge_new_mmio_read_w(uint32_t addr, void *p);
-static uint32_t s3_virge_new_mmio_read_l(uint32_t addr, void *p);
-static void     s3_virge_new_mmio_write(uint32_t addr, uint8_t val, void *p);
-static void     s3_virge_new_mmio_write_w(uint32_t addr, uint16_t val, void *p);
-static void     s3_virge_new_mmio_write_l(uint32_t addr, uint32_t val, void *p);
 
 enum
 {
@@ -159,7 +179,7 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 svga->crtcreg = val & 0x7f;
                 return;
                 case 0x3d5:
-                //pclog("Write CRTC R%02X %02X\n", svga->crtcreg, val);
+//                pclog("Write CRTC R%02X %02X\n", svga->crtcreg, val);
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) 
                         return;
                 if (svga->crtcreg >= 0x20 && svga->crtcreg != 0x38 && (svga->crtc[0x38] & 0xcc) != 0x48) 
@@ -218,7 +238,6 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         case 0x46: case 0x47: case 0x48: case 0x49:
                         case 0x4c: case 0x4d: case 0x4e: case 0x4f:
                         svga->hwcursor.x = ((svga->crtc[0x46] << 8) | svga->crtc[0x47]) & 0x7ff;
-                        if (svga->bpp == 32) svga->hwcursor.x >>= 1;
                         svga->hwcursor.y = ((svga->crtc[0x48] << 8) | svga->crtc[0x49]) & 0x7ff;
                         svga->hwcursor.xoff = svga->crtc[0x4e] & 63;
                         svga->hwcursor.yoff = svga->crtc[0x4f] & 63;
@@ -235,8 +254,8 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         {
                                 case 3:  svga->bpp = 15; break;
                                 case 5:  svga->bpp = 16; break;
-//                                case 7:  svga->bpp = 24; break;
-                                case 13: svga->bpp = 24; break;
+                                case 7:  svga->bpp = 24; break;
+                                case 13: svga->bpp = 32; break;
                                 default: svga->bpp = 8;  break;
                         }
                         break;
@@ -301,61 +320,86 @@ static uint8_t s3_virge_in(uint16_t addr, void *p)
 static void s3_virge_recalctimings(svga_t *svga)
 {
         virge_t *virge = (virge_t *)svga->p;
-//        pclog("recalctimings\n");
-        svga->ma_latch |= (virge->ma_ext << 16);
-//        pclog("SVGA_MA %08X\n", svga_ma);
-//        if (gdcreg[5] & 0x40) svga_lowres = !(crtc[0x3a] & 0x10);
-        if ((svga->gdcreg[5] & 0x40) && (svga->crtc[0x3a] & 0x10))
-        {
-                switch (svga->bpp)
-                {
-                        case 8: 
-                        svga->render = svga_render_8bpp_highres; 
-                        break;
-                        case 15: 
-                        svga->render = svga_render_15bpp_highres; 
-                        break;
-                        case 16: 
-                        svga->render = svga_render_16bpp_highres; 
-                        break;
-                        case 24: 
-                        svga->render = svga_render_24bpp_highres; 
-                        break;
-                        case 32: 
-                        svga->render = svga_render_32bpp_highres; 
-                        break;
-                }
-        }
-        
+
         if (svga->crtc[0x5d] & 0x01) svga->htotal     += 0x100;
         if (svga->crtc[0x5d] & 0x02) svga->hdisp      += 0x100;
         if (svga->crtc[0x5e] & 0x01) svga->vtotal     += 0x400;
         if (svga->crtc[0x5e] & 0x02) svga->dispend    += 0x400;
         if (svga->crtc[0x5e] & 0x10) svga->vsyncstart += 0x400;
         if (svga->crtc[0x5e] & 0x40) svga->split      += 0x400;
-        if (svga->crtc[0x51] & 0x30)      svga->rowoffset += (svga->crtc[0x51] & 0x30) << 4;
-        else if (svga->crtc[0x43] & 0x04) svga->rowoffset += 0x100;
-        if (!svga->rowoffset) svga->rowoffset = 256;
         svga->interlace = svga->crtc[0x42] & 0x20;
-//        pclog("svga->rowoffset = %i bpp=%i\n", svga->rowoffset, svga->bpp);
-        if (svga->bpp == 15 || svga->bpp == 16)
+
+        if ((svga->crtc[0x67] & 0xc) != 0xc) /*VGA mode*/
         {
-                svga->htotal >>= 1;
-                svga->hdisp >>= 1;
+                svga->ma_latch |= (virge->ma_ext << 16);
+
+                if (svga->crtc[0x51] & 0x30)      svga->rowoffset += (svga->crtc[0x51] & 0x30) << 4;
+                else if (svga->crtc[0x43] & 0x04) svga->rowoffset += 0x100;
+                if (!svga->rowoffset) svga->rowoffset = 256;
+
+                if ((svga->gdcreg[5] & 0x40) && (svga->crtc[0x3a] & 0x10))
+                {
+                        switch (svga->bpp)
+                        {
+                                case 8: 
+                                svga->render = svga_render_8bpp_highres; 
+                                break;
+                                case 15: 
+                                svga->render = svga_render_15bpp_highres; 
+                                break;
+                                case 16: 
+                                svga->render = svga_render_16bpp_highres; 
+                                break;
+                                case 24: 
+                                svga->render = svga_render_24bpp_highres; 
+                                break;
+                                case 32: 
+                                svga->render = svga_render_32bpp_highres; 
+                                break;
+                        }
+                }
+        
+//                pclog("svga->rowoffset = %i bpp=%i\n", svga->rowoffset, svga->bpp);
+                if (svga->bpp == 15 || svga->bpp == 16)
+                {
+                        svga->htotal >>= 1;
+                        svga->hdisp >>= 1;
+                }
+                if (svga->bpp == 24)
+                {
+                        svga->rowoffset = (svga->rowoffset * 3) / 4; /*Hack*/
+                }
         }
-        if (svga->bpp == 24)
+        else /*Streams mode*/
         {
-                svga->rowoffset = (svga->rowoffset * 3) / 4; /*Hack*/
+                if (virge->streams.buffer_ctrl & 1)
+                        svga->ma_latch = virge->streams.pri_fb1 >> 2;
+                else
+                        svga->ma_latch = virge->streams.pri_fb0 >> 2;
+                
+                svga->rowoffset = virge->streams.pri_stride >> 3;
+
+                switch ((virge->streams.pri_ctrl >> 24) & 0x7)
+                {
+                        case 0: /*RGB-8 (CLUT)*/
+                        svga->render = svga_render_8bpp_highres; 
+                        break;
+                        case 3: /*KRGB-16 (1.5.5.5)*/ 
+                        svga->render = svga_render_15bpp_highres; 
+                        break;
+                        case 5: /*RGB-16 (5.6.5)*/ 
+                        svga->render = svga_render_16bpp_highres; 
+                        break;
+                        case 6: /*RGB-24 (8.8.8)*/ 
+                        svga->render = svga_render_24bpp_highres; 
+                        break;
+                        case 7: /*XRGB-32 (X.8.8.8)*/
+                        svga->render = svga_render_32bpp_highres; 
+                        break;
+                }
         }
 
-/*        if (svga->bpp == 32)
-        {
-                svga->htotal <<= 2;
-                svga->hdisp <<= 2;
-        }*/
-        //svga_clock = cpuclock / sdac_getclock((svga_miscout >> 2) & 3);
-//        pclog("SVGA_CLOCK = %f  %02X  %f\n", svga_clock, svga_miscout, cpuclock);
-        //if (bpp > 8) svga_clock /= 2;
+
 }
 
 static void s3_virge_updatemapping(virge_t *virge)
@@ -433,7 +477,7 @@ static void s3_virge_updatemapping(virge_t *virge)
                 if (svga->crtc[0x53] & 0x20)
                         mem_mapping_set_addr(&virge->mmio_mapping, 0xb8000, 0x8000);
                 else
-                        mem_mapping_set_addr(&virge->mmio_mapping, 0xa8000, 0x8000);
+                        mem_mapping_set_addr(&virge->mmio_mapping, 0xa0000, 0x10000);
         }
         else
                 mem_mapping_disable(&virge->mmio_mapping);
@@ -447,34 +491,6 @@ static void s3_virge_updatemapping(virge_t *virge)
 
 
 static uint8_t s3_virge_mmio_read(uint32_t addr, void *p)
-{
-//        pclog("MMIO readb %08X\n", addr);
-        return 0xff;
-}
-static uint16_t s3_virge_mmio_read_w(uint32_t addr, void *p)
-{
-//        pclog("MMIO readw %08X\n", addr);
-        return 0xffff;
-}
-static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p)
-{
-//        pclog("MMIO readl %08X\n", addr);
-        return 0xffffffff;
-}
-static void s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p)
-{
-//        pclog("MMIO writeb %08X %02X\n", addr, val);
-}
-static void s3_virge_mmio_write_w(uint32_t addr, uint16_t val, void *p)
-{
-//        pclog("MMIO writew %08X %04X\n", addr, val);
-}
-static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
-{
-//        pclog("MMIO writel %08X %08X\n", addr, val);
-}
-
-static uint8_t s3_virge_new_mmio_read(uint32_t addr, void *p)
 {
 //        pclog("New MMIO readb %08X\n", addr);
         switch (addr & 0xffff)
@@ -495,23 +511,90 @@ static uint8_t s3_virge_new_mmio_read(uint32_t addr, void *p)
         }
         return 0xff;
 }
-static uint16_t s3_virge_new_mmio_read_w(uint32_t addr, void *p)
+static uint16_t s3_virge_mmio_read_w(uint32_t addr, void *p)
 {
 //        pclog("New MMIO readw %08X\n", addr);
         switch (addr & 0xfffe)
         {
                 default:
-                return s3_virge_new_mmio_read(addr, p) | (s3_virge_new_mmio_read(addr + 1, p) << 8);
+                return s3_virge_mmio_read(addr, p) | (s3_virge_mmio_read(addr + 1, p) << 8);
         }
         return 0xffff;
 }
-static uint32_t s3_virge_new_mmio_read_l(uint32_t addr, void *p)
+static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p)
 {
         virge_t *virge = (virge_t *)p;
         uint32_t ret = 0xffffffff;
 //        pclog("New MMIO readl %08X\n", addr);
         switch (addr & 0xfffc)
         {
+                case 0x8180:
+                ret = virge->streams.pri_ctrl;
+                break;
+                case 0x8184:
+                ret = virge->streams.chroma_ctrl;
+                break;
+                case 0x8190:
+                ret = virge->streams.sec_ctrl;
+                break;
+                case 0x8194:
+                ret = virge->streams.chroma_upper_bound;
+                break;
+                case 0x8198:
+                ret = virge->streams.sec_filter;
+                break;
+                case 0x81a0:
+                ret = virge->streams.blend_ctrl;
+                break;
+                case 0x81c0:
+                ret = virge->streams.pri_fb0;
+                break;
+                case 0x81c4:
+                ret = virge->streams.pri_fb1;
+                break;
+                case 0x81c8:
+                ret = virge->streams.pri_stride;
+                break;
+                case 0x81cc:
+                ret = virge->streams.buffer_ctrl;
+                break;
+                case 0x81d0:
+                ret = virge->streams.sec_fb0;
+                break;
+                case 0x81d4:
+                ret = virge->streams.sec_fb1;
+                break;
+                case 0x81d8:
+                ret = virge->streams.sec_stride;
+                break;
+                case 0x81dc:
+                ret = virge->streams.overlay_ctrl;
+                break;
+                case 0x81e0:
+                ret = virge->streams.k1_vert_scale;
+                break;
+                case 0x81e4:
+                ret = virge->streams.k2_vert_scale;
+                break;
+                case 0x81e8:
+                ret = virge->streams.dda_vert_accumulator;
+                break;
+                case 0x81ec:
+                ret = virge->streams.fifo_ctrl;
+                break;
+                case 0x81f0:
+                ret = virge->streams.pri_start;
+                break;
+                case 0x81f4:
+                ret = virge->streams.pri_size;
+                break;
+                case 0x81f8:
+                ret = virge->streams.sec_start;
+                break;
+                case 0x81fc:
+                ret = virge->streams.sec_size;
+                break;
+                
                 case 0x8504:
                 ret = (0x1f << 8) | (1 << 13);
                 break;
@@ -562,11 +645,11 @@ static uint32_t s3_virge_new_mmio_read_l(uint32_t addr, void *p)
                 break;
                 
                 default:
-                return s3_virge_new_mmio_read_w(addr, p) | (s3_virge_new_mmio_read_w(addr + 2, p) << 16);
+                return s3_virge_mmio_read_w(addr, p) | (s3_virge_mmio_read_w(addr + 2, p) << 16);
         }
         return ret;
 }
-static void s3_virge_new_mmio_write(uint32_t addr, uint8_t val, void *p)
+static void s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
         svga_t *svga = &virge->svga;
@@ -595,7 +678,7 @@ static void s3_virge_new_mmio_write(uint32_t addr, uint8_t val, void *p)
 
                 
 }
-static void s3_virge_new_mmio_write_w(uint32_t addr, uint16_t val, void *p)
+static void s3_virge_mmio_write_w(uint32_t addr, uint16_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
 //        pclog("New MMIO writew %08X %04X\n", addr, val);
@@ -609,15 +692,15 @@ static void s3_virge_new_mmio_write_w(uint32_t addr, uint16_t val, void *p)
         else switch (addr & 0xfffe)
         {
                 case 0x83d4:
-                s3_virge_new_mmio_write(addr, val, p);
-                s3_virge_new_mmio_write(addr + 1, val >> 8, p);
+                s3_virge_mmio_write(addr, val, p);
+                s3_virge_mmio_write(addr + 1, val >> 8, p);
                 break;
         }
 }
-static void s3_virge_new_mmio_write_l(uint32_t addr, uint32_t val, void *p)
+static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
-
+        svga_t *svga = &virge->svga;
 //        if ((addr & 0xfffc) >= 0x8000)
 //                pclog("New MMIO writel %08X %08X\n", addr, val);
 
@@ -630,6 +713,94 @@ static void s3_virge_new_mmio_write_l(uint32_t addr, uint32_t val, void *p)
         }
         else switch (addr & 0xfffc)
         {
+                case 0x8180:
+                virge->streams.pri_ctrl = val;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x8184:
+                virge->streams.chroma_ctrl = val;
+                break;
+                case 0x8190:
+                virge->streams.sec_ctrl = val;
+                break;
+                case 0x8194:
+                virge->streams.chroma_upper_bound = val;
+                break;
+                case 0x8198:
+                virge->streams.sec_filter = val;
+                break;
+                case 0x81a0:
+                virge->streams.blend_ctrl = val;
+                break;
+                case 0x81c0:
+                virge->streams.pri_fb0 = val & 0x3fffff;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x81c4:
+                virge->streams.pri_fb1 = val & 0x3fffff;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x81c8:
+                virge->streams.pri_stride = val & 0xfff;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x81cc:
+                virge->streams.buffer_ctrl = val;
+                s3_virge_recalctimings(svga);
+                break;
+                case 0x81d0:
+                virge->streams.sec_fb0 = val;
+                break;
+                case 0x81d4:
+                virge->streams.sec_fb1 = val;
+                break;
+                case 0x81d8:
+                virge->streams.sec_stride = val;
+                break;
+                case 0x81dc:
+                virge->streams.overlay_ctrl = val;
+                break;
+                case 0x81e0:
+                virge->streams.k1_vert_scale = val;
+                break;
+                case 0x81e4:
+                virge->streams.k2_vert_scale = val;
+                break;
+                case 0x81e8:
+                virge->streams.dda_vert_accumulator = val;
+                break;
+                case 0x81ec:
+                virge->streams.fifo_ctrl = val;
+                break;
+                case 0x81f0:
+                virge->streams.pri_start = val;
+                virge->streams.pri_x = (val >> 16) & 0x7ff;
+                virge->streams.pri_y = val & 0x7ff;                
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x81f4:
+                virge->streams.pri_size = val;
+                virge->streams.pri_w = (val >> 16) & 0x7ff;
+                virge->streams.pri_h = val & 0x7ff;                
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
+                break;
+                case 0x81f8:
+                virge->streams.sec_start = val;
+                virge->streams.sec_x = (val >> 16) & 0x7ff;
+                virge->streams.sec_y = val & 0x7ff;                
+                break;
+                case 0x81fc:
+                virge->streams.sec_size = val;
+                virge->streams.sec_w = (val >> 16) & 0x7ff;
+                virge->streams.sec_h = val & 0x7ff;                
+                break;
+                
                 case 0xa000: case 0xa004: case 0xa008: case 0xa00c:
                 case 0xa010: case 0xa014: case 0xa018: case 0xa01c:
                 case 0xa020: case 0xa024: case 0xa028: case 0xa02c:
@@ -931,6 +1102,8 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                                 case 0:
                                 case CMD_SET_MS:
                                 READ(src_addr, source);
+                                if ((virge->s3d.cmd_set & CMD_SET_TP) && source == virge->s3d.src_fg_clr)
+                                        update = 0;
                                 break;
                                 case CMD_SET_IDS:
                                 if (virge->s3d.data_left_count)
@@ -960,6 +1133,8 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                                                 count = 0;
                                         }
                                 }
+                                if ((virge->s3d.cmd_set & CMD_SET_TP) && source == virge->s3d.src_fg_clr)
+                                        update = 0;
                                 break;
                                 case CMD_SET_IDS | CMD_SET_MS:
                                 source = (cpu_dat & (1 << 31)) ? virge->s3d.src_fg_clr : virge->s3d.src_bg_clr;
@@ -1287,12 +1462,12 @@ static void *s3_virge_init()
                                                         NULL,
                                                         0,
                                                         virge);
-        mem_mapping_add(&virge->new_mmio_mapping, 0, 0, s3_virge_new_mmio_read,
-                                                        s3_virge_new_mmio_read_w,
-                                                        s3_virge_new_mmio_read_l,
-                                                        s3_virge_new_mmio_write,
-                                                        s3_virge_new_mmio_write_w,
-                                                        s3_virge_new_mmio_write_l,
+        mem_mapping_add(&virge->new_mmio_mapping, 0, 0, s3_virge_mmio_read,
+                                                        s3_virge_mmio_read_w,
+                                                        s3_virge_mmio_read_l,
+                                                        s3_virge_mmio_write,
+                                                        s3_virge_mmio_write_w,
+                                                        s3_virge_mmio_write_l,
                                                         NULL,
                                                         0,
                                                         virge);
