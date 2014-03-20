@@ -14,10 +14,19 @@ typedef struct mem_mapping_t
         void (*write_w)(uint32_t addr, uint16_t val, void *priv);
         void (*write_l)(uint32_t addr, uint32_t val, void *priv);
         
+        uint8_t *exec;
+        
+        uint32_t flags;
+        
         void *p;
 } mem_mapping_t;
 
-extern uint8_t *ram,*rom,*vram,*vrom;
+/*Only present on external bus (ISA/PCI)*/
+#define MEM_MAPPING_EXTERNAL 1
+/*Only present on internal bus (RAM)*/
+#define MEM_MAPPING_INTERNAL 2
+
+extern uint8_t *ram,*rom;
 extern uint8_t romext[32768];
 extern int readlnum,writelnum;
 extern int memspeed[11];
@@ -34,6 +43,8 @@ void mem_mapping_add(mem_mapping_t *mapping,
                     void (*write_b)(uint32_t addr, uint8_t  val, void *p),
                     void (*write_w)(uint32_t addr, uint16_t val, void *p),
                     void (*write_l)(uint32_t addr, uint32_t val, void *p),
+                    uint8_t *exec,
+                    uint32_t flags,
                     void *p);
 void mem_mapping_set_handler(mem_mapping_t *mapping,
                     uint8_t  (*read_b)(uint32_t addr, void *p),
@@ -44,10 +55,22 @@ void mem_mapping_set_handler(mem_mapping_t *mapping,
                     void (*write_l)(uint32_t addr, uint32_t val, void *p));
 void mem_mapping_set_p(mem_mapping_t *mapping, void *p);
 void mem_mapping_set_addr(mem_mapping_t *mapping, uint32_t base, uint32_t size);
+void mem_mapping_set_exec(mem_mapping_t *mapping, uint8_t *exec);
 void mem_mapping_disable(mem_mapping_t *mapping);
 void mem_mapping_enable(mem_mapping_t *mapping);
 
-void mem_bios_set_state(uint32_t base, uint32_t size, int read_ram, int write_ram);
+void mem_set_mem_state(uint32_t base, uint32_t size, int state);
+
+#define MEM_READ_ANY       0x00
+#define MEM_READ_INTERNAL  0x10
+#define MEM_READ_EXTERNAL  0x20
+#define MEM_READ_MASK      0xf0
+
+#define MEM_WRITE_ANY      0x00
+#define MEM_WRITE_INTERNAL 0x01
+#define MEM_WRITE_EXTERNAL 0x02
+#define MEM_WRITE_DISABLED 0x03
+#define MEM_WRITE_MASK     0x0f
 
 extern int mem_a20_alt;
 extern int mem_a20_key;
@@ -68,6 +91,8 @@ uint8_t  mem_read_bios(uint32_t addr, void *priv);
 uint16_t mem_read_biosw(uint32_t addr, void *priv);
 uint32_t mem_read_biosl(uint32_t addr, void *priv);
 
-FILE *romfopen(char *fn, char *mode);
+void mem_write_null(uint32_t addr, uint8_t val, void *p);
+void mem_write_nullw(uint32_t addr, uint16_t val, void *p);
+void mem_write_nulll(uint32_t addr, uint32_t val, void *p);
 
-int mem_load_video_bios();
+FILE *romfopen(char *fn, char *mode);

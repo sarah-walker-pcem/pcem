@@ -64,7 +64,7 @@ int cgate32;
 uint32_t mmucache[0x100000];
 
 uint8_t romext[32768];
-uint8_t *ram,*rom,*vram,*vrom;
+uint8_t *ram,*rom;
 uint16_t biosmask;
 
 uint32_t rmdat32;

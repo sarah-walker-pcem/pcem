@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
@@ -17,6 +18,8 @@ typedef struct tvga_t
 
         svga_t svga;
         tkd8001_ramdac_t ramdac;
+        
+        rom_t bios_rom;
 
         uint8_t tvga_3d8, tvga_3d9;
         int oldmode;
@@ -48,7 +51,10 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         case 0xd: 
                         if (tvga->oldmode) 
-                                tvga->oldctrl2 = val; 
+                        {
+                                tvga->oldctrl2 = val;
+                                svga->vrammask = (val & 0x10) ? 0xfffff : 0x3ffff;
+                        }
                         else 
                                 tvga->newctrl2 = val; 
                         break;
@@ -92,7 +98,7 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
-//                if (svga->crtcreg != 0xE && svga->crtcreg != 0xF) pclog("CRTC R%02X = %02X\n", svga->crtcreg, val);
+//                if (svga->crtcreg != 0xC && svga->crtcreg != 0xE && svga->crtcreg != 0xF) pclog("CRTC R%02X = %02X %04X:%04X\n", svga->crtcreg, val, CS, pc);
                 if (old != val)
                 {
                         if (svga->crtcreg < 0xE || svga->crtcreg > 0x10)
@@ -240,6 +246,8 @@ void *tvga8900d_init()
 {
         tvga_t *tvga = malloc(sizeof(tvga_t));
         memset(tvga, 0, sizeof(tvga_t));
+
+        rom_init(&tvga->bios_rom, "roms/trident.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
         
         svga_init(&tvga->svga, tvga, 1 << 20, /*1mb - chip supports 2mb, but drivers are buggy*/
                    tvga_recalctimings,
@@ -249,6 +257,11 @@ void *tvga8900d_init()
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);
 
         return tvga;
+}
+
+static int tvga8900d_available()
+{
+        return rom_present("roms/trident.bin");
 }
 
 void tvga_close(void *p)
@@ -287,7 +300,7 @@ device_t tvga8900d_device =
         0,
         tvga8900d_init,
         tvga_close,
-        NULL,
+        tvga8900d_available,
         tvga_speed_changed,
         tvga_force_redraw,
         tvga_add_status_info

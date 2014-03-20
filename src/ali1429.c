@@ -9,9 +9,42 @@
 static int ali1429_index;
 static uint8_t ali1429_regs[256];
 
+static void ali1429_recalc()
+{
+        int c;
+        
+        for (c = 0; c < 8; c++)
+        {
+                uint32_t base = 0xc0000 + (c << 15);
+                if (ali1429_regs[0x13] & (1 << c))
+                {
+                        switch (ali1429_regs[0x14] & 3)
+                        {
+                                case 0:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                                break;
+                                case 1: 
+                                mem_set_mem_state(base, 0x8000, MEM_READ_INTERNAL | MEM_WRITE_EXTERNAL);
+                                break;
+                                case 2:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
+                                break;
+                                case 3:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                                break;
+                        }
+                }
+                else
+                        mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        }
+        
+        flushmmucache();
+}
+
 void ali1429_write(uint16_t port, uint8_t val, void *priv)
 {
-//        return;
+        int c;
+        
         if (!(port & 1)) 
                 ali1429_index = val;
         else
@@ -21,35 +54,12 @@ void ali1429_write(uint16_t port, uint8_t val, void *priv)
                 switch (ali1429_index)
                 {
                         case 0x13:
-                        if (!(val & 0xc0)) 
-                        {
-                                shadowbios = 0;
-                                if (!shadowbios_write)
-                                        mem_bios_set_state(0xf0000, 0x10000, 0, 0);
-                                else
-                                        mem_bios_set_state(0xf0000, 0x10000, 0, 1);
-                                flushmmucache();
-                        }                                        
+                        ali1429_recalc();
                         break;
                         case 0x14:
                         shadowbios = val & 1;
                         shadowbios_write = val & 2;
-                        switch (val & 3)
-                        {
-                                case 0: 
-                                mem_bios_set_state(0xf0000, 0x10000, 0, 0);
-                                break;
-                                case 1: 
-                                mem_bios_set_state(0xf0000, 0x10000, 1, 0);
-                                break;
-                                case 2:
-                                mem_bios_set_state(0xf0000, 0x10000, 0, 1);
-                                break;
-                                case 3:
-                                mem_bios_set_state(0xf0000, 0x10000, 1, 1);
-                                break;
-                        }                                                                                                
-                        flushmmucache();
+                        ali1429_recalc();
                         break;
                 }
         }

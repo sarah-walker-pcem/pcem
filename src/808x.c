@@ -561,14 +561,8 @@ chdir(pcempath);
         f=fopen("ram8.bin","wb");
         fwrite(ram+0x3D210,0x200,1,f);
         fclose(f);        */
-        f=fopen("vram.dmp","wb");
-        fwrite(vram,0x400000,1,f);
-        fclose(f);
 /*        f=fopen("bios.dmp","wb");
         fwrite(rom,0x20000,1,f);
-        fclose(f);
-        f=fopen("vbios.dmp","wb");
-        fwrite(vrom,0x8000,1,f);
         fclose(f);*/
 /*        f=fopen("kernel.dmp","wb");
         for (c=0;c<0x200000;c++) putc(readmemb(c+0xC0000000),f);

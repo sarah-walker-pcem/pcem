@@ -5,6 +5,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_ati68860_ramdac.h"
@@ -25,8 +26,12 @@ typedef struct mach64_t
         ics2595_t ics2595;
         svga_t svga;
         
+        rom_t bios_rom;
+        
         uint8_t regs[256];
         int index;
+        
+        uint8_t pci_regs[256];
 
         int bank_r[2];
         int bank_w[2];
@@ -337,6 +342,16 @@ void mach64_recalctimings(svga_t *svga)
 void mach64_updatemapping(mach64_t *mach64)
 {
         svga_t *svga = &mach64->svga;
+
+        if (!(mach64->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_MEM))
+        {
+                pclog("Update mapping - PCI disabled\n");
+                mem_mapping_disable(&svga->mapping);
+                mem_mapping_disable(&mach64->linear_mapping);
+                mem_mapping_disable(&mach64->mmio_mapping);
+                mem_mapping_disable(&mach64->mmio_linear_mapping);
+                return;
+        }
 
         mem_mapping_disable(&mach64->mmio_mapping);
 //        pclog("Write mapping %02X\n", val);
@@ -1835,9 +1850,13 @@ uint16_t mach64_ext_inw(uint16_t port, void *p)
         switch (port)
         {
                 default:
+#ifdef MACH64_DEBUG
                 pclog("  ");
+#endif
                 ret = mach64_ext_inb(port, p);
+#ifdef MACH64_DEBUG
                 pclog("  ");
+#endif
                 ret |= (mach64_ext_inb(port + 1, p) << 8);
                 break;
         }
@@ -1860,9 +1879,13 @@ uint32_t mach64_ext_inl(uint16_t port, void *p)
                 break;
 
                 default:
+#ifdef MACH64_DEBUG
                 pclog("  ");
+#endif
                 ret = mach64_ext_inw(port, p);
+#ifdef MACH64_DEBUG
                 pclog("  ");
+#endif
                 ret |= (mach64_ext_inw(port + 2, p) << 16);
                 break;
         }
@@ -2053,6 +2076,42 @@ void mach64_hwcursor_draw(svga_t *svga, int displine)
         svga->hwcursor_latch.addr += 16;
 }
 
+static void mach64_io_remove(mach64_t *mach64)
+{
+        int c;
+
+        io_removehandler(0x03c0, 0x0020, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
+        
+        for (c = 0; c < 8; c++)
+        {
+                io_removehandler((c * 0x1000) + 0x2ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_removehandler((c * 0x1000) + 0x6ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_removehandler((c * 0x1000) + 0xaec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_removehandler((c * 0x1000) + 0xeec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+        }
+
+        io_removehandler(0x01ce, 0x0002, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
+}
+
+static void mach64_io_set(mach64_t *mach64)
+{
+        int c;
+        
+        mach64_io_remove(mach64);
+        
+        io_sethandler(0x03c0, 0x0020, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
+        
+        for (c = 0; c < 8; c++)
+        {
+                io_sethandler((c * 0x1000) + 0x2ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_sethandler((c * 0x1000) + 0x6ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_sethandler((c * 0x1000) + 0xaec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                io_sethandler((c * 0x1000) + 0xeec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+        }
+
+        io_sethandler(0x01ce, 0x0002, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
+}
+
 uint8_t mach64_pci_read(int func, int addr, void *p)
 {
         mach64_t *mach64 = (mach64_t *)p;
@@ -2068,7 +2127,8 @@ uint8_t mach64_pci_read(int func, int addr, void *p)
                 case 0x02: return 'X'; /*88800GX*/
                 case 0x03: return 'G';
                 
-                case 0x04: return 0x03; /*Respond to IO and memory accesses*/
+                case PCI_REG_COMMAND:
+                return mach64->pci_regs[PCI_REG_COMMAND]; /*Respond to IO and memory accesses*/
 
                 case 0x07: return 1 << 1; /*Medium DEVSEL timing*/
                 
@@ -2083,10 +2143,10 @@ uint8_t mach64_pci_read(int func, int addr, void *p)
                 case 0x12: return mach64->linear_base >> 16;
                 case 0x13: return mach64->linear_base >> 24;
 
-                case 0x30: return 0x01; /*BIOS ROM address*/
+                case 0x30: return mach64->pci_regs[0x30] & 0x01; /*BIOS ROM address*/
                 case 0x31: return 0x00;
-                case 0x32: return 0x0C;
-                case 0x33: return 0x00;
+                case 0x32: return mach64->pci_regs[0x32];
+                case 0x33: return mach64->pci_regs[0x33];
         }
         return 0;
 }
@@ -2099,6 +2159,15 @@ void mach64_pci_write(int func, int addr, uint8_t val, void *p)
         
         switch (addr)
         {
+                case PCI_REG_COMMAND:
+                mach64->pci_regs[PCI_REG_COMMAND] = val & 0x27;
+                if (val & PCI_COMMAND_IO)
+                        mach64_io_set(mach64);
+                else
+                        mach64_io_remove(mach64);
+                mach64_updatemapping(mach64);
+                break;
+
                 case 0x12:
                 mach64->linear_base = (mach64->linear_base & 0xff000000) | ((val & 0x80) << 16);
                 mach64_updatemapping(mach64);
@@ -2107,6 +2176,21 @@ void mach64_pci_write(int func, int addr, uint8_t val, void *p)
                 mach64->linear_base = (mach64->linear_base & 0x800000) | (val << 24);
                 mach64_updatemapping(mach64);
                 break;
+
+                case 0x30: case 0x32: case 0x33:
+                mach64->pci_regs[addr] = val;
+                if (mach64->pci_regs[0x30] & 0x01)
+                {
+                        uint32_t addr = (mach64->pci_regs[0x32] << 16) | (mach64->pci_regs[0x33] << 24);
+                        pclog("Mach64 bios_rom enabled at %08x\n", addr);
+                        mem_mapping_set_addr(&mach64->bios_rom.mapping, addr, 0x8000);
+                }
+                else
+                {
+                        pclog("Mach64 bios_rom disabled\n");
+                        mem_mapping_disable(&mach64->bios_rom.mapping);
+                }
+                return;
         }
 }
 
@@ -2121,24 +2205,23 @@ void *mach64gx_init()
                    mach64_in, mach64_out,
                    mach64_hwcursor_draw); 
 
-        mem_mapping_add(&mach64->linear_mapping,      0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &mach64->svga);
-        mem_mapping_add(&mach64->mmio_linear_mapping, 0,       0,       mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,   mach64);
-        mem_mapping_add(&mach64->mmio_mapping,        0xbc000, 0x04000, mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,   mach64);
+        rom_init(&mach64->bios_rom, "roms/mach64gx/bios.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        if (PCI)
+                mem_mapping_disable(&mach64->bios_rom.mapping);
+
+        mem_mapping_add(&mach64->linear_mapping,      0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &mach64->svga);
+        mem_mapping_add(&mach64->mmio_linear_mapping, 0,       0,       mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,  NULL, 0,  mach64);
+        mem_mapping_add(&mach64->mmio_mapping,        0xbc000, 0x04000, mach64_ext_readb, mach64_ext_readw,  mach64_ext_readl,  mach64_ext_writeb, mach64_ext_writew,  mach64_ext_writel,  NULL, 0,  mach64);
         mem_mapping_disable(&mach64->mmio_mapping);
 
-        io_sethandler(0x03c0, 0x0020, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
-        
-        for (c = 0; c < 8; c++)
-        {
-                io_sethandler((c * 0x1000) + 0x2ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0x6ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0xaec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0xeec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-        }
-
-        io_sethandler(0x01ce, 0x0002, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
+        mach64_io_set(mach64);
 
         pci_add(mach64_pci_read, mach64_pci_write, mach64);
+
+        mach64->pci_regs[PCI_REG_COMMAND] = 3;
+        mach64->pci_regs[0x30] = 0x00;
+        mach64->pci_regs[0x32] = 0x0c;
+        mach64->pci_regs[0x33] = 0x00;
                 
         ati_eeprom_load(&mach64->eeprom, "mach64.nvr", 1);
 
@@ -2147,6 +2230,11 @@ void *mach64gx_init()
         mach64->dst_cntl = 3;
         
         return mach64;
+}
+
+int mach64gx_available()
+{
+        return rom_present("roms/mach64gx/bios.bin");
 }
 
 void mach64_close(void *p)
@@ -2225,7 +2313,7 @@ device_t mach64gx_device =
         0,
         mach64gx_init,
         mach64_close,
-        NULL,
+        mach64gx_available,
         mach64_speed_changed,
         mach64_force_redraw,
         mach64_add_status_info

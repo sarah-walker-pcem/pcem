@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_vga.h"
@@ -11,6 +12,8 @@
 typedef struct vga_t
 {
         svga_t svga;
+        
+        rom_t bios_rom;
 } vga_t;
 
 void vga_out(uint16_t addr, uint8_t val, void *p)
@@ -78,6 +81,8 @@ void *vga_init()
         vga_t *vga = malloc(sizeof(vga_t));
         memset(vga, 0, sizeof(vga_t));
 
+        rom_init(&vga->bios_rom, "roms/ibm_vga.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+
         svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
                    NULL,
                    vga_in, vga_out,
@@ -89,6 +94,11 @@ void *vga_init()
         vga->svga.miscout = 1;
         
         return vga;
+}
+
+static int vga_available()
+{
+        return rom_present("roms/ibm_vga.bin");
 }
 
 void vga_close(void *p)
@@ -127,7 +137,7 @@ device_t vga_device =
         DEVICE_NOT_WORKING,
         vga_init,
         vga_close,
-        NULL,
+        vga_available,
         vga_speed_changed,
         vga_force_redraw,
         vga_add_status_info

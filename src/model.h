@@ -15,6 +15,7 @@ extern MODEL models[];
 
 extern int model;
 
+int model_count();
 int model_getromset();
 int model_getmodel(int romset);
 char *model_getname();

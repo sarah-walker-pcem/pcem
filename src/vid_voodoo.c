@@ -734,9 +734,9 @@ void voodoo_init()
         voodoo_make_dither();
         pci_add(voodoo_pci_read, voodoo_pci_write, NULL);
 
-        mem_mapping_add(&voodoo.mmio_mapping, 0, 0, NULL, NULL,            voodoo_readl,    NULL,       NULL,              voodoo_writel,     NULL);
-        mem_mapping_add(&voodoo.fb_mapping,   0, 0, NULL, voodoo_fb_readw, voodoo_fb_readl, NULL,       voodoo_fb_writew,  voodoo_fb_writel,  NULL);
-        mem_mapping_add(&voodoo.tex_mapping,  0, 0, NULL, NULL,            NULL,            NULL,       voodoo_tex_writew, voodoo_tex_writel, NULL);
+        mem_mapping_add(&voodoo.mmio_mapping, 0, 0, NULL, NULL,            voodoo_readl,    NULL,       NULL,              voodoo_writel,     NULL, 0, NULL);
+        mem_mapping_add(&voodoo.fb_mapping,   0, 0, NULL, voodoo_fb_readw, voodoo_fb_readl, NULL,       voodoo_fb_writew,  voodoo_fb_writel,  NULL, 0, NULL);
+        mem_mapping_add(&voodoo.tex_mapping,  0, 0, NULL, NULL,            NULL,            NULL,       voodoo_tex_writew, voodoo_tex_writel, NULL, 0, NULL);
 
         voodoo.fb_mem = malloc(2 * 1024 * 1024);
         voodoo.tex_mem = malloc(2 * 1024 * 1024);        

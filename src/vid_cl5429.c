@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_cl5429.h"
 #include "vid_svga.h"
@@ -15,6 +16,8 @@ typedef struct gd5429_t
         mem_mapping_t mmio_mapping;
         
         svga_t svga;
+        
+        rom_t bios_rom;
         
         uint32_t bank[2];
         uint32_t mask;
@@ -816,6 +819,8 @@ void *gd5429_init()
         svga_t *svga = &gd5429->svga;
         memset(gd5429, 0, sizeof(gd5429_t));
 
+        rom_init(&gd5429->bios_rom, "roms/5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        
         svga_init(&gd5429->svga, gd5429, 1 << 21, /*2mb*/
                    gd5429_recalctimings,
                    gd5429_in, gd5429_out,
@@ -824,7 +829,7 @@ void *gd5429_init()
         mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
 
-        mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  gd5429);
+        mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  NULL, 0, gd5429);
 
         io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
 
@@ -834,6 +839,11 @@ void *gd5429_init()
         gd5429->bank[1] = 0x8000;
         
         return gd5429;
+}
+
+static int gd5429_available()
+{
+        return rom_present("roms/5429.vbi");
 }
 
 void gd5429_close(void *p)
@@ -872,7 +882,7 @@ device_t gd5429_device =
         DEVICE_NOT_WORKING,
         gd5429_init,
         gd5429_close,
-        NULL,
+        gd5429_available,
         gd5429_speed_changed,
         gd5429_force_redraw,
         gd5429_add_status_info

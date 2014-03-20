@@ -14,45 +14,32 @@ typedef struct sis496_t
 
 void sis496_recalcmapping(sis496_t *sis496)
 {
-        if (sis496->pci_conf[0x44] & 0x10)
+        int c;
+        
+        for (c = 0; c < 8; c++)
         {
-                if (sis496->pci_conf[0x45] & 0x01)
-                        mem_bios_set_state(0xe0000, 0x08000, 1, 0);
+                uint32_t base = 0xc0000 + (c << 15);
+                if (sis496->pci_conf[0x44] & (1 << c))
+                {
+                        switch (sis496->pci_conf[0x45] & 3)
+                        {
+                                case 0:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
+                                break;
+                                case 1:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                                break;
+                                case 2:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                                break;
+                                case 3:
+                                mem_set_mem_state(base, 0x8000, MEM_READ_INTERNAL | MEM_WRITE_EXTERNAL);
+                                break;
+                        }
+                }
                 else
-                        mem_bios_set_state(0xe0000, 0x08000, 1, 1);
+                        mem_set_mem_state(base, 0x8000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
         }
-        else
-                mem_bios_set_state(0xe0000, 0x08000, 0, 1);
-
-        if (sis496->pci_conf[0x44] & 0x20)
-        {
-                if (sis496->pci_conf[0x45] & 0x01)
-                        mem_bios_set_state(0xe8000, 0x08000, 1, 0);
-                else
-                        mem_bios_set_state(0xe8000, 0x08000, 1, 1);
-        }
-        else
-                mem_bios_set_state(0xe8000, 0x08000, 0, 1);
-                
-        if (sis496->pci_conf[0x44] & 0x40)
-        {
-                if (sis496->pci_conf[0x45] & 0x01)
-                        mem_bios_set_state(0xf0000, 0x08000, 1, 0);
-                else
-                        mem_bios_set_state(0xf0000, 0x08000, 1, 1);
-        }
-        else
-                mem_bios_set_state(0xf0000, 0x08000, 0, 1);
-                
-        if (sis496->pci_conf[0x44] & 0x80)
-        {
-                if (sis496->pci_conf[0x45] & 0x01)
-                        mem_bios_set_state(0xf8000, 0x08000, 1, 0);
-                else
-                        mem_bios_set_state(0xf8000, 0x08000, 1, 1);
-        }
-        else
-                mem_bios_set_state(0xf8000, 0x08000, 0, 1);
 
         flushmmucache();
         shadowbios = (sis496->pci_conf[0x44] & 0xf0);
@@ -61,7 +48,7 @@ void sis496_recalcmapping(sis496_t *sis496)
 void sis496_write(int func, int addr, uint8_t val, void *p)
 {
         sis496_t *sis496 = (sis496_t *)p;
-//pclog("sis496_write : addr=%02x val=%02x\n", addr, val);
+        //pclog("sis496_write : addr=%02x val=%02x\n", addr, val);
         switch (addr)
         {
                 case 0x44: /*Shadow configure*/
@@ -72,8 +59,6 @@ void sis496_write(int func, int addr, uint8_t val, void *p)
                 }
                 break;
                 case 0x45: /*Shadow configure*/
-                //if (val == 3)
-                //        output = 3;
                 if ((sis496->pci_conf[0x45] & val) ^ 0x01)
                 {
                         sis496->pci_conf[0x45] = val;

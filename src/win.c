@@ -386,18 +386,14 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 }
         }
         
-        d = gfxcard;
+
         for (c = 0; c < 18; c++)
-        {
-                gfxcard = c;
-                gfx_present[c] = mem_load_video_bios();
-        }
-        gfxcard = d;
-        c = mem_load_video_bios();
-        if (!c)
+                gfx_present[c] = video_card_available(video_old_to_new(c));
+
+        if (!video_card_available(video_old_to_new(gfxcard)))
         {
                 if (romset!=-1) MessageBox(hwnd,"Configured video BIOS not available.\nDefaulting to available romset.","PCem error",MB_OK);
-                for (c=0;c<18;c++)
+                for (c = 17; c >= 0; c--)
                 {
                         if (gfx_present[c])
                         {
@@ -783,7 +779,6 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                                         sound_card_current = temp_sound_card_current;
                                         
                                         mem_resize();
-                                        mem_load_video_bios();
                                         loadbios();
                                         resetpchard();
                                 }

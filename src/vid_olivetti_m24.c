@@ -459,7 +459,7 @@ void *m24_init()
         m24->vram = malloc(0x8000);
                 
         timer_add(m24_poll, &m24->vidtime, TIMER_ALWAYS_ENABLED, m24);
-        mem_mapping_add(&m24->mapping, 0xb8000, 0x08000, m24_read, NULL, NULL, m24_write, NULL, NULL,  m24);
+        mem_mapping_add(&m24->mapping, 0xb8000, 0x08000, m24_read, NULL, NULL, m24_write, NULL, NULL,  NULL, 0, m24);
         io_sethandler(0x03d0, 0x0010, m24_in, NULL, NULL, m24_out, NULL, NULL, m24);
         return m24;
 }

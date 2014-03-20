@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "timer.h"
 #include "video.h"
 #include "vid_ega.h"
@@ -810,13 +811,33 @@ void *ega_standalone_init()
         int c, d, e;
         ega_t *ega = malloc(sizeof(ega_t));
         memset(ega, 0, sizeof(ega_t));
+        
+        rom_init(&ega->bios_rom, "roms/ibm_6277356_ega_card_u44_27128.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+
+        if (ega->bios_rom.rom[0x3ffe] == 0xaa && ega->bios_rom.rom[0x3fff] == 0x55)
+        {
+                int c;
+                pclog("Read EGA ROM in reverse\n");
+
+                for (c = 0; c < 0x2000; c++)
+                {
+                        uint8_t temp = ega->bios_rom.rom[c];
+                        ega->bios_rom.rom[c] = ega->bios_rom.rom[0x3fff - c];
+                        ega->bios_rom.rom[0x3fff - c] = temp;
+                }
+        }
 
         ega_init(ega);        
 
-        mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, ega);
+        mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, NULL, 0, ega);
         timer_add(ega_poll, &ega->vidtime, TIMER_ALWAYS_ENABLED, ega);
         io_sethandler(0x03a0, 0x0040, ega_in, NULL, NULL, ega_out, NULL, NULL, ega);
         return ega;
+}
+
+static int ega_standalone_available()
+{
+        return rom_present("roms/ibm_6277356_ega_card_u44_27128.bin");
 }
 
 void ega_close(void *p)
@@ -840,7 +861,7 @@ device_t ega_device =
         0,
         ega_standalone_init,
         ega_close,
-        NULL,
+        ega_standalone_available,
         ega_speed_changed,
         NULL,
         NULL

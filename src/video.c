@@ -8,6 +8,7 @@
 #include "vid_svga.h"
 #include "io.h"
 #include "cpu.h"
+#include "rom.h"
 #include "timer.h"
 
 #include "vid_ati18800.h"
@@ -229,11 +230,15 @@ void video_init()
                 return;
 
                 case ROM_PC2086:
-                case ROM_PC3086:
-                device_add(&paradise_pvga1a_device);
+                device_add(&paradise_pvga1a_pc2086_device);
                 return;
+
+                case ROM_PC3086:
+                device_add(&paradise_pvga1a_pc3086_device);
+                return;
+
                 case ROM_MEGAPC:
-                device_add(&paradise_wd90c11_device);
+                device_add(&paradise_wd90c11_megapc_device);
                 return;
                         
                 case ROM_ACER386:

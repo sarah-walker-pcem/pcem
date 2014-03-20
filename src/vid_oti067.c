@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_oti067.h"
 #include "vid_svga.h"
@@ -11,6 +12,8 @@
 typedef struct oti067_t
 {
         svga_t svga;
+        
+        rom_t bios_rom;
         
         int index;
         uint8_t regs[32];
@@ -110,11 +113,13 @@ void oti067_recalctimings(svga_t *svga)
         svga->interlace = oti067->regs[0x14] & 0x80;
 }
 
-void *oti067_init()
+void *oti067_common_init(char *bios_fn)
 {
         oti067_t *oti067 = malloc(sizeof(oti067_t));
         memset(oti067, 0, sizeof(oti067_t));
         
+        rom_init(&oti067->bios_rom, bios_fn, 0xc0000, 0x8000, 0x7fff, 0, 0);
+
         svga_init(&oti067->svga, oti067, 1 << 19, /*512kb*/
                    oti067_recalctimings,
                    oti067_in, oti067_out,
@@ -124,6 +129,26 @@ void *oti067_init()
 
         oti067->svga.miscout = 1;
         return oti067;
+}
+
+void *oti067_init()
+{
+        return oti067_common_init("roms/oti067/bios.bin");
+}
+
+void *oti067_acer386_init()
+{
+        oti067_t *oti067 = oti067_common_init("roms/acer386/oti067.bin");
+        
+        if (oti067)
+                oti067->bios_rom.rom[0x5d] = 0x74;
+                
+        return oti067;
+}
+
+static int oti067_available()
+{
+        return rom_present("roms/oti067/bios.bin");
 }
 
 void oti067_close(void *p)
@@ -162,7 +187,18 @@ device_t oti067_device =
         0,
         oti067_init,
         oti067_close,
-        NULL,
+        oti067_available,
+        oti067_speed_changed,
+        oti067_force_redraw,
+        oti067_add_status_info
+};
+device_t oti067_acer386_device =
+{
+        "Oak OTI-067 (Acermate 386SX/25N)",
+        0,
+        oti067_acer386_init,
+        oti067_close,
+        oti067_available,
         oti067_speed_changed,
         oti067_force_redraw,
         oti067_add_status_info

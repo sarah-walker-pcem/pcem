@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
@@ -15,6 +16,8 @@ typedef struct tgui_t
         mem_mapping_t linear_mapping;
         mem_mapping_t accel_mapping;
 
+        rom_t bios_rom;
+        
         svga_t svga;
 
         struct
@@ -462,37 +465,20 @@ void tgui_pci_write(int func, int addr, uint8_t val, void *p)
         }
 }
 
-void *tgui8900d_init()
-{
-        tgui_t *tgui = malloc(sizeof(tgui_t));
-        memset(tgui, 0, sizeof(tgui_t));
-        
-        svga_init(&tgui->svga, tgui, 1 << 20, /*1mb - chip supports 2mb, but drivers are buggy*/
-                   tgui_recalctimings,
-                   tgui_in, tgui_out,
-                   NULL);
-
-        mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &tgui->svga);
-        mem_mapping_add(&tgui->accel_mapping,  0xbc000, 0x4000, tgui_accel_read,  tgui_accel_read_w, tgui_accel_read_l, tgui_accel_write,  tgui_accel_write_w, tgui_accel_write_l,  tgui);
-        mem_mapping_disable(&tgui->linear_mapping);
-        mem_mapping_disable(&tgui->accel_mapping);
-        
-        io_sethandler(0x03c0, 0x0020, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
-
-        return tgui;
-}
 void *tgui9440_init()
 {
         tgui_t *tgui = malloc(sizeof(tgui_t));
         memset(tgui, 0, sizeof(tgui_t));
         
+        rom_init(&tgui->bios_rom, "roms/9440.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+
         svga_init(&tgui->svga, tgui, 1 << 21, /*2mb*/
                    tgui_recalctimings,
                    tgui_in, tgui_out,
                    tgui_hwcursor_draw);
 
-        mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &tgui->svga);
-        mem_mapping_add(&tgui->accel_mapping,  0xbc000, 0x4000, tgui_accel_read,  tgui_accel_read_w, tgui_accel_read_l, tgui_accel_write,  tgui_accel_write_w, tgui_accel_write_l,  tgui);
+        mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &tgui->svga);
+        mem_mapping_add(&tgui->accel_mapping,  0xbc000, 0x4000, tgui_accel_read,  tgui_accel_read_w, tgui_accel_read_l, tgui_accel_write,  tgui_accel_write_w, tgui_accel_write_l, NULL, 0,  tgui);
         mem_mapping_disable(&tgui->accel_mapping);
 
         io_sethandler(0x03c0, 0x0020, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
@@ -501,6 +487,11 @@ void *tgui9440_init()
         pci_add(tgui_pci_read, tgui_pci_write, tgui);
 
         return tgui;
+}
+
+static int tgui9440_available()
+{
+        return rom_present("roms/9440.vbi");
 }
 
 void tgui_close(void *p)
@@ -1127,7 +1118,7 @@ device_t tgui9440_device =
         0,
         tgui9440_init,
         tgui_close,
-        NULL,
+        tgui9440_available,
         tgui_speed_changed,
         tgui_force_redraw,
         tgui_add_status_info

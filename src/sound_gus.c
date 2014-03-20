@@ -638,8 +638,8 @@ uint8_t readgus(uint16_t addr, void *p)
                         val = 0xff;
                         break;
                         
-                        default:
-                        fatal("Bad GUS global low read %02X\n",gus->global);
+//                        default:
+//                        fatal("Bad GUS global low read %02X\n",gus->global);
                 }
                 break;
                 case 0x345: /*Global high*/
@@ -693,8 +693,8 @@ uint8_t readgus(uint16_t addr, void *p)
                         val = 0xff;
                         break;
                         
-                        default:
-                        fatal("Bad GUS global high read %02X\n",gus->global);
+//                        default:
+//                        fatal("Bad GUS global high read %02X\n",gus->global);
                 }                
                 break;
                 case 0x346: return 0xff;

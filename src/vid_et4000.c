@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_unk_ramdac.h"
@@ -14,6 +15,8 @@ typedef struct et4000_t
 {
         svga_t svga;
         unk_ramdac_t ramdac;
+        
+        rom_t bios_rom;
         
         uint8_t banking;
 } et4000_t;
@@ -129,7 +132,9 @@ void *et4000_init()
 {
         et4000_t *et4000 = malloc(sizeof(et4000_t));
         memset(et4000, 0, sizeof(et4000_t));
-        
+
+        rom_init(&et4000->bios_rom, "roms/et4000.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+                
         io_sethandler(0x03c0, 0x0020, et4000_in, NULL, NULL, et4000_out, NULL, NULL, et4000);
 
         svga_init(&et4000->svga, et4000, 1 << 20, /*1mb*/
@@ -138,6 +143,11 @@ void *et4000_init()
                    NULL);
         
         return et4000;
+}
+
+static int et4000_available()
+{
+        return rom_present("roms/et4000.bin");
 }
 
 void et4000_close(void *p)

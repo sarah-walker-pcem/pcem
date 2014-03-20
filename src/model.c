@@ -78,11 +78,16 @@ MODEL models[] =
         {"AMI 386 clone",       ROM_AMI386,    { "Intel", cpus_i386,    "AMD", cpus_Am386, "Cyrix", cpus_486SDLC}, 0,  at_headland_init},
         {"AMI 486 clone",       ROM_AMI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
         {"AMI WinBIOS 486",     ROM_WIN486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
-        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_um8881f_init},
+/*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_um8881f_init},*/
         {"Award SiS 496/497",   ROM_SIS496,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,    at_sis496_init},
         {"Award 430VX PCI",     ROM_430VX,     { "IDT",   cpus_WinChip, "",    NULL,       "",      NULL},         0,    at_i430vx_init},
         {"", -1, {"", 0, "", 0, "", 0}, 0}
 };
+
+int model_count()
+{
+        return (sizeof(models) / sizeof(MODEL)) - 1;
+}
 
 int model_getromset()
 {

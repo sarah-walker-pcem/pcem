@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_ati18800.h"
 #include "vid_ati_eeprom.h"
@@ -13,6 +14,8 @@ typedef struct ati18800_t
 {
         svga_t svga;
         ati_eeprom_t eeprom;
+
+        rom_t bios_rom;
         
         uint8_t regs[256];
         int index;
@@ -122,6 +125,8 @@ void *ati18800_init()
         ati18800_t *ati18800 = malloc(sizeof(ati18800_t));
         memset(ati18800, 0, sizeof(ati18800_t));
         
+        rom_init(&ati18800->bios_rom, "roms/vgaedge16.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        
         svga_init(&ati18800->svga, ati18800, 1 << 19, /*512kb*/
                    NULL,
                    ati18800_in, ati18800_out,
@@ -135,6 +140,11 @@ void *ati18800_init()
         ati_eeprom_load(&ati18800->eeprom, "ati18800.nvr", 0);
 
         return ati18800;
+}
+
+static int ati18800_available()
+{
+        return rom_present("roms/vgaedge16.vbi");
 }
 
 void ati18800_close(void *p)
@@ -173,7 +183,7 @@ device_t ati18800_device =
         0,
         ati18800_init,
         ati18800_close,
-        NULL,
+        ati18800_available,
         ati18800_speed_changed,
         ati18800_force_redraw,
         ati18800_add_status_info

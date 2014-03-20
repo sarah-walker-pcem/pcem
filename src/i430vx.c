@@ -13,16 +13,22 @@ static void i430vx_map(uint32_t addr, uint32_t size, int state)
 {
         switch (state & 3)
         {
-                case 0x0: mem_bios_set_state(addr, size, 0, 0); break; /*DRAM disabled, accesses directed to PCI bus*/
-                case 0x1: mem_bios_set_state(addr, size, 1, 0); break; /*Read only, DRAM write protected, non-cacheable*/
-                case 0x2: mem_bios_set_state(addr, size, 0, 1); break; /*Write only*/
-                case 0x3: mem_bios_set_state(addr, size, 1, 1); break; /*Read/write, non-cacheable*/
-                /*Below are redundant*/
-//                case 0x5: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    NULL,          NULL,           NULL          ); break; /*Read only, DRAM write protected, cacheable*/
-//                case 0x7: mem_sethandler(addr, size, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml); break; /*Read/write, non-cacheable*/                
+                case 0:
+                mem_set_mem_state(addr, size, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                break;
+                case 1:
+                mem_set_mem_state(addr, size, MEM_READ_INTERNAL | MEM_WRITE_EXTERNAL);
+                break;
+                case 2:
+                mem_set_mem_state(addr, size, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
+                break;
+                case 3:
+                mem_set_mem_state(addr, size, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                break;
         }
         flushmmucache_nopc();        
 }
+
 void i430vx_write(int func, int addr, uint8_t val, void *priv)
 {
         if (func)
@@ -43,18 +49,42 @@ void i430vx_write(int func, int addr, uint8_t val, void *priv)
                 }
                 pclog("i430vx_write : PAM0 write %02X\n", val);
                 break;
+                case 0x5a: /*PAM1*/
+                if ((card_i430vx[0x5a] ^ val) & 0x0f)
+                        i430vx_map(0xc0000, 0x04000, val & 0xf);
+                if ((card_i430vx[0x5a] ^ val) & 0xf0)
+                        i430vx_map(0xc4000, 0x04000, val >> 4);
+                break;
+                case 0x5b: /*PAM2*/
+                if ((card_i430vx[0x5b] ^ val) & 0x0f)
+                        i430vx_map(0xc8000, 0x04000, val & 0xf);
+                if ((card_i430vx[0x5b] ^ val) & 0xf0)
+                        i430vx_map(0xcc000, 0x04000, val >> 4);
+                break;
+                case 0x5c: /*PAM3*/
+                if ((card_i430vx[0x5c] ^ val) & 0x0f)
+                        i430vx_map(0xd0000, 0x04000, val & 0xf);
+                if ((card_i430vx[0x5c] ^ val) & 0xf0)
+                        i430vx_map(0xd4000, 0x04000, val >> 4);
+                break;
+                case 0x5d: /*PAM4*/
+                if ((card_i430vx[0x5d] ^ val) & 0x0f)
+                        i430vx_map(0xd8000, 0x04000, val & 0xf);
+                if ((card_i430vx[0x5d] ^ val) & 0xf0)
+                        i430vx_map(0xdc000, 0x04000, val >> 4);
+                break;
                 case 0x5e: /*PAM5*/
                 if ((card_i430vx[0x5e] ^ val) & 0x0f)
-                   i430vx_map(0xe0000, 0x04000, val & 0xf);
+                        i430vx_map(0xe0000, 0x04000, val & 0xf);
                 if ((card_i430vx[0x5e] ^ val) & 0xf0)
-                   i430vx_map(0xe4000, 0x04000, val >> 4);
+                        i430vx_map(0xe4000, 0x04000, val >> 4);
                 pclog("i430vx_write : PAM5 write %02X\n", val);
                 break;
                 case 0x5f: /*PAM6*/
                 if ((card_i430vx[0x5f] ^ val) & 0x0f)
-                   i430vx_map(0xe8000, 0x04000, val & 0xf);
+                        i430vx_map(0xe8000, 0x04000, val & 0xf);
                 if ((card_i430vx[0x5f] ^ val) & 0xf0)
-                   i430vx_map(0xec000, 0x04000, val >> 4);
+                        i430vx_map(0xec000, 0x04000, val >> 4);
                 pclog("i430vx_write : PAM6 write %02X\n", val);
                 break;
         }

@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_ati28800.h"
 #include "vid_ati_eeprom.h"
@@ -14,6 +15,8 @@ typedef struct ati28800_t
 {
         svga_t svga;
         ati_eeprom_t eeprom;
+        
+        rom_t bios_rom;
         
         uint8_t regs[256];
         int index;
@@ -143,6 +146,8 @@ void *ati28800_init()
         ati28800_t *ati28800 = malloc(sizeof(ati28800_t));
         memset(ati28800, 0, sizeof(ati28800_t));
         
+        rom_init(&ati28800->bios_rom, "roms/bios.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        
         svga_init(&ati28800->svga, ati28800, 1 << 19, /*512kb*/
                    ati28800_recalctimings,
                    ati28800_in, ati28800_out,
@@ -156,6 +161,11 @@ void *ati28800_init()
         ati_eeprom_load(&ati28800->eeprom, "ati28800.nvr", 0);
 
         return ati28800;
+}
+
+static int ati28800_available()
+{
+        return rom_present("roms/bios.bin");
 }
 
 void ati28800_close(void *p)
@@ -194,7 +204,7 @@ device_t ati28800_device =
         0,
         ati28800_init,
         ati28800_close,
-        NULL,
+        ati28800_available,
         ati28800_speed_changed,
         ati28800_force_redraw,
         ati28800_add_status_info

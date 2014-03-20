@@ -7,6 +7,7 @@
 #include "ibm.h"
 #include "device.h"
 #include "mem.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_paradise.h"
 #include "vid_svga.h"
@@ -16,6 +17,8 @@
 typedef struct paradise_t
 {
         svga_t svga;
+        
+        rom_t bios_rom;
         
         enum
         {
@@ -312,6 +315,38 @@ void *paradise_wd90c11_init()
         return paradise;
 }
 
+static void *paradise_pvga1a_pc2086_init()
+{
+        paradise_t *paradise = paradise_pvga1a_init();
+        
+        if (paradise)
+                rom_init(&paradise->bios_rom, "roms/pc2086/40186.ic171", 0xc0000, 0x8000, 0x7fff, 0, 0);
+                
+        return paradise;
+}
+static void *paradise_pvga1a_pc3086_init()
+{
+        paradise_t *paradise = paradise_pvga1a_init();
+
+        if (paradise)
+                rom_init(&paradise->bios_rom, "roms/pc3086/c000.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+                
+        return paradise;
+}
+
+static void *paradise_wd90c11_megapc_init()
+{
+        paradise_t *paradise = paradise_wd90c11_init();
+        
+        if (paradise)
+                rom_init_interleaved(&paradise->bios_rom,
+                                     "roms/megapc/41651-bios lo.u18",
+                                     "roms/megapc/211253-bios hi.u19",
+                                     0xc0000, 0x8000, 0x7fff, 0, 0);
+        
+        return paradise;
+}
+
 void paradise_close(void *p)
 {
         paradise_t *paradise = (paradise_t *)p;
@@ -342,22 +377,33 @@ int paradise_add_status_info(char *s, int max_len, void *p)
         return svga_add_status_info(s, max_len, &paradise->svga);
 }
 
-device_t paradise_pvga1a_device =
+device_t paradise_pvga1a_pc2086_device =
 {
-        "Paradise PVGA1A",
+        "Paradise PVGA1A (Amstrad PC2086)",
         0,
-        paradise_pvga1a_init,
+        paradise_pvga1a_pc2086_init,
         paradise_close,
         NULL,
         paradise_speed_changed,
         paradise_force_redraw,
         paradise_add_status_info
 };
-device_t paradise_wd90c11_device =
+device_t paradise_pvga1a_pc3086_device =
 {
-        "Paradise WD90C11",
+        "Paradise PVGA1A (Amstrad PC3086)",
         0,
-        paradise_wd90c11_init,
+        paradise_pvga1a_pc3086_init,
+        paradise_close,
+        NULL,
+        paradise_speed_changed,
+        paradise_force_redraw,
+        paradise_add_status_info
+};
+device_t paradise_wd90c11_megapc_device =
+{
+        "Paradise WD90C11 (Amstrad MegaPC)",
+        0,
+        paradise_wd90c11_megapc_init,
         paradise_close,
         NULL,
         paradise_speed_changed,

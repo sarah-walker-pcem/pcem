@@ -5,6 +5,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "timer.h"
 #include "video.h"
 #include "vid_cga.h"
@@ -18,6 +19,8 @@ typedef struct pc1640_t
 
         cga_t cga;
         ega_t ega;
+        
+        rom_t bios_rom;
         
         int cga_enabled;
         int dispontime, dispofftime, vidtime;
@@ -114,14 +117,16 @@ void *pc1640_init()
         ega_t *ega = &pc1640->ega;
         memset(pc1640, 0, sizeof(pc1640_t));
 
+        rom_init(&pc1640->bios_rom, "roms/pc1640/40100", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        
         ega_init(&pc1640->ega);
         pc1640->cga.vram = pc1640->ega.vram;
         pc1640->cga_enabled = 1;
         cga_init(&pc1640->cga);
                         
         timer_add(pc1640_poll, &pc1640->vidtime, TIMER_ALWAYS_ENABLED, pc1640);
-        mem_mapping_add(&pc1640->cga_mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  cga);
-        mem_mapping_add(&pc1640->ega_mapping, 0,       0,       ega_read, NULL, NULL, ega_write, NULL, NULL,  ega);
+        mem_mapping_add(&pc1640->cga_mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, 0, cga);
+        mem_mapping_add(&pc1640->ega_mapping, 0,       0,       ega_read, NULL, NULL, ega_write, NULL, NULL,  NULL, 0, ega);
         io_sethandler(0x03a0, 0x0040, pc1640_in, NULL, NULL, pc1640_out, NULL, NULL, pc1640);
         return pc1640;
 }

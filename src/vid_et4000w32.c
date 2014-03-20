@@ -9,6 +9,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
+#include "rom.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_icd2061.h"
@@ -19,6 +20,8 @@ typedef struct et4000w32p_t
         mem_mapping_t linear_mapping;
         mem_mapping_t    mmu_mapping;
         
+        rom_t bios_rom;
+        
         svga_t svga;
         stg_ramdac_t ramdac;
         icd2061_t icd2061;
@@ -28,7 +31,9 @@ typedef struct et4000w32p_t
         uint32_t linearbase, linearbase_old;
 
         uint8_t banking, banking2;
-        
+
+        uint8_t pci_regs[256];
+
         /*Accelerator*/
         struct
         {
@@ -260,6 +265,15 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
 {
         svga_t *svga = &et4000->svga;
         
+        if (!(et4000->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_MEM))
+        {
+                pclog("Update mapping - PCI disabled\n");
+                mem_mapping_disable(&svga->mapping);
+                mem_mapping_disable(&et4000->linear_mapping);
+                mem_mapping_disable(&et4000->mmu_mapping);
+                return;
+        }
+
         pclog("recalcmapping %p\n", svga);
         if (svga->crtc[0x36] & 0x10) /*Linear frame buffer*/
         {
@@ -887,6 +901,36 @@ void et4000w32p_hwcursor_draw(svga_t *svga, int displine)
         svga->hwcursor_latch.addr += 16;
 }
 
+static void et4000w32p_io_remove(et4000w32p_t *et4000)
+{
+        io_removehandler(0x03c0, 0x0020, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+
+        io_removehandler(0x210A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x211A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x212A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x213A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x214A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x215A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x216A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_removehandler(0x217A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+}
+
+static void et4000w32p_io_set(et4000w32p_t *et4000)
+{
+        et4000w32p_io_remove(et4000);
+        
+        io_sethandler(0x03c0, 0x0020, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+
+        io_sethandler(0x210A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x211A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x212A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x213A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x214A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x215A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x216A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        io_sethandler(0x217A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+}
+
 uint8_t et4000w32p_pci_read(int func, int addr, void *p)
 {
         et4000w32p_t *et4000 = (et4000w32p_t *)p;
@@ -902,7 +946,8 @@ uint8_t et4000w32p_pci_read(int func, int addr, void *p)
                 case 0x02: return 0x06; /*ET4000W32p Rev D*/
                 case 0x03: return 0x32;
                 
-                case 0x04: return 0x03; /*Respond to IO and memory accesses*/
+                case PCI_REG_COMMAND:
+                return et4000->pci_regs[PCI_REG_COMMAND]; /*Respond to IO and memory accesses*/
 
                 case 0x07: return 1 << 1; /*Medium DEVSEL timing*/
                 
@@ -917,10 +962,10 @@ uint8_t et4000w32p_pci_read(int func, int addr, void *p)
                 case 0x12: return svga->crtc[0x5a] & 0x80;
                 case 0x13: return svga->crtc[0x59];
 
-                case 0x30: return 0x01; /*BIOS ROM address*/
+                case 0x30: return et4000->pci_regs[0x30] & 0x01; /*BIOS ROM address*/
                 case 0x31: return 0x00;
-                case 0x32: return 0x0C;
-                case 0x33: return 0x00;
+                case 0x32: return et4000->pci_regs[0x32];
+                case 0x33: return et4000->pci_regs[0x33];
         }
         return 0;
 }
@@ -931,10 +976,34 @@ void et4000w32p_pci_write(int func, int addr, uint8_t val, void *p)
 
         switch (addr)
         {
+                case PCI_REG_COMMAND:
+                et4000->pci_regs[PCI_REG_COMMAND] = val & 0x27;
+                if (val & PCI_COMMAND_IO)
+                        et4000w32p_io_set(et4000);
+                else
+                        et4000w32p_io_remove(et4000);
+                et4000w32p_recalcmapping(et4000);
+                break;
+
                 case 0x13: 
                 et4000->linearbase = val << 24; 
                 et4000w32p_recalcmapping(et4000); 
                 break;
+
+                case 0x30: case 0x32: case 0x33:
+                et4000->pci_regs[addr] = val;
+                if (et4000->pci_regs[0x30] & 0x01)
+                {
+                        uint32_t addr = (et4000->pci_regs[0x32] << 16) | (et4000->pci_regs[0x33] << 24);
+                        pclog("ET4000 bios_rom enabled at %08x\n", addr);
+                        mem_mapping_set_addr(&et4000->bios_rom.mapping, addr, 0x8000);
+                }
+                else
+                {
+                        pclog("ET4000 bios_rom disabled\n");
+                        mem_mapping_disable(&et4000->bios_rom.mapping);
+                }
+                return;
         }
 }
 
@@ -948,23 +1017,29 @@ void *et4000w32p_init()
                    et4000w32p_in, et4000w32p_out,
                    et4000w32p_hwcursor_draw); 
 
-        mem_mapping_add(&et4000->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, &et4000->svga);
-        mem_mapping_add(&et4000->mmu_mapping,    0, 0, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, et4000);
+        rom_init(&et4000->bios_rom, "roms/et4000w32.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        if (PCI)
+                mem_mapping_disable(&et4000->bios_rom.mapping);
 
-        io_sethandler(0x03c0, 0x0020, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        mem_mapping_add(&et4000->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &et4000->svga);
+        mem_mapping_add(&et4000->mmu_mapping,    0, 0, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, NULL, 0, et4000);
 
-        io_sethandler(0x210A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x211A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x212A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x213A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x214A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x215A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x216A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
-        io_sethandler(0x217A, 0x0002, et4000w32p_in, NULL, NULL, et4000w32p_out, NULL, NULL, et4000);
+        et4000w32p_io_set(et4000);
         
         pci_add(et4000w32p_pci_read, et4000w32p_pci_write, et4000);
+
+        et4000->pci_regs[0x04] = 7;
+        
+        et4000->pci_regs[0x30] = 0x00;
+        et4000->pci_regs[0x32] = 0x0c;
+        et4000->pci_regs[0x33] = 0x00;
         
         return et4000;
+}
+
+int et4000w32p_available()
+{
+        return rom_present("roms/et4000w32.bin");
 }
 
 void et4000w32p_close(void *p)
@@ -1003,7 +1078,7 @@ device_t et4000w32p_device =
         0,
         et4000w32p_init,
         et4000w32p_close,
-        NULL,
+        et4000w32p_available,
         et4000w32p_speed_changed,
         et4000w32p_force_redraw,
         et4000w32p_add_status_info

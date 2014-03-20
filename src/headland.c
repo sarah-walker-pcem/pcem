@@ -20,9 +20,9 @@ void headland_write(uint16_t addr, uint8_t val, void *priv)
                         shadowbios = val & 0x10;
                         shadowbios_write = !(val & 0x10);
                         if (shadowbios)
-                                mem_bios_set_state(0xf0000, 0x10000, 1, 0);
+                                mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
                         else
-                                mem_bios_set_state(0xf0000, 0x10000, 0, 1);
+                                mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
                 }
         }
         else

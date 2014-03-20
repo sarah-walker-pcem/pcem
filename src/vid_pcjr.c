@@ -615,7 +615,7 @@ static void *pcjr_video_init()
                 q_filt[c] = 512.0 * sin((3.14 * (pcjr_tint + c * 4) / 16.0) - 33.0 / 180.0);
         }
         timer_add(pcjr_poll, &pcjr->vidtime, TIMER_ALWAYS_ENABLED, pcjr);
-        mem_mapping_add(&pcjr->mapping, 0xb8000, 0x08000, pcjr_read, NULL, NULL, pcjr_write, NULL, NULL,  pcjr);
+        mem_mapping_add(&pcjr->mapping, 0xb8000, 0x08000, pcjr_read, NULL, NULL, pcjr_write, NULL, NULL,  NULL, 0, pcjr);
         io_sethandler(0x03d0, 0x0010, pcjr_in, NULL, NULL, pcjr_out, NULL, NULL, pcjr);
         return pcjr;
 }

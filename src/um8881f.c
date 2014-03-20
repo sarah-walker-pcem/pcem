@@ -10,28 +10,29 @@ static uint8_t card_18[256];
 
 void um8881f_write(int func, int addr, uint8_t val, void *priv)
 {
+//        pclog("um8881f_write : addr=%02x val=%02x %04x:%04x\n", addr, val, CS, pc);
         if (addr == 0x54)
         {
-                if ((card_16[0x54] ^ val) & 0x01)
+/*                if ((card_16[0x54] ^ val) & 0x01)
                 {
                         if (val & 1)
                                 mem_bios_set_state(0xe0000, 0x10000, 1, 1);
                         else
                                 mem_bios_set_state(0xe0000, 0x10000, 0, 0);
-                }
+                }*/
                 flushmmucache_nopc();
         }
         if (addr == 0x55)
         {
                 if ((card_16[0x55] ^ val) & 0xc0)
                 {
-                        switch (val & 0xc0)
+/*                        switch (val & 0xc0)
                         {
                                 case 0x00: mem_bios_set_state(0xf0000, 0x10000, 0, 1); break;
                                 case 0x40: mem_bios_set_state(0xf0000, 0x10000, 0, 0); break;
                                 case 0x80: mem_bios_set_state(0xf0000, 0x10000, 1, 1); break;
                                 case 0xc0: mem_bios_set_state(0xf0000, 0x10000, 1, 0); break;
-                        }
+                        }*/
                         shadowbios = val & 0x80;
                         shadowbios_write = !(val & 0x40);
                         flushmmucache_nopc();
