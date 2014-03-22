@@ -1048,17 +1048,17 @@ uint8_t s3_accel_read(uint32_t addr, void *p)
 #define WRITE(addr)     if (s3->bpp == 0)                                                                                \
                         {                                                                                               \
                                 svga->vram[(addr) & 0x3fffff] = dest_dat;                              \
-                                svga->changedvram[((addr) & 0x3fffff) >> 10] = changeframecount;       \
+                                svga->changedvram[((addr) & 0x3fffff) >> 12] = changeframecount;       \
                         }                                                                                               \
                         else if (s3->bpp == 1)                                                                           \
                         {                                                                                               \
                                 vram_w[(addr) & 0x1fffff] = dest_dat;                            \
-                                svga->changedvram[((addr) & 0x1fffff) >> 9] = changeframecount;        \
+                                svga->changedvram[((addr) & 0x1fffff) >> 11] = changeframecount;        \
                         }                                                                                               \
                         else                                                                                            \
                         {                                                                                               \
                                 vram_l[(addr) & 0xfffff] = dest_dat;                             \
-                                svga->changedvram[((addr) & 0xfffff) >> 8] = changeframecount;         \
+                                svga->changedvram[((addr) & 0xfffff) >> 10] = changeframecount;         \
                         }
 
 void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, s3_t *s3)

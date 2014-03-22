@@ -351,14 +351,14 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         if (addr >= svga->vram_limit)
                 return;
 //        if (svga_output) pclog("%08X\n", addr);
-        svga->changedvram[addr >> 10] = changeframecount;
+        svga->changedvram[addr >> 12] = changeframecount;
         
         switch (svga->writemode)
         {
                 case 4:
                 pclog("Writemode 4 : %X ", addr);
                 addr <<= 1;
-                svga->changedvram[addr >> 10] = changeframecount;
+                svga->changedvram[addr >> 12] = changeframecount;
                 pclog("%X %X\n", addr, val);
                 if (val & 0x80)
                         svga->vram[addr + 0] = svga->gdcreg[1];
@@ -381,7 +381,7 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 case 5:
                 pclog("Writemode 5 : %X ", addr);
                 addr <<= 1;
-                svga->changedvram[addr >> 10] = changeframecount;
+                svga->changedvram[addr >> 12] = changeframecount;
                 pclog("%X %X\n", addr, val);
                 svga->vram[addr + 0] = (val & 0x80) ? svga->gdcreg[1] : svga->gdcreg[0];
                 svga->vram[addr + 1] = (val & 0x40) ? svga->gdcreg[1] : svga->gdcreg[0];
@@ -618,7 +618,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         count--;                        
                 }
                 dst = svga->vram[gd5429->blt.dst_addr & svga->vrammask];
-                svga->changedvram[(gd5429->blt.dst_addr & svga->vrammask) >> 10] = changeframecount;
+                svga->changedvram[(gd5429->blt.dst_addr & svga->vrammask) >> 12] = changeframecount;
                
                 pclog("Blit %i,%i %06X %06X  %06X %02X %02X  %02X %02X ", gd5429->blt.width, gd5429->blt.height_internal, gd5429->blt.src_addr, gd5429->blt.dst_addr, gd5429->blt.src_addr & svga->vrammask, svga->vram[gd5429->blt.src_addr & svga->vrammask], 0x80 >> (gd5429->blt.dst_addr & 7), src, dst);
                 switch (gd5429->blt.rop)

@@ -98,7 +98,7 @@ void et4000w32_mmu_write(uint32_t addr, uint8_t val)
                 else
                 {
                         vram[(addr&0x1FFF)+mmu.base[bank]]=val;
-                        changedvram[((addr&0x1FFF)+mmu.base[bank])>>10]=changeframecount;
+                        changedvram[((addr&0x1FFF)+mmu.base[bank])>>12]=changeframecount;
                 }
                 break;
                 case 0x6000:
@@ -302,7 +302,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input)
                 }
                 pclog("%06X = %02X\n",acl.dest_addr&0x1FFFFF,out);
                 vram[acl.dest_addr&0x1FFFFF]=out;
-                changedvram[(acl.dest_addr&0x1FFFFF)>>10]=changeframecount;
+                changedvram[(acl.dest_addr&0x1FFFFF)>>12]=changeframecount;
 
                 acl.pattern_x++;
                 acl.pattern_x&=et4000w32_wrap_x[acl.internal.pattern_wrap&7];
@@ -378,7 +378,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input)
                                 if (acl.internal.rop_bg&(1<<d)) out|=(1<<c);
                         }
                         vram[acl.dest_addr&0x1FFFFF]=out;
-                        changedvram[(acl.dest_addr&0x1FFFFF)>>10]=changeframecount;
+                        changedvram[(acl.dest_addr&0x1FFFFF)>>12]=changeframecount;
 
                         pattern_x++;
                         pattern_x&=et4000w32_wrap_x[acl.internal.pattern_wrap&7];

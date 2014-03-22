@@ -989,16 +989,16 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 {                                                                               \
                         case 0: /*8 bpp*/                                                       \
                         vram[addr & 0x3fffff] = val;                                            \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 10] = changeframecount;    \
+                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
                         break;                                                                  \
                         case 1: /*16 bpp*/                                                      \
                         *(uint16_t *)&vram[addr & 0x3fffff] = val;                              \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 10] = changeframecount;    \
+                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
                         break;                                                                  \
                         case 2: /*24 bpp*/                                                      \
                         *(uint32_t *)&vram[addr & 0x3fffff] = (val & 0xffffff) |                \
                                                               (vram[(addr + 3) & 0x3fffff] << 24);  \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 10] = changeframecount;    \
+                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
                         break;                                                                  \
                 }                                                                               \
         } while (0)

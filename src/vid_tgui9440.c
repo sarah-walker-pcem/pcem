@@ -552,12 +552,12 @@ enum
 #define WRITE(addr, dat)        if (tgui->accel.bpp == 0)                                                \
                                 {                                                                       \
                                         svga->vram[addr & 0x1fffff] = dat;                                    \
-                                        svga->changedvram[((addr) & 0x1fffff) >> 10] = changeframecount;      \
+                                        svga->changedvram[((addr) & 0x1fffff) >> 12] = changeframecount;      \
                                 }                                                                       \
                                 else                                                                    \
                                 {                                                                       \
                                         vram_w[addr & 0xfffff] = dat;                                   \
-                                        svga->changedvram[((addr) & 0xfffff) >> 9] = changeframecount;        \
+                                        svga->changedvram[((addr) & 0xfffff) >> 11] = changeframecount;        \
                                 }
                                 
 void tgui_accel_write_fb_b(uint32_t addr, uint8_t val, void *priv);

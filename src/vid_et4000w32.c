@@ -371,7 +371,7 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
                 else
                 {
                         svga->vram[(addr & 0x1fff) + et4000->mmu.base[bank]] = val;
-                        svga->changedvram[((addr & 0x1fff) + et4000->mmu.base[bank]) >> 10] = changeframecount;
+                        svga->changedvram[((addr & 0x1fff) + et4000->mmu.base[bank]) >> 12] = changeframecount;
                 }
                 break;
                 case 0x6000:
@@ -705,7 +705,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et400
                         if (!(et4000->acl.internal.ctrl_routing & 0x40))
                         {
                                 svga->vram[et4000->acl.dest_addr & 0x1fffff] = out;
-                                svga->changedvram[(et4000->acl.dest_addr & 0x1fffff) >> 10] = changeframecount;
+                                svga->changedvram[(et4000->acl.dest_addr & 0x1fffff) >> 12] = changeframecount;
                         }
                         else
                         {
@@ -826,7 +826,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et400
                         if (!(et4000->acl.internal.ctrl_routing & 0x40))
                         {
                                 svga->vram[et4000->acl.dest_addr & 0x1fffff] = out;
-                                svga->changedvram[(et4000->acl.dest_addr & 0x1fffff) >> 10] = changeframecount;
+                                svga->changedvram[(et4000->acl.dest_addr & 0x1fffff) >> 12] = changeframecount;
                         }
                         else
                         {

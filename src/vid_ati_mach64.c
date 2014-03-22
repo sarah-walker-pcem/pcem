@@ -633,17 +633,17 @@ void mach64_start_line(mach64_t *mach64)
 #define WRITE(addr, width)      if (width == 0)                                                         \
                                 {                                                                       \
                                         svga->vram[(addr) & 0x7fffff] = dest_dat;                             \
-                                        svga->changedvram[((addr) & 0x7fffff) >> 10] = changeframecount;      \
+                                        svga->changedvram[((addr) & 0x7fffff) >> 12] = changeframecount;      \
                                 }                                                                       \
                                 else if (width == 1)                                                    \
                                 {                                                                       \
                                         *(uint16_t *)&svga->vram[((addr) << 1) & 0x7fffff] = dest_dat;          \
-                                        svga->changedvram[(((addr) << 1) & 0x7fffff) >> 10] = changeframecount; \
+                                        svga->changedvram[(((addr) << 1) & 0x7fffff) >> 12] = changeframecount; \
                                 }                                                                       \
                                 else                                                                    \
                                 {                                                                       \
                                         *(uint32_t *)&svga->vram[((addr) << 2) & 0x7fffff] = dest_dat;          \
-                                        svga->changedvram[(((addr) << 2) & 0x7fffff) >> 10] = changeframecount; \
+                                        svga->changedvram[(((addr) << 2) & 0x7fffff) >> 12] = changeframecount; \
                                 }
 
 void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
