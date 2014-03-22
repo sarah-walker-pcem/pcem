@@ -277,10 +277,11 @@ void s3_recalctimings(svga_t *svga)
                 svga->hdisp_time += 0x100;
                 svga->hdisp += 0x100 * ((svga->seqregs[1] & 8) ? 16 : 8);
         }
-        if (svga->crtc[0x5e] & 0x01) svga->vtotal     += 0x400;
-        if (svga->crtc[0x5e] & 0x02) svga->dispend    += 0x400;
-        if (svga->crtc[0x5e] & 0x10) svga->vsyncstart += 0x400;
-        if (svga->crtc[0x5e] & 0x40) svga->split      += 0x400;
+        if (svga->crtc[0x5e] & 0x01) svga->vtotal      += 0x400;
+        if (svga->crtc[0x5e] & 0x02) svga->dispend     += 0x400;
+        if (svga->crtc[0x5e] & 0x04) svga->vblankstart += 0x400;
+        if (svga->crtc[0x5e] & 0x10) svga->vsyncstart  += 0x400;
+        if (svga->crtc[0x5e] & 0x40) svga->split       += 0x400;
         if (svga->crtc[0x51] & 0x30)      svga->rowoffset  += (svga->crtc[0x51] & 0x30) << 4;
         else if (svga->crtc[0x43] & 0x04) svga->rowoffset  += 0x100;
         if (!svga->rowoffset) svga->rowoffset = 256;

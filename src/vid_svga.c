@@ -268,9 +268,6 @@ void svga_recalctimings(svga_t *svga)
         if (svga->crtc[9] & 0x20) svga->vblankstart |= 0x200;
         svga->vblankstart++;
         
-        if (svga->vblankstart < svga->dispend)
-                svga->dispend = svga->vblankstart;
-
         svga->hdisp = svga->crtc[1];
         svga->hdisp++;
 
@@ -369,7 +366,10 @@ void svga_recalctimings(svga_t *svga)
         svga->rowcount = svga->crtc[9] & 31;
         if (svga->recalctimings_ex) 
                 svga->recalctimings_ex(svga);
-        
+
+        if (svga->vblankstart < svga->dispend)
+                svga->dispend = svga->vblankstart;
+
         crtcconst = (svga->seqregs[1] & 1) ? (svga->clock * 8.0) : (svga->clock * 9.0);
 
         disptime  = svga->htotal;
@@ -446,7 +446,7 @@ void svga_poll(void *p)
         }
         else
         {
-//                pclog("VC %i ma %05X\n", vc, ma);
+//                pclog("VC %i ma %05X\n", svga->vc, svga->ma);
                 svga->vidtime += svga->dispontime;
 
 //                if (output) printf("Display on %f\n",vidtime);
@@ -515,7 +515,7 @@ void svga_poll(void *p)
                 if (svga->vc == svga->vsyncstart)
                 {
                         int wx, wy;
-//                        pclog("VC vsync  %i %i\n", firstline_draw, lastline_draw);
+//                        pclog("VC vsync  %i %i\n", svga->firstline_draw, svga->lastline_draw);
                         svga->dispon=0;
                         svga->cgastat |= 8;
                         x = svga->hdisp;
