@@ -236,12 +236,13 @@ void et4000w32p_recalctimings(svga_t *svga)
 //        pclog("Recalc %08X  ",svga_ma);
         svga->ma_latch |= (svga->crtc[0x33] & 0x7) << 16;
 //        pclog("SVGA_MA %08X %i\n", svga_ma, (svga_miscout >> 2) & 3);
-        if (svga->crtc[0x35] & 0x02)     svga->vtotal     += 0x400;
-        if (svga->crtc[0x35] & 0x04)     svga->dispend    += 0x400;
-        if (svga->crtc[0x35] & 0x08)     svga->vsyncstart += 0x400;
-        if (svga->crtc[0x35] & 0x10)     svga->split      += 0x400;
-        if (svga->crtc[0x3F] & 0x80)     svga->rowoffset  += 0x100;
-        if (svga->crtc[0x3F] & 0x01)     svga->htotal     += 256;
+        if (svga->crtc[0x35] & 0x01)     svga->vblankstart += 0x400;
+        if (svga->crtc[0x35] & 0x02)     svga->vtotal      += 0x400;
+        if (svga->crtc[0x35] & 0x04)     svga->dispend     += 0x400;
+        if (svga->crtc[0x35] & 0x08)     svga->vsyncstart  += 0x400;
+        if (svga->crtc[0x35] & 0x10)     svga->split       += 0x400;
+        if (svga->crtc[0x3F] & 0x80)     svga->rowoffset   += 0x100;
+        if (svga->crtc[0x3F] & 0x01)     svga->htotal      += 256;
         if (svga->attrregs[0x16] & 0x20) svga->hdisp <<= 1;
         
         switch ((svga->miscout >> 2) & 3)

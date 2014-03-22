@@ -99,6 +99,7 @@ typedef struct virge_t
         } streams;
 } virge_t;
 
+static void s3_virge_recalctimings(svga_t *svga);
 static void s3_virge_updatemapping(virge_t *virge);
 
 static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat);
@@ -161,6 +162,7 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 if (svga->seqaddr >= 0x10)
                 {
                         svga->seqregs[svga->seqaddr & 0x1f]=val;
+                        s3_virge_recalctimings(svga);
                         return;
                 }
                 if (svga->seqaddr == 4) /*Chain-4 - update banking*/
@@ -321,12 +323,13 @@ static void s3_virge_recalctimings(svga_t *svga)
 {
         virge_t *virge = (virge_t *)svga->p;
 
-        if (svga->crtc[0x5d] & 0x01) svga->htotal     += 0x100;
-        if (svga->crtc[0x5d] & 0x02) svga->hdisp      += 0x100;
-        if (svga->crtc[0x5e] & 0x01) svga->vtotal     += 0x400;
-        if (svga->crtc[0x5e] & 0x02) svga->dispend    += 0x400;
-        if (svga->crtc[0x5e] & 0x10) svga->vsyncstart += 0x400;
-        if (svga->crtc[0x5e] & 0x40) svga->split      += 0x400;
+        if (svga->crtc[0x5d] & 0x01) svga->htotal      += 0x100;
+        if (svga->crtc[0x5d] & 0x02) svga->hdisp       += 0x100;
+        if (svga->crtc[0x5e] & 0x01) svga->vtotal      += 0x400;
+        if (svga->crtc[0x5e] & 0x02) svga->dispend     += 0x400;
+        if (svga->crtc[0x5e] & 0x04) svga->vblankstart += 0x400;
+        if (svga->crtc[0x5e] & 0x10) svga->vsyncstart  += 0x400;
+        if (svga->crtc[0x5e] & 0x40) svga->split       += 0x400;
         svga->interlace = svga->crtc[0x42] & 0x20;
 
         if ((svga->crtc[0x67] & 0xc) != 0xc) /*VGA mode*/
@@ -399,7 +402,15 @@ static void s3_virge_recalctimings(svga_t *svga)
                 }
         }
 
+        if (((svga->miscout >> 2) & 3) == 3)
+        {
+                int n = svga->seqregs[0x12] & 0x1f;
+                int r = (svga->seqregs[0x12] >> 5) & 3;
+                int m = svga->seqregs[0x13] & 0x7f;
+                double freq = (((double)m + 2) / (((double)n + 2) * (double)(1 << r))) * 14318184.0;
 
+                svga->clock = cpuclock / freq;
+        }
 }
 
 static void s3_virge_updatemapping(virge_t *virge)

@@ -299,6 +299,7 @@ void mach64_recalctimings(svga_t *svga)
                 svga->ma_latch = (mach64->crtc_off_pitch & 0x1fffff) * 2;
                 svga->linedbl = svga->rowcount = 0;
                 svga->split = 0xffffff;
+                svga->vblankstart = svga->dispend;
 //                svga_htotal <<= 1;
 //                svga_hdisp <<= 1;
                 svga->rowoffset <<= 1;                
