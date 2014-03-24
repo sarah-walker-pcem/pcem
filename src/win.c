@@ -1192,6 +1192,29 @@ BOOL CALLBACK hdconfdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         pause=0;
                         return TRUE;
 
+                        case IDC_EJECTC:
+                        hd[0].spt = 0;
+                        hd[0].hpc = 0;
+                        hd[0].tracks = 0;
+                        ide_fn[0][0] = 0;
+                        SetDlgItemText(hdlg, IDC_EDIT1, "0");
+                        SetDlgItemText(hdlg, IDC_EDIT2, "0");
+                        SetDlgItemText(hdlg, IDC_EDIT3, "0");
+                        SetDlgItemText(hdlg, IDC_EDITC, "");
+                        hd_changed = 1;
+                        return TRUE;
+                        case IDC_EJECTD:
+                        hd[1].spt = 0;
+                        hd[1].hpc = 0;
+                        hd[1].tracks = 0;
+                        ide_fn[1][0] = 0;
+                        SetDlgItemText(hdlg, IDC_EDIT4, "0");
+                        SetDlgItemText(hdlg, IDC_EDIT5, "0");
+                        SetDlgItemText(hdlg, IDC_EDIT6, "0");
+                        SetDlgItemText(hdlg, IDC_EDITD, "");
+                        hd_changed = 1;
+                        return TRUE;
+                        
                         case IDC_CNEW:
                         if (DialogBox(hinstance,TEXT("HdNewDlg"),hdlg,hdnewdlgproc) == 1)
                         {
@@ -1703,12 +1726,18 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 //                if (mousecapture)
                    return 0;
 //                return DefWindowProc (hwnd, message, wParam, lParam);
-                
+
+                               
                 case WM_DESTROY:
                 UnhookWindowsHookEx( hKeyboardHook );
                 KillTimer(hwnd, TIMER_1SEC);
                 PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
                 break;
+
+                case WM_SYSCOMMAND:
+                if (wParam == SC_KEYMENU && HIWORD(lParam) <= 0 && (video_fullscreen || mousecapture))
+                        return 0; /*disable ALT key for menu*/
+
                 default:
 //                        pclog("Def %08X %i\n",message,message);
                 return DefWindowProc (hwnd, message, wParam, lParam);

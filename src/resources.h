@@ -51,6 +51,8 @@
 #define IDC_EDITD  1053
 #define IDC_DFILE  1054
 #define IDC_DNEW   1055
+#define IDC_EJECTC 1056
+#define IDC_EJECTD 1057
 #define IDC_MEMSPIN 1070
 #define IDC_MEMTEXT 1071
 #define IDC_STEXT1 1100
