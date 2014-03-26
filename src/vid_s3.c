@@ -516,75 +516,118 @@ void s3_accel_out(uint16_t port, uint8_t val, void *p)
                 break;
 
                 case 0xa2e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
                 else
-                   s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x000000ff) | val;
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x000000ff) | val;
                 break;
                 case 0xa2e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
                 else
-                   s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x0000ff00) | (val << 8);
-                s3->accel.multifunc[0xe] ^= 0x10;
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xa2ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xa2eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
                 break;
 
                 case 0xa6e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
                 else
-                   s3->accel.frgd_color = (s3->accel.frgd_color & ~0x000000ff) | val;
-//                pclog("Foreground colour now %08X %i\n", s3->accel.frgd_color, s3->bpp);
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x000000ff) | val;
                 break;
                 case 0xa6e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
                 else
-                   s3->accel.frgd_color = (s3->accel.frgd_color & ~0x0000ff00) | (val << 8);
-                s3->accel.multifunc[0xe] ^= 0x10;
-//                pclog("Foreground colour now %08X\n", s3->accel.frgd_color);
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xa6ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xa6eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
                 break;
 
                 case 0xaae8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
                 else
-                   s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x000000ff) | val;
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x000000ff) | val;
                 break;
                 case 0xaae9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
                 else
-                   s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x0000ff00) | (val << 8);
-                s3->accel.multifunc[0xe] ^= 0x10;
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xaaea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xaaeb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
                 break;
 
                 case 0xaee8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
                 else
-                   s3->accel.rd_mask = (s3->accel.rd_mask & ~0x000000ff) | val;
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x000000ff) | val;
                 break;
                 case 0xaee9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
                 else
-                   s3->accel.rd_mask = (s3->accel.rd_mask & ~0x0000ff00) | (val << 8);
-                s3->accel.multifunc[0xe] ^= 0x10;
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xaeea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xaeeb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
                 break;
 
                 case 0xb2e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
                 else
-                   s3->accel.color_cmp = (s3->accel.color_cmp & ~0x000000ff) | val;
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x000000ff) | val;
                 break;
                 case 0xb2e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10)
-                   s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
                 else
-                   s3->accel.color_cmp = (s3->accel.color_cmp & ~0x0000ff00) | (val << 8);
-                s3->accel.multifunc[0xe] ^= 0x10;
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xb2ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xb2eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
                 break;
 
                 case 0xb6e8:
@@ -749,26 +792,46 @@ uint8_t s3_accel_in(uint16_t port, void *p)
                 return s3->accel.bkgd_color & 0xff;
                 case 0xa2e9:
                 return s3->accel.bkgd_color >> 8;
+                case 0xa2ea:
+                return s3->accel.bkgd_color >> 16;
+                case 0xa2eb:
+                return s3->accel.bkgd_color >> 24;
 
                 case 0xa6e8:
                 return s3->accel.frgd_color & 0xff;
                 case 0xa6e9:
                 return s3->accel.frgd_color >> 8;
+                case 0xa6ea:
+                return s3->accel.frgd_color >> 16;
+                case 0xa6eb:
+                return s3->accel.frgd_color >> 24;
 
                 case 0xaae8:
                 return s3->accel.wrt_mask & 0xff;
                 case 0xaae9:
                 return s3->accel.wrt_mask >> 8;
+                case 0xaaea:
+                return s3->accel.wrt_mask >> 16;
+                case 0xaaeb:
+                return s3->accel.wrt_mask >> 24;
 
                 case 0xaee8:
                 return s3->accel.rd_mask & 0xff;
                 case 0xaee9:
                 return s3->accel.rd_mask >> 8;
+                case 0xaeea:
+                return s3->accel.rd_mask >> 16;
+                case 0xaeeb:
+                return s3->accel.rd_mask >> 24;
 
                 case 0xb2e8:
                 return s3->accel.color_cmp & 0xff;
                 case 0xb2e9:
                 return s3->accel.color_cmp >> 8;
+                case 0xb2ea:
+                return s3->accel.color_cmp >> 16;
+                case 0xb2eb:
+                return s3->accel.color_cmp >> 24;
 
                 case 0xb6e8:
                 return s3->accel.bkgd_mix;
@@ -1666,11 +1729,11 @@ static void s3_io_remove(s3_t *s3)
         io_removehandler(0x96e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_removehandler(0x9ae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_removehandler(0x9ee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_removehandler(0xa2e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_removehandler(0xa6e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_removehandler(0xaae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_removehandler(0xaee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_removehandler(0xb2e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_removehandler(0xa2e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_removehandler(0xa6e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_removehandler(0xaae8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_removehandler(0xaee8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_removehandler(0xb2e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_removehandler(0xb6e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_removehandler(0xbae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_removehandler(0xbee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
@@ -1694,11 +1757,11 @@ static void s3_io_set(s3_t *s3)
         io_sethandler(0x96e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_sethandler(0x9ae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_sethandler(0x9ee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_sethandler(0xa2e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_sethandler(0xa6e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_sethandler(0xaae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_sethandler(0xaee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
-        io_sethandler(0xb2e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_sethandler(0xa2e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_sethandler(0xa6e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_sethandler(0xaae8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_sethandler(0xaee8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
+        io_sethandler(0xb2e8, 0x0004, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_sethandler(0xb6e8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_sethandler(0xbae8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
         io_sethandler(0xbee8, 0x0002, s3_accel_in, NULL, NULL, s3_accel_out, NULL, NULL,  s3);
@@ -1795,8 +1858,8 @@ static void *s3_init(char *bios_fn)
         if (PCI)
                 mem_mapping_disable(&s3->bios_rom.mapping);
 
-        mem_mapping_add(&s3->linear_mapping, 0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &s3->svga);
-        mem_mapping_add(&s3->mmio_mapping,   0xa0000, 0x10000, s3_accel_read, NULL, NULL, s3_accel_write, s3_accel_write_w, s3_accel_write_l, NULL, 0, s3);
+        mem_mapping_add(&s3->linear_mapping, 0,       0,       svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, MEM_MAPPING_EXTERNAL, &s3->svga);
+        mem_mapping_add(&s3->mmio_mapping,   0xa0000, 0x10000, s3_accel_read, NULL, NULL, s3_accel_write, s3_accel_write_w, s3_accel_write_l, NULL, MEM_MAPPING_EXTERNAL, s3);
         mem_mapping_disable(&s3->mmio_mapping);
 
         svga_init(&s3->svga, s3, 1 << 22, /*4mb - 864 supports 8mb but buggy VESA driver reports 0mb*/
