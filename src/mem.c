@@ -1239,7 +1239,9 @@ static void mem_mapping_recalc(uint64_t base, uint64_t size)
 {
         uint64_t c;
         mem_mapping_t *mapping = base_mapping.next;
-        
+
+        if (!size)
+                return;
         /*Clear out old mappings*/
         for (c = base; c < base + size; c += 0x4000)
         {
@@ -1263,7 +1265,9 @@ static void mem_mapping_recalc(uint64_t base, uint64_t size)
                 {
                         uint64_t start = (mapping->base < base) ? mapping->base : base;
                         uint64_t end   = (((uint64_t)mapping->base + (uint64_t)mapping->size) < (base + size)) ? ((uint64_t)mapping->base + (uint64_t)mapping->size) : (base + size);
-                        
+                        if (start < mapping->base)
+                                start = mapping->base;
+
                         for (c = start; c < end; c += 0x4000)
                         {
                                 if ((mapping->read_b || mapping->read_w || mapping->read_l) &&
@@ -1454,11 +1458,13 @@ void mem_init()
 
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0xc0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        mem_set_mem_state(0x000000, 0xa0000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        mem_set_mem_state(0x100000, (mem_size - 1) * 1024 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
 
-        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  0, NULL);
+        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
         if (mem_size > 1)
-                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, 0, NULL);
+                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
         mem_mapping_add(&ram_mid_mapping,   0xc0000, 0x40000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0xc0000,  MEM_MAPPING_INTERNAL, NULL);
 
         mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   romext, 0, NULL);
@@ -1492,11 +1498,13 @@ void mem_resize()
         
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0xc0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
-
-        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  0, NULL);
+        mem_set_mem_state(0x000000, 0xa0000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        mem_set_mem_state(0x100000, (mem_size - 1) * 1024 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        
+        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
         if (mem_size > 1)
-                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, 0, NULL);
+                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
         mem_mapping_add(&ram_mid_mapping,   0xc0000, 0x40000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0xc0000,  MEM_MAPPING_INTERNAL, NULL);
 
         mem_add_bios();
