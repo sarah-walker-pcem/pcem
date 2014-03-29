@@ -172,7 +172,10 @@ uint8_t serial_read(uint16_t addr, void *p)
         {
                 case 0:
                 if (serial->lcr & 0x80 && !AMSTRADIO)
-                        return serial->dlab1;
+                {
+                        temp = serial->dlab1;
+                        break;
+                }
 
                 serial->lsr &= ~1;
                 serial->int_status &= ~SERIAL_INT_RECEIVE;
@@ -206,6 +209,8 @@ uint8_t serial_read(uint16_t addr, void *p)
                 temp = serial->mctrl;
                 break;
                 case 5:
+                if (serial->lsr & 0x20)
+                        serial->lsr |= 0x40;
                 serial->lsr |= 0x20;
                 temp = serial->lsr;
                 if (serial->lsr & 0x1f)
