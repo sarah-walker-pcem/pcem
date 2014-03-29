@@ -15,6 +15,8 @@ int nmi_enable = 1;
 int inscounts[256];
 uint32_t oldpc2;
 
+int trap;
+
 #define check_io_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
                         { \
                                 int tempi = checkio(port); \
@@ -385,6 +387,7 @@ void x86_int_sw(int num)
                 loadcs(readmemw(0,addr+2));
         }
         cycles-=70;
+        trap = 0;
 }
 
 void x86illegal()
@@ -1236,7 +1239,6 @@ void exec386(int cycs)
         int tempi;
         int cycdiff;
         int oldcyc;
-        int trap = flags & T_FLAG;
 
         cycles+=cycs;
 //        output=3;
@@ -1327,12 +1329,11 @@ opcodestart:
                 }
                 cycdiff=oldcyc-cycles;
 
-                if (trap && (flags&T_FLAG))
+                if (trap)
                 {
                         flags_rebuild();
 //                        oldpc=pc;
 //                        oldcs=CS;
-//                        pclog("TRAP!!! %04X:%04X\n",CS,pc);
                         if (msw&1)
                         {
                                 pmodeint(1,0);
