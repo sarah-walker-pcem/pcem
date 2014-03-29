@@ -308,7 +308,6 @@ void loadseg(uint16_t seg, x86seg *s)
                 s->seg=seg;
                 if (eflags&VM_FLAG) s->access=3<<5;
                 else                s->access=0<<5;
-                use32=0;
                 if (s==&_ss) stack32=0;
 /*                if (s==&_ds)
                 {

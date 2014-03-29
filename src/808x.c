@@ -639,6 +639,7 @@ void resetx86()
         cgate32=0;
         loadcs(0xFFFF);
         rammask=0xFFFFFFFF;
+        idt.base = 0;
         flags=2;
         makeznptable();
         initmmucache();
@@ -669,6 +670,7 @@ void softresetx86()
         loadcs(0xFFFF);
         //rammask=0xFFFFFFFF;
         flags=2;
+        idt.base = 0;
 }
 
 static void setznp8(uint8_t val)

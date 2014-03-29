@@ -339,7 +339,7 @@ void x86_int(int num)
                         writememw(ss,((SP-6)&0xFFFF),pc);
                         SP-=6;
                 }
-                addr=num<<2;
+                addr = (num << 2) + idt.base;
 
                 flags&=~I_FLAG;
                 flags&=~T_FLAG;
@@ -376,7 +376,7 @@ void x86_int_sw(int num)
                         writememw(ss,((SP-6)&0xFFFF),pc);
                         SP-=6;
                 }
-                addr=num<<2;
+                addr = (num << 2) + idt.base;
 
                 flags&=~I_FLAG;
                 flags&=~T_FLAG;
@@ -1343,7 +1343,7 @@ opcodestart:
                                 writememw(ss,(SP-4)&0xFFFF,CS);
                                 writememw(ss,(SP-6)&0xFFFF,pc);
                                 SP-=6;
-                                addr=1<<2;
+                                addr = (1 << 2) + idt.base;
                                 flags&=~I_FLAG;
                                 flags&=~T_FLAG;
                                 pc=readmemw(0,addr);
@@ -1378,7 +1378,7 @@ opcodestart:
                                         writememw(ss,(SP-4)&0xFFFF,CS);
                                         writememw(ss,(SP-6)&0xFFFF,pc);
                                         SP-=6;
-                                        addr=temp<<2;
+                                        addr = (temp << 2) + idt.base;
                                         flags&=~I_FLAG;
                                         flags&=~T_FLAG;
                                         oxpc=pc;

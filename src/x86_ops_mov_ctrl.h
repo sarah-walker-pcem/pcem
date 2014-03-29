@@ -107,7 +107,7 @@ static int opMOV_CRx_r_a16(uint32_t fetchdat)
                 cr2 = regs[rm].l;
                 break;
                 case 3:
-                cr3 = regs[rm].l & ~0xfff;
+                cr3 = regs[rm].l;
                 flushmmucache();
                 break;
                 default:
@@ -140,7 +140,7 @@ static int opMOV_CRx_r_a32(uint32_t fetchdat)
                 cr2 = regs[rm].l;
                 break;
                 case 3:
-                cr3 = regs[rm].l & ~0xfff;
+                cr3 = regs[rm].l;
                 flushmmucache();
                 break;
                 default:
