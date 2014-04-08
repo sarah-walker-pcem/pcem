@@ -97,6 +97,26 @@ void ioctl_audio_stop()
         ioctl_cd_state = CD_STOPPED;
 }
 
+static int get_track_nr(uint32_t pos)
+{
+        int c;
+        int track = 0;
+        
+        if (!tocvalid)
+                return 0;
+
+        for (c = toc.FirstTrack; c < toc.LastTrack; c++)
+        {
+                uint32_t track_address = toc.TrackData[c].Address[3] +
+                                         (toc.TrackData[c].Address[2] * 75) +
+                                         (toc.TrackData[c].Address[1] * 75 * 60);
+
+                if (track_address <= pos)
+                        track = c;
+        }
+        return track;
+}
+
 static void ioctl_playaudio(uint32_t pos, uint32_t len, int ismsf)
 {
         if (!cdrom_drive) return;
@@ -225,59 +245,84 @@ static uint8_t ioctl_getcurrentsubchannel(uint8_t *b, int msf)
 	SUB_Q_CHANNEL_DATA sub;
 	long size;
 	int pos=0;
-	uint32_t cdpos;
         if (!cdrom_drive) return 0;
+        
 	insub.Format = IOCTL_CDROM_CURRENT_POSITION;
         ioctl_open(0);
         DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_Q_CHANNEL,&insub,sizeof(insub),&sub,sizeof(sub),&size,NULL);
         ioctl_close();
+
+        if (ioctl_cd_state == CD_PLAYING || ioctl_cd_state == CD_PAUSED)
+        {
+                uint32_t cdpos = ioctl_cd_pos;
+                int track = get_track_nr(cdpos);
+                uint32_t track_address = toc.TrackData[track].Address[3] +
+                                         (toc.TrackData[track].Address[2] * 75) +
+                                         (toc.TrackData[track].Address[1] * 75 * 60);
+
+                b[pos++] = sub.CurrentPosition.Control;
+                b[pos++] = track + 1;
+                b[pos++] = sub.CurrentPosition.IndexNumber;
+
+                if (msf)
+                {
+                        uint32_t dat = cdpos;
+                        b[pos + 3] = (uint8_t)(dat % 75); dat /= 75;
+                        b[pos + 2] = (uint8_t)(dat % 60); dat /= 60;
+                        b[pos + 1] = (uint8_t)dat;
+                        b[pos]     = 0;
+                        pos += 4;
+                        dat = cdpos - track_address;
+                        b[pos + 3] = (uint8_t)(dat % 75); dat /= 75;
+                        b[pos + 2] = (uint8_t)(dat % 60); dat /= 60;
+                        b[pos + 1] = (uint8_t)dat;
+                        b[pos]     = 0;
+                        pos += 4;
+                }
+                else
+                {
+                        b[pos++] = (cdpos >> 24) & 0xff;
+                        b[pos++] = (cdpos >> 16) & 0xff;
+                        b[pos++] = (cdpos >> 8) & 0xff;
+                        b[pos++] = cdpos & 0xff;
+                        cdpos -= track_address;
+                        b[pos++] = (cdpos >> 24) & 0xff;
+                        b[pos++] = (cdpos >> 16) & 0xff;
+                        b[pos++] = (cdpos >> 8) & 0xff;
+                        b[pos++] = cdpos & 0xff;
+                }
+
+                if (ioctl_cd_state == CD_PLAYING) return 0x11;
+                return 0x12;
+        }
+
         b[pos++]=sub.CurrentPosition.Control;
         b[pos++]=sub.CurrentPosition.TrackNumber;
         b[pos++]=sub.CurrentPosition.IndexNumber;
-/*        pclog("Read subchannel %02X %02X %02X %02X%02X%02X%02X %02X%02X%02X%02X\n",sub.CurrentPosition.Control,sub.CurrentPosition.TrackNumber,sub.CurrentPosition.IndexNumber,
-                sub.CurrentPosition.AbsoluteAddress[0],sub.CurrentPosition.AbsoluteAddress[1],sub.CurrentPosition.AbsoluteAddress[2],sub.CurrentPosition.AbsoluteAddress[3],
-                sub.CurrentPosition.TrackRelativeAddress[0],sub.CurrentPosition.TrackRelativeAddress[1],sub.CurrentPosition.TrackRelativeAddress[2],sub.CurrentPosition.TrackRelativeAddress[3]);*/
-        cdpos = ioctl_cd_pos;                
+        
         if (msf)
         {
-                b[pos++] = (uint8_t)(cdpos % 75); cdpos /= 75;
-                b[pos++] = (uint8_t)(cdpos % 60); cdpos /= 60;
-                b[pos++] = (uint8_t)cdpos;
-                b[pos++] = 0;
-                b[pos++] = (uint8_t)(cdpos % 75); cdpos /= 75;
-                b[pos++] = (uint8_t)(cdpos % 60); cdpos /= 60;
-                b[pos++] = (uint8_t)cdpos;
-                b[pos++] = 0;
-
-
-//                for (c=0;c<4;c++) b[pos++]=sub.CurrentPosition.AbsoluteAddress[c];
-//                for (c=0;c<4;c++) b[pos++]=sub.CurrentPosition.TrackRelativeAddress[c];
+                int c;
+                for (c = 0; c < 4; c++)
+                        b[pos++] = sub.CurrentPosition.AbsoluteAddress[c];
+                for (c = 0; c < 4; c++)
+                        b[pos++] = sub.CurrentPosition.TrackRelativeAddress[c];
         }
         else
         {
-                b[pos++] = cdpos & 0xff;
-                b[pos++] = (cdpos >> 8) & 0xff;
-                b[pos++] = (cdpos >> 16) & 0xff;
-                b[pos++] = (cdpos >> 24) & 0xff;
-                b[pos++] = cdpos & 0xff;
-                b[pos++] = (cdpos >> 8) & 0xff;
-                b[pos++] = (cdpos >> 16) & 0xff;
-                b[pos++] = (cdpos >> 24) & 0xff;
-/*                temp=MSFtoLBA(sub.CurrentPosition.AbsoluteAddress[1],sub.CurrentPosition.AbsoluteAddress[2],sub.CurrentPosition.AbsoluteAddress[3]);
-                b[pos++]=temp>>24;
-                b[pos++]=temp>>16;
-                b[pos++]=temp>>8;
-                b[pos++]=temp;
-                temp=MSFtoLBA(sub.CurrentPosition.TrackRelativeAddress[1],sub.CurrentPosition.TrackRelativeAddress[2],sub.CurrentPosition.TrackRelativeAddress[3]);
-                b[pos++]=temp>>24;
-                b[pos++]=temp>>16;
-                b[pos++]=temp>>8;
-                b[pos++]=temp;*/
+                uint32_t temp = MSFtoLBA(sub.CurrentPosition.AbsoluteAddress[1], sub.CurrentPosition.AbsoluteAddress[2], sub.CurrentPosition.AbsoluteAddress[3]);
+                b[pos++] = temp >> 24;
+                b[pos++] = temp >> 16;
+                b[pos++] = temp >> 8;
+                b[pos++] = temp;
+                temp = MSFtoLBA(sub.CurrentPosition.TrackRelativeAddress[1], sub.CurrentPosition.TrackRelativeAddress[2], sub.CurrentPosition.TrackRelativeAddress[3]);
+                b[pos++] = temp >> 24;
+                b[pos++] = temp >> 16;
+                b[pos++] = temp >> 8;
+                b[pos++] = temp;
         }
-        if (ioctl_cd_state == CD_PLAYING) return 0x11;
-        if (ioctl_cd_state == CD_PAUSED)  return 0x12;
+
         return 0x13;
-//        return sub.CurrentPosition.Header.AudioStatus;
 }
 
 static void ioctl_eject(void)
