@@ -86,6 +86,8 @@ static inline uint8_t fastreadb(uint32_t a)
         if ((a >> 12) == pccache) 
                 return *((uint8_t *)&pccache2[a]);
         pccache2 = getpccache(a);
+        if (abrt)
+                return;
         pccache = a >> 12;
         return *((uint8_t *)&pccache2[a]);
 }
@@ -101,6 +103,8 @@ static inline uint16_t fastreadw(uint32_t a)
         }
         if ((a>>12)==pccache) return *((uint16_t *)&pccache2[a]);
         pccache2=getpccache(a);
+        if (abrt)
+                return;
         pccache=a>>12;
         return *((uint16_t *)&pccache2[a]);
 }

@@ -645,6 +645,7 @@ void writeidel(int ide_board, uint32_t val)
 void writeide(int ide_board, uint16_t addr, uint8_t val)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
+        IDE *ide_other = &ide_drives[cur_ide[ide_board] ^ 1];
 #ifndef RPCEMU_IDE
 /*        if (ide_board && (cr0&1) && !(eflags&VM_FLAG))
         {
@@ -671,27 +672,35 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 return;
 
         case 0x1F1: /* Features */
-                ide->cylprecomp=val;
+                ide->cylprecomp = val;
+                ide_other->cylprecomp = val;
                 return;
 
         case 0x1F2: /* Sector count */
-                ide->secount=val;
+                ide->secount = val;
+                ide_other->secount = val;
                 return;
 
         case 0x1F3: /* Sector */
-                ide->sector=val;
-                ide->lba_addr=(ide->lba_addr&0xFFFFF00)|val;
+                ide->sector = val;
+                ide->lba_addr = (ide->lba_addr & 0xFFFFF00) | val;
+                ide_other->sector = val;
+                ide_other->lba_addr = (ide_other->lba_addr & 0xFFFFF00) | val;
                 return;
 
         case 0x1F4: /* Cylinder low */
-                ide->cylinder=(ide->cylinder&0xFF00)|val;
-                ide->lba_addr=(ide->lba_addr&0xFFF00FF)|(val<<8);
+                ide->cylinder = (ide->cylinder & 0xFF00) | val;
+                ide->lba_addr = (ide->lba_addr & 0xFFF00FF) | (val << 8);
+                ide_other->cylinder = (ide_other->cylinder&0xFF00) | val;
+                ide_other->lba_addr = (ide_other->lba_addr&0xFFF00FF) | (val << 8);
 //                pclog("Write cylinder low %02X\n",val);
                 return;
 
         case 0x1F5: /* Cylinder high */
-                ide->cylinder=(ide->cylinder&0xFF)|(val<<8);
-                ide->lba_addr=(ide->lba_addr&0xF00FFFF)|(val<<16);
+                ide->cylinder = (ide->cylinder & 0xFF) | (val << 8);
+                ide->lba_addr = (ide->lba_addr & 0xF00FFFF) | (val << 16);
+                ide_other->cylinder = (ide_other->cylinder & 0xFF) | (val << 8);
+                ide_other->lba_addr = (ide_other->lba_addr & 0xF00FFFF) | (val << 16);
                 return;
 
         case 0x1F6: /* Drive/Head */
@@ -720,11 +729,14 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         ide = &ide_drives[cur_ide[ide_board]];
                 }
                                 
-                ide->head=val&0xF;
-                ide->lba=val&0x40;
+                ide->head = val & 0xF;
+                ide->lba = val & 0x40;
+                ide_other->head = val & 0xF;
+                ide_other->lba = val & 0x40;
                 
-                ide->lba_addr=(ide->lba_addr&0x0FFFFFF)|((val&0xF)<<24);
-                
+                ide->lba_addr = (ide->lba_addr & 0x0FFFFFF) | ((val & 0xF) << 24);
+                ide_other->lba_addr = (ide_other->lba_addr & 0x0FFFFFF)|((val & 0xF) << 24);
+                                
                 ide_irq_update(ide);
                 return;
 

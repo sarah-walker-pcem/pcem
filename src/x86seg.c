@@ -1996,7 +1996,7 @@ void pmodeiret(int is32)
 //                pclog("POP\n");
                 newpc=POPL();
                 seg=POPL();
-                tempflags=POPL(); if (abrt) return;
+                tempflags=POPL(); if (abrt) { ESP = oldsp; return; }
 //                if (output) pclog("IRETD pop %08X %08X %08X\n",newpc,seg,tempflags);
                 if (is386 && ((tempflags>>16)&VM_FLAG))
                 {
@@ -2007,7 +2007,7 @@ void pmodeiret(int is32)
                         segs[0]=POPL();
                         segs[1]=POPL();
                         segs[2]=POPL();
-                        segs[3]=POPL(); if (abrt) return;
+                        segs[3]=POPL(); if (abrt) { ESP = oldsp; return; }
 //                        pclog("Pop stack %04X:%04X\n",newss,newsp);
                         eflags=tempflags>>16;
                         loadseg(segs[0],&_es);
@@ -2043,13 +2043,14 @@ void pmodeiret(int is32)
         {
                 newpc=POPW();
                 seg=POPW();
-                tempflags=POPW(); if (abrt) return;
+                tempflags=POPW(); if (abrt) { ESP = oldsp; return; }
         }
 //        if (!is386) tempflags&=0xFFF;
 //        pclog("Returned to %04X:%08X %04X %04X %i\n",seg,newpc,flags,tempflags, ins);
         if (!(seg&~3))
         {
                 pclog("IRET CS=0\n");
+                ESP = oldsp;
 //                dumpregs();
 //                exit(-1);
                 x86gpf(NULL,0);
@@ -2063,6 +2064,7 @@ void pmodeiret(int is32)
                 if (addr>=ldt.limit)
                 {
                         pclog("Bigger than LDT limit %04X %04X IRET\n",seg,gdt.limit);
+                        ESP = oldsp;
                         x86gpf(NULL,seg&~3);
                         return;
                 }
@@ -2073,6 +2075,7 @@ void pmodeiret(int is32)
                 if (addr>=gdt.limit)
                 {
                         pclog("Bigger than GDT limit %04X %04X IRET\n",seg,gdt.limit);
+                        ESP = oldsp;
                         x86gpf(NULL,seg&~3);
                         return;
                 }
@@ -2081,6 +2084,7 @@ void pmodeiret(int is32)
         if ((seg&3) < CPL)
         {
                 pclog("IRET to lower level\n");
+                ESP = oldsp;
                 x86gpf(NULL,seg&~3);
                 return;
         }
@@ -2088,7 +2092,7 @@ void pmodeiret(int is32)
         segdat[0]=readmemw(0,addr);
         segdat[1]=readmemw(0,addr+2);
         segdat[2]=readmemw(0,addr+4);
-        segdat[3]=readmemw(0,addr+6); cpl_override=0; if (abrt) { ESP=oldsp; return; }
+        segdat[3]=readmemw(0,addr+6); cpl_override=0; if (abrt) { ESP = oldsp; return; }
 //        pclog("Seg type %04X %04X\n",segdat[2]&0x1F00,segdat[2]);
         
         switch (segdat[2]&0x1F00)
@@ -2097,6 +2101,7 @@ void pmodeiret(int is32)
                 if ((seg&3) != DPL)
                 {
                         pclog("IRET NC DPL  %04X   %04X %04X %04X %04X\n", seg, segdat[0], segdat[1], segdat[2], segdat[3]);
+                        ESP = oldsp;
 //                        dumpregs();
 //                        exit(-1);
                         x86gpf(NULL,seg&~3);
@@ -2107,12 +2112,14 @@ void pmodeiret(int is32)
                 if ((seg&3) < DPL)
                 {
                         pclog("IRET C DPL\n");
+                        ESP = oldsp;
                         x86gpf(NULL,seg&~3);
                         return;
                 }
                 break;
                 default:
                 pclog("IRET CS != code seg\n");
+                ESP = oldsp;
                 x86gpf(NULL,seg&~3);
 //                dumpregs();
 //                exit(-1);
@@ -2121,7 +2128,7 @@ void pmodeiret(int is32)
         if (!(segdat[2]&0x8000))
         {
                 pclog("IRET CS not present %i  %04X %04X %04X\n",ins, segdat[0], segdat[1], segdat[2]);
-                ESP=oldsp;
+                ESP = oldsp;
                 x86np("IRET CS not present\n", seg & 0xfffc);
                 return;
         }
@@ -2152,12 +2159,12 @@ void pmodeiret(int is32)
                 if (is32)
                 {
                         newsp=POPL();
-                        newss=POPL(); if (abrt) return;
+                        newss=POPL(); if (abrt) { ESP = oldsp; return; }
                 }
                 else
                 {
                         newsp=POPW();
-                        newss=POPW(); if (abrt) return;
+                        newss=POPW(); if (abrt) { ESP = oldsp; return; }
                 }
                 
                 if (output) pclog("IRET load stack %04X:%04X\n",newss,newsp);
@@ -2165,6 +2172,7 @@ void pmodeiret(int is32)
                 if (!(newss&~3))
                 {
                         pclog("IRET loading null SS\n");
+                        ESP = oldsp;
                         x86gpf(NULL,newss&~3);
                         return;
                 }
@@ -2174,6 +2182,7 @@ void pmodeiret(int is32)
                         if (addr>=ldt.limit)
                         {
                                 pclog("Bigger than LDT limit %04X %04X PMODEIRET SS\n",newss,gdt.limit);
+                                ESP = oldsp;
                                 x86gpf(NULL,newss&~3);
                                 return;
                         }
@@ -2184,6 +2193,7 @@ void pmodeiret(int is32)
                         if (addr>=gdt.limit)
                         {
                                 pclog("Bigger than GDT limit %04X %04X PMODEIRET\n",newss,gdt.limit);
+                                ESP = oldsp;
                                 x86gpf(NULL,newss&~3);
                                 return;
                         }
@@ -2193,12 +2203,13 @@ void pmodeiret(int is32)
                 segdat2[0]=readmemw(0,addr);
                 segdat2[1]=readmemw(0,addr+2);
                 segdat2[2]=readmemw(0,addr+4);
-                segdat2[3]=readmemw(0,addr+6); cpl_override=0; if (abrt) { ESP=oldsp; return; }
+                segdat2[3]=readmemw(0,addr+6); cpl_override=0; if (abrt) { ESP = oldsp; return; }
 //                pclog("IRET SS sd2 %04X\n",segdat2[2]);
 //                if (((newss & 3) != DPL) || (DPL2 != DPL))
                 if ((newss & 3) != (seg & 3))
                 {
                         pclog("IRET loading SS with wrong permissions  %04X %04X\n", newss, seg);
+                        ESP = oldsp;
 //                        dumpregs();
 //                        exit(-1);
                         x86gpf(NULL,newss&~3);
@@ -2207,19 +2218,21 @@ void pmodeiret(int is32)
                 if ((segdat2[2]&0x1A00)!=0x1200)
                 {
                         pclog("IRET loading SS wrong type\n");
+                        ESP = oldsp;
                         x86gpf(NULL,newss&~3);
                         return;
                 }
                 if (DPL2 != (seg & 3))
                 {
                         pclog("IRET loading SS with wrong permissions2 %i %i  %04X %04X\n", DPL2, seg & 3, newss, seg);
-                        ESP=oldsp;
+                        ESP = oldsp;
                         x86gpf(NULL,newss&~3);
                         return;
                 }
                 if (!(segdat2[2]&0x8000))
                 {
                         pclog("IRET loading SS not present\n");
+                        ESP = oldsp;
                         x86np("IRET loading SS not present\n", newss & 0xfffc);
                         return;
                 }
