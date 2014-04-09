@@ -18,6 +18,8 @@ typedef struct
         void (*rcr_callback)(void *p);
         uint8_t fifo[256];
         int fifo_read, fifo_write;
+        
+        int recieve_delay;
 } SERIAL;
 
 extern SERIAL serial1, serial2;

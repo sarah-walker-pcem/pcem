@@ -182,11 +182,7 @@ uint8_t serial_read(uint16_t addr, void *p)
                 serial_update_ints(serial);
                 temp = serial_read_fifo(serial);
                 if (serial->fifo_read != serial->fifo_write)
-                {
-                        serial->lsr |= 1;
-                        serial->int_status |= SERIAL_INT_RECEIVE;
-                        serial_update_ints(serial);
-                }
+                        serial->recieve_delay = 1000 * TIMER_USEC;
                 break;
                 case 1:
                 if (serial->lcr & 0x80 && !AMSTRADIO)
@@ -230,12 +226,28 @@ uint8_t serial_read(uint16_t addr, void *p)
         return temp;
 }
 
+void serial_recieve_callback(void *p)
+{
+        SERIAL *serial = (SERIAL *)p;
+        
+        serial->recieve_delay = 0;
+        
+        if (serial->fifo_read != serial->fifo_write)
+        {
+                serial->lsr |= 1;
+                serial->int_status |= SERIAL_INT_RECEIVE;
+                serial_update_ints(serial);
+        }
+}
+
 /*Tandy might need COM1 at 2f8*/
 void serial1_init(uint16_t addr, int irq)
 {
+        memset(&serial1, 0, sizeof(serial1));
         io_sethandler(addr, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
         serial1.irq = irq;
         serial1.rcr_callback = NULL;
+        timer_add(serial_recieve_callback, &serial1.recieve_delay, &serial1.recieve_delay, &serial1);
 }
 void serial1_remove()
 {
@@ -247,9 +259,11 @@ void serial1_remove()
 
 void serial2_init(uint16_t addr, int irq)
 {
+        memset(&serial2, 0, sizeof(serial2));
         io_sethandler(addr, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
         serial2.irq = irq;
         serial2.rcr_callback = NULL;
+        timer_add(serial_recieve_callback, &serial2.recieve_delay, &serial2.recieve_delay, &serial2);
 }
 void serial2_remove()
 {
