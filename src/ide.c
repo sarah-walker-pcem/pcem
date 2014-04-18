@@ -723,6 +723,8 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                                 ide->head=0;
                                 ide->cylinder=0;
                                 ide->reset = 0;
+                                idecallback[ide_board] = 0;
+                                timer_update_outstanding();
                                 return;
                         }
 
