@@ -539,6 +539,7 @@ static int opBOUND_w_a16(uint32_t fetchdat)
         int16_t low, high;
         
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         low = geteaw();
         high = readmemw(easeg, eaaddr + 2);     if (abrt) return 0;
         
@@ -555,6 +556,7 @@ static int opBOUND_w_a32(uint32_t fetchdat)
         int16_t low, high;
         
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         low = geteaw();
         high = readmemw(easeg, eaaddr + 2);     if (abrt) return 0;
         
@@ -572,6 +574,7 @@ static int opBOUND_l_a16(uint32_t fetchdat)
         int32_t low, high;
         
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         low = geteal();
         high = readmeml(easeg, eaaddr + 4);     if (abrt) return 0;
         
@@ -588,6 +591,7 @@ static int opBOUND_l_a32(uint32_t fetchdat)
         int32_t low, high;
         
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         low = geteal();
         high = readmeml(easeg, eaaddr + 4);     if (abrt) return 0;
         

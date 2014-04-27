@@ -219,6 +219,7 @@ static int opLDS_w_a16(uint32_t fetchdat)
         uint16_t addr, seg;
 
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
@@ -233,6 +234,7 @@ static int opLDS_w_a32(uint32_t fetchdat)
         uint16_t addr, seg;
 
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
@@ -248,6 +250,7 @@ static int opLDS_l_a16(uint32_t fetchdat)
         uint16_t seg;
 
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
@@ -263,6 +266,7 @@ static int opLDS_l_a32(uint32_t fetchdat)
         uint16_t seg;
 
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
@@ -278,6 +282,7 @@ static int opLSS_w_a16(uint32_t fetchdat)
         uint16_t addr, seg;
 
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
@@ -292,6 +297,7 @@ static int opLSS_w_a32(uint32_t fetchdat)
         uint16_t addr, seg;
 
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
@@ -307,6 +313,7 @@ static int opLSS_l_a16(uint32_t fetchdat)
         uint16_t seg;
 
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
@@ -322,6 +329,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
         uint16_t seg;
 
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
@@ -338,6 +346,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 uint16_t addr, seg;                                             \
                                                                                 \
                 fetch_ea_16(fetchdat);                                          \
+                ILLEGAL_ON(mod == 3);                                           \
                 addr = readmemw(easeg, eaaddr);                                 \
                 seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;     \
                 loadseg(seg, &sel);                     if (abrt) return 0;     \
@@ -352,6 +361,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 uint16_t addr, seg;                                             \
                                                                                 \
                 fetch_ea_32(fetchdat);                                          \
+                ILLEGAL_ON(mod == 3);                                           \
                 addr = readmemw(easeg, eaaddr);                                 \
                 seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;     \
                 loadseg(seg, &sel);                     if (abrt) return 0;     \
@@ -367,6 +377,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 uint16_t seg;                                                   \
                                                                                 \
                 fetch_ea_16(fetchdat);                                          \
+                ILLEGAL_ON(mod == 3);                                           \
                 addr = readmeml(easeg, eaaddr);                                 \
                 seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;     \
                 loadseg(seg, &sel);                     if (abrt) return 0;     \
@@ -382,6 +393,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 uint16_t seg;                                                   \
                                                                                 \
                 fetch_ea_32(fetchdat);                                          \
+                ILLEGAL_ON(mod == 3);                                           \
                 addr = readmeml(easeg, eaaddr);                                 \
                 seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;     \
                 loadseg(seg, &sel);                     if (abrt) return 0;     \

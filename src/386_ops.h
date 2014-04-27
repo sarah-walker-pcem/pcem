@@ -3,6 +3,17 @@
 OpFn *x86_opcodes;
 OpFn *x86_opcodes_0f;
 
+#define ILLEGAL_ON(cond)                \
+        do                              \
+        {                               \
+                if ((cond))             \
+                {                       \
+                        pc = oldpc;     \
+                        x86illegal();   \
+                        return 0;       \
+                }                       \
+        } while (0)
+
 static inline void PUSH_W(uint16_t val)
 {
         if (stack32)

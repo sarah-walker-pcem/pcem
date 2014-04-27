@@ -306,6 +306,7 @@ static int opMOV_a32_EAX(uint32_t fetchdat)
 static int opLEA_w_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         regs[reg].w = eaaddr;
         cycles -= timing_rr;
         return 0;
@@ -313,6 +314,7 @@ static int opLEA_w_a16(uint32_t fetchdat)
 static int opLEA_w_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         regs[reg].w = eaaddr;
         cycles -= timing_rr;
         return 0;
@@ -321,6 +323,7 @@ static int opLEA_w_a32(uint32_t fetchdat)
 static int opLEA_l_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON(mod == 3);
         regs[reg].l = eaaddr & 0xffff;
         cycles -= timing_rr;
         return 0;
@@ -328,6 +331,7 @@ static int opLEA_l_a16(uint32_t fetchdat)
 static int opLEA_l_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON(mod == 3);
         regs[reg].l = eaaddr;
         cycles -= timing_rr;
         return 0;
