@@ -56,7 +56,7 @@ static int oldb = 0;
 void amstrad_mouse_poll(int x, int y, int b)
 {
         mousex += x;
-        mousey += y;
+        mousey -= y;
 
         if ((b & 1) && !(oldb & 1))
            keyboard_send(0x7e);
