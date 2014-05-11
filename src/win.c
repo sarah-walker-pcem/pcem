@@ -600,7 +600,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
         int c, d;
         int rom,gfx,mem,fpu;
         int temp_cpu, temp_cpu_m, temp_model;
-        int temp_GAMEBLASTER, temp_GUS, temp_sound_card_current;
+        int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_sound_card_current;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
         {
@@ -697,6 +697,9 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
 
                 h=GetDlgItem(hdlg, IDC_CHECKGUS);
                 SendMessage(h, BM_SETCHECK, GUS, 0);
+
+                h=GetDlgItem(hdlg, IDC_CHECKSSI);
+                SendMessage(h, BM_SETCHECK, SSI2001, 0);
                 
                 h=GetDlgItem(hdlg, IDC_CHECK2);
                 SendMessage(h, BM_SETCHECK, slowega, 0);
@@ -761,10 +764,13 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                         h = GetDlgItem(hdlg, IDC_CHECKGUS);
                         temp_GUS = SendMessage(h, BM_GETCHECK, 0, 0);
 
+                        h = GetDlgItem(hdlg, IDC_CHECKSSI);
+                        temp_SSI2001 = SendMessage(h, BM_GETCHECK, 0, 0);
+
                         h = GetDlgItem(hdlg, IDC_COMBOSND);
                         temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
 
-                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_sound_card_current != sound_card_current)
+                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -776,6 +782,7 @@ BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPara
                                         cpu = temp_cpu;
                                         GAMEBLASTER = temp_GAMEBLASTER;
                                         GUS = temp_GUS;
+                                        SSI2001 = temp_SSI2001;
                                         sound_card_current = temp_sound_card_current;
                                         
                                         mem_resize();

@@ -1,4 +1,4 @@
-VPATH = . dosbox
+VPATH = . dosbox resid-fp
 CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
@@ -10,8 +10,8 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	mouse.o mouse_ps2.o mouse_serial.o neat.o nvr.o olivetti_m24.o \
      opti.o pc.o pci.o pic.o piix.o pit.o ppi.o rom.o serial.o sis496.o sound.o sound_ad1848.o sound_adlib.o \
 	sound_adlibgold.o sound_cms.o sound_dbopl.o sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o \
-	sound_pas16.o sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o \
-	sound_wss.o soundopenal.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o \
+	sound_pas16.o sound_resid.o sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o \
+	sound_ssi2001.o sound_wss.o soundopenal.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o \
 	vid_ati_mach64.o vid_ati18800.o vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o \
 	vid_cl5429.o vid_ega.o vid_et4000.o vid_et4000w32.o vid_et4000w32i.o \
 	vid_hercules.o vid_icd2061.o vid_ics2595.o vid_mda.o vid_olivetti_m24.o \
@@ -21,12 +21,13 @@ OBJ = 386.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
 	vid_voodoo.o video.o wd76c10.o win.o win-d3d.o win-d3d-fs.o win-ddraw.o win-ddraw-fs.o win-keyboard.o win-midi.o \
 	win-mouse.o win-timer.o win-video.o x86seg.o x87.o xtide.o pc.res
 FMOBJ = dbopl.o
+SIDOBJ = convolve.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 
-LIBS = -mwindows -lwinmm -lalut -lopenal32 -lddraw -ldinput -ldxguid -ld3d9
+LIBS = -mwindows -lwinmm -lalut -lopenal32 -lddraw -ldinput -ldxguid -ld3d9 -lstdc++
 
-PCem.exe: $(OBJ) $(FMOBJ)
-	$(CC) $(OBJ) $(FMOBJ) -o "PCem.exe" $(LIBS)
+PCem.exe: $(OBJ) $(FMOBJ) $(SIDOBJ)
+	$(CC) $(OBJ) $(FMOBJ) $(SIDOBJ) -o "PCem.exe" $(LIBS)
 
 all : PCem.exe
 

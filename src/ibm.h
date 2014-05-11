@@ -282,7 +282,7 @@ int driveempty[2];
 
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
 
-int GAMEBLASTER, GUS;
+int GAMEBLASTER, GUS, SSI2001;
 
 enum
 {

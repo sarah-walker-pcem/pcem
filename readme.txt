@@ -441,6 +441,10 @@ Windows Sound System
 from compatible boards with additional components (eg Turtle Beach Monte Carlo)
 
 
+Innovation SSI-2001
+SID6581. Emulated using resid-fp. Board is fixed to port 280.
+
+
 Other stuff emulated :
 
 Serial mouse

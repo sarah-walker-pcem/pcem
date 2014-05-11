@@ -26,6 +26,7 @@
 #include "sound_cms.h"
 #include "sound_opl.h"
 #include "sound_sb.h"
+#include "sound_ssi2001.h"
 #include "timer.h"
 #include "vid_voodoo.h"
 #include "video.h"
@@ -230,7 +231,9 @@ void initpc()
                 device_add(&gus_device);
         if (GAMEBLASTER)
                 device_add(&cms_device);
-       
+        if (SSI2001)
+                device_add(&ssi2001_device);
+               
         pc_reset();
         
         pit_reset();        
@@ -271,6 +274,8 @@ void resetpchard()
                 device_add(&gus_device);
         if (GAMEBLASTER)
                 device_add(&cms_device);
+        if (SSI2001)
+                device_add(&ssi2001_device);
         
         pc_reset();
         
@@ -434,6 +439,7 @@ void loadconfig()
         set_config_file(s);
         GAMEBLASTER = get_config_int(NULL, "gameblaster", 0);
         GUS = get_config_int(NULL, "gus", 0);
+        SSI2001 = get_config_int(NULL, "ssi2001", 0);
         
         model = get_config_int(NULL, "model", 14);
 
@@ -488,6 +494,7 @@ void saveconfig()
         config_new();
         set_config_int(NULL, "gameblaster", GAMEBLASTER);
         set_config_int(NULL, "gus", GUS);
+        set_config_int(NULL, "ssi2001", SSI2001);
         
         set_config_int(NULL, "model", model);
         set_config_int(NULL, "cpu_manufacturer", cpu_manufacturer);
