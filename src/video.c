@@ -54,6 +54,7 @@ static VIDEO_CARD video_cards[] =
         {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device, GFX_BAHAMAS64},
         {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,       GFX_N9_9FX},
         {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,     GFX_VIRGE},
+        {"S3 ViRGE/DX",                            &s3_virge_375_device, GFX_VIRGEDX},
         {"Trident TGUI9440",                       &tgui9440_device,     GFX_TGUI9440},
         {"VGA",                                    &vga_device,          GFX_VGA},
         {"ATI VGA Edge-16 (ATI-18800)",            &ati18800_device,     GFX_VGAEDGE16},

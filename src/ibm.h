@@ -343,6 +343,7 @@ int romset;
 #define GFX_OTI067     15 /*Oak OTI-067*/
 #define GFX_MACH64GX   16 /*ATI Graphics Pro Turbo (Mach64)*/
 #define GFX_CL_GD5429  17 /*Cirrus Logic CL-GD5429*/
+#define GFX_VIRGEDX    18 /*S3 Virge/DX*/
 
 int gfxcard;
 
