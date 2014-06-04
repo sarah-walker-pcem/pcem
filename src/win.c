@@ -31,6 +31,8 @@
 #include "win-d3d-fs.h"
 //#include "win-opengl.h"
 
+uint64_t timer_freq;
+
 static struct
 {
         void (*init)(HWND h);
@@ -264,6 +266,13 @@ void set_window_title(char *s)
         SetWindowText(ghwnd, s);
 }
 
+uint64_t timer_read()
+{
+        LARGE_INTEGER qpc_time;
+        QueryPerformanceCounter(&qpc_time);
+        return qpc_time.QuadPart;
+}
+
 int WINAPI WinMain (HINSTANCE hThisInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR lpszArgument,
@@ -274,6 +283,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         MSG messages;            /* Here messages to the application are saved */
         WNDCLASSEX wincl;        /* Data structure for the windowclass */
         int c, d;
+        LARGE_INTEGER qpc_freq;
 
         hinstance=hThisInstance;
         /* The Window structure */
@@ -436,6 +446,10 @@ InitializeCriticalSection(&cs);
         install_int_ex(vsyncint,BPS_TO_TIMER(100));
         
         updatewindowsize(640, 480);
+
+        QueryPerformanceFrequency(&qpc_freq);
+        timer_freq = qpc_freq.QuadPart;
+
 //        focus=1;
 //        setrefresh(100);
 

@@ -455,3 +455,6 @@ extern int frame;
 
 
 uint8_t *vramp;
+
+uint64_t timer_read();
+extern uint64_t timer_freq;

@@ -11,6 +11,10 @@
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 
+static uint64_t virge_time = 0;
+static uint64_t status_time = 0;
+static int reg_writes = 0;
+
 typedef struct virge_t
 {
         mem_mapping_t   linear_mapping;
@@ -559,6 +563,7 @@ static void s3_virge_updatemapping(virge_t *virge)
 
 static uint8_t s3_virge_mmio_read(uint32_t addr, void *p)
 {
+        reg_writes++;
 //        pclog("New MMIO readb %08X\n", addr);
         switch (addr & 0xffff)
         {
@@ -580,6 +585,7 @@ static uint8_t s3_virge_mmio_read(uint32_t addr, void *p)
 }
 static uint16_t s3_virge_mmio_read_w(uint32_t addr, void *p)
 {
+        reg_writes++;
 //        pclog("New MMIO readw %08X\n", addr);
         switch (addr & 0xfffe)
         {
@@ -592,6 +598,7 @@ static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p)
 {
         virge_t *virge = (virge_t *)p;
         uint32_t ret = 0xffffffff;
+        reg_writes++;
 //        pclog("New MMIO readl %08X %04X(%08X):%08X  ", addr, CS, cs, pc);
         switch (addr & 0xfffc)
         {
@@ -723,7 +730,7 @@ static void s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p)
         svga_t *svga = &virge->svga;
         
 //        pclog("New MMIO writeb %08X %02X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
-       
+        reg_writes++;       
         if ((addr & 0xfffc) < 0x8000)
                 s3_virge_bitblt(virge, 8, val);
         else switch (addr & 0xffff)
@@ -749,6 +756,7 @@ static void s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p)
 static void s3_virge_mmio_write_w(uint32_t addr, uint16_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
+        reg_writes++;
 //        pclog("New MMIO writew %08X %04X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
         if ((addr & 0xfffc) < 0x8000)
         {
@@ -769,6 +777,7 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
         svga_t *svga = &virge->svga;
+        reg_writes++;
 //        if ((addr & 0xfffc) >= 0x8000)
 //                pclog("New MMIO writel %08X %08X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
 
@@ -1533,6 +1542,11 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
 
 #define RGB24(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
 
+typedef struct rgba_t
+{
+        int r, g, b, a;
+} rgba_t;
+
 typedef struct s3d_state_t
 {
         int32_t r, g, b, a, u, v, d, w;
@@ -1552,6 +1566,8 @@ typedef struct s3d_state_t
         
         int32_t x1, x2;
         int y;
+        
+        rgba_t dest_rgba;
 } s3d_state_t;
 
 typedef struct s3d_texture_state_t
@@ -1562,62 +1578,96 @@ typedef struct s3d_texture_state_t
         int32_t u, v;
 } s3d_texture_state_t;
 
-static void (*tex_read)(s3d_state_t *state, s3d_texture_state_t *texture_state, int *r_out, int *g_out, int *b_out, int *a_out);
-static void (*tex_sample)(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out);
-static void (*dest_pixel)(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out);
+static void (*tex_read)(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out);
+static void (*tex_sample)(s3d_state_t *state);
+static void (*dest_pixel)(s3d_state_t *state);
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static int _x, _y;
 
-static void tex_ARGB1555(s3d_state_t *state, s3d_texture_state_t *texture_state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_ARGB1555(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
 {
         int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
                      (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
         uint16_t val = state->texture[texture_state->level][offset];
 
-        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000 && !(state->cmd_set & CMD_SET_TWE))
-                val = state->tex_bdr_clr;
-
-        *r_out = ((val & 0x7c00) >> 7) | ((val & 0x7000) >> 12);
-        *g_out = ((val & 0x03e0) >> 2) | ((val & 0x0380) >> 7);
-        *b_out = ((val & 0x001f) << 3) | ((val & 0x001c) >> 2);
-        *a_out = (val & 0x8000) ? 0xff : 0;
+        out->r = ((val & 0x7c00) >> 7) | ((val & 0x7000) >> 12);
+        out->g = ((val & 0x03e0) >> 2) | ((val & 0x0380) >> 7);
+        out->b = ((val & 0x001f) << 3) | ((val & 0x001c) >> 2);
+        out->a = (val & 0x8000) ? 0xff : 0;
 }
 
-static void tex_ARGB4444(s3d_state_t *state, s3d_texture_state_t *texture_state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_ARGB1555_nowrap(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
 {
         int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
                      (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
         uint16_t val = state->texture[texture_state->level][offset];
 
-        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000 && !(state->cmd_set & CMD_SET_TWE))
+        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000)
                 val = state->tex_bdr_clr;
 
-        *r_out = ((val & 0x0f00) >> 4) | ((val & 0x0f00) >> 8);
-        *g_out = (val & 0x00f0) | ((val & 0x00f0) >> 4);
-        *b_out = ((val & 0x000f) << 4) | (val & 0x000f);
-        *a_out = ((val & 0xf000) >> 8) | ((val & 0xf000) >> 12);
-
+        out->r = ((val & 0x7c00) >> 7) | ((val & 0x7000) >> 12);
+        out->g = ((val & 0x03e0) >> 2) | ((val & 0x0380) >> 7);
+        out->b = ((val & 0x001f) << 3) | ((val & 0x001c) >> 2);
+        out->a = (val & 0x8000) ? 0xff : 0;
 }
 
-static void tex_ARGB8888(s3d_state_t *state, s3d_texture_state_t *texture_state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_ARGB4444(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
+{
+        int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
+                     (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
+        uint16_t val = state->texture[texture_state->level][offset];
+
+        out->r = ((val & 0x0f00) >> 4) | ((val & 0x0f00) >> 8);
+        out->g = (val & 0x00f0) | ((val & 0x00f0) >> 4);
+        out->b = ((val & 0x000f) << 4) | (val & 0x000f);
+        out->a = ((val & 0xf000) >> 8) | ((val & 0xf000) >> 12);
+}
+
+static void tex_ARGB4444_nowrap(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
+{
+        int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
+                     (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
+        uint16_t val = state->texture[texture_state->level][offset];
+
+        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000)
+                val = state->tex_bdr_clr;
+
+        out->r = ((val & 0x0f00) >> 4) | ((val & 0x0f00) >> 8);
+        out->g = (val & 0x00f0) | ((val & 0x00f0) >> 4);
+        out->b = ((val & 0x000f) << 4) | (val & 0x000f);
+        out->a = ((val & 0xf000) >> 8) | ((val & 0xf000) >> 12);
+}
+
+static void tex_ARGB8888(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
 {
         int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
                      (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
         uint32_t val = ((uint32_t *)state->texture[texture_state->level])[offset];
 
-        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000 && !(state->cmd_set & CMD_SET_TWE))
+        out->r = (val >> 16) & 0xff;
+        out->g = (val >> 8)  & 0xff;
+        out->b =  val        & 0xff;
+        out->a = (val >> 24) & 0xff;
+}
+static void tex_ARGB8888_nowrap(s3d_state_t *state, s3d_texture_state_t *texture_state, rgba_t *out)
+{
+        int offset = ((texture_state->u & 0x7fc0000) >> texture_state->texture_shift) +
+                     (((texture_state->v & 0x7fc0000) >> texture_state->texture_shift) << texture_state->level);
+        uint32_t val = ((uint32_t *)state->texture[texture_state->level])[offset];
+
+        if (((texture_state->u | texture_state->v) & 0xf8000000) == 0xf8000000)
                 val = state->tex_bdr_clr;
 
-        *r_out = (val >> 16) & 0xff;
-        *g_out = (val >> 8)  & 0xff;
-        *b_out =  val        & 0xff;
-        *a_out = (val >> 24) & 0xff;
+        out->r = (val >> 16) & 0xff;
+        out->g = (val >> 8)  & 0xff;
+        out->b =  val        & 0xff;
+        out->a = (val >> 24) & 0xff;
 }
 
-static void tex_sample_normal(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_normal(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         
@@ -1626,14 +1676,14 @@ static void tex_sample_normal(s3d_state_t *state, int *r_out, int *g_out, int *b
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_normal_filter(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_normal_filter(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1643,34 +1693,34 @@ static void tex_sample_normal_filter(s3d_state_t *state, int *r_out, int *g_out,
 
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (texture_state.u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (texture_state.v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = state->u + state->tbu + tex_offset;
         texture_state.v = state->v + state->tbv;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = state->u + state->tbu + tex_offset;
         texture_state.v = state->v + state->tbv + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
         
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
-static void tex_sample_mipmap(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_mipmap(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
 
@@ -1679,14 +1729,14 @@ static void tex_sample_mipmap(s3d_state_t *state, int *r_out, int *g_out, int *b
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_mipmap_filter(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_mipmap_filter(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1696,34 +1746,34 @@ static void tex_sample_mipmap_filter(s3d_state_t *state, int *r_out, int *g_out,
         
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (texture_state.u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (texture_state.v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = state->u + state->tbu + tex_offset;
         texture_state.v = state->v + state->tbv;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = state->u + state->tbu + tex_offset;
         texture_state.v = state->v + state->tbv + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
 
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
-static void tex_sample_persp_normal(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_normal(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0;
@@ -1736,15 +1786,15 @@ static void tex_sample_persp_normal(s3d_state_t *state, int *r_out, int *g_out, 
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (12 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (12 + state->max_d)) + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_persp_normal_filter(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_normal_filter(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0, u, v;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1760,34 +1810,34 @@ static void tex_sample_persp_normal_filter(s3d_state_t *state, int *r_out, int *
         
         texture_state.u = u;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = u + tex_offset;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = u;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = u + tex_offset;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
 
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
-static void tex_sample_persp_normal_375(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_normal_375(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0;
@@ -1800,15 +1850,15 @@ static void tex_sample_persp_normal_375(s3d_state_t *state, int *r_out, int *g_o
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (8 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (8 + state->max_d)) + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_persp_normal_filter_375(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_normal_filter_375(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0, u, v;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1824,35 +1874,35 @@ static void tex_sample_persp_normal_filter_375(s3d_state_t *state, int *r_out, i
 
         texture_state.u = u;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = u + tex_offset;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = u;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = u + tex_offset;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
 
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
 
-static void tex_sample_persp_mipmap(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_mipmap(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0;
@@ -1865,15 +1915,15 @@ static void tex_sample_persp_mipmap(s3d_state_t *state, int *r_out, int *g_out, 
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (12 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (12 + state->max_d)) + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_persp_mipmap_filter(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_mipmap_filter(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0, u, v;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1889,34 +1939,34 @@ static void tex_sample_persp_mipmap_filter(s3d_state_t *state, int *r_out, int *
 
         texture_state.u = u;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = u + tex_offset;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = u;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = u + tex_offset;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
 
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
-static void tex_sample_persp_mipmap_375(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_mipmap_375(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0;
@@ -1929,15 +1979,15 @@ static void tex_sample_persp_mipmap_375(s3d_state_t *state, int *r_out, int *g_o
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (8 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (8 + state->max_d)) + state->tbv;
 
-        tex_read(state, &texture_state, r_out, g_out, b_out, a_out);
+        tex_read(state, &texture_state, &state->dest_rgba);
 }
 
-static void tex_sample_persp_mipmap_filter_375(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void tex_sample_persp_mipmap_filter_375(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
         int32_t w = 0, u, v;
         int tex_offset;
-        int r[4], g[4], b[4], a[4];
+        rgba_t tex_samples[4];
         int du, dv;
         int d[4];
 
@@ -1953,55 +2003,51 @@ static void tex_sample_persp_mipmap_filter_375(s3d_state_t *state, int *r_out, i
         
         texture_state.u = u;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[0], &g[0], &b[0], &a[0]);
+        tex_read(state, &texture_state, &tex_samples[0]);
         du = (u >> (texture_state.texture_shift - 8)) & 0xff;
         dv = (v >> (texture_state.texture_shift - 8)) & 0xff;
 
         texture_state.u = u + tex_offset;
         texture_state.v = v;
-        tex_read(state, &texture_state, &r[1], &g[1], &b[1], &a[1]);
+        tex_read(state, &texture_state, &tex_samples[1]);
 
         texture_state.u = u;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[2], &g[2], &b[2], &a[2]);
+        tex_read(state, &texture_state, &tex_samples[2]);
 
         texture_state.u = u + tex_offset;
         texture_state.v = v + tex_offset;
-        tex_read(state, &texture_state, &r[3], &g[3], &b[3], &a[3]);
+        tex_read(state, &texture_state, &tex_samples[3]);
 
         d[0] = (256 - du) * (256 - dv);
         d[1] =  du * (256 - dv);
         d[2] = (256 - du) * dv;
         d[3] = du * dv;
         
-        *r_out = (r[0] * d[0] + r[1] * d[1] + r[2] * d[2] + r[3] * d[3]) >> 16;
-        *g_out = (g[0] * d[0] + g[1] * d[1] + g[2] * d[2] + g[3] * d[3]) >> 16;
-        *b_out = (b[0] * d[0] + b[1] * d[1] + b[2] * d[2] + b[3] * d[3]) >> 16;
-        *a_out = (a[0] * d[0] + a[1] * d[1] + a[2] * d[2] + a[3] * d[3]) >> 16;
+        state->dest_rgba.r = (tex_samples[0].r * d[0] + tex_samples[1].r * d[1] + tex_samples[2].r * d[2] + tex_samples[3].r * d[3]) >> 16;
+        state->dest_rgba.g = (tex_samples[0].g * d[0] + tex_samples[1].g * d[1] + tex_samples[2].g * d[2] + tex_samples[3].g * d[3]) >> 16;
+        state->dest_rgba.b = (tex_samples[0].b * d[0] + tex_samples[1].b * d[1] + tex_samples[2].b * d[2] + tex_samples[3].b * d[3]) >> 16;
+        state->dest_rgba.a = (tex_samples[0].a * d[0] + tex_samples[1].a * d[1] + tex_samples[2].a * d[2] + tex_samples[3].a * d[3]) >> 16;
 }
 
 
-#define CLAMP_RGBA(r, g, b, a) do       \
-        {                               \
-                if ((r) < 0)            \
-                        r = 0;          \
-                if ((r) > 0xff)         \
-                        r = 0xff;       \
-                if ((g) < 0)            \
-                        g = 0;          \
-                if ((g) > 0xff)         \
-                        g = 0xff;       \
-                if ((b) < 0)            \
-                        b = 0;          \
-                if ((b) > 0xff)         \
-                        b = 0xff;       \
-                if ((a) < 0)            \
-                        a = 0;          \
-                if ((a) > 0xff)         \
-                        a = 0xff;       \
+#define CLAMP(x) do                                     \
+        {                                               \
+                if ((x) & ~0xff)                        \
+                        x = ((x) < 0) ? 0 : 0xff;       \
         }                               \
         while (0)
 
+#define CLAMP_RGBA(r, g, b, a)        \
+                if ((r) & ~0xff)                        \
+                        r = ((r) < 0) ? 0 : 0xff;       \
+                if ((g) & ~0xff)                        \
+                        g = ((g) < 0) ? 0 : 0xff;       \
+                if ((b) & ~0xff)                        \
+                        b = ((b) < 0) ? 0 : 0xff;       \
+                if ((a) & ~0xff)                        \
+                        a = ((a) < 0) ? 0 : 0xff;
+        
 #define CLAMP_RGB(r, g, b) do           \
         {                               \
                 if ((r) < 0)            \
@@ -2019,67 +2065,64 @@ static void tex_sample_persp_mipmap_filter_375(s3d_state_t *state, int *r_out, i
         }                               \
         while (0)
 
-static void dest_pixel_gouraud_shaded_triangle(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void dest_pixel_gouraud_shaded_triangle(s3d_state_t *state)
 {
-        *r_out = state->r >> 7;
-        *g_out = state->g >> 7;
-        *b_out = state->b >> 7;
-        *a_out = state->a >> 7;
-        CLAMP_RGBA(*r_out, *g_out, *b_out, *a_out);
+        state->dest_rgba.r = state->r >> 7;
+        CLAMP(state->dest_rgba.r);
+
+        state->dest_rgba.g = state->g >> 7;
+        CLAMP(state->dest_rgba.g);
+
+        state->dest_rgba.b = state->b >> 7;
+        CLAMP(state->dest_rgba.b);
+
+        state->dest_rgba.a = state->a >> 7;
+        CLAMP(state->dest_rgba.a);
 }
 
-static void dest_pixel_unlit_texture_triangle(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void dest_pixel_unlit_texture_triangle(s3d_state_t *state)
 {
-        tex_sample(state, r_out, g_out, b_out, a_out);
+        tex_sample(state);
 
         if (state->cmd_set & CMD_SET_ABC_SRC)
-                *a_out = state->a >> 7;
+                state->dest_rgba.a = state->a >> 7;
 }
 
-static void dest_pixel_lit_texture_decal(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void dest_pixel_lit_texture_decal(s3d_state_t *state)
 {
-        tex_sample(state, r_out, g_out, b_out, a_out);
+        tex_sample(state);
 
         if (state->cmd_set & CMD_SET_ABC_SRC)
-                *a_out = state->a >> 7;
+                state->dest_rgba.a = state->a >> 7;
 }
 
-static void dest_pixel_lit_texture_reflection(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void dest_pixel_lit_texture_reflection(s3d_state_t *state)
 {
-        int tex_r, tex_g, tex_b, tex_a;
-        
-        tex_sample(state, &tex_r, &tex_g, &tex_b, &tex_a);
+        tex_sample(state);
 
-        *r_out = state->r >> 7;
-        *g_out = state->g >> 7;
-        *b_out = state->b >> 7;
-        *a_out = state->a >> 7;
-        CLAMP_RGBA(*r_out, *g_out, *b_out, *a_out);
+        state->dest_rgba.r += (state->r >> 7);
+        state->dest_rgba.g += (state->g >> 7);
+        state->dest_rgba.b += (state->b >> 7);
+        if (state->cmd_set & CMD_SET_ABC_SRC)
+                state->dest_rgba.a += (state->a >> 7);
 
-        *(r_out) += tex_r;
-        *(g_out) += tex_g;
-        *(b_out) += tex_b;
-
-        CLAMP_RGB(*r_out, *g_out, *b_out);
-
-        if (!(state->cmd_set & CMD_SET_ABC_SRC))
-                *a_out = tex_a;
+        CLAMP_RGBA(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b, state->dest_rgba.a);
 }
 
-static void dest_pixel_lit_texture_modulate(s3d_state_t *state, int *r_out, int *g_out, int *b_out, int *a_out)
+static void dest_pixel_lit_texture_modulate(s3d_state_t *state)
 {
         int r = state->r >> 7, g = state->g >> 7, b = state->b >> 7, a = state->a >> 7;
         
-        tex_sample(state, r_out, g_out, b_out, a_out);
+        tex_sample(state);
         
         CLAMP_RGBA(r, g, b, a);
         
-        *r_out = ((*r_out) * r) >> 8;
-        *g_out = ((*g_out) * g) >> 8;
-        *b_out = ((*b_out) * b) >> 8;
+        state->dest_rgba.r = ((state->dest_rgba.r) * r) >> 8;
+        state->dest_rgba.g = ((state->dest_rgba.g) * g) >> 8;
+        state->dest_rgba.b = ((state->dest_rgba.b) * b) >> 8;
 
         if (state->cmd_set & CMD_SET_ABC_SRC)
-                *a_out = a;               
+                state->dest_rgba.a = a;
 }
 
 static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t dx2)
@@ -2094,9 +2137,40 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
         
         int bpp = 1;
         
-        uint32_t dest_offset = virge->s3d.dest_base + (state->y * virge->s3d.dest_str);
-        uint32_t z_offset = virge->s3d.z_base + (state->y * virge->s3d.z_str);
-                
+        uint32_t dest_offset, z_offset;
+
+        if (virge->s3d.cmd_set & CMD_SET_HC)
+        {
+                if (state->y < virge->s3d.clip_t)
+                        return;
+                if (state->y > virge->s3d.clip_b)
+                {
+                        int diff_y = state->y - virge->s3d.clip_b;
+                        
+                        if (diff_y > y_count)
+                                diff_y = y_count;
+                        
+                        state->base_u += (virge->s3d.TdUdY * diff_y);
+                        state->base_v += (virge->s3d.TdVdY * diff_y);
+                        state->base_z += (virge->s3d.TdZdY * diff_y);
+                        state->base_r += (virge->s3d.TdRdY * diff_y);
+                        state->base_g += (virge->s3d.TdGdY * diff_y);
+                        state->base_b += (virge->s3d.TdBdY * diff_y);
+                        state->base_a += (virge->s3d.TdAdY * diff_y);
+                        state->base_d += (virge->s3d.TdDdY * diff_y);
+                        state->base_w += (virge->s3d.TdWdY * diff_y);
+                        state->x1 += (dx1 * diff_y);
+                        state->x2 += (dx2 * diff_y);
+                        state->y -= diff_y;
+                        dest_offset -= virge->s3d.dest_str;
+                        z_offset -= virge->s3d.z_str;
+                        y_count -= diff_y;
+                }
+        }
+
+        dest_offset = virge->s3d.dest_base + (state->y * virge->s3d.dest_str);
+        z_offset = virge->s3d.z_base + (state->y * virge->s3d.z_str);
+        
         for (; y_count > 0; y_count--)
         {
                 int x = state->x1 >> 20;
@@ -2104,7 +2178,10 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                 uint32_t z = state->base_z;
                 if (x != xe && (x_dir > 0 && x < xe) || (x_dir < 0 && x > xe))
                 {
+                        uint32_t dest_addr, z_addr;
                         int dx = (x_dir > 0) ? 8 - ((state->x1 >> 16) & 0xf) : ((state->x1 >> 16) & 0xf) - 8;
+                        int x_offset = x_dir << bpp;
+                        
                         state->r = state->base_r + ((virge->s3d.TdRdX * dx) >> 4);
                         state->g = state->base_g + ((virge->s3d.TdGdX * dx) >> 4);
                         state->b = state->base_b + ((virge->s3d.TdBdX * dx) >> 4);
@@ -2116,10 +2193,67 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                         z += ((virge->s3d.TdZdX * dx) >> 4);
 //                        pclog("Draw Y=%i X=%i to XE=%i  %i   %08x %08x %08x %08x  %08x %08x %08x %08x  %i %08x\n", state->y, x, xe, dx, state->x1, state->x2, dx1, virge->s3d.TdWdX, state->u, state->v, virge->s3d.TdUdX, virge->s3d.TdUdY, dx, (virge->s3d.TdUdX * dx) >> 4);
 
+                        if (virge->s3d.cmd_set & CMD_SET_HC)
+                        {
+                                if (x_dir > 0)
+                                {
+                                        if (x > virge->s3d.clip_r)
+                                                goto tri_skip_line;
+                                        if (xe < virge->s3d.clip_l)
+                                                goto tri_skip_line;
+                                        if (xe > virge->s3d.clip_r)
+                                                xe = virge->s3d.clip_r;
+                                        if (x < virge->s3d.clip_l)
+                                        {
+                                                int diff_x = virge->s3d.clip_l - x;
+                                                
+                                                z += (virge->s3d.TdZdX * diff_x);
+                                                state->u += (virge->s3d.TdUdX * diff_x);
+                                                state->v += (virge->s3d.TdVdX * diff_x);
+                                                state->r += (virge->s3d.TdRdX * diff_x);
+                                                state->g += (virge->s3d.TdGdX * diff_x);
+                                                state->b += (virge->s3d.TdBdX * diff_x);
+                                                state->a += (virge->s3d.TdAdX * diff_x);
+                                                state->d += (virge->s3d.TdDdX * diff_x);
+                                                state->w += (virge->s3d.TdWdX * diff_x);
+                                                
+                                                x = virge->s3d.clip_l;
+                                        }
+                                }
+                                else
+                                {
+                                        if (x < virge->s3d.clip_l)
+                                                goto tri_skip_line;
+                                        if (xe > virge->s3d.clip_r)
+                                                goto tri_skip_line;
+                                        if (xe < virge->s3d.clip_l)
+                                                xe = virge->s3d.clip_l;
+                                        if (x > virge->s3d.clip_r)
+                                        {
+                                                int diff_x = x - virge->s3d.clip_r;
+                                                
+                                                z += (virge->s3d.TdZdX * diff_x);
+                                                state->u += (virge->s3d.TdUdX * diff_x);
+                                                state->v += (virge->s3d.TdVdX * diff_x);
+                                                state->r += (virge->s3d.TdRdX * diff_x);
+                                                state->g += (virge->s3d.TdGdX * diff_x);
+                                                state->b += (virge->s3d.TdBdX * diff_x);
+                                                state->a += (virge->s3d.TdAdX * diff_x);
+                                                state->d += (virge->s3d.TdDdX * diff_x);
+                                                state->w += (virge->s3d.TdWdX * diff_x);
+                                                
+                                                x = virge->s3d.clip_r;
+                                        }
+                                }
+                        }
+
+                        virge->svga.changedvram[(dest_offset & 0x3fffff) >> 12] = changeframecount;
+
+                        dest_addr = dest_offset + (x << bpp);
+                        z_addr = z_offset + (x << bpp);
+
                         for (; x != ((xe + x_dir) & 0xfff); x = (x + x_dir) & 0xfff)
                         {
-                                uint32_t dest_addr = dest_offset + (x << bpp);
-                                uint32_t z_addr = z_offset + (x << bpp);
                                 int update = 1;
                                 int16_t src_z;
                                 _x = x; _y = state->y;
@@ -2129,14 +2263,12 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                         src_z = Z_READ(z_addr);
                                         Z_CLIP(src_z, z >> 16);
                                 }
-                                CLIP(x, state->y);
 
                                 if (update)
                                 {
-                                        int dest_r, dest_g, dest_b, dest_a;
                                         uint32_t dest_col;
 
-                                        dest_pixel(state, &dest_r, &dest_g, &dest_b, &dest_a);
+                                        dest_pixel(state);
 
                                         if (virge->s3d.cmd_set & CMD_SET_ABC_ENABLE)
                                         {
@@ -2158,9 +2290,9 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                                         break;
                                                 }
 
-                                                dest_r = ((dest_r * dest_a) + (src_r * (255 - dest_a))) / 255;
-                                                dest_g = ((dest_g * dest_a) + (src_g * (255 - dest_a))) / 255;
-                                                dest_b = ((dest_b * dest_a) + (src_b * (255 - dest_a))) / 255;
+                                                state->dest_rgba.r = ((state->dest_rgba.r * state->dest_rgba.a) + (src_r * (255 - state->dest_rgba.a))) / 255;
+                                                state->dest_rgba.g = ((state->dest_rgba.g * state->dest_rgba.a) + (src_g * (255 - state->dest_rgba.a))) / 255;
+                                                state->dest_rgba.b = ((state->dest_rgba.b * state->dest_rgba.a) + (src_b * (255 - state->dest_rgba.a))) / 255;
                                         }
 
                                         switch (bpp)
@@ -2169,14 +2301,12 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                                 /*Not implemented yet*/
                                                 break;
                                                 case 1: /*16 bpp*/
-                                                dest_col = RGB15(dest_r, dest_g, dest_b);
-                                                *(uint16_t *)&vram[dest_addr & 0x3fffff] = dest_col;
-                                                virge->svga.changedvram[(dest_addr & 0x3fffff) >> 12] = changeframecount;
+                                                dest_col = RGB15(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b);
+                                                *(uint16_t *)&vram[dest_addr] = dest_col;
                                                 break;
                                                 case 2: /*24 bpp*/
-                                                dest_col = RGB24(dest_r, dest_g, dest_b);
-                                                *(uint32_t *)&vram[dest_addr & 0x3fffff] = dest_col;
-                                                virge->svga.changedvram[(dest_addr & 0x3fffff) >> 12] = changeframecount;
+                                                dest_col = RGB24(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b);
+                                                *(uint32_t *)&vram[dest_addr] = dest_col;
                                                 break;
                                         }
 
@@ -2193,9 +2323,12 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                 state->a += virge->s3d.TdAdX;
                                 state->d += virge->s3d.TdDdX;
                                 state->w += virge->s3d.TdWdX;
+                                dest_addr += x_offset;
+                                z_addr += x_offset;
                                 virge->pixel_count++;
                         }
                 }
+tri_skip_line:
                 state->x1 += dx1;
                 state->x2 += dx2;
                 state->base_u += virge->s3d.TdUdY;
@@ -2231,7 +2364,10 @@ static void s3_virge_triangle(virge_t *virge)
 
         uint32_t tex_base;
         int c;
-        
+
+        uint64_t start_time = timer_read();
+        uint64_t end_time;
+
         state.tbu = virge->s3d.tbu << 11;
         state.tbv = virge->s3d.tbv << 11;
         
@@ -2347,19 +2483,20 @@ static void s3_virge_triangle(virge_t *virge)
         switch ((virge->s3d.cmd_set >> 5) & 7)
         {
                 case 0:
-                tex_read = tex_ARGB8888;
+                tex_read = (virge->s3d.cmd_set & CMD_SET_TWE) ? tex_ARGB8888 : tex_ARGB8888_nowrap;
                 break;
                 case 1:
-                tex_read = tex_ARGB4444;
+                tex_read = (virge->s3d.cmd_set & CMD_SET_TWE) ? tex_ARGB4444 : tex_ARGB4444_nowrap;
 //                pclog("tex_ARGB4444\n");
                 break;
                 case 2:
-                tex_read = tex_ARGB1555;
+                tex_read = (virge->s3d.cmd_set & CMD_SET_TWE) ? tex_ARGB1555 : tex_ARGB1555_nowrap;
 //                pclog("tex_ARGB1555 %i\n", (virge->s3d.cmd_set >> 5) & 7);
                 break;
                 default:
                 pclog("bad texture type %i\n", (virge->s3d.cmd_set >> 5) & 7);
-                tex_read = tex_ARGB1555;
+                tex_read = (virge->s3d.cmd_set & CMD_SET_TWE) ? tex_ARGB1555 : tex_ARGB1555_nowrap;
+                break;
         }
         
 //        pclog("Triangle %i %i,%i to %i,%i  %08x\n", y, x1 >> 20, y, virge->s3d.txend01 >> 20, y - (virge->s3d.ty01 + virge->s3d.ty12), state.cmd_set);
@@ -2372,6 +2509,10 @@ static void s3_virge_triangle(virge_t *virge)
         tri(virge, &state, virge->s3d.ty12, virge->s3d.TdXdY02, virge->s3d.TdXdY12);
 
         virge->tri_count++;
+
+        end_time = timer_read();
+        
+        virge_time += end_time - start_time;
 }
 
 
@@ -2693,11 +2834,20 @@ static int s3_virge_add_status_info(char *s, int max_len, void *p)
         int cur_len;
         char temps[256];
 
+        uint64_t new_time = timer_read();
+        uint64_t status_diff = new_time - status_time;
+        status_time = new_time;
+
+        if (!status_diff)
+                status_diff = 1;
+
         cur_len = svga_add_status_info(s, cur_len, &virge->svga);
-        sprintf(temps, "%f Mpixels/sec\n%f ktris/sec\n", (double)virge->pixel_count/1000000.0, (double)virge->tri_count/1000.0);
+        sprintf(temps, "%f Mpixels/sec\n%f ktris/sec\n%f%% CPU\n%f%% CPU (real)\n%d writes", (double)virge->pixel_count/1000000.0, (double)virge->tri_count/1000.0, ((double)virge_time * 100.0) / timer_freq, ((double)virge_time * 100.0) / status_diff, reg_writes);
         strncat(s, temps, cur_len);
         cur_len -= strlen(temps);
         virge->pixel_count = virge->tri_count = 0;
+        virge_time = 0;
+        reg_writes = 0;
         
         return max_len - cur_len;
 }
