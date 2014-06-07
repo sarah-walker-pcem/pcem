@@ -55,15 +55,13 @@ int cgate32;
 #undef writememb
 
 
-#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF)?readmemb386l(s,a):ram[readlookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)])
+#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF)?readmemb386l(s,a): *(uint8_t *)(readlookup2[((s)+(a))>>12] + (s) + (a)) )
 
-#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememb386l(s,a,v); else ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]=v
+#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
-#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
-#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *((uint32_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
+#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
-
-uint32_t mmucache[0x100000];
 
 uint8_t romext[32768];
 uint8_t *ram,*rom;
@@ -194,7 +192,7 @@ static inline uint32_t geteal_mem()
         return readmeml(easeg,eaaddr);
 }
 
-#define seteab(v) if (mod!=3) { /*if (eal_w) *(uint8_t *)eal_w=v;  else */writememb386l(easeg,eaaddr,v); } else if (rm&4) regs[rm&3].b.h=v; else regs[rm].b.l=v
+#define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) regs[rm&3].b.h=v; else regs[rm].b.l=v
 #define seteaw(v) if (mod!=3) { if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);    } else regs[rm].w=v
 #define seteal(v) if (mod!=3) { if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);    } else regs[rm].l=v
 
@@ -269,9 +267,9 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
                 if ( readlookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
-                   eal_r = (uint32_t *)&ram[ readlookup2[(easeg + eaaddr) >> 12] + ((easeg + eaaddr) & 0xFFF)];
+                   eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
                 if (writelookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
-                   eal_w = (uint32_t *)&ram[writelookup2[(easeg + eaaddr) >> 12] + ((easeg + eaaddr) & 0xFFF)];
+                   eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
         }
 }
 
@@ -307,9 +305,9 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
                 if ( readlookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
-                   eal_r = (uint32_t *)&ram[ readlookup2[(easeg + eaaddr) >> 12] + ((easeg + eaaddr) & 0xFFF)];
+                   eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
                 if (writelookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
-                   eal_w = (uint32_t *)&ram[writelookup2[(easeg + eaaddr) >> 12] + ((easeg + eaaddr) & 0xFFF)];
+                   eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
         }
 }
 

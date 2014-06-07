@@ -424,19 +424,7 @@ int loadbios()
 
 
 
-uint32_t mmucache[0x100000];
-int mmucaches[64];
-int mmunext=0;
 int abrt=0;
-
-void initmmucache()
-{
-        int c;
-//        if (output) pclog("initmmucache\n");
-        memset(mmucache,0xFF,sizeof(mmucache));
-        for (c=0;c<64;c++) mmucaches[c]=0xFFFFFFFF;
-        mmunext=0;
-}
 
 void resetreadlookup()
 {
@@ -488,15 +476,6 @@ void flushmmucache()
 //        memset(writelookup,0xFF,sizeof(writelookup));
 //        memset(writelookup2,0xFF,1024*1024*4);
 /*        if (!(cr0>>31)) return;*/
-        for (c=0;c<64;c++)
-        {
-                if (mmucaches[c]!=0xFFFFFFFF)
-                {
-                        mmucache[mmucaches[c]]=0xFFFFFFFF;
-                        mmucaches[c]=0xFFFFFFFF;
-                }
-        }
-//        pclog("Flush MMU cache\n");
 
 /*        for (c = 0; c < 1024*1024; c++)
         {
@@ -531,15 +510,6 @@ void flushmmucache_nopc()
                         writelookup[c]=0xFFFFFFFF;
                 }
         }
-        mmuflush++;
-        for (c=0;c<64;c++)
-        {
-                if (mmucaches[c]!=0xFFFFFFFF)
-                {
-                        mmucache[mmucaches[c]]=0xFFFFFFFF;
-                        mmucaches[c]=0xFFFFFFFF;
-                }
-        }
 }
 
 void flushmmucache_cr3()
@@ -559,15 +529,6 @@ void flushmmucache_cr3()
                         writelookup[c]=0xFFFFFFFF;
                 }
         }
-        for (c=0;c<64;c++)
-        {
-                if (mmucaches[c]!=0xFFFFFFFF)
-                {
-                        mmucache[mmucaches[c]]=0xFFFFFFFF;
-                        mmucaches[c]=0xFFFFFFFF;
-                }
-        }
-
 /*        for (c = 0; c < 1024*1024; c++)
         {
                 if (readlookup2[c] != 0xFFFFFFFF)
@@ -586,8 +547,10 @@ void flushmmucache_cr3()
 }
 
 extern int output;
-#define mmutranslate(addr,rw) mmutranslatereal(addr,rw)
-//#define mmutranslate(addr,rw) ((mmucache[addr>>12]!=0xFFFFFFFF)?(mmucache[addr>>12]+(addr&0xFFF)):mmutranslatereal(addr,rw))
+
+#define mmutranslate_read(addr) mmutranslatereal(addr,0)
+#define mmutranslate_write(addr) mmutranslatereal(addr,1)
+
 int pctrans=0;
 
 extern uint32_t testr[9];
@@ -596,6 +559,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
 {
         uint32_t addr2;
         uint32_t temp,temp2,temp3;
+        
                 if (abrt) 
                 {
 //                        pclog("Translate recursive abort\n");
@@ -707,7 +671,7 @@ void addreadlookup(uint32_t virt, uint32_t phys)
                 readlookup2[readlookup[readlnext]]=0xFFFFFFFF;
 //                readlnum--;
         }
-        readlookup2[virt>>12]=phys&~0xFFF;
+        readlookup2[virt>>12] = (uint32_t)&ram[(phys & ~0xFFF) -  (virt & ~0xfff)];
         readlookupp[readlnext]=mmu_perm;
         readlookup[readlnext++]=virt>>12;
         readlnext&=(cachesize-1);
@@ -748,7 +712,7 @@ void addwritelookup(uint32_t virt, uint32_t phys)
                 writelookup2[writelookup[writelnext]]=0xFFFFFFFF;
 //                writelnum--;
         }
-        writelookup2[virt>>12]=phys&~0xFFF;
+        writelookup2[virt>>12] = (uint32_t)&ram[(phys & ~0xFFF) - (virt & ~0xfff)];
         writelookupp[writelnext]=mmu_perm;
         writelookup[writelnext++]=virt>>12;
         writelnext&=(cachesize-1);
@@ -764,7 +728,7 @@ uint8_t *getpccache(uint32_t a)
         {
 //                if (output==3) pclog("Translate GetPCCache %08X\n",a);
 pctrans=1;
-                a=mmutranslate(a,0);
+                a = mmutranslate_read(a);
                 pctrans=0;
 //                if (output==3) pclog("GetPCCache output %08X\n",a);
                 if (a==0xFFFFFFFF) return ram;
@@ -816,7 +780,7 @@ uint8_t readmembl(uint32_t addr)
         mem_logical_addr = addr;
         if (cr0 >> 31)
         {
-                addr = mmutranslate(addr, 0);
+                addr = mmutranslate_read(addr);
                 if (addr == 0xFFFFFFFF) return 0xFF;
         }
         addr &= rammask;
@@ -832,7 +796,7 @@ void writemembl(uint32_t addr, uint8_t val)
 
         if (cr0 >> 31)
         {
-                addr = mmutranslate(addr,1);
+                addr = mmutranslate_write(addr);
                 if (addr == 0xFFFFFFFF) return;
         }
         addr &= rammask;
@@ -857,7 +821,7 @@ uint8_t readmemb386l(uint32_t seg, uint32_t addr)
         
         if (cr0 >> 31)
         {
-                addr = mmutranslate(addr, 0);
+                addr = mmutranslate_read(addr);
                 if (addr == 0xFFFFFFFF) return 0xFF;
         }
 
@@ -880,7 +844,7 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
         mem_logical_addr = addr = addr + seg;
         if (cr0 >> 31)
         {
-                addr = mmutranslate(addr, 1);
+                addr = mmutranslate_write(addr);
                 if (addr == 0xFFFFFFFF) return;
         }
 
@@ -900,8 +864,8 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   0) == 0xffffffff) return 0xffff;
-                        if (mmutranslate(addr2+1, 0) == 0xffffffff) return 0xffff;
+                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffff;
+                        if (mmutranslate_read(addr2+1) == 0xffffffff) return 0xffff;
                 }
                 if (is386) return readmemb386l(seg,addr)|(readmemb386l(seg,addr+1)<<8);
                 else       return readmembl(seg+addr)|(readmembl(seg+addr+1)<<8);
@@ -914,7 +878,7 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
         }
         if (cr0>>31)
         {
-                addr2=mmutranslate(addr2,0);
+                addr2 = mmutranslate_read(addr2);
                 if (addr2==0xFFFFFFFF) return 0xFFFF;
         }
 
@@ -938,8 +902,8 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   1) == 0xffffffff) return;
-                        if (mmutranslate(addr2+1, 1) == 0xffffffff) return;
+                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                        if (mmutranslate_write(addr2+1) == 0xffffffff) return;
                 }
                 if (is386)
                 {
@@ -962,7 +926,7 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
         }
         if (cr0>>31)
         {
-                addr2=mmutranslate(addr2,1);
+                addr2 = mmutranslate_write(addr2);
                 if (addr2==0xFFFFFFFF) return;
         }
         
@@ -993,8 +957,8 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   0) == 0xffffffff) return 0xffffffff;
-                        if (mmutranslate(addr2+3, 0) == 0xffffffff) return 0xffffffff;
+                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
+                        if (mmutranslate_read(addr2+3) == 0xffffffff) return 0xffffffff;
                 }
                 return readmemwl(seg,addr)|(readmemwl(seg,addr+2)<<16);
         }
@@ -1008,7 +972,7 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
         
         if (cr0>>31)
         {
-                addr2=mmutranslate(addr2,0);
+                addr2 = mmutranslate_read(addr2);
                 if (addr2==0xFFFFFFFF) return 0xFFFFFFFF;
         }
 
@@ -1032,8 +996,8 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
         {
                 if (cr0>>31)
                 {
-                        if (mmutranslate(addr2,   1) == 0xffffffff) return;
-                        if (mmutranslate(addr2+3, 1) == 0xffffffff) return;
+                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                        if (mmutranslate_write(addr2+3) == 0xffffffff) return;
                 }
                 writememwl(seg,addr,val);
                 writememwl(seg,addr+2,val>>16);
@@ -1047,7 +1011,7 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
         }
         if (cr0>>31)
         {
-                addr2=mmutranslate(addr2,1);
+                addr2 = mmutranslate_write(addr2);
                 if (addr2==0xFFFFFFFF) return;
         }
         

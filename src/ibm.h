@@ -17,9 +17,9 @@ int writelnext;
 
 extern int mmu_perm;
 
-#define readmemb(a) ((readlookup2[(a)>>12]==0xFFFFFFFF)?readmembl(a):ram[readlookup2[(a)>>12]+((a)&0xFFF)])
-#define readmemw(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE)?readmemwl(s,a):*((uint16_t *)(&ram[readlookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)])))
-#define readmeml(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC)?readmemll(s,a):*((uint32_t *)(&ram[readlookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)])))
+#define readmemb(a) ((readlookup2[(a)>>12]==0xFFFFFFFF)?readmembl(a):*(uint8_t *)(readlookup2[(a) >> 12] + (a)))
+#define readmemw(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE)?readmemwl(s,a):*(uint16_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
+#define readmeml(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC)?readmemll(s,a):*(uint32_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
 
 //#define writememb(a,v) if (writelookup2[(a)>>12]==0xFFFFFFFF) writemembl(a,v); else ram[writelookup2[(a)>>12]+((a)&0xFFF)]=v
 //#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
