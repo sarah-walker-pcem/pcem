@@ -1,3 +1,4 @@
+#define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
 #include "plat-joystick.h"
 #include "plat-dinput.h"
