@@ -9,6 +9,7 @@
 #include "device.h"
 #include "dma.h"
 #include "fdc.h"
+#include "gameport.h"
 #include "headland.h"
 #include "i430vx.h"
 #include "ide.h"
@@ -122,6 +123,7 @@ void common_init()
         pit_init();
         serial1_init(0x3f8, 4);
         serial2_init(0x2f8, 3);
+        device_add(&gameport_device);
 }
 
 void xt_init()

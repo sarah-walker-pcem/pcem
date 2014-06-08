@@ -20,6 +20,7 @@
 #include "nvr.h"
 #include "pic.h"
 #include "pit.h"
+#include "plat-joystick.h"
 #include "plat-mouse.h"
 #include "serial.h"
 #include "sound.h"
@@ -196,6 +197,7 @@ void initpc()
 
         keyboard_init();
         mouse_init();
+        joystick_init();
         
         loadconfig();
         pclog("Config loaded\n");
@@ -326,6 +328,7 @@ void runpc()
                 keyboard_process();
 //                checkkeys();
                 pollmouse();
+                poll_joystick();
         endblit();
 
                 framecountx++;
