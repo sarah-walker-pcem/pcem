@@ -252,7 +252,7 @@ static int pit_read_timer(int t)
 //        pclog("pit_read_timer: t=%i using_timer=%i m=%i\n", t, pit.using_timer[t], pit.m[t]);
         if (pit.using_timer[t])
         {
-                int read = pit.c[t] / PITCONST;
+                int read = (pit.c[t] / PITCONST) - 1;
                 if (pit.m[t] == 2)
                         read++;
                 if (read < 0)
@@ -274,6 +274,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
         int t;
         cycles -= (int)PITCONST;
 //        if (val != 0x40) pclog("Write PIT %04X %02X %04X:%08X %i %i\n",addr,val,CS,pc,ins, pit.gate[0]);
+        
         switch (addr&3)
         {
                 case 3: /*CTRL*/
@@ -424,7 +425,7 @@ uint8_t pit_read(uint16_t addr, void *priv)
                 break;
         }
 //        pclog("%02X\n", temp);
-//        printf("%02X %i %i %04X:%04X\n",temp,pit.rm[addr&3],pit.wp,cs>>4,pc);
+//        printf("%02X %i %i %04X:%04X %i\n",temp,pit.rm[addr&3],pit.wp,cs>>4,pc, ins);
         return temp;
 }
 
