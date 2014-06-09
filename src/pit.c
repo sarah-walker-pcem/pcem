@@ -252,7 +252,7 @@ static int pit_read_timer(int t)
 //        pclog("pit_read_timer: t=%i using_timer=%i m=%i\n", t, pit.using_timer[t], pit.m[t]);
         if (pit.using_timer[t])
         {
-                int read = (pit.c[t] / PITCONST) - 1;
+                int read = (pit.c[t] / PITCONST);
                 if (pit.m[t] == 2)
                         read++;
                 if (read < 0)
