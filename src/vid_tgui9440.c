@@ -475,7 +475,8 @@ void *tgui9440_init()
         svga_init(&tgui->svga, tgui, 1 << 21, /*2mb*/
                    tgui_recalctimings,
                    tgui_in, tgui_out,
-                   tgui_hwcursor_draw);
+                   tgui_hwcursor_draw,
+                   NULL);
 
         mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &tgui->svga);
         mem_mapping_add(&tgui->accel_mapping,  0xbc000, 0x4000, tgui_accel_read,  tgui_accel_read_w, tgui_accel_read_l, tgui_accel_write,  tgui_accel_write_w, tgui_accel_write_l, NULL, 0,  tgui);

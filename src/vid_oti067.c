@@ -123,6 +123,7 @@ void *oti067_common_init(char *bios_fn)
         svga_init(&oti067->svga, oti067, 1 << 19, /*512kb*/
                    oti067_recalctimings,
                    oti067_in, oti067_out,
+                   NULL,
                    NULL);
 
         io_sethandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);

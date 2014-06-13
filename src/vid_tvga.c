@@ -252,6 +252,7 @@ void *tvga8900d_init()
         svga_init(&tvga->svga, tvga, 1 << 20, /*1mb - chip supports 2mb, but drivers are buggy*/
                    tvga_recalctimings,
                    tvga_in, tvga_out,
+                   NULL,
                    NULL);
        
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);

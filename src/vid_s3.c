@@ -1881,7 +1881,8 @@ static void *s3_init(char *bios_fn)
         svga_init(&s3->svga, s3, 1 << 22, /*4mb - 864 supports 8mb but buggy VESA driver reports 0mb*/
                    s3_recalctimings,
                    s3_in, s3_out,
-                   s3_hwcursor_draw);
+                   s3_hwcursor_draw,
+                   NULL);
 
         svga->crtc[0x36] = 1 | (2 << 2) | (1 << 4) | (4 << 5);
         svga->crtc[0x37] = 1 | (7 << 5);

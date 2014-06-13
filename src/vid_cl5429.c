@@ -824,7 +824,8 @@ void *gd5429_init()
         svga_init(&gd5429->svga, gd5429, 1 << 21, /*2mb*/
                    gd5429_recalctimings,
                    gd5429_in, gd5429_out,
-                   gd5429_hwcursor_draw);
+                   gd5429_hwcursor_draw,
+                   NULL);
 
         mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);

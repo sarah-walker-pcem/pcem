@@ -400,7 +400,11 @@ void svga_poll(void *p)
         {
 //                if (!(vc & 15)) pclog("VC %i %i\n", vc, GetTickCount());
                 if (svga->displine == svga->hwcursor_latch.y && svga->hwcursor_latch.ena)
-                   svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+                        svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+
+                if (svga->displine == svga->overlay_latch.y && svga->overlay_latch.ena)
+                        svga->overlay_on = svga->overlay_latch.ysize - svga->overlay_latch.yoff;
+
                 svga->vidtime += svga->dispofftime;
 //                if (output) printf("Display off %f\n",vidtime);
                 svga->cgastat |= 1;
@@ -414,11 +418,17 @@ void svga_poll(void *p)
                         if (svga->firstline == 2000) 
                                 svga->firstline = svga->displine;
                         
-                        if (svga->hwcursor_on) 
+                        if (svga->hwcursor_on || svga->overlay_on)
                                 svga->changedvram[svga->ma >> 12] = svga->changedvram[(svga->ma >> 12) + 1] = 2;
                         
                         svga->render(svga);
                         
+                        if (svga->overlay_on)
+                        {
+                                svga->overlay_draw(svga, svga->displine);
+                                svga->overlay_on--;
+                        }
+
                         if (svga->hwcursor_on)
                         {
                                 svga->hwcursor_draw(svga, svga->displine);
@@ -594,6 +604,9 @@ void svga_poll(void *p)
                         
                         svga->hwcursor_on = 0;
                         svga->hwcursor_latch = svga->hwcursor;
+
+                        svga->overlay_on = 0;
+                        svga->overlay_latch = svga->overlay;
 //                        pclog("Latch HWcursor addr %08X\n", svga_hwcursor_latch.addr);
                         
 //                        pclog("ADDR %08X\n",hwcursor_addr);
@@ -609,7 +622,8 @@ int svga_init(svga_t *svga, void *p, int memsize,
                void (*recalctimings_ex)(struct svga_t *svga),
                uint8_t (*video_in) (uint16_t addr, void *p),
                void    (*video_out)(uint16_t addr, uint8_t val, void *p),
-               void (*hwcursor_draw)(struct svga_t *svga, int displine))
+               void (*hwcursor_draw)(struct svga_t *svga, int displine),
+               void (*overlay_draw)(struct svga_t *svga, int displine))
 {
         int c, d, e;
         
@@ -639,6 +653,7 @@ int svga_init(svga_t *svga, void *p, int memsize,
         svga->video_in  = video_in;
         svga->video_out = video_out;
         svga->hwcursor_draw = hwcursor_draw;
+        svga->overlay_draw = overlay_draw;
 //        _svga_recalctimings(svga);
 
         mem_mapping_add(&svga->mapping, 0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, NULL, 0, svga);

@@ -123,14 +123,19 @@ typedef struct virge_t
                 uint32_t sec_fb0, sec_fb1;
                 uint32_t sec_stride;
                 uint32_t overlay_ctrl;
-                uint32_t k1_vert_scale;
-                uint32_t k2_vert_scale;
-                uint32_t dda_vert_accumulator;
+                 int32_t k1_vert_scale;
+                 int32_t k2_vert_scale;
+                 int32_t dda_vert_accumulator;
+                 int32_t k1_horiz_scale;
+                 int32_t k2_horiz_scale;
+                 int32_t dda_horiz_accumulator;
                 uint32_t fifo_ctrl;
                 uint32_t pri_start;
                 uint32_t pri_size;
                 uint32_t sec_start;
                 uint32_t sec_size;
+                
+                int sdif;
                 
                 int pri_x, pri_y, pri_w, pri_h;
                 int sec_x, sec_y, sec_w, sec_h;
@@ -224,13 +229,15 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 //return;
 
                 case 0x3d4:
-                svga->crtcreg = val & 0x7f;
+                svga->crtcreg = val;// & 0x7f;
                 return;
                 case 0x3d5:
-//                pclog("Write CRTC R%02X %02X\n", svga->crtcreg, val);
+                //pclog("Write CRTC R%02X %02X  %04x(%08x):%08x\n", svga->crtcreg, val, CS, cs, pc);
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) 
                         return;
                 if (svga->crtcreg >= 0x20 && svga->crtcreg != 0x38 && (svga->crtc[0x38] & 0xcc) != 0x48) 
+                        return;
+                if (svga->crtcreg >= 0x80)
                         return;
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
@@ -350,7 +357,7 @@ static uint8_t s3_virge_in(uint16_t addr, void *p)
                 ret = svga->crtcreg;
                 break;
                 case 0x3D5:
-//                pclog("Read CRTC R%02X %04X:%04X (%02x)\n", svga->crtcreg, CS, pc, svga->crtc[svga->crtcreg]);
+                //pclog("Read CRTC R%02X %04X:%04X (%02x)\n", svga->crtcreg, CS, pc, svga->crtc[svga->crtcreg]);
                 switch (svga->crtcreg)
                 {
                         case 0x2d: ret = virge->virge_id_high; break; /*Extended chip ID*/
@@ -391,7 +398,7 @@ static void s3_virge_recalctimings(svga_t *svga)
         if ((svga->crtc[0x67] & 0xc) != 0xc) /*VGA mode*/
         {
                 svga->ma_latch |= (virge->ma_ext << 16);
-pclog("VGA mode\n");
+//pclog("VGA mode\n");
                 if (svga->crtc[0x51] & 0x30)      svga->rowoffset += (svga->crtc[0x51] & 0x30) << 4;
                 else if (svga->crtc[0x43] & 0x04) svga->rowoffset += 0x100;
                 if (!svga->rowoffset) svga->rowoffset = 256;
@@ -428,6 +435,7 @@ pclog("VGA mode\n");
                 {
                         svga->rowoffset = (svga->rowoffset * 3) / 4; /*Hack*/
                 }
+//pclog("VGA mode   x_disp=%i dispend=%i vtotal=%i\n", svga->hdisp, svga->dispend, svga->vtotal);
         }
         else /*Streams mode*/
         {
@@ -436,8 +444,21 @@ pclog("VGA mode\n");
                 else
                         svga->ma_latch = virge->streams.pri_fb0 >> 2;
                         
-                svga->hdisp = virge->streams.pri_w;
-pclog("Streams mode   x_disp=%i\n", svga->hdisp);                
+                svga->hdisp = virge->streams.pri_w + 1;
+                svga->dispend = virge->streams.pri_h;
+                
+                svga->overlay.x = virge->streams.sec_x - virge->streams.pri_x;
+                svga->overlay.y = virge->streams.sec_y - virge->streams.pri_y;
+                svga->overlay.ysize = virge->streams.sec_h;
+
+                if (virge->streams.buffer_ctrl & 2)
+                        svga->overlay.addr = virge->streams.sec_fb1;
+                else
+                        svga->overlay.addr = virge->streams.sec_fb0;
+
+                svga->overlay.ena = (svga->overlay.x >= 0);
+                svga->overlay.v_acc = virge->streams.dda_vert_accumulator;
+//pclog("Streams mode   x_disp=%i dispend=%i vtotal=%i  x=%i y=%i ysize=%i\n", svga->hdisp, svga->dispend, svga->vtotal, svga->overlay.x, svga->overlay.y, svga->overlay.ysize);
                 svga->rowoffset = virge->streams.pri_stride >> 3;
 
                 switch ((virge->streams.pri_ctrl >> 24) & 0x7)
@@ -778,7 +799,7 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
         virge_t *virge = (virge_t *)p;
         svga_t *svga = &virge->svga;
         reg_writes++;
-//        if ((addr & 0xfffc) >= 0x8000)
+//        if ((addr & 0xfffc) >= 0x8000 && (addr & 0xfffc) < 0x8400)
 //                pclog("New MMIO writel %08X %08X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
 
         if ((addr & 0xfffc) < 0x8000)
@@ -800,12 +821,22 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 break;
                 case 0x8190:
                 virge->streams.sec_ctrl = val;
+                virge->streams.dda_horiz_accumulator = val & 0xfff;
+                if (val & (1 << 11))
+                        virge->streams.dda_horiz_accumulator |= 0xfffff800;
+                virge->streams.sdif = (val >> 24) & 7;
                 break;
                 case 0x8194:
                 virge->streams.chroma_upper_bound = val;
                 break;
                 case 0x8198:
                 virge->streams.sec_filter = val;
+                virge->streams.k1_horiz_scale = val & 0x7ff;
+                if (val & (1 << 10))
+                        virge->streams.k1_horiz_scale |= 0xfffff800;
+                virge->streams.k2_horiz_scale = (val >> 16) & 0x7ff;
+                if ((val >> 16) & (1 << 10))
+                        virge->streams.k2_horiz_scale |= 0xfffff800;
                 break;
                 case 0x81a0:
                 virge->streams.blend_ctrl = val;
@@ -832,24 +863,36 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 break;
                 case 0x81d0:
                 virge->streams.sec_fb0 = val;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
                 break;
                 case 0x81d4:
                 virge->streams.sec_fb1 = val;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
                 break;
                 case 0x81d8:
                 virge->streams.sec_stride = val;
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
                 break;
                 case 0x81dc:
                 virge->streams.overlay_ctrl = val;
                 break;
                 case 0x81e0:
-                virge->streams.k1_vert_scale = val;
+                virge->streams.k1_vert_scale = val & 0x7ff;
+                if (val & (1 << 10))
+                        virge->streams.k1_vert_scale |= 0xfffff800;
                 break;
                 case 0x81e4:
-                virge->streams.k2_vert_scale = val;
+                virge->streams.k2_vert_scale = val & 0x7ff;
+                if (val & (1 << 10))
+                        virge->streams.k2_vert_scale |= 0xfffff800;
                 break;
                 case 0x81e8:
-                virge->streams.dda_vert_accumulator = val;
+                virge->streams.dda_vert_accumulator = val & 0xfff;
+                if (val & (1 << 11))
+                        virge->streams.dda_vert_accumulator |= 0xfffff800;
                 break;
                 case 0x81ec:
                 virge->streams.fifo_ctrl = val;
@@ -872,11 +915,15 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 virge->streams.sec_start = val;
                 virge->streams.sec_x = (val >> 16) & 0x7ff;
                 virge->streams.sec_y = val & 0x7ff;                
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
                 break;
                 case 0x81fc:
                 virge->streams.sec_size = val;
                 virge->streams.sec_w = (val >> 16) & 0x7ff;
                 virge->streams.sec_h = val & 0x7ff;                
+                s3_virge_recalctimings(svga);
+                svga->fullchange = changeframecount;
                 break;
                 
                 case 0xa000: case 0xa004: case 0xa008: case 0xa00c:
@@ -2547,6 +2594,279 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
         }
 }
 
+#define DECODE_YCbCr()                                                  \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 2; c++)                                 \
+                {                                                       \
+                        uint8_t y1, y2;                                 \
+                        int8_t Cr, Cb;                                  \
+                        int dR, dG, dB;                                 \
+                                                                        \
+                        y1 = src[0];                                    \
+                        Cr = src[1] - 0x80;                             \
+                        y2 = src[2];                                    \
+                        Cb = src[3] - 0x80;                             \
+                        src += 4;                                       \
+                                                                        \
+                        dR = (359*Cr) >> 8;                             \
+                        dG = (88*Cb + 183*Cr) >> 8;                     \
+                        dB = (453*Cb) >> 8;                             \
+                                                                        \
+                        r[x_write] = y1 + dR;                           \
+                        CLAMP(r[x_write]);                              \
+                        g[x_write] = y1 - dG;                           \
+                        CLAMP(g[x_write]);                              \
+                        b[x_write] = y1 + dB;                           \
+                        CLAMP(b[x_write]);                              \
+                                                                        \
+                        r[x_write+1] = y2 + dR;                         \
+                        CLAMP(r[x_write+1]);                            \
+                        g[x_write+1] = y2 - dG;                         \
+                        CLAMP(g[x_write+1]);                            \
+                        b[x_write+1] = y2 + dB;                         \
+                        CLAMP(b[x_write+1]);                            \
+                                                                        \
+                        x_write = (x_write + 2) & 7;                    \
+                }                                                       \
+        } while (0)
+
+/*Both YUV formats are untested*/
+#define DECODE_YUV211()                                         \
+        do                                                      \
+        {                                                       \
+                uint8_t y1, y2, y3, y4;                         \
+                int8_t U, V;                                    \
+                int dR, dG, dB;                                 \
+                                                                \
+                U = src[0] - 0x80;                              \
+                y1 = (298 * (src[1] - 16)) >> 8;                \
+                y2 = (298 * (src[2] - 16)) >> 8;                \
+                V = src[3] - 0x80;                              \
+                y3 = (298 * (src[4] - 16)) >> 8;                \
+                y4 = (298 * (src[5] - 16)) >> 8;                \
+                src += 6;                                       \
+                                                                \
+                dR = (309*V) >> 8;                              \
+                dG = (100*U + 208*V) >> 8;                      \
+                dB = (516*U) >> 8;                              \
+                                                                \
+                r[x_write] = y1 + dR;                           \
+                CLAMP(r[x_write]);                              \
+                g[x_write] = y1 - dG;                           \
+                CLAMP(g[x_write]);                              \
+                b[x_write] = y1 + dB;                           \
+                CLAMP(b[x_write]);                              \
+                                                                \
+                r[x_write+1] = y2 + dR;                         \
+                CLAMP(r[x_write+1]);                            \
+                g[x_write+1] = y2 - dG;                         \
+                CLAMP(g[x_write+1]);                            \
+                b[x_write+1] = y2 + dB;                         \
+                CLAMP(b[x_write+1]);                            \
+                                                                \
+                r[x_write+2] = y2 + dR;                         \
+                CLAMP(r[x_write+2]);                            \
+                g[x_write+2] = y2 - dG;                         \
+                CLAMP(g[x_write+2]);                            \
+                b[x_write+2] = y2 + dB;                         \
+                CLAMP(b[x_write+2]);                            \
+                                                                \
+                r[x_write+3] = y2 + dR;                         \
+                CLAMP(r[x_write+3]);                            \
+                g[x_write+3] = y2 - dG;                         \
+                CLAMP(g[x_write+3]);                            \
+                b[x_write+3] = y2 + dB;                         \
+                CLAMP(b[x_write+3]);                            \
+                                                                \
+                x_write = (x_write + 4) & 7;                    \
+        } while (0)
+
+#define DECODE_YUV422()                                                 \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 2; c++)                                 \
+                {                                                       \
+                        uint8_t y1, y2;                                 \
+                        int8_t U, V;                                    \
+                        int dR, dG, dB;                                 \
+                                                                        \
+                        U = src[0] - 0x80;                              \
+                        y1 = (298 * (src[1] - 16)) >> 8;                \
+                        V = src[2] - 0x80;                              \
+                        y2 = (298 * (src[3] - 16)) >> 8;                \
+                        src += 4;                                       \
+                                                                        \
+                        dR = (309*V) >> 8;                              \
+                        dG = (100*U + 208*V) >> 8;                      \
+                        dB = (516*U) >> 8;                              \
+                                                                        \
+                        r[x_write] = y1 + dR;                           \
+                        CLAMP(r[x_write]);                              \
+                        g[x_write] = y1 - dG;                           \
+                        CLAMP(g[x_write]);                              \
+                        b[x_write] = y1 + dB;                           \
+                        CLAMP(b[x_write]);                              \
+                                                                        \
+                        r[x_write+1] = y2 + dR;                         \
+                        CLAMP(r[x_write+1]);                            \
+                        g[x_write+1] = y2 - dG;                         \
+                        CLAMP(g[x_write+1]);                            \
+                        b[x_write+1] = y2 + dB;                         \
+                        CLAMP(b[x_write+1]);                            \
+                                                                        \
+                        x_write = (x_write + 2) & 7;                    \
+                }                                                       \
+        } while (0)
+
+#define DECODE_RGB555()                                                 \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 4; c++)                                 \
+                {                                                       \
+                        uint16_t dat;                                   \
+                                                                        \
+                        dat = *(uint16_t *)src;                         \
+                        src += 2;                                       \
+                                                                        \
+                        r[x_write + c] = ((dat & 0x001f) << 3) | ((dat & 0x001f) >> 2); \
+                        g[x_write + c] = ((dat & 0x03e0) >> 2) | ((dat & 0x03e0) >> 7); \
+                        b[x_write + c] = ((dat & 0x7c00) >> 7) | ((dat & 0x7c00) >> 12); \
+                }                                                       \
+                x_write = (x_write + 4) & 7;                            \
+        } while (0)
+
+#define DECODE_RGB565()                                                 \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 4; c++)                                 \
+                {                                                       \
+                        uint16_t dat;                                   \
+                                                                        \
+                        dat = *(uint16_t *)src;                         \
+                        src += 2;                                       \
+                                                                        \
+                        r[x_write + c] = ((dat & 0x001f) << 3) | ((dat & 0x001f) >> 2); \
+                        g[x_write + c] = ((dat & 0x07e0) >> 3) | ((dat & 0x07e0) >> 9); \
+                        b[x_write + c] = ((dat & 0xf800) >> 8) | ((dat & 0xf800) >> 13); \
+                }                                                       \
+                x_write = (x_write + 4) & 7;                            \
+        } while (0)
+
+#define DECODE_RGB888()                                                 \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 4; c++)                                 \
+                {                                                       \
+                        r[x_write + c] = src[0];                        \
+                        g[x_write + c] = src[1];                        \
+                        b[x_write + c] = src[2];                        \
+                        src += 3;                                       \
+                }                                                       \
+                x_write = (x_write + 4) & 7;                            \
+        } while (0)
+
+#define DECODE_XRGB8888()                                               \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                                                                        \
+                for (c = 0; c < 4; c++)                                 \
+                {                                                       \
+                        r[x_write + c] = src[0];                        \
+                        g[x_write + c] = src[1];                        \
+                        b[x_write + c] = src[2];                        \
+                        src += 4;                                       \
+                }                                                       \
+                x_write = (x_write + 4) & 7;                            \
+        } while (0)
+
+#define OVERLAY_SAMPLE()                        \
+        do                                      \
+        {                                       \
+                switch (virge->streams.sdif)    \
+                {                               \
+                        case 1:                 \
+                        DECODE_YCbCr();         \
+                        break;                  \
+                        case 2:                 \
+                        DECODE_YUV422();        \
+                        break;                  \
+                        case 3:                 \
+                        DECODE_RGB555();        \
+                        break;                  \
+                        case 4:                 \
+                        DECODE_YUV211();        \
+                        break;                  \
+                        case 5:                 \
+                        DECODE_RGB565();        \
+                        break;                  \
+                        case 6:                 \
+                        DECODE_RGB888();        \
+                        break;                  \
+                        case 7:                 \
+                        default:                \
+                        DECODE_XRGB8888();      \
+                        break;                  \
+                }                               \
+        } while (0)
+
+static void s3_virge_overlay_draw(svga_t *svga, int displine)
+{
+        virge_t *virge = (virge_t *)svga->p;
+        int offset = (virge->streams.sec_x - virge->streams.pri_x) + 1;
+        int h_acc = virge->streams.dda_horiz_accumulator;
+        int r[8], g[8], b[8];
+        int r_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int g_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int b_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int x_size, x_read = 4, x_write = 4;
+        int x;
+        uint32_t *p;
+        uint8_t *src = &svga->vram[svga->overlay_latch.addr];
+        
+        p = &((uint32_t *)buffer32->line[displine])[offset + 32];
+        
+        if ((offset + virge->streams.sec_w) > virge->streams.pri_w)
+                x_size = (virge->streams.pri_w - virge->streams.sec_x) + 1;
+        else
+                x_size = virge->streams.sec_w + 1;
+
+        OVERLAY_SAMPLE();
+        
+        for (x = 0; x < x_size; x++)
+        {
+                *p++ = r[x_read] | (g[x_read] << 8) | (b[x_read] << 16);
+
+                h_acc += virge->streams.k1_horiz_scale;
+                if (h_acc >= 0)
+                {
+                        if ((x_read ^ (x_read + 1)) & ~3)
+                                OVERLAY_SAMPLE();
+                        x_read = (x_read + 1) & 7;
+
+                        h_acc += (virge->streams.k2_horiz_scale - virge->streams.k1_horiz_scale);
+                }
+        }
+
+        svga->overlay_latch.v_acc += virge->streams.k1_vert_scale;
+        if (svga->overlay_latch.v_acc >= 0)
+        {
+                svga->overlay_latch.v_acc += (virge->streams.k2_vert_scale - virge->streams.k1_vert_scale);
+                svga->overlay_latch.addr += virge->streams.sec_stride;
+        }
+}
+
 static uint8_t s3_virge_pci_read(int func, int addr, void *p)
 {
         virge_t *virge = (virge_t *)p;
@@ -2658,7 +2978,8 @@ static void *s3_virge_init()
         svga_init(&virge->svga, virge, 1 << 22, /*4mb*/
                    s3_virge_recalctimings,
                    s3_virge_in, s3_virge_out,
-                   s3_virge_hwcursor_draw);
+                   s3_virge_hwcursor_draw,
+                   s3_virge_overlay_draw);
 
         rom_init(&virge->bios_rom, "roms/s3virge.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)
@@ -2728,7 +3049,8 @@ static void *s3_virge_375_init()
         svga_init(&virge->svga, virge, 1 << 22, /*4mb*/
                    s3_virge_recalctimings,
                    s3_virge_in, s3_virge_out,
-                   s3_virge_hwcursor_draw);
+                   s3_virge_hwcursor_draw,
+                   s3_virge_overlay_draw);
 
         rom_init(&virge->bios_rom, "roms/86c375_1.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)

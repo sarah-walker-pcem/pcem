@@ -86,6 +86,7 @@ void *vga_init()
         svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
                    NULL,
                    vga_in, vga_out,
+                   NULL,
                    NULL);
 
         io_sethandler(0x03c0, 0x0020, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);

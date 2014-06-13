@@ -151,6 +151,7 @@ void *ati28800_init()
         svga_init(&ati28800->svga, ati28800, 1 << 19, /*512kb*/
                    ati28800_recalctimings,
                    ati28800_in, ati28800_out,
+                   NULL,
                    NULL);
 
         io_sethandler(0x01ce, 0x0002, ati28800_in, NULL, NULL, ati28800_out, NULL, NULL, ati28800);

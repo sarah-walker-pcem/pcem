@@ -264,6 +264,7 @@ void *paradise_pvga1a_init()
         svga_init(&paradise->svga, paradise, 1 << 18, /*256kb*/
                    NULL,
                    paradise_in, paradise_out,
+                   NULL,
                    NULL);
 
         mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
@@ -294,6 +295,7 @@ void *paradise_wd90c11_init()
         svga_init(&paradise->svga, paradise, 1 << 19, /*512kb*/
                    paradise_recalctimings,
                    paradise_in, paradise_out,
+                   NULL,
                    NULL);
 
         mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, NULL, NULL, paradise_write, NULL, NULL);

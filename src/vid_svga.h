@@ -82,10 +82,13 @@ typedef struct svga_t
                 int ena;
                 int x, y;
                 int xoff, yoff;
+                int ysize;
                 uint32_t addr;
-        } hwcursor, hwcursor_latch;
+                int v_acc, h_acc;
+        } hwcursor, hwcursor_latch, overlay, overlay_latch;
         
         int hwcursor_on;
+        int overlay_on;
         
         void (*render)(struct svga_t *svga);
         void (*recalctimings_ex)(struct svga_t *svga);
@@ -94,6 +97,8 @@ typedef struct svga_t
         uint8_t (*video_in) (uint16_t addr, void *p);
 
         void (*hwcursor_draw)(struct svga_t *svga, int displine);
+
+        void (*overlay_draw)(struct svga_t *svga, int displine);
         
         void *p;
 } svga_t;
@@ -102,12 +107,10 @@ extern int svga_init(svga_t *svga, void *p, int memsize,
                void (*recalctimings_ex)(struct svga_t *svga),
                uint8_t (*video_in) (uint16_t addr, void *p),
                void    (*video_out)(uint16_t addr, uint8_t val, void *p),
-               void (*hwcursor_draw)(struct svga_t *svga, int displine));
+               void (*hwcursor_draw)(struct svga_t *svga, int displine),
+               void (*overlay_draw)(struct svga_t *svga, int displine));
 extern void svga_recalctimings(svga_t *svga);
 
-
-extern int      svga_hwcursor_on;
-extern void   (*svga_hwcursor_draw)(int displine);
 
 uint8_t  svga_read(uint32_t addr, void *p);
 uint16_t svga_readw(uint32_t addr, void *p);

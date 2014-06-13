@@ -130,6 +130,7 @@ void *ati18800_init()
         svga_init(&ati18800->svga, ati18800, 1 << 19, /*512kb*/
                    NULL,
                    ati18800_in, ati18800_out,
+                   NULL,
                    NULL);
 
         io_sethandler(0x01ce, 0x0002, ati18800_in, NULL, NULL, ati18800_out, NULL, NULL, ati18800);

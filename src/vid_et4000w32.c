@@ -1016,7 +1016,8 @@ void *et4000w32p_init()
         svga_init(&et4000->svga, et4000, 1 << 21, /*2mb*/
                    et4000w32p_recalctimings,
                    et4000w32p_in, et4000w32p_out,
-                   et4000w32p_hwcursor_draw); 
+                   et4000w32p_hwcursor_draw,
+                   NULL); 
 
         rom_init(&et4000->bios_rom, "roms/et4000w32.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)

@@ -2204,7 +2204,8 @@ void *mach64gx_init()
         svga_init(&mach64->svga, mach64, 1 << 22, /*4mb*/
                    mach64_recalctimings,
                    mach64_in, mach64_out,
-                   mach64_hwcursor_draw); 
+                   mach64_hwcursor_draw,
+                   NULL);
 
         rom_init(&mach64->bios_rom, "roms/mach64gx/bios.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)

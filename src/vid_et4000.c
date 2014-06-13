@@ -140,6 +140,7 @@ void *et4000_init()
         svga_init(&et4000->svga, et4000, 1 << 20, /*1mb*/
                    et4000_recalctimings,
                    et4000_in, et4000_out,
+                   NULL,
                    NULL);
         
         return et4000;
