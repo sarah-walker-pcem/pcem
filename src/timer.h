@@ -1,14 +1,23 @@
-#define timer_clock(cycles) 				\
+extern int timer_start;
+
+#define timer_start_period(cycles)                      \
+        timer_start = cycles;
+
+#define timer_end_period(cycles) 			\
 	do 						\
 	{						\
-		timer_count -= cycles;			\
+                int diff = timer_start - cycles;        \
+		timer_count -= diff;			\
+                timer_start = cycles;                   \
 		if (timer_count <= 0)			\
 		{					\
 			timer_process();		\
 			timer_update_outstanding();	\
 		}					\
 	} while (0)
-	
+
+#define timer_clock() timer_end_period(cycles)
+
 void timer_process();
 void timer_update_outstanding();
 void timer_reset();

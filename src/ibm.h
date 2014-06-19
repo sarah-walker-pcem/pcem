@@ -190,7 +190,7 @@ extern int cpl_override;
 typedef struct PIT
 {
         uint32_t l[3];
-        double c[3];
+        int c[3];
         uint8_t m[3];
         uint8_t ctrl,ctrls[2];
         int wp,rm[3],wm[3];

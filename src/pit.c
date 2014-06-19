@@ -68,8 +68,10 @@ void clearpit()
 
 float pit_timer0_freq()
 {
-//        pclog("PIT timer 0 freq %04X %f %f\n",pit.l[0],(float)pit.l[0],1193182.0f/(float)pit.l[0]);
-        return 1193182.0f/(float)pit.l[0];
+        if (pit.l[0])
+                return 1193182.0f/(float)pit.l[0];
+        else
+                return 1193182.0f/(float)0x10000;
 }
 
 static void (*pit_set_out_funcs[3])(int new_out, int old_out);
@@ -83,12 +85,14 @@ static void pit_set_out(int t, int out)
 static void pit_load(int t)
 {
         int l = pit.l[t] ? pit.l[t] : 0x10000;
+        timer_process();
         pit.newcount[t] = 0;
+//        pclog("pit_load: t=%i l=%x\n", t, l);
         switch (pit.m[t])
         {
                 case 0: /*Interrupt on terminal count*/
                 pit.count[t] = l;
-                pit.c[t] = l * PITCONST;
+                pit.c[t] = (int)((l << TIMER_SHIFT) * PITCONST);
                 pit_set_out(t, 0);
                 pit.thit[t] = 0;
                 pit.enabled[t] = pit.gate[t];
@@ -100,7 +104,7 @@ static void pit_load(int t)
                 if (pit.initial[t])
                 {
                         pit.count[t] = l - 1;
-                        pit.c[t] = (l - 1) * PITCONST;
+                        pit.c[t] = (int)(((l - 1) << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 1);
                         pit.thit[t] = 0;
                 }
@@ -110,11 +114,12 @@ static void pit_load(int t)
                 if (pit.initial[t])
                 {
                         pit.count[t] = l;
-                        pit.c[t] = ((l + 1) >> 1) * PITCONST;
+                        pit.c[t] = (int)((((l + 1) >> 1) << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 1);
                         pit.thit[t] = 0;
                 }
                 pit.enabled[t] = pit.gate[t];
+//                pclog("pit_load: square wave mode c=%x\n", pit.c[t]);
                 break;
                 case 4: /*Software triggered stobe*/
                 if (!pit.thit[t] && !pit.initial[t])
@@ -122,7 +127,7 @@ static void pit_load(int t)
                 else
                 {
                         pit.count[t] = l;
-                        pit.c[t] = l * PITCONST;
+                        pit.c[t] = (int)((l << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 0);
                         pit.thit[t] = 0;
                 }
@@ -134,12 +139,14 @@ static void pit_load(int t)
         }
         pit.initial[t] = 0;
         pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        timer_update_outstanding();
 //        pclog("pit_load: t=%i running=%i thit=%i enabled=%i m=%i l=%x c=%g gate=%i\n", t, pit.running[t], pit.thit[t], pit.enabled[t], pit.m[t], pit.l[t], pit.c[t], pit.gate[t]);
 }
 
 void pit_set_gate(int t, int gate)
 {
         int l = pit.l[t] ? pit.l[t] : 0x10000;
+        timer_process();
         switch (pit.m[t])
         {
                 case 0: /*Interrupt on terminal count*/
@@ -151,7 +158,7 @@ void pit_set_gate(int t, int gate)
                 if (gate && !pit.gate[t])
                 {
                         pit.count[t] = l;
-                        pit.c[t] = l * PITCONST;
+                        pit.c[t] = (int)((l << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 0);
                         pit.thit[t] = 0;
                         pit.enabled[t] = 1;
@@ -161,7 +168,7 @@ void pit_set_gate(int t, int gate)
                 if (gate && !pit.gate[t])
                 {
                         pit.count[t] = l - 1;
-                        pit.c[t] = (l - 1) * PITCONST;
+                        pit.c[t] = (int)(((l - 1) << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 1);
                         pit.thit[t] = 0;
                 }                
@@ -171,7 +178,7 @@ void pit_set_gate(int t, int gate)
                 if (gate && !pit.gate[t])
                 {
                         pit.count[t] = l;
-                        pit.c[t] = ((l + 1) >> 1) * PITCONST;
+                        pit.c[t] = (int)((((l + 1) >> 1) << TIMER_SHIFT) * PITCONST);
                         pit_set_out(t, 1);
                         pit.thit[t] = 0;
                 }
@@ -180,12 +187,14 @@ void pit_set_gate(int t, int gate)
         }
         pit.gate[t] = gate;
         pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        timer_update_outstanding();
 //        pclog("pit_set_gate: t=%i gate=%i\n", t, gate);
 }
 
 static void pit_over(int t)
 {
         int l = pit.l[t] ? pit.l[t] : 0x10000;
+//        if (!t) pclog("pit_over: t=%i l=%x c=%x %i\n", t, pit.l[t], pit.c[t], pit.c[t] >> TIMER_SHIFT);
         switch (pit.m[t])
         {
                 case 0: /*Interrupt on terminal count*/
@@ -194,11 +203,11 @@ static void pit_over(int t)
                         pit_set_out(t, 1);
                 pit.thit[t] = 1;
                 pit.count[t] += 0xffff;
-                pit.c[t] += 0xffff * PITCONST;
+                pit.c[t] += (int)((0xffff << TIMER_SHIFT) * PITCONST);
                 break;
                 case 2: /*Rate generator*/
                 pit.count[t] += l;
-                pit.c[t] += l * PITCONST;
+                pit.c[t] += (int)((l << TIMER_SHIFT) * PITCONST);
                 pit_set_out(t, 0);
                 pit_set_out(t, 1);
                 break;
@@ -207,14 +216,15 @@ static void pit_over(int t)
                 {
                         pit_set_out(t, 0);
                         pit.count[t] += (l >> 1);
-                        pit.c[t] += (l >> 1) * PITCONST;
+                        pit.c[t] += (int)(((l >> 1) << TIMER_SHIFT) * PITCONST);
                 }
                 else
                 {
                         pit_set_out(t, 1);
                         pit.count[t] += ((l + 1) >> 1);
-                        pit.c[t] = ((l + 1) >> 1) * PITCONST;
+                        pit.c[t] = (int)((((l + 1) >> 1) << TIMER_SHIFT) * PITCONST);
                 }
+//                if (!t) pclog("pit_over: square wave mode c=%x  %lli  %f\n", pit.c[t], tsc, PITCONST);
                 break;
                 case 4: /*Software triggered strove*/
                 if (!pit.thit[t])
@@ -226,19 +236,19 @@ static void pit_over(int t)
                 {
                         pit.newcount[t] = 0;
                         pit.count[t] += l;
-                        pit.c[t] += l * PITCONST;
+                        pit.c[t] += (int)((l << TIMER_SHIFT) * PITCONST);
                 }
                 else
                 {
                         pit.thit[t] = 1;
                         pit.count[t] += 0xffff;
-                        pit.c[t] += 0xffff * PITCONST;
+                        pit.c[t] += (int)((0xffff << TIMER_SHIFT) * PITCONST);
                 }
                 break;
                 case 5: /*Hardware triggered strove*/
                 if (!pit.thit[t])
                 {
-                                pit_set_out(t, 0);
+                        pit_set_out(t, 0);
                         pit_set_out(t, 1);
                 }
                 pit.thit[t] = 1;
@@ -249,10 +259,11 @@ static void pit_over(int t)
 
 static int pit_read_timer(int t)
 {
+        timer_clock();
 //        pclog("pit_read_timer: t=%i using_timer=%i m=%i\n", t, pit.using_timer[t], pit.m[t]);
         if (pit.using_timer[t])
         {
-                int read = (pit.c[t] / PITCONST);
+                int read = (int)((pit.c[t] + ((1 << TIMER_SHIFT) - 1)) / PITCONST) >> TIMER_SHIFT;
                 if (pit.m[t] == 2)
                         read++;
                 if (read < 0)
@@ -273,7 +284,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
 {
         int t;
         cycles -= (int)PITCONST;
-//        if (val != 0x40) pclog("Write PIT %04X %02X %04X:%08X %i %i\n",addr,val,CS,pc,ins, pit.gate[0]);
+//        /*if (val != 0x40) */pclog("Write PIT %04X %02X %04X:%08X %i %i\n",addr,val,CS,pc,ins, pit.gate[0]);
         
         switch (addr&3)
         {
@@ -283,11 +294,11 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                         if (!(val&0x20))
                         {
                                 if (val & 2)
-                                        pit.rl[0] = pit.using_timer[0] ? (pit.c[0] / PITCONST) : pit.count[0];
+                                        pit.rl[0] = pit.using_timer[0] ? ((int)(pit.c[0] / PITCONST) >> TIMER_SHIFT) : pit.count[0];
                                 if (val & 4)
-                                        pit.rl[1] = pit.using_timer[1] ? (pit.c[1] / PITCONST) : pit.count[1];
+                                        pit.rl[1] = pit.using_timer[1] ? ((int)(pit.c[1] / PITCONST) >> TIMER_SHIFT) : pit.count[1];
                                 if (val & 8)
-                                        pit.rl[2] = pit.using_timer[2] ? (pit.c[2] / PITCONST) : pit.count[2];
+                                        pit.rl[2] = pit.using_timer[2] ? ((int)(pit.c[2] / PITCONST) >> TIMER_SHIFT) : pit.count[2];
                         }
                         return;
                 }
@@ -440,6 +451,14 @@ void pit_poll()
                 pit_over(2);
 }
 
+void pit_timer_over(void *p)
+{
+        int timer = (int) p;
+//        pclog("pit_timer_over %i\n", timer);
+        
+        pit_over(timer);
+}
+
 void pit_clock(int t)
 {
         if (pit.thit[t] || !pit.enabled[t])
@@ -456,12 +475,14 @@ void pit_clock(int t)
 void pit_set_using_timer(int t, int using_timer)
 {
 //        pclog("pit_set_using_timer: t=%i using_timer=%i\n", t, using_timer);        
+        timer_process();
         if (pit.using_timer[t] && !using_timer)
                 pit.count[t] = pit_read_timer(t);
         if (!pit.using_timer[t] && using_timer)
-                pit.c[t] = pit.count[t] * PITCONST;
+                pit.c[t] = (int)((pit.count[t] << TIMER_SHIFT) * PITCONST);
         pit.using_timer[t] = using_timer;
         pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        timer_update_outstanding();
 }
 
 void pit_set_out_func(int t, void (*func)(int new_out, int old_out))
@@ -516,7 +537,11 @@ void pit_init()
         pit.gate[0] = pit.gate[1] = 1;
         pit.gate[2] = 0;
         pit.using_timer[0] = pit.using_timer[1] = pit.using_timer[2] = 1;
-        
+
+        timer_add(pit_timer_over, &pit.c[0], &pit.running[0], (void *)0);
+        timer_add(pit_timer_over, &pit.c[1], &pit.running[1], (void *)1);
+        timer_add(pit_timer_over, &pit.c[2], &pit.running[2], (void *)2);
+                
         pit_set_out_func(0, pit_irq0_timer);
         pit_set_out_func(1, pit_null_timer);
         pit_set_out_func(2, pit_speaker_timer);

@@ -798,8 +798,8 @@ void clockhardware()
         if (pit.running[1]) pit.c[1] -= diff;
         if (pit.running[2]) pit.c[2] -= diff;
         if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
-        
-        timer_clock(diff);
+  
+        timer_end_period(cycles);      
 }
 
 static int takeint = 0;
@@ -1076,6 +1076,7 @@ void execx86(int cycs)
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
 //                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
+                timer_start_period(cycles);
                 current_diff = 0;
                 cycles-=nextcyc;
 //                if (instime) pclog("Cycles %i %i\n",cycles,cycdiff);

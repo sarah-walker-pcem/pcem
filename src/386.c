@@ -1248,6 +1248,7 @@ void exec386(int cycs)
         {
                 cycdiff=0;
                 oldcyc=cycles;
+                timer_start_period(cycles);
 //                pclog("%i %02X\n", ins, ram[8]);
                 while (cycdiff<100)
                 {
@@ -1414,18 +1415,6 @@ opcodestart:
                 
                 tsc += cycdiff;
                 
-/*                keybsenddelay -= cycdiff;
-                if (keybsenddelay<1)
-                {
-                        keybsenddelay = 1000;
-                        keyboard_at_poll();
-                }*/
-                
-                pit.c[0] -= cycdiff;
-                pit.c[1] -= cycdiff;
-                if (pit.gate[2]) pit.c[2] -= cycdiff;
-                if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
-
-                timer_clock(cycdiff);
+                timer_end_period(cycles);
         }
 }
