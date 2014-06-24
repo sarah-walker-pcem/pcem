@@ -54,51 +54,38 @@ static struct
 
 int winsizex=640,winsizey=480;
 int gfx_present[19];
-int wakeups,wokeups;
 #undef cs
 CRITICAL_SECTION cs;
-void waitmain();
-void vsyncint();
-int vgapresent;
 
-int cursoron = 1;
-
-HANDLE soundthreadh;
-HANDLE blitthreadh;
 HANDLE mainthreadh;
-
-void soundthread(LPVOID param);
-void endmainthread();
-void endsoundthread();
-void silencesound();
-void restoresound();
-static HANDLE frameobject;
 
 int infocus=1;
 
 int drawits=0;
-void vsyncint()
-{
-//        if (infocus)
-//        {
-                        drawits++;
-                        wakeups++;
-                        SetEvent(frameobject);
-//        }
-}
 
 int romspresent[ROM_MAX];
 int quited=0;
 
 RECT oldclip;
 int mousecapture=0;
-int drawit;
+
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND ghwnd;
+
+HINSTANCE hinstance;
+
+HMENU menu;
+
+extern int updatestatus;
+
+int pause=0;
+
 static int win_doresize = 0;
+
+static int leave_fullscreen_flag = 0;
 
 void updatewindowsize(int x, int y)
 {
@@ -119,19 +106,6 @@ void releasemouse()
         }
 }
 
-void setrefresh(int rate)
-{
-        return;
-        remove_int(vsyncint);
-        drawit=0;
-        install_int_ex(vsyncint,BPS_TO_TIMER(rate));
-/*        printf("Vsyncint at %i hz\n",rate);
-        counter_freq.QuadPart=counter_base.QuadPart/rate;*/
-//        DeleteTimerQueueTimer( &hTimer, hTimerQueue, NULL);
-//        CreateTimerQueueTimer( &hTimer, hTimerQueue,
-//            mainroutine, NULL , 100, 1000/rate, 0);
-}
-
 void startblit()
 {
         EnterCriticalSection(&cs);
@@ -142,36 +116,10 @@ void endblit()
         LeaveCriticalSection(&cs);
 }
 
-static int leave_fullscreen_flag = 0;
 void leave_fullscreen()
 {
         leave_fullscreen_flag = 1;
 }
-
-int mainthreadon=0;
-
-/*static HANDLE blitobject;
-void blitthread(LPVOID param)
-{
-        while (!quited)
-        {
-                WaitForSingleObject(blitobject,100);
-                if (quited) break;
-                doblit();
-        }
-}
-
-void wakeupblit()
-{
-        SetEvent(blitobject);
-}*/
-
-HWND statushwnd;
-int statusopen=0;
-extern int updatestatus;
-extern int sreadlnum, swritelnum, segareads, segawrites, scycles_lost;
-
-int pause=0;
 
 void mainthread(LPVOID param)
 {
@@ -179,7 +127,6 @@ void mainthread(LPVOID param)
         int frames = 0;
         DWORD old_time, new_time;
 
-        mainthreadon=1;
 //        Sleep(500);
         drawits=0;
         old_time = GetTickCount();
@@ -187,8 +134,9 @@ void mainthread(LPVOID param)
         {
                 if (updatestatus)
                 {
-                        updatestatus=0;
-                        if (statusopen) SendMessage(statushwnd,WM_USER,0,0);
+                        updatestatus = 0;
+                        if (status_is_open)
+                                SendMessage(status_hwnd, WM_USER, 0, 0);
                 }
                 new_time = GetTickCount();
                 drawits += new_time - old_time;
@@ -196,7 +144,6 @@ void mainthread(LPVOID param)
                 if (drawits > 0 && !pause)
                 {
                         drawits-=10;        if (drawits>50) drawits=0;
-                        wokeups++;
                         runpc();
                         frames++;
                         if (frames >= 200 && nvr_dosave)
@@ -226,10 +173,7 @@ void mainthread(LPVOID param)
                         SendMessage(ghwnd, WM_LEAVEFULLSCREEN, 0, 0);
                 }
         }
-        mainthreadon=0;
 }
-
-HMENU menu;
 
 static void initmenu(void)
 {
@@ -251,8 +195,6 @@ static void initmenu(void)
                 }
         }
 }
-
-HINSTANCE hinstance;
 
 void get_executable_name(char *s, int size)
 {
@@ -418,33 +360,18 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         loadbios();
 
         timeBeginPeriod(1);
-//        soundobject=CreateEvent(NULL, FALSE, FALSE, NULL);
-//        soundthreadh=CreateThread(NULL,0,soundthread,NULL,NULL,NULL);
-
         
         atexit(releasemouse);
-//        atexit(endsoundthread);
-        drawit=0;
+
 //        QueryPerformanceFrequency(&counter_base);
 ///        QueryPerformanceCounter(&counter_posold);
 //        counter_posold.QuadPart*=100;
 
-InitializeCriticalSection(&cs);
-        frameobject=CreateEvent(NULL, FALSE, FALSE, NULL);
+        InitializeCriticalSection(&cs);
         mainthreadh=(HANDLE)_beginthread(mainthread,0,NULL);
-//        atexit(endmainthread);
-//        soundthreadh=(HANDLE)_beginthread(soundthread,0,NULL);
-//        atexit(endsoundthread);
         SetThreadPriority(mainthreadh, THREAD_PRIORITY_HIGHEST);
         
-//        blitobject=CreateEvent(NULL, FALSE, FALSE, NULL);
-//        blitthreadh=(HANDLE)_beginthread(blitthread,0,NULL);
-        
-//        SetThreadPriority(soundthreadh, THREAD_PRIORITY_HIGHEST);
-
-        drawit=0;
-        install_int_ex(vsyncint,BPS_TO_TIMER(100));
-        
+       
         updatewindowsize(640, 480);
 
         QueryPerformanceFrequency(&qpc_freq);
@@ -497,7 +424,6 @@ InitializeCriticalSection(&cs);
 //        pclog("Sleep 1000\n");
         Sleep(200);
 //        pclog("TerminateThread\n");
-        TerminateThread(blitthreadh,0);
         TerminateThread(mainthreadh,0);
 //        pclog("Quited? %i\n",quited);
 //        pclog("Closepc\n");
@@ -507,7 +433,6 @@ InitializeCriticalSection(&cs);
         vid_apis[video_fullscreen][vid_api].close();
         
         timeEndPeriod(1);
-//        endsoundthread();
 //        dumpregs();
         if (mousecapture) 
         {
@@ -603,846 +528,7 @@ int getsfile(HWND hwnd, char *f, char *fn)
         return 1;
 }
 
-extern int is486;
-int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
-static int settings_sound_to_list[20], settings_list_to_sound[20];
 
-BOOL CALLBACK configdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-        char temp_str[256];
-        HWND h;
-        int c, d;
-        int rom,gfx,mem,fpu;
-        int temp_cpu, temp_cpu_m, temp_model;
-        int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_sound_card_current;
-//        pclog("Dialog msg %i %08X\n",message,message);
-        switch (message)
-        {
-                case WM_INITDIALOG:
-                        pause=1;
-                h=GetDlgItem(hdlg,IDC_COMBO1);
-                for (c=0;c<ROM_MAX;c++) romstolist[c]=0;
-                c = d = 0;
-                while (models[c].id != -1)
-                {
-                        pclog("INITDIALOG : %i %i %i\n",c,models[c].id,romspresent[models[c].id]);
-                        if (romspresent[models[c].id])
-                        {
-                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)models[c].name);
-                                modeltolist[c] = d;
-                                listtomodel[d] = c;
-                                romstolist[models[c].id] = d;
-                                romstomodel[models[c].id] = c;
-                                d++;
-                        }
-                        c++;
-                }
-                SendMessage(h, CB_SETCURSEL, modeltolist[model], 0);
-
-                h = GetDlgItem(hdlg, IDC_COMBOVID);
-                c = d = 0;
-                while (1)
-                {
-                        char *s = video_card_getname(c);
-
-                        if (!s[0])
-                                break;
-
-                        if (video_card_available(c) && gfx_present[video_new_to_old(c)])
-                        {
-                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
-                                if (video_new_to_old(c) == gfxcard)
-                                        SendMessage(h, CB_SETCURSEL, d, 0);                                
-
-                                d++;
-                        }
-
-                        c++;
-                }
-                if (models[model].fixed_gfxcard)
-                        EnableWindow(h, FALSE);
-
-                h=GetDlgItem(hdlg,IDC_COMBOCPUM);
-                c = 0;
-                while (models[romstomodel[romset]].cpu[c].cpus != NULL && c < 3)
-                {
-                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)models[romstomodel[romset]].cpu[c].name);
-                        c++;
-                }
-                EnableWindow(h,TRUE);
-                SendMessage(h, CB_SETCURSEL, cpu_manufacturer, 0);
-                if (c == 1) EnableWindow(h, FALSE);
-                else        EnableWindow(h, TRUE);
-
-                h=GetDlgItem(hdlg,IDC_COMBO3);
-                c = 0;
-                while (models[romstomodel[romset]].cpu[cpu_manufacturer].cpus[c].cpu_type != -1)
-                {
-                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)models[romstomodel[romset]].cpu[cpu_manufacturer].cpus[c].name);
-                        c++;
-                }
-                EnableWindow(h,TRUE);
-                SendMessage(h, CB_SETCURSEL, cpu, 0);
-
-                h=GetDlgItem(hdlg,IDC_COMBOSND);
-                c = d = 0;
-                while (1)
-                {
-                        char *s = sound_card_getname(c);
-
-                        if (!s[0])
-                                break;
-
-                        settings_sound_to_list[c] = d;
-                        
-                        if (sound_card_available(c))
-                        {
-                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
-                                settings_list_to_sound[d] = c;
-                                d++;
-                        }
-
-                        c++;
-                }
-                SendMessage(h, CB_SETCURSEL, settings_sound_to_list[sound_card_current], 0);
-
-                h=GetDlgItem(hdlg, IDC_CHECK3);
-                SendMessage(h, BM_SETCHECK, GAMEBLASTER, 0);
-
-                h=GetDlgItem(hdlg, IDC_CHECKGUS);
-                SendMessage(h, BM_SETCHECK, GUS, 0);
-
-                h=GetDlgItem(hdlg, IDC_CHECKSSI);
-                SendMessage(h, BM_SETCHECK, SSI2001, 0);
-                
-                h=GetDlgItem(hdlg, IDC_CHECK2);
-                SendMessage(h, BM_SETCHECK, slowega, 0);
-
-                h=GetDlgItem(hdlg, IDC_CHECK4);
-                SendMessage(h, BM_SETCHECK, cga_comp, 0);
-
-                h=GetDlgItem(hdlg,IDC_COMBOCHC);
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"A little");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"A bit");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Some");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"A lot");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Infinite");
-                SendMessage(h,CB_SETCURSEL,cache,0);
-
-                h=GetDlgItem(hdlg,IDC_COMBOSPD);
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"8-bit");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Slow 16-bit");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Fast 16-bit");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Slow VLB/PCI");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Mid  VLB/PCI");
-                SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)"Fast VLB/PCI");                
-                SendMessage(h,CB_SETCURSEL,video_speed,0);
-
-                h = GetDlgItem(hdlg, IDC_MEMSPIN);
-                SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
-                SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
-                SendMessage(h, UDM_SETPOS, 0, mem_size);
-                
-                return TRUE;
-                case WM_COMMAND:
-                switch (LOWORD(wParam))
-                {
-                        case IDOK:
-			h = GetDlgItem(hdlg, IDC_MEMTEXT);
-			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
-			sscanf(temp_str, "%i", &mem);
-			if (mem < 1 || mem > 256)
-			{
-				MessageBox(NULL, "Invalid memory size\nMemory must be between 1 and 256 MB", "PCem", MB_OK);
-				break;
-			}
-			
-			
-                        h=GetDlgItem(hdlg,IDC_COMBO1);
-                        temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
-
-                        h = GetDlgItem(hdlg, IDC_COMBOVID);
-                        SendMessage(h, CB_GETLBTEXT, SendMessage(h,CB_GETCURSEL,0,0), (LPARAM)temp_str);
-                        gfx = video_new_to_old(video_card_getid(temp_str));
-
-                        h = GetDlgItem(hdlg, IDC_COMBOCPUM);
-                        temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        h = GetDlgItem(hdlg, IDC_COMBO3);
-                        temp_cpu = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        fpu = (models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type >= CPU_i486DX) ? 1 : 0;
-                        pclog("newcpu - %i %i %i  %i\n",temp_cpu_m,temp_cpu,fpu,models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type);
-
-                        h = GetDlgItem(hdlg, IDC_CHECK3);
-                        temp_GAMEBLASTER = SendMessage(h, BM_GETCHECK, 0, 0);
-
-                        h = GetDlgItem(hdlg, IDC_CHECKGUS);
-                        temp_GUS = SendMessage(h, BM_GETCHECK, 0, 0);
-
-                        h = GetDlgItem(hdlg, IDC_CHECKSSI);
-                        temp_SSI2001 = SendMessage(h, BM_GETCHECK, 0, 0);
-
-                        h = GetDlgItem(hdlg, IDC_COMBOSND);
-                        temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
-
-                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current)
-                        {
-                                if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
-                                {
-                                        model = temp_model;
-                                        romset = model_getromset();
-                                        gfxcard=gfx;
-                                        mem_size=mem;
-                                        cpu_manufacturer = temp_cpu_m;
-                                        cpu = temp_cpu;
-                                        GAMEBLASTER = temp_GAMEBLASTER;
-                                        GUS = temp_GUS;
-                                        SSI2001 = temp_SSI2001;
-                                        sound_card_current = temp_sound_card_current;
-                                        
-                                        mem_resize();
-                                        loadbios();
-                                        resetpchard();
-                                }
-                                else
-                                {
-                                        EndDialog(hdlg,0);
-                                        pause=0;
-                                        return TRUE;
-                                }
-                        }
-
-                        h=GetDlgItem(hdlg,IDC_COMBOSPD);
-                        video_speed = SendMessage(h,CB_GETCURSEL,0,0);
-
-                        h=GetDlgItem(hdlg,IDC_CHECK4);
-                        cga_comp=SendMessage(h,BM_GETCHECK,0,0);
-
-                        cpu_manufacturer = temp_cpu_m;
-                        cpu = temp_cpu;
-                        cpu_set();
-                        
-                        h=GetDlgItem(hdlg,IDC_COMBOCHC);
-                        cache=SendMessage(h,CB_GETCURSEL,0,0);
-                        mem_updatecache();
-                        
-                        saveconfig();
-
-                        speedchanged();
-//                        if (romset>2) cpuspeed=1;
-//                        setpitclock(clocks[AT?1:0][cpuspeed][0]);
-//                        if (cpuspeed) setpitclock(8000000.0);
-//                        else          setpitclock(4772728.0);
-
-                        case IDCANCEL:
-                        EndDialog(hdlg,0);
-                        pause=0;
-                        return TRUE;
-                        case IDC_COMBO1:
-                        if (HIWORD(wParam) == CBN_SELCHANGE)
-                        {
-                                h = GetDlgItem(hdlg,IDC_COMBO1);
-                                temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
-                                
-                                /*Enable/disable gfxcard list*/
-                                h = GetDlgItem(hdlg, IDC_COMBOVID);
-                                if (!models[temp_model].fixed_gfxcard)
-                                {
-                                        char *s = video_card_getname(video_old_to_new(gfxcard));
-                                        
-                                        EnableWindow(h, TRUE);
-                                        
-                                        c = 0;
-                                        while (1)
-                                        {
-                                                SendMessage(h, CB_GETLBTEXT, c, (LPARAM)temp_str);
-                                                if (!strcmp(temp_str, s))
-                                                        break;
-                                                c++;
-                                        }
-                                        SendMessage(h, CB_SETCURSEL, c, 0);
-                                }
-                                else
-                                        EnableWindow(h, FALSE);
-                                
-                                /*Rebuild manufacturer list*/
-                                h = GetDlgItem(hdlg, IDC_COMBOCPUM);
-                                temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
-                                SendMessage(h, CB_RESETCONTENT, 0, 0);
-                                c = 0;
-                                while (models[temp_model].cpu[c].cpus != NULL && c < 3)
-                                {
-                                        SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)models[temp_model].cpu[c].name);
-                                        c++;
-                                }
-                                if (temp_cpu_m >= c) temp_cpu_m = c - 1;
-                                SendMessage(h, CB_SETCURSEL, temp_cpu_m, 0);
-                                if (c == 1) EnableWindow(h, FALSE);
-                                else        EnableWindow(h, TRUE);
-
-                                /*Rebuild CPU list*/
-                                h = GetDlgItem(hdlg, IDC_COMBO3);
-                                temp_cpu = SendMessage(h, CB_GETCURSEL, 0, 0);
-                                SendMessage(h, CB_RESETCONTENT, 0, 0);
-                                c = 0;
-                                while (models[temp_model].cpu[temp_cpu_m].cpus[c].cpu_type != -1)
-                                {
-                                        SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)models[temp_model].cpu[temp_cpu_m].cpus[c].name);
-                                        c++;
-                                }
-                                if (temp_cpu >= c) temp_cpu = c - 1;
-                                SendMessage(h, CB_SETCURSEL, temp_cpu, 0);
-                        }
-                        break;
-                        case IDC_COMBOCPUM:
-                        if (HIWORD(wParam) == CBN_SELCHANGE)
-                        {
-                                h = GetDlgItem(hdlg, IDC_COMBO1);
-                                temp_model = listtomodel[SendMessage(h, CB_GETCURSEL, 0, 0)];
-                                h = GetDlgItem(hdlg, IDC_COMBOCPUM);
-                                temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
-                                
-                                /*Rebuild CPU list*/
-                                h=GetDlgItem(hdlg, IDC_COMBO3);
-                                temp_cpu = SendMessage(h, CB_GETCURSEL, 0, 0);
-                                SendMessage(h, CB_RESETCONTENT, 0, 0);
-                                c = 0;
-                                while (models[temp_model].cpu[temp_cpu_m].cpus[c].cpu_type != -1)
-                                {
-                                        SendMessage(h,CB_ADDSTRING,0,(LPARAM)(LPCSTR)models[temp_model].cpu[temp_cpu_m].cpus[c].name);
-                                        c++;
-                                }
-                                if (temp_cpu >= c) temp_cpu = c - 1;
-                                SendMessage(h, CB_SETCURSEL, temp_cpu, 0);
-                        }
-                        break;
-                }
-                break;
-
-        }
-        return FALSE;
-}
-static char hd_new_name[512];
-static int hd_new_spt, hd_new_hpc, hd_new_cyl;
-
-BOOL CALLBACK hdnewdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-        char s[260];
-        HWND h;
-        int c;
-        PcemHDC hd[2];
-        FILE *f;
-        uint8_t buf[512];
-        switch (message)
-        {
-                case WM_INITDIALOG:
-                h = GetDlgItem(hdlg, IDC_EDIT1);
-                sprintf(s, "%i", 63);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-                h = GetDlgItem(hdlg, IDC_EDIT2);
-                sprintf(s, "%i", 16);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-                h = GetDlgItem(hdlg, IDC_EDIT3);
-                sprintf(s, "%i", 511);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-
-                h = GetDlgItem(hdlg, IDC_EDITC);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)"");
-                
-                h = GetDlgItem(hdlg, IDC_TEXT1);
-                sprintf(s, "Size : %imb", (((511*16*63)*512)/1024)/1024);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-
-                return TRUE;
-                case WM_COMMAND:
-                switch (LOWORD(wParam))
-                {
-                        case IDOK:
-                        h = GetDlgItem(hdlg, IDC_EDITC);
-                        SendMessage(h, WM_GETTEXT, 511, (LPARAM)hd_new_name);
-                        if (!hd_new_name[0])
-                        {
-                                MessageBox(ghwnd,"Please enter a valid filename","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        h = GetDlgItem(hdlg, IDC_EDIT1);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_spt);
-                        h = GetDlgItem(hdlg, IDC_EDIT2);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_hpc);
-                        h = GetDlgItem(hdlg, IDC_EDIT3);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_cyl);
-                        
-                        if (hd_new_spt > 63)
-                        {
-                                MessageBox(ghwnd,"Drive has too many sectors (maximum is 63)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        if (hd_new_hpc > 128)
-                        {
-                                MessageBox(ghwnd,"Drive has too many heads (maximum is 128)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        if (hd_new_cyl > 16383)
-                        {
-                                MessageBox(ghwnd,"Drive has too many cylinders (maximum is 16383)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        
-                        f = fopen64(hd_new_name, "wb");
-                        if (!f)
-                        {
-                                MessageBox(ghwnd,"Can't open file for write","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        memset(buf, 0, 512);
-                        for (c = 0; c < (hd_new_cyl * hd_new_hpc * hd_new_spt); c++)
-                            fwrite(buf, 512, 1, f);
-                        fclose(f);
-                        
-                        MessageBox(ghwnd,"Remember to partition and format the new drive","PCem",MB_OK);
-                        
-                        EndDialog(hdlg,1);
-                        return TRUE;
-                        case IDCANCEL:
-                        EndDialog(hdlg,0);
-                        return TRUE;
-
-                        case IDC_CFILE:
-                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", ""))
-                        {
-                                h = GetDlgItem(hdlg, IDC_EDITC);
-                                SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
-                        }
-                        return TRUE;
-                        
-                        case IDC_EDIT1: case IDC_EDIT2: case IDC_EDIT3:
-                        h=GetDlgItem(hdlg,IDC_EDIT1);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].spt);
-                        h=GetDlgItem(hdlg,IDC_EDIT2);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].hpc);
-                        h=GetDlgItem(hdlg,IDC_EDIT3);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].tracks);
-
-                        h=GetDlgItem(hdlg,IDC_TEXT1);
-                        sprintf(s,"Size : %imb",(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
-                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                        return TRUE;
-                }
-                break;
-
-        }
-        return FALSE;
-}
-
-BOOL CALLBACK hdsizedlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-        char s[260];
-        HWND h;
-        PcemHDC hd[2];
-        switch (message)
-        {
-                case WM_INITDIALOG:
-                h = GetDlgItem(hdlg, IDC_EDIT1);
-                sprintf(s, "%i", hd_new_spt);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-                h = GetDlgItem(hdlg, IDC_EDIT2);
-                sprintf(s, "%i", hd_new_hpc);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-                h = GetDlgItem(hdlg, IDC_EDIT3);
-                sprintf(s, "%i", hd_new_cyl);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-
-                h = GetDlgItem(hdlg, IDC_TEXT1);
-                sprintf(s, "Size : %imb", ((((uint64_t)hd_new_spt*(uint64_t)hd_new_hpc*(uint64_t)hd_new_cyl)*512)/1024)/1024);
-                SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-
-                return TRUE;
-                case WM_COMMAND:
-                switch (LOWORD(wParam))
-                {
-                        case IDOK:
-                        h = GetDlgItem(hdlg, IDC_EDIT1);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_spt);
-                        h = GetDlgItem(hdlg, IDC_EDIT2);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_hpc);
-                        h = GetDlgItem(hdlg, IDC_EDIT3);
-                        SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
-                        sscanf(s, "%i", &hd_new_cyl);
-                        
-                        if (hd_new_spt > 63)
-                        {
-                                MessageBox(ghwnd,"Drive has too many sectors (maximum is 63)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        if (hd_new_hpc > 128)
-                        {
-                                MessageBox(ghwnd,"Drive has too many heads (maximum is 128)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        if (hd_new_cyl > 16383)
-                        {
-                                MessageBox(ghwnd,"Drive has too many cylinders (maximum is 16383)","PCem error",MB_OK);
-                                return TRUE;
-                        }
-                        
-                        EndDialog(hdlg,1);
-                        return TRUE;
-                        case IDCANCEL:
-                        EndDialog(hdlg,0);
-                        return TRUE;
-
-                        case IDC_EDIT1: case IDC_EDIT2: case IDC_EDIT3:
-                        h=GetDlgItem(hdlg,IDC_EDIT1);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].spt);
-                        h=GetDlgItem(hdlg,IDC_EDIT2);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].hpc);
-                        h=GetDlgItem(hdlg,IDC_EDIT3);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].tracks);
-
-                        h=GetDlgItem(hdlg,IDC_TEXT1);
-                        sprintf(s,"Size : %imb",(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
-                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                        return TRUE;
-                }
-                break;
-
-        }
-        return FALSE;
-}
-
-static int hd_changed = 0;
-BOOL CALLBACK hdconfdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-        char s[260];
-        HWND h;
-        PcemHDC hd[2];
-        FILE *f;
-        off64_t sz;
-        switch (message)
-        {
-                case WM_INITDIALOG:
-                pause=1;
-                hd[0]=hdc[0];
-                hd[1]=hdc[1];
-                hd_changed = 0;
-                
-                h=GetDlgItem(hdlg,IDC_EDIT1);
-                sprintf(s,"%i",hdc[0].spt);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDIT2);
-                sprintf(s,"%i",hdc[0].hpc);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDIT3);
-                sprintf(s,"%i",hdc[0].tracks);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDITC);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)ide_fn[0]);
-
-                h=GetDlgItem(hdlg,IDC_EDIT4);
-                sprintf(s,"%i",hdc[1].spt);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDIT5);
-                sprintf(s,"%i",hdc[1].hpc);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDIT6);
-                sprintf(s,"%i",hdc[1].tracks);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                h=GetDlgItem(hdlg,IDC_EDITD);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)ide_fn[1]);
-                
-                h=GetDlgItem(hdlg,IDC_TEXT1);
-                sprintf(s,"Size : %imb",(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-
-                h=GetDlgItem(hdlg,IDC_TEXT2);
-                sprintf(s,"Size : %imb",(((((uint64_t)hd[1].tracks*(uint64_t)hd[1].hpc)*(uint64_t)hd[1].spt)*512)/1024)/1024);
-                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                return TRUE;
-                case WM_COMMAND:
-                switch (LOWORD(wParam))
-                {
-                        case IDOK:
-                        if (hd_changed)
-                        {                     
-                                if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
-                                {
-                                        h=GetDlgItem(hdlg,IDC_EDIT1);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[0].spt);
-                                        h=GetDlgItem(hdlg,IDC_EDIT2);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[0].hpc);
-                                        h=GetDlgItem(hdlg,IDC_EDIT3);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[0].tracks);
-                                        h=GetDlgItem(hdlg,IDC_EDITC);
-                                        SendMessage(h,WM_GETTEXT,511,(LPARAM)ide_fn[0]);
-
-                                        h=GetDlgItem(hdlg,IDC_EDIT4);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[1].spt);
-                                        h=GetDlgItem(hdlg,IDC_EDIT5);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[1].hpc);
-                                        h=GetDlgItem(hdlg,IDC_EDIT6);
-                                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                                        sscanf(s,"%i",&hd[1].tracks);
-                                        h=GetDlgItem(hdlg,IDC_EDITD);
-                                        SendMessage(h,WM_GETTEXT,511,(LPARAM)ide_fn[1]);
-                                        
-                                        hdc[0] = hd[0];
-                                        hdc[1] = hd[1];
-
-                                        saveconfig();
-                                                                                
-                                        resetpchard();
-                                }                                
-                        }
-                        case IDCANCEL:
-                        EndDialog(hdlg,0);
-                        pause=0;
-                        return TRUE;
-
-                        case IDC_EJECTC:
-                        hd[0].spt = 0;
-                        hd[0].hpc = 0;
-                        hd[0].tracks = 0;
-                        ide_fn[0][0] = 0;
-                        SetDlgItemText(hdlg, IDC_EDIT1, "0");
-                        SetDlgItemText(hdlg, IDC_EDIT2, "0");
-                        SetDlgItemText(hdlg, IDC_EDIT3, "0");
-                        SetDlgItemText(hdlg, IDC_EDITC, "");
-                        hd_changed = 1;
-                        return TRUE;
-                        case IDC_EJECTD:
-                        hd[1].spt = 0;
-                        hd[1].hpc = 0;
-                        hd[1].tracks = 0;
-                        ide_fn[1][0] = 0;
-                        SetDlgItemText(hdlg, IDC_EDIT4, "0");
-                        SetDlgItemText(hdlg, IDC_EDIT5, "0");
-                        SetDlgItemText(hdlg, IDC_EDIT6, "0");
-                        SetDlgItemText(hdlg, IDC_EDITD, "");
-                        hd_changed = 1;
-                        return TRUE;
-                        
-                        case IDC_CNEW:
-                        if (DialogBox(hinstance,TEXT("HdNewDlg"),hdlg,hdnewdlgproc) == 1)
-                        {
-                                h=GetDlgItem(hdlg,IDC_EDIT1);
-                                sprintf(s,"%i",hd_new_spt);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDIT2);
-                                sprintf(s,"%i",hd_new_hpc);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDIT3);
-                                sprintf(s,"%i",hd_new_cyl);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDITC);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)hd_new_name);
-
-                                h=GetDlgItem(hdlg,IDC_TEXT1);
-                                sprintf(s,"Size : %imb",(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-
-                                hd_changed = 1;
-                        }                              
-                        return TRUE;
-                        
-                        case IDC_CFILE:
-                        if (!getfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        MessageBox(ghwnd,"Can't open file for read","PCem error",MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                hd_new_spt = 63;
-                                hd_new_hpc = 16;
-                                hd_new_cyl = ((sz / 512) / 16) / 63;
-                                
-                                if (DialogBox(hinstance,TEXT("HdSizeDlg"),hdlg,hdsizedlgproc) == 1)
-                                {
-                                        h=GetDlgItem(hdlg,IDC_EDIT1);
-                                        sprintf(s,"%i",hd_new_spt);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDIT2);
-                                        sprintf(s,"%i",hd_new_hpc);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDIT3);
-                                        sprintf(s,"%i",hd_new_cyl);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDITC);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)openfilestring);
-
-                                        h=GetDlgItem(hdlg,IDC_TEXT1);
-                                        sprintf(s,"Size : %imb",(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-        
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-                                
-                        case IDC_DNEW:
-                        if (DialogBox(hinstance,TEXT("HdNewDlg"),hdlg,hdnewdlgproc) == 1)
-                        {
-                                h=GetDlgItem(hdlg,IDC_EDIT4);
-                                sprintf(s,"%i",hd_new_spt);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDIT5);
-                                sprintf(s,"%i",hd_new_hpc);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDIT6);
-                                sprintf(s,"%i",hd_new_cyl);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                h=GetDlgItem(hdlg,IDC_EDITD);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)hd_new_name);
-
-                                h=GetDlgItem(hdlg,IDC_TEXT2);
-                                sprintf(s,"Size : %imb",(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-
-                                hd_changed = 1;
-                        }                              
-                        return TRUE;
-                        
-                        case IDC_DFILE:
-                        if (!getfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        MessageBox(ghwnd,"Can't open file for read","PCem error",MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                hd_new_spt = 63;
-                                hd_new_hpc = 16;
-                                hd_new_cyl = ((sz / 512) / 16) / 63;
-                                
-                                if (DialogBox(hinstance,TEXT("HdSizeDlg"),hdlg,hdsizedlgproc) == 1)
-                                {
-                                        h=GetDlgItem(hdlg,IDC_EDIT4);
-                                        sprintf(s,"%i",hd_new_spt);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDIT5);
-                                        sprintf(s,"%i",hd_new_hpc);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDIT6);
-                                        sprintf(s,"%i",hd_new_cyl);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                                        h=GetDlgItem(hdlg,IDC_EDITD);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)openfilestring);
-
-                                        h=GetDlgItem(hdlg,IDC_TEXT2);
-                                        sprintf(s,"Size : %imb",(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-        
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-
-                        case IDC_EDIT1: case IDC_EDIT2: case IDC_EDIT3:
-                        h=GetDlgItem(hdlg,IDC_EDIT1);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].spt);
-                        h=GetDlgItem(hdlg,IDC_EDIT2);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].hpc);
-                        h=GetDlgItem(hdlg,IDC_EDIT3);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[0].tracks);
-
-                        h=GetDlgItem(hdlg,IDC_TEXT1);
-                        sprintf(s,"Size : %imb",((((hd[0].tracks*hd[0].hpc)*hd[0].spt)*512)/1024)/1024);
-                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                        return TRUE;
-
-                        case IDC_EDIT4: case IDC_EDIT5: case IDC_EDIT6:
-                        h=GetDlgItem(hdlg,IDC_EDIT4);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[1].spt);
-                        h=GetDlgItem(hdlg,IDC_EDIT5);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[1].hpc);
-                        h=GetDlgItem(hdlg,IDC_EDIT6);
-                        SendMessage(h,WM_GETTEXT,255,(LPARAM)s);
-                        sscanf(s,"%i",&hd[1].tracks);
-
-                        h=GetDlgItem(hdlg,IDC_TEXT2);
-                        sprintf(s,"Size : %imb",((((hd[1].tracks*hd[1].hpc)*hd[1].spt)*512)/1024)/1024);
-                        SendMessage(h,WM_SETTEXT,0,(LPARAM)s);
-                        return TRUE;
-                }
-                break;
-
-        }
-        return FALSE;
-}
-
-BOOL CALLBACK statusdlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-        int egasp;
-        char s[256];
-        char device_s[4096];
-        switch (message)
-        {
-                case WM_INITDIALOG:
-                statusopen=1;
-                case WM_USER:
-                sprintf(s,"CPU speed : %f MIPS",mips);
-                SendDlgItemMessage(hdlg,IDC_STEXT1,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"FPU speed : %f MFLOPS",flops);
-                SendDlgItemMessage(hdlg,IDC_STEXT2,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Cache misses (read) : %i/sec",sreadlnum);
-                SendDlgItemMessage(hdlg,IDC_STEXT3,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Cache misses (write) : %i/sec",swritelnum);
-                SendDlgItemMessage(hdlg,IDC_STEXT4,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Video throughput (read) : %i bytes/sec",segareads);
-                SendDlgItemMessage(hdlg,IDC_STEXT5,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Video throughput (write) : %i bytes/sec",segawrites);
-                SendDlgItemMessage(hdlg,IDC_STEXT6,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                egasp=(slowega)?egacycles:egacycles2;
-                sprintf(s,"Effective clockspeed : %iHz",clockrate-(sreadlnum*memwaitstate)-(swritelnum*memwaitstate)- scycles_lost);
-//                pclog("%i : %i %i %i %i : %i %i\n",clockrate,sreadlnum*memwaitstate,swritelnum*memwaitstate,segareads*egasp,segawrites*egasp,segawrites,egasp);
-                SendDlgItemMessage(hdlg,IDC_STEXT7,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                sprintf(s,"Timer 0 frequency : %fHz",pit_timer0_freq());
-                SendDlgItemMessage(hdlg,IDC_STEXT8,WM_SETTEXT,(WPARAM)NULL,(LPARAM)s);
-                device_s[0] = 0;
-                device_add_status_info(device_s, 4096);
-                SendDlgItemMessage(hdlg,IDC_STEXT_DEVICE,WM_SETTEXT,(WPARAM)NULL,(LPARAM)device_s);
-                return TRUE;
-                case WM_COMMAND:
-                switch (LOWORD(wParam))
-                {
-                        case IDOK:
-                        case IDCANCEL:
-                        statusopen=0;
-                        EndDialog(hdlg,0);
-                        return TRUE;
-                }
-                break;
-        }
-        return FALSE;
-}
 
 
 HHOOK hKeyboardHook;
@@ -1486,14 +572,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         Sleep(100);
                         resetpc();
                         pause=0;
-                        drawit=1;
                         break;
                         case IDM_FILE_HRESET:
                         pause=1;
                         Sleep(100);
                         resetpchard();
                         pause=0;
-                        drawit=1;
                         break;
                         case IDM_FILE_EXIT:
                         PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
@@ -1525,14 +609,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         saveconfig();
                         break;
                         case IDM_HDCONF:
-                        DialogBox(hinstance,TEXT("HdConfDlg"),hwnd,hdconfdlgproc);
+                        hdconf_open(hwnd);
                         break;
                         case IDM_CONFIG:
-                        DialogBox(hinstance,TEXT("ConfigureDlg"),hwnd,configdlgproc);
+                        config_open(hwnd);
                         break;
                         case IDM_STATUS:
-                        statushwnd=CreateDialog(hinstance,TEXT("StatusDlg"),hwnd,statusdlgproc);
-                        ShowWindow(statushwnd,SW_SHOW);
+                        status_open(hwnd);
                         break;
                         
                         case IDM_VID_RESIZE:
@@ -1648,10 +731,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 
                 case WM_SETFOCUS:
                 infocus=1;
-                drawit=0;
  //               QueryPerformanceCounter(&counter_posold);
-//                ResetEvent(frameobject);
-//                restoresound();
 //                pclog("Set focus!\n");
                 break;
                 case WM_KILLFOCUS:
@@ -1662,7 +742,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         ShowCursor(TRUE);
                         mousecapture=0;
                 }
-//                silencesound();
 //                pclog("Lost focus!\n");
                 break;
 

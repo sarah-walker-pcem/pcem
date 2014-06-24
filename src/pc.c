@@ -49,7 +49,7 @@ void fullspeed();
 
 int framecount,fps;
 int intcount;
-int wakeups,wokeups;
+
 int output;
 int atfullspeed;
 void loadconfig();
@@ -93,7 +93,6 @@ void fatal(const char *format, ...)
 }
 
 uint8_t cgastat;
-int drawit=0;
 
 int pollmouse_delay = 2;
 void pollmouse()
@@ -239,8 +238,6 @@ void initpc()
         pc_reset();
         
         pit_reset();        
-        install_int_ex(onesec,BPS_TO_TIMER(1));
-//        install_int_ex(vsyncint,BPS_TO_TIMER(60));
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
         mem_updatecache();
         ali1429_reset();
@@ -352,7 +349,6 @@ void runpc()
                         cycles_lost = 0;
                         mmuflush=0;
                         intcount=0;
-                        wakeups=wokeups=0;
                         intcount=pitcount=0;
                         emu_fps = frames;
                         frames = 0;
@@ -365,16 +361,6 @@ void runpc()
                 }
                 done++;
                 frame++;
-/*                if ((at70hz && VGA)!=oldat70hz)
-                {
-                        oldat70hz=(at70hz && VGA);
-                        if (oldat70hz) setrefresh(70); //install_int_ex(vsyncint,BPS_TO_TIMER(70));
-                        else           setrefresh(60); //install_int_ex(vsyncint,BPS_TO_TIMER(60));
-                        drawit=0;
-                        done=0;
-                }*/
-//                printf("End of run!\n");
-//        }
 }
 
 void fullspeed()

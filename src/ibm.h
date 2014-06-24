@@ -317,6 +317,9 @@ enum
         ROM_MAX
 };
 
+extern int romspresent[ROM_MAX];
+extern int gfx_present[19];
+
 //#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
 #define is386 (romset>=ROM_IBMAT386)
 #define is386sx 0

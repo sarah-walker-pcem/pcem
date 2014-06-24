@@ -90,7 +90,7 @@ char *device_add_status_info(char *s, int max_len)
 {
         int c;
         
-        s[0] = 0;
+        s += strlen(s);
         
         for (c = 0; c < 256; c++)
         {

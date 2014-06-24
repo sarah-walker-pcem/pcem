@@ -1345,9 +1345,9 @@ int svga_add_status_info(char *s, int max_len, void *p)
         int cur_len = max_len;
         int len;
         
-        if (svga->chain4) len = snprintf(s, max_len, "SVGA chained (possibly mode 13h)\n");
-        else              len = snprintf(s, max_len, "SVGA unchained (possibly mode-X)\n");
-        if (len < 0) return;
+        if (svga->chain4) strcpy(temps, "SVGA chained (possibly mode 13h)\n");
+        else              strcpy(temps, "SVGA unchained (possibly mode-X)\n");
+        strncat(s, temps, cur_len);
         cur_len -= len;
 
         if (!svga->video_bpp) strcpy(temps, "SVGA in text mode\n");
