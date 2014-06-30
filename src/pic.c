@@ -244,6 +244,8 @@ int pic_current[16];
 
 void picint(uint16_t num)
 {
+        if (AT && num == (1 << 2))
+                num = 1 << 9;
 //        pclog("picint : %04X\n", num);
 //        if (num == 0x10) pclog("PICINT 10\n");
         if (num>0xFF)
@@ -264,6 +266,11 @@ void picintlevel(uint16_t num)
 {
         int c = 0;
         while (!(num & (1 << c))) c++;
+        if (AT && c == 2)
+        {
+                c = 9;
+                num = 1 << 9;
+        }
 //        pclog("INTLEVEL %04X %i\n", num, c);
         if (!pic_current[c])
         {
@@ -283,6 +290,11 @@ void picintc(uint16_t num)
 {
         int c = 0;
         while (!(num & (1 << c))) c++;
+        if (AT && c == 2)
+        {
+                c = 9;
+                num = 1 << 9;
+        }
 //        pclog("INTC %04X %i\n", num, c);
         pic_current[c]=0;
 

@@ -38,6 +38,9 @@ typedef struct virge_t
 
         int is_375;
 
+        int bilinear_enabled;
+        int memory_size;
+        
         int pixel_count, tri_count;
                         
         struct
@@ -2486,7 +2489,7 @@ static void s3_virge_triangle(virge_t *virge)
 //                pclog("use tex_sample_mipmap\n");
                 break;
                 case 2: case 3:
-                tex_sample = tex_sample_mipmap_filter;
+                tex_sample = virge->bilinear_enabled ? tex_sample_mipmap_filter : tex_sample_mipmap;
 //                pclog("use tex_sample_mipmap_filter\n");
                 break;
                 case 4: case 5:
@@ -2494,7 +2497,7 @@ static void s3_virge_triangle(virge_t *virge)
 //                pclog("use tex_sample_normal\n");
                 break;
                 case 6: case 7:
-                tex_sample = tex_sample_normal_filter;
+                tex_sample = virge->bilinear_enabled ? tex_sample_normal_filter : tex_sample_normal;
 //                pclog("use tex_sample_normal_filter\n");
                 break;
                 case (0 | 8): case (1 | 8):
@@ -2506,9 +2509,9 @@ static void s3_virge_triangle(virge_t *virge)
                 break;
                 case (2 | 8): case (3 | 8):
                 if (virge->is_375)
-                        tex_sample = tex_sample_persp_mipmap_filter_375;
+                        tex_sample = virge->bilinear_enabled ? tex_sample_persp_mipmap_filter_375 : tex_sample_persp_mipmap_375;
                 else
-                        tex_sample = tex_sample_persp_mipmap_filter;
+                        tex_sample = virge->bilinear_enabled ? tex_sample_persp_mipmap_filter : tex_sample_persp_mipmap;
 //                pclog("use tex_sample_persp_mipmap_filter\n");
                 break;
                 case (4 | 8): case (5 | 8):
@@ -2520,9 +2523,9 @@ static void s3_virge_triangle(virge_t *virge)
                 break;
                 case (6 | 8): case (7 | 8):
                 if (virge->is_375)
-                        tex_sample = tex_sample_persp_normal_filter_375;
+                        tex_sample = virge->bilinear_enabled ? tex_sample_persp_normal_filter_375 : tex_sample_persp_normal_375;
                 else
-                        tex_sample = tex_sample_persp_normal_filter;
+                        tex_sample = virge->bilinear_enabled ? tex_sample_persp_normal_filter : tex_sample_persp_normal;
 //                pclog("use tex_sample_persp_normal_filter\n");
                 break;
         }
@@ -2974,8 +2977,12 @@ static void *s3_virge_init()
 {
         virge_t *virge = malloc(sizeof(virge_t));
         memset(virge, 0, sizeof(virge_t));
+
+        virge->bilinear_enabled = device_get_config_int("bilinear");
+        virge->memory_size = device_get_config_int("memory");
+        pclog("bilinear_enabled=%i memory_size=%i\n", virge->bilinear_enabled, virge->memory_size);
         
-        svga_init(&virge->svga, virge, 1 << 22, /*4mb*/
+        svga_init(&virge->svga, virge, virge->memory_size << 20,
                    s3_virge_recalctimings,
                    s3_virge_in, s3_virge_out,
                    s3_virge_hwcursor_draw,
@@ -3029,7 +3036,17 @@ static void *s3_virge_init()
         virge->virge_rev = 0;
         virge->virge_id = 0xe1;
 
-        virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4);
+        switch (virge->memory_size)
+        {
+                case 2:
+                virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4) | (4 << 5);
+                break;
+                case 4:
+                default:
+                virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4) | (0 << 5);
+                break;
+        }
+                
         virge->svga.crtc[0x37] = 1;// | (7 << 5);
         virge->svga.crtc[0x53] = 1 << 3;
         virge->svga.crtc[0x59] = 0x70;
@@ -3046,7 +3063,11 @@ static void *s3_virge_375_init()
         virge_t *virge = malloc(sizeof(virge_t));
         memset(virge, 0, sizeof(virge_t));
         
-        svga_init(&virge->svga, virge, 1 << 22, /*4mb*/
+        virge->bilinear_enabled = device_get_config_int("bilinear");
+        virge->memory_size = device_get_config_int("memory");
+        pclog("bilinear_enabled=%i memory_size=%i\n", virge->bilinear_enabled, virge->memory_size);
+
+        svga_init(&virge->svga, virge, virge->memory_size << 20,
                    s3_virge_recalctimings,
                    s3_virge_in, s3_virge_out,
                    s3_virge_hwcursor_draw,
@@ -3100,7 +3121,17 @@ static void *s3_virge_375_init()
         virge->virge_rev = 0;
         virge->virge_id = 0xe1;
 
-        virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4);
+        switch (virge->memory_size)
+        {
+                case 2:
+                virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4) | (4 << 5);
+                break;
+                case 4:
+                default:
+                virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4) | (0 << 5);
+                break;
+        }
+//        virge->svga.crtc[0x36] = 2 | (0 << 2) | (1 << 4);
         virge->svga.crtc[0x37] = 1;// | (7 << 5);
         virge->svga.crtc[0x53] = 1 << 3;
         virge->svga.crtc[0x59] = 0x70;
@@ -3174,6 +3205,39 @@ static int s3_virge_add_status_info(char *s, int max_len, void *p)
         return max_len - cur_len;
 }
 
+static device_config_t s3_virge_config[] =
+{
+        {
+                .name = "bilinear",
+                .description = "Bilinear filtering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = "4 MB",
+                                .value = 4
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 4
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t s3_virge_device =
 {
         "Diamond Stealth 3D 2000 (S3 ViRGE)",
@@ -3183,7 +3247,8 @@ device_t s3_virge_device =
         s3_virge_available,
         s3_virge_speed_changed,
         s3_virge_force_redraw,
-        s3_virge_add_status_info
+        s3_virge_add_status_info,
+        s3_virge_config
 };
 
 device_t s3_virge_375_device =
@@ -3195,5 +3260,6 @@ device_t s3_virge_375_device =
         s3_virge_375_available,
         s3_virge_speed_changed,
         s3_virge_force_redraw,
-        s3_virge_add_status_info
+        s3_virge_add_status_info,
+        s3_virge_config
 };

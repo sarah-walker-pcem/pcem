@@ -1,8 +1,193 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "config.h"
 
 static char config_file[256];
+
+typedef struct list_t
+{
+        struct list_t *next;
+} list_t;
+
+static list_t config_head;
+
+typedef struct section_t
+{
+        struct list_t list;
+        
+        char name[256];
+        
+        struct list_t entry_head;
+} section_t;
+
+typedef struct entry_t
+{
+        struct list_t list;
+        
+        char name[256];
+        char data[256];
+} entry_t;
+
+#define list_add(new, head)                             \
+        {                                               \
+                struct list_t *next = head;             \
+                                                        \
+                while (next->next)                      \
+                        next = next->next;              \
+                                                        \
+                (next)->next = new;                     \
+                (new)->next = NULL;                     \
+        }
+
+void config_dump()
+{
+        section_t *current_section;
+        
+        pclog("Config data :\n");
+        
+        current_section = (section_t *)config_head.next;
+        
+        while (current_section)
+        {
+                entry_t *current_entry;
+                
+                pclog("[%s]\n", current_section->name);
+                
+                current_entry = (entry_t *)current_section->entry_head.next;
+                
+                while (current_entry)
+                {
+                        pclog("%s = %s\n", current_entry->name, current_entry->data);
+
+                        current_entry = (entry_t *)current_entry->list.next;
+                }
+
+                current_section = (section_t *)current_section->list.next;
+        }
+}
+
+void config_free()
+{
+        section_t *current_section;
+        current_section = (section_t *)config_head.next;
+        
+        while (current_section)
+        {
+                section_t *next_section = (section_t *)current_section->list.next;
+                entry_t *current_entry;
+                
+                current_entry = (entry_t *)current_section->entry_head.next;
+                
+                while (current_entry)
+                {
+                        entry_t *next_entry = (entry_t *)current_entry->list.next;
+                        
+                        free(current_entry);
+                        current_entry = next_entry;
+                }
+
+                free(current_section);                
+                current_section = next_section;
+        }
+}
+
+void config_load()
+{
+        FILE *f = fopen(config_file, "rt");
+        section_t *current_section;
+        
+        memset(&config_head, 0, sizeof(list_t));
+
+        current_section = malloc(sizeof(section_t));
+        memset(current_section, 0, sizeof(section_t));
+        list_add(&current_section->list, &config_head);
+
+        if (!f)
+                return;
+
+        while (1)
+        {
+                int c;
+                char buffer[256];
+
+                fgets(buffer, 255, f);
+                if (feof(f)) break;
+                
+                c = 0;
+                
+                while (buffer[c] == ' ' && buffer[c])
+                      c++;
+
+                if (!buffer[c]) continue;
+                
+                if (buffer[c] == '#') /*Comment*/
+                        continue;
+
+                if (buffer[c] == '[') /*Section*/
+                {
+                        section_t *new_section;
+                        char name[256];
+                        int d = 0;
+                        
+                        c++;
+                        while (buffer[c] != ']' && buffer[c])
+                                name[d++] = buffer[c++];
+
+                        if (buffer[c] != ']')
+                                continue;
+                        name[d] = 0;
+                        
+                        new_section = malloc(sizeof(section_t));
+                        memset(new_section, 0, sizeof(section_t));
+                        strncpy(new_section->name, name, 256);
+                        list_add(&new_section->list, &config_head);
+                        
+                        current_section = new_section;
+                        
+//                        pclog("New section : %s %p\n", name, (void *)current_section);
+                }
+                else
+                {
+                        entry_t *new_entry;
+                        char name[256];
+                        int d = 0, data_pos;
+
+                        while (buffer[c] != '=' && buffer[c] != ' ' && buffer[c])
+                                name[d++] = buffer[c++];
+                
+                        if (!buffer[c]) continue;
+                        name[d] = 0;
+
+                        while ((buffer[c] == '=' || buffer[c] == ' ') && buffer[c])
+                                c++;
+                        
+                        if (!buffer[c]) continue;
+                        
+                        data_pos = c;
+                        while (buffer[c])
+                        {
+                                if (buffer[c] == '\n')
+                                        buffer[c] = 0;
+                                c++;
+                        }
+
+                        new_entry = malloc(sizeof(entry_t));
+                        memset(new_entry, 0, sizeof(entry_t));
+                        strncpy(new_entry->name, name, 256);
+                        strncpy(new_entry->data, &buffer[data_pos], 256);
+                        list_add(&new_entry->list, &current_section->entry_head);
+
+//                        pclog("New data under section [%s] : %s = %s\n", current_section->name, new_entry->name, new_entry->data);
+                }
+        }
+        
+        fclose(f);
+        
+        config_dump();
+}
+
+
 
 void set_config_file(char *s)
 {
@@ -15,131 +200,138 @@ void config_new()
         fclose(f);
 }
 
-int get_config_int(char *head, char *name, int def)
+static section_t *find_section(char *name)
 {
-        char buffer[256];
-        char name2[256];
-        FILE *f = fopen(config_file, "rt");
-        int c, d;
-        int res = def;
+        section_t *current_section;
+        char blank[] = "";
         
-        if (!f)
-           return def;
-           
-//        pclog("Searching for %s\n", name);
-        
-        while (1)
-        {
-                fgets(buffer, 255, f);
-                if (feof(f)) break;
-                
-                c = d = 0;
-                
-                while (buffer[c] == ' ' && buffer[c])
-                      c++;
-                      
-                if (!buffer[c]) continue;
-                
-                while (buffer[c] != '=' && buffer[c] != ' ' && buffer[c])
-                        name2[d++] = buffer[c++];
-                
-                if (!buffer[c]) continue;
-                name2[d] = 0;
-                
-//                pclog("Comparing %s and %s\n", name, name2);
-                if (strcmp(name, name2)) continue;
-//                pclog("Found!\n");
+        current_section = (section_t *)config_head.next;
+        if (!name)
+                name = blank;
 
-                while ((buffer[c] == '=' || buffer[c] == ' ') && buffer[c])                
-                        c++;
-                        
-                if (!buffer[c]) continue;
+        while (current_section)
+        {
+                if (!strncmp(current_section->name, name, 256))
+                        return current_section;
                 
-                sscanf(&buffer[c], "%i", &res);
-//                pclog("Reading value - %i\n", res);
-                break;
+                current_section = (section_t *)current_section->list.next;
         }
-        
-        fclose(f);
-        return res;
+        return NULL;
 }
 
-char config_return_string[256];
+static entry_t *find_entry(section_t *section, char *name)
+{
+        entry_t *current_entry;
+        
+        current_entry = (entry_t *)section->entry_head.next;
+        
+        while (current_entry)
+        {
+                if (!strncmp(current_entry->name, name, 256))
+                        return current_entry;
+
+                current_entry = (entry_t *)current_entry->list.next;
+        }
+        return NULL;
+}
+
+static section_t *create_section(char *name)
+{
+        section_t *new_section = malloc(sizeof(section_t));
+
+        memset(new_section, 0, sizeof(section_t));
+        strncpy(new_section->name, name, 256);
+        list_add(&new_section->list, &config_head);
+        
+        return new_section;
+}
+
+static entry_t *create_entry(section_t *section, char *name)
+{
+        entry_t *new_entry = malloc(sizeof(entry_t));
+        memset(new_entry, 0, sizeof(entry_t));
+        strncpy(new_entry->name, name, 256);
+        list_add(&new_entry->list, &section->entry_head);
+        
+        return new_entry;
+}
+        
+int get_config_int(char *head, char *name, int def)
+{
+        section_t *section;
+        entry_t *entry;
+        int value;
+
+        section = find_section(head);
+        
+        if (!section)
+                return def;
+                
+        entry = find_entry(section, name);
+
+        if (!entry)
+                return def;
+        
+        sscanf(entry->data, "%i", &value);
+        
+        return value;
+}
 
 char *get_config_string(char *head, char *name, char *def)
 {
-        char buffer[256];
-        char name2[256];
-        FILE *f = fopen(config_file, "rt");
-        int c, d;
-        
-        strcpy(config_return_string, def);
-        
-        if (!f)
-           return config_return_string;
-           
-//        pclog("Searching for %s\n", name);
-        
-        while (1)
-        {
-                fgets(buffer, 255, f);
-                if (feof(f)) break;
-                
-                c = d = 0;
-                
-                while (buffer[c] == ' ' && buffer[c])
-                      c++;
-                      
-                if (!buffer[c]) continue;
-                
-                while (buffer[c] != '=' && buffer[c] != ' ' && buffer[c])
-                        name2[d++] = buffer[c++];
-                
-                if (!buffer[c]) continue;
-                name2[d] = 0;
-                
-//                pclog("Comparing %s and %s\n", name, name2);
-                if (strcmp(name, name2)) continue;
-//                pclog("Found!\n");
+        section_t *section;
+        entry_t *entry;
+        int value;
 
-                while ((buffer[c] == '=' || buffer[c] == ' ') && buffer[c])                
-                        c++;
-                        
-                if (!buffer[c]) continue;
-                
-                strcpy(config_return_string, &buffer[c]);
-                
-                c = strlen(config_return_string) - 1;
-//                pclog("string len %i\n", c);
-                while (config_return_string[c] <= 32 && config_return_string[c]) 
-                      config_return_string[c--] = 0;
-
-//                pclog("Reading value - %s\n", config_return_string);
-                break;
-        }
+        section = find_section(head);
         
-        fclose(f);
-        return config_return_string;
+        if (!section)
+                return def;
+                
+        entry = find_entry(section, name);
+
+        if (!entry)
+                return def;
+       
+        return entry->data; 
 }
 
 void set_config_int(char *head, char *name, int val)
 {
-        FILE *f = fopen(config_file, "at");
-//        if (!f) pclog("set_config_int - !f\n");
-        fprintf(f, "%s = %i\n", name, val);
-//        pclog("Write %s = %i\n", name, val);
-        fclose(f);
-//        pclog("fclose\n");
+        section_t *section;
+        entry_t *entry;
+
+        section = find_section(head);
+        
+        if (!section)
+                section = create_section(head);
+                
+        entry = find_entry(section, name);
+
+        if (!entry)
+                entry = create_entry(section, name);
+
+        sprintf(entry->data, "%i", val);
 }
 
 void set_config_string(char *head, char *name, char *val)
 {
-        FILE *f = fopen(config_file, "at");
-//        if (!f) pclog("set_config_string - !f\n");
-        fprintf(f, "%s = %s\n", name, val);
-//        pclog("Write %s = %s\n", name, val);
-        fclose(f);
+        section_t *section;
+        entry_t *entry;
+
+        section = find_section(head);
+        
+        if (!section)
+                section = create_section(head);
+                
+        entry = find_entry(section, name);
+
+        if (!entry)
+                entry = create_entry(section, name);
+
+        strncpy(entry->data, val, 256);
 }
+
 
 char *get_filename(char *s)
 {
@@ -163,4 +355,33 @@ void put_backslash(char *s)
         int c = strlen(s) - 1;
         if (s[c] != '/' && s[c] != '\\')
            s[c] = '/';
+}
+
+void config_save()
+{
+        FILE *f = fopen(config_file, "wt");
+        section_t *current_section;
+        
+        current_section = (section_t *)config_head.next;
+        
+        while (current_section)
+        {
+                entry_t *current_entry;
+                
+                if (current_section->name[0])
+                        fprintf(f, "\n[%s]\n", current_section->name);
+                
+                current_entry = (entry_t *)current_section->entry_head.next;
+                
+                while (current_entry)
+                {
+                        fprintf(f, "%s = %s\n", current_entry->name, current_entry->data);
+
+                        current_entry = (entry_t *)current_entry->list.next;
+                }
+
+                current_section = (section_t *)current_section->list.next;
+        }
+        
+        fclose(f);
 }

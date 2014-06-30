@@ -56,6 +56,16 @@ char *sound_card_getname(int card)
         return sound_cards[card].name;
 }
 
+device_t *sound_card_getdevice(int card)
+{
+        return sound_cards[card].device;
+}
+
+int sound_card_has_config(int card)
+{
+        return sound_cards[card].device->config ? 1 : 0;
+}
+
 void sound_card_init()
 {
         if (sound_cards[sound_card_current].device)

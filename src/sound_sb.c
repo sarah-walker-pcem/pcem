@@ -256,13 +256,16 @@ void sb_mixer_init(sb_mixer_t *mixer)
 void *sb_1_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");        
         memset(sb, 0, sizeof(sb_t));
         
         opl2_init(&sb->opl);
         sb_dsp_init(&sb->dsp, SB1);
-        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sb_mixer_init(&sb->mixer);
-        io_sethandler(0x0228, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+        io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
         return sb;
@@ -270,13 +273,16 @@ void *sb_1_init()
 void *sb_15_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
         sb_dsp_init(&sb->dsp, SB15);
-        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sb_mixer_init(&sb->mixer);
-        io_sethandler(0x0228, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+        io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
         return sb;
@@ -284,13 +290,16 @@ void *sb_15_init()
 void *sb_2_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
         sb_dsp_init(&sb->dsp, SB2);
-        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sb_mixer_init(&sb->mixer);
-        io_sethandler(0x0228, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+        io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
         return sb;
@@ -299,17 +308,20 @@ void *sb_2_init()
 void *sb_pro_v1_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
         sb_dsp_init(&sb->dsp, SBPRO);
-        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sb_mixer_init(&sb->mixer);
-        io_sethandler(0x0220, 0x0002, opl2_l_read, NULL, NULL, opl2_l_write, NULL, NULL, &sb->opl);
-        io_sethandler(0x0222, 0x0002, opl2_r_read, NULL, NULL, opl2_r_write, NULL, NULL, &sb->opl);
-        io_sethandler(0x0228, 0x0002, opl2_read,   NULL, NULL, opl2_write,   NULL, NULL, &sb->opl);
+        io_sethandler(addr+0, 0x0002, opl2_l_read, NULL, NULL, opl2_l_write, NULL, NULL, &sb->opl);
+        io_sethandler(addr+2, 0x0002, opl2_r_read, NULL, NULL, opl2_r_write, NULL, NULL, &sb->opl);
+        io_sethandler(addr+8, 0x0002, opl2_read,   NULL, NULL, opl2_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read,   NULL, NULL, opl2_write,   NULL, NULL, &sb->opl);
-        io_sethandler(0x0224, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
+        io_sethandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
 
         sb->mixer.regs[0x22] = 0xff;
@@ -323,16 +335,19 @@ void *sb_pro_v1_init()
 void *sb_pro_v2_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
         opl3_init(&sb->opl);
         sb_dsp_init(&sb->dsp, SBPRO2);
-        sb_dsp_setaddr(&sb->dsp, 0x0220);
+        sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sb_mixer_init(&sb->mixer);
-        io_sethandler(0x0220, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
-        io_sethandler(0x0228, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_sethandler(addr+0, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_sethandler(addr+8, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
-        io_sethandler(0x0224, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
+        io_sethandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_opl3_poll, sb_get_buffer, sb);
 
         sb->mixer.regs[0x22] = 0xff;
@@ -436,6 +451,158 @@ int sb_add_status_info(char *s, int max_len, void *p)
         sb_dsp_add_status_info(s, max_len, &sb->dsp);
 }
 
+static device_config_t sb_config[] =
+{
+        {
+                .name = "addr",
+                .description = "Address",
+                .type = CONFIG_BINARY,
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "0x220",
+                                .value = 0x220
+                        },
+                        {
+                                .description = "0x240",
+                                .value = 0x240
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 0x220
+        },
+        {
+                .name = "irq",
+                .description = "IRQ",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "IRQ 2",
+                                .value = 2
+                        },
+                        {
+                                .description = "IRQ 3",
+                                .value = 3
+                        },
+                        {
+                                .description = "IRQ 5",
+                                .value = 5
+                        },
+                        {
+                                .description = "IRQ 7",
+                                .value = 7
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 7
+        },
+        {
+                .name = "dma",
+                .description = "DMA",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DMA 1",
+                                .value = 1
+                        },
+                        {
+                                .description = "DMA 3",
+                                .value = 3
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 1
+        },
+        {
+                .type = -1
+        }
+};
+
+static device_config_t sb_pro_config[] =
+{
+        {
+                .name = "addr",
+                .description = "Address",
+                .type = CONFIG_BINARY,
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "0x220",
+                                .value = 0x220
+                        },
+                        {
+                                .description = "0x240",
+                                .value = 0x240
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 0x220
+        },
+        {
+                .name = "irq",
+                .description = "IRQ",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "IRQ 2",
+                                .value = 2
+                        },
+                        {
+                                .description = "IRQ 5",
+                                .value = 5
+                        },
+                        {
+                                .description = "IRQ 7",
+                                .value = 7
+                        },
+                        {
+                                .description = "IRQ 10",
+                                .value = 10
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 7
+        },
+        {
+                .name = "dma",
+                .description = "DMA",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DMA 1",
+                                .value = 1
+                        },
+                        {
+                                .description = "DMA 3",
+                                .value = 3
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 1
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t sb_1_device =
 {
         "Sound Blaster v1.0",
@@ -445,7 +612,8 @@ device_t sb_1_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_config
 };
 device_t sb_15_device =
 {
@@ -456,7 +624,8 @@ device_t sb_15_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_config
 };
 device_t sb_2_device =
 {
@@ -467,7 +636,8 @@ device_t sb_2_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_config
 };
 device_t sb_pro_v1_device =
 {
@@ -478,7 +648,8 @@ device_t sb_pro_v1_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_pro_config
 };
 device_t sb_pro_v2_device =
 {
@@ -489,7 +660,8 @@ device_t sb_pro_v2_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_pro_config
 };
 device_t sb_16_device =
 {

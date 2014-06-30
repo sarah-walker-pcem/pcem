@@ -24,6 +24,8 @@ void hdconf_open(HWND hwnd);
 
 void config_open(HWND hwnd);
 
+void deviceconfig_open(HWND hwnd, struct device_t *device);
+
 extern char openfilestring[260];
 
 int getfile(HWND hwnd, char *f, char *fn);

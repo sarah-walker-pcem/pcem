@@ -426,6 +426,9 @@ void loadconfig()
         char *p;
         append_filename(s, pcempath, "pcem.cfg", 511);
         set_config_file(s);
+        
+        config_load();
+        
         GAMEBLASTER = get_config_int(NULL, "gameblaster", 0);
         GUS = get_config_int(NULL, "gus", 0);
         SSI2001 = get_config_int(NULL, "ssi2001", 0);
@@ -480,7 +483,6 @@ void loadconfig()
 
 void saveconfig()
 {
-        config_new();
         set_config_int(NULL, "gameblaster", GAMEBLASTER);
         set_config_int(NULL, "gus", GUS);
         set_config_int(NULL, "ssi2001", SSI2001);
@@ -515,4 +517,6 @@ void saveconfig()
         set_config_int(NULL, "hdd_heads", hdc[1].hpc);
         set_config_int(NULL, "hdd_cylinders", hdc[1].tracks);
         set_config_string(NULL, "hdd_fn", ide_fn[1]);
+        
+        config_save();
 }

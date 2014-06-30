@@ -78,6 +78,16 @@ char *video_card_getname(int card)
         return video_cards[card].name;
 }
 
+device_t *video_card_getdevice(int card)
+{
+        return video_cards[card].device;
+}
+
+int video_card_has_config(int card)
+{
+        return video_cards[card].device->config ? 1 : 0;
+}
+
 int video_card_getid(char *s)
 {
         int c = 0;

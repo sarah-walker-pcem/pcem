@@ -1,8 +1,11 @@
 #include "ibm.h"
+#include "config.h"
 #include "device.h"
 
 static void *device_priv[256];
 static device_t *devices[256];
+
+static device_t *current_device;
 
 void device_init()
 {
@@ -19,6 +22,8 @@ void device_add(device_t *d)
         
         if (c >= 256)
                 fatal("device_add : too many devices\n");
+        
+        current_device = d;
         
         priv = d->init();
         if (priv == NULL)
@@ -104,4 +109,32 @@ char *device_add_status_info(char *s, int max_len)
                         }
                 }
         }
+}
+
+int device_get_config_int(char *s)
+{
+        device_config_t *config = current_device->config;
+        
+        while (config->type != -1)
+        {
+                if (!strcmp(s, config->name))
+                        return get_config_int(current_device->name, s, config->default_int);
+
+                config++;
+        }
+        return 0;
+}
+
+char *device_get_config_string(char *s)
+{
+        device_config_t *config = current_device->config;
+        
+        while (config->type != -1)
+        {
+                if (!strcmp(s, config->name))
+                        return get_config_string(current_device->name, s, config->default_string);
+
+                config++;
+        }
+        return NULL;
 }

@@ -7,6 +7,7 @@
 
 #include "ibm.h"
 #include "cpu.h"
+#include "device.h"
 #include "model.h"
 #include "resources.h"
 #include "sound.h"
@@ -153,7 +154,19 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
                 SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
                 SendMessage(h, UDM_SETPOS, 0, mem_size);
+
+                h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
+                if (video_card_has_config(video_old_to_new(gfxcard)))
+                        EnableWindow(h, TRUE);
+                else
+                        EnableWindow(h, FALSE);
                 
+                h = GetDlgItem(hdlg, IDC_CONFIGURESND);
+                if (sound_card_has_config(sound_card_current))
+                        EnableWindow(h, TRUE);
+                else
+                        EnableWindow(h, FALSE);
+                        
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -322,6 +335,43 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, CB_SETCURSEL, temp_cpu, 0);
                         }
                         break;
+                        
+                        case IDC_CONFIGUREVID:
+                        h = GetDlgItem(hdlg, IDC_COMBOVID);
+                        SendMessage(h, CB_GETLBTEXT, SendMessage(h, CB_GETCURSEL, 0, 0), (LPARAM)temp_str);
+                        
+                        deviceconfig_open(hdlg, (void *)video_card_getdevice(video_card_getid(temp_str)));
+                        break;
+                        
+                        case IDC_COMBOVID:
+                        h = GetDlgItem(hdlg, IDC_COMBOVID);
+                        SendMessage(h, CB_GETLBTEXT, SendMessage(h, CB_GETCURSEL, 0, 0), (LPARAM)temp_str);
+                        gfx = video_card_getid(temp_str);
+                        
+                        h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
+                        if (video_card_has_config(gfx))
+                                EnableWindow(h, TRUE);
+                        else
+                                EnableWindow(h, FALSE);
+                        break;                                
+
+                        case IDC_CONFIGURESND:
+                        h = GetDlgItem(hdlg, IDC_COMBOSND);
+                        temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                        
+                        deviceconfig_open(hdlg, (void *)sound_card_getdevice(temp_sound_card_current));
+                        break;
+                        
+                        case IDC_COMBOSND:
+                        h = GetDlgItem(hdlg, IDC_COMBOSND);
+                        temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                        
+                        h = GetDlgItem(hdlg, IDC_CONFIGURESND);
+                        if (sound_card_has_config(temp_sound_card_current))
+                                EnableWindow(h, TRUE);
+                        else
+                                EnableWindow(h, FALSE);
+                        break;                                
                 }
                 break;
         }
