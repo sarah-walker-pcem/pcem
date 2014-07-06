@@ -229,7 +229,10 @@ uint8_t svga_in(uint16_t addr, void *p)
                 return svga->gdcreg[svga->gdcaddr & 0xf];
                 case 0x3DA:
                 svga->attrff = 0;
-                svga->cgastat ^= 0x30;
+                if (svga->cgastat & 0x01)
+                        svga->cgastat &= ~0x30;
+                else
+                        svga->cgastat ^= 0x30;
                 return svga->cgastat;
         }
 //        printf("Bad EGA read %04X %04X:%04X\n",addr,cs>>4,pc);
