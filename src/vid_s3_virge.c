@@ -15,6 +15,14 @@ static uint64_t virge_time = 0;
 static uint64_t status_time = 0;
 static int reg_writes = 0;
 
+static int dither[4][4] =
+{
+        0,  4,  1,  5,
+        6,  2,  7,  3,
+        1,  5,  0,  4,
+        7,  3,  6,  2,
+};
+
 typedef struct virge_t
 {
         mem_mapping_t   linear_mapping;
@@ -39,6 +47,7 @@ typedef struct virge_t
         int is_375;
 
         int bilinear_enabled;
+        int dithering_enabled;
         int memory_size;
         
         int pixel_count, tri_count;
@@ -178,6 +187,8 @@ enum
         CMD_SET_ITA_BYTE = (0 << 10),
         CMD_SET_ITA_WORD = (1 << 10),
         CMD_SET_ITA_DWORD = (2 << 10),
+        
+        CMD_SET_ZUP = (1 << 23),
         
         CMD_SET_ZB_MODE = (3 << 24),
 
@@ -802,7 +813,7 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
         virge_t *virge = (virge_t *)p;
         svga_t *svga = &virge->svga;
         reg_writes++;
-//        if ((addr & 0xfffc) >= 0x8000 && (addr & 0xfffc) < 0x8400)
+//        if ((addr & 0xfffc) >= 0xb400 && (addr & 0xfffc) < 0xb800)
 //                pclog("New MMIO writel %08X %08X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
 
         if ((addr & 0xfffc) < 0x8000)
@@ -1580,15 +1591,25 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
         }
 }
 
-#define RGB15_TO_24(val, r, g, b) b = (val & 0x1f) << 3;      \
-                                  g = (val & 0x3e0) >> 2;     \
-                                  r = (val & 0x7c00) >> 7
+#define RGB15_TO_24(val, r, g, b) b = ((val & 0x001f) << 3) | ((val & 0x001f) >> 2);     \
+                                  g = ((val & 0x03e0) >> 2) | ((val & 0x03e0) >> 7);     \
+                                  r = ((val & 0x7c00) >> 7) | ((val & 0x7c00) >> 12);
 
 #define RGB24_TO_24(val, r, g, b) b = val & 0xff;             \
                                   g = (val & 0xff00) >> 8;    \
                                   r = (val & 0xff0000) >> 16
 
-#define RGB15(r, g, b) ((((b) >> 3) & 0x1f) | ((((g) >> 3) & 0x1f) << 5) | ((((r) >> 3) & 0x1f) << 10))
+#define RGB15(r, g, b, dest) \
+        if (virge->dithering_enabled)                           \
+        {                                                       \
+                int add = dither[_y & 3][_x & 3];               \
+                int _r = (r > 248) ? 248 : r+add;               \
+                int _g = (g > 248) ? 248 : g+add;               \
+                int _b = (b > 248) ? 248 : b+add;               \
+                dest = ((_b >> 3) & 0x1f) | (((_g >> 3) & 0x1f) << 5) | (((_r >> 3) & 0x1f) << 10);     \
+        }                                                                                               \
+        else                                                                                            \
+                dest = ((b >> 3) & 0x1f) | (((g >> 3) & 0x1f) << 5) | (((r >> 3) & 0x1f) << 10)
 
 #define RGB24(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
 
@@ -1774,7 +1795,9 @@ static void tex_sample_mipmap(s3d_state_t *state)
 {
         s3d_texture_state_t texture_state;
 
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         texture_state.u = state->u + state->tbu;
         texture_state.v = state->v + state->tbv;
@@ -1790,7 +1813,9 @@ static void tex_sample_mipmap_filter(s3d_state_t *state)
         int du, dv;
         int d[4];
 
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         tex_offset = 1 << texture_state.texture_shift;
         
@@ -1960,7 +1985,9 @@ static void tex_sample_persp_mipmap(s3d_state_t *state)
         if (state->w)
                 w = (int32_t)(((1ULL << 27) << 19) / (int64_t)state->w);
         
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (12 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (12 + state->max_d)) + state->tbv;
@@ -1983,7 +2010,9 @@ static void tex_sample_persp_mipmap_filter(s3d_state_t *state)
         u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (12 + state->max_d)) + state->tbu;
         v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (12 + state->max_d)) + state->tbv;
         
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         tex_offset = 1 << texture_state.texture_shift;
 
@@ -2024,7 +2053,9 @@ static void tex_sample_persp_mipmap_375(s3d_state_t *state)
         if (state->w)
                 w = (int32_t)(((1ULL << 27) << 19) / (int64_t)state->w);
         
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         texture_state.u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (8 + state->max_d)) + state->tbu;
         texture_state.v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (8 + state->max_d)) + state->tbv;
@@ -2047,7 +2078,9 @@ static void tex_sample_persp_mipmap_filter_375(s3d_state_t *state)
         u = (int32_t)(((int64_t)state->u * (int64_t)w) >> (8 + state->max_d)) + state->tbu;
         v = (int32_t)(((int64_t)state->v * (int64_t)w) >> (8 + state->max_d)) + state->tbv;
         
-        texture_state.level = MAX(MIN(9 - ((state->d >> 27) & 0xf), state->max_d), 0);
+        texture_state.level = (state->d < 0) ? state->max_d : state->max_d - ((state->d >> 27) & 0xf);
+        if (texture_state.level < 0)
+                texture_state.level = 0;
         texture_state.texture_shift = 18 + (9 - texture_state.level);
         tex_offset = 1 << texture_state.texture_shift;
         
@@ -2185,7 +2218,7 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
 
         int y_count = yc;
         
-        int bpp = 1;
+        int bpp = (virge->s3d.cmd_set >> 2) & 7;
         
         uint32_t dest_offset, z_offset;
 
@@ -2223,24 +2256,33 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
         
         for (; y_count > 0; y_count--)
         {
-                int x = state->x1 >> 20;
-                int xe = state->x2 >> 20;
+                int x  = (state->x1 + ((1 << 20) - 1)) >> 20;
+                int xe = (state->x2 + ((1 << 20) - 1)) >> 20;
                 uint32_t z = state->base_z;
+                if (x_dir < 0)
+                {
+                        x--;
+                        xe--;
+                }
+
                 if (x != xe && (x_dir > 0 && x < xe) || (x_dir < 0 && x > xe))
                 {
                         uint32_t dest_addr, z_addr;
-                        int dx = (x_dir > 0) ? 8 - ((state->x1 >> 16) & 0xf) : ((state->x1 >> 16) & 0xf) - 8;
-                        int x_offset = x_dir << bpp;
-                        
-                        state->r = state->base_r + ((virge->s3d.TdRdX * dx) >> 4);
-                        state->g = state->base_g + ((virge->s3d.TdGdX * dx) >> 4);
-                        state->b = state->base_b + ((virge->s3d.TdBdX * dx) >> 4);
-                        state->a = state->base_a + ((virge->s3d.TdAdX * dx) >> 4);
-                        state->u = state->base_u + ((virge->s3d.TdUdX * dx) >> 4);
-                        state->v = state->base_v + ((virge->s3d.TdVdX * dx) >> 4);
-                        state->w = state->base_w + ((virge->s3d.TdWdX * dx) >> 4);
-                        state->d = state->base_d + ((virge->s3d.TdDdX * dx) >> 4);
-                        z += ((virge->s3d.TdZdX * dx) >> 4);
+                        int dx = (x_dir > 0) ? ((31 - ((state->x1-1) >> 15)) & 0x1f) : (((state->x1-1) >> 15) & 0x1f);
+                        int x_offset = x_dir * (bpp + 1);
+                        int xz_offset = x_dir << 1;
+                        if (x_dir > 0)
+                                dx += 1;
+                        state->r = state->base_r + ((virge->s3d.TdRdX * dx) >> 5);
+                        state->g = state->base_g + ((virge->s3d.TdGdX * dx) >> 5);
+                        state->b = state->base_b + ((virge->s3d.TdBdX * dx) >> 5);
+                        state->a = state->base_a + ((virge->s3d.TdAdX * dx) >> 5);
+                        state->u = state->base_u + ((virge->s3d.TdUdX * dx) >> 5);
+                        state->v = state->base_v + ((virge->s3d.TdVdX * dx) >> 5);
+                        state->w = state->base_w + ((virge->s3d.TdWdX * dx) >> 5);
+                        state->d = state->base_d + ((virge->s3d.TdDdX * dx) >> 5);
+                        z += ((virge->s3d.TdZdX * dx) >> 5);
+
 //                        pclog("Draw Y=%i X=%i to XE=%i  %i   %08x %08x %08x %08x  %08x %08x %08x %08x  %i %08x\n", state->y, x, xe, dx, state->x1, state->x2, dx1, virge->s3d.TdWdX, state->u, state->v, virge->s3d.TdUdX, virge->s3d.TdUdY, dx, (virge->s3d.TdUdX * dx) >> 4);
 
                         if (virge->s3d.cmd_set & CMD_SET_HC)
@@ -2299,10 +2341,10 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
 
                         virge->svga.changedvram[(dest_offset & 0x3fffff) >> 12] = changeframecount;
 
-                        dest_addr = dest_offset + (x << bpp);
-                        z_addr = z_offset + (x << bpp);
+                        dest_addr = dest_offset + (x * (bpp + 1));
+                        z_addr = z_offset + (x << 1);
 
-                        for (; x != ((xe + x_dir) & 0xfff); x = (x + x_dir) & 0xfff)
+                        for (; x != xe; x = (x + x_dir) & 0xfff)
                         {
                                 int update = 1;
                                 int16_t src_z;
@@ -2351,16 +2393,18 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                                 /*Not implemented yet*/
                                                 break;
                                                 case 1: /*16 bpp*/
-                                                dest_col = RGB15(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b);
+                                                RGB15(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b, dest_col);
                                                 *(uint16_t *)&vram[dest_addr] = dest_col;
                                                 break;
                                                 case 2: /*24 bpp*/
                                                 dest_col = RGB24(state->dest_rgba.r, state->dest_rgba.g, state->dest_rgba.b);
-                                                *(uint32_t *)&vram[dest_addr] = dest_col;
+                                                *(uint8_t *)&vram[dest_addr] = dest_col & 0xff;
+                                                *(uint8_t *)&vram[dest_addr + 1] = (dest_col >> 8) & 0xff;
+                                                *(uint8_t *)&vram[dest_addr + 2] = (dest_col >> 16) & 0xff;
                                                 break;
                                         }
 
-                                        if (use_z)
+                                        if (use_z && (virge->s3d.cmd_set & CMD_SET_ZUP))
                                                 Z_WRITE(z_addr, src_z);
                                 }
 
@@ -2374,7 +2418,7 @@ static void tri(virge_t *virge, s3d_state_t *state, int yc, int32_t dx1, int32_t
                                 state->d += virge->s3d.TdDdX;
                                 state->w += virge->s3d.TdWdX;
                                 dest_addr += x_offset;
-                                z_addr += x_offset;
+                                z_addr += xz_offset;
                                 virge->pixel_count++;
                         }
                 }
@@ -2979,8 +3023,8 @@ static void *s3_virge_init()
         memset(virge, 0, sizeof(virge_t));
 
         virge->bilinear_enabled = device_get_config_int("bilinear");
+        virge->dithering_enabled = device_get_config_int("dithering");
         virge->memory_size = device_get_config_int("memory");
-        pclog("bilinear_enabled=%i memory_size=%i\n", virge->bilinear_enabled, virge->memory_size);
         
         svga_init(&virge->svga, virge, virge->memory_size << 20,
                    s3_virge_recalctimings,
@@ -3064,8 +3108,8 @@ static void *s3_virge_375_init()
         memset(virge, 0, sizeof(virge_t));
         
         virge->bilinear_enabled = device_get_config_int("bilinear");
+        virge->dithering_enabled = device_get_config_int("dithering");
         virge->memory_size = device_get_config_int("memory");
-        pclog("bilinear_enabled=%i memory_size=%i\n", virge->bilinear_enabled, virge->memory_size);
 
         svga_init(&virge->svga, virge, virge->memory_size << 20,
                    s3_virge_recalctimings,
@@ -3208,12 +3252,6 @@ static int s3_virge_add_status_info(char *s, int max_len, void *p)
 static device_config_t s3_virge_config[] =
 {
         {
-                .name = "bilinear",
-                .description = "Bilinear filtering",
-                .type = CONFIG_BINARY,
-                .default_int = 1
-        },
-        {
                 .name = "memory",
                 .description = "Memory size",
                 .type = CONFIG_SELECTION,
@@ -3232,6 +3270,18 @@ static device_config_t s3_virge_config[] =
                         }
                 },
                 .default_int = 4
+        },
+        {
+                .name = "bilinear",
+                .description = "Bilinear filtering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
+                .name = "dithering",
+                .description = "Dithering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
         },
         {
                 .type = -1
