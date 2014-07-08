@@ -247,8 +247,8 @@ int loadbios()
                 fclose(f);
                 return 1;*/
                 case ROM_IBMAT386:
-                f=romfopen("roms/ibmat/at111585.0","rb");
-                ff=romfopen("roms/ibmat/at111585.1","rb");
+                f = romfopen("roms/ibmat/62x0820.u27", "rb");
+                ff  =romfopen("roms/ibmat/62x0821.u47", "rb");
                 if (!f || !ff) break;
                 for (c=0x0000;c<0x10000;c+=2)
                 {
