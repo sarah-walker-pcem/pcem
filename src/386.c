@@ -663,6 +663,9 @@ void rep386(int fv)
                 if (c > 0) { firstrepcycle = 0; pc = ipc; if (ssegs) ssegs++; }
                 else firstrepcycle = 1;
                 break;
+                case 0x90: case 0x190: /*REP NOP*/
+		case 0x290: case 0x390:
+                break;
                 case 0xA4: case 0x1A4: /*REP MOVSB*/
                 if (c>0)
                 {
