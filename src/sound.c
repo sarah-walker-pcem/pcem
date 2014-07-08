@@ -63,6 +63,8 @@ device_t *sound_card_getdevice(int card)
 
 int sound_card_has_config(int card)
 {
+        if (!sound_cards[card].device)
+                return 0;
         return sound_cards[card].device->config ? 1 : 0;
 }
 

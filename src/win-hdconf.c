@@ -331,7 +331,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 h = GetDlgItem(hdlg, IDC_EDIT_C_SPT);
                                 sprintf(s, "%i", hd_new_spt);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-                                h = GetDlgItem(hdlg, IDC_EDIT_C_CYL);
+                                h = GetDlgItem(hdlg, IDC_EDIT_C_HPC);
                                 sprintf(s, "%i", hd_new_hpc);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
                                 h = GetDlgItem(hdlg, IDC_EDIT_C_CYL);
