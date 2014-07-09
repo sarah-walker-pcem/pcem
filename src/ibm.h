@@ -346,6 +346,7 @@ enum
         GFX_MACH64GX,   /*ATI Graphics Pro Turbo (Mach64)*/
         GFX_CL_GD5429,  /*Cirrus Logic CL-GD5429*/
         GFX_VIRGEDX,    /*S3 Virge/DX*/
+        GFX_PHOENIX_TRIO32, /*S3 732/Trio32 (Phoenix)*/
         
         GFX_MAX
 };

@@ -44,25 +44,26 @@ typedef struct
 
 static VIDEO_CARD video_cards[] =
 {
-        {"CGA",                                    &cga_device,          GFX_CGA},
-        {"MDA",                                    &mda_device,          GFX_MDA},
-        {"Hercules",                               &hercules_device,     GFX_HERCULES},
-        {"EGA",                                    &ega_device,          GFX_EGA},
-        {"Trident TVGA8900D",                      &tvga8900d_device,    GFX_TVGA},
-        {"Tseng ET4000AX",                         &et4000_device,       GFX_ET4000},
-        {"Diamond Stealth 32 (Tseng ET4000/w32p)", &et4000w32p_device,   GFX_ET4000W32},
-        {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device, GFX_BAHAMAS64},
-        {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,       GFX_N9_9FX},
-        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,     GFX_VIRGE},
-        {"S3 ViRGE/DX",                            &s3_virge_375_device, GFX_VIRGEDX},
-        {"Trident TGUI9440",                       &tgui9440_device,     GFX_TGUI9440},
-        {"VGA",                                    &vga_device,          GFX_VGA},
-        {"ATI VGA Edge-16 (ATI-18800)",            &ati18800_device,     GFX_VGAEDGE16},
-        {"ATI VGA Charger",                        &ati28800_device,     GFX_VGACHARGER},
-        {"OAK OTI-067",                            &oti067_device,       GFX_OTI067},
-        {"ATI Graphics Pro Turbo (Mach64 GX)",     &mach64gx_device,     GFX_MACH64GX},
-        {"Cirrus Logic CL-GD5429",                 &gd5429_device,       GFX_CL_GD5429},
-        {"",                                       NULL,                 0}
+        {"ATI Graphics Pro Turbo (Mach64 GX)",     &mach64gx_device,            GFX_MACH64GX},
+        {"ATI VGA Charger (ATI-28800)",            &ati28800_device,            GFX_VGACHARGER},
+        {"ATI VGA Edge-16 (ATI-18800)",            &ati18800_device,            GFX_VGAEDGE16},
+        {"CGA",                                    &cga_device,                 GFX_CGA},
+        {"Cirrus Logic CL-GD5429",                 &gd5429_device,              GFX_CL_GD5429},
+        {"Diamond Stealth 32 (Tseng ET4000/w32p)", &et4000w32p_device,          GFX_ET4000W32},
+        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,            GFX_VIRGE},
+        {"EGA",                                    &ega_device,                 GFX_EGA},
+        {"Hercules",                               &hercules_device,            GFX_HERCULES},
+        {"MDA",                                    &mda_device,                 GFX_MDA},
+        {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,              GFX_N9_9FX},
+        {"OAK OTI-067",                            &oti067_device,              GFX_OTI067},
+        {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device,        GFX_BAHAMAS64},
+        {"Phoenix S3 Trio32",                      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
+        {"S3 ViRGE/DX",                            &s3_virge_375_device,        GFX_VIRGEDX},
+        {"Trident TVGA8900D",                      &tvga8900d_device,           GFX_TVGA},
+        {"Tseng ET4000AX",                         &et4000_device,              GFX_ET4000},
+        {"Trident TGUI9440",                       &tgui9440_device,            GFX_TGUI9440},
+        {"VGA",                                    &vga_device,                 GFX_VGA},
+        {"",                                       NULL,                        0}
 };
 
 int video_card_available(int card)
