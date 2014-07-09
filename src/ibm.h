@@ -318,7 +318,6 @@ enum
 };
 
 extern int romspresent[ROM_MAX];
-extern int gfx_present[19];
 
 //#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
 #define is386 (romset>=ROM_IBMAT386)
@@ -327,26 +326,31 @@ extern int gfx_present[19];
 int hasfpu;
 int romset;
 
-#define GFX_CGA 0
-#define GFX_MDA 1
-#define GFX_HERCULES 2
-#define GFX_EGA 3     /*Using IBM EGA BIOS*/
-//#define GFX_OTI067 3    /*Using BIOS from Acer 386SX/25N - edit - only works with Acer BIOS! Stupid integrated systems*/
-#define GFX_TVGA 4      /*Using Trident 8900D BIOS*/
-#define GFX_ET4000 5    /*Tseng ET4000*/
-#define GFX_ET4000W32  6 /*Tseng ET4000/W32p (Diamond Stealth 32)*/
-#define GFX_BAHAMAS64  7 /*S3 Vision864 (Paradise Bahamas 64)*/
-#define GFX_N9_9FX     8 /*S3 764/Trio64 (Number Nine 9FX)*/
-#define GFX_STEALTH64  9 /*S3 Vision964 (Diamond Stealth 64 VRAM PCI)*/
-#define GFX_VIRGE      10 /*S3 Virge*/
-#define GFX_TGUI9440   11 /*Trident TGUI9440*/
-#define GFX_VGA        12 /*IBM VGA*/
-#define GFX_VGAEDGE16  13 /*ATI VGA Edge-16 (18800-1)*/
-#define GFX_VGACHARGER 14 /*ATI VGA Charger (28800-5)*/
-#define GFX_OTI067     15 /*Oak OTI-067*/
-#define GFX_MACH64GX   16 /*ATI Graphics Pro Turbo (Mach64)*/
-#define GFX_CL_GD5429  17 /*Cirrus Logic CL-GD5429*/
-#define GFX_VIRGEDX    18 /*S3 Virge/DX*/
+enum
+{
+        GFX_CGA = 0,
+        GFX_MDA,
+        GFX_HERCULES,
+        GFX_EGA,        /*Using IBM EGA BIOS*/
+        GFX_TVGA,       /*Using Trident TVGA8900D BIOS*/
+        GFX_ET4000,     /*Tseng ET4000*/
+        GFX_ET4000W32,  /*Tseng ET4000/W32p (Diamond Stealth 32)*/
+        GFX_BAHAMAS64,  /*S3 Vision864 (Paradise Bahamas 64)*/
+        GFX_N9_9FX,     /*S3 764/Trio64 (Number Nine 9FX)*/
+        GFX_VIRGE,      /*S3 Virge*/
+        GFX_TGUI9440,   /*Trident TGUI9440*/
+        GFX_VGA,        /*IBM VGA*/        
+        GFX_VGAEDGE16,  /*ATI VGA Edge-16 (18800-1)*/
+        GFX_VGACHARGER, /*ATI VGA Charger (28800-5)*/
+        GFX_OTI067,     /*Oak OTI-067*/
+        GFX_MACH64GX,   /*ATI Graphics Pro Turbo (Mach64)*/
+        GFX_CL_GD5429,  /*Cirrus Logic CL-GD5429*/
+        GFX_VIRGEDX,    /*S3 Virge/DX*/
+        
+        GFX_MAX
+};
+
+extern int gfx_present[GFX_MAX];
 
 int gfxcard;
 

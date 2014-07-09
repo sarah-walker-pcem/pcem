@@ -53,7 +53,7 @@ static struct
 #define TIMER_1SEC 1
 
 int winsizex=640,winsizey=480;
-int gfx_present[19];
+int gfx_present[GFX_MAX];
 #undef cs
 CRITICAL_SECTION cs;
 
@@ -339,13 +339,13 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         }
         
 
-        for (c = 0; c < 19; c++)
+        for (c = 0; c < GFX_MAX; c++)
                 gfx_present[c] = video_card_available(video_old_to_new(c));
 
         if (!video_card_available(video_old_to_new(gfxcard)))
         {
                 if (romset!=-1) MessageBox(hwnd,"Configured video BIOS not available.\nDefaulting to available romset.","PCem error",MB_OK);
-                for (c = 18; c >= 0; c--)
+                for (c = GFX_MAX-1; c >= 0; c--)
                 {
                         if (gfx_present[c])
                         {
