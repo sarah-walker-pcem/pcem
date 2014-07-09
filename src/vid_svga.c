@@ -403,10 +403,27 @@ void svga_poll(void *p)
         {
 //                if (!(vc & 15)) pclog("VC %i %i\n", vc, GetTickCount());
                 if (svga->displine == svga->hwcursor_latch.y && svga->hwcursor_latch.ena)
+                {
                         svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+                        svga->hwcursor_oddeven = 0;
+                }
+
+                if (svga->displine == svga->hwcursor_latch.y+1 && svga->hwcursor_latch.ena && svga->interlace)
+                {
+                        svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+                        svga->hwcursor_oddeven = 1;
+                }
 
                 if (svga->displine == svga->overlay_latch.y && svga->overlay_latch.ena)
+                {
                         svga->overlay_on = svga->overlay_latch.ysize - svga->overlay_latch.yoff;
+                        svga->overlay_oddeven = 0;
+                }
+                if (svga->displine == svga->overlay_latch.y+1 && svga->overlay_latch.ena && svga->interlace)
+                {
+                        svga->overlay_on = svga->overlay_latch.ysize - svga->overlay_latch.yoff;
+                        svga->overlay_oddeven = 1;
+                }
 
                 svga->vidtime += svga->dispofftime;
 //                if (output) printf("Display off %f\n",vidtime);
@@ -430,12 +447,16 @@ void svga_poll(void *p)
                         {
                                 svga->overlay_draw(svga, svga->displine);
                                 svga->overlay_on--;
+                                if (svga->overlay_on && svga->interlace)
+                                        svga->overlay_on--;
                         }
 
                         if (svga->hwcursor_on)
                         {
                                 svga->hwcursor_draw(svga, svga->displine);
                                 svga->hwcursor_on--;
+                                if (svga->hwcursor_on && svga->interlace)
+                                        svga->hwcursor_on--;
                         }
 
                         if (svga->lastline < svga->displine) 

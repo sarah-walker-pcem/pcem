@@ -1725,6 +1725,9 @@ void s3_hwcursor_draw(svga_t *svga, int displine)
         int xx;
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
         
+        if (svga->interlace && svga->hwcursor_oddeven)
+                svga->hwcursor_latch.addr += 16;
+
 //        pclog("HWcursor %i %i\n", svga->hwcursor_latch.x, svga->hwcursor_latch.y);
         for (x = 0; x < 64; x += 16)
         {
@@ -1747,6 +1750,8 @@ void s3_hwcursor_draw(svga_t *svga, int displine)
                 }
                 svga->hwcursor_latch.addr += 4;
         }
+        if (svga->interlace && !svga->hwcursor_oddeven)
+                svga->hwcursor_latch.addr += 16;
 }
 
 

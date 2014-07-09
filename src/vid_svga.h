@@ -90,6 +90,9 @@ typedef struct svga_t
         int hwcursor_on;
         int overlay_on;
         
+        int hwcursor_oddeven;
+        int overlay_oddeven;
+        
         void (*render)(struct svga_t *svga);
         void (*recalctimings_ex)(struct svga_t *svga);
 
