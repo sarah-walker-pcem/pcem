@@ -58,6 +58,7 @@ static VIDEO_CARD video_cards[] =
         {"OAK OTI-067",                            &oti067_device,              GFX_OTI067},
         {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device,        GFX_BAHAMAS64},
         {"Phoenix S3 Trio32",                      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
+        {"Phoenix S3 Trio64",                      &s3_phoenix_trio64_device,   GFX_PHOENIX_TRIO64},
         {"S3 ViRGE/DX",                            &s3_virge_375_device,        GFX_VIRGEDX},
         {"Trident TVGA8900D",                      &tvga8900d_device,           GFX_TVGA},
         {"Tseng ET4000AX",                         &et4000_device,              GFX_ET4000},

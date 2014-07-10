@@ -1933,9 +1933,9 @@ static void *s3_init(char *bios_fn, int chip)
                    NULL);
 
         if (PCI)
-                svga->crtc[0x36] = 2 | (2 << 2) | (1 << 4) | (vram_sizes[vram] << 5);
+                svga->crtc[0x36] = 2 | (3 << 2) | (1 << 4) | (vram_sizes[vram] << 5);
         else
-                svga->crtc[0x36] = 1 | (2 << 2) | (1 << 4) | (vram_sizes[vram] << 5);
+                svga->crtc[0x36] = 1 | (3 << 2) | (1 << 4) | (vram_sizes[vram] << 5);
         svga->crtc[0x37] = 1 | (7 << 5);
 
         s3_io_set(s3);
@@ -2010,6 +2010,26 @@ void *s3_phoenix_trio32_init()
 int s3_phoenix_trio32_available()
 {
         return rom_present("roms/86C732P.bin");
+}
+
+void *s3_phoenix_trio64_init()
+{
+        s3_t *s3 = s3_init("roms/86c764x1.bin", S3_TRIO64);
+        svga_t *svga = &s3->svga;
+
+        s3->id = 0xe1; /*Trio64*/
+        s3->id_ext = s3->id_ext_pci = 0x11;
+        s3->packed_mmio = 1;
+
+        s3->getclock = s3_trio64_getclock;
+        s3->getclock_p = s3;
+
+        return s3;
+}
+
+int s3_phoenix_trio64_available()
+{
+        return rom_present("roms/86c764x1.bin");
 }
 
 void s3_close(void *p)
@@ -2133,6 +2153,41 @@ static device_config_t s3_phoenix_trio32_config[] =
         }
 };
 
+static device_config_t s3_phoenix_trio64_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "512 KB",
+                                .value = 0
+                        },
+                        {
+                                .description = "1 MB",
+                                .value = 1
+                        },
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = "4 MB",
+                                .value = 4
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t s3_bahamas64_device =
 {
         "Paradise Bahamas 64 (S3 Vision864)",
@@ -2170,4 +2225,17 @@ device_t s3_phoenix_trio32_device =
         s3_force_redraw,
         s3_add_status_info,
         s3_phoenix_trio32_config
+};
+
+device_t s3_phoenix_trio64_device =
+{
+        "Phoenix S3 Trio64",
+        0,
+        s3_phoenix_trio64_init,
+        s3_close,
+        s3_phoenix_trio64_available,
+        s3_speed_changed,
+        s3_force_redraw,
+        s3_add_status_info,
+        s3_phoenix_trio64_config
 };

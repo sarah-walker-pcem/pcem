@@ -347,6 +347,7 @@ enum
         GFX_CL_GD5429,  /*Cirrus Logic CL-GD5429*/
         GFX_VIRGEDX,    /*S3 Virge/DX*/
         GFX_PHOENIX_TRIO32, /*S3 732/Trio32 (Phoenix)*/
+        GFX_PHOENIX_TRIO64, /*S3 764/Trio64 (Phoenix)*/
         
         GFX_MAX
 };
