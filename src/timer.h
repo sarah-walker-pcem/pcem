@@ -16,7 +16,15 @@ extern int timer_start;
 		}					\
 	} while (0)
 
-#define timer_clock() timer_end_period(cycles)
+#define timer_clock()                                   \
+	do 						\
+	{						\
+                int diff = timer_start - cycles;        \
+		timer_count -= diff;			\
+                timer_start = cycles;                   \
+		timer_process();		        \
+        	timer_update_outstanding();	        \
+	} while (0)
 
 void timer_process();
 void timer_update_outstanding();
