@@ -1367,12 +1367,11 @@ int svga_add_status_info(char *s, int max_len, void *p)
         svga_t *svga = (svga_t *)p;
         char temps[128];
         int cur_len = max_len;
-        int len;
         
         if (svga->chain4) strcpy(temps, "SVGA chained (possibly mode 13h)\n");
         else              strcpy(temps, "SVGA unchained (possibly mode-X)\n");
         strncat(s, temps, cur_len);
-        cur_len -= len;
+        cur_len -= strlen(temps);
 
         if (!svga->video_bpp) strcpy(temps, "SVGA in text mode\n");
         else                  sprintf(temps, "SVGA colour depth : %i bpp\n", svga->video_bpp);

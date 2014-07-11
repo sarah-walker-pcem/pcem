@@ -4,6 +4,7 @@
 #undef BITMAP
 
 #include "ibm.h"
+#include "device.h"
 #include "video.h"
 #include "resources.h"
 #include "win.h"
