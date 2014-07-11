@@ -933,7 +933,7 @@ uint8_t readide(int ide_board, uint16_t addr)
 //         pclog("ReadIDE %04X  from %04X(%08X):%08X\n", addr, CS, cs, pc);
 //        return 0xFF;
 
-        if (ide->type == IDE_NONE && addr != 0x1f6) return 0xff;
+        if (ide->type == IDE_NONE && addr != 0x1f6) return 0;
 //        /*if (addr!=0x1F7 && addr!=0x3F6) */pclog("Read IDEb %04X %02X %02X %i %04X:%04X %i  %04X\n",addr,ide->atastat,(ide->atastat & ~DSC_STAT) | (ide->service ? SERVICE_STAT : 0),cur_ide[ide_board],CS,pc,ide_board, BX);
 //rpclog("Read IDE %08X %08X %02X\n",addr,PC,iomd.irqb.mask);
         switch (addr)
