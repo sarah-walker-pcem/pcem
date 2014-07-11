@@ -379,7 +379,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         memset(rawinputkey, 0, sizeof(rawinputkey));
 	device.usUsagePage = 0x01;
 	device.usUsage = 0x06;
-	device.dwFlags = RIDEV_NOLEGACY;
+	device.dwFlags = 0;
 	device.hwndTarget = hwnd;
 	
 	if (RegisterRawInputDevices(&device, 1, sizeof(device)))
