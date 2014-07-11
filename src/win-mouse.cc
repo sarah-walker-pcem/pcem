@@ -1,6 +1,6 @@
+#define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
 #include "plat-mouse.h"
-#include "plat-dinput.h"
 #include "win.h"
 
 extern "C" int video_fullscreen;
@@ -14,6 +14,7 @@ extern "C" void poll_mouse();
 extern "C" void position_mouse(int x, int y);
 extern "C" void get_mouse_mickeys(int *x, int *y);
 
+static LPDIRECTINPUT lpdi;
 static LPDIRECTINPUTDEVICE lpdi_mouse = NULL;
 static DIMOUSESTATE mousestate;
 static int mouse_x = 0, mouse_y = 0;
@@ -23,6 +24,8 @@ void mouse_init()
 {
         atexit(mouse_close);
         
+        if (FAILED(DirectInputCreate(hinstance, DIRECTINPUT_VERSION, &lpdi, NULL)))
+                fatal("mouse_init : DirectInputCreate failed\n"); 
         if (FAILED(lpdi->CreateDevice(GUID_SysMouse, &lpdi_mouse, NULL)))
            fatal("mouse_init : CreateDevice failed\n");
         if (FAILED(lpdi_mouse->SetCooperativeLevel(ghwnd, DISCL_FOREGROUND | (video_fullscreen ? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE))))

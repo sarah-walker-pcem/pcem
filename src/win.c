@@ -1,3 +1,4 @@
+#define  _WIN32_WINNT 0x0501
 #define BITMAP WINDOWS_BITMAP
 #include <windows.h>
 #include <windowsx.h>
@@ -31,7 +32,14 @@
 #include "win-d3d-fs.h"
 //#include "win-opengl.h"
 
+#ifndef MAPVK_VK_TO_VSC
+#define MAPVK_VK_TO_VSC 0
+#endif
+
 uint64_t timer_freq;
+
+static RAWINPUTDEVICE device;
+static uint16_t scancode_map[65536];
 
 static struct
 {
@@ -215,6 +223,95 @@ uint64_t timer_read()
         return qpc_time.QuadPart;
 }
 
+/* This is so we can disambiguate scan codes that would otherwise conflict and get
+   passed on incorrectly. */
+UINT16 convert_scan_code(UINT16 scan_code)
+{
+	switch (scan_code)
+        {
+		case 0xE001:
+		return 0xF001;
+		case 0xE002:
+		return 0xF002;
+		case 0xE005:
+		return 0xF005;
+		case 0xE006:
+		return 0xF006;
+		case 0xE007:
+		return 0xF007;
+		case 0xE071:
+		return 0xF008;
+		case 0xE072:
+		return 0xF009;
+		case 0xE07F:
+		return 0xF00A;
+		case 0xE0E1:
+		return 0xF00B;
+		case 0xE0EE:
+		return 0xF00C;
+		case 0xE0F1:
+		return 0xF00D;
+		case 0xE0FE:
+		return 0xF00E;
+		case 0xE0EF:
+		return 0xF00F;
+		
+		default:
+		return scan_code;
+	}
+}
+
+void get_registry_key_map()
+{
+	char *keyName = "SYSTEM\\CurrentControlSet\\Control\\Keyboard Layout";
+	char *valueName = "Scancode Map";
+	char buf[32768];
+	DWORD bufSize;
+	HKEY hKey;
+	int j;
+
+ 	/* First, prepare the default scan code map list which is 1:1.
+ 	   Remappings will be inserted directly into it.
+ 	   65536 bytes so scan codes fit in easily and it's easy to find what each maps too,
+ 	   since each array element is a scan code and provides for E0, etc. ones too. */
+	for (j = 0; j < 65536; j++)
+		scancode_map[j] = convert_scan_code(j);
+
+	bufSize = 32768;
+	pclog("Preparing scan code map list...\n");
+ 	/* Get the scan code remappings from:
+ 	   HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout */
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, 1, &hKey) == ERROR_SUCCESS)
+        {
+		if(RegQueryValueEx(hKey, valueName, NULL, NULL, buf, &bufSize) == ERROR_SUCCESS)
+                {
+			UINT32 *bufEx2 = (UINT32 *) buf;
+			int scMapCount = bufEx2[2];
+			pclog("%lu scan code mappings found!\n", scMapCount);
+			if ((bufSize != 0) && (scMapCount != 0))
+                        {
+				UINT16 *bufEx = (UINT16 *) (buf + 12);
+				pclog("More than zero scan code mappings found, processing...\n");
+				for (j = 0; j < scMapCount*2; j += 2)
+ 				{
+ 					/* Each scan code is 32-bit: 16 bits of remapped scan code,
+ 					   and 16 bits of original scan code. */
+  					int scancode_unmapped = bufEx[j + 1];
+  					int scancode_mapped = bufEx[j];
+
+  					scancode_mapped = convert_scan_code(scancode_mapped);
+
+  					scancode_map[scancode_unmapped] = scancode_mapped;
+  					pclog("Scan code mapping %u detected: %X -> %X\n", scancode_unmapped, scancode_mapped, scancode_map[scancode_unmapped]);
+  				}
+				pclog("Done processing!\n");
+			}
+		}
+		RegCloseKey(hKey);
+	}
+	pclog("Done preparing!\n");
+}
+
 int WINAPI WinMain (HINSTANCE hThisInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR lpszArgument,
@@ -279,6 +376,19 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 //        win_set_window(hwnd);
         
+        memset(rawinputkey, 0, sizeof(rawinputkey));
+	device.usUsagePage = 0x01;
+	device.usUsage = 0x06;
+	device.dwFlags = RIDEV_NOLEGACY;
+	device.hwndTarget = hwnd;
+	
+	if (RegisterRawInputDevices(&device, 1, sizeof(device)))
+		pclog("Raw input registered!\n");
+	else
+		pclog("Raw input registration failed!\n");
+
+	get_registry_key_map();
+
         ghwnd=hwnd;
         
         midi_init();
@@ -729,6 +839,56 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 }
                 return 0;
                 
+		case WM_INPUT:
+                {
+                        UINT size;
+                        RAWINPUT *raw;
+                        
+                        GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+                        
+                        raw = malloc(size);
+
+        		/* Here we read the raw input data for the keyboard */
+        		GetRawInputData((HRAWINPUT)(lParam), RID_INPUT, raw, &size, sizeof(RAWINPUTHEADER));
+ 
+        		/* If the input is keyboard, we process it */
+        		if (raw->header.dwType == RIM_TYPEKEYBOARD)
+        		{
+        			const RAWKEYBOARD rawKB = raw->data.keyboard;
+                                USHORT scancode = rawKB.MakeCode;
+                                
+        			// pclog("Keyboard input received: S:%X VK:%X F:%X\n", c, d, e);
+
+        			if (rawKB.VKey == VK_NUMLOCK)
+        			{
+        				/* This is for proper handling of Pause/Break and Num Lock */
+        				scancode = (MapVirtualKey(rawKB.VKey, MAPVK_VK_TO_VSC) | 0x100);
+        			}
+        			/* If it's not a scan code that starts with 0xE1 */
+        			if (!(rawKB.Flags & RI_KEY_E1))
+        			{
+        				if (rawKB.Flags & RI_KEY_E0)
+                                                scancode |= (0xE0 << 8);
+
+        				/* Remap it according to the list from the Registry */
+        				scancode = scancode_map[scancode];
+
+        				if ((scancode >> 8) == 0xF0)
+        					scancode |= 0x100; /* Extended key code in disambiguated format */
+        				else if ((scancode >> 8) == 0xE0)
+        					scancode |= 0x80; /* Normal extended key code */
+
+        				/* If it's not 0 (therefore not 0xE1, 0xE2, etc),
+        				   then pass it on to the rawinputkey array */
+        				if (!(scancode & 0xf00))
+                                                rawinputkey[scancode & 0x1ff] = !(rawKB.Flags & RI_KEY_BREAK);
+        			}
+                        }
+                        free(raw);
+			
+		}
+		break;
+
                 case WM_SETFOCUS:
                 infocus=1;
  //               QueryPerformanceCounter(&counter_posold);

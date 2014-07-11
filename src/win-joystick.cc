@@ -1,7 +1,6 @@
 #define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
 #include "plat-joystick.h"
-#include "plat-dinput.h"
 #include "win.h"
 
 extern "C" int video_fullscreen;
@@ -15,6 +14,7 @@ extern "C" void poll_joystick();
 
 joystick_t joystick_state[2];
 
+static LPDIRECTINPUT lpdi;
 static LPDIRECTINPUTDEVICE2 lpdi_joystick[2] = {NULL, NULL};
 
 int joysticks_present = 0;
@@ -43,6 +43,9 @@ void joystick_init()
         
         joysticks_present = 0;
         
+        if (FAILED(DirectInputCreate(hinstance, DIRECTINPUT_VERSION, &lpdi, NULL)))
+                fatal("joystick_init : DirectInputCreate failed\n"); 
+
         if (FAILED(lpdi->EnumDevices(DIDEVTYPE_JOYSTICK, joystick_enum_callback, NULL, DIEDFL_ATTACHEDONLY)))
                 fatal("joystick_init : EnumDevices failed\n");
 
@@ -125,7 +128,7 @@ void poll_joystick()
                 joystick_state[c].b[2] = joystate.rgbButtons[2] & 0x80;
                 joystick_state[c].b[3] = joystate.rgbButtons[3] & 0x80;
                 
-                pclog("joystick %i - x=%i y=%i b[0]=%i b[1]=%i  %i\n", c, joystick_state[c].x, joystick_state[c].y, joystick_state[c].b[0], joystick_state[c].b[1], joysticks_present);
+//                pclog("joystick %i - x=%i y=%i b[0]=%i b[1]=%i  %i\n", c, joystick_state[c].x, joystick_state[c].y, joystick_state[c].b[0], joystick_state[c].b[1], joysticks_present);
         }                
 }
 
