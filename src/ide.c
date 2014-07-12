@@ -71,6 +71,7 @@
 #define GPCMD_PREVENT_REMOVAL           0x1e
 #define GPCMD_READ_10                   0x28
 #define GPCMD_READ_CD			0xbe
+#define GPCMD_READ_CDROM_CAPACITY	0x25
 #define GPCMD_READ_HEADER		0x44
 #define GPCMD_READ_SUBCHANNEL		0x42
 #define GPCMD_READ_TOC_PMA_ATIP		0x43
@@ -1553,6 +1554,7 @@ static void atapicommand(int ide_board)
         int msf;
         int pos=0;
         unsigned char temp;
+        uint32_t size;
 #ifndef RPCEMU_IDE
         pclog("New ATAPI command %02X %i\n",idebufferb[0],ins);
 #endif
@@ -1957,6 +1959,26 @@ static void atapicommand(int ide_board)
                 idecallback[ide_board]=50*IDE_TIME;
                 break;
 
+        case GPCMD_READ_CDROM_CAPACITY:
+                if (!atapi->ready()) { atapi_notready(ide); return; }
+                size = atapi->size();
+                idebufferb[0] = (size >> 24) & 0xff;
+                idebufferb[1] = (size >> 16) & 0xff;
+                idebufferb[2] = (size >> 8) & 0xff;
+                idebufferb[3] = size & 0xff;
+                idebufferb[4] = (2048 >> 24) & 0xff;
+                idebufferb[5] = (2048 >> 16) & 0xff;
+                idebufferb[6] = (2048 >> 8) & 0xff;
+                idebufferb[7] = 2048 & 0xff;
+                len=8;
+                ide->packetstatus=3;
+                ide->cylinder=len;
+                ide->secount=2;
+                ide->pos=0;
+                idecallback[ide_board]=60*IDE_TIME;
+                ide->packlen=len;
+                break;
+                
         case GPCMD_SEND_DVD_STRUCTURE:
         default:
                 ide->atastat = READY_STAT | ERR_STAT;    /*CHECK CONDITION*/

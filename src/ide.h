@@ -30,6 +30,7 @@ typedef struct ATAPI
         void (*eject)(void);
         void (*pause)(void);
         void (*resume)(void);
+        uint32_t (*size)(void);
         void (*stop)(void);
         void (*exit)(void);
 } ATAPI;

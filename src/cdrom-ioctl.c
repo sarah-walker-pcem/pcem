@@ -18,6 +18,7 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 } CDROM_TOC_SESSION_DATA, *PCDROM_TOC_SESSION_DATA;
 static ATAPI ioctl_atapi;
 
+static uint32_t last_block = 0;
 static int ioctl_inited = 0;
 static char ioctl_path[8];
 static void ioctl_close(void);
@@ -383,14 +384,20 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
                 }
         }
         b[2]=toc.TrackData[c].TrackNumber;
+        last_block = 0;
         for (c=d;c<=toc.LastTrack;c++)
         {
+                uint32_t address;
                 if ((len+8)>maxlen) break;
 //                pclog("Len %i max %i Track %02X - %02X %02X %i %i %i %i %08X\n",len,maxlen,toc.TrackData[c].TrackNumber,toc.TrackData[c].Adr,toc.TrackData[c].Control,toc.TrackData[c].Address[0],toc.TrackData[c].Address[1],toc.TrackData[c].Address[2],toc.TrackData[c].Address[3],MSFtoLBA(toc.TrackData[c].Address[1],toc.TrackData[c].Address[2],toc.TrackData[c].Address[3]));
                 b[len++]=0; /*Reserved*/
                 b[len++]=(toc.TrackData[c].Adr<<4)|toc.TrackData[c].Control;
                 b[len++]=toc.TrackData[c].TrackNumber;
                 b[len++]=0; /*Reserved*/
+                address = MSFtoLBA(toc.TrackData[c].Address[1],toc.TrackData[c].Address[2],toc.TrackData[c].Address[3]);
+                if (address > last_block)
+                        last_block = address;
+
                 if (msf)
                 {
                         b[len++]=toc.TrackData[c].Address[0];
@@ -461,6 +468,15 @@ static void ioctl_readtoc_session(unsigned char *b, int msf, int maxlen)
                 }
 }
 
+static uint32_t ioctl_size()
+{
+        unsigned char b[4096];
+
+        atapi->readtoc(b, 0, 0, 4096, 0);
+        
+        return last_block;
+}
+
 int ioctl_open(char d)
 {
 //        char s[8];
@@ -510,6 +526,7 @@ static ATAPI ioctl_atapi=
         ioctl_eject,
         ioctl_pause,
         ioctl_resume,
+        ioctl_size,
         ioctl_stop,
         ioctl_exit
 };
