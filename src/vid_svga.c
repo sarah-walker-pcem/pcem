@@ -66,6 +66,7 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
 //                        pclog("Set mono handler\n");
                         io_sethandler(0x03a0, 0x0020, svga->video_in, NULL, NULL, svga->video_out, NULL, NULL, svga->p);
                 }
+                svga_recalctimings(svga);
                 break;
                 case 0x3C4: 
                 svga->seqaddr = val; 

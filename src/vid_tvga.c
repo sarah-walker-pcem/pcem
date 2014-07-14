@@ -25,6 +25,9 @@ typedef struct tvga_t
         int oldmode;
         uint8_t oldctrl1;
         uint8_t oldctrl2, newctrl2;
+        
+        int vram_size;
+        uint32_t vram_mask;
 } tvga_t;
 
 void tvga_out(uint16_t addr, uint8_t val, void *p)
@@ -47,16 +50,16 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         case 0xC: 
                         if (svga->seqregs[0xe] & 0x80) 
-                        svga->seqregs[0xc] = val; 
+                                svga->seqregs[0xc] = val; 
                         break;
                         case 0xd: 
                         if (tvga->oldmode) 
+                                tvga->oldctrl2 = val;                                
+                        else
                         {
-                                tvga->oldctrl2 = val;
-                                svga->vrammask = (val & 0x10) ? 0xfffff : 0x3ffff;
+                                tvga->newctrl2 = val;
+                                svga_recalctimings(svga);
                         }
-                        else 
-                                tvga->newctrl2 = val; 
                         break;
                         case 0xE:
                         if (tvga->oldmode) 
@@ -106,6 +109,12 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                                 svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
+                }
+                switch (svga->crtcreg)
+                {
+                        case 0x1e:
+                        svga->vrammask = (val & 0x80) ? tvga->vram_mask : 0x3ffff;
+                        break;
                 }
                 return;
                 case 0x3D8:
@@ -207,7 +216,7 @@ void tvga_recalctimings(svga_t *svga)
         svga->interlace = svga->crtc[0x1e] & 4;
         if (svga->interlace)
                 svga->rowoffset >>= 1;
-        
+
         switch (((svga->miscout >> 2) & 3) | ((tvga->newctrl2 << 2) & 4))
         {
                 case 2: svga->clock = cpuclock/44900000.0; break;
@@ -246,10 +255,13 @@ void *tvga8900d_init()
 {
         tvga_t *tvga = malloc(sizeof(tvga_t));
         memset(tvga, 0, sizeof(tvga_t));
-
+        
+        tvga->vram_size = device_get_config_int("memory") << 10;
+        tvga->vram_mask = tvga->vram_size - 1;
+        
         rom_init(&tvga->bios_rom, "roms/trident.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
         
-        svga_init(&tvga->svga, tvga, 1 << 20, /*1mb - chip supports 2mb, but drivers are buggy*/
+        svga_init(&tvga->svga, tvga, tvga->vram_size,
                    tvga_recalctimings,
                    tvga_in, tvga_out,
                    NULL,
@@ -295,6 +307,38 @@ int tvga_add_status_info(char *s, int max_len, void *p)
         return svga_add_status_info(s, max_len, &tvga->svga);
 }
 
+static device_config_t tvga_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "256 kB",
+                                .value = 256
+                        },
+                        {
+                                .description = "512 kB",
+                                .value = 512
+                        },
+                        {
+                                .description = "1 MB",
+                                .value = 1024
+                        },
+                         /*Chip supports 2mb, but drivers are buggy*/
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 1024
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t tvga8900d_device =
 {
         "Trident TVGA 8900D",
@@ -304,5 +348,6 @@ device_t tvga8900d_device =
         tvga8900d_available,
         tvga_speed_changed,
         tvga_force_redraw,
-        tvga_add_status_info
+        tvga_add_status_info,
+        tvga_config
 };

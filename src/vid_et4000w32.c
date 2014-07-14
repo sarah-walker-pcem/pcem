@@ -33,6 +33,8 @@ typedef struct et4000w32p_t
         uint8_t banking, banking2;
 
         uint8_t pci_regs[256];
+        
+        int interleaved;
 
         /*Accelerator*/
         struct
@@ -142,7 +144,7 @@ void et4000w32p_out(uint16_t addr, uint8_t val, void *p)
 //                        pclog("Linear base now at %08X %02X\n", et4000w32p_linearbase, val);
                         et4000w32p_recalcmapping(et4000);
                 }
-                if (svga->crtcreg == 0x36) 
+                if (svga->crtcreg == 0x32 || svga->crtcreg == 0x36)
                         et4000w32p_recalcmapping(et4000);
                 break;
 
@@ -330,6 +332,9 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
 //                pclog("ET4K map %02X\n", map);
         }
         et4000->linearbase_old = et4000->linearbase;
+        
+        if (!et4000->interleaved && (et4000->svga.crtc[0x32] & 0x80))
+                mem_mapping_disable(&svga->mapping);
 }
 
 #define ACL_WRST 1
@@ -1010,10 +1015,15 @@ void et4000w32p_pci_write(int func, int addr, uint8_t val, void *p)
 
 void *et4000w32p_init()
 {
+        int vram_size;
         et4000w32p_t *et4000 = malloc(sizeof(et4000w32p_t));
         memset(et4000, 0, sizeof(et4000w32p_t));
 
-        svga_init(&et4000->svga, et4000, 1 << 21, /*2mb*/
+        vram_size = device_get_config_int("memory");
+        
+        et4000->interleaved = (vram_size == 2) ? 1 : 0;
+        
+        svga_init(&et4000->svga, et4000, vram_size << 20,
                    et4000w32p_recalctimings,
                    et4000w32p_in, et4000w32p_out,
                    et4000w32p_hwcursor_draw,
@@ -1074,6 +1084,33 @@ int et4000w32p_add_status_info(char *s, int max_len, void *p)
         return svga_add_status_info(s, max_len, &et4000w32p->svga);
 }
 
+static device_config_t et4000w32p_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "1 MB",
+                                .value = 1
+                        },
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t et4000w32p_device =
 {
         "Tseng Labs ET4000/w32p",
@@ -1083,5 +1120,6 @@ device_t et4000w32p_device =
         et4000w32p_available,
         et4000w32p_speed_changed,
         et4000w32p_force_redraw,
-        et4000w32p_add_status_info
+        et4000w32p_add_status_info,
+        et4000w32p_config
 };

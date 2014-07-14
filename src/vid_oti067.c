@@ -17,6 +17,9 @@ typedef struct oti067_t
         
         int index;
         uint8_t regs[32];
+        
+        uint32_t vram_size;
+        uint32_t vram_mask;
 } oti067_t;
 
 void oti067_out(uint16_t addr, uint8_t val, void *p)
@@ -56,7 +59,13 @@ void oti067_out(uint16_t addr, uint8_t val, void *p)
                 switch (oti067->index)
                 {
                         case 0xD:
-                        svga->vrammask = (val & 0xc) ? 0x7ffff : 0x3ffff;
+                        svga->vrammask = (val & 0xc) ? oti067->vram_mask : 0x3ffff;
+                        if ((val & 0x80) && oti067->vram_size == 256)
+                                mem_mapping_disable(&svga->mapping);
+                        else
+                                mem_mapping_enable(&svga->mapping);
+                        if (!(val & 0x80))
+                                svga->vrammask = 0x3ffff;
                         break;
                         case 0x11:
                         svga->read_bank = (val & 0xf) * 65536;
@@ -92,7 +101,6 @@ uint8_t oti067_in(uint16_t addr, void *p)
                 break;               
                 case 0x3DF: 
                 if (oti067->index==0x10)     temp = 0x18;
-                else if (oti067->index==0xD) temp = oti067->regs[oti067->index]|0xC0;
                 else                         temp = oti067->regs[oti067->index];
                 break;
 
@@ -113,14 +121,17 @@ void oti067_recalctimings(svga_t *svga)
         svga->interlace = oti067->regs[0x14] & 0x80;
 }
 
-void *oti067_common_init(char *bios_fn)
+void *oti067_common_init(char *bios_fn, int vram_size)
 {
         oti067_t *oti067 = malloc(sizeof(oti067_t));
         memset(oti067, 0, sizeof(oti067_t));
         
         rom_init(&oti067->bios_rom, bios_fn, 0xc0000, 0x8000, 0x7fff, 0, 0);
 
-        svga_init(&oti067->svga, oti067, 1 << 19, /*512kb*/
+        oti067->vram_size = vram_size;
+        oti067->vram_mask = (vram_size << 10) - 1;
+        
+        svga_init(&oti067->svga, oti067, vram_size << 10,
                    oti067_recalctimings,
                    oti067_in, oti067_out,
                    NULL,
@@ -134,12 +145,13 @@ void *oti067_common_init(char *bios_fn)
 
 void *oti067_init()
 {
-        return oti067_common_init("roms/oti067/bios.bin");
+        int vram_size = device_get_config_int("memory");
+        return oti067_common_init("roms/oti067/bios.bin", vram_size);
 }
 
 void *oti067_acer386_init()
 {
-        oti067_t *oti067 = oti067_common_init("roms/acer386/oti067.bin");
+        oti067_t *oti067 = oti067_common_init("roms/acer386/oti067.bin", 512);
         
         if (oti067)
                 oti067->bios_rom.rom[0x5d] = 0x74;
@@ -182,6 +194,33 @@ int oti067_add_status_info(char *s, int max_len, void *p)
         return svga_add_status_info(s, max_len, &oti067->svga);
 }
 
+static device_config_t oti067_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "256 kB",
+                                .value = 256
+                        },
+                        {
+                                .description = "512 kB",
+                                .value = 512
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 512
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t oti067_device =
 {
         "Oak OTI-067",
@@ -191,7 +230,8 @@ device_t oti067_device =
         oti067_available,
         oti067_speed_changed,
         oti067_force_redraw,
-        oti067_add_status_info
+        oti067_add_status_info,
+        oti067_config
 };
 device_t oti067_acer386_device =
 {

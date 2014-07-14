@@ -53,6 +53,8 @@ typedef struct tgui_t
         uint8_t ramdac_ctrl;
         
         int clock_m, clock_n, clock_k;
+        
+        uint32_t vram_size, vram_mask;
 } tgui_t;
 
 void tgui_recalcmapping(tgui_t *tgui);
@@ -470,9 +472,12 @@ void *tgui9440_init()
         tgui_t *tgui = malloc(sizeof(tgui_t));
         memset(tgui, 0, sizeof(tgui_t));
         
+        tgui->vram_size = device_get_config_int("memory") << 20;
+        tgui->vram_mask = tgui->vram_size - 1;
+
         rom_init(&tgui->bios_rom, "roms/9440.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
 
-        svga_init(&tgui->svga, tgui, 1 << 21, /*2mb*/
+        svga_init(&tgui->svga, tgui, tgui->vram_size,
                    tgui_recalctimings,
                    tgui_in, tgui_out,
                    tgui_hwcursor_draw,
@@ -1113,6 +1118,33 @@ int tgui_add_status_info(char *s, int max_len, void *p)
         return svga_add_status_info(s, max_len, &tgui->svga);
 }
 
+static device_config_t tgui9440_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "1 MB",
+                                .value = 1
+                        },
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t tgui9440_device =
 {
         "Trident TGUI 9440",
@@ -1122,5 +1154,6 @@ device_t tgui9440_device =
         tgui9440_available,
         tgui_speed_changed,
         tgui_force_redraw,
-        tgui_add_status_info
+        tgui_add_status_info,
+        tgui9440_config
 };
