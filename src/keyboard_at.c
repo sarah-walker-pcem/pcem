@@ -254,6 +254,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                         break;
                                         
                                         case 0xff: /*Reset*/
+                                        key_queue_start = key_queue_end = 0; /*Clear key queue*/
                                         keyboard_at_adddata_keyboard(0xfa);
                                         keyboard_at_adddata_keyboard(0xaa);
                                         break;
