@@ -4,6 +4,7 @@
 #include "mouse.h"
 #include "pic.h"
 #include "sound.h"
+#include "sound_speaker.h"
 #include "timer.h"
 
 #include "keyboard.h"
@@ -143,9 +144,10 @@ void keyboard_olim24_write(uint16_t port, uint8_t val, void *priv)
                 case 0x61:
                 ppi.pb = val;
                 
-                gated = ((val & 3) == 3);
-                if (gated) 
-                        wasgated = 1;
+                speaker_gated = val & 1;
+                speaker_enable = val & 2;
+                if (speaker_enable) 
+                        was_speaker_enable = 1;
                 pit_set_gate(2, val & 1);
                 break;
         }

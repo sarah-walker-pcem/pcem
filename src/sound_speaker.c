@@ -8,24 +8,26 @@ static int16_t speaker_buffer[SOUNDBUFLEN];
 
 static int speaker_pos = 0;
 
-int wasgated = 0;
+int speaker_gated = 0;
+int speaker_enable = 0, was_speaker_enable = 0;
 
 static void speaker_poll(void *p)
 {
         if (speaker_pos >= SOUNDBUFLEN) return;
 
 //        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
-        if (gated)
+        if (speaker_gated && was_speaker_enable)
         {
                 if (!pit.m[2] || pit.m[2]==4)
-                   speaker_buffer[speaker_pos] = speakval;
+                        speaker_buffer[speaker_pos] = speakval;
                 else 
-                   speaker_buffer[speaker_pos] = speakon ? 0x1400 : 0;
+                        speaker_buffer[speaker_pos] = speakon ? 0x1400 : 0;
         }
         else
-           speaker_buffer[speaker_pos] = wasgated ? 0x1400 : 0;
+                speaker_buffer[speaker_pos] = was_speaker_enable ? 0x1400 : 0;
         speaker_pos++;
-        wasgated = 0;
+        if (!speaker_enable)
+                was_speaker_enable = 0;
 }
 
 static void speaker_get_buffer(int16_t *buffer, int len, void *p)
