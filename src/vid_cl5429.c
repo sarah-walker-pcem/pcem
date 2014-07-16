@@ -819,7 +819,7 @@ void *gd5429_init()
         svga_t *svga = &gd5429->svga;
         memset(gd5429, 0, sizeof(gd5429_t));
 
-        rom_init(&gd5429->bios_rom, "roms/5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&gd5429->bios_rom, "roms/5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&gd5429->svga, gd5429, 1 << 21, /*2mb*/
                    gd5429_recalctimings,

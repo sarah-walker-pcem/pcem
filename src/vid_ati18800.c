@@ -125,7 +125,7 @@ void *ati18800_init()
         ati18800_t *ati18800 = malloc(sizeof(ati18800_t));
         memset(ati18800, 0, sizeof(ati18800_t));
         
-        rom_init(&ati18800->bios_rom, "roms/vgaedge16.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&ati18800->bios_rom, "roms/vgaedge16.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&ati18800->svga, ati18800, 1 << 19, /*512kb*/
                    NULL,

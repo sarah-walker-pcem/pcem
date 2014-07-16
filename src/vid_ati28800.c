@@ -146,7 +146,7 @@ void *ati28800_init()
         ati28800_t *ati28800 = malloc(sizeof(ati28800_t));
         memset(ati28800, 0, sizeof(ati28800_t));
         
-        rom_init(&ati28800->bios_rom, "roms/bios.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&ati28800->bios_rom, "roms/bios.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&ati28800->svga, ati28800, 1 << 19, /*512kb*/
                    ati28800_recalctimings,

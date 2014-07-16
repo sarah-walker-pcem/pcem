@@ -126,7 +126,7 @@ void *oti067_common_init(char *bios_fn, int vram_size)
         oti067_t *oti067 = malloc(sizeof(oti067_t));
         memset(oti067, 0, sizeof(oti067_t));
         
-        rom_init(&oti067->bios_rom, bios_fn, 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&oti067->bios_rom, bios_fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
 
         oti067->vram_size = vram_size;
         oti067->vram_mask = (vram_size << 10) - 1;

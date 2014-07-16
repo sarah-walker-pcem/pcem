@@ -81,7 +81,7 @@ void *vga_init()
         vga_t *vga = malloc(sizeof(vga_t));
         memset(vga, 0, sizeof(vga_t));
 
-        rom_init(&vga->bios_rom, "roms/ibm_vga.bin", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&vga->bios_rom, "roms/ibm_vga.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
 
         svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
                    NULL,

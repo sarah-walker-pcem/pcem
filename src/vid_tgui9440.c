@@ -475,7 +475,7 @@ void *tgui9440_init()
         tgui->vram_size = device_get_config_int("memory") << 20;
         tgui->vram_mask = tgui->vram_size - 1;
 
-        rom_init(&tgui->bios_rom, "roms/9440.vbi", 0xc0000, 0x8000, 0x7fff, 0, 0);
+        rom_init(&tgui->bios_rom, "roms/9440.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
 
         svga_init(&tgui->svga, tgui, tgui->vram_size,
                    tgui_recalctimings,
