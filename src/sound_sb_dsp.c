@@ -910,10 +910,9 @@ void sb_dsp_poll(sb_dsp_t *dsp, int16_t *l, int16_t *r)
         *r = dsp->sbdatr;
 }
 
-int sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
+void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
 {
         char temps[128];
-        int cur_len = max_len;
         int len;
         int freq;
 
@@ -967,15 +966,11 @@ int sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
         }
         else
                 strcpy(temps, "SB playback stopped\n");
-        strncat(s, temps, cur_len);
-        cur_len -= strlen(temps);
+        strncat(s, temps, max_len);
 
         if ((dsp->sb_8_enable && dsp->sb_8_output) || (dsp->sb_16_enable && dsp->sb_16_output))
         {
                 sprintf(temps, "SB playback frequency : %iHz\n", freq);
-                strncat(s, temps, cur_len);
-                cur_len -= strlen(temps);
+                strncat(s, temps, max_len);
         }
-        
-        return max_len - cur_len;
 }

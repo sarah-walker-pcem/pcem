@@ -21,6 +21,7 @@
 #include "model.h"
 #include "nvr.h"
 #include "sound.h"
+#include "thread.h"
 
 #include "plat-midi.h"
 #include "plat-keyboard.h"
@@ -181,6 +182,70 @@ void mainthread(LPVOID param)
                         SendMessage(ghwnd, WM_LEAVEFULLSCREEN, 0, 0);
                 }
         }
+}
+
+void *thread_create(void (*thread_rout)(void *param), void *param)
+{
+        return (void *)_beginthread(thread_rout, 0, param);
+}
+
+void thread_kill(void *handle)
+{
+        TerminateThread(handle, 0);
+}
+
+void thread_sleep(int t)
+{
+        Sleep(t);
+}
+
+typedef struct win_event_t
+{
+        HANDLE handle;
+} win_event_t;
+
+event_t *thread_create_event()
+{
+        win_event_t *event = malloc(sizeof(win_event_t));
+        
+        event->handle = CreateEvent(NULL, FALSE, FALSE, NULL);
+        
+        return (event_t *)event;
+}
+
+void thread_set_event(event_t *_event)
+{
+        win_event_t *event = (win_event_t *)_event;
+        
+        SetEvent(event->handle);
+}
+
+void thread_reset_event(event_t *_event)
+{
+        win_event_t *event = (win_event_t *)_event;
+        
+        ResetEvent(event->handle);
+}
+
+int thread_wait_event(event_t *_event, int timeout)
+{
+        win_event_t *event = (win_event_t *)_event;
+        
+        if (timeout == -1)
+                timeout = INFINITE;
+        
+        if (WaitForSingleObject(event->handle, timeout))
+                return 1;
+        return 0;
+}
+
+void thread_destroy_event(event_t *_event)
+{
+        win_event_t *event = (win_event_t *)_event;
+        
+        CloseHandle(event->handle);
+        
+        free(event);
 }
 
 static void initmenu(void)

@@ -95,18 +95,12 @@ char *device_add_status_info(char *s, int max_len)
 {
         int c;
         
-        s += strlen(s);
-        
         for (c = 0; c < 256; c++)
         {
                 if (devices[c] != NULL)
                 {
                         if (devices[c]->add_status_info != NULL)
-                        {
-                                int len = devices[c]->add_status_info(s, max_len, device_priv[c]);
-                                s += len;
-                                max_len -= len;
-                        }
+                                devices[c]->add_status_info(s, max_len, device_priv[c]);
                 }
         }
 }

@@ -125,11 +125,11 @@ void vga_force_redraw(void *p)
         vga->svga.fullchange = changeframecount;
 }
 
-int vga_add_status_info(char *s, int max_len, void *p)
+void vga_add_status_info(char *s, int max_len, void *p)
 {
         vga_t *vga = (vga_t *)p;
         
-        return svga_add_status_info(s, max_len, &vga->svga);
+        svga_add_status_info(s, max_len, &vga->svga);
 }
 
 device_t vga_device =

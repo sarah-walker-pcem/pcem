@@ -1077,11 +1077,11 @@ void et4000w32p_force_redraw(void *p)
         et4000w32p->svga.fullchange = changeframecount;
 }
 
-int et4000w32p_add_status_info(char *s, int max_len, void *p)
+void et4000w32p_add_status_info(char *s, int max_len, void *p)
 {
         et4000w32p_t *et4000w32p = (et4000w32p_t *)p;
         
-        return svga_add_status_info(s, max_len, &et4000w32p->svga);
+        svga_add_status_info(s, max_len, &et4000w32p->svga);
 }
 
 static device_config_t et4000w32p_config[] =

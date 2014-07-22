@@ -1111,11 +1111,11 @@ void tgui_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
 	tgui_accel_command(32, ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), tgui);
 }
 
-int tgui_add_status_info(char *s, int max_len, void *p)
+void tgui_add_status_info(char *s, int max_len, void *p)
 {
         tgui_t *tgui = (tgui_t *)p;
         
-        return svga_add_status_info(s, max_len, &tgui->svga);
+        svga_add_status_info(s, max_len, &tgui->svga);
 }
 
 static device_config_t tgui9440_config[] =

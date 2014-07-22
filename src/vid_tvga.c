@@ -300,11 +300,11 @@ void tvga_force_redraw(void *p)
         tvga->svga.fullchange = changeframecount;
 }
 
-int tvga_add_status_info(char *s, int max_len, void *p)
+void tvga_add_status_info(char *s, int max_len, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
         
-        return svga_add_status_info(s, max_len, &tvga->svga);
+        svga_add_status_info(s, max_len, &tvga->svga);
 }
 
 static device_config_t tvga_config[] =

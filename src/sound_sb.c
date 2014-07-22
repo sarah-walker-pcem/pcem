@@ -444,7 +444,7 @@ void sb_speed_changed(void *p)
         sb_dsp_speed_changed(&sb->dsp);
 }
 
-int sb_add_status_info(char *s, int max_len, void *p)
+void sb_add_status_info(char *s, int max_len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         

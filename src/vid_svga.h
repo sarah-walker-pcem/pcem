@@ -128,7 +128,7 @@ void     svga_write_linear(uint32_t addr, uint8_t val, void *p);
 void     svga_writew_linear(uint32_t addr, uint16_t val, void *p);
 void     svga_writel_linear(uint32_t addr, uint32_t val, void *p);
 
-int svga_add_status_info(char *s, int max_len, void *p);
+void svga_add_status_info(char *s, int max_len, void *p);
 
 extern uint8_t svga_rotate[8][256];
 

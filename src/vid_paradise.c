@@ -372,11 +372,11 @@ void paradise_force_redraw(void *p)
         paradise->svga.fullchange = changeframecount;
 }
 
-int paradise_add_status_info(char *s, int max_len, void *p)
+void paradise_add_status_info(char *s, int max_len, void *p)
 {
         paradise_t *paradise = (paradise_t *)p;
         
-        return svga_add_status_info(s, max_len, &paradise->svga);
+        svga_add_status_info(s, max_len, &paradise->svga);
 }
 
 device_t paradise_pvga1a_pc2086_device =

@@ -13,10 +13,8 @@ HWND status_hwnd;
 int status_is_open = 0;
 
 extern int sreadlnum, swritelnum, segareads, segawrites, scycles_lost;
-
 static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-        char s[256];
         char device_s[4096];
         switch (message)
         {
@@ -28,7 +26,7 @@ static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         "FPU speed : %f MFLOPS\n\n"
                         "Cache misses (read) : %i/sec\n"
                         "Cache misses (write) : %i/sec\n\n"
-                        "Video throughput (read) : %i bytes/sec\n\n"
+                        "Video throughput (read) : %i bytes/sec\n"
                         "Video throughput (write) : %i bytes/sec\n\n"
                         "Effective clockspeed : %iHz\n\n"
                         "Timer 0 frequency : %fHz\n\n",
@@ -57,6 +55,7 @@ static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 }
                 break;
         }
+
         return FALSE;
 }
 

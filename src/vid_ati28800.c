@@ -192,11 +192,11 @@ void ati28800_force_redraw(void *p)
         ati28800->svga.fullchange = changeframecount;
 }
 
-int ati28800_add_status_info(char *s, int max_len, void *p)
+void ati28800_add_status_info(char *s, int max_len, void *p)
 {
         ati28800_t *ati28800 = (ati28800_t *)p;
         
-        return svga_add_status_info(s, max_len, &ati28800->svga);
+        svga_add_status_info(s, max_len, &ati28800->svga);
 }
 
 device_t ati28800_device =

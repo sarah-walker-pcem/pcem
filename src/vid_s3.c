@@ -2055,11 +2055,11 @@ void s3_force_redraw(void *p)
         s3->svga.fullchange = changeframecount;
 }
 
-int s3_add_status_info(char *s, int max_len, void *p)
+void s3_add_status_info(char *s, int max_len, void *p)
 {
         s3_t *s3 = (s3_t *)p;
         
-        return svga_add_status_info(s, max_len, &s3->svga);
+        svga_add_status_info(s, max_len, &s3->svga);
 }
 
 static device_config_t s3_bahamas64_config[] =

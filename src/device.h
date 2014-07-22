@@ -28,7 +28,7 @@ typedef struct device_t
         int  (*available)();
         void (*speed_changed)(void *p);
         void (*force_redraw)(void *p);
-        int  (*add_status_info)(char *s, int max_len, void *p);
+        void (*add_status_info)(char *s, int max_len, void *p);
         device_config_t *config;
 } device_t;
 

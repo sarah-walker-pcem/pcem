@@ -1181,8 +1181,6 @@ void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
 void svga_writew(uint32_t addr, uint16_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
-        if (!svga)
-                exit(-1);
         if (!svga->fast)
         {
                 svga_write(addr, val, p);
@@ -1363,30 +1361,23 @@ uint32_t svga_readl_linear(uint32_t addr, void *p)
 }
 
 
-int svga_add_status_info(char *s, int max_len, void *p)
+void svga_add_status_info(char *s, int max_len, void *p)
 {
         svga_t *svga = (svga_t *)p;
         char temps[128];
-        int cur_len = max_len;
         
         if (svga->chain4) strcpy(temps, "SVGA chained (possibly mode 13h)\n");
         else              strcpy(temps, "SVGA unchained (possibly mode-X)\n");
-        strncat(s, temps, cur_len);
-        cur_len -= strlen(temps);
+        strncat(s, temps, max_len);
 
         if (!svga->video_bpp) strcpy(temps, "SVGA in text mode\n");
         else                  sprintf(temps, "SVGA colour depth : %i bpp\n", svga->video_bpp);
-        strncat(s, temps, cur_len);
-        cur_len -= strlen(temps);
+        strncat(s, temps, max_len);
         
         sprintf(temps, "SVGA resolution : %i x %i\n", svga->video_res_x, svga->video_res_y);
-        strncat(s, temps, cur_len);
-        cur_len -= strlen(temps);
+        strncat(s, temps, max_len);
         
         sprintf(temps, "SVGA refresh rate : %i Hz\n\n", svga->frames);
         svga->frames = 0;
-        strncat(s, temps, cur_len);
-        cur_len -= strlen(temps);
-        
-        return max_len - cur_len;
+        strncat(s, temps, max_len);
 }

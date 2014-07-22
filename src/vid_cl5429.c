@@ -870,11 +870,11 @@ void gd5429_force_redraw(void *p)
         gd5429->svga.fullchange = changeframecount;
 }
 
-int gd5429_add_status_info(char *s, int max_len, void *p)
+void gd5429_add_status_info(char *s, int max_len, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         
-        return svga_add_status_info(s, max_len, &gd5429->svga);
+        svga_add_status_info(s, max_len, &gd5429->svga);
 }
 
 device_t gd5429_device =
