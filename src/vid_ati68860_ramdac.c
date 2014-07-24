@@ -23,6 +23,7 @@ bit   0  Controls 6/8bit DAC. 0: 8bit DAC/LUT, 1: 6bit DAC/LUT
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_ati68860_ramdac.h"
+#include "vid_svga_render.h"
 
 void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, svga_t *svga)
 {
@@ -43,6 +44,38 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                 break;
                 default:
                 ramdac->regs[addr & 0xf] = val;
+                switch (addr & 0xf)
+                {
+                        case 0xb:
+                        switch (val)
+                        {
+                                case 0x82:
+                                ramdac->render = svga_render_4bpp_highres;
+                                break;
+                                case 0x83:
+                                ramdac->render = svga_render_8bpp_highres;
+                                break;
+                                case 0xa0:
+                                ramdac->render = svga_render_15bpp_highres;
+                                break;
+                                case 0xa1: case 0xb1:
+                                ramdac->render = svga_render_16bpp_highres;
+                                break;
+                                case 0xc0: case 0xd0:
+                                ramdac->render = svga_render_24bpp_highres;
+                                break;
+                                case 0xe2:
+                                ramdac->render = svga_render_32bpp_highres;
+                                break;
+                                case 0xf2:
+                                ramdac->render = svga_render_RGBA8888_highres;
+                                break;
+                                default:
+                                ramdac->render = svga_render_8bpp_highres;
+                                break;
+                        }
+                        break;
+                }
                 break;
         }
 }
@@ -80,4 +113,9 @@ uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svg
         }
 //        pclog("ati68860_in  : addr %04X ret %02X  %04X:%04X\n", addr, ret, CS,pc);
         return ret;
+}
+
+void ati68860_ramdac_init(ati68860_ramdac_t *ramdac)
+{
+        ramdac->render = svga_render_8bpp_highres;
 }

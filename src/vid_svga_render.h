@@ -27,5 +27,6 @@ void svga_render_24bpp_lowres(svga_t *svga);
 void svga_render_24bpp_highres(svga_t *svga);
 void svga_render_32bpp_lowres(svga_t *svga);
 void svga_render_32bpp_highres(svga_t *svga);
+void svga_render_RGBA8888_highres(svga_t *svga);
 
 extern void (*svga_render)(svga_t *svga);

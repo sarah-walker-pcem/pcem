@@ -638,3 +638,24 @@ void svga_render_32bpp_highres(svga_t *svga)
         }
 }
 
+void svga_render_RGBA8888_highres(svga_t *svga)
+{
+        if (svga->changedvram[svga->ma >> 12] ||  svga->changedvram[(svga->ma >> 12) + 1] || svga->changedvram[(svga->ma >> 12) + 2] || svga->fullchange)
+        {
+                int x;
+                int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
+                
+                if (svga->firstline_draw == 2000) 
+                        svga->firstline_draw = svga->displine;
+                svga->lastline_draw = svga->displine;
+
+                for (x = 0; x <= svga->hdisp; x++)
+                {
+                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vrammask]);
+                        p[x] = dat >> 8;
+                }
+                svga->ma += 4; 
+                svga->ma &= svga->vrammask;
+        }
+}

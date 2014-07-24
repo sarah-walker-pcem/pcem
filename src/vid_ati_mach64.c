@@ -11,7 +11,6 @@
 #include "vid_ati68860_ramdac.h"
 #include "vid_ati_eeprom.h"
 #include "vid_ics2595.h"
-#include "vid_svga_render.h"
 
 //#define MACH64_DEBUG
 
@@ -182,6 +181,11 @@ enum
         SRC_LINEAR_EN   = 4
 };
 
+enum
+{
+        DP_BYTE_PIX_ORDER = (1 << 24)
+};
+
 static int mach64_width[8] = {0, 0, 0, 1, 1, 2, 2, 0};
 
 enum
@@ -238,10 +242,12 @@ void mach64_out(uint16_t addr, uint8_t val, void *p)
                 break;
                 
                 case 0x3D4:
-                svga->crtcreg = val & 0x3f;
+                svga->crtcreg = val & 0x1f;
                 return;
                 case 0x3D5:
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
+                if (svga->crtcreg > 0x18)
+                        return;
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
 
@@ -281,6 +287,8 @@ uint8_t mach64_in(uint16_t addr, void *p)
                 case 0x3D4:
                 return svga->crtcreg;
                 case 0x3D5:
+                if (svga->crtcreg > 0x18)
+                        return 0xff;
                 return svga->crtc[svga->crtcreg];
         }
         return svga_in(addr, svga);
@@ -305,35 +313,36 @@ void mach64_recalctimings(svga_t *svga)
                 svga->vblankstart = svga->dispend;
 //                svga_htotal <<= 1;
 //                svga_hdisp <<= 1;
-                svga->rowoffset <<= 1;                
+                svga->rowoffset <<= 1;
+                svga->render = mach64->ramdac.render;
                 switch ((mach64->crtc_gen_cntl >> 8) & 7)
                 {
                         case 1: 
-                        svga->render = svga_render_4bpp_highres; 
+//                        svga->render = svga_render_4bpp_highres; 
                         svga->hdisp *= 8;
                         break;
                         case 2: 
-                        svga->render = svga_render_8bpp_highres; 
+//                        svga->render = svga_render_8bpp_highres; 
                         svga->hdisp *= 8;
                         svga->rowoffset /= 2;
                         break;
                         case 3: 
-                        svga->render = svga_render_15bpp_highres; 
+//                        svga->render = svga_render_15bpp_highres; 
                         svga->hdisp *= 8;
                         //svga_rowoffset *= 2;
                         break;
                         case 4: 
-                        svga->render = svga_render_16bpp_highres; 
+//                        svga->render = svga_render_16bpp_highres; 
                         svga->hdisp *= 8;
                         //svga_rowoffset *= 2;
                         break;
                         case 5: 
-                        svga->render = svga_render_24bpp_highres; 
+//                        svga->render = svga_render_24bpp_highres; 
                         svga->hdisp *= 8;
                         svga->rowoffset = (svga->rowoffset * 3) / 2;
                         break;
                         case 6: 
-                        svga->render = svga_render_32bpp_highres; 
+//                        svga->render = svga_render_32bpp_highres; 
                         svga->hdisp *= 8;
                         svga->rowoffset *= 2;
                         break;
@@ -706,8 +715,16 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         switch (mach64->accel.source_mix)
                         {
                                 case MONO_SRC_HOST:
-                                mix = cpu_dat >> 31;
-                                cpu_dat <<= 1;
+                                if (mach64->dp_pix_width & DP_BYTE_PIX_ORDER)
+                                {
+                                        mix = cpu_dat & 1;
+                                        cpu_dat >>= 1;
+                                }
+                                else
+                                {
+                                        mix = cpu_dat >> 31;
+                                        cpu_dat <<= 1;
+                                }
                                 break;
                                 case MONO_SRC_PAT:
                                 mix = mach64->accel.pattern[dst_y & 7][dst_x & 7];
@@ -1722,7 +1739,7 @@ void mach64_ext_writel(uint32_t addr, uint32_t val, void *p)
                 case 0x210: case 0x214: case 0x218: case 0x21c:
                 case 0x220: case 0x224: case 0x228: case 0x22c:
                 case 0x230: case 0x234: case 0x238: case 0x23c:
-                if (mach64->accel.source_host)
+                if (mach64->accel.source_host || (mach64->dp_pix_width & DP_BYTE_PIX_ORDER))
                         mach64_blit(val, 32, mach64);
                 else
                         mach64_blit(((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), 32, mach64);
@@ -2243,6 +2260,8 @@ void *mach64gx_init()
                 
         ati_eeprom_load(&mach64->eeprom, "mach64.nvr", 1);
 
+        ati68860_ramdac_init(&mach64->ramdac);
+        
         mach64->dac_cntl = 5 << 16; /*ATI 68860 RAMDAC*/        
         
         mach64->dst_cntl = 3;
