@@ -30,6 +30,18 @@ typedef struct tvga_t
         uint32_t vram_mask;
 } tvga_t;
 
+static uint8_t crtc_mask[0x40] =
+{
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0x7f, 0xff, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xef,
+        0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
+        0x7f, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00, 0x03,
+        0x00, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 void tvga_out(uint16_t addr, uint8_t val, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
@@ -100,6 +112,7 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3D5:
                 if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
                 old = svga->crtc[svga->crtcreg];
+                val &= crtc_mask[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
 //                if (svga->crtcreg != 0xC && svga->crtcreg != 0xE && svga->crtcreg != 0xF) pclog("CRTC R%02X = %02X %04X:%04X\n", svga->crtcreg, val, CS, pc);
                 if (old != val)
@@ -170,12 +183,19 @@ uint8_t tvga_in(uint16_t addr, void *p)
                         if (tvga->oldmode) return tvga->oldctrl2;
                         return tvga->newctrl2;
                 }
+                if ((svga->seqaddr & 0xf) == 0xe)
+                {
+                        if (tvga->oldmode) 
+                                return tvga->oldctrl1; 
+                }
                 break;
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
                 return tkd8001_ramdac_in(addr, &tvga->ramdac, svga);
                 case 0x3D4:
                 return svga->crtcreg;
                 case 0x3D5:
+                if (svga->crtcreg > 0x18 && svga->crtcreg < 0x1e)
+                        return 0xff;
                 return svga->crtc[svga->crtcreg];
                 case 0x3d8:
 		return tvga->tvga_3d8;
