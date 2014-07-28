@@ -351,6 +351,7 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
         svga_t *svga = &et4000->svga;
         int bank;
 //        pclog("ET4K write %08X %02X %02X %04X(%08X):%08X\n",addr,val,et4000->acl.status,et4000->acl.internal.ctrl_routing,CS,cs,pc);
+        et4000->acl.status |= ACL_RDST;
         switch (addr & 0x6000)
         {
                 case 0x0000: /*MMU 0*/
@@ -499,9 +500,10 @@ uint8_t et4000w32p_mmu_read(uint32_t addr, void *p)
                         case 0x7f13: return et4000->mmu.ctrl;
 
                         case 0x7f36:
-//                                pclog("Read ACL status %02X\n",et4000->acl.status);
+                        temp = et4000->acl.status;
+                        et4000->acl.status &= ~ACL_RDST;
 //                        if (et4000->acl.internal.pos_x!=et4000->acl.internal.count_x || et4000->acl.internal.pos_y!=et4000->acl.internal.count_y) return et4000->acl.status | ACL_XYST;
-                        return et4000->acl.status;
+                        return temp;
                         case 0x7f80: return et4000->acl.internal.pattern_addr;
                         case 0x7f81: return et4000->acl.internal.pattern_addr >> 8;
                         case 0x7f82: return et4000->acl.internal.pattern_addr >> 16;
@@ -559,7 +561,7 @@ void et4000w32_blit_start(et4000w32p_t *et4000)
         et4000->acl.dest_back   = et4000->acl.dest_addr;
         et4000->acl.internal.pos_x = et4000->acl.internal.pos_y = 0;
         et4000->acl.pattern_x = et4000->acl.source_x = et4000->acl.pattern_y = et4000->acl.source_y = 0;
-        et4000->acl.status = ACL_XYST;
+        et4000->acl.status |= ACL_XYST;
         if ((!(et4000->acl.internal.ctrl_routing & 7) || (et4000->acl.internal.ctrl_routing & 4)) && !(et4000->acl.internal.ctrl_routing & 0x40)) 
                 et4000->acl.status |= ACL_SSO;
         
@@ -782,7 +784,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et400
                                 if (et4000->acl.internal.pos_x > et4000->acl.internal.count_x ||
                                     et4000->acl.internal.pos_y > et4000->acl.internal.count_y)
                                 {
-                                        et4000->acl.status = 0;
+                                        et4000->acl.status &= ~(ACL_XYST | ACL_SSO);
 //                                        pclog("Blit line over\n");
                                         return;
                                 }
@@ -865,7 +867,7 @@ void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et400
                                 et4000->acl.internal.pos_x = 0;
                                 if (et4000->acl.internal.pos_y > et4000->acl.internal.count_y)
                                 {
-                                        et4000->acl.status = 0;
+                                        et4000->acl.status &= ~(ACL_XYST | ACL_SSO);
 //                                        pclog("Blit over\n");
                                         return;
                                 }
