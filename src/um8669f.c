@@ -52,6 +52,7 @@ static uint8_t um8669f_regs[256];
 void um8669f_write(uint16_t port, uint8_t val, void *priv)
 {
         int temp;
+//        pclog("um8669f_write : port=%04x reg %02X = %02X locked=%i\n", port, um8669f_curreg, val, um8669f_locked);
         if (um8669f_locked)
         {
                 if (port == 0x108 && val == 0xaa)
@@ -69,13 +70,11 @@ void um8669f_write(uint16_t port, uint8_t val, void *priv)
                 else
                 {
                         um8669f_regs[um8669f_curreg] = val;
-                        pclog("um8669f_write : reg %02X = %02X\n", um8669f_curreg, val);
 
                         fdc_remove();
                         if (um8669f_regs[0xc0] & 1)
                            fdc_add();
                            
-                        serial1_remove();
                         if (um8669f_regs[0xc0] & 2)
                         {
                                 temp = um8669f_regs[0xc3] & 1; /*might be & 2*/
@@ -83,14 +82,13 @@ void um8669f_write(uint16_t port, uint8_t val, void *priv)
                                    temp |= 2;
                                 switch (temp)
                                 {
-                                        case 0: serial1_init(0x3f8, 4); break;
-                                        case 1: serial1_init(0x2f8, 4); break;
-                                        case 2: serial1_init(0x3e8, 4); break;
-                                        case 3: serial1_init(0x2e8, 4); break;
+                                        case 0: serial1_set(0x3f8, 4); break;
+                                        case 1: serial1_set(0x2f8, 4); break;
+                                        case 2: serial1_set(0x3e8, 4); break;
+                                        case 3: serial1_set(0x2e8, 4); break;
                                 }
                         }
                         
-                        serial2_remove();
                         if (um8669f_regs[0xc0] & 4)
                         {
                                 temp = (um8669f_regs[0xc3] & 4) ? 0 : 1; /*might be & 8*/
@@ -98,10 +96,10 @@ void um8669f_write(uint16_t port, uint8_t val, void *priv)
                                    temp |= 2;
                                 switch (temp)
                                 {
-                                        case 0: serial2_init(0x3f8, 3); break;
-                                        case 1: serial2_init(0x2f8, 3); break;
-                                        case 2: serial2_init(0x3e8, 3); break;
-                                        case 3: serial2_init(0x2e8, 3); break;
+                                        case 0: serial2_set(0x3f8, 3); break;
+                                        case 1: serial2_set(0x2f8, 3); break;
+                                        case 2: serial2_set(0x3e8, 3); break;
+                                        case 3: serial2_set(0x2e8, 3); break;
                                 }
                         }
                         
@@ -122,6 +120,7 @@ void um8669f_write(uint16_t port, uint8_t val, void *priv)
 
 uint8_t um8669f_read(uint16_t port, void *priv)
 {
+//        pclog("um8669f_read : port=%04x reg %02X locked=%i\n", port, um8669f_curreg, um8669f_locked);
         if (um8669f_locked)
            return 0xff;
         

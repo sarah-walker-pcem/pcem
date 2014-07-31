@@ -249,6 +249,12 @@ void serial1_init(uint16_t addr, int irq)
         serial1.rcr_callback = NULL;
         timer_add(serial_recieve_callback, &serial1.recieve_delay, &serial1.recieve_delay, &serial1);
 }
+void serial1_set(uint16_t addr, int irq)
+{
+        serial1_remove();
+        io_sethandler(addr, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
+        serial1.irq = irq;
+}
 void serial1_remove()
 {
         io_removehandler(0x2e8, 0x0008, serial_read,  NULL, NULL, serial_write,  NULL, NULL, &serial1);
@@ -264,6 +270,12 @@ void serial2_init(uint16_t addr, int irq)
         serial2.irq = irq;
         serial2.rcr_callback = NULL;
         timer_add(serial_recieve_callback, &serial2.recieve_delay, &serial2.recieve_delay, &serial2);
+}
+void serial2_set(uint16_t addr, int irq)
+{
+        serial2_remove();
+        io_sethandler(addr, 0x0008, serial_read, NULL, NULL, serial_write, NULL, NULL, &serial2);
+        serial2.irq = irq;
 }
 void serial2_remove()
 {
