@@ -19,6 +19,7 @@ static uint8_t card_piix[256], card_piix_ide[256];
 
 void piix_write(int func, int addr, uint8_t val, void *priv)
 {
+//        pclog("piix_write: func=%d addr=%02x val=%02x %04x:%08x\n", func, addr, val, CS, pc);
         if (func > 1)
            return;
         
@@ -26,20 +27,37 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
         {
                 switch (addr)
                 {
-                        case 0x00: case 0x01: case 0x02: case 0x03:
-                        case 0x08: case 0x09: case 0x0a: case 0x0b:
-                        case 0x0e:
-                        return;
+                        case 0x04:
+                        card_piix_ide[0x04] = (card_piix_ide[0x04] & ~1) | (val & 1);
+                        break;
+                        case 0x07:
+                        card_piix_ide[0x07] = (card_piix_ide[0x07] & ~0x38) | (val & 0x38);
+                        break;
+                        case 0x0d:
+                        card_piix_ide[0x0d] = val;
+                        break;
+                        
                         case 0x20:
-                        val |= 1;
+                        card_piix_ide[0x20] = (val & ~0x0f) | 1;
+                        break;
+                        case 0x21:
+                        card_piix_ide[0x21] = val;
+                        break;
+                        
+                        case 0x40:
+                        card_piix_ide[0x40] = val;
                         break;
                         case 0x41:
                         if ((val ^ card_piix_ide[0x41]) & 0x80)
                         {
                                 ide_pri_disable();
                                 if (val & 0x80)
-                                   ide_pri_enable();
+                                        ide_pri_enable();
                         }
+                        card_piix_ide[0x41] = val;
+                        break;
+                        case 0x42:
+                        card_piix_ide[0x42] = val;
                         break;
                         case 0x43:
                         if ((val ^ card_piix_ide[0x43]) & 0x80)
@@ -48,9 +66,9 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                                 if (val & 0x80)
                                    ide_sec_enable();                                  
                         }
+                        card_piix_ide[0x43] = val;
                         break;
                 }
-                card_piix_ide[addr] = val;
                 if ((addr & ~3) == 0x20) /*Bus master base address*/                
                 {
                         uint16_t base = (card_piix_ide[0x20] & 0xf0) | (card_piix_ide[0x21] << 8);
@@ -74,6 +92,7 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
 
 uint8_t piix_read(int func, int addr, void *priv)
 {
+//        pclog("piix_read: func=%d addr=%02x %04x:%08x\n", func, addr, CS, pc);
         if (func > 1)
            return 0xff;
 
@@ -108,7 +127,7 @@ static void piix_bus_master_next_addr(int channel)
 void piix_bus_master_write(uint16_t port, uint8_t val, void *priv)
 {
         int channel = (port & 8) ? 1 : 0;
-//        pclog("PIIX Bus Master write %04X %02X\n", port, val);
+//        pclog("PIIX Bus Master write %04X %02X %04x:%08x\n", port, val, CS, pc);
         switch (port & 7)
         {
                 case 0:
@@ -144,6 +163,7 @@ void piix_bus_master_write(uint16_t port, uint8_t val, void *priv)
 uint8_t piix_bus_master_read(uint16_t port, void *priv)
 {
         int channel = (port & 8) ? 1 : 0;
+//        pclog("PIIX Bus Master read %04X %04x:%08x\n", port, CS, pc);
         switch (port & 7)
         {
                 case 0:
