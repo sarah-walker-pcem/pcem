@@ -240,8 +240,7 @@ void pcjr_poll(void *p)
                                 offset = (pcjr->sc & 3) * 0x2000;
                                 break;
                         }
-                        
-                        switch ((pcjr->array[0] & 0x13) | ((pcjr->array[3] & 0x10) << 4))
+                        switch ((pcjr->array[0] & 0x13) | ((pcjr->array[3] & 0x08) << 5))
                         {
                                 case 0x13: /*320x200x16*/
                                 for (x = 0; x < pcjr->crtc[1]; x++)
@@ -392,8 +391,8 @@ void pcjr_poll(void *p)
                                 }
                                 break;
                                 case 0x102: /*640x200x2*/
-                                cols[0] = 0; 
-                                cols[1] = pcjr->array[0 + 16] + 16;
+                                cols[0] = pcjr->array[0 + 16] + 16;
+                                cols[1] = pcjr->array[1 + 16] + 16;
                                 for (x = 0; x < pcjr->crtc[1]; x++)
                                 {
                                         dat = (pcjr->vram[((pcjr->ma << 1) & mask) + offset] << 8) |
