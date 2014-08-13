@@ -198,7 +198,6 @@ static int opJMP_far_a32(uint32_t fetchdat)
 int opCALL_r16(uint32_t fetchdat)
 {
         int16_t addr = (int16_t)getwordf();
-        if (ssegs) ss=oldss;
         PUSH_W(pc);
         pc += addr;
         cycles -= (is486) ? 3 : 7;
@@ -207,7 +206,6 @@ int opCALL_r16(uint32_t fetchdat)
 int opCALL_r32(uint32_t fetchdat)
 {
         int32_t addr = getlong();                       if (abrt) return 0;       
-        if (ssegs) ss=oldss;
         PUSH_L(pc);
         pc += addr;
         cycles -= (is486) ? 3 : 7;
@@ -218,7 +216,6 @@ int opRET_w(uint32_t fetchdat)
 {
         uint16_t ret;
         
-        if (ssegs) ss=oldss;        
         ret = POP_W();                          if (abrt) return 0;
         pc = ret;
         
@@ -229,7 +226,6 @@ int opRET_l(uint32_t fetchdat)
 {
         uint32_t ret;
 
-        if (ssegs) ss=oldss;        
         ret = POP_L();                          if (abrt) return 0;
         pc = ret;
         
@@ -242,7 +238,6 @@ int opRET_w_imm(uint32_t fetchdat)
         uint16_t offset = getwordf();
         uint16_t ret;
 
-        if (ssegs) ss=oldss;       
         ret = POP_W();                          if (abrt) return 0;
         if (stack32) ESP += offset;
         else          SP += offset;       
@@ -256,7 +251,6 @@ int opRET_l_imm(uint32_t fetchdat)
         uint16_t offset = getwordf();
         uint32_t ret;
 
-        if (ssegs) ss=oldss;        
         ret = POP_L();                          if (abrt) return 0;
         if (stack32) ESP += offset;
         else          SP += offset;       

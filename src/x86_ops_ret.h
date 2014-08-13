@@ -4,7 +4,6 @@
                         pmoderetf(0, stack_offset);             \
                         return 0;                               \
                 }                                               \
-                if (ssegs) ss = oldss;                          \
                 oxpc = pc;                                      \
                 if (stack32)                                    \
                 {                                               \
@@ -27,7 +26,6 @@
                         pmoderetf(1, stack_offset);             \
                         return 0;                               \
                 }                                               \
-                if (ssegs) ss = oldss;                          \
                 oxpc = pc;                                      \
                 if (stack32)                                    \
                 {                                               \
@@ -75,7 +73,6 @@ static int opIRET_286(uint32_t fetchdat)
                 x86gpf(NULL,0);
                 return 0;
         }
-        if (ssegs) ss = oldss;
         if (msw&1)
         {
                 optype = IRET;
@@ -115,7 +112,6 @@ static int opIRET(uint32_t fetchdat)
                 x86gpf(NULL,0);
                 return 0;
         }
-        if (ssegs) ss = oldss;
         if (msw&1)
         {
                 optype = IRET;
@@ -155,7 +151,6 @@ static int opIRETD(uint32_t fetchdat)
                 x86gpf(NULL,0);
                 return 0;
         }
-        if (ssegs) ss = oldss;
         if (msw & 1)
         {
                 optype = IRET;

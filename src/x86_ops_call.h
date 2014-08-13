@@ -1,7 +1,6 @@
 #define CALL_FAR_w(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
         old_pc = pc;                                                            \
-        if (ssegs) ss = oldss;                                                  \
         oxpc = pc;                                                              \
         pc = new_pc;                                                            \
         optype = CALL;                                                          \
@@ -27,7 +26,6 @@
 #define CALL_FAR_l(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
         old_pc = pc;                                                            \
-        if (ssegs) ss = oldss;                                                  \
         oxpc = pc;                                                              \
         pc = new_pc;                                                            \
         optype = CALL;                                                          \
@@ -54,7 +52,6 @@
 #define CALL_FAR_nr(new_seg, new_pc)                                               \
         old_cs = CS;                                                            \
         old_pc = pc;                                                            \
-        if (ssegs) ss = oldss;                                                  \
         oxpc = pc;                                                              \
         pc = new_pc;                                                            \
         optype = CALL;                                                          \
@@ -130,7 +127,6 @@ static int opFF_w_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_W(pc);
                 pc = new_pc;
                 if (is486) cycles -= 5;
@@ -160,7 +156,6 @@ static int opFF_w_a16(uint32_t fetchdat)
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_W(temp);
                 cycles -= ((mod == 3) ? 2 : 5);
                 break;
@@ -196,7 +191,6 @@ static int opFF_w_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_W(pc);
                 pc = new_pc;
                 if (is486) cycles -= 5;
@@ -226,7 +220,6 @@ static int opFF_w_a32(uint32_t fetchdat)
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_W(temp);
                 cycles -= ((mod == 3) ? 2 : 5);
                 break;
@@ -263,7 +256,6 @@ static int opFF_l_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_L(pc);
                 pc = new_pc;
                 if (is486) cycles -= 5;
@@ -293,7 +285,6 @@ static int opFF_l_a16(uint32_t fetchdat)
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_L(temp);
                 cycles -= ((mod == 3) ? 2 : 5);
                 break;
@@ -329,7 +320,6 @@ static int opFF_l_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_L(pc);                             if (abrt) return 0;
                 pc = new_pc;
                 if (is486) cycles -= 5;
@@ -359,7 +349,6 @@ static int opFF_l_a32(uint32_t fetchdat)
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 0;
-                if (ssegs) ss = oldss;
                 PUSH_L(temp);
                 cycles -= ((mod == 3) ? 2 : 5);
                 break;

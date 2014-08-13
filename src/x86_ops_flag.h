@@ -76,7 +76,6 @@ static int opLAHF(uint32_t fetchdat)
 
 static int opPUSHF(uint32_t fetchdat)
 {
-        if (ssegs) ss = oldss;
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL,0);
@@ -90,7 +89,6 @@ static int opPUSHF(uint32_t fetchdat)
 static int opPUSHFD(uint32_t fetchdat)
 {
         uint16_t tempw;
-        if (ssegs) ss=oldss;
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL, 0);
@@ -107,7 +105,6 @@ static int opPUSHFD(uint32_t fetchdat)
 static int opPOPF_286(uint32_t fetchdat)
 {
         uint16_t tempw;
-        if (ssegs) ss = oldss;
         
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
@@ -129,7 +126,6 @@ static int opPOPF_286(uint32_t fetchdat)
 static int opPOPF(uint32_t fetchdat)
 {
         uint16_t tempw;
-        if (ssegs) ss = oldss;
         
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
@@ -150,7 +146,6 @@ static int opPOPF(uint32_t fetchdat)
 static int opPOPFD(uint32_t fetchdat)
 {
         uint32_t templ;
-        if (ssegs) ss = oldss;
         
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {

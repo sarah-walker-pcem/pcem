@@ -588,15 +588,15 @@ chdir(pcempath);
            printf("In %s mode\n",(msw&1)?((eflags&VM_FLAG)?"V86":"protected"):"real");
         else
            printf("In %s mode\n",(msw&1)?"protected":"real");
-        printf("CS : base=%06X limit=%04X access=%02X\n",cs,_cs.limit,_cs.access);
-        printf("DS : base=%06X limit=%04X access=%02X\n",ds,_ds.limit,_ds.access);
-        printf("ES : base=%06X limit=%04X access=%02X\n",es,_es.limit,_es.access);
+        printf("CS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",cs,_cs.limit,_cs.access, _cs.limit_low, _cs.limit_high);
+        printf("DS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ds,_ds.limit,_ds.access, _ds.limit_low, _ds.limit_high);
+        printf("ES : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",es,_es.limit,_es.access, _es.limit_low, _es.limit_high);
         if (is386)
         {
-                printf("FS : base=%06X limit=%04X access=%02X\n",fs,_fs.limit,_fs.access);
-                printf("GS : base=%06X limit=%04X access=%02X\n",gs,_gs.limit,_gs.access);
+                printf("FS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",fs,_fs.limit,_fs.access, _fs.limit_low, _fs.limit_high);
+                printf("GS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",gs,_gs.limit,_gs.access, _gs.limit_low, _gs.limit_high);
         }
-        printf("SS : base=%06X limit=%04X access=%02X\n",ss,_ss.limit,_ss.access);
+        printf("SS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ss,_ss.limit,_ss.access, _ss.limit_low, _ss.limit_high);
         printf("GDT : base=%06X limit=%04X\n",gdt.base,gdt.limit);
         printf("LDT : base=%06X limit=%04X\n",ldt.base,ldt.limit);
         printf("IDT : base=%06X limit=%04X\n",idt.base,idt.limit);
@@ -646,6 +646,7 @@ void resetx86()
         ESP=0;
         mmu_perm=4;
         memset(inscounts, 0, sizeof(inscounts));
+        x86seg_reset();
 }
 
 void softresetx86()
@@ -665,6 +666,7 @@ void softresetx86()
         //rammask=0xFFFFFFFF;
         flags=2;
         idt.base = 0;
+        x86seg_reset();
 }
 
 static void setznp8(uint8_t val)

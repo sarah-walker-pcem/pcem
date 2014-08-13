@@ -1,59 +1,42 @@
 static int op_CS(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        ds = ss = cs;
-        rds = CS;
-        ssegs = 2;
+        ea_seg = &_cs;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }
 static int op_DS(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        ds = ss = ds;
-        ssegs = 2;
+        ea_seg = &_ds;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }
 static int op_ES(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        ds = ss = es;
-        rds = ES;
-        ssegs = 2;
+        ea_seg = &_es;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }      
 static int op_FS(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        rds = FS;
-        ds = ss = fs;
-        ssegs = 2;
+        ea_seg = &_fs;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }
 static int op_GS(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        rds = GS;
-        ds = ss = gs;
-        ssegs = 2;
+        ea_seg = &_gs;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }
 static int op_SS(uint32_t fetchdat)
 {
-        oldss = ss;
-        oldds = ds;
-        ds = ss = ss;
-        rds = SS;
-        ssegs = 2;
+        ea_seg = &_ss;
+        ssegs = 1;
         cycles -= 4;
         return 1;
 }

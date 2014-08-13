@@ -1,7 +1,6 @@
 #define PUSH_W_OP(reg)                                                                          \
         static int opPUSH_ ## reg (uint32_t fetchdat)                                                  \
         {                                                                                       \
-                if (ssegs) ss=oldss;                                                            \
                 PUSH_W(reg);                                                                    \
                 cycles -= (is486) ? 1 : 2;                                                      \
                 return 0;                                                                       \
@@ -10,7 +9,6 @@
 #define PUSH_L_OP(reg)                                                                          \
         static int opPUSH_ ## reg (uint32_t fetchdat)                                                  \
         {                                                                                       \
-                if (ssegs) ss=oldss;                                                            \
                 PUSH_L(reg);                                                                    \
                 cycles -= (is486) ? 1 : 2;                                                      \
                 return 0;                                                                       \
@@ -19,7 +17,6 @@
 #define POP_W_OP(reg)                                                                           \
         static int opPOP_ ## reg (uint32_t fetchdat)                                                   \
         {                                                                                       \
-                if (ssegs) ss=oldss;                                                            \
                 reg = POP_W();                                                                  \
                 cycles -= (is486) ? 1 : 4;                                                      \
                 return 0;                                                                       \
@@ -28,7 +25,6 @@
 #define POP_L_OP(reg)                                                                           \
         static int opPOP_ ## reg (uint32_t fetchdat)                                                   \
         {                                                                                       \
-                if (ssegs) ss=oldss;                                                            \
                 reg = POP_L();                                                                  \
                 cycles -= (is486) ? 1 : 4;                                                      \
                 return 0;                                                                       \
@@ -188,7 +184,6 @@ static int opPOPA_l(uint32_t fetchdat)
 static int opPUSH_imm_w(uint32_t fetchdat)
 {
         uint16_t val = getwordf(); 
-        if (ssegs) ss=oldss;
         PUSH_W(val);
         cycles -= 2;
         return 0;
@@ -196,7 +191,6 @@ static int opPUSH_imm_w(uint32_t fetchdat)
 static int opPUSH_imm_l(uint32_t fetchdat)
 {
         uint32_t val = getlong(); 
-        if (ssegs) ss=oldss;
         PUSH_L(val);
         cycles -= 2;
         return 0;
@@ -226,9 +220,8 @@ static int opPUSH_imm_bl(uint32_t fetchdat)
 static int opPOPW_a16(uint32_t fetchdat)
 {
         uint16_t temp;
-        uint32_t tempseg = ssegs ? oldss : ss;
         
-        temp = POP_W_seg(tempseg);                      if (abrt) return 0;
+        temp = POP_W();                                 if (abrt) return 0;
 
         fetch_ea_16(fetchdat);
         seteaw(temp);
@@ -245,9 +238,8 @@ static int opPOPW_a16(uint32_t fetchdat)
 static int opPOPW_a32(uint32_t fetchdat)
 {
         uint16_t temp;
-        uint32_t tempseg = ssegs ? oldss : ss;
                 
-        temp = POP_W_seg(tempseg);                      if (abrt) return 0;
+        temp = POP_W();                                 if (abrt) return 0;
         
         fetch_ea_32(fetchdat);
         seteaw(temp);
@@ -265,9 +257,8 @@ static int opPOPW_a32(uint32_t fetchdat)
 static int opPOPL_a16(uint32_t fetchdat)
 {
         uint32_t temp;
-        uint32_t tempseg = ssegs ? oldss : ss;
 
-        temp = POP_L_seg(tempseg);                      if (abrt) return 0;
+        temp = POP_L();                                 if (abrt) return 0;
 
         fetch_ea_16(fetchdat);        
         seteal(temp);
@@ -284,9 +275,8 @@ static int opPOPL_a16(uint32_t fetchdat)
 static int opPOPL_a32(uint32_t fetchdat)
 {
         uint32_t temp;
-        uint32_t tempseg = ssegs ? oldss : ss;
 
-        temp = POP_L_seg(tempseg);                      if (abrt) return 0;
+        temp = POP_L();                                 if (abrt) return 0;
 
         fetch_ea_32(fetchdat);
         seteal(temp);
@@ -401,14 +391,12 @@ static int opLEAVE_l(uint32_t fetchdat)
 #define PUSH_SEG_OPS(seg)                                                       \
         static int opPUSH_ ## seg ## _w(uint32_t fetchdat)                      \
         {                                                                       \
-                if (ssegs) ss=oldss;                                            \
                 PUSH_W(seg);                                                    \
                 cycles -= 2;                                                    \
                 return 0;                                                       \
         }                                                                       \
         static int opPUSH_ ## seg ## _l(uint32_t fetchdat)                      \
         {                                                                       \
-                if (ssegs) ss=oldss;                                            \
                 PUSH_L(seg);                                                    \
                 cycles -= 2;                                                    \
                 return 0;                                                       \
@@ -419,7 +407,6 @@ static int opLEAVE_l(uint32_t fetchdat)
         {                                                                       \
                 uint16_t temp_seg;                                              \
                 uint32_t temp_esp = ESP;                                        \
-                if (ssegs) ss=oldss;                                            \
                 temp_seg = POP_W();                     if (abrt) return 0;     \
                 loadseg(temp_seg, realseg);             if (abrt) ESP = temp_esp; \
                 cycles -= is486 ? 3 : 7;                                        \
@@ -429,7 +416,6 @@ static int opLEAVE_l(uint32_t fetchdat)
         {                                                                       \
                 uint32_t temp_seg;                                              \
                 uint32_t temp_esp = ESP;                                        \
-                if (ssegs) ss=oldss;                                            \
                 temp_seg = POP_L();                     if (abrt) return 0;     \
                 loadseg(temp_seg & 0xffff, realseg);    if (abrt) ESP = temp_esp; \
                 cycles -= is486 ? 3 : 7;                                        \

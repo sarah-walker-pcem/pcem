@@ -58,7 +58,7 @@ extern uint16_t *mod1add[2][8];
 extern uint32_t *mod1seg[8];
 
 
-#define IRQTEST ((flags&I_FLAG) && (pic.pend&~pic.mask) && !ssegs && !noint)
+#define IRQTEST ((flags&I_FLAG) && (pic.pend&~pic.mask) && !noint)
 
 extern int cgate32;
 
@@ -99,3 +99,5 @@ extern uint32_t rmdat32;
 extern int inscounts[256];
 
 void x86illegal();
+
+void x86seg_reset();

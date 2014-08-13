@@ -10,6 +10,9 @@
 #include "timer.h"
 #include "video.h"
 
+
+x86seg *ea_seg;
+
 int nmi_enable = 1;
 
 int inscounts[256];
@@ -38,6 +41,27 @@ int trap;
                                         break; \
                                 } \
                         }
+
+#define CHECK_READ(seg, low, high)  \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high))       \
+        {                                       \
+                x86gpf("Limit check", 0);       \
+                return 0;                       \
+        }
+
+#define CHECK_WRITE(seg, low, high)  \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high))       \
+        {                                       \
+                x86gpf("Limit check", 0);       \
+                return 0;                       \
+        }
+
+#define CHECK_WRITE_REP(seg, low, high)  \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high))       \
+        {                                       \
+                x86gpf("Limit check", 0);       \
+                break;                       \
+        }
 
 
 int cpl_override=0;
@@ -206,8 +230,8 @@ uint32_t *mod1seg[8];
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
-        easeg = ds;
-        ea_rseg = DS;
+        easeg = ea_seg->base;
+        ea_rseg = ea_seg->seg;
         if (rm == 4)
         {
                 uint8_t sib = rmdat >> 8;
@@ -231,10 +255,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 /*SIB byte present*/
                 if ((sib & 7) == 5 && !mod) 
                         eaaddr = getlong();
-                else if ((sib & 6) == 4)
+                else if ((sib & 6) == 4 && !ssegs)
                 {
                         easeg = ss;
                         ea_rseg = SS;
+                        ea_seg = &_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
                         eaaddr += regs[(sib >> 3) & 7].l << (sib >> 6);
@@ -244,10 +269,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 eaaddr = regs[rm].l;
                 if (mod) 
                 {
-                        if (rm == 5)
+                        if (rm == 5 && !ssegs)
                         {
                                 easeg = ss;
                                 ea_rseg = SS;
+                                ea_seg = &_ss;
                         }
                         if (mod == 1) 
                         { 
@@ -276,11 +302,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
 static inline void fetch_ea_16_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
+        easeg = ea_seg->base;
+        ea_rseg = ea_seg->seg;
         if (!mod && rm == 6) 
         { 
                 eaaddr = getword();
-                easeg = ds; 
-                ea_rseg = DS; 
         }
         else
         {
@@ -297,9 +323,12 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                         break;
                 }
                 eaaddr += (*mod1add[0][rm]) + (*mod1add[1][rm]);
-                easeg = *mod1seg[rm];
-                if (mod1seg[rm] == &ss) ea_rseg = SS;
-                else                    ea_rseg = DS;
+                if (mod1seg[rm] == &ss && !ssegs)
+                {
+                        easeg = ss;
+                        ea_rseg = SS;
+                        ea_seg = &_ss;
+                }
                 eaaddr &= 0xFFFF;
         }
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
@@ -328,7 +357,6 @@ void x86_int(int num)
         }
         else
         {
-                if (ssegs) ss=oldss;
                 if (stack32)
                 {
                         writememw(ss,ESP-2,flags);
@@ -365,7 +393,6 @@ void x86_int_sw(int num)
         }
         else
         {
-                if (ssegs) ss=oldss;
                 if (stack32)
                 {
                         writememw(ss,ESP-2,flags);
@@ -418,7 +445,6 @@ void rep386(int fv)
         uint8_t temp2;
         uint16_t tempw,tempw2,of;
         uint32_t ipc=oldpc;//pc-1;
-        int changeds=0;
         uint32_t oldds;
         uint32_t rep32=op32;
         uint32_t templ,templ2;
@@ -446,43 +472,23 @@ void rep386(int fv)
                 pc=ipc+1;
                 break;
                 case 0x26: case 0x126: case 0x226: case 0x326: /*ES:*/
-                oldds=ds;
-                ds=es;
-                rds=ES;
-                changeds=1;
+                ea_seg = &_es;
                 goto startrep;
                 break;
                 case 0x2E: case 0x12E: case 0x22E: case 0x32E: /*CS:*/
-                oldds=ds;
-                ds=cs;
-                rds=CS;
-                changeds=1;
+                ea_seg = &_cs;
                 goto startrep;
-                break;
                 case 0x36: case 0x136: case 0x236: case 0x336: /*SS:*/
-                oldds=ds;
-                ds=ss;
-                rds=SS;
-                changeds=1;
+                ea_seg = &_ss;
                 goto startrep;
-                break;
                 case 0x3E: case 0x13E: case 0x23E: case 0x33E: /*DS:*/
-                oldds=ds;
-                ds=ds;
-                changeds=1;
+                ea_seg = &_ds;
                 goto startrep;
-                break;
                 case 0x64: case 0x164: case 0x264: case 0x364: /*FS:*/
-                oldds=ds;
-                ds=fs;
-                rds=FS;
-                changeds=1;
+                ea_seg = &_fs;
                 goto startrep;
                 case 0x65: case 0x165: case 0x265: case 0x365: /*GS:*/
-                oldds=ds;
-                ds=gs;
-                rds=GS;
-                changeds=1;
+                ea_seg = &_gs;
                 goto startrep;
                 case 0x66: case 0x166: case 0x266: case 0x366: /*Data size prefix*/
                 rep32^=0x100;
@@ -502,7 +508,7 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26C: case 0x36C: /*REP INSB*/
@@ -517,7 +523,7 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6D: /*REP INSW*/
@@ -531,7 +537,7 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x16D: /*REP INSL*/
@@ -545,7 +551,7 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26D: /*REP INSW*/
@@ -559,7 +565,7 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x36D: /*REP INSL*/
@@ -573,13 +579,13 @@ void rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6E: case 0x16E: /*REP OUTSB*/
                 if (c>0)
                 {
-                        temp2=readmemb(ds,SI);
+                        temp2 = readmemb(ea_seg->base, SI);
                         if (abrt) break;
                         checkio_perm(DX);
                         outb(DX,temp2);
@@ -588,13 +594,13 @@ void rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26E: case 0x36E: /*REP OUTSB*/
                 if (c>0)
                 {
-                        temp2=readmemb(ds,ESI);
+                        temp2 = readmemb(ea_seg->base, ESI);
                         if (abrt) break;
                         checkio_perm(DX);
                         outb(DX,temp2);
@@ -603,13 +609,13 @@ void rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6F: /*REP OUTSW*/
                 if (c>0)
                 {
-                        tempw=readmemw(ds,SI);
+                        tempw = readmemw(ea_seg->base, SI);
                         if (abrt) break;
 //                        pclog("OUTSW %04X -> %04X\n",SI,tempw);
                         outw(DX,tempw);
@@ -618,13 +624,13 @@ void rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x16F: /*REP OUTSL*/
                 if (c > 0)
                 {
-                        templ = readmeml(ds, SI);
+                        templ = readmeml(ea_seg->base, SI);
                         if (abrt) break;
                         outl(DX, templ);
                         if (flags & D_FLAG) SI -= 4;
@@ -632,13 +638,13 @@ void rep386(int fv)
                         c--;
                         cycles -= 14;
                 }
-                if (c > 0) { firstrepcycle = 0; pc = ipc; if (ssegs) ssegs++; }
+                if (c > 0) { firstrepcycle = 0; pc = ipc; }
                 else firstrepcycle = 1;
                 break;
                 case 0x26F: /*REP OUTSW*/
                 if (c>0)
                 {
-                        tempw=readmemw(ds,ESI);
+                        tempw = readmemw(ea_seg->base, ESI);
                         if (abrt) break;
                         outw(DX,tempw);
                         if (flags&D_FLAG) ESI-=2;
@@ -646,13 +652,13 @@ void rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x36F: /*REP OUTSL*/
                 if (c > 0)
                 {
-                        templ = readmeml(ds, ESI);
+                        templ = readmeml(ea_seg->base, ESI);
                         if (abrt) break;
                         outl(DX, templ);
                         if (flags & D_FLAG) ESI -= 4;
@@ -660,7 +666,7 @@ void rep386(int fv)
                         c--;
                         cycles -= 14;
                 }
-                if (c > 0) { firstrepcycle = 0; pc = ipc; if (ssegs) ssegs++; }
+                if (c > 0) { firstrepcycle = 0; pc = ipc; }
                 else firstrepcycle = 1;
                 break;
                 case 0x90: case 0x190: /*REP NOP*/
@@ -669,7 +675,8 @@ void rep386(int fv)
                 case 0xA4: case 0x1A4: /*REP MOVSB*/
                 if (c>0)
                 {
-                        temp2=readmemb(ds,SI);  if (abrt) break;
+                        CHECK_WRITE_REP(&_es, DI, DI);
+                        temp2 = readmemb(ea_seg->base, SI); if (abrt) break;
                         writememb(es,DI,temp2); if (abrt) break;
 //                        if (output==3) pclog("MOVSB %08X:%04X -> %08X:%04X %02X\n",ds,SI,es,DI,temp2);
                         if (flags&D_FLAG) { DI--; SI--; }
@@ -677,39 +684,42 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A4: case 0x3A4: /*REP MOVSB*/
                 if (c>0)
                 {
-                        temp2=readmemb(ds,ESI);  if (abrt) break;
+                        CHECK_WRITE_REP(&_es, EDI, EDI);
+                        temp2 = readmemb(ea_seg->base, ESI); if (abrt) break;
                         writememb(es,EDI,temp2); if (abrt) break;
                         if (flags&D_FLAG) { EDI--; ESI--; }
                         else              { EDI++; ESI++; }
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xA5: /*REP MOVSW*/
                 if (c>0)
                 {
-                        tempw=readmemw(ds,SI);  if (abrt) break;
+                        CHECK_WRITE_REP(&_es, DI, DI+1);
+                        tempw = readmemw(ea_seg->base, SI); if (abrt) break;
                         writememw(es,DI,tempw); if (abrt) break;
                         if (flags&D_FLAG) { DI-=2; SI-=2; }
                         else              { DI+=2; SI+=2; }
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1A5: /*REP MOVSL*/
                 if (c>0)
                 {
-                        templ=readmeml(ds,SI);  if (abrt) break;
+                        CHECK_WRITE_REP(&_es, DI, DI+3);
+                        templ = readmeml(ea_seg->base, SI); if (abrt) break;
 //                        pclog("MOVSD %08X from %08X to %08X (%04X:%08X)\n", templ, ds+SI, es+DI, CS, pc);
                         writememl(es,DI,templ); if (abrt) break;
                         if (flags&D_FLAG) { DI-=4; SI-=4; }
@@ -717,13 +727,14 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A5: /*REP MOVSW*/
                 if (c>0)
                 {
-                        tempw=readmemw(ds,ESI);  if (abrt) break;
+                        CHECK_WRITE_REP(&_es, EDI, EDI+1);
+                        tempw = readmemw(ea_seg->base, ESI); if (abrt) break;
                         writememw(es,EDI,tempw); if (abrt) break;
 //                        if (output) pclog("Written %04X from %08X to %08X %i  %08X %04X %08X %04X\n",tempw,ds+ESI,es+EDI,c,ds,ES,es,ES);
                         if (flags&D_FLAG) { EDI-=2; ESI-=2; }
@@ -731,13 +742,14 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3A5: /*REP MOVSL*/
                 if (c>0)
                 {
-                        templ=readmeml(ds,ESI); if (abrt) break;
+                        CHECK_WRITE_REP(&_es, EDI, EDI+3);
+                        templ = readmeml(ea_seg->base, ESI); if (abrt) break;
 //                        if ((EDI&0xFFFF0000)==0xA0000) cycles-=12;
                         writememl(es,EDI,templ); if (abrt) break;
 //                        if (output) pclog("Load %08X from %08X to %08X  %04X %08X  %04X %08X\n",templ,ESI,EDI,DS,ds,ES,es);
@@ -746,14 +758,14 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xA6: case 0x1A6: /*REP CMPSB*/
                 tempz = (fv) ? 1 : 0;
                 if ((c>0) && (fv==tempz))
                 {
-                        temp=readmemb(ds,SI);
+                        temp = readmemb(ea_seg->base, SI);
                         temp2=readmemb(es,DI);
                         if (abrt) { flags=of; break; }
                         if (flags&D_FLAG) { DI--; SI--; }
@@ -763,14 +775,14 @@ void rep386(int fv)
                         setsub8(temp,temp2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A6: case 0x3A6: /*REP CMPSB*/
                 tempz = (fv) ? 1 : 0;
                 if ((c>0) && (fv==tempz))
                 {
-                        temp=readmemb(ds,ESI);
+                        temp = readmemb(ea_seg->base, ESI);
                         temp2=readmemb(es,EDI);
                         if (abrt) { flags=of; break; }
                         if (flags&D_FLAG) { EDI--; ESI--; }
@@ -780,7 +792,7 @@ void rep386(int fv)
                         setsub8(temp,temp2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0xA7: /*REP CMPSW*/
@@ -788,7 +800,7 @@ void rep386(int fv)
                 if ((c>0) && (fv==tempz))
                 {
 //                        pclog("CMPSW %05X %05X  %08X %08X   ", ds+SI, es+DI, readlookup2[(ds+SI)>>12], readlookup2[(es+DI)>>12]);
-                        tempw=readmemw(ds,SI);
+                        tempw = readmemw(ea_seg->base, SI);
                         tempw2=readmemw(es,DI);
 //                        pclog("%04X %04X %02X\n", tempw, tempw2, ram[8]);
 
@@ -800,14 +812,14 @@ void rep386(int fv)
                         setsub16(tempw,tempw2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x1A7: /*REP CMPSL*/
                 tempz = (fv) ? 1 : 0;
                 if ((c>0) && (fv==tempz))
                 {
-                        templ=readmeml(ds,SI);
+                        templ = readmeml(ea_seg->base, SI);
                         templ2=readmeml(es,DI);
                         if (abrt) { flags=of; break; }
                         if (flags&D_FLAG) { DI-=4; SI-=4; }
@@ -817,14 +829,14 @@ void rep386(int fv)
                         setsub32(templ,templ2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A7: /*REP CMPSW*/
                 tempz = (fv) ? 1 : 0;
                 if ((c>0) && (fv==tempz))
                 {
-                        tempw=readmemw(ds,ESI);
+                        tempw = readmemw(ea_seg->base, ESI);
                         tempw2=readmemw(es,EDI);
                         if (abrt) { flags=of; break; }
                         if (flags&D_FLAG) { EDI-=2; ESI-=2; }
@@ -834,14 +846,14 @@ void rep386(int fv)
                         setsub16(tempw,tempw2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x3A7: /*REP CMPSL*/
                 tempz = (fv) ? 1 : 0;
                 if ((c>0) && (fv==tempz))
                 {
-                        templ=readmeml(ds,ESI);
+                        templ = readmeml(ea_seg->base, ESI);
                         templ2=readmeml(es,EDI);
                         if (abrt) { flags=of; break; }
                         if (flags&D_FLAG) { EDI-=4; ESI-=4; }
@@ -851,13 +863,14 @@ void rep386(int fv)
                         setsub32(templ,templ2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
 
                 case 0xAA: case 0x1AA: /*REP STOSB*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, DI, DI);
                         writememb(es,DI,AL);
                         if (abrt) break;
                         if (flags&D_FLAG) DI--;
@@ -865,12 +878,13 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AA: case 0x3AA: /*REP STOSB*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, EDI, EDI);
                         writememb(es,EDI,AL);
                         if (abrt) break;
                         if (flags&D_FLAG) EDI--;
@@ -878,12 +892,13 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAB: /*REP STOSW*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, DI, DI+1);
                         writememw(es,DI,AX);
                         if (abrt) break;
                         if (flags&D_FLAG) DI-=2;
@@ -891,12 +906,13 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AB: /*REP STOSW*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, EDI, EDI+1);
                         writememw(es,EDI,AX);
                         if (abrt) break;
                         if (flags&D_FLAG) EDI-=2;
@@ -904,12 +920,13 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AB: /*REP STOSL*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, DI, DI+3);
                         writememl(es,DI,EAX);
                         if (abrt) break;
                         if (flags&D_FLAG) DI-=4;
@@ -917,12 +934,13 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AB: /*REP STOSL*/
                 if (c>0)
                 {
+                        CHECK_WRITE_REP(&_es, EDI, EDI+3);
                         writememl(es,EDI,EAX);
                         if (abrt) break;
                         if (flags&D_FLAG) EDI-=4;
@@ -930,91 +948,91 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAC: case 0x1AC: /*REP LODSB*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSB %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        AL=readmemb(ds,SI);
+                        AL = readmemb(ea_seg->base, SI);
                         if (abrt) break;
                         if (flags&D_FLAG) SI--;
                         else              SI++;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AC: case 0x3AC: /*REP LODSB*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSB %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        AL=readmemb(ds,ESI);
+                        AL = readmemb(ea_seg->base, ESI);
                         if (abrt) break;
                         if (flags&D_FLAG) ESI--;
                         else              ESI++;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAD: /*REP LODSW*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSW %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        AX=readmemw(ds,SI);
+                        AX = readmemw(ea_seg->base, SI);
                         if (abrt) break;
                         if (flags&D_FLAG) SI-=2;
                         else              SI+=2;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AD: /*REP LODSL*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSL %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        EAX=readmeml(ds,SI);
+                        EAX = readmeml(ea_seg->base, SI);
                         if (abrt) break;
                         if (flags&D_FLAG) SI-=4;
                         else              SI+=4;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AD: /*REP LODSW*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSW %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        AX=readmemw(ds,ESI);
+                        AX = readmemw(ea_seg->base, ESI);
                         if (abrt) break;
                         if (flags&D_FLAG) ESI-=2;
                         else              ESI+=2;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AD: /*REP LODSL*/
 //                if (ds==0xFFFFFFFF) pclog("Null selector REP LODSL %04X(%06X):%06X\n",CS,cs,pc);
                 if (c>0)
                 {
-                        EAX=readmeml(ds,ESI);
+                        EAX = readmeml(ea_seg->base, ESI);
                         if (abrt) break;
                         if (flags&D_FLAG) ESI-=4;
                         else              ESI+=4;
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; if (ssegs) ssegs++; }
+                if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAE: case 0x1AE: /*REP SCASB*/
@@ -1032,7 +1050,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AE: case 0x3AE: /*REP SCASB*/
@@ -1051,7 +1069,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0xAF: /*REP SCASW*/
@@ -1068,7 +1086,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AF: /*REP SCASL*/
@@ -1085,7 +1103,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AF: /*REP SCASW*/
@@ -1102,7 +1120,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AF: /*REP SCASL*/
@@ -1119,7 +1137,7 @@ void rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                 }
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; if (ssegs) ssegs++; }
+                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
 
@@ -1132,7 +1150,6 @@ void rep386(int fv)
         }
         if (rep32&0x200) ECX=c;
         else             CX=c;
-        if (changeds) ds=oldds;
 //        if (output) pclog("%03X %03X\n",rep32,use32);
 }
 
@@ -1268,8 +1285,12 @@ opcode_realstart:
                 
 dontprint=0;
 
+                ea_seg = &_ds;
+                ssegs = 0;
+                
 opcodestart:
                 fetchdat = fastreadl(cs + pc);
+
                 if (!abrt)
                 {               
                         tempc = CF_SET();
@@ -1287,20 +1308,7 @@ opcodestart:
                 }
 
                 if (!use32) pc &= 0xffff;
-/*                if (ins == 74400000)
-                {
-                        pclog("Output on\n");
-                        output = 3;
-                }*/
-                if ((cs + pc) == 0xc)
-                        fatal("Dead\n");
-                if (ssegs)
-                {
-                        ds=oldds;
-                        ss=oldss;
-                        rds=DS;
-                        ssegs=0;
-                }
+
                 if (abrt)
                 {
                         flags_rebuild();
@@ -1397,23 +1405,15 @@ opcodestart:
                         }
                 }
 
-//                tempi = ZF_SET() ? Z_FLAG : 0;
-//                if (tempi != (flags & Z_FLAG))
-//                   fatal("Z flag mismatch %02X %08X\n", opcode, fetchdat);
                 ins++;
                 insc++;
-/*output = 3;
-                if (ins == 1372108)
-                        fatal("here2\n");
-                if (ins == 50966339)
-                        fatal("here\n");*/
+
                 if (timetolive)
                 {
                         timetolive--;
                         if (!timetolive)
                                 fatal("Life expired\n");
                 }
-//                if (ins == 97300000) output = 3;
                 }
                 
                 tsc += cycdiff;

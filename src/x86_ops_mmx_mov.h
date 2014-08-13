@@ -57,6 +57,7 @@ int opMOVD_mm_l_a16(uint32_t fetchdat)
         }
         else
         {
+                CHECK_WRITE(ea_seg, eaaddr, eaaddr + 3);
                 writememl(easeg, eaaddr, MM[reg].l[0]); if (abrt) return 0;
                 cycles -= 2;
         }
@@ -74,6 +75,7 @@ int opMOVD_mm_l_a32(uint32_t fetchdat)
         }
         else
         {
+                CHECK_WRITE(ea_seg, eaaddr, eaaddr + 3);
                 writememl(easeg, eaaddr, MM[reg].l[0]); if (abrt) return 0;
                 cycles -= 2;
         }
@@ -137,6 +139,7 @@ int opMOVQ_mm_q_a16(uint32_t fetchdat)
         }
         else
         {
+                CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
                 writememl(easeg, eaaddr,     MM[reg].l[0]);
                 writememl(easeg, eaaddr + 4, MM[reg].l[1]); if (abrt) return 0;
                 cycles -= 2;
@@ -155,6 +158,7 @@ int opMOVQ_mm_q_a32(uint32_t fetchdat)
         }
         else
         {
+                CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
                 writememl(easeg, eaaddr,     MM[reg].l[0]);
                 writememl(easeg, eaaddr + 4, MM[reg].l[1]); if (abrt) return 0;
                 cycles -= 2;

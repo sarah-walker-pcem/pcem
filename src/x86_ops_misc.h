@@ -515,7 +515,7 @@ static int opHLT(uint32_t fetchdat)
                 x86gpf(NULL,0);
                 return 0;
         }
-        if (!((flags&I_FLAG) && pic_intpending && !ssegs)) 
+        if (!((flags&I_FLAG) && pic_intpending))
         {
                 cycles -= 100;
                 pc--;

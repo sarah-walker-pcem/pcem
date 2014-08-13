@@ -57,6 +57,24 @@ void x86abort(const char *format, ...)
 
 uint8_t opcode2;
 
+static void seg_reset(x86seg *s)
+{
+        s->access = 0 << 5;
+        s->limit = 0xFFFF;
+        s->limit_low = 0;
+        s->limit_high = 0xffff;
+}
+
+void x86seg_reset()
+{
+        seg_reset(&_cs);
+        seg_reset(&_ds);
+        seg_reset(&_es);
+        seg_reset(&_fs);
+        seg_reset(&_gs);
+        seg_reset(&_ss);
+}
+
 void x86_doabrt(int x86_abrt)
 {
 //        ingpf = 1;
@@ -73,7 +91,33 @@ void x86_doabrt(int x86_abrt)
         }*/
 //        pclog("GPF! - error %04X  %04X(%08X):%08X %02X %02X  %i  %04X %i %i\n",error,CS,cs,pc,opcode,opcode2,ins,flags&I_FLAG,IOPL, dtimes);
 
-        pmodeint(x86_abrt, 0);
+        if (msw & 1)
+                pmodeint(x86_abrt, 0);
+        else
+        {
+                uint32_t addr = (x86_abrt << 2) + idt.base;
+                if (stack32)
+                {
+                        writememw(ss,ESP-2,flags);
+                        writememw(ss,ESP-4,CS);
+                        writememw(ss,ESP-6,pc);
+                        ESP-=6;
+                }
+                else
+                {
+                        writememw(ss,((SP-2)&0xFFFF),flags);
+                        writememw(ss,((SP-4)&0xFFFF),CS);
+                        writememw(ss,((SP-6)&0xFFFF),pc);
+                        SP-=6;
+                }
+
+                flags&=~I_FLAG;
+                flags&=~T_FLAG;
+                oxpc=pc;
+                pc=readmemw(0,addr);
+                loadcs(readmemw(0,addr+2));
+                return;
+        }
         
         if (abrt) return;
         
@@ -132,12 +176,90 @@ void x86np(char *s, uint16_t error)
 }
 
 
+static void do_seg_load(x86seg *s, uint16_t *segdat)
+{
+        s->limit = segdat[0] | ((segdat[3] & 0xF) << 16);
+        if (segdat[3] & 0x80)
+                s->limit = (s->limit << 12) | 0xFFF;
+        s->base = segdat[1] | ((segdat[2] & 0xFF) << 16);
+        if (is386)
+                s->base |= ((segdat[3] >> 8) << 24);
+        s->access = segdat[2] >> 8;
+                        
+        if ((segdat[2] & 0x1800) != 0x1000 || !(segdat[2] & (1 << 10))) /*expand-down*/
+        {
+                s->limit_high = s->limit;
+                s->limit_low = 0;
+        }
+        else
+        {
+                s->limit_high = (segdat[3] & 0x40) ? 0xffffffff : 0xffff;
+                s->limit_low = s->limit + 1;
+        }
+//        if (output) pclog("SEG : base=%08x limit=%08x low=%08x high=%08x\n", s->base, s->limit, s->limit_low, s->limit_high);
+}
+
+static void do_seg_v86_init(x86seg *s)
+{
+        s->access = 3 << 5;
+        s->limit = 0xffff;
+        s->limit_low = 0;
+        s->limit_high = 0xffff;
+}
+
+static void check_seg_valid(x86seg *s)
+{
+        int dpl = (s->access >> 5) & 3;
+        int valid = 1;
+
+        if (s->seg & 4)
+        {
+                if ((s->seg & ~7) >= ldt.limit)
+                {
+//                        pclog("Bigger than LDT limit %04X %04X %02X %02X %02X\n", s->seg, ldt.limit, opcode, opcode2, rmdat);
+                        valid = 0;
+                }
+        }
+        else
+        {
+                if ((s->seg & ~7) >= gdt.limit)
+                {
+//                        pclog("Bigger than GDT limit %04X %04X\n", s->seg, gdt.limit);
+                        valid = 0;
+                }
+        }
+
+        switch (s->access & 0x1f)
+        {
+                case 0x10: case 0x11: case 0x12: case 0x13: /*Data segments*/
+                case 0x14: case 0x15: case 0x16: case 0x17:
+                case 0x1A: case 0x1B: /*Readable non-conforming code*/
+                if ((s->seg & 3) > dpl || (CPL) > dpl)
+                {
+//                        pclog("Data seg fail - %04X:%08X %04X %i\n", CS, pc, s->seg, dpl);
+                        valid = 0;
+                        break;
+                }
+                break;
+                
+                case 0x1E: case 0x1F: /*Readable conforming code*/
+                break;
+                
+                default:
+                valid = 0;
+                break;
+        }
+        
+        if (!valid)
+                loadseg(0, s);
+}
+
 void loadseg(uint16_t seg, x86seg *s)
 {
         uint16_t segdat[4];
         uint32_t addr;
         int dpl;
-        if (output) pclog("Load seg %04X\n",seg);
+
         if (msw&1 && !(eflags&VM_FLAG))
         {
 //                intcount++;
@@ -153,6 +275,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         }
 //                        if (s->base!=-1) pclog("NEW! ");
                         s->seg=0;
+                        s->access = 0;
                         s->base=-1;
 //                        pclog("NULL selector %s%s%s%s %04X(%06X):%06X\n",(s==&_ds)?"DS":"",(s==&_es)?"ES":"",(s==&_fs)?"FS":"",(s==&_gs)?"GS":"",CS,cs,pc);
                         return;
@@ -224,7 +347,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         }
                         if (segdat[3]&0x40) stack32=1;
                         else                stack32=0;
-//                        pclog("Load SS\n");
+//                        pclog("Load SS  %04x %04x %04x %04x\n", segdat[0], segdat[1], segdat[2], segdat[3]);
                 }
                 else if (s!=&_cs)
                 {
@@ -248,71 +371,38 @@ void loadseg(uint16_t seg, x86seg *s)
                                 break;
                                 default:
                                 pclog("Invalid segment type for %04X! %04X\n",seg&0xFFFC,segdat[2]);
-//                                if ((seg & ~3) == 0x1508) btimes++;
-//                                if (btimes == 2) output = 3;
-//                                dumpregs();
-//                                exit(-1);
                                 x86gpf(NULL,seg&~3);
-//                                x86abort("Invalid segment type for %04X!\n",seg&0xFFFC);
                                 return;
                         }
                 }
-//                #endif
-//                }
-//                if (!(segdat[2]&0x8000)) x86abort("Data segment not present!\n");
-//                if (!(segdat[2]&0x800) || !(segdat[2]&0x400))
-//                {
-                        if (!(segdat[2]&0x8000))
-                        {
-                                x86np("Load data seg not present", seg & 0xfffc);
-                                return;
-                        }
-                        s->seg=seg;
-                        s->limit=segdat[0]|((segdat[3]&0xF)<<16);
-                        if (segdat[3]&0x80) s->limit=(s->limit<<12)|0xFFF;
-                        s->limitw=(segdat[2]&0x200)?1:0;
-                        s->base=segdat[1];
-                        s->base|=((segdat[2]&0xFF)<<16);
-                        if (is386) s->base|=((segdat[3]>>8)<<24);
-                        s->access=segdat[2]>>8;
-                        
-                        if ((segdat[2]>>8) & 4)
-                           s->limit = 0xffffffff;
-                           
-//                        if (output) pclog("SS limit %08X\n", s->limit);
-                        
-//                        pclog("Seg Write %04X to %08X\n",segdat[2]|0x100,addr+4);
+
+                if (!(segdat[2] & 0x8000))
+                {
+                        x86np("Load data seg not present", seg & 0xfffc);
+                        return;
+                }
+                s->seg = seg;
+                do_seg_load(s, segdat);
+
 #ifndef CS_ACCESSED
-                        if (s != &_cs)
-                        {
+                if (s != &_cs)
+                {
 #endif                   
 #ifdef SEL_ACCESSED         
-                                cpl_override = 1;
-                                writememw(0, addr+4, segdat[2] | 0x100); /*Set accessed bit*/
-                                cpl_override = 0;
+                        cpl_override = 1;
+                        writememw(0, addr+4, segdat[2] | 0x100); /*Set accessed bit*/
+                        cpl_override = 0;
 #endif
 #ifndef CS_ACCESSED
-                        }
+                }
 #endif
-//                        pclog("Access=%02X Limit=%04X Limitw=%04X   %08X  %i %04X:%04X\n",s->access,s->limit,s->limitw, _ss.limit, ins, CS, pc);
-//                        if (s==&_es && s->base>0x180000) s->base=0x180000;
-//                }
-//                pclog("base=%06X limit=%04X access=%02X  %06X  %04X %04X %04X  %04X\n",s->base,s->limit,s->access,addr,segdat[0],segdat[1],segdat[2],seg);
-//                dumpregs();
-//                exit(-1);
         }
         else
         {
-                s->base=seg<<4;
-                s->limit=0xFFFF;
-                s->seg=seg;
-                if (eflags&VM_FLAG) s->access=3<<5;
-                else                s->access=0<<5;
-                if (s==&_ss) stack32=0;
-/*                if (s==&_ds)
-                {
-                        pclog("DS! %04X %06X %04X:%04X\n",DS,ds,CS,pc);
-                }*/
+                s->base = seg << 4;
+                s->seg = seg;
+                if (s == &_ss)
+                        stack32 = 0;
         }
 }
 
@@ -397,12 +487,7 @@ void loadcs(uint16_t seg)
                         if (segdat[3]&0x40) use32=0x300;
                         else                use32=0;
                         CS=(seg&~3)|CPL;
-                        _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                        if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                        _cs.base=segdat[1];
-                        _cs.base|=((segdat[2]&0xFF)<<16);
-                        if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                        _cs.access=segdat[2]>>8;
+                        do_seg_load(&_cs, segdat);
                         use32=(segdat[3]&0x40)?0x300:0;
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 
@@ -437,6 +522,8 @@ void loadcs(uint16_t seg)
         {
                 _cs.base=seg<<4;
                 _cs.limit=0xFFFF;
+                _cs.limit_low = 0;
+                _cs.limit_high = 0xffff;
                 CS=seg;
                 if (eflags&VM_FLAG) _cs.access=3<<5;
                 else                _cs.access=0<<5;
@@ -526,13 +613,8 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                         
                         CS = (seg & ~3) | CPL;
                         segdat[2] = (segdat[2] & ~(3 << (5+8))) | (CPL << (5+8));
-                        
-                        _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                        if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                        _cs.base=segdat[1];
-                        _cs.base|=((segdat[2]&0xFF)<<16);
-                        if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                        _cs.access=segdat[2]>>8;
+
+                        do_seg_load(&_cs, segdat);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         use32=(segdat[3]&0x40)?0x300:0;
                 }
@@ -627,12 +709,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                         }
                                         case 0x1C00: case 0x1D00: case 0x1E00: case 0x1F00: /*Conforming*/
                                         CS=seg2;
-                                        _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                                        if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                                        _cs.base=segdat[1];
-                                        _cs.base|=((segdat[2]&0xFF)<<16);
-                                        if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                                        _cs.access=segdat[2]>>8;
+                                        do_seg_load(&_cs, segdat);
                                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                         use32=(segdat[3]&0x40)?0x300:0;
                                                 pc=newpc;
@@ -679,6 +756,8 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
         {
                 _cs.base=seg<<4;
                 _cs.limit=0xFFFF;
+                _cs.limit_low = 0;
+                _cs.limit_high = 0xffff;
                 CS=seg;
                 if (eflags&VM_FLAG) _cs.access=3<<5;
                 else                _cs.access=0<<5;
@@ -858,12 +937,7 @@ void loadcscall(uint16_t seg)
                         else /*On non-conforming segments, set RPL = CPL*/
                                 seg = (seg & ~3) | CPL;
                         CS=seg;
-                        _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                        if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                        _cs.base=segdat[1];
-                        _cs.base|=((segdat[2]&0xFF)<<16);
-                        if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                        _cs.access=segdat[2]>>8;
+                        do_seg_load(&_cs, segdat);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         use32=(segdat[3]&0x40)?0x300:0;
                         if (csout) pclog("Complete\n");
@@ -1031,16 +1105,8 @@ void loadcscall(uint16_t seg)
                                                 stack32=segdat2[3]&0x40;
                                                 if (stack32) ESP=newsp;
                                                 else         SP=newsp;
-                                                _ss.limit=segdat2[0]|((segdat2[3]&0xF)<<16);
-                                                if (segdat2[3]&0x80) _ss.limit=(_ss.limit<<12)|0xFFF;
-                                                if ((segdat2[2]>>8) & 4)
-                                                   _ss.limit = 0xffffffff;
-
-                                                _ss.limitw=(segdat2[2]&0x200)?1:0;
-                                                _ss.base=segdat2[1];
-                                                _ss.base|=((segdat2[2]&0xFF)<<16);
-                                                if (is386) _ss.base|=((segdat2[3]>>8)<<24);
-                                                _ss.access=segdat2[2]>>8;
+                                                
+                                                do_seg_load(&_ss, segdat2);
 
                                                 if (output) pclog("Set access 1\n");
 
@@ -1051,12 +1117,7 @@ void loadcscall(uint16_t seg)
 #endif
                                                 
                                                 CS=seg2;
-                                                _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                                                if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                                                _cs.base=segdat[1];
-                                                _cs.base|=((segdat[2]&0xFF)<<16);
-                                                if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                                                _cs.access=segdat[2]>>8;
+                                                do_seg_load(&_cs, segdat);
                                                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                                 use32=(segdat[3]&0x40)?0x300:0;
                                                 pc=newpc;
@@ -1159,12 +1220,7 @@ void loadcscall(uint16_t seg)
                                                 PUSHW(oldpc); if (abrt) return;
                                         }*/
                                         CS=seg2;
-                                        _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                                        if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                                        _cs.base=segdat[1];
-                                        _cs.base|=((segdat[2]&0xFF)<<16);
-                                        if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                                        _cs.access=segdat[2]>>8;
+                                        do_seg_load(&_cs, segdat);
                                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                         use32=(segdat[3]&0x40)?0x300:0;
                                                 pc=newpc;
@@ -1206,6 +1262,8 @@ void loadcscall(uint16_t seg)
         {
                 _cs.base=seg<<4;
                 _cs.limit=0xFFFF;
+                _cs.limit_low = 0;
+                _cs.limit_high = 0xffff;
                 CS=seg;
                 if (eflags&VM_FLAG) _cs.access=3<<5;
                 else                _cs.access=0<<5;
@@ -1334,12 +1392,7 @@ void pmoderetf(int is32, uint16_t off)
                 if (segdat[2] & 0x400)
                    segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
                 CS = seg;
-                _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat[1];
-                _cs.base|=((segdat[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                _cs.access=segdat[2]>>8;
+                do_seg_load(&_cs, segdat);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
                 
@@ -1472,15 +1525,7 @@ void pmoderetf(int is32, uint16_t off)
                 stack32=segdat2[3]&0x40;
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
-                _ss.limit=segdat2[0]|((segdat2[3]&0xF)<<16);
-                if (segdat2[3]&0x80) _ss.limit=(_ss.limit<<12)|0xFFF;
-                if ((segdat2[2]>>8) & 4)
-                   _ss.limit = 0xffffffff;
-                _ss.limitw=(segdat2[2]&0x200)?1:0;
-                _ss.base=segdat2[1];
-                _ss.base|=((segdat2[2]&0xFF)<<16);
-                if (is386) _ss.base|=((segdat2[3]>>8)<<24);
-                _ss.access=segdat2[2]>>8;
+                do_seg_load(&_ss, segdat2);
 
 #ifdef SEL_ACCESSED
                 cpl_override = 1;
@@ -1497,24 +1542,24 @@ void pmoderetf(int is32, uint16_t off)
 
                 pc=newpc;
                 CS=seg;
-                _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat[1];
-                _cs.base|=((segdat[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                _cs.access=segdat[2]>>8;
+                do_seg_load(&_cs, segdat);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
                 
                 if (stack32) ESP+=off;
                 else         SP+=off;
+                
+                check_seg_valid(&_ds);
+                check_seg_valid(&_es);
+                check_seg_valid(&_fs);
+                check_seg_valid(&_gs);
 //                pclog("CPL<RPL return to %04X:%08X %04X:%08X\n",CS,pc,SS,ESP);
         }
 }
 
 void restore_stack()
 {
-        ss=oldss; _ss.limit=oldsslimit; _ss.limitw=oldsslimitw;
+        ss=oldss; _ss.limit=oldsslimit;
 }
 
 void pmodeint(int num, int soft)
@@ -1527,6 +1572,7 @@ void pmodeint(int num, int soft)
         uint32_t newsp;
         uint16_t seg;
         int stack_changed=0;
+        
 //        if (!num) pclog("Pmode int 0 at %04X(%06X):%08X\n",CS,cs,pc);
 //        pclog("Pmode int %02X %i %04X:%08X %04X:%08X %i\n",num,soft,CS,pc, SS, ESP, abrt);
         if (eflags&VM_FLAG && IOPL!=3 && soft)
@@ -1728,15 +1774,7 @@ void pmodeint(int num, int soft)
                                         stack32=segdat3[3]&0x40;
                                         if (stack32) ESP=newsp;
                                         else         SP=newsp;
-                                        _ss.limit=segdat3[0]|((segdat3[3]&0xF)<<16);
-                                        if (segdat3[3]&0x80) _ss.limit=(_ss.limit<<12)|0xFFF;
-                                        if ((segdat3[2]>>8) & 4)
-                                           _ss.limit = 0xffffffff;
-                                        _ss.limitw=(segdat3[2]&0x200)?1:0;
-                                        _ss.base=segdat3[1];
-                                        _ss.base|=((segdat3[2]&0xFF)<<16);
-                                        if (is386) _ss.base|=((segdat3[3]>>8)<<24);
-                                        _ss.access=segdat3[2]>>8;
+                                        do_seg_load(&_ss, segdat3);
 
 #ifdef CS_ACCESSED                                        
                                         cpl_override = 1;
@@ -1805,7 +1843,7 @@ void pmodeint(int num, int soft)
                                         x86gpf(NULL,seg&~3);
                                         return;
                                 }
-                                if (!stack_changed && ssegs) restore_stack();
+//                                if (!stack_changed && ssegs) restore_stack();
                                 if (type>0x800)
                                 {
                                         PUSHL(flags|(eflags<<16));
@@ -1830,12 +1868,7 @@ void pmodeint(int num, int soft)
                         }
                 CS=(seg&~3)|CPL;
 //                pclog("New CS = %04X\n",CS);
-                _cs.limit=segdat2[0]|((segdat2[3]&0xF)<<16);
-                if (segdat2[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat2[1];
-                _cs.base|=((segdat2[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat2[3]>>8)<<24);
-                _cs.access=segdat2[2]>>8;
+                do_seg_load(&_cs, segdat2);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 if (type>0x800) pc=segdat[0]|(segdat[3]<<16);
                 else            pc=segdat[0];
@@ -1943,6 +1976,8 @@ void pmodeiret(int is32)
                 pc=newpc;
                 _cs.base=seg<<4;
                 _cs.limit=0xFFFF;
+                _cs.limit_low = 0;
+                _cs.limit_high = 0xffff;
                 CS=seg;
                 flags=(flags&0x3000)|(tempflags&0xCFD5)|2;
                 return;
@@ -2011,9 +2046,13 @@ void pmodeiret(int is32)
 //                        pclog("Pop stack %04X:%04X\n",newss,newsp);
                         eflags=tempflags>>16;
                         loadseg(segs[0],&_es);
+                        do_seg_v86_init(&_es);
                         loadseg(segs[1],&_ds);
+                        do_seg_v86_init(&_ds);
                         loadseg(segs[2],&_fs);
+                        do_seg_v86_init(&_fs);
                         loadseg(segs[3],&_gs);
+                        do_seg_v86_init(&_gs);                        
                         
 //                        pclog("V86 IRET %04X:%08X\n",SS,ESP);
 //                        output=3;
@@ -2021,12 +2060,15 @@ void pmodeiret(int is32)
                         pc=newpc;
                         _cs.base=seg<<4;
                         _cs.limit=0xFFFF;
+                        _cs.limit_low = 0;
+                        _cs.limit_high = 0xffff;
                         CS=seg;
                         _cs.access=3<<5;
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 
                         ESP=newsp;
                         loadseg(newss,&_ss);
+                        do_seg_v86_init(&_ss);
                         use32=0;
                         flags=(tempflags&0xFFD5)|2;
 
@@ -2137,12 +2179,7 @@ void pmodeiret(int is32)
         {
 //                pclog("Same level\n");
                 CS=seg;
-                _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat[1];
-                _cs.base|=((segdat[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                _cs.access=segdat[2]>>8;
+                do_seg_load(&_cs, segdat);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
 
@@ -2240,15 +2277,7 @@ void pmodeiret(int is32)
                 stack32=segdat2[3]&0x40;
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
-                _ss.limit=segdat2[0]|((segdat2[3]&0xF)<<16);
-                if (segdat2[3]&0x80) _ss.limit=(_ss.limit<<12)|0xFFF;
-                if ((segdat2[2]>>8) & 4)
-                   _ss.limit = 0xffffffff;
-                _ss.limitw=(segdat2[2]&0x200)?1:0;
-                _ss.base=segdat2[1];
-                _ss.base|=((segdat2[2]&0xFF)<<16);
-                if (is386) _ss.base|=((segdat2[3]>>8)<<24);
-                _ss.access=segdat2[2]>>8;
+                do_seg_load(&_ss, segdat2);
 
 #ifdef SEL_ACCESSED
                 cpl_override = 1;
@@ -2264,35 +2293,14 @@ void pmodeiret(int is32)
                            segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
 
                 CS=seg;
-                _cs.limit=segdat[0]|((segdat[3]&0xF)<<16);
-                if (segdat[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat[1];
-                _cs.base|=((segdat[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat[3]>>8)<<24);
-                _cs.access=segdat[2]>>8;
+                do_seg_load(&_cs, segdat);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
                         
-                if (CPL>((_ds.access>>5)&3))
-                {
-                        _ds.seg=0;
-                        _ds.base=-1;
-                }
-                if (CPL>((_es.access>>5)&3))
-                {
-                        _es.seg=0;
-                        _es.base=-1;
-                }
-                if (CPL>((_fs.access>>5)&3))
-                {
-                        _fs.seg=0;
-                        _fs.base=-1;
-                }
-                if (CPL>((_gs.access>>5)&3))
-                {
-                        _gs.seg=0;
-                        _gs.base=-1;
-                }
+                check_seg_valid(&_ds);
+                check_seg_valid(&_es);
+                check_seg_valid(&_fs);
+                check_seg_valid(&_gs);
         }
         pc=newpc;
         flags=(flags&~flagmask)|(tempflags&flagmask&0xFFD5)|2;
@@ -2501,12 +2509,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 
 //                if (output) pclog("new_cs %04X\n",new_cs);
                 CS=new_cs;
-                _cs.limit=segdat2[0]|((segdat2[3]&0xF)<<16);
-                if (segdat2[3]&0x80) _cs.limit=(_cs.limit<<12)|0xFFF;
-                _cs.base=segdat2[1];
-                _cs.base|=((segdat2[2]&0xFF)<<16);
-                if (is386) _cs.base|=((segdat2[3]>>8)<<24);
-                _cs.access=segdat2[2]>>8;
+                do_seg_load(&_cs, segdat2);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat2[3]&0x40)?0x300:0;
 

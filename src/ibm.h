@@ -108,14 +108,17 @@ extern int cycdiff;
 typedef struct
 {
         uint32_t base;
-        uint32_t limit,limitw;
+        uint32_t limit;
         uint8_t access;
         uint16_t seg;
+        uint32_t limit_low, limit_high;
 } x86seg;
 
 x86seg gdt,ldt,idt,tr;
 x86seg _cs,_ds,_es,_ss,_fs,_gs;
 x86seg _oldds;
+
+extern x86seg *ea_seg;
 
 uint32_t pccache;
 uint8_t *pccache2;

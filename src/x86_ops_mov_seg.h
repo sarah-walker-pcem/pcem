@@ -11,11 +11,9 @@ static int opMOV_w_seg_a16(uint32_t fetchdat)
                 seteaw(CS);
                 break;
                 case 0x18: /*DS*/
-                if (ssegs) ds = oldds;
                 seteaw(DS);
                 break;
                 case 0x10: /*SS*/
-                if (ssegs) ss = oldss;
                 seteaw(SS);
                 break;
                 case 0x20: /*FS*/
@@ -42,11 +40,9 @@ static int opMOV_w_seg_a32(uint32_t fetchdat)
                 seteaw(CS);
                 break;
                 case 0x18: /*DS*/
-                if (ssegs) ds = oldds;
                 seteaw(DS);
                 break;
                 case 0x10: /*SS*/
-                if (ssegs) ss = oldss;
                 seteaw(SS);
                 break;
                 case 0x20: /*FS*/
@@ -76,12 +72,10 @@ static int opMOV_l_seg_a16(uint32_t fetchdat)
                 else          seteaw(CS);
                 break;
                 case 0x18: /*DS*/
-                if (ssegs) ds = oldds;
                 if (mod == 3) regs[rm].l = DS;
                 else          seteaw(DS);
                 break;
                 case 0x10: /*SS*/
-                if (ssegs) ss = oldss;
                 if (mod == 3) regs[rm].l = SS;
                 else          seteaw(SS);
                 break;
@@ -113,12 +107,10 @@ static int opMOV_l_seg_a32(uint32_t fetchdat)
                 else          seteaw(CS);
                 break;
                 case 0x18: /*DS*/
-                if (ssegs) ds = oldds;
                 if (mod == 3) regs[rm].l = DS;
                 else          seteaw(DS);
                 break;
                 case 0x10: /*SS*/
-                if (ssegs) ss = oldss;
                 if (mod == 3) regs[rm].l = SS;
                 else          seteaw(SS);
                 break;
@@ -151,16 +143,9 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
                 break;
                 case 0x18: /*DS*/
                 loadseg(new_seg, &_ds);
-                if (ssegs) oldds = ds;
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
-                if (ssegs)
-                {
-                        ds = oldds;
-                        rds = DS;
-                        ssegs = 0;
-                }
                 op32 = use32;
                 return 1;
                 case 0x20: /*FS*/
@@ -189,16 +174,9 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
                 break;
                 case 0x18: /*DS*/
                 loadseg(new_seg, &_ds);
-                if (ssegs) oldds = ds;
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
-                if (ssegs)
-                {
-                        ds = oldds;
-                        rds = DS;
-                        ssegs = 0;
-                }
                 op32 = use32;
                 return 1;
                 case 0x20: /*FS*/
@@ -224,7 +202,6 @@ static int opLDS_w_a16(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
         regs[reg].w = addr;
-        if (ssegs) oldds = ds;
  
         cycles -= 7;       
         return 0;
@@ -239,7 +216,6 @@ static int opLDS_w_a32(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
         regs[reg].w = addr;
-        if (ssegs) oldds = ds;
  
         cycles -= 7;       
         return 0;
@@ -255,7 +231,6 @@ static int opLDS_l_a16(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
         regs[reg].l = addr;
-        if (ssegs) oldds = ds;
  
         cycles -= 7;       
         return 0;
@@ -271,7 +246,6 @@ static int opLDS_l_a32(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ds);                     if (abrt) return 0;
         regs[reg].l = addr;
-        if (ssegs) oldds = ds;
  
         cycles -= 7;       
         return 0;
