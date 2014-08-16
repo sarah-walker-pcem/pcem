@@ -146,7 +146,11 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
+                if (abrt) return 0;
+                oldpc = pc;
                 op32 = use32;
+                ssegs = 0;
+                ea_seg = &_ds;
                 return 1;
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
@@ -177,7 +181,11 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
+                if (abrt) return 0;
+                oldpc = pc;
                 op32 = use32;
+                ssegs = 0;
+                ea_seg = &_ds;
                 return 1;
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
@@ -261,7 +269,6 @@ static int opLSS_w_a16(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
         regs[reg].w = addr;
-        oldss = ss;
  
         cycles -= 7;       
         return 0;
@@ -276,7 +283,6 @@ static int opLSS_w_a32(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
         regs[reg].w = addr;
-        oldss = ss;
  
         cycles -= 7;       
         return 0;
@@ -292,7 +298,6 @@ static int opLSS_l_a16(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
         regs[reg].l = addr;
-        oldss = ss;
  
         cycles -= 7;       
         return 0;
@@ -308,7 +313,6 @@ static int opLSS_l_a32(uint32_t fetchdat)
         seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
         loadseg(seg, &_ss);                     if (abrt) return 0;
         regs[reg].l = addr;
-        oldss = ss;
  
         cycles -= 7;       
         return 0;
