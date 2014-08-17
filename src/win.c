@@ -444,7 +444,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         memset(rawinputkey, 0, sizeof(rawinputkey));
 	device.usUsagePage = 0x01;
 	device.usUsage = 0x06;
-	device.dwFlags = 0;
+	device.dwFlags = RIDEV_NOHOTKEYS;
 	device.hwndTarget = hwnd;
 	
 	if (RegisterRawInputDevices(&device, 1, sizeof(device)))
@@ -909,6 +909,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         UINT size;
                         RAWINPUT *raw;
                         
+                        if (!infocus)
+                                break;
+
                         GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
                         
                         raw = malloc(size);
@@ -968,6 +971,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         mousecapture=0;
                 }
 //                pclog("Lost focus!\n");
+                memset(rawinputkey, 0, sizeof(rawinputkey));
                 break;
 
                 case WM_LBUTTONUP:
