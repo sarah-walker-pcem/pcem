@@ -36,6 +36,8 @@ struct
         
         uint8_t key_command;
         int key_wantdata;
+        
+        int last_irq;
 } keyboard_at;
 
 static uint8_t key_ctrl_queue[16];
@@ -50,22 +52,24 @@ int mouse_queue_start = 0, mouse_queue_end = 0;
 void keyboard_at_poll()
 {
 	keybsenddelay += (1000 * TIMER_USEC);
-        if (keyboard_at.wantirq)
+        if (keyboard_at.out_new != -1)
         {
                 keyboard_at.wantirq = 0;
-                picint(2);
-                if (keyboard_at.out_new != -1)
-                        keyboard_at.out = keyboard_at.out_new;
+                if (keyboard_at.mem[0] & 0x01)
+                        picint(2);
+                keyboard_at.out = keyboard_at.out_new;
                 keyboard_at.out_new = -1;
                 keyboard_at.status |=  STAT_OFULL;
                 keyboard_at.status &= ~STAT_IFULL;
 //                pclog("keyboard_at : take IRQ\n");
+                keyboard_at.last_irq = 2;
         }
         else if (keyboard_at.wantirq12)
         {
                 keyboard_at.wantirq12 = 0;
                 picint(0x1000);
 //                pclog("keyboard_at : take IRQ 12\n");
+                keyboard_at.last_irq = 0x1000;
         }
         if (!(keyboard_at.status & STAT_OFULL) && !(keyboard_at.mem[0] & 0x10) &&
             mouse_queue_start != mouse_queue_end)
@@ -84,8 +88,6 @@ void keyboard_at_poll()
                 keyboard_at.out_new = key_queue[key_queue_start];
 //                pclog("Reading %02X from the key queue at %i\n", keyboard_at.out, key_queue_start);
                 key_queue_start = (key_queue_start + 1) & 0xf;
-                if (keyboard_at.mem[0] & 0x01)
-                   keyboard_at.wantirq = 1;        
         }                
         else if (keyboard_at.out_new == -1 && !(keyboard_at.status & STAT_OFULL) && 
             key_ctrl_queue_start != key_ctrl_queue_end)
@@ -93,8 +95,6 @@ void keyboard_at_poll()
                 keyboard_at.out_new = key_ctrl_queue[key_ctrl_queue_start];
 //                pclog("Reading %02X from the key ctrl_queue at %i\n", keyboard_at.out, key_ctrl_queue_start);
                 key_ctrl_queue_start = (key_ctrl_queue_start + 1) & 0xf;
-                if (keyboard_at.mem[0] & 0x01)
-                   keyboard_at.wantirq = 1;        
         }                
 }
 
@@ -411,6 +411,8 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
                 case 0x60:
                 temp = keyboard_at.out;
                 keyboard_at.status &= ~(STAT_OFULL | STAT_MFULL);
+                picintc(keyboard_at.last_irq);
+                keyboard_at.last_irq = 0;
                 break;
 
                 case 0x61:                
@@ -436,6 +438,7 @@ void keyboard_at_reset()
         keyboard_at.output_port = 0;
         keyboard_at.input_port = 0xb0;
         keyboard_at.out_new = -1;
+        keyboard_at.last_irq = 0;
         
         keyboard_at.key_wantdata = 0;
         

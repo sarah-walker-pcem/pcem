@@ -289,6 +289,8 @@ void picintlevel(uint16_t num)
 void picintc(uint16_t num)
 {
         int c = 0;
+        if (!num)
+                return;
         while (!(num & (1 << c))) c++;
         if (AT && c == 2)
         {
