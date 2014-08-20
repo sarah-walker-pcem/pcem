@@ -1059,7 +1059,7 @@ uint16_t readidew(int ide_board)
                         ide->packetstatus=0;
                         if (ide->command == WIN_READ || ide->command == WIN_READ_NORETRY || ide->command == WIN_READ_MULTIPLE)
                         {
-                                ide->secount--;
+                                ide->secount = (ide->secount - 1) & 0xff;
                                 if (ide->secount)
                                 {
                                         ide_next_sector(ide);
@@ -1187,7 +1187,7 @@ void callbackide(int ide_board)
                                 /*DMA successful*/
                                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
 
-                                ide->secount--;
+                                ide->secount = (ide->secount - 1) & 0xff;
                                 if (ide->secount)
                                 {
                                         ide_next_sector(ide);
@@ -1239,7 +1239,7 @@ void callbackide(int ide_board)
                 fseeko64(ide->hdfile, addr, SEEK_SET);
                 fwrite(ide->buffer, 512, 1, ide->hdfile);
                 ide_irq_raise(ide);
-                ide->secount--;
+                ide->secount = (ide->secount - 1) & 0xff;
                 if (ide->secount)
                 {
                         ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
@@ -1271,7 +1271,7 @@ void callbackide(int ide_board)
                                 
                                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
 
-                                ide->secount--;
+                                ide->secount = (ide->secount - 1) & 0xff;
                                 if (ide->secount)
                                 {
                                         ide_next_sector(ide);
@@ -1304,7 +1304,7 @@ void callbackide(int ide_board)
                         ide->blockcount = 0;
                         ide_irq_raise(ide);
                 }
-                ide->secount--;
+                ide->secount = (ide->secount - 1) & 0xff;
                 if (ide->secount)
                 {
                         ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
