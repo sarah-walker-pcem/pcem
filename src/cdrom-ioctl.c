@@ -477,6 +477,26 @@ static uint32_t ioctl_size()
         return last_block;
 }
 
+void ioctl_reset()
+{
+        CDROM_TOC ltoc;
+        int temp;
+        long size;
+
+        if (!cdrom_drive)
+        {
+                tocvalid = 0;
+                return;
+        }
+        
+        ioctl_open(0);
+        temp = DeviceIoControl(hIOCTL, IOCTL_CDROM_READ_TOC, NULL, 0, &ltoc, sizeof(ltoc), &size, NULL);
+        ioctl_close();
+
+        toc = ltoc;
+        tocvalid = 1;
+}
+
 int ioctl_open(char d)
 {
 //        char s[8];

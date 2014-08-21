@@ -5,5 +5,6 @@
    various platform specific cdrom-ioctl files */
 
 extern int ioctl_open(char d);
-   
+extern void ioctl_reset();
+
 #endif /* ! CDROM_IOCTL_H */
