@@ -852,9 +852,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY,              MF_UNCHECKED);
                         if (cdrom_enabled)
                         {
+                                pause = 1;
+                                Sleep(100);
                                 cdrom_enabled = 0;                                             
                                 saveconfig();
                                 resetpchard();
+                                pause = 0;
                         }
                         break;
                         
@@ -873,9 +876,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         saveconfig();
                         if (!cdrom_enabled)
                         {
+                                pause = 1;
+                                Sleep(100);
                                 cdrom_enabled = 1;
                                 saveconfig();
                                 resetpchard();
+                                pause = 0;
                         }
                         break;
                         default:
@@ -895,9 +901,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 saveconfig();
                                 if (!cdrom_enabled)
                                 {
+                                        pause = 1;
+                                        Sleep(100);
                                         cdrom_enabled = 1;
                                         saveconfig();
                                         resetpchard();
+                                        pause = 0;
                                 }
                         }
                         break;
