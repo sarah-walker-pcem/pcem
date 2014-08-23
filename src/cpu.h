@@ -74,6 +74,14 @@ extern int cpu_multi;
 extern int cpu_hasrdtsc;
 extern int cpu_hasMSR;
 extern int cpu_hasMMX;
+extern int cpu_hasCR4;
+
+#define CR4_TSD  (1 << 2)
+#define CR4_DE   (1 << 3)
+#define CR4_MCE  (1 << 6)
+#define CR4_PCE  (1 << 8)
+
+extern uint64_t cpu_CR4_mask;
 
 extern uint64_t tsc;
 

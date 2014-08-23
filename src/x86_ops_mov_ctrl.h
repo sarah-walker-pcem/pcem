@@ -19,6 +19,12 @@ static int opMOV_r_CRx_a16(uint32_t fetchdat)
                 case 3:
                 regs[rm].l = cr3;
                 break;
+                case 4:
+                if (cpu_hasCR4)
+                {
+                        regs[rm].l = cr4;
+                        break;
+                }
                 default:
                 pclog("Bad read of CR%i %i\n",rmdat&7,reg);
                 pc = oldpc;
@@ -49,6 +55,12 @@ static int opMOV_r_CRx_a32(uint32_t fetchdat)
                 case 3:
                 regs[rm].l = cr3;
                 break;
+                case 4:
+                if (cpu_hasCR4)
+                {
+                        regs[rm].l = cr4;
+                        break;
+                }
                 default:
                 pclog("Bad read of CR%i %i\n",rmdat&7,reg);
                 pc = oldpc;
@@ -110,6 +122,13 @@ static int opMOV_CRx_r_a16(uint32_t fetchdat)
                 cr3 = regs[rm].l;
                 flushmmucache();
                 break;
+                case 4:
+                if (cpu_hasCR4)
+                {
+                        cr4 = regs[rm].l & cpu_CR4_mask;
+                        break;
+                }
+
                 default:
                 pclog("Bad load CR%i\n", reg);
                 pc = oldpc;
@@ -143,6 +162,13 @@ static int opMOV_CRx_r_a32(uint32_t fetchdat)
                 cr3 = regs[rm].l;
                 flushmmucache();
                 break;
+                case 4:
+                if (cpu_hasCR4)
+                {
+                        cr4 = regs[rm].l & cpu_CR4_mask;
+                        break;
+                }
+
                 default:
                 pclog("Bad load CR%i\n", reg);
                 pc = oldpc;

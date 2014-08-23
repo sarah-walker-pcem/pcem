@@ -630,6 +630,7 @@ void resetx86()
         pc=0;
         msw=0;
         cr0=0;
+        cr4 = 0;
         eflags=0;
         cgate32=0;
         loadcs(0xFFFF);
@@ -660,6 +661,7 @@ void softresetx86()
         pc=0;
         msw=0;
         cr0=0;
+        cr4 = 0;
         eflags=0;
         cgate32=0;
         loadcs(0xFFFF);

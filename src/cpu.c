@@ -20,6 +20,10 @@ int cpu_16bitbus;
 int cpu_busspeed;
 int cpu_hasrdtsc;
 int cpu_hasMMX, cpu_hasMSR;
+int cpu_hasCR4;
+
+uint64_t cpu_CR4_mask;
+
 uint64_t tsc = 0;
 
 int timing_rr;
@@ -267,6 +271,7 @@ void cpu_set()
         cpu_hasrdtsc = 0;
         cpu_hasMMX = 0;
         cpu_hasMSR = 0;
+        cpu_hasCR4 = 0;
 
         if (cpu_iscyrix)
            io_sethandler(0x0022, 0x0002, cyrix_read, NULL, NULL, cyrix_write, NULL, NULL, NULL);
@@ -413,6 +418,8 @@ void cpu_set()
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
                 break;
                 
                 default:
@@ -549,7 +556,6 @@ void cpu_WRMSR()
         switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_WINCHIP:
-                EAX = EDX = 0;
                 switch (ECX)
                 {
                         case 0x02:
