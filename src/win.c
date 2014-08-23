@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "ibm.h"
+#include "config.h"
 #include "video.h"
 #include "resources.h"
 #include "cpu.h"
@@ -839,6 +840,29 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         video_fullscreen_scale = LOWORD(wParam) - IDM_VID_FS_FULL;
                         CheckMenuItem(hmenu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
                         saveconfig();
+                        break;
+
+                        case IDM_CONFIG_LOAD:
+                        pause = 1;
+                        if (!getfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", ""))
+                        {
+                                if (MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) == IDOK)
+                                {
+                                        loadconfig(openfilestring);
+                                        config_save(config_file_default);
+                                        mem_resize();
+                                        loadbios();
+                                        resetpchard();
+                                }
+                        }
+                        pause = 0;
+                        break;                        
+                        
+                        case IDM_CONFIG_SAVE:
+                        pause = 1;
+                        if (!getsfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", ""))
+                                config_save(openfilestring);
+                        pause = 0;
                         break;
                         
                         case IDM_CDROM_DISABLED:

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "config.h"
 
+char config_file_default[256];
+
 static char config_file[256];
 
 typedef struct list_t
@@ -92,9 +94,9 @@ void config_free()
         }
 }
 
-void config_load()
+void config_load(char *fn)
 {
-        FILE *f = fopen(config_file, "rt");
+        FILE *f = fopen(fn, "rt");
         section_t *current_section;
         
         memset(&config_head, 0, sizeof(list_t));
@@ -357,9 +359,9 @@ void put_backslash(char *s)
            s[c] = '/';
 }
 
-void config_save()
+void config_save(char *fn)
 {
-        FILE *f = fopen(config_file, "wt");
+        FILE *f = fopen(fn, "wt");
         section_t *current_section;
         
         current_section = (section_t *)config_head.next;

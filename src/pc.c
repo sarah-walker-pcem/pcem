@@ -52,7 +52,7 @@ int intcount;
 
 int output;
 int atfullspeed;
-void loadconfig();
+
 void saveconfig();
 int infocus;
 int mousecapture;
@@ -198,7 +198,7 @@ void initpc()
         mouse_init();
         joystick_init();
         
-        loadconfig();
+        loadconfig(NULL);
         pclog("Config loaded\n");
         
         cpuspeed2=(AT)?2:1;
@@ -424,14 +424,19 @@ END_OF_MAIN();*/
 
 int cga_comp=0;
 
-void loadconfig()
+void loadconfig(char *fn)
 {
         char s[512];
         char *p;
-        append_filename(s, pcempath, "pcem.cfg", 511);
-        set_config_file(s);
         
-        config_load();
+        if (!fn)
+        {
+                append_filename(config_file_default, pcempath, "pcem.cfg", 511);
+        
+                config_load(config_file_default);
+        }
+        else
+                config_load(fn);
         
         GAMEBLASTER = get_config_int(NULL, "gameblaster", 0);
         GUS = get_config_int(NULL, "gus", 0);
@@ -522,5 +527,5 @@ void saveconfig()
         set_config_int(NULL, "hdd_cylinders", hdc[1].tracks);
         set_config_string(NULL, "hdd_fn", ide_fn[1]);
         
-        config_save();
+        config_save(config_file_default);
 }

@@ -40,6 +40,9 @@ BEGIN
                                 MENUITEM "&Integer scale", IDM_VID_FS_INT
                         END
                 END
+                MENUITEM SEPARATOR
+                MENUITEM "&Load configuration...", IDM_CONFIG_LOAD
+                MENUITEM "&Save configuration...", IDM_CONFIG_SAVE
         END
         POPUP "&Misc"
         BEGIN

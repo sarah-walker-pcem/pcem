@@ -8,7 +8,9 @@ char *get_filename(char *s);
 void append_filename(char *dest, char *s1, char *s2, int size);
 void put_backslash(char *s);
 
-void config_load();
-void config_save();
+void config_load(char *fn);
+void config_save(char *fn);
 void config_dump();
 void config_free();
+
+extern char config_file_default[256];
