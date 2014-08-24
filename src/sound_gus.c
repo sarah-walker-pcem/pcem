@@ -374,12 +374,17 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                                         c=0;
                                         while (c<65536)
                                         {
+                                                int dma_result;
                                                 d = gus->ram[gus->dmaaddr];
                                                 if (val & 0x80) d ^= 0x80;
-                                                if (dma_channel_write(gus->dma, d) == DMA_NODATA) break;
+                                                dma_result = dma_channel_write(gus->dma, d);
+                                                if (dma_result == DMA_NODATA)
+                                                        break;
                                                 gus->dmaaddr++;
                                                 gus->dmaaddr&=0xFFFFF;
                                                 c++;
+                                                if (dma_result & DMA_OVER)
+                                                        break;
                                         }
 //                                        printf("GUS->MEM Transferred %i bytes\n",c);
                                         gus->dmactrl=val&~0x40;
@@ -391,12 +396,15 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                                         while (c<65536)
                                         {
                                                 d = dma_channel_read(gus->dma);
-                                                if (d == DMA_NODATA) break;
+                                                if (d == DMA_NODATA)
+                                                        break;
                                                 if (val&0x80) d^=0x80;
                                                 gus->ram[gus->dmaaddr]=d;
                                                 gus->dmaaddr++;
                                                 gus->dmaaddr&=0xFFFFF;
                                                 c++;
+                                                if (d & DMA_OVER)
+                                                        break;
                                         }
 //                                        printf("MEM->GUS Transferred %i bytes\n",c);
                                         gus->dmactrl=val&~0x40;

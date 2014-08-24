@@ -251,7 +251,8 @@ void _dma_write(uint32_t addr, uint8_t val)
 int dma_channel_read(int channel)
 {
         uint16_t temp;
-
+        int tc = 0;
+        
 	if (dma.command & 0x04)
 		return DMA_NODATA;
 		
@@ -272,6 +273,7 @@ int dma_channel_read(int channel)
                 dma.cc[channel]--;
                 if (dma.cc[channel] < 0)
                 {
+                        tc = 1;
                         if (dma.mode[channel] & 0x10) /*Auto-init*/
                         {
                                 dma.cc[channel] = dma.cb[channel];
@@ -282,7 +284,7 @@ int dma_channel_read(int channel)
                         dma.stat |= (1 << channel);
                 }
 
-                if (dma.m & (1 << channel))
+                if (tc)
                         return temp | DMA_OVER;
                 return temp;
         }
@@ -302,6 +304,7 @@ int dma_channel_read(int channel)
                 dma16.cc[channel]--;
                 if (dma16.cc[channel] < 0)
                 {
+                        tc = 1;
                         if (dma16.mode[channel] & 0x10) /*Auto-init*/
                         {
                                 dma16.cc[channel] = dma16.cb[channel];
@@ -312,7 +315,7 @@ int dma_channel_read(int channel)
                         dma16.stat |= (1 << channel);
                 }
 
-                if (dma.m & (1 << channel))
+                if (tc)
                         return temp | DMA_OVER;
                 return temp;
         }
