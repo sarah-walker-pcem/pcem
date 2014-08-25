@@ -2330,7 +2330,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
         {
                 int x  = (state->x1 + ((1 << 20) - 1)) >> 20;
                 int xe = (state->x2 + ((1 << 20) - 1)) >> 20;
-                uint32_t z = state->base_z;
+                uint32_t z = (state->base_z > 0) ? (state->base_z << 1) : 0;
                 if (x_dir < 0)
                 {
                         x--;
@@ -2419,7 +2419,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                         for (; x != xe; x = (x + x_dir) & 0xfff)
                         {
                                 int update = 1;
-                                int16_t src_z;
+                                uint16_t src_z;
                                 _x = x; _y = state->y;
 
                                 if (use_z)
