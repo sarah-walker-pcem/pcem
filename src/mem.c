@@ -430,10 +430,10 @@ void resetreadlookup()
 {
         int c;
 //        /*if (output) */pclog("resetreadlookup\n");
-        memset(readlookup2,0xFF,1024*1024*4);
+        memset(readlookup2,0xFF,1024*1024*sizeof(uintptr_t));
         for (c=0;c<256;c++) readlookup[c]=0xFFFFFFFF;
         readlnext=0;
-        memset(writelookup2,0xFF,1024*1024*4);
+        memset(writelookup2,0xFF,1024*1024*sizeof(uintptr_t));
         for (c=0;c<256;c++) writelookup[c]=0xFFFFFFFF;
         writelnext=0;
         pccache=0xFFFFFFFF;
@@ -671,7 +671,7 @@ void addreadlookup(uint32_t virt, uint32_t phys)
                 readlookup2[readlookup[readlnext]]=0xFFFFFFFF;
 //                readlnum--;
         }
-        readlookup2[virt>>12] = (uint32_t)&ram[(phys & ~0xFFF) -  (virt & ~0xfff)];
+        readlookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
         readlookupp[readlnext]=mmu_perm;
         readlookup[readlnext++]=virt>>12;
         readlnext&=(cachesize-1);
@@ -712,7 +712,7 @@ void addwritelookup(uint32_t virt, uint32_t phys)
                 writelookup2[writelookup[writelnext]]=0xFFFFFFFF;
 //                writelnum--;
         }
-        writelookup2[virt>>12] = (uint32_t)&ram[(phys & ~0xFFF) - (virt & ~0xfff)];
+        writelookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
         writelookupp[writelnext]=mmu_perm;
         writelookup[writelnext++]=virt>>12;
         writelnext&=(cachesize-1);
@@ -721,56 +721,31 @@ void addwritelookup(uint32_t virt, uint32_t phys)
 #undef printf
 uint8_t *getpccache(uint32_t a)
 {
-//        int logit=(a>0xFFFFF);
         uint32_t a2=a;
-        //if (readlookup2[a>>12]!=0xFFFFFFFF) return &ram[(uint8_t *)readlookup2[a>>12] - (uint8_t *)(a&~0xFFF)];
+
         if (cr0>>31)
         {
-//                if (output==3) pclog("Translate GetPCCache %08X\n",a);
-pctrans=1;
+		pctrans=1;
                 a = mmutranslate_read(a);
                 pctrans=0;
-//                if (output==3) pclog("GetPCCache output %08X\n",a);
+
                 if (a==0xFFFFFFFF) return ram;
-/*                {
-                        printf("Bad getpccache %08X\n",a);
-                        dumpregs();
-                        exit(-1);
-                }*/
         }
         a&=rammask;
-        //if (output==3) pclog("Getpccache %08X %i\n",a,shadowbios);
+
         if (isram[a>>16])
         {
-                //if (readlookup2[a>>12]!=0xFFFFFFFF) return &ram[readlookup2[a>>12]];
-                if ((a>>16)!=0xF || shadowbios)
-                   addreadlookup(a2,a);
-//                if (a > 0xc0000000)
-//                   printf("%016X %016X %016X\n", ((long)a&0xFFFFF000), ((long)a2&~0xFFF), (uint8_t *)(a&0xFFFFF000) - (uint8_t *)(a2&~0xFFF));
-//                pclog("getpccache: virt=%08x phys=%08x RAM\n", a2, a);
-                return &ram[(uint8_t *)(a&0xFFFFF000) - (uint8_t *)(a2&~0xFFF)];
+                if ((a >> 16) != 0xF || shadowbios)
+                	addreadlookup(a2, a);
+                return &ram[(uintptr_t)(a & 0xFFFFF000) - (uintptr_t)(a2 & ~0xFFF)];
         }
-//        if (logit) printf("PCCACHE - %08X -> %08X\n",a2,a);
+
         if (_mem_exec[a >> 14])
         {
-//                pclog("getpccache: %p %p %p\n", ram, rom, &_mem_exec[a >> 14][(a & 0x3000) - (a2 & ~0xFFF)]);
-//                pclog("getpccache: virt=%08x phys=%08x %08x %08x %08x %08x\n", a2, a, _mem_exec[a >> 14], &_mem_exec[a >> 14][(a & 0x3000) - (a2 & ~0xFFF)], &_mem_exec[a >> 14][(a & 0x3000) - (a2 & ~0xFFF)] + 0xf0000, rom);
-                return &_mem_exec[a >> 14][(a & 0x3000) - (a2 & ~0xFFF)];
+                return &_mem_exec[a >> 14][(uintptr_t)(a & 0x3000) - (uintptr_t)(a2 & ~0xFFF)];
         }
-/*        switch (a>>16)
-        {
-                case 0xC: if (a&0x8000) return &romext[(uint8_t *)(a&0x7000) - (uint8_t *)(a2&~0xFFF)];
-                return &vrom[(uint8_t *)(a&0x7000) - (uint8_t *)(a2&~0xFFF)];
-                case 0xE: if (shadowbios) return &ram[(uint8_t *)(a&0xFFF000) - (uint8_t *)(a2&~0xFFF)];
-                return &rom[(uint8_t *)((a & biosmask) & ~ 0xfff) - (uint8_t *)(a2 & ~0xFFF)];
-                case 0xF: if (shadowbios) return &ram[(uint8_t *)(a&0xFFF000) - (uint8_t *)(a2&~0xFFF)];
-                return &rom[(uint8_t *)((a & biosmask) & ~ 0xfff) - (uint8_t *)(a2 & ~0xFFF)];
-        }
-        return &rom[(long)(a&0xF000) - (long)(a2&~0xFFF)];*/
+
         fatal("Bad getpccache %08X\n", a);
-                        /*printf("Bad getpccache %08X\n",a);
-                        dumpregs();
-                        exit(-1);*/
 }
 #define printf pclog
 
@@ -1396,8 +1371,8 @@ void mem_init()
         ram = malloc(mem_size * 1024 * 1024);
         rom = malloc(0x20000);
         vram = malloc(0x800000);
-        readlookup2  = malloc(1024 * 1024 * 4);
-        writelookup2 = malloc(1024 * 1024 * 4);
+        readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
+        writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         cachelookup2 = malloc(1024 * 1024);
         biosmask = 0xffff;
 

@@ -279,7 +279,7 @@ void *tvga8900d_init()
         tvga->vram_size = device_get_config_int("memory") << 10;
         tvga->vram_mask = tvga->vram_size - 1;
         
-        rom_init(&tvga->bios_rom, "roms/trident.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&tvga->bios_rom, "roms/TRIDENT.BIN", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&tvga->svga, tvga, tvga->vram_size,
                    tvga_recalctimings,
@@ -294,7 +294,7 @@ void *tvga8900d_init()
 
 static int tvga8900d_available()
 {
-        return rom_present("roms/trident.bin");
+        return rom_present("roms/TRIDENT.BIN");
 }
 
 void tvga_close(void *p)

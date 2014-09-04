@@ -396,10 +396,7 @@ void m24_poll(void *p)
                                                         updatewindowsize(xsize, ysize + 16);
                                                 }
 startblit();
-pclog("m24 blit %i %i\n", m24->firstline, m24->lastline);
                                                 video_blit_memtoscreen_8(0, m24->firstline - 8, xsize, (m24->lastline - m24->firstline) + 16);
-                                                if (readflash) rectfill(screen, winsizex - 40, 8, winsizex - 8, 14, 0xFFFFFFFF);
-                                                readflash = 0;
                                                 frames++;
 endblit();
                                                 video_res_x = xsize - 16;

@@ -1381,6 +1381,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                 {
                                         READ(s3->accel.dest + s3->accel.cx, dest_dat);
                                 
+
 //                                if (CS != 0xc000) pclog("Write %05X  %02X %02X  %04X (%02X %02X)  ", s3->accel.dest + s3->accel.cx, src_dat, dest_dat, mix_dat, s3->accel.frgd_mix, s3->accel.bkgd_mix);
 
                                         MIX
@@ -1955,7 +1956,7 @@ static void *s3_init(char *bios_fn, int chip)
 
 void *s3_bahamas64_init()
 {
-        s3_t *s3 = s3_init("roms/bahamas64.bin", S3_VISION864);
+        s3_t *s3 = s3_init("roms/bahamas64.BIN", S3_VISION864);
 
         s3->id = 0xc1; /*Vision864P*/
         s3->id_ext = s3->id_ext_pci = 0xc1;
@@ -1969,7 +1970,7 @@ void *s3_bahamas64_init()
 
 int s3_bahamas64_available()
 {
-        return rom_present("roms/bahamas64.bin");
+        return rom_present("roms/bahamas64.BIN");
 }
 
 void *s3_9fx_init()

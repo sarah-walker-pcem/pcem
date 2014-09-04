@@ -1,3 +1,3 @@
 void midi_init();
 void midi_close();
-void midi_out(uint8_t val);
+void midi_write(uint8_t val);

@@ -33,7 +33,7 @@ static void mpu401_uart_write(uint16_t addr, uint8_t val, void *p)
                         
         /*Data*/
         if (mpu->uart_mode)
-                midi_out(val);
+                midi_write(val);
 }
 
 static uint8_t mpu401_uart_read(uint16_t addr, void *p)

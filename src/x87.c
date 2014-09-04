@@ -19,11 +19,11 @@
 #undef readmemb
 #undef writememb
 
-#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF)?readmemb386l(s,a): *((uint8_t *)readlookup2[((s)+(a))>>12]+ (s) + (a)) )
-#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF)?readmemb386l(s,a): *((uint8_t *)readlookup2[((s)+(a))>>12]+ (s) + (a)) )
+#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
-#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
-#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
 static inline uint8_t geteab()
 {

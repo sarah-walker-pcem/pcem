@@ -10,15 +10,14 @@ extern "C" void pclog(const char *format, ...);
 
 extern "C" void mouse_init();
 extern "C" void mouse_close();
-extern "C" void poll_mouse();
-extern "C" void position_mouse(int x, int y);
-extern "C" void get_mouse_mickeys(int *x, int *y);
+extern "C" void mouse_poll_host();
+extern "C" void mouse_get_mickeys(int *x, int *y);
 
 static LPDIRECTINPUT lpdi;
 static LPDIRECTINPUTDEVICE lpdi_mouse = NULL;
 static DIMOUSESTATE mousestate;
 static int mouse_x = 0, mouse_y = 0;
-int mouse_b = 0;
+int mouse_buttons = 0;
 
 void mouse_init()
 {
@@ -45,31 +44,27 @@ void mouse_close()
         }
 }
 
-void poll_mouse()
+void mouse_poll_host()
 {
         if (FAILED(lpdi_mouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate)))
         {
                 lpdi_mouse->Acquire();
                 lpdi_mouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
         }                
-        mouse_b = 0;
+        mouse_buttons = 0;
         if (mousestate.rgbButtons[0] & 0x80)
-           mouse_b |= 1;
+           mouse_buttons |= 1;
         if (mousestate.rgbButtons[1] & 0x80)
-           mouse_b |= 2;
+           mouse_buttons |= 2;
         if (mousestate.rgbButtons[2] & 0x80)
-           mouse_b |= 4;
+           mouse_buttons |= 4;
         mouse_x += mousestate.lX;
         mouse_y += mousestate.lY;        
         if (!mousecapture && !video_fullscreen)
-           mouse_x = mouse_y = mouse_b = 0;
+           mouse_x = mouse_y = mouse_buttons = 0;
 }
 
-void position_mouse(int x, int y)
-{
-}
-
-void get_mouse_mickeys(int *x, int *y)
+void mouse_get_mickeys(int *x, int *y)
 {
         *x = mouse_x;
         *y = mouse_y;

@@ -1174,7 +1174,6 @@ void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
                 ysize = wy + 1;
         }
         video_blit_memtoscreen(32, 0, y1, y2, xsize, ysize);
-        if (readflash) rectfill(screen,winsizex-40,8,winsizex-8,14,0xFFFFFFFF);      
 //        pclog("svga_doblit end\n");
 }
 

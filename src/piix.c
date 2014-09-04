@@ -117,9 +117,9 @@ struct
 
 static void piix_bus_master_next_addr(int channel)
 {
-        piix_busmaster[channel].addr = (*(unsigned long *)(&ram[piix_busmaster[channel].ptr_cur])) & ~1;
-        piix_busmaster[channel].count = (*(unsigned long *)(&ram[piix_busmaster[channel].ptr_cur + 4])) & 0xfffe;
-        piix_busmaster[channel].eot = (*(unsigned long *)(&ram[piix_busmaster[channel].ptr_cur + 4])) >> 31;
+        piix_busmaster[channel].addr = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur])) & ~1;
+        piix_busmaster[channel].count = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur + 4])) & 0xfffe;
+        piix_busmaster[channel].eot = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur + 4])) >> 31;
         piix_busmaster[channel].ptr_cur += 8;
 //        pclog("New DMA settings on channel %i - Addr %08X Count %04X EOT %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot);
 }

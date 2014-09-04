@@ -9,17 +9,17 @@ uint8_t *ram,*vram;
 uint32_t rammask;
 
 int readlookup[256],readlookupp[256];
-uint32_t *readlookup2;
+uintptr_t *readlookup2;
 int readlnext;
 int writelookup[256],writelookupp[256];
-uint32_t *writelookup2;
+uintptr_t *writelookup2;
 int writelnext;
 
 extern int mmu_perm;
 
-#define readmemb(a) ((readlookup2[(a)>>12]==0xFFFFFFFF)?readmembl(a):*(uint8_t *)(readlookup2[(a) >> 12] + (a)))
-#define readmemw(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE)?readmemwl(s,a):*(uint16_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
-#define readmeml(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC)?readmemll(s,a):*(uint32_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
+#define readmemb(a) ((readlookup2[(a)>>12]==-1)?readmembl(a):*(uint8_t *)(readlookup2[(a) >> 12] + (a)))
+#define readmemw(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE)?readmemwl(s,a):*(uint16_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
+#define readmeml(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC)?readmemll(s,a):*(uint32_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
 
 //#define writememb(a,v) if (writelookup2[(a)>>12]==0xFFFFFFFF) writemembl(a,v); else ram[writelookup2[(a)>>12]+((a)&0xFFF)]=v
 //#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
@@ -473,3 +473,8 @@ extern uint64_t timer_freq;
 
 
 void loadconfig(char *fn);
+
+extern int infocus;
+
+void onesec();
+

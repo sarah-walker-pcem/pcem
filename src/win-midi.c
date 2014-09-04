@@ -41,7 +41,7 @@ static int midi_pos, midi_len;
 static uint32_t midi_command;
 static int midi_lengths[8] = {3, 3, 3, 3, 2, 2, 3, 0};
 
-void midi_out(uint8_t val)
+void midi_write(uint8_t val)
 {
         if (val & 0x80)
         {

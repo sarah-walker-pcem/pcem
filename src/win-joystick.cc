@@ -101,7 +101,7 @@ void joystick_close()
         }
 }
 
-void poll_joystick()
+void joystick_poll()
 {
         int c;
 

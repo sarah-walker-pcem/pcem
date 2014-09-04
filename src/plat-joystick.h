@@ -3,7 +3,7 @@ extern "C" {
 #endif
         void joystick_init();
         void joystick_close();
-        void poll_joystick();
+        void joystick_poll();
         
         typedef struct joystick_t
         {
@@ -16,4 +16,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-

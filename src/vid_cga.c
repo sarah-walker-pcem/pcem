@@ -430,8 +430,6 @@ startblit();
                                            video_blit_memtoscreen(0, cga->firstline - 4, 0, (cga->lastline - cga->firstline) + 8, xsize, (cga->lastline - cga->firstline) + 8);
                                         else          
                                            video_blit_memtoscreen_8(0, cga->firstline - 4, xsize, (cga->lastline - cga->firstline) + 8);
-                                        if (readflash) rectfill(screen, winsizex - 40, 8, winsizex - 8, 14, 0xffffffff);
-                                        readflash = 0;
                                         frames++;
 endblit();
                                         video_res_x = xsize - 16;

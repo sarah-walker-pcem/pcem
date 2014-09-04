@@ -248,22 +248,24 @@ void keyboard_process()
                 
         for (c = 0; c < 272; c++)
         {
-                if (key[c]) keydelay[c]++;
-                else        keydelay[c] = 0;
+                if (pcem_key[c])
+                        keydelay[c]++;
+                else
+                        keydelay[c] = 0;
         }
         
         for (c = 0; c < 272; c++)
         {
-                if (key[c] != oldkey[c])
+                if (pcem_key[c] != oldkey[c])
                 {
-                        oldkey[c] = key[c];
-                        if ( key[c] && scancodes[c].scancodes_make[0]  == -1)
+                        oldkey[c] = pcem_key[c];
+                        if ( pcem_key[c] && scancodes[c].scancodes_make[0]  == -1)
                            continue;
-                        if (!key[c] && scancodes[c].scancodes_break[0] == -1)
+                        if (!pcem_key[c] && scancodes[c].scancodes_break[0] == -1)
                            continue;
 //                        pclog("Key %02X start\n", c);
                         d = 0;
-                        if (key[c])
+                        if (pcem_key[c])
                         {
                                 while (scancodes[c].scancodes_make[d] != -1)
                                       keyboard_send(scancodes[c].scancodes_make[d++]);

@@ -40,6 +40,8 @@
 
 uint64_t timer_freq;
 
+int rawinputkey[272];
+
 static RAWINPUTDEVICE device;
 static uint16_t scancode_map[65536];
 
@@ -571,7 +573,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         }
 //;                        else
 //                           sleep(0);
-                        if ((key[KEY_LCONTROL] || key[KEY_RCONTROL]) && key[KEY_END] && mousecapture)
+                        if ((pcem_key[KEY_LCONTROL] || pcem_key[KEY_RCONTROL]) && pcem_key[KEY_END] && mousecapture)
                         {
                                 ClipCursor(&oldclip);
                                 mousecapture=0;
@@ -583,7 +585,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         if (messages.message==WM_QUIT) quited=1;
                         TranslateMessage(&messages);
                         DispatchMessage(&messages);                        
-                        if ((key[KEY_LCONTROL] || key[KEY_RCONTROL]) && key[KEY_END] && mousecapture)
+                        if ((pcem_key[KEY_LCONTROL] || pcem_key[KEY_RCONTROL]) && pcem_key[KEY_END] && mousecapture)
                         {
                                 ClipCursor(&oldclip);
                                 ShowCursor(TRUE);

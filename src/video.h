@@ -1,3 +1,34 @@
+#ifdef __unix
+
+#include "allegro-main.h"
+
+#else
+
+typedef struct
+{
+        int w, h;
+        uint8_t *dat;
+        uint8_t *line[0];
+} BITMAP;
+
+extern BITMAP *screen;
+
+BITMAP *create_bitmap(int w, int h);
+
+typedef struct
+{
+        uint8_t r, g, b;
+} RGB;
+        
+typedef RGB PALETTE[256];
+
+#define makecol(r, g, b)    ((b) | ((g) << 8) | ((r) << 16))
+#define makecol32(r, g, b)  ((b) | ((g) << 8) | ((r) << 16))
+
+#endif
+
+extern BITMAP *buffer, *buffer32;
+
 int video_card_available(int card);
 char *video_card_getname(int card);
 struct device_t *video_card_getdevice(int card);
@@ -21,19 +52,6 @@ extern int egareads,egawrites;
 extern int fullchange;
 extern int changeframecount;
 
-typedef struct
-{
-        int w, h;
-        uint8_t *dat;
-        uint8_t *line[0];
-} BITMAP;
-
-extern BITMAP *buffer, *buffer32;
-
-extern BITMAP *screen;
-
-BITMAP *create_bitmap(int w, int h);
-
 extern uint8_t fontdat[256][8];
 extern uint8_t fontdatm[256][16];
 
@@ -41,19 +59,9 @@ extern uint32_t *video_15to32, *video_16to32;
 
 extern int xsize,ysize;
 
-typedef struct
-{
-        uint8_t r, g, b;
-} RGB;
-        
-typedef RGB PALETTE[256];
-
 extern float cpuclock;
 
 extern int emu_fps, frames;
-
-#define makecol(r, g, b)    ((b) | ((g) << 8) | ((r) << 16))
-#define makecol32(r, g, b)  ((b) | ((g) << 8) | ((r) << 16))
 
 extern int readflash;
 

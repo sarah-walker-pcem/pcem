@@ -8,7 +8,6 @@
 #include "cpu.h"
 #include "fdc.h"
 #include "timer.h"
-#include "video.h"
 
 
 x86seg *ea_seg;
@@ -79,12 +78,12 @@ int cgate32;
 #undef writememb
 
 
-#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF)?readmemb386l(s,a): *(uint8_t *)(readlookup2[((s)+(a))>>12] + (s) + (a)) )
+#define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF)?readmemb386l(s,a): *(uint8_t *)(readlookup2[((s)+(a))>>12] + (s) + (a)) )
 
-#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
-#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
-#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
 
 uint8_t romext[32768];
@@ -292,9 +291,9 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
         }
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
-                if ( readlookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
+                if ( readlookup2[(easeg + eaaddr) >> 12] != -1)
                    eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
-                if (writelookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
+                if (writelookup2[(easeg + eaaddr) >> 12] != -1)
                    eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
         }
 }
@@ -333,9 +332,9 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         }
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
-                if ( readlookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
+                if ( readlookup2[(easeg + eaaddr) >> 12] != -1)
                    eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
-                if (writelookup2[(easeg + eaaddr) >> 12] != 0xFFFFFFFF)
+                if (writelookup2[(easeg + eaaddr) >> 12] != -1)
                    eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
         }
 }

@@ -124,11 +124,11 @@ void mouse_ps2_poll(int x, int y, int b)
                    packet[0] |= 0x10;
                 if (ps2_y < 0)
                    packet[0] |= 0x20;
-                if (mouse_b & 1)
+                if (mouse_buttons & 1)
                    packet[0] |= 1;
-                if (mouse_b & 2)
+                if (mouse_buttons & 2)
                    packet[0] |= 2;
-                if (mouse_b & 4)
+                if (mouse_buttons & 4)
                    packet[0] |= 4;
                 packet[1] = ps2_x & 0xff;
                 packet[2] = ps2_y & 0xff;

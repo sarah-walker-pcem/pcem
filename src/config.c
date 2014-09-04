@@ -191,11 +191,6 @@ void config_load(char *fn)
 
 
 
-void set_config_file(char *s)
-{
-        strcpy(config_file, s);
-}
-
 void config_new()
 {
         FILE *f = fopen(config_file, "wt");
@@ -258,7 +253,7 @@ static entry_t *create_entry(section_t *section, char *name)
         return new_entry;
 }
         
-int get_config_int(char *head, char *name, int def)
+int config_get_int(char *head, char *name, int def)
 {
         section_t *section;
         entry_t *entry;
@@ -279,7 +274,7 @@ int get_config_int(char *head, char *name, int def)
         return value;
 }
 
-char *get_config_string(char *head, char *name, char *def)
+char *config_get_string(char *head, char *name, char *def)
 {
         section_t *section;
         entry_t *entry;
@@ -298,7 +293,7 @@ char *get_config_string(char *head, char *name, char *def)
         return entry->data; 
 }
 
-void set_config_int(char *head, char *name, int val)
+void config_set_int(char *head, char *name, int val)
 {
         section_t *section;
         entry_t *entry;
@@ -316,7 +311,7 @@ void set_config_int(char *head, char *name, int val)
         sprintf(entry->data, "%i", val);
 }
 
-void set_config_string(char *head, char *name, char *val)
+void config_set_string(char *head, char *name, char *val)
 {
         section_t *section;
         entry_t *entry;
