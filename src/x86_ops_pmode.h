@@ -281,7 +281,7 @@ static inline op0F00_a32(uint32_t fetchdat)
         return 0;
 }
 
-static inline op0F01_common(uint32_t fetchdat, int is32)
+static inline op0F01_common(uint32_t fetchdat, int is32, int is286)
 {
         uint32_t base;
         uint16_t limit, tempw;
@@ -291,12 +291,16 @@ static inline op0F01_common(uint32_t fetchdat, int is32)
                 case 0x00: /*SGDT*/
                 seteaw(gdt.limit);
                 base = is32 ? gdt.base : (gdt.base & 0xffffff);
+                if (is286)
+                        base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
                 cycles -= 7;
                 break;
                 case 0x08: /*SIDT*/
                 seteaw(idt.limit);
                 base = is32 ? idt.base : (idt.base & 0xffffff);
+                if (is286)
+                        base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
                 cycles -= 7;
                 break;
@@ -377,28 +381,35 @@ static inline op0F01_w_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
         
-        op0F01_common(fetchdat, 0);
+        op0F01_common(fetchdat, 0, 0);
         return 0;
 }
 static inline op0F01_w_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
         
-        op0F01_common(fetchdat, 0);
+        op0F01_common(fetchdat, 0, 0);
         return 0;
 }
 static inline op0F01_l_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
         
-        op0F01_common(fetchdat, 1);
+        op0F01_common(fetchdat, 1, 0);
         return 0;
 }
 static inline op0F01_l_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
         
-        op0F01_common(fetchdat, 1);
+        op0F01_common(fetchdat, 1, 0);
         return 0;
 }
 
+static inline op0F01_286(uint32_t fetchdat)
+{
+        fetch_ea_16(fetchdat);
+        
+        op0F01_common(fetchdat, 0, 1);
+        return 0;
+}
