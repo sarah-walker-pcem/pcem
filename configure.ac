@@ -44,5 +44,6 @@ AC_CHECK_LIB([alut], [alutInit], [], \
    [echo "You need to install the ALUT library."
     exit -1])
 
+AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_OUTPUT([Makefile src/Makefile])
