@@ -82,8 +82,8 @@ void keyboard_at_poll()
                 if (keyboard_at.mem[0] & 0x02)
                    keyboard_at.wantirq12 = 1;        
         }                
-        else if (keyboard_at.out_new == -1 && !(keyboard_at.mem[0] & 0x10) &&
-            key_queue_start != key_queue_end)
+        else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 &&
+                 !(keyboard_at.mem[0] & 0x10) && key_queue_start != key_queue_end)
         {
                 keyboard_at.out_new = key_queue[key_queue_start];
 //                pclog("Reading %02X from the key queue at %i\n", keyboard_at.out, key_queue_start);
