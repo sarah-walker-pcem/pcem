@@ -12,6 +12,8 @@ int nvraddr;
 
 int nvr_dosave = 0;
 
+static int nvr_onesec_time = 0, nvr_onesec_cnt = 0;
+
 void getnvrtime()
 {
 	time_get(nvrram);
@@ -26,7 +28,7 @@ void nvr_recalc()
         if (rtctime>newrtctime) rtctime=newrtctime;
 }
 
-void nvr_rtc()
+void nvr_rtc(void *p)
 {
         int c;
         if (!(nvrram[0xA]&0xF))
@@ -37,7 +39,7 @@ void nvr_rtc()
         c=1<<((nvrram[0xA]&0xF)-1);
         rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
 //        pclog("RTCtime now %f\n",rtctime);
-        nvrram[0xC]=0x40;
+        nvrram[0xC] |= 0x40;
         if (nvrram[0xB]&0x40)
         {
                 nvrram[0xC]|=0x80;
@@ -45,6 +47,24 @@ void nvr_rtc()
                 else         picint(0x100);
 //                pclog("RTC int\n");
         }
+}
+
+void nvr_onesec(void *p)
+{
+        nvr_onesec_cnt++;
+        if (nvr_onesec_cnt >= 100)
+        {
+                nvr_onesec_cnt = 0;
+                nvrram[0xC] |= 0x10;
+                if (nvrram[0xB] & 0x10)
+                {
+                        nvrram[0xC] |= 0x80;
+                        if (AMSTRAD) picint(2);
+                        else         picint(0x100);
+                }
+//                pclog("RTC onesec\n");
+        }
+        nvr_onesec_time += (int)(10000 * TIMER_USEC);
 }
 
 void writenvr(uint16_t addr, uint8_t val, void *priv)
@@ -175,4 +195,5 @@ void nvr_init()
 {
         io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL,  NULL);
         timer_add(nvr_rtc, &rtctime, TIMER_ALWAYS_ENABLED, NULL);
+        timer_add(nvr_onesec, &nvr_onesec_time, TIMER_ALWAYS_ENABLED, NULL);
 }
