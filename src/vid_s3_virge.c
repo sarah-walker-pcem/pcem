@@ -383,15 +383,23 @@ static uint8_t s3_virge_in(uint16_t addr, void *p)
 //        if (addr != 0x3da) pclog("S3 in %04X %04X:%08X  ", addr, CS, pc);
         switch (addr)
         {
+                case 0x3c1:
+                if (svga->attraddr > 0x14)
+                        ret = 0xff;
+                else
+                        ret = svga_in(addr, svga);
+                break; 
                 //case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
 //                pclog("Read RAMDAC %04X  %04X:%04X\n", addr, CS, pc);
                 //return sdac_ramdac_in(addr);
 
                 case 0x3c5:
-                if (svga->seqaddr >= 0x10)
+                if (svga->seqaddr >= 8)
                         ret = svga->seqregs[svga->seqaddr & 0x1f];
-                else
+                else if (svga->seqaddr <= 4)
                         ret = svga_in(addr, svga);
+                else
+                        ret = 0xff;
                 break;
 
                 case 0x3D4:
