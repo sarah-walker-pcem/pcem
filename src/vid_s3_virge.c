@@ -105,6 +105,9 @@ typedef struct virge_t
         event_t *wake_render_thread;
         event_t *wake_main_thread;
         event_t *not_full_event;
+        
+        uint32_t hwcursor_col[2];
+        int hwcursor_col_pos;
                         
         struct
         {
@@ -339,6 +342,19 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         svga->hwcursor.yoff = svga->crtc[0x4f] & 63;
                         svga->hwcursor.addr = ((((svga->crtc[0x4c] << 8) | svga->crtc[0x4d]) & 0xfff) * 1024) + (svga->hwcursor.yoff * 16);
                         break;
+                        
+                        case 0x4a:
+                        virge->hwcursor_col[1] = (virge->hwcursor_col[1] & ~(0xff << (virge->hwcursor_col_pos * 8))) |
+                                                 (val << (virge->hwcursor_col_pos * 8));
+                        virge->hwcursor_col_pos++;
+                        virge->hwcursor_col_pos &= 3;
+                        break;
+                        case 0x4b:
+                        virge->hwcursor_col[0] = (virge->hwcursor_col[0] & ~(0xff << (virge->hwcursor_col_pos * 8))) |
+                                                 (val << (virge->hwcursor_col_pos * 8));
+                        virge->hwcursor_col_pos++;
+                        virge->hwcursor_col_pos &= 3;
+                        break;
 
                         case 0x53:
                         case 0x58: case 0x59: case 0x5a:
@@ -416,6 +432,7 @@ static uint8_t s3_virge_in(uint16_t addr, void *p)
                         case 0x31: ret = (svga->crtc[0x31] & 0xcf) | ((virge->ma_ext & 3) << 4); break;
                         case 0x35: ret = (svga->crtc[0x35] & 0xf0) | (virge->bank & 0xf); break;
                         case 0x36: ret = (svga->crtc[0x36] & 0xfc) | 2; break; /*PCI bus*/
+                        case 0x45: virge->hwcursor_col_pos = 0; ret = svga->crtc[0x45]; break;
                         case 0x51: ret = (svga->crtc[0x51] & 0xf0) | ((virge->bank >> 2) & 0xc) | ((virge->ma_ext >> 2) & 3); break;
                         case 0x69: ret = virge->ma_ext; break;
                         case 0x6a: ret = virge->bank; break;
@@ -2729,6 +2746,7 @@ static void queue_triangle(virge_t *virge)
 
 static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
 {
+        virge_t *virge = (virge_t *)svga->p;
         int x;
         uint16_t dat[2];
         int xx;
@@ -2739,20 +2757,40 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
         {
                 dat[0] = (svga->vram[svga->hwcursor_latch.addr]     << 8) | svga->vram[svga->hwcursor_latch.addr + 1];
                 dat[1] = (svga->vram[svga->hwcursor_latch.addr + 2] << 8) | svga->vram[svga->hwcursor_latch.addr + 3];
-                for (xx = 0; xx < 16; xx++)
+                if (svga->crtc[0x55] & 0x10)
                 {
-                        if (offset >= svga->hwcursor_latch.x)
+                        /*X11*/
+                        for (xx = 0; xx < 16; xx++)
                         {
-                                if (!(dat[0] & 0x8000))
-                                   ((uint32_t *)buffer32->line[displine])[offset + 32]  = (dat[1] & 0x8000) ? 0xffffff : 0;
-                                else if (dat[1] & 0x8000)
-                                   ((uint32_t *)buffer32->line[displine])[offset + 32] ^= 0xffffff;
-//                                pclog("Plot %i, %i (%i %i) %04X %04X\n", offset, displine, x+xx, svga->hwcursor_on, dat[0], dat[1]);
-                        }
+                                if (offset >= svga->hwcursor_latch.x)
+                                {
+                                        if (dat[0] & 0x8000)
+                                                ((uint32_t *)buffer32->line[displine])[offset + 32]  = virge->hwcursor_col[dat[1] >> 15];
+                                }
                            
-                        offset++;
-                        dat[0] <<= 1;
-                        dat[1] <<= 1;
+                                offset++;
+                                dat[0] <<= 1;
+                                dat[1] <<= 1;
+                        }
+                }
+                else
+                {
+                        /*Windows*/
+                        for (xx = 0; xx < 16; xx++)
+                        {
+                                if (offset >= svga->hwcursor_latch.x)
+                                {
+                                        if (!(dat[0] & 0x8000))
+                                           ((uint32_t *)buffer32->line[displine])[offset + 32]  = virge->hwcursor_col[dat[1] >> 15];
+                                        else if (dat[1] & 0x8000)
+                                           ((uint32_t *)buffer32->line[displine])[offset + 32] ^= 0xffffff;
+//                                pclog("Plot %i, %i (%i %i) %04X %04X\n", offset, displine, x+xx, svga->hwcursor_on, dat[0], dat[1]);
+                                }
+                           
+                                offset++;
+                                dat[0] <<= 1;
+                                dat[1] <<= 1;
+                        }
                 }
                 svga->hwcursor_latch.addr += 4;
         }
