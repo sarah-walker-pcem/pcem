@@ -1861,7 +1861,10 @@ uint8_t mach64_ext_inb(uint16_t port, void *p)
                 break;
 
                 case 0x72ec:
-                ret = 6 | (3 << 3); /*VLB, 256Kx16 DRAM*/
+                if (PCI)
+                        ret = 7 | (3 << 3); /*PCI, 256Kx16 DRAM*/
+                else
+                        ret = 6 | (3 << 3); /*VLB, 256Kx16 DRAM*/
                 break;
 
                 default:
