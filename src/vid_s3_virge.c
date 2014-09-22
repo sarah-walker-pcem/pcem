@@ -3458,7 +3458,7 @@ static device_config_t s3_virge_config[] =
 device_t s3_virge_device =
 {
         "Diamond Stealth 3D 2000 (S3 ViRGE)",
-        DEVICE_NOT_WORKING,
+        0,
         s3_virge_init,
         s3_virge_close,
         s3_virge_available,
@@ -3471,7 +3471,7 @@ device_t s3_virge_device =
 device_t s3_virge_375_device =
 {
         "S3 ViRGE/DX",
-        DEVICE_NOT_WORKING,
+        0,
         s3_virge_375_init,
         s3_virge_close,
         s3_virge_375_available,
