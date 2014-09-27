@@ -90,10 +90,11 @@ uint8_t pc200_in(uint16_t addr, void *p)
                 case 0x3DD:
                 temp = pc200->reg_3dd;
                 pc200->reg_3dd &= 0x1f;
+		nmi = 0;
                 return temp;
                 
                 case 0x3DE:
-                return (pc200->reg_3de & 0xc7) | 0x18; /*External CGA*/
+                return (pc200->reg_3de & 0xc7) | 0x10; /*External CGA*/
                 
                 case 0x3DF:
                 return pc200->reg_3df;
@@ -113,7 +114,7 @@ void *pc200_init()
         timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
         mem_mapping_add(&pc200->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, 0, cga);
         io_sethandler(0x03d0, 0x0010, pc200_in, NULL, NULL, pc200_out, NULL, NULL, pc200);
-        return cga;
+        return pc200;
 }
 
 void pc200_close(void *p)

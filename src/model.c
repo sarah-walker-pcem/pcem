@@ -23,6 +23,7 @@
 #include "mouse_ps2.h"
 #include "mouse_serial.h"
 #include "neat.h"
+#include "nmi.h"
 #include "nvr.h"
 #include "olivetti_m24.h"
 #include "pci.h"
@@ -133,6 +134,7 @@ void xt_init()
         keyboard_xt_init();
         mouse_serial_init();
         xtide_init();
+	nmi_init();
 }
 
 void pcjr_init()
@@ -144,6 +146,7 @@ void pcjr_init()
         serial1_init(0x2f8, 3);
         keyboard_pcjr_init();
         device_add(&sn76489_device);
+	nmi_mask = 0x80;
 }
 
 void tandy1k_init()
@@ -153,6 +156,7 @@ void tandy1k_init()
         mouse_serial_init();
         device_add(&sn76489_device);
         xtide_init();
+	nmi_init();
 }
 
 void ams_init()
@@ -162,6 +166,7 @@ void ams_init()
         keyboard_amstrad_init();
         nvr_init();
         xtide_init();
+	nmi_init();
 }
 
 void europc_init()
@@ -171,6 +176,7 @@ void europc_init()
         keyboard_xt_init();
         mouse_serial_init();
         xtide_init();
+	nmi_init();
 }
 
 void olim24_init()
@@ -180,6 +186,7 @@ void olim24_init()
         nvr_init();
         olivetti_m24_init();
         xtide_init();
+	nmi_init();
 }
 
 void at_init()

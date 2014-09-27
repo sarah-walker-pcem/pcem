@@ -141,6 +141,8 @@ uint8_t keyboard_amstrad_read(uint16_t port, void *priv)
                 else
                    temp = amstrad_systemstat_2 >> 4;
                 temp |= (ppispeakon ? 0x20 : 0);
+                if (nmi)
+                        temp |= 0x40;
                 break;
                 
                 default:

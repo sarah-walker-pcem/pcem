@@ -15,6 +15,7 @@
 #include "cpu.h"
 #include "keyboard.h"
 #include "mem.h"
+#include "nmi.h"
 #include "pic.h"
 #include "timer.h"
 #include "x86.h"
@@ -3427,7 +3428,7 @@ void execx86(int cycs)
                         loadcs(readmemw(0,addr+2));
                         FETCHCLEAR();
                 }
-                else if (nmi && nmi_enable)
+                else if (nmi && nmi_enable && nmi_mask)
                 {
 //                        output = 3;
                         writememw(ss,(SP-2)&0xFFFF,flags|0xF000);

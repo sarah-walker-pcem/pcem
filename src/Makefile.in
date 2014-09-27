@@ -68,7 +68,7 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-lpt.$(OBJEXT) pcem-mcr.$(OBJEXT) pcem-mem.$(OBJEXT) \
 	pcem-model.$(OBJEXT) pcem-mouse.$(OBJEXT) \
 	pcem-mouse_ps2.$(OBJEXT) pcem-mouse_serial.$(OBJEXT) \
-	pcem-neat.$(OBJEXT) pcem-nvr.$(OBJEXT) \
+	pcem-neat.$(OBJEXT) pcem-nmi.$(OBJEXT) pcem-nvr.$(OBJEXT) \
 	pcem-olivetti_m24.$(OBJEXT) pcem-opti.$(OBJEXT) \
 	pcem-pc.$(OBJEXT) pcem-pci.$(OBJEXT) pcem-pic.$(OBJEXT) \
 	pcem-piix.$(OBJEXT) pcem-pit.$(OBJEXT) pcem-ppi.$(OBJEXT) \
@@ -231,7 +231,7 @@ allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
 config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430vx.c ide.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
-linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nvr.c \
+linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
 olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c rom.c serial.c sis496.c sound.c \
 sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
@@ -380,6 +380,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse_ps2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse_serial.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-neat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nmi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nvr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-olivetti_m24.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-opti.Po@am__quote@
@@ -1082,6 +1083,20 @@ pcem-neat.obj: neat.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='neat.c' object='pcem-neat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-neat.obj `if test -f 'neat.c'; then $(CYGPATH_W) 'neat.c'; else $(CYGPATH_W) '$(srcdir)/neat.c'; fi`
+
+pcem-nmi.o: nmi.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-nmi.o -MD -MP -MF $(DEPDIR)/pcem-nmi.Tpo -c -o pcem-nmi.o `test -f 'nmi.c' || echo '$(srcdir)/'`nmi.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-nmi.Tpo $(DEPDIR)/pcem-nmi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='nmi.c' object='pcem-nmi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-nmi.o `test -f 'nmi.c' || echo '$(srcdir)/'`nmi.c
+
+pcem-nmi.obj: nmi.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-nmi.obj -MD -MP -MF $(DEPDIR)/pcem-nmi.Tpo -c -o pcem-nmi.obj `if test -f 'nmi.c'; then $(CYGPATH_W) 'nmi.c'; else $(CYGPATH_W) '$(srcdir)/nmi.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-nmi.Tpo $(DEPDIR)/pcem-nmi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='nmi.c' object='pcem-nmi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-nmi.obj `if test -f 'nmi.c'; then $(CYGPATH_W) 'nmi.c'; else $(CYGPATH_W) '$(srcdir)/nmi.c'; fi`
 
 pcem-nvr.o: nvr.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-nvr.o -MD -MP -MF $(DEPDIR)/pcem-nvr.Tpo -c -o pcem-nvr.o `test -f 'nvr.c' || echo '$(srcdir)/'`nvr.c
