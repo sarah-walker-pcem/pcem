@@ -160,7 +160,7 @@ static int opIMUL_l_ib_a32(uint32_t fetchdat)
 
 static int opIMUL_w_w_a16(uint32_t fetchdat)
 {
-        int32_t templ;
+        uint32_t templ;
         
         fetch_ea_16(fetchdat);
         templ = (int32_t)(int16_t)regs[reg].w * (int32_t)(int16_t)geteaw();
@@ -175,7 +175,7 @@ static int opIMUL_w_w_a16(uint32_t fetchdat)
 }
 static int opIMUL_w_w_a32(uint32_t fetchdat)
 {
-        int32_t templ;
+        uint32_t templ;
         
         fetch_ea_32(fetchdat);
         templ = (int32_t)(int16_t)regs[reg].w * (int32_t)(int16_t)geteaw();
@@ -191,7 +191,7 @@ static int opIMUL_w_w_a32(uint32_t fetchdat)
 
 static int opIMUL_l_l_a16(uint32_t fetchdat)
 {
-        int64_t temp64;
+        uint64_t temp64;
 
         fetch_ea_16(fetchdat);
         temp64 = (int64_t)(int32_t)regs[reg].l * (int64_t)(int32_t)geteal();
@@ -206,7 +206,7 @@ static int opIMUL_l_l_a16(uint32_t fetchdat)
 }
 static int opIMUL_l_l_a32(uint32_t fetchdat)
 {
-        int64_t temp64;
+        uint64_t temp64;
 
         fetch_ea_32(fetchdat);
         temp64 = (int64_t)(int32_t)regs[reg].l * (int64_t)(int32_t)geteal();
