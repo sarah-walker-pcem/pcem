@@ -79,15 +79,15 @@ uint8_t pc1640_in(uint16_t addr, void *p)
 
 void pc1640_recalctimings(pc1640_t *pc1640)
 {
+        cga_recalctimings(&pc1640->cga);
+        ega_recalctimings(&pc1640->ega);
         if (pc1640->cga_enabled) 
         {
-                cga_recalctimings(&pc1640->cga);
                 pc1640->dispontime  = pc1640->cga.dispontime;
                 pc1640->dispofftime = pc1640->cga.dispofftime;
         }
         else            
         {
-                ega_recalctimings(&pc1640->ega);
                 pc1640->dispontime  = pc1640->ega.dispontime;
                 pc1640->dispofftime = pc1640->ega.dispofftime;
         }
