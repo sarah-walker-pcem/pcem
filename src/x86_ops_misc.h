@@ -75,8 +75,8 @@ static int opF6_a16(uint32_t fetchdat)
                 tempws = (int)((int8_t)AL) * (int)((int8_t)dst);
                 AX = tempws & 0xffff;
                 flags_rebuild();
-                if (AH && AH != 0xff) flags |=  (C_FLAG | V_FLAG);
-                else                  flags &= ~(C_FLAG | V_FLAG);
+                if (((int16_t)AX >> 7) != 0 && ((int16_t)AX >> 7) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                     flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 14;
                 break;
                 case 0x30: /*DIV AL,b*/
@@ -163,8 +163,8 @@ static int opF6_a32(uint32_t fetchdat)
                 tempws = (int)((int8_t)AL) * (int)((int8_t)dst);
                 AX = tempws & 0xffff;
                 flags_rebuild();
-                if (AH && AH != 0xff) flags |=  (C_FLAG | V_FLAG);
-                else                  flags &= ~(C_FLAG | V_FLAG);
+                if (((int16_t)AX >> 7) != 0 && ((int16_t)AX >> 7) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                     flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 14;
                 break;
                 case 0x30: /*DIV AL,b*/
@@ -257,8 +257,8 @@ static int opF7_w_a16(uint32_t fetchdat)
                 AX = templ & 0xFFFF;
                 DX = templ >> 16;
                 flags_rebuild();
-                if (DX && DX != 0xFFFF) flags |=  (C_FLAG | V_FLAG);
-                else                    flags &= ~(C_FLAG | V_FLAG);
+                if (((int32_t)templ >> 15) != 0 && ((int32_t)templ >> 15) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                             flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 22;
                 break;
                 case 0x30: /*DIV AX,w*/
@@ -341,8 +341,8 @@ static int opF7_w_a32(uint32_t fetchdat)
                 AX = templ & 0xFFFF;
                 DX = templ >> 16;
                 flags_rebuild();
-                if (DX && DX != 0xFFFF) flags |=  (C_FLAG | V_FLAG);
-                else                    flags &= ~(C_FLAG | V_FLAG);
+                if (((int32_t)templ >> 15) != 0 && ((int32_t)templ >> 15) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                             flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 22;
                 break;
                 case 0x30: /*DIV AX,w*/
@@ -425,8 +425,8 @@ static int opF7_l_a16(uint32_t fetchdat)
                 EAX = temp64 & 0xffffffff;
                 EDX = temp64 >> 32;
                 flags_rebuild();
-                if (EDX && EDX != 0xffffffff) flags |=  (C_FLAG|V_FLAG);
-                else                          flags &= ~(C_FLAG|V_FLAG);
+                if (((int64_t)temp64 >> 31) != 0 && ((int64_t)temp64 >> 31) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                               flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 38;
                 break;
                 case 0x30: /*DIV EAX,l*/
@@ -485,8 +485,8 @@ static int opF7_l_a32(uint32_t fetchdat)
                 EAX = temp64 & 0xffffffff;
                 EDX = temp64 >> 32;
                 flags_rebuild();
-                if (EDX && EDX != 0xffffffff) flags |=  (C_FLAG|V_FLAG);
-                else                          flags &= ~(C_FLAG|V_FLAG);
+                if (((int64_t)temp64 >> 31) != 0 && ((int64_t)temp64 >> 31) != -1) flags |=  (C_FLAG | V_FLAG);
+                else                                                               flags &= ~(C_FLAG | V_FLAG);
                 cycles -= 38;
                 break;
                 case 0x30: /*DIV EAX,l*/
