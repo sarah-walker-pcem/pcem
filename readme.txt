@@ -1,13 +1,25 @@
-PCem v8.1
+PCem v9
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v8:
+Changes since v8.1:
 
-- Fixed various issues with ROM detection/loading
-- Implemented DMA controller disable, fixed PC2086/3086
-- Switched IBM XT BIOS from 01/10/86 version to 11/08/82
-- Fixed stuck keys on XT and Amstrad machines
+- New machines - IBM PCjr
+- New graphics cards - Diamond Stealth 3D 2000 (S3 ViRGE/325), S3 ViRGE/DX
+- New sound cards - Innovation SSI-2001 (using ReSID-FP)
+- CPU fixes - Windows NT now works, OS/2 2.0+ works better
+- Fixed issue with port 3DA when in blanking, DOS 6.2/V now works
+- Re-written PIT emulation
+- IRQs 8-15 now handled correctly, Civilization no longer hangs
+- Fixed vertical axis on Amstrad mouse
+- Serial fixes - fixes mouse issues on Win 3.x and OS/2
+- New Windows keyboard code - should work better with international keyboards
+- Changes to keyboard emulation - should fix stuck keys
+- Some CD-ROM fixes
+- Joystick emulation
+- Preliminary Linux port
+
+Thanks to HalfMinute, SA1988 and Battler for contributions towards this release.
 
 
 PCem emulates the following machines:
@@ -34,6 +46,15 @@ ROM files needed:
 
 5000027.u19
 1501512.u18
+
+
+IBM PCjr (1984)
+A home machine, which had better graphics and sound than most XTs but was not hardware compatible
+with the PC.
+
+ROM files needed:
+
+bios.rom
 
 
 IBM AT (1984)
@@ -227,15 +248,6 @@ ROM files needed:
 ali1429g.amw
 
 
-PCI 486 clone (1994)
-A 486 clone with a PCI bus - specifically, a Shuttle HOT-433 board. Due to lack of documentation
-this machine has some issues - in particular, don't enable the PCI IDE emulation.
-
-ROM files needed:
-
-hot-433.ami
-
-
 Award SiS 496/497 (1995)
 A 486 clone using the SiS 496/497 chipset, with PCI bus and Award BIOS.
 
@@ -360,6 +372,30 @@ A basic SVGA clone.
 ROM files needed:
 
 oti067/bios.bin
+
+
+Diamond Stealth 3D 2000
+An S3 ViRGE/325 based board.
+
+PCem emulates the ViRGE S3D engine in software. This works with most games I tried, but
+there may be some issues. The Direct3D drivers for the /325 are fairly poor (often showing
+as missing triangles), so use of the /DX instead is recommended.
+
+The streams processor (video overlay) is also emulated, however many features are missing.
+
+ROM files needed:
+
+s3virge.bin
+
+
+S3 ViRGE/DX
+An S3 ViRGE/DX based board. The drivers that come with Windows are similar to those for the
+/325, however better ones do exist (try the 8-21-1997 version). With the correct drivers,
+many early Direct3D games work okay (if slowly).
+
+ROM files needed:
+
+86c375_1.bin
 
 
 Some models have fixed graphics adapters :
@@ -503,15 +539,15 @@ Notes :
 
 - OS/2 1.3 seems to work okay, but I haven't tested it very thoroughly.
 
-- Linux appears to work. fdlinux runs okay, but is relatively useless. SuSE 6.3 seemed mostly okay, but I only
-  had the first disc of 6 when testing, so I didn't get very far.
+- Linux appears to work. fdlinux runs okay, but is relatively useless. SuSE 6.3 seemed
+  mostly okay. RedHat Seawolf also seems to work fine.
 
-- Windows NT does not work at all.
+- Windows NT works okay now. I've tested NT 3.51, NT 4, and 2000. I've also been informed
+  that NT 3.1 works. XP does not currently run as PCem doesn't emulate any processor with
+  the required CMPXCHG8B instruction.
 
 
 Software tested:
-
-I removed most of this, and only put the stuff I actually tested on this release.
 
 
 MS-DOS 3.30
@@ -531,44 +567,40 @@ Windows 95 OSR 2.5
 Windows 98
 Windows 98 SE
 Windows ME
+Windows NT 3.51
+Windows NT 4
+Windows 2000
 
-Actua Soccer
-Age of Empires
 All New World of Lemmings
-Bust-a-Move 2
-Civilization
-Colonization
-Command & Conquer : Red Alert
+Command and Conquer : Red Alert
+Croc (demo, ViRGE)
 Dawn Patrol
 Doom
-Duke Nukem 3D (not AWE32)
+Duke Nukem 3D
 Epic Pinball
 Final Fantasy 7 (i430VX only)
+Forsaken (ViRGE)
 Grand Theft Auto
+Grim Fandango (ViRGE)
+Incoming (ViRGE, SLOW)
+Jedi Knight (ViRGE)
 Lemmings
-Mortal Kombat 2
-Mortal Kombat Trilogy
-Need For Speed II SE
 Network Q RAC Rally
-Oddworld : Abe's Oddysee (with visual errors)
-One Must Fall
-Pro Pinball : Big Race USA (use Mach64 or TGUI9440)
+Pro Pinball : Big Race USA
+Psycho Pinball
 Quake
 Quake 2 (SLOW - unsurprisingly)
-Screamer 2
-Stargunner
+Screamer Rally
+Simcity 2000
+Simcity 3000 (SLOW)
 Syndicate
 System Shock
-Terminal Velocity
-Theme Hospital
 Theme Park
-Tomb Raider
-Tomb Raider 2
+Tomb Raider (ViRGE version has oversized display)
+Tomb Raider II (ViRGE - has display artifacts that also occur on real hardware)
 Transport Tycoon
+Tyrian
 Wolfenstein 3D
 Worms
-Worms 2
-X-Com : Terror From The Deep
-Xargon
-Zone 66
-Zool 2
+UFO : Enemy Unknown
+X-Com : Apocalypse
