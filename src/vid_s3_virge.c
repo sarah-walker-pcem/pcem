@@ -552,7 +552,7 @@ static void s3_virge_recalctimings(svga_t *svga)
         if (((svga->miscout >> 2) & 3) == 3)
         {
                 int n = svga->seqregs[0x12] & 0x1f;
-                int r = (svga->seqregs[0x12] >> 5) & 3;
+                int r = (svga->seqregs[0x12] >> 5) & (virge->is_375 ? 7 : 3);
                 int m = svga->seqregs[0x13] & 0x7f;
                 double freq = (((double)m + 2) / (((double)n + 2) * (double)(1 << r))) * 14318184.0;
 
