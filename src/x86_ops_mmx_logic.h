@@ -29,7 +29,7 @@ int opPANDN_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         MMX_GETSRC();
         
-        MM[reg].q &= ~src.q;
+        MM[reg].q = ~MM[reg].q & src.q;
         return 0;
 }
 int opPANDN_a32(uint32_t fetchdat)
@@ -40,7 +40,7 @@ int opPANDN_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         MMX_GETSRC();
         
-        MM[reg].q &= ~src.q;
+        MM[reg].q = ~MM[reg].q & src.q;
         return 0;
 }
 
