@@ -127,7 +127,10 @@ void et4000w32p_out(uint16_t addr, uint8_t val, void *p)
                 return;
                 case 0x3D5:
 //                pclog("Write CRTC R%02X %02X\n", crtcreg, val);
-                if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) return;
+                if ((svga->crtcreg < 7) && (svga->crtc[0x11] & 0x80))
+                        return;
+                if ((svga->crtcreg == 7) && (svga->crtc[0x11] & 0x80))
+                        val = (svga->crtc[7] & ~0x10) | (val & 0x10);
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
                 if (old != val)

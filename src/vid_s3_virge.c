@@ -277,8 +277,10 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 return;
                 case 0x3d5:
                 //pclog("Write CRTC R%02X %02X  %04x(%08x):%08x\n", svga->crtcreg, val, CS, cs, pc);
-                if (svga->crtcreg <= 7 && svga->crtc[0x11] & 0x80) 
+                if ((svga->crtcreg < 7) && (svga->crtc[0x11] & 0x80))
                         return;
+                if ((svga->crtcreg == 7) && (svga->crtc[0x11] & 0x80))
+                        val = (svga->crtc[7] & ~0x10) | (val & 0x10);
                 if (svga->crtcreg >= 0x20 && svga->crtcreg != 0x38 && (svga->crtc[0x38] & 0xcc) != 0x48) 
                         return;
                 if (svga->crtcreg >= 0x80)
