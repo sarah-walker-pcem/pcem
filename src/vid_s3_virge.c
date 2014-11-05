@@ -291,7 +291,9 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 0x31:
                         virge->ma_ext = (virge->ma_ext & 0x1c) | ((val & 0x30) >> 4);
-                        svga->vrammask = (val & 8) ? 0x3fffff : 0x3ffff;
+                        break;
+                        case 0x32:
+                        svga->vrammask = (val & 0x40) ? 0x3ffff : ((virge->memory_size << 20) - 1);
                         break;
                         
                         case 0x50:

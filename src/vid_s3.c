@@ -152,9 +152,11 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 0x31:
                         s3->ma_ext = (s3->ma_ext & 0x1c) | ((val & 0x30) >> 4);
-                        svga->vrammask = /*(val & 8) ? */s3->vram_mask/* : 0x3ffff*/;
                         break;
-                        
+                        case 0x32:
+                        svga->vrammask = (val & 0x40) ? 0x3ffff : s3->vram_mask;
+                        break;
+                                                
                         case 0x50:
                         switch (svga->crtc[0x50] & 0xc1)
                         {
