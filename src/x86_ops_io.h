@@ -1,4 +1,4 @@
-int opIN_AL_imm(uint32_t fetchdat)
+static int opIN_AL_imm(uint32_t fetchdat)
 {       
         uint16_t port = (uint16_t)getbytef();
         check_io_perm(port);
@@ -6,7 +6,7 @@ int opIN_AL_imm(uint32_t fetchdat)
         cycles -= 12;
         return 0;
 }
-int opIN_AX_imm(uint32_t fetchdat)
+static int opIN_AX_imm(uint32_t fetchdat)
 {
         uint16_t port = (uint16_t)getbytef();
         check_io_perm(port);
@@ -15,7 +15,7 @@ int opIN_AX_imm(uint32_t fetchdat)
         cycles -= 12;
         return 0;
 }
-int opIN_EAX_imm(uint32_t fetchdat)
+static int opIN_EAX_imm(uint32_t fetchdat)
 {
         uint16_t port = (uint16_t)getbytef();
         check_io_perm(port);
@@ -27,7 +27,7 @@ int opIN_EAX_imm(uint32_t fetchdat)
         return 0;
 }
 
-int opOUT_AL_imm(uint32_t fetchdat)
+static int opOUT_AL_imm(uint32_t fetchdat)
 {
         uint16_t port = (uint16_t)getbytef();        
         check_io_perm(port);
@@ -35,7 +35,7 @@ int opOUT_AL_imm(uint32_t fetchdat)
         cycles -= 10;
         return 0;
 }
-int opOUT_AX_imm(uint32_t fetchdat)
+static int opOUT_AX_imm(uint32_t fetchdat)
 {
         uint16_t port = (uint16_t)getbytef();        
         check_io_perm(port);
@@ -44,7 +44,7 @@ int opOUT_AX_imm(uint32_t fetchdat)
         cycles -= 10;
         return 0;
 }
-int opOUT_EAX_imm(uint32_t fetchdat)
+static int opOUT_EAX_imm(uint32_t fetchdat)
 {
         uint16_t port = (uint16_t)getbytef();        
         check_io_perm(port);
@@ -56,14 +56,14 @@ int opOUT_EAX_imm(uint32_t fetchdat)
         return 0;
 }
 
-int opIN_AL_DX(uint32_t fetchdat)
+static int opIN_AL_DX(uint32_t fetchdat)
 {       
         check_io_perm(DX);
         AL = inb(DX);
         cycles -= 12;
         return 0;
 }
-int opIN_AX_DX(uint32_t fetchdat)
+static int opIN_AX_DX(uint32_t fetchdat)
 {
         check_io_perm(DX);
         check_io_perm(DX + 1);
@@ -71,7 +71,7 @@ int opIN_AX_DX(uint32_t fetchdat)
         cycles -= 12;
         return 0;
 }
-int opIN_EAX_DX(uint32_t fetchdat)
+static int opIN_EAX_DX(uint32_t fetchdat)
 {
         check_io_perm(DX);
         check_io_perm(DX + 1);
@@ -82,14 +82,14 @@ int opIN_EAX_DX(uint32_t fetchdat)
         return 0;
 }
 
-int opOUT_AL_DX(uint32_t fetchdat)
+static int opOUT_AL_DX(uint32_t fetchdat)
 {
         check_io_perm(DX);
         outb(DX, AL);
         cycles -= 11;
         return 0;
 }
-int opOUT_AX_DX(uint32_t fetchdat)
+static int opOUT_AX_DX(uint32_t fetchdat)
 {
         //pclog("OUT_AX_DX %04X %04X\n", DX, AX);
         check_io_perm(DX);
@@ -98,7 +98,7 @@ int opOUT_AX_DX(uint32_t fetchdat)
         cycles -= 11;
         return 0;
 }
-int opOUT_EAX_DX(uint32_t fetchdat)
+static int opOUT_EAX_DX(uint32_t fetchdat)
 {
         check_io_perm(DX);
         check_io_perm(DX + 1);

@@ -27,9 +27,9 @@ enum
         FLAGS_SAR32,
 };
 
-static int flags_op;
-static uint32_t flags_res;
-static uint32_t flags_op1, flags_op2;
+int flags_op;
+uint32_t flags_res;
+uint32_t flags_op1, flags_op2;
 
 static inline int ZF_SET()
 {

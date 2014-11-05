@@ -10,7 +10,7 @@
                 cycles -= 2;                                            \
         }
 
-int opPSxxW_imm(uint32_t fetchdat)
+static int opPSxxW_imm(uint32_t fetchdat)
 {
         int reg = fetchdat & 7;
         int op = fetchdat & 0x38;
@@ -62,7 +62,7 @@ int opPSxxW_imm(uint32_t fetchdat)
         return 0;
 }
 
-int opPSLLW_a16(uint32_t fetchdat)
+static int opPSLLW_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -83,7 +83,7 @@ int opPSLLW_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSLLW_a32(uint32_t fetchdat)
+static int opPSLLW_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -105,7 +105,7 @@ int opPSLLW_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSRLW_a16(uint32_t fetchdat)
+static int opPSRLW_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -126,7 +126,7 @@ int opPSRLW_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSRLW_a32(uint32_t fetchdat)
+static int opPSRLW_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -148,7 +148,7 @@ int opPSRLW_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSRAW_a16(uint32_t fetchdat)
+static int opPSRAW_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -167,7 +167,7 @@ int opPSRAW_a16(uint32_t fetchdat)
         
         return 0;
 }
-int opPSRAW_a32(uint32_t fetchdat)
+static int opPSRAW_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -187,7 +187,7 @@ int opPSRAW_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSxxD_imm(uint32_t fetchdat)
+static int opPSxxD_imm(uint32_t fetchdat)
 {
         int reg = fetchdat & 7;
         int op = fetchdat & 0x38;
@@ -233,7 +233,7 @@ int opPSxxD_imm(uint32_t fetchdat)
         return 0;
 }
 
-int opPSLLD_a16(uint32_t fetchdat)
+static int opPSLLD_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -252,7 +252,7 @@ int opPSLLD_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSLLD_a32(uint32_t fetchdat)
+static int opPSLLD_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -272,7 +272,7 @@ int opPSLLD_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSRLD_a16(uint32_t fetchdat)
+static int opPSRLD_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -291,7 +291,7 @@ int opPSRLD_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSRLD_a32(uint32_t fetchdat)
+static int opPSRLD_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -311,7 +311,7 @@ int opPSRLD_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSRAD_a16(uint32_t fetchdat)
+static int opPSRAD_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -328,7 +328,7 @@ int opPSRAD_a16(uint32_t fetchdat)
         
         return 0;
 }
-int opPSRAD_a32(uint32_t fetchdat)
+static int opPSRAD_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -346,7 +346,7 @@ int opPSRAD_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSxxQ_imm(uint32_t fetchdat)
+static int opPSxxQ_imm(uint32_t fetchdat)
 {
         int reg = fetchdat & 7;
         int op = fetchdat & 0x38;
@@ -385,7 +385,7 @@ int opPSxxQ_imm(uint32_t fetchdat)
         return 0;
 }
 
-int opPSLLQ_a16(uint32_t fetchdat)
+static int opPSLLQ_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -401,7 +401,7 @@ int opPSLLQ_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSLLQ_a32(uint32_t fetchdat)
+static int opPSLLQ_a32(uint32_t fetchdat)
 {
         int shift;
         
@@ -418,7 +418,7 @@ int opPSLLQ_a32(uint32_t fetchdat)
         return 0;
 }
 
-int opPSRLQ_a16(uint32_t fetchdat)
+static int opPSRLQ_a16(uint32_t fetchdat)
 {
         int shift;
         
@@ -434,7 +434,7 @@ int opPSRLQ_a16(uint32_t fetchdat)
 
         return 0;
 }
-int opPSRLQ_a32(uint32_t fetchdat)
+static int opPSRLQ_a32(uint32_t fetchdat)
 {
         int shift;
         

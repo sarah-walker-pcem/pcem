@@ -1,56 +1,80 @@
-static int op_CS(uint32_t fetchdat)
-{
-        ea_seg = &_cs;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
-}
-static int op_DS(uint32_t fetchdat)
-{
-        ea_seg = &_ds;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
-}
-static int op_ES(uint32_t fetchdat)
-{
-        ea_seg = &_es;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
-}      
-static int op_FS(uint32_t fetchdat)
-{
-        ea_seg = &_fs;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
-}
-static int op_GS(uint32_t fetchdat)
-{
-        ea_seg = &_gs;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
-}
-static int op_SS(uint32_t fetchdat)
-{
-        ea_seg = &_ss;
-        ssegs = 1;
-        cycles -= 4;
-        return 1;
+#define op_seg(name, seg)                                       \
+static int op ## name ## _w_a16(uint32_t fetchdat)              \
+{                                                               \
+        fetchdat = fastreadl(cs + pc);                          \
+        if (abrt) return 1;                                     \
+        pc++;                                                   \
+                                                                \
+        ea_seg = &seg;                                          \
+        ssegs = 1;                                              \
+        cycles -= 4;                                            \
+                                                                \
+        return x86_opcodes[fetchdat & 0xff](fetchdat >> 8);     \
+}                                                               \
+                                                                \
+static int op ## name ## _l_a16(uint32_t fetchdat)              \
+{                                                               \
+        fetchdat = fastreadl(cs + pc);                          \
+        if (abrt) return 1;                                     \
+        pc++;                                                   \
+                                                                \
+        ea_seg = &seg;                                          \
+        ssegs = 1;                                              \
+        cycles -= 4;                                            \
+                                                                \
+        return x86_opcodes[(fetchdat & 0xff) | 0x100](fetchdat >> 8);      \
+}                                                               \
+                                                                \
+static int op ## name ## _w_a32(uint32_t fetchdat)              \
+{                                                               \
+        fetchdat = fastreadl(cs + pc);                          \
+        if (abrt) return 1;                                     \
+        pc++;                                                   \
+                                                                \
+        ea_seg = &seg;                                          \
+        ssegs = 1;                                              \
+        cycles -= 4;                                            \
+                                                                \
+        return x86_opcodes[(fetchdat & 0xff) | 0x200](fetchdat >> 8);      \
+}                                                               \
+                                                                \
+static int op ## name ## _l_a32(uint32_t fetchdat)              \
+{                                                               \
+        fetchdat = fastreadl(cs + pc);                          \
+        if (abrt) return 1;                                     \
+        pc++;                                                   \
+                                                                \
+        ea_seg = &seg;                                          \
+        ssegs = 1;                                              \
+        cycles -= 4;                                            \
+                                                                \
+        return x86_opcodes[(fetchdat & 0xff) | 0x300](fetchdat >> 8);      \
 }
 
+op_seg(CS, _cs)
+op_seg(DS, _ds)
+op_seg(ES, _es)
+op_seg(FS, _fs)
+op_seg(GS, _gs)
+op_seg(SS, _ss)
 
 static int op_66(uint32_t fetchdat) /*Data size select*/
 {
+        fetchdat = fastreadl(cs + pc);
+        if (abrt) return 1;
+        pc++;
+
         op32 = ((use32 & 0x100) ^ 0x100) | (op32 & 0x200);
         cycles -= 2;
-        return 1;
+        return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
 }
 static int op_67(uint32_t fetchdat) /*Address size select*/
 {
+        fetchdat = fastreadl(cs + pc);
+        if (abrt) return 1;
+        pc++;
+
         op32 = ((use32 & 0x200) ^ 0x200) | (op32 & 0x100);
         cycles -= 2;
-        return 1;
+        return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
 }

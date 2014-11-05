@@ -25,7 +25,7 @@ static int opMOV_w_seg_a16(uint32_t fetchdat)
         }
                         
         cycles -= ((mod == 3) ? 2 : 3);
-        return 0;
+        return abrt;
 }
 static int opMOV_w_seg_a32(uint32_t fetchdat)
 {
@@ -54,7 +54,7 @@ static int opMOV_w_seg_a32(uint32_t fetchdat)
         }
                         
         cycles -= ((mod == 3) ? 2 : 3);
-        return 0;
+        return abrt;
 }
 
 static int opMOV_l_seg_a16(uint32_t fetchdat)
@@ -90,7 +90,7 @@ static int opMOV_l_seg_a16(uint32_t fetchdat)
         }
         
         cycles -= ((mod == 3) ? 2 : 3);
-        return 0;
+        return abrt;
 }
 static int opMOV_l_seg_a32(uint32_t fetchdat)
 {
@@ -125,7 +125,7 @@ static int opMOV_l_seg_a32(uint32_t fetchdat)
         }
         
         cycles -= ((mod == 3) ? 2 : 3);
-        return 0;
+        return abrt;
 }
 
 static int opMOV_seg_w_a16(uint32_t fetchdat)
@@ -134,7 +134,7 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
         
         fetch_ea_16(fetchdat);
         
-        new_seg=geteaw();         if (abrt) return 0;
+        new_seg=geteaw();         if (abrt) return 1;
         
         switch (rmdat & 0x38)
         {
@@ -146,12 +146,15 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
-                if (abrt) return 0;
+                if (abrt) return 1;
                 oldpc = pc;
                 op32 = use32;
                 ssegs = 0;
                 ea_seg = &_ds;
-                return 1;
+                fetchdat = fastreadl(cs + pc);
+                pc++;
+                if (abrt) return 1;
+                return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
                 break;
@@ -161,7 +164,7 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
         }
                         
         cycles -= ((mod == 3) ? 2 : 5);
-        return 0;
+        return abrt;
 }
 static int opMOV_seg_w_a32(uint32_t fetchdat)
 {
@@ -169,7 +172,7 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
         
         fetch_ea_32(fetchdat);
         
-        new_seg=geteaw();         if (abrt) return 0;
+        new_seg=geteaw();         if (abrt) return 1;
         
         switch (rmdat & 0x38)
         {
@@ -181,12 +184,15 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*SS*/
                 loadseg(new_seg, &_ss);
-                if (abrt) return 0;
+                if (abrt) return 1;
                 oldpc = pc;
                 op32 = use32;
                 ssegs = 0;
                 ea_seg = &_ds;
-                return 1;
+                fetchdat = fastreadl(cs + pc);
+                pc++;
+                if (abrt) return 1;
+                return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
                 break;
@@ -196,7 +202,7 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
         }
                         
         cycles -= ((mod == 3) ? 2 : 5);
-        return 0;
+        return abrt;
 }
 
 
@@ -207,8 +213,8 @@ static int opLDS_w_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
-        loadseg(seg, &_ds);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;
+        loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].w = addr;
  
         cycles -= 7;       
@@ -221,8 +227,8 @@ static int opLDS_w_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
-        loadseg(seg, &_ds);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;
+        loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].w = addr;
  
         cycles -= 7;       
@@ -236,8 +242,8 @@ static int opLDS_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
-        loadseg(seg, &_ds);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;
+        loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].l = addr;
  
         cycles -= 7;       
@@ -251,8 +257,8 @@ static int opLDS_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
-        loadseg(seg, &_ds);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;
+        loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].l = addr;
  
         cycles -= 7;       
@@ -266,8 +272,8 @@ static int opLSS_w_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
-        loadseg(seg, &_ss);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;
+        loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].w = addr;
  
         cycles -= 7;       
@@ -280,8 +286,8 @@ static int opLSS_w_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmemw(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;
-        loadseg(seg, &_ss);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;
+        loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].w = addr;
  
         cycles -= 7;       
@@ -295,8 +301,8 @@ static int opLSS_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
-        loadseg(seg, &_ss);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;
+        loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].l = addr;
  
         cycles -= 7;       
@@ -310,8 +316,8 @@ static int opLSS_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         addr = readmeml(easeg, eaaddr);
-        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;
-        loadseg(seg, &_ss);                     if (abrt) return 0;
+        seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;
+        loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].l = addr;
  
         cycles -= 7;       
@@ -326,8 +332,8 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 fetch_ea_16(fetchdat);                                          \
                 ILLEGAL_ON(mod == 3);                                           \
                 addr = readmemw(easeg, eaaddr);                                 \
-                seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;     \
-                loadseg(seg, &sel);                     if (abrt) return 0;     \
+                seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;     \
+                loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].w = addr;                                             \
                                                                                 \
                 cycles -= 7;                                                    \
@@ -341,8 +347,8 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 fetch_ea_32(fetchdat);                                          \
                 ILLEGAL_ON(mod == 3);                                           \
                 addr = readmemw(easeg, eaaddr);                                 \
-                seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 0;     \
-                loadseg(seg, &sel);                     if (abrt) return 0;     \
+                seg = readmemw(easeg, eaaddr + 2);      if (abrt) return 1;     \
+                loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].w = addr;                                             \
                                                                                 \
                 cycles -= 7;                                                    \
@@ -357,8 +363,8 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 fetch_ea_16(fetchdat);                                          \
                 ILLEGAL_ON(mod == 3);                                           \
                 addr = readmeml(easeg, eaaddr);                                 \
-                seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;     \
-                loadseg(seg, &sel);                     if (abrt) return 0;     \
+                seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;     \
+                loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].l = addr;                                             \
                                                                                 \
                 cycles -= 7;                                                    \
@@ -373,8 +379,8 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 fetch_ea_32(fetchdat);                                          \
                 ILLEGAL_ON(mod == 3);                                           \
                 addr = readmeml(easeg, eaaddr);                                 \
-                seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 0;     \
-                loadseg(seg, &sel);                     if (abrt) return 0;     \
+                seg = readmemw(easeg, eaaddr + 4);      if (abrt) return 1;     \
+                loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].l = addr;                                             \
                                                                                 \
                 cycles -= 7;                                                    \

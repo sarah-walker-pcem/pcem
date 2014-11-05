@@ -260,7 +260,7 @@ void x87_stmmx(MMX_REG r)
         writememw(easeg, eaaddr + 8, 0xffff);
 }
 
-void x87_d8()
+void x87_d8(uint32_t fetchdat)
 {
         union
         {
@@ -269,59 +269,59 @@ void x87_d8()
         } ts;
         if (mod==3)
         {
-                switch (rmdat32&0xFF)
+                switch (fetchdat&0xFF)
                 {
                         case 0xC0: case 0xC1: case 0xC2: case 0xC3: /*FADD*/
                         case 0xC4: case 0xC5: case 0xC6: case 0xC7:
                         if (fplog) pclog("FADD\n");
-                        ST(0)=ST(0)+ST(rmdat32&7);
+                        ST(0)=ST(0)+ST(fetchdat&7);
                         cycles-=8;
                         return;
                         case 0xC8: case 0xC9: case 0xCA: case 0xCB: /*FMUL*/
                         case 0xCC: case 0xCD: case 0xCE: case 0xCF:
                         if (fplog) pclog("FMUL\n");
-                        ST(0)=ST(0)*ST(rmdat32&7);
+                        ST(0)=ST(0)*ST(fetchdat&7);
                         cycles-=16;
                         return;
                         case 0xD0: case 0xD1: case 0xD2: case 0xD3: /*FCOM*/
                         case 0xD4: case 0xD5: case 0xD6: case 0xD7:
                         if (fplog) pclog("FCOM\n");
                         npxs&=~(C0|C2|C3);
-                        if (ST(0)==ST(rmdat32&7))     npxs|=C3;
-                        else if (ST(0)<ST(rmdat32&7)) npxs|=C0;
+                        if (ST(0)==ST(fetchdat&7))     npxs|=C3;
+                        else if (ST(0)<ST(fetchdat&7)) npxs|=C0;
                         cycles-=4;
                         return;
                         case 0xD8: case 0xD9: case 0xDA: case 0xDB: /*FCOMP*/
                         case 0xDC: case 0xDD: case 0xDE: case 0xDF:
                         if (fplog) pclog("FCOMP\n");
                         npxs&=~(C0|C2|C3);
-                        if (ST(0)==ST(rmdat32&7))     npxs|=C3;
-                        else if (ST(0)<ST(rmdat32&7)) npxs|=C0;
+                        if (ST(0)==ST(fetchdat&7))     npxs|=C3;
+                        else if (ST(0)<ST(fetchdat&7)) npxs|=C0;
                         x87_pop();
                         cycles-=4;
                         return;
                         case 0xE0: case 0xE1: case 0xE2: case 0xE3: /*FSUB*/
                         case 0xE4: case 0xE5: case 0xE6: case 0xE7:
                         if (fplog) pclog("FSUB\n");
-                        ST(0)=ST(0)-ST(rmdat32&7);
+                        ST(0)=ST(0)-ST(fetchdat&7);
                         cycles-=8;
                         return;
                         case 0xE8: case 0xE9: case 0xEA: case 0xEB: /*FSUBR*/
                         case 0xEC: case 0xED: case 0xEE: case 0xEF:
                         if (fplog) pclog("FSUBR\n");
-                        ST(0)=ST(rmdat32&7)-ST(0);
+                        ST(0)=ST(fetchdat&7)-ST(0);
                         cycles-=8;
                         return;
                         case 0xF0: case 0xF1: case 0xF2: case 0xF3: /*FDIV*/
                         case 0xF4: case 0xF5: case 0xF6: case 0xF7:
                         if (fplog) pclog("FDIV\n");
-                        x87_div(ST(0), ST(0), ST(rmdat32&7));
+                        x87_div(ST(0), ST(0), ST(fetchdat&7));
                         cycles-=73;
                         return;
                         case 0xF8: case 0xF9: case 0xFA: case 0xFB: /*FDIVR*/
                         case 0xFC: case 0xFD: case 0xFE: case 0xFF:
                         if (fplog) pclog("FDIVR\n");
-                        x87_div(ST(0), ST(rmdat32&7), ST(0));
+                        x87_div(ST(0), ST(fetchdat&7), ST(0));
                         cycles-=73;
                         return;
                 }
@@ -380,9 +380,9 @@ void x87_d8()
                 }
         }
         x86illegal();
-//        fatal("Bad x87 D8 opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 D8 opcode %i %02X\n",reg,fetchdat&0xFF);
 }
-void x87_d9()
+void x87_d9(uint32_t fetchdat)
 {
         union
         {
@@ -393,22 +393,23 @@ void x87_d9()
         int64_t temp64;
         uint16_t tempw;
         int temp;
+//        pclog("x87_d9: fetchdat=%08x\n", fetchdat);
         if (mod==3)
         {
-                switch (rmdat32&0xFF)
+                switch (fetchdat&0xFF)
                 {
                         case 0xC0: case 0xC1: case 0xC2: case 0xC3: /*FLD*/
                         case 0xC4: case 0xC5: case 0xC6: case 0xC7:
-                        if (fplog) pclog("FLD %f\n", ST(rmdat32 & 7));
-                        x87_push(ST(rmdat32&7));
+                        if (fplog) pclog("FLD %f\n", ST(fetchdat & 7));
+                        x87_push(ST(fetchdat&7));
                         cycles-=4;
                         return;
                         case 0xC8: case 0xC9: case 0xCA: case 0xCB: /*FXCH*/
                         case 0xCC: case 0xCD: case 0xCE: case 0xCF:
                         if (fplog) pclog("FXCH\n");
                         td=ST(0);
-                        ST(0)=ST(rmdat32&7);
-                        ST(rmdat32&7)=td;
+                        ST(0)=ST(fetchdat&7);
+                        ST(fetchdat&7)=td;
                         cycles-=4;
                         return;
                         case 0xD0: /*FNOP*/
@@ -418,10 +419,10 @@ void x87_d9()
                         case 0xD8: case 0xD9: case 0xDA: case 0xDB: /*Invalid, but apparently not illegal*/
                         case 0xDC: case 0xDD: case 0xDE: case 0xDF:
                         if (fplog) pclog("FSTP\n");
-                        ST(rmdat32 & 7) = ST(0);
+                        ST(fetchdat & 7) = ST(0);
                         temp = (tag >> ((TOP & 7) << 1)) & 3;
-                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
-                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
+                        tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
+                        tag |= (temp << (((TOP + fetchdat) & 7) << 1));
                         x87_pop();
                         cycles-=3;
                         return;
@@ -588,7 +589,7 @@ void x87_d9()
                 {
                         case 0: /*FLD single-precision*/
                         if (fplog) pclog("FLDs %08X:%08X\n", easeg, eaaddr);                        
-//                        if ((rmdat32&0xFFFF)==0xD445) { pclog("FLDS\n"); output=3; dumpregs(); exit(-1); }
+//                        if ((fetchdat&0xFFFF)==0xD445) { pclog("FLDS\n"); output=3; dumpregs(); exit(-1); }
                         ts.i=geteal(); if (abrt) { pclog("FLD sp abort\n"); return; }
                         if (fplog) pclog("  %f\n", ts.s);
                         x87_push((double)ts.s);
@@ -687,15 +688,15 @@ void x87_d9()
                         return;
                 }
         }
-//        fatal("Bad x87 D9 opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 D9 opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_da()
+void x87_da(uint32_t fetchdat)
 {
         int32_t templ;
         if (mod==3)
         {
-                switch (rmdat32&0xFF)
+                switch (fetchdat&0xFF)
                 {
                         case 0xE9: /*FUCOMPP*/
                         if (fplog) pclog("FUCOMPP\n", easeg, eaaddr);
@@ -760,10 +761,10 @@ void x87_da()
                         return;
                 }
         }
-//        fatal("Bad x87 DA opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DA opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_db()
+void x87_db(uint32_t fetchdat)
 {
         double t;
         int32_t templ;
@@ -773,7 +774,7 @@ void x87_db()
                 switch (reg)
                 {
                         case 4:
-                        switch (rmdat32&0xFF)
+                        switch (fetchdat&0xFF)
                         {
                                 case 0xE1:
                                 return;
@@ -839,10 +840,10 @@ void x87_db()
                         return;
                 }
         }
-//        fatal("Bad x87 DB opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DB opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_dc()
+void x87_dc(uint32_t fetchdat)
 {
         union
         {
@@ -851,42 +852,42 @@ void x87_dc()
         } t;
         if (mod==3)
         {
-                switch (rmdat32&0xFF)
+                switch (fetchdat&0xFF)
                 {
                         case 0xC0: case 0xC1: case 0xC2: case 0xC3: /*FADD*/
                         case 0xC4: case 0xC5: case 0xC6: case 0xC7:
-                        if (fplog) pclog("FADD %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)+ST(0);
+                        if (fplog) pclog("FADD %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)+ST(0);
                         cycles-=8;
                         return;
                         case 0xC8: case 0xC9: case 0xCA: case 0xCB: /*FMUL*/
                         case 0xCC: case 0xCD: case 0xCE: case 0xCF:
-                        if (fplog) pclog("FMUL %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)*ST(0);
+                        if (fplog) pclog("FMUL %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)*ST(0);
                         cycles-=16;
                         return;
                         case 0xE0: case 0xE1: case 0xE2: case 0xE3: /*FSUBR*/
                         case 0xE4: case 0xE5: case 0xE6: case 0xE7:
-                        if (fplog) pclog("FSUBR %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(0)-ST(rmdat32&7);
+                        if (fplog) pclog("FSUBR %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(0)-ST(fetchdat&7);
                         cycles-=8;
                         return;
                         case 0xE8: case 0xE9: case 0xEA: case 0xEB: /*FSUB*/
                         case 0xEC: case 0xED: case 0xEE: case 0xEF:
-                        if (fplog) pclog("FSUB %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)-ST(0);
+                        if (fplog) pclog("FSUB %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)-ST(0);
                         cycles-=8;
                         return;
                         case 0xF0: case 0xF1: case 0xF2: case 0xF3: /*FDIVR*/
                         case 0xF4: case 0xF5: case 0xF6: case 0xF7:
-                        if (fplog) pclog("FDIVR %f %f\n", ST(rmdat32 & 7), ST(0));
-                        x87_div(ST(rmdat32&7), ST(0), ST(rmdat32&7));
+                        if (fplog) pclog("FDIVR %f %f\n", ST(fetchdat & 7), ST(0));
+                        x87_div(ST(fetchdat&7), ST(0), ST(fetchdat&7));
                         cycles-=73;
                         return;
                         case 0xF8: case 0xF9: case 0xFA: case 0xFB: /*FDIV*/
                         case 0xFC: case 0xFD: case 0xFE: case 0xFF:
-                        if (fplog) pclog("FDIV %f %f\n", ST(rmdat32 & 7), ST(0));
-                        x87_div(ST(rmdat32&7), ST(rmdat32&7), ST(0));
+                        if (fplog) pclog("FDIV %f %f\n", ST(fetchdat & 7), ST(0));
+                        x87_div(ST(fetchdat&7), ST(fetchdat&7), ST(0));
                         cycles-=73;
                         return;
                 }
@@ -945,10 +946,10 @@ void x87_dc()
                         return;
                 }
         }
-//        fatal("Bad x87 DC opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DC opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_dd()
+void x87_dd(uint32_t fetchdat)
 {
         union
         {
@@ -962,38 +963,38 @@ void x87_dd()
                 {
                         case 0: /*FFREE*/
                         if (fplog) pclog("FFREE\n");
-                        tag |= (3 << (((TOP + rmdat32) & 7) << 1));
+                        tag |= (3 << (((TOP + fetchdat) & 7) << 1));
                         cycles-=3;
                         return;
                         case 2: /*FST*/
                         if (fplog) pclog("FST\n");
-                        ST(rmdat32 & 7) = ST(0);
+                        ST(fetchdat & 7) = ST(0);
                         temp = (tag >> ((TOP & 7) << 1)) & 3;
-                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
-                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
+                        tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
+                        tag |= (temp << (((TOP + fetchdat) & 7) << 1));
                         cycles-=3;
                         return;
                         case 3: /*FSTP*/
                         if (fplog) pclog("FSTP\n");
-                        ST(rmdat32 & 7) = ST(0);
+                        ST(fetchdat & 7) = ST(0);
                         temp = (tag >> ((TOP & 7) << 1)) & 3;
-                        tag &= ~(3 << (((TOP + rmdat32) & 7) << 1));
-                        tag |= (temp << (((TOP + rmdat32) & 7) << 1));
+                        tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
+                        tag |= (temp << (((TOP + fetchdat) & 7) << 1));
                         x87_pop();
                         cycles-=3;
                         return;
                         case 4: /*FUCOM*/
                         if (fplog) pclog("FUCOM\n");
                         npxs&=~(C0|C2|C3);
-                        if (ST(0)==ST(rmdat32&7))     npxs|=C3;
-                        else if (ST(0)<ST(rmdat32&7)) npxs|=C0;
+                        if (ST(0)==ST(fetchdat&7))     npxs|=C3;
+                        else if (ST(0)<ST(fetchdat&7)) npxs|=C0;
                         cycles-=4;
                         return;
                         case 5: /*FUCOMP*/
                         if (fplog) pclog("FUCOMP\n");
                         npxs&=~(C0|C2|C3);
-                        if (ST(0)==ST(rmdat32&7))     npxs|=C3;
-                        else if (ST(0)<ST(rmdat32&7)) npxs|=C0;
+                        if (ST(0)==ST(fetchdat&7))     npxs|=C3;
+                        else if (ST(0)<ST(fetchdat&7)) npxs|=C0;
                         x87_pop();
                         cycles-=4;
                         return;
@@ -1210,27 +1211,27 @@ void x87_dd()
                         return;
                 }
         }
-//        fatal("Bad x87 DD opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DD opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_de()
+void x87_de(uint32_t fetchdat)
 {
         int32_t templ;
         if (mod==3)
         {
-                switch (rmdat32&0xFF)
+                switch (fetchdat&0xFF)
                 {
                         case 0xC0: case 0xC1: case 0xC2: case 0xC3: /*FADDP*/
                         case 0xC4: case 0xC5: case 0xC6: case 0xC7:
-                        if (fplog) pclog("FADDP %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)+ST(0);
+                        if (fplog) pclog("FADDP %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)+ST(0);
                         x87_pop();
                         cycles-=8;
                         return;
                         case 0xC8: case 0xC9: case 0xCA: case 0xCB: /*FMULP*/
                         case 0xCC: case 0xCD: case 0xCE: case 0xCF:
-                        if (fplog) pclog("FMULP %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)*ST(0);
+                        if (fplog) pclog("FMULP %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)*ST(0);
                         x87_pop();
                         cycles-=16;
                         return;
@@ -1249,29 +1250,29 @@ void x87_de()
                         return;
                         case 0xE0: case 0xE1: case 0xE2: case 0xE3: /*FSUBRP*/
                         case 0xE4: case 0xE5: case 0xE6: case 0xE7:
-                        if (fplog) pclog("FSUBRP %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(0)-ST(rmdat32&7);
+                        if (fplog) pclog("FSUBRP %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(0)-ST(fetchdat&7);
                         x87_pop();
                         cycles-=8;
                         return;
                         case 0xE8: case 0xE9: case 0xEA: case 0xEB: /*FSUBP*/
                         case 0xEC: case 0xED: case 0xEE: case 0xEF:
-                        if (fplog) pclog("FSUBP %f %f\n", ST(rmdat32 & 7), ST(0));
-                        ST(rmdat32&7)=ST(rmdat32&7)-ST(0);
+                        if (fplog) pclog("FSUBP %f %f\n", ST(fetchdat & 7), ST(0));
+                        ST(fetchdat&7)=ST(fetchdat&7)-ST(0);
                         x87_pop();
                         cycles-=8;
                         return;
                         case 0xF0: case 0xF1: case 0xF2: case 0xF3: /*FDIVRP*/
                         case 0xF4: case 0xF5: case 0xF6: case 0xF7:
-                        if (fplog) pclog("FDIVRP %f %f\n", ST(rmdat32 & 7), ST(0));
-                        x87_div(ST(rmdat32&7), ST(0), ST(rmdat32&7));
+                        if (fplog) pclog("FDIVRP %f %f\n", ST(fetchdat & 7), ST(0));
+                        x87_div(ST(fetchdat&7), ST(0), ST(fetchdat&7));
                         x87_pop();
                         cycles-=73;
                         return;
                         case 0xF8: case 0xF9: case 0xFA: case 0xFB: /*FDIVP*/
                         case 0xFC: case 0xFD: case 0xFE: case 0xFF:
-                        if (fplog) pclog("FDIVP %f %f %i\n", ST(rmdat32 & 7), ST(0), rmdat32 & 7);
-                        x87_div(ST(rmdat32&7), ST(rmdat32&7), ST(0));
+                        if (fplog) pclog("FDIVP %f %f %i\n", ST(fetchdat & 7), ST(0), fetchdat & 7);
+                        x87_div(ST(fetchdat&7), ST(fetchdat&7), ST(0));
                         x87_pop();
                         cycles-=73;
                         return;
@@ -1329,10 +1330,10 @@ void x87_de()
                         return;
                 }
         }
-//        fatal("Bad x87 DE opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DE opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
-void x87_df()
+void x87_df(uint32_t fetchdat)
 {
         int c;
         int64_t temp64;
@@ -1344,7 +1345,7 @@ void x87_df()
                 switch (reg)
                 {
                         case 4:
-                        switch (rmdat32&0xFF)
+                        switch (fetchdat&0xFF)
                         {
                                 case 0xE0: /*FSTSW AX*/
                                 if (fplog) pclog("FSTSW\n");
@@ -1417,7 +1418,7 @@ void x87_df()
                         return;
                 }
         }
-//        fatal("Bad x87 DF opcode %i %02X\n",reg,rmdat32&0xFF);
+//        fatal("Bad x87 DF opcode %i %02X\n",reg,fetchdat&0xFF);
         x86illegal();
 }
 

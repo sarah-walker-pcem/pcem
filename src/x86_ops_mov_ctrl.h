@@ -4,7 +4,7 @@ static int opMOV_r_CRx_a16(uint32_t fetchdat)
         {
                 pclog("Can't load from CRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         switch (reg)
@@ -40,7 +40,7 @@ static int opMOV_r_CRx_a32(uint32_t fetchdat)
         {
                 pclog("Can't load from CRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_32(fetchdat);
         switch (reg)
@@ -77,7 +77,7 @@ static int opMOV_r_DRx_a16(uint32_t fetchdat)
         {
                 pclog("Can't load from DRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         regs[rm].l = 0;
@@ -90,7 +90,7 @@ static int opMOV_r_DRx_a32(uint32_t fetchdat)
         {
                 pclog("Can't load from DRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_32(fetchdat);
         regs[rm].l = 0;
@@ -104,7 +104,7 @@ static int opMOV_CRx_r_a16(uint32_t fetchdat)
         {
                 pclog("Can't load CRx\n");
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         switch (reg)
@@ -144,7 +144,7 @@ static int opMOV_CRx_r_a32(uint32_t fetchdat)
         {
                 pclog("Can't load CRx\n");
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         fetch_ea_32(fetchdat);
         switch (reg)
@@ -185,7 +185,7 @@ static int opMOV_DRx_r_a16(uint32_t fetchdat)
         {
                 pclog("Can't load DRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         cycles -= 6;
@@ -197,7 +197,7 @@ static int opMOV_DRx_r_a32(uint32_t fetchdat)
         {
                 pclog("Can't load DRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         cycles -= 6;
@@ -210,7 +210,7 @@ static int opMOV_r_TRx_a16(uint32_t fetchdat)
         {
                 pclog("Can't load from TRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         regs[rm].l = 0;
@@ -223,7 +223,7 @@ static int opMOV_r_TRx_a32(uint32_t fetchdat)
         {
                 pclog("Can't load from TRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_32(fetchdat);
         regs[rm].l = 0;
@@ -237,7 +237,7 @@ static int opMOV_TRx_r_a16(uint32_t fetchdat)
         {
                 pclog("Can't load TRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         cycles -= 6;
@@ -249,7 +249,7 @@ static int opMOV_TRx_r_a32(uint32_t fetchdat)
         {
                 pclog("Can't load TRx\n");
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         fetch_ea_16(fetchdat);
         cycles -= 6;

@@ -46,22 +46,22 @@ static int opF6_a16(uint32_t fetchdat)
         int8_t temps;
         
         fetch_ea_16(fetchdat);
-        dst = geteab();                 if (abrt) return 0;
+        dst = geteab();                 if (abrt) return 1;
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST b,#8*/
-                src = readmemb(cs, pc); pc++;           if (abrt) return 0;
+                src = readmemb(cs, pc); pc++;           if (abrt) return 1;
                 setznp8(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT b*/
-                seteab(~dst);
+                seteab(~dst);                           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x18: /*NEG b*/
+                seteab(0 - dst);                        if (abrt) return 1;
                 setsub8(0, dst);
-                seteab(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x20: /*MUL AL,b*/
@@ -134,22 +134,22 @@ static int opF6_a32(uint32_t fetchdat)
         int8_t temps;
         
         fetch_ea_32(fetchdat);
-        dst = geteab();                 if (abrt) return 0;
+        dst = geteab();                 if (abrt) return 1;
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST b,#8*/
-                src = readmemb(cs, pc); pc++;           if (abrt) return 0;
+                src = readmemb(cs, pc); pc++;           if (abrt) return 1;
                 setznp8(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT b*/
-                seteab(~dst);
+                seteab(~dst);                           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x18: /*NEG b*/
+                seteab(0 - dst);                        if (abrt) return 1;
                 setsub8(0, dst);
-                seteab(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x20: /*MUL AL,b*/
@@ -225,22 +225,22 @@ static int opF7_w_a16(uint32_t fetchdat)
         uint16_t src, dst;
         
         fetch_ea_16(fetchdat);
-        dst = geteaw();        if (abrt) return 0;
+        dst = geteaw();        if (abrt) return 1;
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST w*/
-                src = getword();        if (abrt) return 0;
+                src = getword();        if (abrt) return 1;
                 setznp16(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT w*/
-                seteaw(~dst);
+                seteaw(~dst);           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x18: /*NEG w*/
+                seteaw(0 - dst);        if (abrt) return 1;
                 setsub16(0, dst);
-                seteaw(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x20: /*MUL AX,w*/
@@ -309,22 +309,22 @@ static int opF7_w_a32(uint32_t fetchdat)
         uint16_t src, dst;
 
         fetch_ea_32(fetchdat);
-        dst = geteaw();        if (abrt) return 0;
+        dst = geteaw();        if (abrt) return 1;
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST w*/
-                src = getword();        if (abrt) return 0;
+                src = getword();        if (abrt) return 1;
                 setznp16(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT w*/
-                seteaw(~dst);
+                seteaw(~dst);           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x18: /*NEG w*/
+                seteaw(0 - dst);        if (abrt) return 1;
                 setsub16(0, dst);
-                seteaw(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mm;
                 break;
                 case 0x20: /*MUL AX,w*/
@@ -392,23 +392,23 @@ static int opF7_l_a16(uint32_t fetchdat)
         uint32_t src, dst;
 
         fetch_ea_16(fetchdat);
-        dst = geteal();                 if (abrt) return 0;
+        dst = geteal();                 if (abrt) return 1;
 
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST l*/
-                src = getlong();        if (abrt) return 0;
+                src = getlong();        if (abrt) return 1;
                 setznp32(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT l*/
-                seteal(~dst);
+                seteal(~dst);           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mml;
                 break;
                 case 0x18: /*NEG l*/
+                seteal(0 - dst);        if (abrt) return 1;
                 setsub32(0, dst);
-                seteal(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mml;
                 break;
                 case 0x20: /*MUL EAX,l*/
@@ -430,12 +430,14 @@ static int opF7_l_a16(uint32_t fetchdat)
                 cycles -= 38;
                 break;
                 case 0x30: /*DIV EAX,l*/
-                divl(dst);
+                if (divl(dst))
+                        return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
                 cycles -= (is486) ? 40 : 38;
                 break;
                 case 0x38: /*IDIV EAX,l*/
-                idivl((int32_t)dst);
+                if (idivl((int32_t)dst))
+                        return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
                 cycles -= 43;
                 break;
@@ -452,23 +454,23 @@ static int opF7_l_a32(uint32_t fetchdat)
         uint32_t src, dst;
 
         fetch_ea_32(fetchdat);
-        dst = geteal();                 if (abrt) return 0;
+        dst = geteal();                 if (abrt) return 1;
 
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST l*/
-                src = getlong();        if (abrt) return 0;
+                src = getlong();        if (abrt) return 1;
                 setznp32(src & dst);
                 if (is486) cycles -= ((mod == 3) ? 1 : 2);
                 else       cycles -= ((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT l*/
-                seteal(~dst);
+                seteal(~dst);           if (abrt) return 1;
                 cycles -= (mod == 3) ? timing_rr : timing_mml;
                 break;
                 case 0x18: /*NEG l*/
+                seteal(0 - dst);        if (abrt) return 1;
                 setsub32(0, dst);
-                seteal(0 - dst);
                 cycles -= (mod == 3) ? timing_rr : timing_mml;
                 break;
                 case 0x20: /*MUL EAX,l*/
@@ -490,12 +492,14 @@ static int opF7_l_a32(uint32_t fetchdat)
                 cycles -= 38;
                 break;
                 case 0x30: /*DIV EAX,l*/
-                divl(dst);
+                if (divl(dst))
+                        return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
                 cycles -= (is486) ? 40 : 38;
                 break;
                 case 0x38: /*IDIV EAX,l*/
-                idivl((int32_t)dst);
+                if (idivl((int32_t)dst))
+                        return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
                 cycles -= 43;
                 break;
@@ -513,7 +517,7 @@ static int opHLT(uint32_t fetchdat)
         if ((CPL || (eflags&VM_FLAG)) && (cr0&1))
         {
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         if (!((flags&I_FLAG) && pic_intpending))
         {
@@ -522,6 +526,9 @@ static int opHLT(uint32_t fetchdat)
         }
         else
                 cycles -= 5;
+
+        CPU_BLOCK_END();
+        
         return 0;
 }
 
@@ -541,11 +548,12 @@ static int opBOUND_w_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         low = geteaw();
-        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 0;
+        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
         
         if (((int16_t)regs[reg].w < low) || ((int16_t)regs[reg].w > high))
         {
                 x86_int(5);
+                return 1;
         }
         
         cycles -= is486 ? 7 : 10;
@@ -558,11 +566,12 @@ static int opBOUND_w_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         low = geteaw();
-        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 0;
+        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
         
         if (((int16_t)regs[reg].w < low) || ((int16_t)regs[reg].w > high))
         {
                 x86_int(5);
+                return 1;
         }
         
         cycles -= is486 ? 7 : 10;
@@ -576,11 +585,12 @@ static int opBOUND_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
         low = geteal();
-        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 0;
+        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
         
         if (((int32_t)regs[reg].l < low) || ((int32_t)regs[reg].l > high))
         {
                 x86_int(5);
+                return 1;
         }
         
         cycles -= is486 ? 7 : 10;
@@ -593,11 +603,12 @@ static int opBOUND_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
         low = geteal();
-        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 0;
+        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
         
         if (((int32_t)regs[reg].l < low) || ((int32_t)regs[reg].l > high))
         {
                 x86_int(5);
+                return 1;
         }
         
         cycles -= is486 ? 7 : 10;
@@ -611,7 +622,7 @@ static int opCLTS(uint32_t fetchdat)
         {
                 pclog("Can't CLTS\n");
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         cr0 &= ~8;
         cycles -= 5;
@@ -623,9 +634,10 @@ static int opINVD(uint32_t fetchdat)
         if (!is486) 
         {
                 x86illegal();
-                return 0;
+                return 1;
         }
         cycles -= 1000;
+        CPU_BLOCK_END();
         return 0;
 }
 static int opWBINVD(uint32_t fetchdat)
@@ -633,9 +645,10 @@ static int opWBINVD(uint32_t fetchdat)
         if (!is486) 
         {
                 x86illegal();
-                return 0;
+                return 1;
         }
         cycles -= 10000;
+        CPU_BLOCK_END();
         return 0;
 }
 
@@ -676,7 +689,7 @@ static int opCPUID(uint32_t fetchdat)
         }
         pc = oldpc;
         x86illegal();
-        return 0;
+        return 1;
 }
 
 static int opRDMSR(uint32_t fetchdat)
@@ -689,7 +702,7 @@ static int opRDMSR(uint32_t fetchdat)
         }
         pc = oldpc;
         x86illegal();
-        return 0;
+        return 1;
 }
 
 static int opWRMSR(uint32_t fetchdat)
@@ -702,6 +715,6 @@ static int opWRMSR(uint32_t fetchdat)
         }
         pc = oldpc;
         x86illegal();
-        return 0;
+        return 1;
 }
 

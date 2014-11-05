@@ -12,7 +12,7 @@
         else                                                                    \
         {                                                                       \
                 src.l[0] = readmeml(easeg, eaaddr);                             \
-                src.l[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 0;     \
+                src.l[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 1;     \
                 cycles -= 2;                                                    \
         }
 
@@ -21,27 +21,27 @@
         {                                                               \
                 pc = oldpc;                                             \
                 x86illegal();                                           \
-                return 0;                                               \
+                return 1;                                               \
         }                                                               \
         if (cr0 & 0xc)                                                  \
         {                                                               \
                 x86_int(7);                                             \
-                return 0;                                               \
+                return 1;                                               \
         }                                                               \
         x87_set_mmx()
 
-int opEMMS(uint32_t fetchdat)
+static int opEMMS(uint32_t fetchdat)
 {
         if (!cpu_hasMMX)
         {
                 pc = oldpc;
                 x86illegal();
-                return 0;
+                return 1;
         }
         if (cr0 & 4)
         {
                 x86_int(7);
-                return 0;
+                return 1;
         }
         x87_emms();
         cycles -= 100; /*Guess*/

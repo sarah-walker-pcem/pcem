@@ -281,8 +281,11 @@ void cpu_set()
         pclog("hasfpu - %i\n",hasfpu);
         pclog("is486 - %i  %i\n",is486,cpu_s->cpu_type);
 
+#ifdef DYNAREC
+        x86_setopcodes(ops_386, ops_386_0f, dynarec_ops_386, dynarec_ops_386_0f);
+#else
         x86_setopcodes(ops_386, ops_386_0f);
-                        
+#endif                        
         memset(&msr, 0, sizeof(msr));
         
         switch (cpu_s->cpu_type)
@@ -292,7 +295,11 @@ void cpu_set()
                 break;
                 
                 case CPU_286:
+#ifdef DYNAREC
+                x86_setopcodes(ops_286, ops_286_0f, dynarec_ops_286, dynarec_ops_286_0f);
+#else
                 x86_setopcodes(ops_286, ops_286_0f);
+#endif                        
                 timing_rr  = 2;   /*register dest - register src*/
                 timing_rm  = 7;   /*register dest - memory src*/
                 timing_mr  = 7;   /*memory dest   - register src*/
@@ -405,7 +412,11 @@ void cpu_set()
                 break;
 
                 case CPU_WINCHIP:
+#ifdef DYNAREC
+                x86_setopcodes(ops_386, ops_winchip_0f, dynarec_ops_386, dynarec_ops_winchip_0f);
+#else
                 x86_setopcodes(ops_386, ops_winchip_0f);
+#endif                        
                 timing_rr  = 1; /*register dest - register src*/
                 timing_rm  = 2; /*register dest - memory src*/
                 timing_mr  = 3; /*memory dest   - register src*/
@@ -611,3 +622,19 @@ uint8_t cyrix_read(uint16_t addr, void *priv)
         }
         return 0xff;
 }
+
+#ifdef DYNAREC
+void x86_setopcodes(OpFn *opcodes, OpFn *opcodes_0f, OpFn *dynarec_opcodes, OpFn *dynarec_opcodes_0f)
+{
+        x86_opcodes = opcodes;
+        x86_opcodes_0f = opcodes_0f;
+        x86_dynarec_opcodes = dynarec_opcodes;
+        x86_dynarec_opcodes_0f = dynarec_opcodes_0f;
+}
+#else
+void x86_setopcodes(OpFn *opcodes, OpFn *opcodes_0f)
+{
+        x86_opcodes = opcodes;
+        x86_opcodes_0f = opcodes_0f;
+}
+#endif

@@ -2,7 +2,7 @@
                 if ((msw&1) && !(eflags&VM_FLAG))               \
                 {                                               \
                         pmoderetf(0, stack_offset);             \
-                        return 0;                               \
+                        return 1;                               \
                 }                                               \
                 oxpc = pc;                                      \
                 if (stack32)                                    \
@@ -15,7 +15,7 @@
                         pc = readmemw(ss, SP);                  \
                         loadcs(readmemw(ss, SP + 2));           \
                 }                                               \
-                if (abrt) return 0;                             \
+                if (abrt) return 1;                             \
                 if (stack32) ESP += 4 + stack_offset;           \
                 else         SP  += 4 + stack_offset;           \
                 cycles -= is486 ? 13 : 18;
@@ -24,7 +24,7 @@
                 if ((msw&1) && !(eflags&VM_FLAG))               \
                 {                                               \
                         pmoderetf(1, stack_offset);             \
-                        return 0;                               \
+                        return 1;                               \
                 }                                               \
                 oxpc = pc;                                      \
                 if (stack32)                                    \
@@ -37,18 +37,20 @@
                         pc = readmeml(ss, SP);                  \
                         loadcs(readmeml(ss, SP + 4) & 0xffff);  \
                 }                                               \
-                if (abrt) return 0;                             \
+                if (abrt) return 1;                             \
                 if (stack32) ESP += 8 + stack_offset;           \
                 else         SP  += 8 + stack_offset;           \
                 cycles -= is486 ? 13 : 18;
 
 static int opRETF_a16(uint32_t fetchdat)
 {
+        CPU_BLOCK_END();
         RETF_a16(0);
         return 0;
 }
 static int opRETF_a32(uint32_t fetchdat)
 {
+        CPU_BLOCK_END();
         RETF_a32(0);
         return 0;
 }
@@ -56,12 +58,14 @@ static int opRETF_a32(uint32_t fetchdat)
 static int opRETF_a16_imm(uint32_t fetchdat)
 {
         uint16_t offset = getwordf();
+        CPU_BLOCK_END();
         RETF_a16(offset);
         return 0;
 }
 static int opRETF_a32_imm(uint32_t fetchdat)
 {
         uint16_t offset = getwordf();
+        CPU_BLOCK_END();
         RETF_a32(offset);
         return 0;
 }
@@ -71,7 +75,7 @@ static int opIRET_286(uint32_t fetchdat)
         if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
         {
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         if (msw&1)
         {
@@ -102,7 +106,8 @@ static int opIRET_286(uint32_t fetchdat)
         flags_extract();
         cycles -= is486 ? 15 : 22;
         nmi_enable = 1;
-        return 0;
+        CPU_BLOCK_END();
+        return abrt;
 }
 
 static int opIRET(uint32_t fetchdat)
@@ -110,7 +115,7 @@ static int opIRET(uint32_t fetchdat)
         if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
         {
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         if (msw&1)
         {
@@ -141,7 +146,8 @@ static int opIRET(uint32_t fetchdat)
         flags_extract();
         cycles -= is486 ? 15 : 22;
         nmi_enable = 1;
-        return 0;
+        CPU_BLOCK_END();
+        return abrt;
 }
 
 static int opIRETD(uint32_t fetchdat)
@@ -149,7 +155,7 @@ static int opIRETD(uint32_t fetchdat)
         if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
         {
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         if (msw & 1)
         {
@@ -182,6 +188,7 @@ static int opIRETD(uint32_t fetchdat)
         flags_extract();
         cycles -= is486 ? 15 : 22;
         nmi_enable = 1;
-        return 0;
+        CPU_BLOCK_END();
+        return abrt;
 }
  

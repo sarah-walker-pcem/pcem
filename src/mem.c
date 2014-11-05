@@ -15,6 +15,10 @@
 #include "x86.h"
 #include "cpu.h"
 #include "rom.h"
+#if DYNAREC
+#include "x86_ops.h"
+#include "codegen.h"
+#endif
 
 static uint8_t         (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
 static uint16_t        (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
@@ -492,6 +496,9 @@ void flushmmucache()
                         exit(-1);
                 }
         }*/
+#if DYNAREC
+        codegen_flush();
+#endif
 }
 
 void flushmmucache_nopc()
@@ -544,6 +551,23 @@ void flushmmucache_cr3()
                         exit(-1);
                 }
         }*/
+}
+
+
+void mem_flush_write_page(uint32_t addr, uint32_t virt)
+{
+        int c;
+
+        for (c = 0; c < 256; c++)        
+        {
+                uintptr_t target = (uintptr_t)&ram[(uintptr_t)(addr & ~0xFFF) - (uintptr_t)(writelookup[c] << 12)];
+
+                if (writelookup2[writelookup[c]] == target)
+                {
+                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup[c] = 0xffffffff;
+                }
+        }
 }
 
 extern int output;
@@ -716,6 +740,10 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         writelookupp[writelnext]=mmu_perm;
         writelookup[writelnext++]=virt>>12;
         writelnext&=(cachesize-1);
+
+#if DYNAREC
+        codegen_dirty(phys);
+#endif
 }
 
 #undef printf

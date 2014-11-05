@@ -7,6 +7,10 @@
 #include "ali1429.h"
 #include "amstrad.h"
 #include "cdrom-ioctl.h"
+#ifdef DYNAREC
+#include "x86_ops.h"
+#include "codegen.h"
+#endif
 #include "cdrom-null.h"
 #include "config.h"
 #include "cpu.h"
@@ -201,6 +205,10 @@ void initpc()
         
         loadconfig(NULL);
         pclog("Config loaded\n");
+
+#if DYNAREC
+        codegen_init();
+#endif  
         
         cpuspeed2=(AT)?2:1;
 //        cpuspeed2=cpuspeed;
@@ -363,6 +371,27 @@ void runpc()
                         segareads=egareads;
                         segawrites=egawrites;
                         scycles_lost = cycles_lost;
+#if DYNAREC
+                        cpu_recomp_blocks_latched = cpu_recomp_blocks;
+                        cpu_recomp_ins_latched = cpu_recomp_ins;
+                        cpu_new_blocks_latched = cpu_new_blocks;
+                        cpu_recomp_flushes_latched = cpu_recomp_flushes;
+                        cpu_recomp_evicted_latched = cpu_recomp_evicted;
+                        cpu_recomp_reuse_latched = cpu_recomp_reuse;
+                        cpu_recomp_removed_latched = cpu_recomp_removed;
+                        cpu_reps_latched = cpu_reps;
+                        cpu_notreps_latched = cpu_notreps;
+                                                
+                        cpu_recomp_blocks = 0;
+                        cpu_recomp_ins = 0;
+                        cpu_new_blocks = 0;
+                        cpu_recomp_flushes = 0;
+                        cpu_recomp_evicted = 0;
+                        cpu_recomp_reuse = 0;
+                        cpu_recomp_removed = 0;
+                        cpu_reps = 0;
+                        cpu_notreps = 0;
+#endif
                         updatestatus=1;
                         readlnum=writelnum=0;
                         egareads=egawrites=0;

@@ -2,8 +2,8 @@ static int opXCHG_b_a16(uint32_t fetchdat)
 {
         uint8_t temp;
         fetch_ea_16(fetchdat);
-        temp = geteab();                        if (abrt) return 0;
-        seteab(getr8(reg));                     if (abrt) return 0;
+        temp = geteab();                        if (abrt) return 1;
+        seteab(getr8(reg));                     if (abrt) return 1;
         setr8(reg, temp);
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;
@@ -12,8 +12,8 @@ static int opXCHG_b_a32(uint32_t fetchdat)
 {
         uint8_t temp;
         fetch_ea_32(fetchdat);
-        temp = geteab();                        if (abrt) return 0;
-        seteab(getr8(reg));                     if (abrt) return 0;
+        temp = geteab();                        if (abrt) return 1;
+        seteab(getr8(reg));                     if (abrt) return 1;
         setr8(reg, temp);
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;
@@ -23,8 +23,8 @@ static int opXCHG_w_a16(uint32_t fetchdat)
 {
         uint16_t temp;
         fetch_ea_16(fetchdat);
-        temp = geteaw();                        if (abrt) return 0;
-        seteaw(regs[reg].w);                    if (abrt) return 0;
+        temp = geteaw();                        if (abrt) return 1;
+        seteaw(regs[reg].w);                    if (abrt) return 1;
         regs[reg].w = temp;
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;
@@ -33,8 +33,8 @@ static int opXCHG_w_a32(uint32_t fetchdat)
 {
         uint16_t temp;
         fetch_ea_32(fetchdat);
-        temp = geteaw();                        if (abrt) return 0;
-        seteaw(regs[reg].w);                    if (abrt) return 0;
+        temp = geteaw();                        if (abrt) return 1;
+        seteaw(regs[reg].w);                    if (abrt) return 1;
         regs[reg].w = temp;
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;
@@ -44,8 +44,8 @@ static int opXCHG_l_a16(uint32_t fetchdat)
 {
         uint32_t temp;
         fetch_ea_16(fetchdat);
-        temp = geteal();                        if (abrt) return 0;
-        seteal(regs[reg].l);                    if (abrt) return 0;
+        temp = geteal();                        if (abrt) return 1;
+        seteal(regs[reg].l);                    if (abrt) return 1;
         regs[reg].l = temp;
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;
@@ -54,8 +54,8 @@ static int opXCHG_l_a32(uint32_t fetchdat)
 {
         uint32_t temp;
         fetch_ea_32(fetchdat);
-        temp = geteal();                        if (abrt) return 0;
-        seteal(regs[reg].l);                    if (abrt) return 0;
+        temp = geteal();                        if (abrt) return 1;
+        seteal(regs[reg].l);                    if (abrt) return 1;
         regs[reg].l = temp;
         cycles -= ((mod == 3) ? 3 : 5);
         return 0;

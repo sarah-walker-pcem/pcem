@@ -133,6 +133,8 @@ void leave_fullscreen()
         leave_fullscreen_flag = 1;
 }
 
+uint64_t main_time;
+
 void mainthread(LPVOID param)
 {
         int t = 0;
@@ -155,6 +157,8 @@ void mainthread(LPVOID param)
                 old_time = new_time;
                 if (drawits > 0 && !pause)
                 {
+                        uint64_t start_time = timer_read();
+                        uint64_t end_time;
                         drawits-=10;        if (drawits>50) drawits=0;
                         runpc();
                         frames++;
@@ -164,6 +168,8 @@ void mainthread(LPVOID param)
                                 nvr_dosave = 0;
                                 savenvr();
                         }
+                        end_time = timer_read();
+                        main_time += end_time - start_time;
                 }
                 else
                         Sleep(1);

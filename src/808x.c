@@ -630,7 +630,10 @@ void resetx86()
 //        cs=0xFFFF0;
         pc=0;
         msw=0;
-        cr0=0;
+        if (is486)
+                cr0 = 1 << 30;
+        else
+                cr0 = 0;
         cr4 = 0;
         eflags=0;
         cgate32=0;

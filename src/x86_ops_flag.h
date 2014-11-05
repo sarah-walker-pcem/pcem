@@ -25,10 +25,13 @@ static int opCLI(uint32_t fetchdat)
         if (!IOPLp)
         {
                 x86gpf(NULL,0);
+                return 1;
         }
         else
                 flags &= ~I_FLAG;
-                        
+         
+        CPU_BLOCK_END();
+                       
         cycles -= 3;
         return 0;
 }
@@ -51,10 +54,13 @@ static int opSTI(uint32_t fetchdat)
         if (!IOPLp)
         {
                 x86gpf(NULL,0);
+                return 1;
         }
         else
                 flags |= I_FLAG;
-                        
+
+        CPU_BLOCK_END();
+                                
         cycles -= 2;
         return 0;
 }
@@ -79,12 +85,12 @@ static int opPUSHF(uint32_t fetchdat)
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL,0);
-                return 0;
+                return 1;
         }
         flags_rebuild();
         PUSH_W(flags);
         cycles -= 4;
-        return 0;
+        return abrt;
 }
 static int opPUSHFD(uint32_t fetchdat)
 {
@@ -92,14 +98,14 @@ static int opPUSHFD(uint32_t fetchdat)
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         if (CPUID) tempw = eflags & 0x24;
         else       tempw = eflags & 4;
         flags_rebuild();
         PUSH_L(flags | (tempw << 16));
         cycles -= 4;
-        return 0;
+        return abrt;
 }
 
 static int opPOPF_286(uint32_t fetchdat)
@@ -109,10 +115,10 @@ static int opPOPF_286(uint32_t fetchdat)
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         
-        tempw = POP_W();                if (abrt) return 0;
+        tempw = POP_W();                if (abrt) return 1;
 
         if (!(msw & 1))           flags = (flags & 0x7000) | (tempw & 0x0fd5) | 2;
         else if (!(CPL))          flags = (tempw & 0x7fd5) | 2;
@@ -130,10 +136,10 @@ static int opPOPF(uint32_t fetchdat)
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL, 0);
-                return 0;
+                return 1;
         }
         
-        tempw = POP_W();                if (abrt) return 0;
+        tempw = POP_W();                if (abrt) return 1;
         
         if (!(CPL) || !(msw & 1)) flags = (tempw & 0xffd5) | 2;
         else if (IOPLp)           flags = (flags & 0x3000) | (tempw & 0xcfd5) | 2;
@@ -150,10 +156,10 @@ static int opPOPFD(uint32_t fetchdat)
         if ((eflags & VM_FLAG) && (IOPL < 3))
         {
                 x86gpf(NULL, 0);
-                return 0;                
+                return 1;
         }
         
-        templ = POP_L();                if (abrt) return 0;
+        templ = POP_L();                if (abrt) return 1;
 
         if (!(CPL) || !(msw & 1)) flags = (templ & 0xffd5) | 2;
         else if (IOPLp)           flags = (flags & 0x3000) | (templ & 0xcfd5) | 2;
