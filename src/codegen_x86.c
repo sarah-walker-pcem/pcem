@@ -448,14 +448,19 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         OpFn *op_table = x86_dynarec_opcodes;
         x86seg *op_ea_seg = &_ds;
         int op_ssegs = 0;
+        int opcode_shift = 0;
+        int opcode_mask = 0x3ff;
+        int over = 0;
+        int pc_off = 0;
         
-        while (1)
+        while (!over)
         {
 
                 switch (opcode)
                 {
                         case 0x0f:
                         op_table = x86_dynarec_opcodes_0f;
+                        over = 1;
                         break;
                         
                         case 0x26: /*ES:*/
@@ -498,6 +503,57 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(2);
                         break;
                         
+                        case 0xd8:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_d8_a32 : x86_opcodes_d8_a16;
+                        opcode_shift = 3;
+                        opcode_mask = 0x1f;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xd9:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_d9_a32 : x86_opcodes_d9_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xda:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_da_a32 : x86_opcodes_da_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xdb:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_db_a32 : x86_opcodes_db_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xdc:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_dc_a32 : x86_opcodes_dc_a16;
+                        opcode_shift = 3;
+                        opcode_mask = 0x1f;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xdd:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_dd_a32 : x86_opcodes_dd_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xde:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_de_a32 : x86_opcodes_de_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        case 0xdf:
+                        op_table = (op_32 & 0x200) ? x86_opcodes_df_a32 : x86_opcodes_df_a16;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        break;
+                        
                         case 0xf0: /*LOCK*/
                         addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(2);
                         break;
@@ -510,13 +566,14 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                 if (abrt)
                         return;
                 opcode = fetchdat & 0xff;
-                fetchdat >>= 8;
+                if (!pc_off)
+                        fetchdat >>= 8;
                 
                 op_pc++;
         }
         
 generate_call:
-        op = op_table[(opcode | op_32) & 0x3ff];
+        op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 //        if (output)
 //                pclog("Generate call at %08X %02X %08X %02X  %08X %08X %08X %08X %08X  %02X %02X %02X %02X\n", &codeblock[block_current][block_pos], opcode, new_pc, ram[old_pc], EAX, EBX, ECX, EDX, ESI, ram[0x7bd2+6],ram[0x7bd2+7],ram[0x7bd2+8],ram[0x7bd2+9]);
         if (opcode_needs_tempc[opcode])
@@ -548,7 +605,7 @@ generate_call:
         addbyte(0xC7); /*MOVL $new_pc,(pc)*/
         addbyte(0x05);
         addlong((uint32_t)&pc);
-        addlong(op_pc);
+        addlong(op_pc + pc_off);
         addbyte(0xC7); /*MOVL $old_pc,(oldpc)*/
         addbyte(0x05);
         addlong((uint32_t)&oldpc);

@@ -1,59 +1,74 @@
-#define opESCAPE(num)                                                           \
-        static int opESCAPE_ ## num ##_a16(uint32_t fetchdat)                   \
-        {                                                                       \
-                flags_rebuild();                                                \
-                if (cr0 & 0xc)                                                  \
-                {                                                               \
-                        x86_int(7);                                             \
-                        return 1;                                               \
-                }                                                               \
-                else                                                            \
-                {                                                               \
-                        fpucount++;                                             \
-                        fetch_ea_16(fetchdat);                                  \
-                        if (hasfpu)                                             \
-                        {                                                       \
-                                x87_pc_off = oldpc;                             \
-                                x87_pc_seg = CS;                                \
-                                x87_op_off = eaaddr;                            \
-                                x87_op_seg = ea_rseg;                           \
-                                x87_ ## num(fetchdat);                          \
-                        }                                                       \
-                }                                                               \
-                return abrt;                                                       \
-        }                                                                       \
-        static int opESCAPE_ ## num ## _a32(uint32_t fetchdat)                  \
-        {                                                                       \
-                flags_rebuild();                                                \
-                if (cr0 & 0xc)                                                  \
-                {                                                               \
-                        x86_int(7);                                             \
-                        return 1;                                               \
-                }                                                               \
-                else                                                            \
-                {                                                               \
-                        fpucount++;                                             \
-                        fetch_ea_32(fetchdat);                                  \
-                        if (hasfpu)                                             \
-                        {                                                       \
-                                x87_pc_off = oldpc;                             \
-                                x87_pc_seg = CS;                                \
-                                x87_op_off = eaaddr;                            \
-                                x87_op_seg = ea_rseg;                           \
-                                x87_ ## num(fetchdat);                          \
-                        }                                                       \
-                }                                                               \
-                return abrt;                                                       \
-        }
+static int opESCAPE_d8_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_d8_a16[(fetchdat >> 3) & 0x1f](fetchdat);
+}
+static int opESCAPE_d8_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_d8_a32[(fetchdat >> 3) & 0x1f](fetchdat);
+}
 
-opESCAPE(d8);
-opESCAPE(d9);
-opESCAPE(da);
-opESCAPE(db);
-opESCAPE(dc);
-opESCAPE(dd);
-opESCAPE(de);
-opESCAPE(df);
+static int opESCAPE_d9_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_d9_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_d9_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_d9_a32[fetchdat & 0xff](fetchdat);
+}
+
+static int opESCAPE_da_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_da_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_da_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_da_a32[fetchdat & 0xff](fetchdat);
+}
+
+static int opESCAPE_db_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_db_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_db_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_db_a32[fetchdat & 0xff](fetchdat);
+}
+
+static int opESCAPE_dc_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_dc_a16[(fetchdat >> 3) & 0x1f](fetchdat);
+}
+static int opESCAPE_dc_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_dc_a32[(fetchdat >> 3) & 0x1f](fetchdat);
+}
+
+static int opESCAPE_dd_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_dd_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_dd_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_dd_a32[fetchdat & 0xff](fetchdat);
+}
+
+static int opESCAPE_de_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_de_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_de_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_de_a32[fetchdat & 0xff](fetchdat);
+}
+
+static int opESCAPE_df_a16(uint32_t fetchdat)
+{
+        return x86_opcodes_df_a16[fetchdat & 0xff](fetchdat);
+}
+static int opESCAPE_df_a32(uint32_t fetchdat)
+{
+        return x86_opcodes_df_a32[fetchdat & 0xff](fetchdat);
+}
 
 static int opWAIT(uint32_t fetchdat)
 {

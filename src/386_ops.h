@@ -1,11 +1,5 @@
 #include "x86_ops.h"
 
-OpFn *x86_opcodes;
-OpFn *x86_opcodes_0f;
-#ifdef DYNAREC
-OpFn *x86_dynarec_opcodes;
-OpFn *x86_dynarec_opcodes_0f;
-#endif
 
 #define ILLEGAL_ON(cond)                \
         do                              \
@@ -638,3 +632,5 @@ OpFn OP_TABLE(386)[1024] =
 /*e0*/  opLOOPNE_l,     opLOOPE_l,      opLOOP_l,       opJECXZ,        opIN_AL_imm,    opIN_EAX_imm,   opOUT_AL_imm,   opOUT_EAX_imm,  opCALL_r32,     opJMP_r32,      opJMP_far_a32,  opJMP_r8,       opIN_AL_DX,     opIN_EAX_DX,    opOUT_AL_DX,    opOUT_EAX_DX,
 /*f0*/  opLOCK,         ILLEGAL,        opREPNE,        opREPE,         opHLT,          opCMC,          opF6_a32,       opF7_l_a32,     opCLC,          opSTC,          opCLI,          opSTI,          opCLD,          opSTD,          opINCDEC_b_a32, opFF_l_a32,
 };
+
+#include "x87_ops.h"

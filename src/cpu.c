@@ -4,6 +4,46 @@
 #include "io.h"
 #include "x86_ops.h"
 
+#ifdef DYNAREC
+OpFn *x86_dynarec_opcodes;
+OpFn *x86_dynarec_opcodes_0f;
+OpFn *x86_dynarec_opcodes_d8_a16;
+OpFn *x86_dynarec_opcodes_d8_a32;
+OpFn *x86_dynarec_opcodes_d9_a16;
+OpFn *x86_dynarec_opcodes_d9_a32;
+OpFn *x86_dynarec_opcodes_da_a16;
+OpFn *x86_dynarec_opcodes_da_a32;
+OpFn *x86_dynarec_opcodes_db_a16;
+OpFn *x86_dynarec_opcodes_db_a32;
+OpFn *x86_dynarec_opcodes_dc_a16;
+OpFn *x86_dynarec_opcodes_dc_a32;
+OpFn *x86_dynarec_opcodes_dd_a16;
+OpFn *x86_dynarec_opcodes_dd_a32;
+OpFn *x86_dynarec_opcodes_de_a16;
+OpFn *x86_dynarec_opcodes_de_a32;
+OpFn *x86_dynarec_opcodes_df_a16;
+OpFn *x86_dynarec_opcodes_df_a32;
+#endif
+
+OpFn *x86_opcodes;
+OpFn *x86_opcodes_0f;
+OpFn *x86_opcodes_d8_a16;
+OpFn *x86_opcodes_d8_a32;
+OpFn *x86_opcodes_d9_a16;
+OpFn *x86_opcodes_d9_a32;
+OpFn *x86_opcodes_da_a16;
+OpFn *x86_opcodes_da_a32;
+OpFn *x86_opcodes_db_a16;
+OpFn *x86_opcodes_db_a32;
+OpFn *x86_opcodes_dc_a16;
+OpFn *x86_opcodes_dc_a32;
+OpFn *x86_opcodes_dd_a16;
+OpFn *x86_opcodes_dd_a32;
+OpFn *x86_opcodes_de_a16;
+OpFn *x86_opcodes_de_a32;
+OpFn *x86_opcodes_df_a16;
+OpFn *x86_opcodes_df_a32;
+
 enum
 {
         CPUID_FPU = (1 << 0),
@@ -286,6 +326,85 @@ void cpu_set()
 #else
         x86_setopcodes(ops_386, ops_386_0f);
 #endif                        
+#ifdef DYNAREC
+        if (hasfpu)
+        {
+                x86_dynarec_opcodes_d8_a16 = dynarec_ops_fpu_d8_a16;
+                x86_dynarec_opcodes_d8_a32 = dynarec_ops_fpu_d8_a32;
+                x86_dynarec_opcodes_d9_a16 = dynarec_ops_fpu_d9_a16;
+                x86_dynarec_opcodes_d9_a32 = dynarec_ops_fpu_d9_a32;
+                x86_dynarec_opcodes_da_a16 = dynarec_ops_fpu_da_a16;
+                x86_dynarec_opcodes_da_a32 = dynarec_ops_fpu_da_a32;
+                x86_dynarec_opcodes_db_a16 = dynarec_ops_fpu_db_a16;
+                x86_dynarec_opcodes_db_a32 = dynarec_ops_fpu_db_a32;
+                x86_dynarec_opcodes_dc_a16 = dynarec_ops_fpu_dc_a16;
+                x86_dynarec_opcodes_dc_a32 = dynarec_ops_fpu_dc_a32;
+                x86_dynarec_opcodes_dd_a16 = dynarec_ops_fpu_dd_a16;
+                x86_dynarec_opcodes_dd_a32 = dynarec_ops_fpu_dd_a32;
+                x86_dynarec_opcodes_de_a16 = dynarec_ops_fpu_de_a16;
+                x86_dynarec_opcodes_de_a32 = dynarec_ops_fpu_de_a32;
+                x86_dynarec_opcodes_df_a16 = dynarec_ops_fpu_df_a16;
+                x86_dynarec_opcodes_df_a32 = dynarec_ops_fpu_df_a32;
+        }
+        else
+        {
+                x86_dynarec_opcodes_d8_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_d8_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_d9_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_d9_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_da_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_da_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_db_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_db_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_dc_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_dc_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_dd_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_dd_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_de_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_de_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a16;
+                x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a32;
+        }
+#endif
+        if (hasfpu)
+        {
+                x86_opcodes_d8_a16 = ops_fpu_d8_a16;
+                x86_opcodes_d8_a32 = ops_fpu_d8_a32;
+                x86_opcodes_d9_a16 = ops_fpu_d9_a16;
+                x86_opcodes_d9_a32 = ops_fpu_d9_a32;
+                x86_opcodes_da_a16 = ops_fpu_da_a16;
+                x86_opcodes_da_a32 = ops_fpu_da_a32;
+                x86_opcodes_db_a16 = ops_fpu_db_a16;
+                x86_opcodes_db_a32 = ops_fpu_db_a32;
+                x86_opcodes_dc_a16 = ops_fpu_dc_a16;
+                x86_opcodes_dc_a32 = ops_fpu_dc_a32;
+                x86_opcodes_dd_a16 = ops_fpu_dd_a16;
+                x86_opcodes_dd_a32 = ops_fpu_dd_a32;
+                x86_opcodes_de_a16 = ops_fpu_de_a16;
+                x86_opcodes_de_a32 = ops_fpu_de_a32;
+                x86_opcodes_df_a16 = ops_fpu_df_a16;
+                x86_opcodes_df_a32 = ops_fpu_df_a32;
+        }
+        else
+        {
+                x86_opcodes_d8_a16 = ops_nofpu_a16;
+                x86_opcodes_d8_a32 = ops_nofpu_a32;
+                x86_opcodes_d9_a16 = ops_nofpu_a16;
+                x86_opcodes_d9_a32 = ops_nofpu_a32;
+                x86_opcodes_da_a16 = ops_nofpu_a16;
+                x86_opcodes_da_a32 = ops_nofpu_a32;
+                x86_opcodes_db_a16 = ops_nofpu_a16;
+                x86_opcodes_db_a32 = ops_nofpu_a32;
+                x86_opcodes_dc_a16 = ops_nofpu_a16;
+                x86_opcodes_dc_a32 = ops_nofpu_a32;
+                x86_opcodes_dd_a16 = ops_nofpu_a16;
+                x86_opcodes_dd_a32 = ops_nofpu_a32;
+                x86_opcodes_de_a16 = ops_nofpu_a16;
+                x86_opcodes_de_a32 = ops_nofpu_a32;
+                x86_opcodes_df_a16 = ops_nofpu_a16;
+                x86_opcodes_df_a32 = ops_nofpu_a32;
+        }
+
         memset(&msr, 0, sizeof(msr));
         
         switch (cpu_s->cpu_type)

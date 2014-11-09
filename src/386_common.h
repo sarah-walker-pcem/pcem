@@ -134,6 +134,12 @@ static inline uint32_t getlong()
         return fastreadl(cs+(pc-4));
 }
 
+static inline uint64_t getquad()
+{
+        pc+=8;
+        return fastreadl(cs+(pc-8)) | ((uint64_t)fastreadl(cs+(pc-4)) << 32);
+}
+
 
 
 static inline uint8_t geteab()
@@ -162,6 +168,11 @@ static inline uint32_t geteal()
         return readmeml(easeg,eaaddr);
 }
 
+static inline uint64_t geteaq()
+{
+        return readmeml(easeg,eaaddr) | ((uint64_t)readmeml(easeg, eaaddr + 4) << 32);
+}
+
 static inline uint8_t geteab_mem()
 {
         if (eal_r) return *(uint8_t *)eal_r;
@@ -176,6 +187,12 @@ static inline uint32_t geteal_mem()
 {
         if (eal_r) return *eal_r;
         return readmeml(easeg,eaaddr);
+}
+
+static inline void seteaq(uint64_t v)
+{
+        writememll(easeg, eaaddr, v & 0xffffffff); if (abrt) return;
+        writememll(easeg, eaaddr + 4, v >> 32);
 }
 
 #define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) regs[rm&3].b.h=v; else regs[rm].b.l=v
