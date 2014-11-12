@@ -10,7 +10,7 @@ static int opBT_w_r_a16(uint32_t fetchdat)
         if (temp & (1 << (regs[reg].w & 15))) flags |=  C_FLAG;
         else                                  flags &= ~C_FLAG;
         
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opBT_w_r_a32(uint32_t fetchdat)
@@ -24,7 +24,7 @@ static int opBT_w_r_a32(uint32_t fetchdat)
         if (temp & (1 << (regs[reg].w & 15))) flags |=  C_FLAG;
         else                                  flags &= ~C_FLAG;
         
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opBT_l_r_a16(uint32_t fetchdat)
@@ -38,7 +38,7 @@ static int opBT_l_r_a16(uint32_t fetchdat)
         if (temp & (1 << (regs[reg].l & 31))) flags |=  C_FLAG;
         else                                  flags &= ~C_FLAG;
         
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opBT_l_r_a32(uint32_t fetchdat)
@@ -52,7 +52,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
         if (temp & (1 << (regs[reg].l & 31))) flags |=  C_FLAG;
         else                                  flags &= ~C_FLAG;
         
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -72,7 +72,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;                                    \
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
-                cycles -= 6;                                                    \
+                CLOCK_CYCLES(6);                                                \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _w_r_a32(uint32_t fetchdat)                  \
@@ -90,7 +90,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;                                    \
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
-                cycles -= 6;                                                    \
+                CLOCK_CYCLES(6);                                                \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _l_r_a16(uint32_t fetchdat)                  \
@@ -108,7 +108,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;                                    \
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
-                cycles -= 6;                                                    \
+                CLOCK_CYCLES(6);                                                \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _l_r_a32(uint32_t fetchdat)                  \
@@ -126,7 +126,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;                                    \
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
-                cycles -= 6;                                                    \
+                CLOCK_CYCLES(6);                                                \
                 return 0;                                                       \
         }
 
@@ -150,7 +150,7 @@ static int opBA_w_a16(uint32_t fetchdat)
                 case 0x20: /*BT w,imm*/
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
-                cycles -= 3;
+                CLOCK_CYCLES(3);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -171,7 +171,7 @@ static int opBA_w_a16(uint32_t fetchdat)
         seteaw(temp);                           if (abrt) return 1;
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opBA_w_a32(uint32_t fetchdat)
@@ -190,7 +190,7 @@ static int opBA_w_a32(uint32_t fetchdat)
                 case 0x20: /*BT w,imm*/
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
-                cycles -= 3;
+                CLOCK_CYCLES(3);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -211,7 +211,7 @@ static int opBA_w_a32(uint32_t fetchdat)
         seteaw(temp);                           if (abrt) return 1;
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -231,7 +231,7 @@ static int opBA_l_a16(uint32_t fetchdat)
                 case 0x20: /*BT w,imm*/
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
-                cycles -= 3;
+                CLOCK_CYCLES(3);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -252,7 +252,7 @@ static int opBA_l_a16(uint32_t fetchdat)
         seteal(temp);                           if (abrt) return 1;
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opBA_l_a32(uint32_t fetchdat)
@@ -271,7 +271,7 @@ static int opBA_l_a32(uint32_t fetchdat)
                 case 0x20: /*BT w,imm*/
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
-                cycles -= 3;
+                CLOCK_CYCLES(3);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -292,6 +292,6 @@ static int opBA_l_a32(uint32_t fetchdat)
         seteal(temp);                           if (abrt) return 1;
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }

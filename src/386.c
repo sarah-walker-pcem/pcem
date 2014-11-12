@@ -1079,6 +1079,9 @@ int dontprint=0;
 
 #define OP_TABLE(name) ops_ ## name
 
+#define CLOCK_CYCLES(c) cycles -= (c)
+#define CLOCK_CYCLES_ALWAYS(c) cycles -= (c)
+
 #include "386_ops.h"
 
 #undef NOTRM

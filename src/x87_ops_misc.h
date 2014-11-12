@@ -4,7 +4,7 @@ static int opFSTSW_AX(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSTSW\n");
         AX = npxs;
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -14,7 +14,7 @@ static int opFNOP(uint32_t fetchdat)
 {
         FP_ENTER();
         pc++;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -23,7 +23,7 @@ static int opFCLEX(uint32_t fetchdat)
         FP_ENTER();
         pc++;
         npxs &= 0xff00;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -35,7 +35,7 @@ static int opFINIT(uint32_t fetchdat)
         npxs = 0;
         tag = 0xFFFF;
         TOP = 0;
-        cycles -= 17;
+        CLOCK_CYCLES(17);
         return 0;
 }
 
@@ -46,7 +46,7 @@ static int opFFREE(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FFREE\n");
         tag |= (3 << (((TOP + fetchdat) & 7) << 1));
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -60,7 +60,7 @@ static int opFST(uint32_t fetchdat)
         temp = (tag >> ((TOP & 7) << 1)) & 3;
         tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
         tag |= (temp << (((TOP + fetchdat) & 7) << 1));
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -75,14 +75,14 @@ static int opFSTP(uint32_t fetchdat)
         tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
         tag |= (temp << (((TOP + fetchdat) & 7) << 1));
         x87_pop();
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
 
 
 
-static void FSTOR()
+static int FSTOR()
 {
         switch ((cr0 & 1) | (op32 & 0x100))
         {
@@ -119,8 +119,9 @@ static void FSTOR()
             !TOP && !tag)
         ismmx = 1;
 
-        cycles -= (cr0 & 1) ? 34 : 44;
+        CLOCK_CYCLES((cr0 & 1) ? 34 : 44);
         if (fplog) pclog("FRSTOR %08X:%08X %i %i %04X\n", easeg, eaaddr, ismmx, TOP, tag);
+        return abrt;
 }
 static int opFSTOR_a16(uint32_t fetchdat)
 {
@@ -137,7 +138,7 @@ static int opFSTOR_a32(uint32_t fetchdat)
         return abrt;
 }
 
-static void FSAVE()
+static int FSAVE()
 {
         if (fplog) pclog("FSAVE %08X:%08X %i\n", easeg, eaaddr, ismmx);
         npxs = (npxs & ~(7 << 11)) | (TOP << 11);
@@ -270,7 +271,8 @@ static void FSAVE()
                 }
                 break;
         }
-        cycles-=(cr0&1)?56:67;
+        CLOCK_CYCLES((cr0 & 1) ? 56 : 67);
+        return abrt;
 }
 static int opFSAVE_a16(uint32_t fetchdat)
 {
@@ -293,7 +295,7 @@ static int opFSTSW_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, eaaddr);
         seteaw((npxs & 0xC7FF) | (TOP << 11));
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return abrt;
 }
 static int opFSTSW_a32(uint32_t fetchdat)
@@ -302,7 +304,7 @@ static int opFSTSW_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, eaaddr);
         seteaw((npxs & 0xC7FF) | (TOP << 11));
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return abrt;
 }
 
@@ -313,7 +315,7 @@ static int opFLD(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLD %f\n", ST(fetchdat & 7));
         x87_push(ST(fetchdat&7));
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -326,7 +328,7 @@ static int opFXCH(uint32_t fetchdat)
         td = ST(0);
         ST(0) = ST(fetchdat&7);
         ST(fetchdat&7) = td;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -336,7 +338,7 @@ static int opFCHS(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FCHS\n");
         ST(0) = -ST(0);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -346,7 +348,7 @@ static int opFABS(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FABS %f\n", ST(0));
         ST(0) = fabs(ST(0));
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -358,7 +360,7 @@ static int opFTST(uint32_t fetchdat)
         npxs &= ~(C0|C2|C3);
         if (ST(0) == 0.0)     npxs |= C3;
         else if (ST(0) < 0.0) npxs |= C0;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -372,7 +374,7 @@ static int opFXAM(uint32_t fetchdat)
         else if (ST(0) == 0.0)          npxs |= C3;
         else                            npxs |= C2;
         if (ST(0) < 0.0)                npxs |= C1;
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -382,7 +384,7 @@ static int opFLD1(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLD1\n");
         x87_push(1.0);
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -392,7 +394,7 @@ static int opFLDL2T(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDL2T\n");
         x87_push(3.3219280948873623);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -402,7 +404,7 @@ static int opFLDL2E(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDL2E\n");
         x87_push(1.4426950408889634);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -412,7 +414,7 @@ static int opFLDPI(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDPI\n");
         x87_push(3.141592653589793);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -422,7 +424,7 @@ static int opFLDEG2(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDEG2\n");
         x87_push(0.3010299956639812);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -432,7 +434,7 @@ static int opFLDLN2(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDLN2\n");
         x87_push(0.693147180559945);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
  
@@ -443,7 +445,7 @@ static int opFLDZ(uint32_t fetchdat)
         if (fplog) pclog("FLDZ\n");
         x87_push(0.0);
         tag |= (1<<((TOP&7)<<1));
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -453,7 +455,7 @@ static int opF2XM1(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("F2XM1\n");
         ST(0) = pow(2.0, ST(0)) - 1.0;
-        cycles -= 200;
+        CLOCK_CYCLES(200);
         return 0;
 }
 
@@ -464,7 +466,7 @@ static int opFYL2X(uint32_t fetchdat)
         if (fplog) pclog("FYL2X\n");
         ST(1) = ST(1) * (log(ST(0)) / log(2.0));
         x87_pop();
-        cycles -= 250;
+        CLOCK_CYCLES(250);
         return 0;
 }
 
@@ -476,7 +478,7 @@ static int opFPTAN(uint32_t fetchdat)
         ST(0) = tan(ST(0));
         x87_push(1.0);
         npxs &= ~C2;
-        cycles -= 235;
+        CLOCK_CYCLES(235);
         return 0;
 }
 
@@ -487,7 +489,7 @@ static int opFPATAN(uint32_t fetchdat)
         if (fplog) pclog("FPATAN\n");
         ST(1) = atan2(ST(1), ST(0));
         x87_pop();
-        cycles -= 250;
+        CLOCK_CYCLES(250);
         return 0;
 }
 
@@ -497,7 +499,7 @@ static int opFDECSTP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDECSTP\n");
         TOP = (TOP - 1) & 7;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -507,7 +509,7 @@ static int opFINCSTP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDECSTP\n");
         TOP = (TOP + 1) & 7;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -524,7 +526,7 @@ static int opFPREM(uint32_t fetchdat)
         if (temp64 & 4) npxs|=C0;
         if (temp64 & 2) npxs|=C3;
         if (temp64 & 1) npxs|=C1;
-        cycles -= 100;
+        CLOCK_CYCLES(100);
         return 0;
 }
 
@@ -534,7 +536,7 @@ static int opFSQRT(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSQRT\n");
         ST(0) = sqrt(ST(0));
-        cycles -= 83;
+        CLOCK_CYCLES(83);
         return 0;
 }
 
@@ -548,7 +550,7 @@ static int opFSINCOS(uint32_t fetchdat)
         ST(0) = sin(td);
         x87_push(cos(td));
         npxs &= ~C2;
-        cycles -= 330;
+        CLOCK_CYCLES(330);
         return 0;
 }
 
@@ -559,7 +561,7 @@ static int opFRNDINT(uint32_t fetchdat)
         if (fplog) pclog("FRNDINT %g ", ST(0));
         ST(0) = (double)x87_fround(ST(0));
         if (fplog) pclog("%g\n", ST(0));
-        cycles -= 21;
+        CLOCK_CYCLES(21);
         return 0;
 }
 
@@ -571,7 +573,7 @@ static int opFSCALE(uint32_t fetchdat)
         if (fplog) pclog("FSCALE\n");
         temp64 = (int64_t)ST(1);
         ST(0) = ST(0) * pow(2.0, (double)temp64);
-        cycles -= 30;
+        CLOCK_CYCLES(30);
         return 0;
 }
 
@@ -582,7 +584,7 @@ static int opFSIN(uint32_t fetchdat)
         if (fplog) pclog("FSIN\n");
         ST(0) = sin(ST(0));
         npxs &= ~C2;
-        cycles -= 300;
+        CLOCK_CYCLES(300);
         return 0;
 }
 
@@ -593,12 +595,12 @@ static int opFCOS(uint32_t fetchdat)
         if (fplog) pclog("FCOS\n");
         ST(0) = cos(ST(0));
         npxs &= ~C2;
-        cycles -= 300;
+        CLOCK_CYCLES(300);
         return 0;
 }
 
 
-static void FLDENV()
+static int FLDENV()
 {
         if (fplog) pclog("FLDENV %08X:%08X\n", easeg, eaaddr);
         switch ((cr0 & 1) | (op32 & 0x100))
@@ -618,7 +620,8 @@ static void FLDENV()
                 TOP = (npxs >> 11) & 7;
                 break;
         }
-        cycles -= (cr0 & 1) ? 34 : 44;
+        CLOCK_CYCLES((cr0 & 1) ? 34 : 44);
+        return abrt;
 }
 
 static int opFLDENV_a16(uint32_t fetchdat)
@@ -645,7 +648,7 @@ static int opFLDCW_a16(uint32_t fetchdat)
         tempw = geteaw();
         if (abrt) return 1;
         npxc = tempw;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opFLDCW_a32(uint32_t fetchdat)
@@ -657,11 +660,11 @@ static int opFLDCW_a32(uint32_t fetchdat)
         tempw = geteaw();
         if (abrt) return 1;
         npxc = tempw;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
-static void FSTENV()
+static int FSTENV()
 {
         if (fplog) pclog("FSTENV %08X:%08X\n", easeg, eaaddr);
         switch ((cr0 & 1) | (op32 & 0x100))
@@ -700,7 +703,8 @@ static void FSTENV()
                 writememl(easeg,eaaddr+24,x87_op_seg);
                 break;
         }
-        cycles -= (cr0 & 1) ? 56 : 67;
+        CLOCK_CYCLES((cr0 & 1) ? 56 : 67);
+        return abrt;
 }
 
 static int opFSTENV_a16(uint32_t fetchdat)
@@ -724,7 +728,7 @@ static int opFSTCW_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FSTCW %08X:%08X\n", easeg, eaaddr);
         seteaw(npxc);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return abrt;
 }
 static int opFSTCW_a32(uint32_t fetchdat)
@@ -733,6 +737,6 @@ static int opFSTCW_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FSTCW %08X:%08X\n", easeg, eaaddr);
         seteaw(npxc);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return abrt;
 }

@@ -50,4 +50,11 @@ extern int cpu_recomp_removed, cpu_recomp_removed_latched;
 extern int cpu_reps, cpu_reps_latched;
 extern int cpu_notreps, cpu_notreps_latched;
 
+extern int codegen_block_cycles;
+
+void codegen_timing_start();
+void codegen_timing_prefix(uint8_t prefix);
+void codegen_timing_opcode(uint8_t opcode, uint32_t fetchdat, int op_32);
+void codegen_timing_block_end();
+
 #endif

@@ -31,7 +31,7 @@ static int opMOV_r_CRx_a16(uint32_t fetchdat)
                 x86illegal();
                 break;
         }
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opMOV_r_CRx_a32(uint32_t fetchdat)
@@ -67,7 +67,7 @@ static int opMOV_r_CRx_a32(uint32_t fetchdat)
                 x86illegal();
                 break;
         }
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -81,7 +81,7 @@ static int opMOV_r_DRx_a16(uint32_t fetchdat)
         }
         fetch_ea_16(fetchdat);
         regs[rm].l = 0;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opMOV_r_DRx_a32(uint32_t fetchdat)
@@ -94,7 +94,7 @@ static int opMOV_r_DRx_a32(uint32_t fetchdat)
         }
         fetch_ea_32(fetchdat);
         regs[rm].l = 0;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -135,7 +135,7 @@ static int opMOV_CRx_r_a16(uint32_t fetchdat)
                 x86illegal();
                 break;
         }
-        cycles -= 10;
+        CLOCK_CYCLES(10);
         return 0;
 }
 static int opMOV_CRx_r_a32(uint32_t fetchdat)
@@ -175,7 +175,7 @@ static int opMOV_CRx_r_a32(uint32_t fetchdat)
                 x86illegal();
                 break;
         }
-        cycles -= 10;
+        CLOCK_CYCLES(10);
         return 0;
 }
 
@@ -188,7 +188,7 @@ static int opMOV_DRx_r_a16(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opMOV_DRx_r_a32(uint32_t fetchdat)
@@ -200,7 +200,7 @@ static int opMOV_DRx_r_a32(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -214,7 +214,7 @@ static int opMOV_r_TRx_a16(uint32_t fetchdat)
         }
         fetch_ea_16(fetchdat);
         regs[rm].l = 0;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opMOV_r_TRx_a32(uint32_t fetchdat)
@@ -227,7 +227,7 @@ static int opMOV_r_TRx_a32(uint32_t fetchdat)
         }
         fetch_ea_32(fetchdat);
         regs[rm].l = 0;
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -240,7 +240,7 @@ static int opMOV_TRx_r_a16(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opMOV_TRx_r_a32(uint32_t fetchdat)
@@ -252,7 +252,7 @@ static int opMOV_TRx_r_a32(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 

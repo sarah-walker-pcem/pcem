@@ -24,7 +24,7 @@ static int opMOV_w_seg_a16(uint32_t fetchdat)
                 break;
         }
                         
-        cycles -= ((mod == 3) ? 2 : 3);
+        CLOCK_CYCLES((mod == 3) ? 2 : 3);
         return abrt;
 }
 static int opMOV_w_seg_a32(uint32_t fetchdat)
@@ -53,7 +53,7 @@ static int opMOV_w_seg_a32(uint32_t fetchdat)
                 break;
         }
                         
-        cycles -= ((mod == 3) ? 2 : 3);
+        CLOCK_CYCLES((mod == 3) ? 2 : 3);
         return abrt;
 }
 
@@ -89,7 +89,7 @@ static int opMOV_l_seg_a16(uint32_t fetchdat)
                 break;
         }
         
-        cycles -= ((mod == 3) ? 2 : 3);
+        CLOCK_CYCLES((mod == 3) ? 2 : 3);
         return abrt;
 }
 static int opMOV_l_seg_a32(uint32_t fetchdat)
@@ -124,7 +124,7 @@ static int opMOV_l_seg_a32(uint32_t fetchdat)
                 break;
         }
         
-        cycles -= ((mod == 3) ? 2 : 3);
+        CLOCK_CYCLES((mod == 3) ? 2 : 3);
         return abrt;
 }
 
@@ -163,7 +163,7 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
                 break;
         }
                         
-        cycles -= ((mod == 3) ? 2 : 5);
+        CLOCK_CYCLES((mod == 3) ? 2 : 5);
         return abrt;
 }
 static int opMOV_seg_w_a32(uint32_t fetchdat)
@@ -201,7 +201,7 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
                 break;
         }
                         
-        cycles -= ((mod == 3) ? 2 : 5);
+        CLOCK_CYCLES((mod == 3) ? 2 : 5);
         return abrt;
 }
 
@@ -217,7 +217,7 @@ static int opLDS_w_a16(uint32_t fetchdat)
         loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].w = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLDS_w_a32(uint32_t fetchdat)
@@ -231,7 +231,7 @@ static int opLDS_w_a32(uint32_t fetchdat)
         loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].w = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLDS_l_a16(uint32_t fetchdat)
@@ -246,7 +246,7 @@ static int opLDS_l_a16(uint32_t fetchdat)
         loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].l = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLDS_l_a32(uint32_t fetchdat)
@@ -261,7 +261,7 @@ static int opLDS_l_a32(uint32_t fetchdat)
         loadseg(seg, &_ds);                     if (abrt) return 1;
         regs[reg].l = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -276,7 +276,7 @@ static int opLSS_w_a16(uint32_t fetchdat)
         loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].w = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLSS_w_a32(uint32_t fetchdat)
@@ -290,7 +290,7 @@ static int opLSS_w_a32(uint32_t fetchdat)
         loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].w = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLSS_l_a16(uint32_t fetchdat)
@@ -305,7 +305,7 @@ static int opLSS_l_a16(uint32_t fetchdat)
         loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].l = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opLSS_l_a32(uint32_t fetchdat)
@@ -320,7 +320,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
         loadseg(seg, &_ss);                     if (abrt) return 1;
         regs[reg].l = addr;
  
-        cycles -= 7;       
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -336,7 +336,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].w = addr;                                             \
                                                                                 \
-                cycles -= 7;                                                    \
+                CLOCK_CYCLES(7);                                                \
                 return 0;                                                       \
         }                                                                       \
                                                                                 \
@@ -351,7 +351,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].w = addr;                                             \
                                                                                 \
-                cycles -= 7;                                                    \
+                CLOCK_CYCLES(7);                                                \
                 return 0;                                                       \
         }                                                                       \
                                                                                 \
@@ -367,7 +367,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].l = addr;                                             \
                                                                                 \
-                cycles -= 7;                                                    \
+                CLOCK_CYCLES(7);                                                \
                 return 0;                                                       \
         }                                                                       \
                                                                                 \
@@ -383,7 +383,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
                 loadseg(seg, &sel);                     if (abrt) return 1;     \
                 regs[reg].l = addr;                                             \
                                                                                 \
-                cycles -= 7;                                                    \
+                CLOCK_CYCLES(7);                                                \
                 return 0;                                                       \
         }
         

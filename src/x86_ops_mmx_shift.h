@@ -2,12 +2,12 @@
         if (mod == 3)                                                   \
         {                                                               \
                 shift = MM[rm].b[0];                                    \
-                cycles--;                                               \
+                CLOCK_CYCLES(1);                                        \
         }                                                               \
         else                                                            \
         {                                                               \
                 shift = readmemb(easeg, eaaddr); if (abrt) return 0;    \
-                cycles -= 2;                                            \
+                CLOCK_CYCLES(2);                                        \
         }
 
 static int opPSxxW_imm(uint32_t fetchdat)
@@ -58,7 +58,7 @@ static int opPSxxW_imm(uint32_t fetchdat)
                 return 0;
         }
 
-        cycles--;
+        CLOCK_CYCLES(1);
         return 0;
 }
 
@@ -229,7 +229,7 @@ static int opPSxxD_imm(uint32_t fetchdat)
                 return 0;
         }
 
-        cycles--;
+        CLOCK_CYCLES(1);
         return 0;
 }
 
@@ -381,7 +381,7 @@ static int opPSxxQ_imm(uint32_t fetchdat)
                 return 0;
         }
 
-        cycles--;
+        CLOCK_CYCLES(1);
         return 0;
 }
 

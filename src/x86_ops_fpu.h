@@ -77,6 +77,6 @@ static int opWAIT(uint32_t fetchdat)
                 x86_int(7);
                 return 1;
         }
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }

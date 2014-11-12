@@ -10,7 +10,7 @@ static int opAAA(uint32_t fetchdat)
         else
                 flags &= ~(A_FLAG | C_FLAG);
         AL &= 0xF;
-        cycles -= is486 ? 3 : 4;
+        CLOCK_CYCLES(is486 ? 3 : 4);
         return 0;
 }
 
@@ -21,7 +21,7 @@ static int opAAD(uint32_t fetchdat)
         AL = (AH * base) + AL;
         AH = 0;
         setznp16(AX);
-        cycles -= (is486) ? 14 : 19;
+        CLOCK_CYCLES((is486) ? 14 : 19);
         return 0;
 }
 
@@ -32,7 +32,7 @@ static int opAAM(uint32_t fetchdat)
         AH = AL / base;
         AL %= base;
         setznp16(AX);
-        cycles -= (is486) ? 15 : 17;
+        CLOCK_CYCLES((is486) ? 15 : 17);
         return 0;
 }
 
@@ -48,7 +48,7 @@ static int opAAS(uint32_t fetchdat)
         else
                 flags &= ~(A_FLAG | C_FLAG);
         AL &= 0xF;
-        cycles -= is486 ? 3 : 4;
+        CLOCK_CYCLES(is486 ? 3 : 4);
         return 0;
 }
 
@@ -73,7 +73,7 @@ static int opDAA(uint32_t fetchdat)
         tempw = flags & (C_FLAG | A_FLAG);
         setznp8(AL);
         flags |= tempw;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         
         return 0;
 }
@@ -99,7 +99,7 @@ static int opDAS(uint32_t fetchdat)
         tempw = flags & (C_FLAG | A_FLAG);
         setznp8(AL);
         flags |= tempw;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         
         return 0;
 }

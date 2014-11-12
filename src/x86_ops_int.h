@@ -6,7 +6,7 @@ static int opINT3(uint32_t fetchdat)
                 return 1;
         }
         x86_int_sw(3);
-        cycles -= (is486) ? 44 : 59;
+        CLOCK_CYCLES((is486) ? 44 : 59);
         return 1;
 }
 
@@ -71,7 +71,7 @@ static int opINTO(uint32_t fetchdat)
                 x86_int_sw(4);
                 return 1;
         }
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 

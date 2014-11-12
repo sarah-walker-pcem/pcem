@@ -134,6 +134,8 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 #define fetch_ea_32(rmdat)              pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_32_long(rmdat); } if (abrt) return 1
 
 #define OP_TABLE(name) dynarec_ops_ ## name
+#define CLOCK_CYCLES(c) 
+#define CLOCK_CYCLES_ALWAYS(c) cycles -= (c)
 
 #include "386_ops.h"
 #endif

@@ -60,7 +60,7 @@ static int opCALL_far_w(uint32_t fetchdat)
         CALL_FAR_w(new_cs, new_pc);
         CPU_BLOCK_END();
         
-        cycles -= is486 ? 18 : 17;
+        CLOCK_CYCLES(is486 ? 18 : 17);
         return 0;
 }
 static int opCALL_far_l(uint32_t fetchdat)
@@ -74,7 +74,7 @@ static int opCALL_far_l(uint32_t fetchdat)
         CALL_FAR_l(new_cs, new_pc);
         CPU_BLOCK_END();
         
-        cycles -= is486 ? 18 : 17;
+        CLOCK_CYCLES(is486 ? 18 : 17);
         return 0;
 }
 
@@ -94,21 +94,21 @@ static int opFF_w_a16(uint32_t fetchdat)
                 temp = geteaw();                        if (abrt) return 1;
                 seteaw(temp + 1);                       if (abrt) return 1;
                 setadd16nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x08: /*DEC w*/
                 temp = geteaw();                        if (abrt) return 1;
                 seteaw(temp - 1);                       if (abrt) return 1;
                 setsub16nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 1;
                 PUSH_W(pc);
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
                 new_pc = readmemw(easeg, eaaddr);
@@ -117,14 +117,14 @@ static int opFF_w_a16(uint32_t fetchdat)
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
                                 
-                cycles -= is486 ? 17 : 22;
+                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = pc;
@@ -133,12 +133,12 @@ static int opFF_w_a16(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
-                cycles -= is486 ? 13 : 12;
+                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 1;
                 PUSH_W(temp);
-                cycles -= ((mod == 3) ? 2 : 5);
+                CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
 
                 default:
@@ -162,21 +162,21 @@ static int opFF_w_a32(uint32_t fetchdat)
                 temp = geteaw();                        if (abrt) return 1;
                 seteaw(temp + 1);                       if (abrt) return 1;
                 setadd16nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x08: /*DEC w*/
                 temp = geteaw();                        if (abrt) return 1;
                 seteaw(temp - 1);                       if (abrt) return 1;
                 setsub16nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 1;
                 PUSH_W(pc);
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
                 new_pc = readmemw(easeg, eaaddr);
@@ -185,14 +185,14 @@ static int opFF_w_a32(uint32_t fetchdat)
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
                 
-                cycles -= is486 ? 17 : 22;
+                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = pc;
@@ -201,12 +201,12 @@ static int opFF_w_a32(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
-                cycles -= is486 ? 13 : 12;
+                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 1;
                 PUSH_W(temp);
-                cycles -= ((mod == 3) ? 2 : 5);
+                CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
 
                 default:
@@ -231,21 +231,21 @@ static int opFF_l_a16(uint32_t fetchdat)
                 temp = geteal();                        if (abrt) return 1;
                 seteal(temp + 1);                       if (abrt) return 1;
                 setadd32nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x08: /*DEC l*/
                 temp = geteal();                        if (abrt) return 1;
                 seteal(temp - 1);                       if (abrt) return 1;
                 setsub32nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 1;
                 PUSH_L(pc);
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
                 new_pc = readmeml(easeg, eaaddr);
@@ -254,14 +254,14 @@ static int opFF_l_a16(uint32_t fetchdat)
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
                                 
-                cycles -= is486 ? 17 : 22;
+                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = pc;
@@ -270,12 +270,12 @@ static int opFF_l_a16(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
-                cycles -= is486 ? 13 : 12;
+                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 1;
                 PUSH_L(temp);
-                cycles -= ((mod == 3) ? 2 : 5);
+                CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
 
                 default:
@@ -299,21 +299,21 @@ static int opFF_l_a32(uint32_t fetchdat)
                 temp = geteal();                        if (abrt) return 1;
                 seteal(temp + 1);                       if (abrt) return 1;
                 setadd32nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x08: /*DEC l*/
                 temp = geteal();                        if (abrt) return 1;
                 seteal(temp - 1);                       if (abrt) return 1;
                 setsub32nc(temp, 1);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 1;
                 PUSH_L(pc);                             if (abrt) return 1;
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
                 new_pc = readmeml(easeg, eaaddr);
@@ -322,14 +322,14 @@ static int opFF_l_a32(uint32_t fetchdat)
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
                                 
-                cycles -= is486 ? 17 : 22;
+                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
                 pc = new_pc;
                 CPU_BLOCK_END();
-                if (is486) cycles -= 5;
-                else       cycles -= ((mod == 3) ? 7 : 10);
+                if (is486) CLOCK_CYCLES(5);
+                else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = pc;
@@ -338,12 +338,12 @@ static int opFF_l_a32(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
-                cycles -= is486 ? 13 : 12;
+                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 1;
                 PUSH_L(temp);
-                cycles -= ((mod == 3) ? 2 : 5);
+                CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
 
                 default:

@@ -7,7 +7,7 @@ static int opFILDiw_a16(uint32_t fetchdat)
         temp = geteaw(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", (double)temp);
         x87_push((double)temp);
-        cycles -= 13;
+        CLOCK_CYCLES(13);
         return 0;
 }
 static int opFILDiw_a32(uint32_t fetchdat)
@@ -19,7 +19,7 @@ static int opFILDiw_a32(uint32_t fetchdat)
         temp = geteaw(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", (double)temp);
         x87_push((double)temp);
-        cycles -= 13;
+        CLOCK_CYCLES(13);
         return 0;
 }
 
@@ -33,7 +33,7 @@ static int opFISTiw_a16(uint32_t fetchdat)
 /*                        if (temp64 > 32767 || temp64 < -32768)
                            fatal("FISTw overflow %i\n", temp64);*/
         seteaw((int16_t)temp64);
-        cycles -= 29;
+        CLOCK_CYCLES(29);
         return abrt;
 }
 static int opFISTiw_a32(uint32_t fetchdat)
@@ -46,7 +46,7 @@ static int opFISTiw_a32(uint32_t fetchdat)
 /*                        if (temp64 > 32767 || temp64 < -32768)
                            fatal("FISTw overflow %i\n", temp64);*/
         seteaw((int16_t)temp64);
-        cycles -= 29;
+        CLOCK_CYCLES(29);
         return abrt;
 }
 
@@ -61,7 +61,7 @@ static int opFISTPiw_a16(uint32_t fetchdat)
                            fatal("FISTw overflow %i\n", temp64);*/
         seteaw((int16_t)temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 29;
+        CLOCK_CYCLES(29);
         return 0;
 }
 static int opFISTPiw_a32(uint32_t fetchdat)
@@ -75,7 +75,7 @@ static int opFISTPiw_a32(uint32_t fetchdat)
                            fatal("FISTw overflow %i\n", temp64);*/
         seteaw((int16_t)temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 29;
+        CLOCK_CYCLES(29);
         return 0;
 }
 
@@ -88,7 +88,7 @@ static int opFILDiq_a16(uint32_t fetchdat)
         temp64 = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,eaaddr), readmeml(easeg,eaaddr+4));
         x87_push((double)temp64);
-        cycles -= 10;
+        CLOCK_CYCLES(10);
         return 0;
 }
 static int opFILDiq_a32(uint32_t fetchdat)
@@ -100,7 +100,7 @@ static int opFILDiq_a32(uint32_t fetchdat)
         temp64 = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,eaaddr), readmeml(easeg,eaaddr+4));
         x87_push((double)temp64);
-        cycles -= 10;
+        CLOCK_CYCLES(10);
         return 0;
 }
 
@@ -166,8 +166,8 @@ static int FISTPiq_a16(uint32_t fetchdat)
         temp64 = x87_fround(ST(0));
         seteaq(temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 29;
-        return 1;
+        CLOCK_CYCLES(29);
+        return 0;
 }
 static int FISTPiq_a32(uint32_t fetchdat)
 {
@@ -178,8 +178,8 @@ static int FISTPiq_a32(uint32_t fetchdat)
         temp64 = x87_fround(ST(0));
         seteaq(temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 29;
-        return 1;
+        CLOCK_CYCLES(29);
+        return 0;
 }
 
 static int opFILDil_a16(uint32_t fetchdat)
@@ -191,7 +191,7 @@ static int opFILDil_a16(uint32_t fetchdat)
         templ = geteal(); if (abrt) return 1;
         if (fplog) pclog("  %f %08X %i\n", (double)templ, templ, templ);
         x87_push((double)templ);
-        cycles -= 9;
+        CLOCK_CYCLES(9);
         return 0;
 }
 static int opFILDil_a32(uint32_t fetchdat)
@@ -203,7 +203,7 @@ static int opFILDil_a32(uint32_t fetchdat)
         templ = geteal(); if (abrt) return 1;
         if (fplog) pclog("  %f %08X %i\n", (double)templ, templ, templ);
         x87_push((double)templ);
-        cycles -= 9;
+        CLOCK_CYCLES(9);
         return 0;
 }
 
@@ -217,7 +217,7 @@ static int opFISTil_a16(uint32_t fetchdat)
 /*                        if (temp64 > 2147483647 || temp64 < -2147483647)
                            fatal("FISTl out of range! %i\n", temp64);*/
         seteal((int32_t)temp64);
-        cycles -= 28;
+        CLOCK_CYCLES(28);
         return abrt;
 }
 static int opFISTil_a32(uint32_t fetchdat)
@@ -230,7 +230,7 @@ static int opFISTil_a32(uint32_t fetchdat)
 /*                        if (temp64 > 2147483647 || temp64 < -2147483647)
                            fatal("FISTl out of range! %i\n", temp64);*/
         seteal((int32_t)temp64);
-        cycles -= 28;
+        CLOCK_CYCLES(28);
         return abrt;
 }
 
@@ -245,7 +245,7 @@ static int opFISTPil_a16(uint32_t fetchdat)
                            fatal("FISTl out of range! %i\n", temp64);*/
         seteal((int32_t)temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 28;
+        CLOCK_CYCLES(28);
         return 0;
 }
 static int opFISTPil_a32(uint32_t fetchdat)
@@ -259,7 +259,7 @@ static int opFISTPil_a32(uint32_t fetchdat)
                            fatal("FISTl out of range! %i\n", temp64);*/
         seteal((int32_t)temp64); if (abrt) return 1;
         x87_pop();
-        cycles -= 28;
+        CLOCK_CYCLES(28);
         return 0;
 }
 
@@ -272,7 +272,7 @@ static int opFLDe_a16(uint32_t fetchdat)
         t=x87_ld80(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", t);
         x87_push(t);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opFLDe_a32(uint32_t fetchdat)
@@ -284,7 +284,7 @@ static int opFLDe_a32(uint32_t fetchdat)
         t=x87_ld80(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", t);
         x87_push(t);
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -295,7 +295,7 @@ static int opFSTPe_a16(uint32_t fetchdat)
         if (fplog) pclog("FSTPe %08X:%08X\n", easeg, eaaddr);
         x87_st80(ST(0)); if (abrt) return 1;
         x87_pop();
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 static int opFSTPe_a32(uint32_t fetchdat)
@@ -305,7 +305,7 @@ static int opFSTPe_a32(uint32_t fetchdat)
         if (fplog) pclog("FSTPe %08X:%08X\n", easeg, eaaddr);
         x87_st80(ST(0)); if (abrt) return 1;
         x87_pop();
-        cycles -= 6;
+        CLOCK_CYCLES(6);
         return 0;
 }
 
@@ -318,7 +318,7 @@ static int opFLDd_a16(uint32_t fetchdat)
         t.i = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", t.d);                        
         x87_push(t.d);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opFLDd_a32(uint32_t fetchdat)
@@ -330,7 +330,7 @@ static int opFLDd_a32(uint32_t fetchdat)
         t.i = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", t.d);                        
         x87_push(t.d);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -342,7 +342,7 @@ static int opFSTd_a16(uint32_t fetchdat)
         if (fplog) pclog("FSTd %08X:%08X\n", easeg, eaaddr);
         t.d = ST(0);
         seteaq(t.i);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return abrt;
 }
 static int opFSTd_a32(uint32_t fetchdat)
@@ -353,7 +353,7 @@ static int opFSTd_a32(uint32_t fetchdat)
         if (fplog) pclog("FSTd %08X:%08X\n", easeg, eaaddr);
         t.d = ST(0);
         seteaq(t.i);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return abrt;
 }
 
@@ -366,7 +366,7 @@ static int opFSTPd_a16(uint32_t fetchdat)
         t.d = ST(0);
         seteaq(t.i); if (abrt) return 1;
         x87_pop();
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFSTPd_a32(uint32_t fetchdat)
@@ -378,7 +378,7 @@ static int opFSTPd_a32(uint32_t fetchdat)
         t.d = ST(0);
         seteaq(t.i); if (abrt) return 1;
         x87_pop();
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -391,7 +391,7 @@ static int opFLDs_a16(uint32_t fetchdat)
         ts.i = geteal(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", ts.s);
         x87_push((double)ts.s);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opFLDs_a32(uint32_t fetchdat)
@@ -403,7 +403,7 @@ static int opFLDs_a32(uint32_t fetchdat)
         ts.i = geteal(); if (abrt) return 1;
         if (fplog) pclog("  %f\n", ts.s);
         x87_push((double)ts.s);
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -415,7 +415,7 @@ static int opFSTs_a16(uint32_t fetchdat)
         if (fplog) pclog("FSTs %08X:%08X\n", easeg, eaaddr);
         ts.s = (float)ST(0);
         seteal(ts.i);
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return abrt;
 }
 static int opFSTs_a32(uint32_t fetchdat)
@@ -426,7 +426,7 @@ static int opFSTs_a32(uint32_t fetchdat)
         if (fplog) pclog("FSTs %08X:%08X\n", easeg, eaaddr);
         ts.s = (float)ST(0);
         seteal(ts.i);
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return abrt;
 }
 
@@ -439,7 +439,7 @@ static int opFSTPs_a16(uint32_t fetchdat)
         ts.s = (float)ST(0);
         seteal(ts.i); if (abrt) return 1;
         x87_pop();
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opFSTPs_a32(uint32_t fetchdat)
@@ -451,6 +451,6 @@ static int opFSTPs_a32(uint32_t fetchdat)
         ts.s = (float)ST(0);
         seteal(ts.i); if (abrt) return 1;
         x87_pop();
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }

@@ -1,38 +1,38 @@
 static int opCBW(uint32_t fetchdat)
 {
         AH = (AL & 0x80) ? 0xff : 0;
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opCWDE(uint32_t fetchdat)
 {
         EAX = (AX & 0x8000) ? (0xffff0000 | AX) : AX;
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opCWD(uint32_t fetchdat)
 {
         DX = (AX & 0x8000) ? 0xFFFF : 0;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 static int opCDQ(uint32_t fetchdat)
 {
         EDX = (EAX & 0x80000000) ? 0xffffffff : 0;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 
 static int opNOP(uint32_t fetchdat)
 {
-        cycles -= (is486) ? 1 : 3;
+        CLOCK_CYCLES((is486) ? 1 : 3);
         return 0;
 }
 
 static int opSETALC(uint32_t fetchdat)
 {
         AL = (CF_SET()) ? 0xff : 0;
-        cycles -= timing_rr;
+        CLOCK_CYCLES(timing_rr);
         return 0;
 }
 
@@ -52,24 +52,24 @@ static int opF6_a16(uint32_t fetchdat)
                 case 0x00: /*TEST b,#8*/
                 src = readmemb(cs, pc); pc++;           if (abrt) return 1;
                 setznp8(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT b*/
                 seteab(~dst);                           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x18: /*NEG b*/
                 seteab(0 - dst);                        if (abrt) return 1;
                 setsub8(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x20: /*MUL AL,b*/
                 AX = AL * dst;
                 flags_rebuild();
                 if (AH) flags |=  (C_FLAG | V_FLAG);
                 else    flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 13;
+                CLOCK_CYCLES(13);
                 break;
                 case 0x28: /*IMUL AL,b*/
                 tempws = (int)((int8_t)AL) * (int)((int8_t)dst);
@@ -77,7 +77,7 @@ static int opF6_a16(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int16_t)AX >> 7) != 0 && ((int16_t)AX >> 7) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                     flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 14;
+                CLOCK_CYCLES(14);
                 break;
                 case 0x30: /*DIV AL,b*/
                 src16 = AX;
@@ -96,7 +96,7 @@ static int opF6_a16(uint32_t fetchdat)
                 {
                         x86_int(0);
                 }
-                cycles -= is486 ? 16 : 14;
+                CLOCK_CYCLES(is486 ? 16 : 14);
                 break;
                 case 0x38: /*IDIV AL,b*/
                 tempws = (int)(int16_t)AX;
@@ -117,7 +117,7 @@ static int opF6_a16(uint32_t fetchdat)
 //                        pclog("IDIVb exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
                 }
-                cycles -= 19;
+                CLOCK_CYCLES(19);
                 break;
 
                 default:
@@ -140,24 +140,24 @@ static int opF6_a32(uint32_t fetchdat)
                 case 0x00: /*TEST b,#8*/
                 src = readmemb(cs, pc); pc++;           if (abrt) return 1;
                 setznp8(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT b*/
                 seteab(~dst);                           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x18: /*NEG b*/
                 seteab(0 - dst);                        if (abrt) return 1;
                 setsub8(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x20: /*MUL AL,b*/
                 AX = AL * dst;
                 flags_rebuild();
                 if (AH) flags |=  (C_FLAG | V_FLAG);
                 else    flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 13;
+                CLOCK_CYCLES(13);
                 break;
                 case 0x28: /*IMUL AL,b*/
                 tempws = (int)((int8_t)AL) * (int)((int8_t)dst);
@@ -165,7 +165,7 @@ static int opF6_a32(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int16_t)AX >> 7) != 0 && ((int16_t)AX >> 7) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                     flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 14;
+                CLOCK_CYCLES(14);
                 break;
                 case 0x30: /*DIV AL,b*/
                 src16 = AX;
@@ -184,7 +184,7 @@ static int opF6_a32(uint32_t fetchdat)
                 {
                         x86_int(0);
                 }
-                cycles -= is486 ? 16 : 14;
+                CLOCK_CYCLES(is486 ? 16 : 14);
                 break;
                 case 0x38: /*IDIV AL,b*/
                 tempws = (int)(int16_t)AX;
@@ -205,7 +205,7 @@ static int opF6_a32(uint32_t fetchdat)
 //                        pclog("IDIVb exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
                 }
-                cycles -= 19;
+                CLOCK_CYCLES(19);
                 break;
 
                 default:
@@ -231,17 +231,17 @@ static int opF7_w_a16(uint32_t fetchdat)
                 case 0x00: /*TEST w*/
                 src = getword();        if (abrt) return 1;
                 setznp16(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT w*/
                 seteaw(~dst);           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x18: /*NEG w*/
                 seteaw(0 - dst);        if (abrt) return 1;
                 setsub16(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x20: /*MUL AX,w*/
                 templ = AX * dst;
@@ -250,7 +250,7 @@ static int opF7_w_a16(uint32_t fetchdat)
                 flags_rebuild();
                 if (DX)    flags |=  (C_FLAG | V_FLAG);
                 else       flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 21;
+                CLOCK_CYCLES(21);
                 break;
                 case 0x28: /*IMUL AX,w*/
                 templ = (int)((int16_t)AX) * (int)((int16_t)dst);
@@ -259,7 +259,7 @@ static int opF7_w_a16(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int32_t)templ >> 15) != 0 && ((int32_t)templ >> 15) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                             flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 22;
+                CLOCK_CYCLES(22);
                 break;
                 case 0x30: /*DIV AX,w*/
                 templ = (DX << 16) | AX;
@@ -275,7 +275,7 @@ static int opF7_w_a16(uint32_t fetchdat)
 //                        fatal("DIVw BY 0 %04X:%04X %i\n",cs>>4,pc,ins);
                         x86_int(0);
                 }
-                cycles -=  is486 ? 24 : 22;
+                CLOCK_CYCLES(is486 ? 24 : 22);
                 break;
                 case 0x38: /*IDIV AX,w*/
                 tempws = (int)((DX << 16)|AX);
@@ -292,7 +292,7 @@ static int opF7_w_a16(uint32_t fetchdat)
 //                        pclog("IDIVw exception - %X / %08X = %X\n",tempws, dst, tempws2);
                         x86_int(0);
                 }
-                cycles -= 27;
+                CLOCK_CYCLES(27);
                 break;
 
                 default:
@@ -315,17 +315,17 @@ static int opF7_w_a32(uint32_t fetchdat)
                 case 0x00: /*TEST w*/
                 src = getword();        if (abrt) return 1;
                 setznp16(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT w*/
                 seteaw(~dst);           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x18: /*NEG w*/
                 seteaw(0 - dst);        if (abrt) return 1;
                 setsub16(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mm;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mm);
                 break;
                 case 0x20: /*MUL AX,w*/
                 templ = AX * dst;
@@ -334,7 +334,7 @@ static int opF7_w_a32(uint32_t fetchdat)
                 flags_rebuild();
                 if (DX)    flags |=  (C_FLAG | V_FLAG);
                 else       flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 21;
+                CLOCK_CYCLES(21);
                 break;
                 case 0x28: /*IMUL AX,w*/
                 templ = (int)((int16_t)AX) * (int)((int16_t)dst);
@@ -343,7 +343,7 @@ static int opF7_w_a32(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int32_t)templ >> 15) != 0 && ((int32_t)templ >> 15) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                             flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 22;
+                CLOCK_CYCLES(22);
                 break;
                 case 0x30: /*DIV AX,w*/
                 templ = (DX << 16) | AX;
@@ -359,7 +359,7 @@ static int opF7_w_a32(uint32_t fetchdat)
 //                        fatal("DIVw BY 0 %04X:%04X %i\n",cs>>4,pc,ins);
                         x86_int(0);
                 }
-                cycles -=  is486 ? 24 : 22;
+                CLOCK_CYCLES(is486 ? 24 : 22);
                 break;
                 case 0x38: /*IDIV AX,w*/
                 tempws = (int)((DX << 16)|AX);
@@ -376,7 +376,7 @@ static int opF7_w_a32(uint32_t fetchdat)
 //                        pclog("IDIVw exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
                 }
-                cycles -= 27;
+                CLOCK_CYCLES(27);
                 break;
 
                 default:
@@ -399,17 +399,17 @@ static int opF7_l_a16(uint32_t fetchdat)
                 case 0x00: /*TEST l*/
                 src = getlong();        if (abrt) return 1;
                 setznp32(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT l*/
                 seteal(~dst);           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mml;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mml);
                 break;
                 case 0x18: /*NEG l*/
                 seteal(0 - dst);        if (abrt) return 1;
                 setsub32(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mml;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mml);
                 break;
                 case 0x20: /*MUL EAX,l*/
                 temp64 = (uint64_t)EAX * (uint64_t)dst;
@@ -418,7 +418,7 @@ static int opF7_l_a16(uint32_t fetchdat)
                 flags_rebuild();
                 if (EDX) flags |=  (C_FLAG|V_FLAG);
                 else     flags &= ~(C_FLAG|V_FLAG);
-                cycles -= 21;
+                CLOCK_CYCLES(21);
                 break;
                 case 0x28: /*IMUL EAX,l*/
                 temp64 = (int64_t)(int32_t)EAX * (int64_t)(int32_t)dst;
@@ -427,19 +427,19 @@ static int opF7_l_a16(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int64_t)temp64 >> 31) != 0 && ((int64_t)temp64 >> 31) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                               flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 38;
+                CLOCK_CYCLES(38);
                 break;
                 case 0x30: /*DIV EAX,l*/
                 if (divl(dst))
                         return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
-                cycles -= (is486) ? 40 : 38;
+                CLOCK_CYCLES((is486) ? 40 : 38);
                 break;
                 case 0x38: /*IDIV EAX,l*/
                 if (idivl((int32_t)dst))
                         return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
-                cycles -= 43;
+                CLOCK_CYCLES(43);
                 break;
 
                 default:
@@ -461,17 +461,17 @@ static int opF7_l_a32(uint32_t fetchdat)
                 case 0x00: /*TEST l*/
                 src = getlong();        if (abrt) return 1;
                 setznp32(src & dst);
-                if (is486) cycles -= ((mod == 3) ? 1 : 2);
-                else       cycles -= ((mod == 3) ? 2 : 5);
+                if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
+                else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
                 break;
                 case 0x10: /*NOT l*/
                 seteal(~dst);           if (abrt) return 1;
-                cycles -= (mod == 3) ? timing_rr : timing_mml;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mml);
                 break;
                 case 0x18: /*NEG l*/
                 seteal(0 - dst);        if (abrt) return 1;
                 setsub32(0, dst);
-                cycles -= (mod == 3) ? timing_rr : timing_mml;
+                CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mml);
                 break;
                 case 0x20: /*MUL EAX,l*/
                 temp64 = (uint64_t)EAX * (uint64_t)dst;
@@ -480,7 +480,7 @@ static int opF7_l_a32(uint32_t fetchdat)
                 flags_rebuild();
                 if (EDX) flags |=  (C_FLAG|V_FLAG);
                 else     flags &= ~(C_FLAG|V_FLAG);
-                cycles -= 21;
+                CLOCK_CYCLES(21);
                 break;
                 case 0x28: /*IMUL EAX,l*/
                 temp64 = (int64_t)(int32_t)EAX * (int64_t)(int32_t)dst;
@@ -489,19 +489,19 @@ static int opF7_l_a32(uint32_t fetchdat)
                 flags_rebuild();
                 if (((int64_t)temp64 >> 31) != 0 && ((int64_t)temp64 >> 31) != -1) flags |=  (C_FLAG | V_FLAG);
                 else                                                               flags &= ~(C_FLAG | V_FLAG);
-                cycles -= 38;
+                CLOCK_CYCLES(38);
                 break;
                 case 0x30: /*DIV EAX,l*/
                 if (divl(dst))
                         return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
-                cycles -= (is486) ? 40 : 38;
+                CLOCK_CYCLES((is486) ? 40 : 38);
                 break;
                 case 0x38: /*IDIV EAX,l*/
                 if (idivl((int32_t)dst))
                         return 1;
                 if (!cpu_iscyrix) setznp32(EAX); /*Not a Cyrix*/
-                cycles -= 43;
+                CLOCK_CYCLES(43);
                 break;
 
                 default:
@@ -521,11 +521,11 @@ static int opHLT(uint32_t fetchdat)
         }
         if (!((flags&I_FLAG) && pic_intpending))
         {
-                cycles -= 100;
+                CLOCK_CYCLES(100);
                 pc--;
         }
         else
-                cycles -= 5;
+                CLOCK_CYCLES(5);
 
         CPU_BLOCK_END();
         
@@ -535,7 +535,7 @@ static int opHLT(uint32_t fetchdat)
 
 static int opLOCK(uint32_t fetchdat)
 {
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -556,7 +556,7 @@ static int opBOUND_w_a16(uint32_t fetchdat)
                 return 1;
         }
         
-        cycles -= is486 ? 7 : 10;
+        CLOCK_CYCLES(is486 ? 7 : 10);
         return 0;
 }
 static int opBOUND_w_a32(uint32_t fetchdat)
@@ -574,7 +574,7 @@ static int opBOUND_w_a32(uint32_t fetchdat)
                 return 1;
         }
         
-        cycles -= is486 ? 7 : 10;
+        CLOCK_CYCLES(is486 ? 7 : 10);
         return 0;
 }
 
@@ -593,7 +593,7 @@ static int opBOUND_l_a16(uint32_t fetchdat)
                 return 1;
         }
         
-        cycles -= is486 ? 7 : 10;
+        CLOCK_CYCLES(is486 ? 7 : 10);
         return 0;
 }
 static int opBOUND_l_a32(uint32_t fetchdat)
@@ -611,7 +611,7 @@ static int opBOUND_l_a32(uint32_t fetchdat)
                 return 1;
         }
         
-        cycles -= is486 ? 7 : 10;
+        CLOCK_CYCLES(is486 ? 7 : 10);
         return 0;
 }
 
@@ -625,7 +625,7 @@ static int opCLTS(uint32_t fetchdat)
                 return 1;
         }
         cr0 &= ~8;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 
@@ -636,7 +636,7 @@ static int opINVD(uint32_t fetchdat)
                 x86illegal();
                 return 1;
         }
-        cycles -= 1000;
+        CLOCK_CYCLES(1000);
         CPU_BLOCK_END();
         return 0;
 }
@@ -647,7 +647,7 @@ static int opWBINVD(uint32_t fetchdat)
                 x86illegal();
                 return 1;
         }
-        cycles -= 10000;
+        CLOCK_CYCLES(10000);
         CPU_BLOCK_END();
         return 0;
 }
@@ -675,7 +675,7 @@ static int opLOADALL(uint32_t fetchdat)
         cs = readmemw(0, 0x83C) | (readmemb(0, 0x83E) << 16);
         ss = readmemw(0, 0x842) | (readmemb(0, 0x844) << 16);
         ds = readmemw(0, 0x848) | (readmemb(0, 0x84A) << 16);
-        cycles-=195;
+        CLOCK_CYCLES(195);
         return 0;
 }                                
 
@@ -684,7 +684,7 @@ static int opCPUID(uint32_t fetchdat)
         if (CPUID)
         {
                 cpu_CPUID();
-                cycles -= 9;
+                CLOCK_CYCLES(9);
                 return 0;
         }
         pc = oldpc;
@@ -697,7 +697,7 @@ static int opRDMSR(uint32_t fetchdat)
         if (cpu_hasMSR)
         {
                 cpu_RDMSR();
-                cycles -= 9;
+                CLOCK_CYCLES(9);
                 return 0;
         }
         pc = oldpc;
@@ -710,7 +710,7 @@ static int opWRMSR(uint32_t fetchdat)
         if (cpu_hasMSR)
         {
                 cpu_WRMSR();
-                cycles -= 9;
+                CLOCK_CYCLES(9);
                 return 0;
         }
         pc = oldpc;

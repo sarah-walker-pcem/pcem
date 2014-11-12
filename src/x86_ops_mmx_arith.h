@@ -288,7 +288,7 @@ static int opPMULLW_a16(uint32_t fetchdat)
                 MM[reg].w[1] *= MM[rm].w[1];
                 MM[reg].w[2] *= MM[rm].w[2];
                 MM[reg].w[3] *= MM[rm].w[3];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -300,7 +300,7 @@ static int opPMULLW_a16(uint32_t fetchdat)
                 MM[reg].w[1] *= src.w[1];
                 MM[reg].w[2] *= src.w[2];
                 MM[reg].w[3] *= src.w[3];
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -315,7 +315,7 @@ static int opPMULLW_a32(uint32_t fetchdat)
                 MM[reg].w[1] *= MM[rm].w[1];
                 MM[reg].w[2] *= MM[rm].w[2];
                 MM[reg].w[3] *= MM[rm].w[3];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -327,7 +327,7 @@ static int opPMULLW_a32(uint32_t fetchdat)
                 MM[reg].w[1] *= src.w[1];
                 MM[reg].w[2] *= src.w[2];
                 MM[reg].w[3] *= src.w[3];
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -343,7 +343,7 @@ static int opPMULHW_a16(uint32_t fetchdat)
                 MM[reg].w[1] = ((int32_t)MM[reg].sw[1] * (int32_t)MM[rm].sw[1]) >> 16;
                 MM[reg].w[2] = ((int32_t)MM[reg].sw[2] * (int32_t)MM[rm].sw[2]) >> 16;
                 MM[reg].w[3] = ((int32_t)MM[reg].sw[3] * (int32_t)MM[rm].sw[3]) >> 16;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -355,7 +355,7 @@ static int opPMULHW_a16(uint32_t fetchdat)
                 MM[reg].w[1] = ((int32_t)MM[reg].sw[1] * (int32_t)src.sw[1]) >> 16;
                 MM[reg].w[2] = ((int32_t)MM[reg].sw[2] * (int32_t)src.sw[2]) >> 16;
                 MM[reg].w[3] = ((int32_t)MM[reg].sw[3] * (int32_t)src.sw[3]) >> 16;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -370,7 +370,7 @@ static int opPMULHW_a32(uint32_t fetchdat)
                 MM[reg].w[1] = ((int32_t)MM[reg].sw[1] * (int32_t)MM[rm].sw[1]) >> 16;
                 MM[reg].w[2] = ((int32_t)MM[reg].sw[2] * (int32_t)MM[rm].sw[2]) >> 16;
                 MM[reg].w[3] = ((int32_t)MM[reg].sw[3] * (int32_t)MM[rm].sw[3]) >> 16;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -382,7 +382,7 @@ static int opPMULHW_a32(uint32_t fetchdat)
                 MM[reg].w[1] = ((int32_t)MM[reg].sw[1] * (int32_t)src.sw[1]) >> 16;
                 MM[reg].w[2] = ((int32_t)MM[reg].sw[2] * (int32_t)src.sw[2]) >> 16;
                 MM[reg].w[3] = ((int32_t)MM[reg].sw[3] * (int32_t)src.sw[3]) >> 16;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }

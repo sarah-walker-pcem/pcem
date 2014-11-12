@@ -17,7 +17,7 @@ static int opARPL_a16(uint32_t fetchdat)
         else
                 flags &= ~Z_FLAG;
         
-        cycles -= is486 ? 9 : 20;
+        CLOCK_CYCLES(is486 ? 9 : 20);
         return 0;
 }
 static int opARPL_a32(uint32_t fetchdat)
@@ -39,7 +39,7 @@ static int opARPL_a32(uint32_t fetchdat)
         else
                 flags &= ~Z_FLAG;
         
-        cycles -= is486 ? 9 : 20;
+        CLOCK_CYCLES(is486 ? 9 : 20);
         return 0;
 }
 
@@ -83,7 +83,7 @@ static int opARPL_a32(uint32_t fetchdat)
                                 regs[reg].w = readmemw(0, ((sel & 4) ? ldt.base : gdt.base) + (sel & ~7) + 4) & 0xff00;         \
                         cpl_override = 0;                                                                       \
                 }                                                                                               \
-                cycles -= 11;                                                                                   \
+                CLOCK_CYCLES(11);                                                                               \
                 return abrt;                                                                                    \
         }
 
@@ -138,8 +138,8 @@ opLAR(l_a32, fetch_ea_32, 1)
                                 regs[reg].w = readmemw(0, ((sel & 4) ? ldt.base : gdt.base) + (sel & ~7));      \
                         cpl_override = 0;                                                                       \
                 }                                                                                               \
-                cycles -= 10;                                                                                   \
-                return abrt;                                                                                       \
+                CLOCK_CYCLES(10);                                                                               \
+                return abrt;                                                                                    \
         }
 
 opLSL(w_a16, fetch_ea_16, 0)
@@ -160,11 +160,11 @@ static int op0F00_common(uint32_t fetchdat)
         {
                 case 0x00: /*SLDT*/
                 seteaw(ldt.seg);
-                cycles -= 4;
+                CLOCK_CYCLES(4);
                 break;
                 case 0x08: /*STR*/
                 seteaw(tr.seg);
-                cycles -= 4;
+                CLOCK_CYCLES(4);
                 break;
                 case 0x10: /*LLDT*/
                 if ((CPL || eflags&VM_FLAG) && (cr0&1))
@@ -189,7 +189,7 @@ static int op0F00_common(uint32_t fetchdat)
                 }
                 ldt.base = base;
                 ldt.seg = sel;
-                cycles -= 20;
+                CLOCK_CYCLES(20);
                 break;
                 case 0x18: /*LTR*/
                 if ((CPL || eflags&VM_FLAG) && (cr0&1))
@@ -214,7 +214,7 @@ static int op0F00_common(uint32_t fetchdat)
                         tr.limit |= 0xFFF;
                 }
                 tr.base = base;
-                cycles -= 20;
+                CLOCK_CYCLES(20);
                 break;
                 case 0x20: /*VERR*/
                 sel = geteaw();                 if (abrt) return 1;
@@ -233,7 +233,7 @@ static int op0F00_common(uint32_t fetchdat)
                 }
                 if ((desc & 0x0800) && !(desc & 0x0200)) valid = 0; /*Non-readable code*/
                 if (valid) flags |= Z_FLAG;
-                cycles -= 20;
+                CLOCK_CYCLES(20);
                 break;
                 case 0x28: /*VERW*/
                 sel = geteaw();                 if (abrt) return 1;
@@ -250,7 +250,7 @@ static int op0F00_common(uint32_t fetchdat)
                 if (desc & 0x0800) valid = 0; /*Code*/
                 if (!(desc & 0x0200)) valid = 0; /*Read-only data*/
                 if (valid) flags |= Z_FLAG;
-                cycles -= 20;
+                CLOCK_CYCLES(20);
                 break;
 
                 default:
@@ -292,7 +292,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                 if (is286)
                         base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
-                cycles -= 7;
+                CLOCK_CYCLES(7);
                 break;
                 case 0x08: /*SIDT*/
                 seteaw(idt.limit);
@@ -300,7 +300,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                 if (is286)
                         base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
-                cycles -= 7;
+                CLOCK_CYCLES(7);
                 break;
                 case 0x10: /*LGDT*/
                 if ((CPL || eflags&VM_FLAG) && (cr0&1))
@@ -316,7 +316,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                 gdt.limit = limit;
                 gdt.base = base;
                 if (!is32) gdt.base &= 0xffffff;
-                cycles -= 11;
+                CLOCK_CYCLES(11);
                 break;
                 case 0x18: /*LIDT*/
                 if ((CPL || eflags&VM_FLAG) && (cr0&1))
@@ -332,13 +332,13 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                 idt.limit = limit;
                 idt.base = base;
                 if (!is32) idt.base &= 0xffffff;
-                cycles -= 11;
+                CLOCK_CYCLES(11);
                 break;
 
                 case 0x20: /*SMSW*/
                 if (is486) seteaw(msw);
                 else       seteaw(msw | 0xFF00);
-                cycles -= 2;
+                CLOCK_CYCLES(2);
                 break;
                 case 0x30: /*LMSW*/
                 if ((CPL || eflags&VM_FLAG) && (msw&1))
@@ -362,7 +362,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                                 break;
                         }
                         mmu_invalidate(ds + eaaddr);
-                        cycles -= 12;
+                        CLOCK_CYCLES(12);
                         break;
                 }
 

@@ -18,7 +18,7 @@
                 if (abrt) return 1;                             \
                 if (stack32) ESP += 4 + stack_offset;           \
                 else         SP  += 4 + stack_offset;           \
-                cycles -= is486 ? 13 : 18;
+                CLOCK_CYCLES(is486 ? 13 : 18);
 
 #define RETF_a32(stack_offset)                                  \
                 if ((msw&1) && !(eflags&VM_FLAG))               \
@@ -40,7 +40,7 @@
                 if (abrt) return 1;                             \
                 if (stack32) ESP += 8 + stack_offset;           \
                 else         SP  += 8 + stack_offset;           \
-                cycles -= is486 ? 13 : 18;
+                CLOCK_CYCLES(is486 ? 13 : 18);
 
 static int opRETF_a16(uint32_t fetchdat)
 {
@@ -104,7 +104,7 @@ static int opIRET_286(uint32_t fetchdat)
                 loadcs(new_cs);
         }
         flags_extract();
-        cycles -= is486 ? 15 : 22;
+        CLOCK_CYCLES(is486 ? 15 : 22);
         nmi_enable = 1;
         CPU_BLOCK_END();
         return abrt;
@@ -144,7 +144,7 @@ static int opIRET(uint32_t fetchdat)
                 loadcs(new_cs);
         }
         flags_extract();
-        cycles -= is486 ? 15 : 22;
+        CLOCK_CYCLES(is486 ? 15 : 22);
         nmi_enable = 1;
         CPU_BLOCK_END();
         return abrt;
@@ -186,7 +186,7 @@ static int opIRETD(uint32_t fetchdat)
                 loadcs(new_cs);
         }
         flags_extract();
-        cycles -= is486 ? 15 : 22;
+        CLOCK_CYCLES(is486 ? 15 : 22);
         nmi_enable = 1;
         CPU_BLOCK_END();
         return abrt;

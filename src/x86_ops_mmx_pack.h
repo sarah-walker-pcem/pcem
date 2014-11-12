@@ -6,7 +6,7 @@ static int opPUNPCKLDQ_a16(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[reg].l[1] = MM[rm].l[0];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -15,7 +15,7 @@ static int opPUNPCKLDQ_a16(uint32_t fetchdat)
                 src = readmeml(easeg, eaaddr); if (abrt) return 0;
                 MM[reg].l[1] = src;
 
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -27,7 +27,7 @@ static int opPUNPCKLDQ_a32(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[reg].l[1] = MM[rm].l[0];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -36,7 +36,7 @@ static int opPUNPCKLDQ_a32(uint32_t fetchdat)
                 src = readmeml(easeg, eaaddr); if (abrt) return 0;
                 MM[reg].l[1] = src;
 
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }

@@ -7,13 +7,13 @@
         if (mod == 3)                                                           \
         {                                                                       \
                 src = MM[rm];                                                   \
-                cycles--;                                                       \
+                CLOCK_CYCLES(1);                                                \
         }                                                                       \
         else                                                                    \
         {                                                                       \
                 src.l[0] = readmeml(easeg, eaaddr);                             \
                 src.l[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 1;     \
-                cycles -= 2;                                                    \
+                CLOCK_CYCLES(2);                                                \
         }
 
 #define MMX_ENTER()                                                     \
@@ -44,6 +44,6 @@ static int opEMMS(uint32_t fetchdat)
                 return 1;
         }
         x87_emms();
-        cycles -= 100; /*Guess*/
+        CLOCK_CYCLES(100); /*Guess*/
         return 0;
 }

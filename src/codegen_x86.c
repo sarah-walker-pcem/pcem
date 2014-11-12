@@ -44,6 +44,7 @@ int cpu_recomp_removed, cpu_recomp_removed_latched;
 
 static uint32_t codegen_endpc;
 
+int codegen_block_cycles;
 
 static uint32_t last_op32;
 static x86seg *last_ea_seg;
@@ -303,6 +304,8 @@ void codegen_block_init(uint32_t phys_addr)
         last_op32 = -1;
         last_ea_seg = NULL;
         last_ssegs = -1;
+        
+        codegen_block_cycles = 0;
 }
 
 void codegen_block_remove()
@@ -354,6 +357,11 @@ void codegen_block_end()
         
         block->checksum = checksum;
 //        pclog("Checksum for %08x - %08x = %08x\n", codeblock_hash_pc[block_num] & ~3, end_pc, checksum);
+
+        addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
+        addbyte(0x2d);
+        addlong((uint32_t)&cycles);
+        addlong((uint32_t)codegen_block_cycles);
 
         addbyte(0x83); /*ADDL $8,%esp*/
         addbyte(0xC4);
@@ -452,10 +460,11 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         int opcode_mask = 0x3ff;
         int over = 0;
         int pc_off = 0;
-        
+
+        codegen_timing_start();
+
         while (!over)
         {
-
                 switch (opcode)
                 {
                         case 0x0f:
@@ -466,102 +475,93 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         case 0x26: /*ES:*/
                         op_ea_seg = &_es;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         case 0x2e: /*CS:*/
                         op_ea_seg = &_cs;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         case 0x36: /*SS:*/
                         op_ea_seg = &_ss;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         case 0x3e: /*DS:*/
                         op_ea_seg = &_ds;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         case 0x64: /*FS:*/
                         op_ea_seg = &_fs;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         case 0x65: /*GS:*/
                         op_ea_seg = &_gs;
                         op_ssegs = 1;
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(4);
                         break;
                         
                         case 0x66: /*Data size select*/
                         op_32 = ((use32 & 0x100) ^ 0x100) | (op_32 & 0x200);
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(2);
                         break;
                         case 0x67: /*Address size select*/
                         op_32 = ((use32 & 0x200) ^ 0x200) | (op_32 & 0x100);
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(2);
                         break;
                         
                         case 0xd8:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_d8_a32 : x86_opcodes_d8_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d8_a32 : x86_dynarec_opcodes_d8_a16;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xd9:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_d9_a32 : x86_opcodes_d9_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d9_a32 : x86_dynarec_opcodes_d9_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xda:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_da_a32 : x86_opcodes_da_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_da_a32 : x86_dynarec_opcodes_da_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xdb:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_db_a32 : x86_opcodes_db_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_db_a32 : x86_dynarec_opcodes_db_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xdc:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_dc_a32 : x86_opcodes_dc_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dc_a32 : x86_dynarec_opcodes_dc_a16;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xdd:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_dd_a32 : x86_opcodes_dd_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dd_a32 : x86_dynarec_opcodes_dd_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xde:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_de_a32 : x86_opcodes_de_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_de_a32 : x86_dynarec_opcodes_de_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         case 0xdf:
-                        op_table = (op_32 & 0x200) ? x86_opcodes_df_a32 : x86_opcodes_df_a16;
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_df_a32 : x86_dynarec_opcodes_df_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
                         break;
                         
                         case 0xf0: /*LOCK*/
-                        addbyte(0x83); addbyte(0x2D); addlong((uint32_t)&cycles); addbyte(2);
                         break;
 
                         default:
                         goto generate_call;
                 }
-                
+                codegen_timing_prefix(opcode);
                 fetchdat = fastreadl(cs + op_pc);
                 if (abrt)
                         return;
@@ -573,6 +573,8 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         }
         
 generate_call:
+        codegen_timing_opcode(opcode, fetchdat, op_32);
+
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 //        if (output)
 //                pclog("Generate call at %08X %02X %08X %02X  %08X %08X %08X %08X %08X  %02X %02X %02X %02X\n", &codeblock[block_current][block_pos], opcode, new_pc, ram[old_pc], EAX, EBX, ECX, EDX, ESI, ram[0x7bd2+6],ram[0x7bd2+7],ram[0x7bd2+8],ram[0x7bd2+9]);
@@ -618,7 +620,7 @@ generate_call:
                 addlong((uint32_t)&op32);
                 addlong(op_32);
         }
-        
+
         addbyte(0xC7); /*MOVL $fetchdat,(%esp)*/
         addbyte(0x04);
         addbyte(0x24);
@@ -631,6 +633,19 @@ generate_call:
 
         addbyte(0xE8); /*CALL*/
         addlong(((uint8_t *)op - (uint8_t *)(&block->data[block_pos + 4])));
+
+        if (codegen_block_cycles &&
+            ((op_table == x86_dynarec_opcodes && ((opcode & 0xf0) == 0x70)) ||
+            (op_table == x86_dynarec_opcodes && ((opcode & 0xfc) == 0xe0)) ||
+            (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80))))
+        {
+                /*Opcode is likely to cause block to exit, update cycle count*/
+                addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uint32_t)&cycles);
+                addlong((uint32_t)codegen_block_cycles);
+                codegen_block_cycles = 0;
+        }
         
         block->ins++;
 

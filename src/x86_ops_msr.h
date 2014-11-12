@@ -13,6 +13,6 @@ static int opRDTSC(uint32_t fetchdat)
         }
         EAX = tsc & 0xffffffff;
         EDX = tsc >> 32;
-        cycles--;
+        CLOCK_CYCLES(1);
         return 0;
 }

@@ -553,7 +553,7 @@ OpFn OP_TABLE(386)[1024] =
 
 /*40*/  opINC_AX,       opINC_CX,       opINC_DX,       opINC_BX,       opINC_SP,       opINC_BP,       opINC_SI,       opINC_DI,       opDEC_AX,       opDEC_CX,       opDEC_DX,       opDEC_BX,       opDEC_SP,       opDEC_BP,       opDEC_SI,       opDEC_DI,  
 /*50*/  opPUSH_AX,      opPUSH_CX,      opPUSH_DX,      opPUSH_BX,      opPUSH_SP,      opPUSH_BP,      opPUSH_SI,      opPUSH_DI,      opPOP_AX,       opPOP_CX,       opPOP_DX,       opPOP_BX,       opPOP_SP,       opPOP_BP,       opPOP_SI,       opPOP_DI, 
-/*60*/  opPUSHA_w,      opPOPA_w,       opBOUND_w_a16,  opARPL_a16,     opFS_w_a16,     opGS_w_a16,     op_66, op_67,     opPUSH_imm_w,   opIMUL_w_iw_a16,opPUSH_imm_bw,  opIMUL_w_ib_a16,opINSB_a16,     opINSW_a16,     opOUTSB_a16,    opOUTSW_a16,
+/*60*/  opPUSHA_w,      opPOPA_w,       opBOUND_w_a16,  opARPL_a16,     opFS_w_a16,     opGS_w_a16,     op_66,          op_67,          opPUSH_imm_w,   opIMUL_w_iw_a16,opPUSH_imm_bw,  opIMUL_w_ib_a16,opINSB_a16,     opINSW_a16,     opOUTSB_a16,    opOUTSW_a16,
 /*70*/  opJO,           opJNO,          opJB,           opJNB,          opJE,           opJNE,          opJBE,          opJNBE,         opJS,           opJNS,          opJP,           opJNP,          opJL,           opJNL,          opJLE,          opJNLE,
 
 /*80*/  op80_a16,       op81_w_a16,     op80_a16,       op83_w_a16,     opTEST_b_a16,   opTEST_w_a16,   opXCHG_b_a16,   opXCHG_w_a16,   opMOV_b_r_a16,  opMOV_w_r_a16,  opMOV_r_b_a16,  opMOV_r_w_a16,  opMOV_w_seg_a16,opLEA_w_a16,    opMOV_seg_w_a16,opPOPW_a16,

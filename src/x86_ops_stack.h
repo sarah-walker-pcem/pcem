@@ -2,7 +2,7 @@
         static int opPUSH_ ## reg (uint32_t fetchdat)                                                  \
         {                                                                                       \
                 PUSH_W(reg);                                                                    \
-                cycles -= (is486) ? 1 : 2;                                                      \
+                CLOCK_CYCLES((is486) ? 1 : 2);                                                  \
                 return abrt;                                                                    \
         }
 
@@ -10,7 +10,7 @@
         static int opPUSH_ ## reg (uint32_t fetchdat)                                                  \
         {                                                                                       \
                 PUSH_L(reg);                                                                    \
-                cycles -= (is486) ? 1 : 2;                                                      \
+                CLOCK_CYCLES((is486) ? 1 : 2);                                                  \
                 return abrt;                                                                    \
         }
 
@@ -18,7 +18,7 @@
         static int opPOP_ ## reg (uint32_t fetchdat)                                                   \
         {                                                                                       \
                 reg = POP_W();                                                                  \
-                cycles -= (is486) ? 1 : 4;                                                      \
+                CLOCK_CYCLES((is486) ? 1 : 4);                                                  \
                 return abrt;                                                                    \
         }
 
@@ -26,7 +26,7 @@
         static int opPOP_ ## reg (uint32_t fetchdat)                                                   \
         {                                                                                       \
                 reg = POP_L();                                                                  \
-                cycles -= (is486) ? 1 : 4;                                                      \
+                CLOCK_CYCLES((is486) ? 1 : 4);                                                  \
                 return abrt;                                                                    \
         }
 
@@ -93,7 +93,7 @@ static int opPUSHA_w(uint32_t fetchdat)
                 writememw(ss, ((SP - 16) & 0xFFFF), DI);
                 if (!abrt) SP -= 16;
         }
-        cycles -= (is486) ? 11 : 18;
+        CLOCK_CYCLES((is486) ? 11 : 18);
         return abrt;
 }
 static int opPUSHA_l(uint32_t fetchdat)
@@ -122,7 +122,7 @@ static int opPUSHA_l(uint32_t fetchdat)
                 writememl(ss, ((SP - 32) & 0xFFFF), EDI);
                 if (!abrt) SP -= 32;
         }
-        cycles -= (is486) ? 11 : 18;
+        CLOCK_CYCLES((is486) ? 11 : 18);
         return abrt;
 }
 
@@ -150,7 +150,7 @@ static int opPOPA_w(uint32_t fetchdat)
                 AX = readmemw(ss, ((SP + 14) & 0xFFFF));        if (abrt) return 1;
                 SP += 16;
         }
-        cycles -= (is486) ? 9 : 24;
+        CLOCK_CYCLES((is486) ? 9 : 24);
         return 0;
 }
 static int opPOPA_l(uint32_t fetchdat)
@@ -177,7 +177,7 @@ static int opPOPA_l(uint32_t fetchdat)
                 EAX = readmeml(ss, ((SP + 28) & 0xFFFF));       if (abrt) return 1;
                 SP += 32;
         }
-        cycles -= (is486) ? 9 : 24;
+        CLOCK_CYCLES((is486) ? 9 : 24);
         return 0;
 }
 
@@ -185,14 +185,14 @@ static int opPUSH_imm_w(uint32_t fetchdat)
 {
         uint16_t val = getwordf(); 
         PUSH_W(val);
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return abrt;
 }
 static int opPUSH_imm_l(uint32_t fetchdat)
 {
         uint32_t val = getlong();              if (abrt) return 1;
         PUSH_L(val);
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return abrt;
 }
 
@@ -203,7 +203,7 @@ static int opPUSH_imm_bw(uint32_t fetchdat)
         if (tempw & 0x80) tempw |= 0xFF00;
         PUSH_W(tempw);
         
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return abrt;
 }
 static int opPUSH_imm_bl(uint32_t fetchdat)
@@ -213,7 +213,7 @@ static int opPUSH_imm_bl(uint32_t fetchdat)
         if (templ & 0x80) templ |= 0xFFFFFF00;
         PUSH_L(templ);
         
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return abrt;
 }
 
@@ -231,8 +231,8 @@ static int opPOPW_a16(uint32_t fetchdat)
                 else         SP -= 2;
         }
                         
-        if (is486) cycles -= ((mod == 3) ? 1 : 6);
-        else       cycles -= ((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
         return abrt;
 }
 static int opPOPW_a32(uint32_t fetchdat)
@@ -249,8 +249,8 @@ static int opPOPW_a32(uint32_t fetchdat)
                 else         SP -= 2;
         }
                         
-        if (is486) cycles -= ((mod == 3) ? 1 : 6);
-        else       cycles -= ((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
         return abrt;
 }
 
@@ -268,8 +268,8 @@ static int opPOPL_a16(uint32_t fetchdat)
                 else         SP -= 4;
         }
                         
-        if (is486) cycles -= ((mod == 3) ? 1 : 6);
-        else       cycles -= ((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
         return abrt;
 }
 static int opPOPL_a32(uint32_t fetchdat)
@@ -286,8 +286,8 @@ static int opPOPL_a32(uint32_t fetchdat)
                 else         SP -= 4;
         }
 
-        if (is486) cycles -= ((mod == 3) ? 1 : 6);
-        else       cycles -= ((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
         return abrt;
 }
 
@@ -312,17 +312,17 @@ static int opENTER_w(uint32_t fetchdat)
                         if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
                         PUSH_W(tempw);
                         if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
-                        cycles -= (is486) ? 3 : 4;
+                        CLOCK_CYCLES((is486) ? 3 : 4);
                 }
                 PUSH_W(frame_ptr);
                 if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
-                cycles -= (is486) ? 3 : 5;
+                CLOCK_CYCLES((is486) ? 3 : 5);
         }
         BP = frame_ptr;
         
         if (stack32) ESP -= offset;
         else          SP -= offset;
-        cycles -= (is486) ? 14 : 10;
+        CLOCK_CYCLES((is486) ? 14 : 10);
         return 0;
 }
 static int opENTER_l(uint32_t fetchdat)
@@ -345,17 +345,17 @@ static int opENTER_l(uint32_t fetchdat)
                         if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
                         PUSH_L(templ);
                         if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
-                        cycles -= (is486) ? 3 : 4;
+                        CLOCK_CYCLES((is486) ? 3 : 4);
                 }
                 PUSH_L(frame_ptr);
                 if (abrt) { ESP = tempESP; EBP = tempEBP; return 1; }
-                cycles -= (is486) ? 3 : 5;
+                CLOCK_CYCLES((is486) ? 3 : 5);
         }
         EBP = frame_ptr;
         
         if (stack32) ESP -= offset;
         else          SP -= offset;
-        cycles -= (is486) ? 14 : 10;
+        CLOCK_CYCLES((is486) ? 14 : 10);
         return 0;
 }
 
@@ -370,7 +370,7 @@ static int opLEAVE_w(uint32_t fetchdat)
         if (abrt) { ESP = tempESP; return 1; }
         BP = temp;
         
-        cycles -= 4;        
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opLEAVE_l(uint32_t fetchdat)
@@ -383,7 +383,7 @@ static int opLEAVE_l(uint32_t fetchdat)
         if (abrt) { ESP = tempESP; return 1; }
         EBP = temp;
         
-        cycles -= 4;        
+        CLOCK_CYCLES(4);        
         return 0;
 }
 
@@ -392,14 +392,14 @@ static int opLEAVE_l(uint32_t fetchdat)
         static int opPUSH_ ## seg ## _w(uint32_t fetchdat)                      \
         {                                                                       \
                 PUSH_W(seg);                                                    \
-                cycles -= 2;                                                    \
-                return abrt;                                                       \
+                CLOCK_CYCLES(2);                                                \
+                return abrt;                                                    \
         }                                                                       \
         static int opPUSH_ ## seg ## _l(uint32_t fetchdat)                      \
         {                                                                       \
                 PUSH_L(seg);                                                    \
-                cycles -= 2;                                                    \
-                return abrt;                                                       \
+                CLOCK_CYCLES(2);                                                \
+                return abrt;                                                    \
         }
         
 #define POP_SEG_OPS(seg, realseg)                                               \
@@ -409,8 +409,8 @@ static int opLEAVE_l(uint32_t fetchdat)
                 uint32_t temp_esp = ESP;                                        \
                 temp_seg = POP_W();                     if (abrt) return 1;     \
                 loadseg(temp_seg, realseg);             if (abrt) ESP = temp_esp; \
-                cycles -= is486 ? 3 : 7;                                        \
-                return abrt;                                                       \
+                CLOCK_CYCLES(is486 ? 3 : 7);                                    \
+                return abrt;                                                    \
         }                                                                       \
         static int opPOP_ ## seg ## _l(uint32_t fetchdat)                       \
         {                                                                       \
@@ -418,8 +418,8 @@ static int opLEAVE_l(uint32_t fetchdat)
                 uint32_t temp_esp = ESP;                                        \
                 temp_seg = POP_L();                     if (abrt) return 1;     \
                 loadseg(temp_seg & 0xffff, realseg);    if (abrt) ESP = temp_esp; \
-                cycles -= is486 ? 3 : 7;                                        \
-                return abrt;                                                       \
+                CLOCK_CYCLES(is486 ? 3 : 7);                                    \
+                return abrt;                                                    \
         }
 
                 

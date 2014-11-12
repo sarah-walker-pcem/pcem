@@ -14,7 +14,7 @@ static int opIMUL_w_iw_a16(uint32_t fetchdat)
         else                                           flags &= ~(C_FLAG | V_FLAG);
         regs[reg].w = templ & 0xffff;
 
-        cycles -= (mod == 3) ? 14 : 17;       
+        CLOCK_CYCLES((mod == 3) ? 14 : 17);
         return 0;
 }
 static int opIMUL_w_iw_a32(uint32_t fetchdat)
@@ -33,7 +33,7 @@ static int opIMUL_w_iw_a32(uint32_t fetchdat)
         else                                           flags &= ~(C_FLAG | V_FLAG);
         regs[reg].w = templ & 0xffff;
 
-        cycles -= (mod == 3) ? 14 : 17;       
+        CLOCK_CYCLES((mod == 3) ? 14 : 17);
         return 0;
 }
 
@@ -53,7 +53,7 @@ static int opIMUL_l_il_a16(uint32_t fetchdat)
         else                                             flags &= ~(C_FLAG | V_FLAG);
         regs[reg].l = temp64 & 0xffffffff;
         
-        cycles-=25;
+        CLOCK_CYCLES(25);
         return 0;
 }
 static int opIMUL_l_il_a32(uint32_t fetchdat)
@@ -72,7 +72,7 @@ static int opIMUL_l_il_a32(uint32_t fetchdat)
         else                                             flags &= ~(C_FLAG | V_FLAG);
         regs[reg].l = temp64 & 0xffffffff;
         
-        cycles-=25;
+        CLOCK_CYCLES(25);
         return 0;
 }
 
@@ -93,7 +93,7 @@ static int opIMUL_w_ib_a16(uint32_t fetchdat)
         else                                           flags &= ~(C_FLAG | V_FLAG);
         regs[reg].w = templ & 0xffff;
         
-        cycles -= (mod == 3) ? 14 : 17;
+        CLOCK_CYCLES((mod == 3) ? 14 : 17);
         return 0;
 }
 static int opIMUL_w_ib_a32(uint32_t fetchdat)
@@ -113,7 +113,7 @@ static int opIMUL_w_ib_a32(uint32_t fetchdat)
         else                                           flags &= ~(C_FLAG | V_FLAG);
         regs[reg].w = templ & 0xffff;
         
-        cycles -= (mod == 3) ? 14 : 17;
+        CLOCK_CYCLES((mod == 3) ? 14 : 17);
         return 0;
 }
 
@@ -133,7 +133,7 @@ static int opIMUL_l_ib_a16(uint32_t fetchdat)
         else                                             flags &= ~(C_FLAG | V_FLAG);
         regs[reg].l = temp64 & 0xffffffff;
         
-        cycles -= 20;
+        CLOCK_CYCLES(20);
         return 0;
 }
 static int opIMUL_l_ib_a32(uint32_t fetchdat)
@@ -152,7 +152,7 @@ static int opIMUL_l_ib_a32(uint32_t fetchdat)
         else                                             flags &= ~(C_FLAG | V_FLAG);
         regs[reg].l = temp64 & 0xffffffff;
         
-        cycles -= 20;
+        CLOCK_CYCLES(20);
         return 0;
 }
 
@@ -170,7 +170,7 @@ static int opIMUL_w_w_a16(uint32_t fetchdat)
         if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
         else                                           flags &= ~(C_FLAG | V_FLAG);
         
-        cycles -= 18;
+        CLOCK_CYCLES(18);
         return 0;
 }
 static int opIMUL_w_w_a32(uint32_t fetchdat)
@@ -185,7 +185,7 @@ static int opIMUL_w_w_a32(uint32_t fetchdat)
         if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
         else                                           flags &= ~(C_FLAG | V_FLAG);
         
-        cycles -= 18;
+        CLOCK_CYCLES(18);
         return 0;
 }
 
@@ -201,7 +201,7 @@ static int opIMUL_l_l_a16(uint32_t fetchdat)
         if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
         else                                             flags &= ~(C_FLAG | V_FLAG);
         
-        cycles -= 30;
+        CLOCK_CYCLES(30);
         return 0;
 }
 static int opIMUL_l_l_a32(uint32_t fetchdat)
@@ -216,7 +216,7 @@ static int opIMUL_l_l_a32(uint32_t fetchdat)
         if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
         else                                             flags &= ~(C_FLAG | V_FLAG);
         
-        cycles -= 30;
+        CLOCK_CYCLES(30);
         return 0;
 }
 

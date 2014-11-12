@@ -7,7 +7,7 @@ static int opMOVD_l_mm_a16(uint32_t fetchdat)
         {
                 MM[reg].l[0] = regs[rm].l;
                 MM[reg].l[1] = 0;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -17,7 +17,7 @@ static int opMOVD_l_mm_a16(uint32_t fetchdat)
                 MM[reg].l[0] = dst;
                 MM[reg].l[1] = 0;
 
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -30,7 +30,7 @@ static int opMOVD_l_mm_a32(uint32_t fetchdat)
         {
                 MM[reg].l[0] = regs[rm].l;
                 MM[reg].l[1] = 0;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -40,7 +40,7 @@ static int opMOVD_l_mm_a32(uint32_t fetchdat)
                 MM[reg].l[0] = dst;
                 MM[reg].l[1] = 0;
 
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -53,13 +53,13 @@ static int opMOVD_mm_l_a16(uint32_t fetchdat)
         if (mod == 3)
         {
                 regs[rm].l = MM[reg].l[0];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 3);
                 writememl(easeg, eaaddr, MM[reg].l[0]); if (abrt) return 1;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -71,13 +71,13 @@ static int opMOVD_mm_l_a32(uint32_t fetchdat)
         if (mod == 3)
         {
                 regs[rm].l = MM[reg].l[0];
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 3);
                 writememl(easeg, eaaddr, MM[reg].l[0]); if (abrt) return 1;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -90,7 +90,7 @@ static int opMOVQ_q_mm_a16(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[reg].q = MM[rm].q;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -100,7 +100,7 @@ static int opMOVQ_q_mm_a16(uint32_t fetchdat)
                 dst[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 1;
                 MM[reg].l[0] = dst[0];
                 MM[reg].l[1] = dst[1];
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -112,7 +112,7 @@ static int opMOVQ_q_mm_a32(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[reg].q = MM[rm].q;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
@@ -122,7 +122,7 @@ static int opMOVQ_q_mm_a32(uint32_t fetchdat)
                 dst[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 1;
                 MM[reg].l[0] = dst[0];
                 MM[reg].l[1] = dst[1];
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -135,14 +135,14 @@ static int opMOVQ_mm_q_a16(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[rm].q = MM[reg].q;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
                 writememl(easeg, eaaddr,     MM[reg].l[0]);
                 writememl(easeg, eaaddr + 4, MM[reg].l[1]); if (abrt) return 1;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }
@@ -154,14 +154,14 @@ static int opMOVQ_mm_q_a32(uint32_t fetchdat)
         if (mod == 3)
         {
                 MM[rm].q = MM[reg].q;
-                cycles--;
+                CLOCK_CYCLES(1);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
                 writememl(easeg, eaaddr,     MM[reg].l[0]);
                 writememl(easeg, eaaddr + 4, MM[reg].l[1]); if (abrt) return 1;
-                cycles -= 2;
+                CLOCK_CYCLES(2);
         }
         return 0;
 }

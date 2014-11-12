@@ -3,7 +3,7 @@
         {                                                               \
                 fetch_ea_16(fetchdat);                                  \
                 seteab((cond_ ## condition) ? 1 : 0);                   \
-                cycles -= 4;                                            \
+                CLOCK_CYCLES(4);                                        \
                 return abrt;                                            \
         }                                                               \
                                                                         \
@@ -11,7 +11,7 @@
         {                                                               \
                 fetch_ea_32(fetchdat);                                  \
                 seteab((cond_ ## condition) ? 1 : 0);                   \
-                cycles -= 4;                                            \
+                CLOCK_CYCLES(4);                                        \
                 return abrt;                                            \
         }
 

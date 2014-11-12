@@ -6,7 +6,8 @@ static int opFADD ## name ## _a ## a_size(uint32_t fetchdat)    \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         ST(0) += use_var;                                       \
-        cycles -= 8;                                            \
+        CLOCK_CYCLES(8);                                        \
+        return 0;                                               \
 }                                                               \
 static int opFCOM ## name ## _a ## a_size(uint32_t fetchdat)    \
 {                                                               \
@@ -17,7 +18,8 @@ static int opFCOM ## name ## _a ## a_size(uint32_t fetchdat)    \
         npxs &= ~(C0|C2|C3);                                    \
         if (ST(0) == use_var)     npxs |= C3;                   \
         else if (ST(0) < use_var) npxs |= C0;                   \
-        cycles -= 4;                                            \
+        CLOCK_CYCLES(4);                                        \
+        return 0;                                               \
 }                                                               \
 static int opFCOMP ## name ## _a ## a_size(uint32_t fetchdat)   \
 {                                                               \
@@ -29,7 +31,8 @@ static int opFCOMP ## name ## _a ## a_size(uint32_t fetchdat)   \
         if (ST(0) == use_var)     npxs |= C3;                   \
         else if (ST(0) < use_var) npxs |= C0;                   \
         x87_pop();                                              \
-        cycles -= 4;                                            \
+        CLOCK_CYCLES(4);                                        \
+        return 0;                                               \
 }                                                               \
 static int opFDIV ## name ## _a ## a_size(uint32_t fetchdat)    \
 {                                                               \
@@ -38,7 +41,8 @@ static int opFDIV ## name ## _a ## a_size(uint32_t fetchdat)    \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         x87_div(ST(0), ST(0), use_var);                         \
-        cycles -= 73;                                           \
+        CLOCK_CYCLES(73);                                       \
+        return 0;                                               \
 }                                                               \
 static int opFDIVR ## name ## _a ## a_size(uint32_t fetchdat)   \
 {                                                               \
@@ -47,7 +51,8 @@ static int opFDIVR ## name ## _a ## a_size(uint32_t fetchdat)   \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         x87_div(ST(0), use_var, ST(0));                         \
-        cycles -= 73;                                           \
+        CLOCK_CYCLES(73);                                       \
+        return 0;                                               \
 }                                                               \
 static int opFMUL ## name ## _a ## a_size(uint32_t fetchdat)    \
 {                                                               \
@@ -56,7 +61,8 @@ static int opFMUL ## name ## _a ## a_size(uint32_t fetchdat)    \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         ST(0) *= use_var;                                       \
-        cycles -= 11;                                           \
+        CLOCK_CYCLES(11);                                       \
+        return 0;                                               \
 }                                                               \
 static int opFSUB ## name ## _a ## a_size(uint32_t fetchdat)    \
 {                                                               \
@@ -65,7 +71,8 @@ static int opFSUB ## name ## _a ## a_size(uint32_t fetchdat)    \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         ST(0) -= use_var;                                       \
-        cycles -= 8;                                            \
+        CLOCK_CYCLES(8);                                        \
+        return 0;                                               \
 }                                                               \
 static int opFSUBR ## name ## _a ## a_size(uint32_t fetchdat)   \
 {                                                               \
@@ -74,7 +81,8 @@ static int opFSUBR ## name ## _a ## a_size(uint32_t fetchdat)   \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         ST(0) = use_var - ST(0);                                \
-        cycles -= 8;                                            \
+        CLOCK_CYCLES(8);                                        \
+        return 0;                                               \
 }
 
 
@@ -97,7 +105,7 @@ static int opFADD(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FADD\n");
         ST(0) = ST(0) + ST(fetchdat & 7);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFADDr(uint32_t fetchdat)
@@ -106,7 +114,7 @@ static int opFADDr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FADD\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFADDP(uint32_t fetchdat)
@@ -116,7 +124,7 @@ static int opFADDP(uint32_t fetchdat)
         if (fplog) pclog("FADDP\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
         x87_pop();
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -128,7 +136,7 @@ static int opFCOM(uint32_t fetchdat)
         npxs &= ~(C0|C2|C3);
         if (ST(0) == ST(fetchdat & 7))     npxs |= C3;
         else if (ST(0) < ST(fetchdat & 7)) npxs |= C0;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -141,7 +149,7 @@ static int opFCOMP(uint32_t fetchdat)
         if (ST(0) == ST(fetchdat & 7))     npxs |= C3;
         else if (ST(0) < ST(fetchdat & 7)) npxs |= C0;
         x87_pop();
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -155,7 +163,7 @@ static int opFCOMPP(uint32_t fetchdat)
         else if (ST(0) < ST(1)) npxs |= C0;
         x87_pop();
         x87_pop();
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opFUCOMPP(uint32_t fetchdat)
@@ -168,7 +176,7 @@ static int opFUCOMPP(uint32_t fetchdat)
         else if (ST(0) < ST(1)) npxs |= C0;
         x87_pop();
         x87_pop();
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 
@@ -178,7 +186,7 @@ static int opFDIV(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDIV\n");
         x87_div(ST(0), ST(0), ST(fetchdat & 7));
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 static int opFDIVr(uint32_t fetchdat)
@@ -187,7 +195,7 @@ static int opFDIVr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDIV\n");
         x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 static int opFDIVP(uint32_t fetchdat)
@@ -197,7 +205,7 @@ static int opFDIVP(uint32_t fetchdat)
         if (fplog) pclog("FDIVP\n");
         x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
         x87_pop();
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 
@@ -207,7 +215,7 @@ static int opFDIVR(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(0), ST(fetchdat&7), ST(0));
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 static int opFDIVRr(uint32_t fetchdat)
@@ -216,7 +224,7 @@ static int opFDIVRr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 static int opFDIVRP(uint32_t fetchdat)
@@ -226,7 +234,7 @@ static int opFDIVRP(uint32_t fetchdat)
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
         x87_pop();
-        cycles -= 73;
+        CLOCK_CYCLES(73);
         return 0;
 }
 
@@ -236,7 +244,7 @@ static int opFMUL(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FMUL\n");
         ST(0) = ST(0) * ST(fetchdat & 7);
-        cycles -= 16;
+        CLOCK_CYCLES(16);
         return 0;
 }
 static int opFMULr(uint32_t fetchdat)
@@ -245,7 +253,7 @@ static int opFMULr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FMUL\n");
         ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
-        cycles -= 16;
+        CLOCK_CYCLES(16);
         return 0;
 }
 static int opFMULP(uint32_t fetchdat)
@@ -255,7 +263,7 @@ static int opFMULP(uint32_t fetchdat)
         if (fplog) pclog("FMULP\n");
         ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
         x87_pop();
-        cycles -= 16;
+        CLOCK_CYCLES(16);
         return 0;
 }
 
@@ -265,7 +273,7 @@ static int opFSUB(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSUB\n");
         ST(0) = ST(0) - ST(fetchdat & 7);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFSUBr(uint32_t fetchdat)
@@ -274,7 +282,7 @@ static int opFSUBr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSUB\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFSUBP(uint32_t fetchdat)
@@ -284,7 +292,7 @@ static int opFSUBP(uint32_t fetchdat)
         if (fplog) pclog("FSUBP\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
         x87_pop();
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -294,7 +302,7 @@ static int opFSUBR(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSUBR\n");
         ST(0) = ST(fetchdat & 7) - ST(0);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFSUBRr(uint32_t fetchdat)
@@ -303,7 +311,7 @@ static int opFSUBRr(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSUBR\n");
         ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 static int opFSUBRP(uint32_t fetchdat)
@@ -313,7 +321,7 @@ static int opFSUBRP(uint32_t fetchdat)
         if (fplog) pclog("FSUBRP\n");
         ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
         x87_pop();
-        cycles -= 8;
+        CLOCK_CYCLES(8);
         return 0;
 }
 
@@ -325,7 +333,7 @@ static int opFUCOM(uint32_t fetchdat)
         npxs &= ~(C0|C2|C3);
         if (ST(0) == ST(fetchdat&7))     npxs |= C3;
         else if (ST(0) < ST(fetchdat&7)) npxs |= C0;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -338,6 +346,6 @@ static int opFUCOMP(uint32_t fetchdat)
         if (ST(0) == ST(fetchdat&7))     npxs |= C3;
         else if (ST(0) < ST(fetchdat&7)) npxs |= C0;
         x87_pop();
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }

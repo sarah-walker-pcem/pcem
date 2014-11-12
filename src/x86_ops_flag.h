@@ -2,7 +2,7 @@ static int opCMC(uint32_t fetchdat)
 {
         flags_rebuild();
         flags ^= C_FLAG;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 
@@ -11,13 +11,13 @@ static int opCLC(uint32_t fetchdat)
 {
         flags_rebuild();
         flags &= ~C_FLAG;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 static int opCLD(uint32_t fetchdat)
 {
         flags &= ~D_FLAG;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 static int opCLI(uint32_t fetchdat)
@@ -32,7 +32,7 @@ static int opCLI(uint32_t fetchdat)
          
         CPU_BLOCK_END();
                        
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -40,13 +40,13 @@ static int opSTC(uint32_t fetchdat)
 {
         flags_rebuild();
         flags |= C_FLAG;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 static int opSTD(uint32_t fetchdat)
 {
         flags |= D_FLAG;
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 static int opSTI(uint32_t fetchdat)
@@ -61,7 +61,7 @@ static int opSTI(uint32_t fetchdat)
 
         CPU_BLOCK_END();
                                 
-        cycles -= 2;
+        CLOCK_CYCLES(2);
         return 0;
 }
 
@@ -69,14 +69,14 @@ static int opSAHF(uint32_t fetchdat)
 {
         flags_rebuild();
         flags = (flags & 0xff00) | (AH & 0xd5) | 2;
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 static int opLAHF(uint32_t fetchdat)
 {
         flags_rebuild();
         AH = flags & 0xff;
-        cycles -= 3;
+        CLOCK_CYCLES(3);
         return 0;
 }
 
@@ -89,7 +89,7 @@ static int opPUSHF(uint32_t fetchdat)
         }
         flags_rebuild();
         PUSH_W(flags);
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return abrt;
 }
 static int opPUSHFD(uint32_t fetchdat)
@@ -104,7 +104,7 @@ static int opPUSHFD(uint32_t fetchdat)
         else       tempw = eflags & 4;
         flags_rebuild();
         PUSH_L(flags | (tempw << 16));
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return abrt;
 }
 
@@ -126,7 +126,7 @@ static int opPOPF_286(uint32_t fetchdat)
         else                      flags = (flags & 0x3200) | (tempw & 0x4dd5) | 2;
         flags_extract();
 
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 static int opPOPF(uint32_t fetchdat)
@@ -146,7 +146,7 @@ static int opPOPF(uint32_t fetchdat)
         else                      flags = (flags & 0x3200) | (tempw & 0xcdd5) | 2;
         flags_extract();
 
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 static int opPOPFD(uint32_t fetchdat)
@@ -173,6 +173,6 @@ static int opPOPFD(uint32_t fetchdat)
         
         flags_extract();
 
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }

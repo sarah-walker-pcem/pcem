@@ -4,7 +4,7 @@ static int opMOVSB_a16(uint32_t fetchdat)
         writememb(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) { DI--; SI--; }
         else                { DI++; SI++; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opMOVSB_a32(uint32_t fetchdat)
@@ -13,7 +13,7 @@ static int opMOVSB_a32(uint32_t fetchdat)
         writememb(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) { EDI--; ESI--; }
         else                { EDI++; ESI++; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -23,7 +23,7 @@ static int opMOVSW_a16(uint32_t fetchdat)
         writememw(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) { DI -= 2; SI -= 2; }
         else                { DI += 2; SI += 2; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opMOVSW_a32(uint32_t fetchdat)
@@ -32,7 +32,7 @@ static int opMOVSW_a32(uint32_t fetchdat)
         writememw(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) { EDI -= 2; ESI -= 2; }
         else                { EDI += 2; ESI += 2; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -42,7 +42,7 @@ static int opMOVSL_a16(uint32_t fetchdat)
         writememl(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) { DI -= 4; SI -= 4; }
         else                { DI += 4; SI += 4; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opMOVSL_a32(uint32_t fetchdat)
@@ -51,7 +51,7 @@ static int opMOVSL_a32(uint32_t fetchdat)
         writememl(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) { EDI -= 4; ESI -= 4; }
         else                { EDI += 4; ESI += 4; }
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -63,7 +63,7 @@ static int opCMPSB_a16(uint32_t fetchdat)
         setsub8(src, dst);
         if (flags & D_FLAG) { DI--; SI--; }
         else                { DI++; SI++; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 static int opCMPSB_a32(uint32_t fetchdat)
@@ -73,7 +73,7 @@ static int opCMPSB_a32(uint32_t fetchdat)
         setsub8(src, dst);
         if (flags & D_FLAG) { EDI--; ESI--; }
         else                { EDI++; ESI++; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 
@@ -84,7 +84,7 @@ static int opCMPSW_a16(uint32_t fetchdat)
         setsub16(src, dst);
         if (flags & D_FLAG) { DI -= 2; SI -= 2; }
         else                { DI += 2; SI += 2; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 static int opCMPSW_a32(uint32_t fetchdat)
@@ -94,7 +94,7 @@ static int opCMPSW_a32(uint32_t fetchdat)
         setsub16(src, dst);
         if (flags & D_FLAG) { EDI -= 2; ESI -= 2; }
         else                { EDI += 2; ESI += 2; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 
@@ -105,7 +105,7 @@ static int opCMPSL_a16(uint32_t fetchdat)
         setsub32(src, dst);
         if (flags & D_FLAG) { DI -= 4; SI -= 4; }
         else                { DI += 4; SI += 4; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 static int opCMPSL_a32(uint32_t fetchdat)
@@ -115,7 +115,7 @@ static int opCMPSL_a32(uint32_t fetchdat)
         setsub32(src, dst);
         if (flags & D_FLAG) { EDI -= 4; ESI -= 4; }
         else                { EDI += 4; ESI += 4; }
-        cycles -= (is486) ? 8 : 10;
+        CLOCK_CYCLES((is486) ? 8 : 10);
         return 0;
 }
 
@@ -124,7 +124,7 @@ static int opSTOSB_a16(uint32_t fetchdat)
         writememb(es, DI, AL);                  if (abrt) return 1;
         if (flags & D_FLAG) DI--;
         else                DI++;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opSTOSB_a32(uint32_t fetchdat)
@@ -132,7 +132,7 @@ static int opSTOSB_a32(uint32_t fetchdat)
         writememb(es, EDI, AL);                 if (abrt) return 1;
         if (flags & D_FLAG) EDI--;
         else                EDI++;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -141,7 +141,7 @@ static int opSTOSW_a16(uint32_t fetchdat)
         writememw(es, DI, AX);                  if (abrt) return 1;
         if (flags & D_FLAG) DI -= 2;
         else                DI += 2;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opSTOSW_a32(uint32_t fetchdat)
@@ -149,7 +149,7 @@ static int opSTOSW_a32(uint32_t fetchdat)
         writememw(es, EDI, AX);                 if (abrt) return 1;
         if (flags & D_FLAG) EDI -= 2;
         else                EDI += 2;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -158,7 +158,7 @@ static int opSTOSL_a16(uint32_t fetchdat)
         writememl(es, DI, EAX);                 if (abrt) return 1;
         if (flags & D_FLAG) DI -= 4;
         else                DI += 4;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 static int opSTOSL_a32(uint32_t fetchdat)
@@ -166,7 +166,7 @@ static int opSTOSL_a32(uint32_t fetchdat)
         writememl(es, EDI, EAX);                if (abrt) return 1;
         if (flags & D_FLAG) EDI -= 4;
         else                EDI += 4;
-        cycles -= 4;
+        CLOCK_CYCLES(4);
         return 0;
 }
 
@@ -177,7 +177,7 @@ static int opLODSB_a16(uint32_t fetchdat)
         AL = temp;
         if (flags & D_FLAG) SI--;
         else                SI++;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 static int opLODSB_a32(uint32_t fetchdat)
@@ -186,7 +186,7 @@ static int opLODSB_a32(uint32_t fetchdat)
         AL = temp;
         if (flags & D_FLAG) ESI--;
         else                ESI++;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 
@@ -196,7 +196,7 @@ static int opLODSW_a16(uint32_t fetchdat)
         AX = temp;
         if (flags & D_FLAG) SI -= 2;
         else                SI += 2;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 static int opLODSW_a32(uint32_t fetchdat)
@@ -205,7 +205,7 @@ static int opLODSW_a32(uint32_t fetchdat)
         AX = temp;
         if (flags & D_FLAG) ESI -= 2;
         else                ESI += 2;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 
@@ -215,7 +215,7 @@ static int opLODSL_a16(uint32_t fetchdat)
         EAX = temp;
         if (flags & D_FLAG) SI -= 4;
         else                SI += 4;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 static int opLODSL_a32(uint32_t fetchdat)
@@ -224,7 +224,7 @@ static int opLODSL_a32(uint32_t fetchdat)
         EAX = temp;
         if (flags & D_FLAG) ESI -= 4;
         else                ESI += 4;
-        cycles -= 5;
+        CLOCK_CYCLES(5);
         return 0;
 }
 
@@ -235,7 +235,7 @@ static int opSCASB_a16(uint32_t fetchdat)
         setsub8(AL, temp);
         if (flags & D_FLAG) DI--;
         else                DI++;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opSCASB_a32(uint32_t fetchdat)
@@ -244,7 +244,7 @@ static int opSCASB_a32(uint32_t fetchdat)
         setsub8(AL, temp);
         if (flags & D_FLAG) EDI--;
         else                EDI++;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -254,7 +254,7 @@ static int opSCASW_a16(uint32_t fetchdat)
         setsub16(AX, temp);
         if (flags & D_FLAG) DI -= 2;
         else                DI += 2;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opSCASW_a32(uint32_t fetchdat)
@@ -263,7 +263,7 @@ static int opSCASW_a32(uint32_t fetchdat)
         setsub16(AX, temp);
         if (flags & D_FLAG) EDI -= 2;
         else                EDI += 2;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -273,7 +273,7 @@ static int opSCASL_a16(uint32_t fetchdat)
         setsub32(EAX, temp);
         if (flags & D_FLAG) DI -= 4;
         else                DI += 4;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 static int opSCASL_a32(uint32_t fetchdat)
@@ -282,7 +282,7 @@ static int opSCASL_a32(uint32_t fetchdat)
         setsub32(EAX, temp);
         if (flags & D_FLAG) EDI -= 4;
         else                EDI += 4;
-        cycles -= 7;
+        CLOCK_CYCLES(7);
         return 0;
 }
 
@@ -294,7 +294,7 @@ static int opINSB_a16(uint32_t fetchdat)
         writememb(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) DI--;
         else                DI++;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 static int opINSB_a32(uint32_t fetchdat)
@@ -305,7 +305,7 @@ static int opINSB_a32(uint32_t fetchdat)
         writememb(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) EDI--;
         else                EDI++;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 
@@ -318,7 +318,7 @@ static int opINSW_a16(uint32_t fetchdat)
         writememw(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) DI -= 2;
         else                DI += 2;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 static int opINSW_a32(uint32_t fetchdat)
@@ -330,7 +330,7 @@ static int opINSW_a32(uint32_t fetchdat)
         writememw(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) EDI -= 2;
         else                EDI += 2;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 
@@ -345,7 +345,7 @@ static int opINSL_a16(uint32_t fetchdat)
         writememl(es, DI, temp);                if (abrt) return 1;
         if (flags & D_FLAG) DI -= 4;
         else                DI += 4;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 static int opINSL_a32(uint32_t fetchdat)
@@ -359,7 +359,7 @@ static int opINSL_a32(uint32_t fetchdat)
         writememl(es, EDI, temp);               if (abrt) return 1;
         if (flags & D_FLAG) EDI -= 4;
         else                EDI += 4;
-        cycles -= 15;
+        CLOCK_CYCLES(15);
         return 0;
 }
 
@@ -370,7 +370,7 @@ static int opOUTSB_a16(uint32_t fetchdat)
         if (flags & D_FLAG) SI--;
         else                SI++;
         outb(DX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
 static int opOUTSB_a32(uint32_t fetchdat)
@@ -380,7 +380,7 @@ static int opOUTSB_a32(uint32_t fetchdat)
         if (flags & D_FLAG) ESI--;
         else                ESI++;
         outb(DX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
 
@@ -392,7 +392,7 @@ static int opOUTSW_a16(uint32_t fetchdat)
         if (flags & D_FLAG) SI -= 2;
         else                SI += 2;
         outw(DX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
 static int opOUTSW_a32(uint32_t fetchdat)
@@ -403,7 +403,7 @@ static int opOUTSW_a32(uint32_t fetchdat)
         if (flags & D_FLAG) ESI -= 2;
         else                ESI += 2;
         outw(DX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
 
@@ -417,7 +417,7 @@ static int opOUTSL_a16(uint32_t fetchdat)
         if (flags & D_FLAG) SI -= 4;
         else                SI += 4;
         outl(EDX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
 static int opOUTSL_a32(uint32_t fetchdat)
@@ -430,6 +430,6 @@ static int opOUTSL_a32(uint32_t fetchdat)
         if (flags & D_FLAG) ESI -= 4;
         else                ESI += 4;
         outl(EDX, temp);
-        cycles -= 14;
+        CLOCK_CYCLES(14);
         return 0;
 }
