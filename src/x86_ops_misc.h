@@ -521,7 +521,7 @@ static int opHLT(uint32_t fetchdat)
         }
         if (!((flags&I_FLAG) && pic_intpending))
         {
-                CLOCK_CYCLES(100);
+                CLOCK_CYCLES_ALWAYS(100);
                 pc--;
         }
         else
