@@ -535,8 +535,12 @@ static int opHLT(uint32_t fetchdat)
 
 static int opLOCK(uint32_t fetchdat)
 {
+        fetchdat = fastreadl(cs + pc);
+        if (abrt) return 0;
+        pc++;
+
         CLOCK_CYCLES(4);
-        return 0;
+        return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
 }
 
 
