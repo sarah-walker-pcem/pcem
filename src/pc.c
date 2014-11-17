@@ -172,8 +172,8 @@ void onesec()
 
 void pc_reset()
 {
-        resetx86();
         cpu_set();
+        resetx86();
         //timer_reset();
         dma_reset();
         fdc_reset();

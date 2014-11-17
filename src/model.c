@@ -81,8 +81,12 @@ MODEL models[] =
         {"AMI 486 clone",       ROM_AMI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
         {"AMI WinBIOS 486",     ROM_WIN486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
 /*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_um8881f_init},*/
-        {"Award SiS 496/497",   ROM_SIS496,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,    at_sis496_init},
-        {"Award 430VX PCI",     ROM_430VX,     { "IDT",   cpus_WinChip, "",    NULL,       "",      NULL},         0,    at_i430vx_init},
+        {"Award SiS 496/497",   ROM_SIS496,    { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,    at_sis496_init},
+#ifdef DYNAREC
+        {"Award 430VX PCI",     ROM_430VX,     { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0,    at_i430vx_init},
+#else
+        {"Award 430VX PCI",     ROM_430VX,     { "IDT", cpus_WinChip,   "",    NULL,         "",      NULL},         0,    at_i430vx_init},
+#endif
         {"", -1, {"", 0, "", 0, "", 0}, 0}
 };
 

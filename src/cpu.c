@@ -3,6 +3,9 @@
 #include "model.h"
 #include "io.h"
 #include "x86_ops.h"
+#ifdef DYNAREC
+#include "codegen.h"
+#endif
 
 #ifdef DYNAREC
 OpFn *x86_dynarec_opcodes;
@@ -49,6 +52,7 @@ enum
         CPUID_FPU = (1 << 0),
         CPUID_TSC = (1 << 4),
         CPUID_MSR = (1 << 5),
+        CPUID_CMPXCHG8B = (1 << 8),
         CPUID_MMX = (1 << 23)
 };
 
@@ -288,7 +292,32 @@ CPU cpus_WinChip[] =
         {"WinChip 240",  CPU_WINCHIP, 17, 240000000, 6, 0x540, 0x540, 0},
         {"",             -1,        0, 0, 0}
 };
+#ifdef DYNAREC
+CPU cpus_Pentium5V[] =
+{
+        /*Intel Pentium (5V, socket 4)*/
+        {"Pentium 60",       CPU_PENTIUM,     6,  60000000, 1, 0x52c, 0x52c, 0},
+        {"Pentium 66",       CPU_PENTIUM,     6,  66666666, 1, 0x52c, 0x52c, 0},
+        {"",             -1,        0, 0, 0}
+};
 
+CPU cpus_Pentium[] =
+{
+        /*Intel Pentium*/
+        {"Pentium 75",       CPU_PENTIUM,     7,  75000000, 2, 0x52c, 0x52c, 0},
+        {"Pentium 90",       CPU_PENTIUM,     9,  90000000, 2, 0x52c, 0x52c, 0},
+        {"Pentium 100",      CPU_PENTIUM,    10, 100000000, 2, 0x52c, 0x52c, 0},
+        {"Pentium 120",      CPU_PENTIUM,    11, 120000000, 2, 0x52c, 0x52c, 0},
+        {"Pentium 133",      CPU_PENTIUM,    12, 133333333, 2, 0x52c, 0x52c, 0},
+        {"Pentium 150",      CPU_PENTIUM,    12, 150000000, 3, 0x52c, 0x52c, 0},
+        {"Pentium 166",      CPU_PENTIUM,    12, 166666666, 3, 0x52c, 0x52c, 0},
+        {"Pentium 200",      CPU_PENTIUM,    12, 200000000, 3, 0x52c, 0x52c, 0},
+        {"Pentium MMX 166",  CPU_PENTIUMMMX, 12, 166666666, 3, 0x543, 0x543, 0},
+        {"Pentium MMX 200",  CPU_PENTIUMMMX, 12, 200000000, 3, 0x543, 0x543, 0},
+        {"Pentium MMX 233",  CPU_PENTIUMMMX, 12, 233333333, 4, 0x543, 0x543, 0},
+        {"",             -1,        0, 0, 0}
+};
+#endif
 void cpu_set_edx()
 {
         EDX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
@@ -296,7 +325,16 @@ void cpu_set_edx()
 
 void cpu_set()
 {
-        CPU *cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+        CPU *cpu_s;
+        
+        if (!models[model].cpu[cpu_manufacturer].cpus)
+        {
+                /*CPU is invalid, set to default*/
+                cpu_manufacturer = 0;
+                cpu = 0;
+        }
+        
+        cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
 
         CPUID    = cpu_s->cpuid_model;
         cpuspeed = cpu_s->speed;
@@ -365,6 +403,7 @@ void cpu_set()
                 x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a16;
                 x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a32;
         }
+        codegen_timing_set(&codegen_timing_486);
 #endif
         if (hasfpu)
         {
@@ -551,7 +590,49 @@ void cpu_set()
                 cpu_hasCR4 = 1;
                 cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
                 break;
-                
+
+#ifdef DYNAREC                
+                case CPU_PENTIUM:
+                x86_setopcodes(ops_386, ops_pentium_0f, dynarec_ops_386, dynarec_ops_pentium_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 0; /*branch taken*/
+                timing_bnt = 2; /*branch not taken*/
+                cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                cpu_hasMMX = 0;
+                cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                codegen_timing_set(&codegen_timing_pentium);
+                break;
+
+                case CPU_PENTIUMMMX:
+                x86_setopcodes(ops_386, ops_pentiummmx_0f, dynarec_ops_386, dynarec_ops_pentiummmx_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 0; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                cpu_hasMMX = 1;
+                cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                codegen_timing_set(&codegen_timing_pentium);
+                break;
+#endif
+
                 default:
                 fatal("cpu_set : unknown CPU type %i\n", cpu_s->cpu_type);
         }
@@ -642,6 +723,43 @@ void cpu_CPUID()
                 else
                    EAX = 0;
                 break;
+#ifdef DYNAREC
+                case CPU_PENTIUM:
+                if (!EAX)
+                {
+                        EAX = 0x00000001;
+                        EBX = 0x756e6547;
+                        EDX = 0x49656e69;
+                        ECX = 0x6c65746e;
+                }
+                else if (EAX == 1)
+                {
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B;
+                }
+                else
+                        EAX = 0;
+                break;
+
+                case CPU_PENTIUMMMX:
+                if (!EAX)
+                {
+                        EAX = 0x00000001;
+                        EBX = 0x756e6547;
+                        EDX = 0x49656e69;
+                        ECX = 0x6c65746e;
+                }
+                else if (EAX == 1)
+                {
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                }
+                else
+                        EAX = 0;
+                break;
+#endif
         }
 }
 
@@ -678,6 +796,19 @@ void cpu_RDMSR()
                         break;
                 }
                 break;
+#ifdef DYNAREC
+                case CPU_PENTIUM:
+                case CPU_PENTIUMMMX:
+                EAX = EDX = 0;
+                switch (ECX)
+                {
+                        case 0x10:
+                        EAX = tsc & 0xffffffff;
+                        EDX = tsc >> 32;
+                        break;
+                }
+                break;
+#endif
         }
 }
 
@@ -716,6 +847,17 @@ void cpu_WRMSR()
                         break;
                 }
                 break;
+#ifdef DYNAREC
+                case CPU_PENTIUM:
+                case CPU_PENTIUMMMX:
+                switch (ECX)
+                {
+                        case 0x10:
+                        tsc = EAX | ((uint64_t)EDX << 32);
+                        break;
+                }
+                break;
+#endif
         }
 }
 

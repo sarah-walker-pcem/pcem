@@ -24,6 +24,10 @@ extern int cpu, cpu_manufacturer;
 
 /*586 class CPUs*/
 #define CPU_WINCHIP 14
+#ifdef DYNAREC
+#define CPU_PENTIUM 15
+#define CPU_PENTIUMMMX 16
+#endif
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -60,6 +64,10 @@ extern CPU cpus_i486[];
 extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
 extern CPU cpus_WinChip[];
+#ifdef DYNAREC
+extern CPU cpus_Pentium5V[];
+extern CPU cpus_Pentium[];
+#endif
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_pc1512[];

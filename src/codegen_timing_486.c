@@ -265,21 +265,25 @@ static inline int COUNT(int *c, int op_32)
         return *c;
 }
 
-void codegen_timing_start()
+void codegen_timing_486_block_start()
+{
+}
+
+void codegen_timing_486_start()
 {
         timing_count = 0;
         last_prefix = 0;
 }
 
-void codegen_timing_prefix(uint8_t prefix)
+void codegen_timing_486_prefix(uint8_t prefix, uint32_t fetchdat)
 {
         timing_count += COUNT(opcode_timings[prefix], 0);
         last_prefix = prefix;
 }
 
-void codegen_timing_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+void codegen_timing_486_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
 {
-        static int **timings;
+        int **timings;
         int mod3 = ((fetchdat & 0xc0) == 0xc0);
 
         switch (last_prefix)
@@ -358,8 +362,16 @@ void codegen_timing_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
         codegen_block_cycles += timing_count;
 }
 
-void codegen_timing_block_end()
+void codegen_timing_486_block_end()
 {
 }
 
+codegen_timing_t codegen_timing_486 =
+{
+        codegen_timing_486_start,
+        codegen_timing_486_prefix,
+        codegen_timing_486_opcode,
+        codegen_timing_486_block_start,
+        codegen_timing_486_block_end
+};
 #endif

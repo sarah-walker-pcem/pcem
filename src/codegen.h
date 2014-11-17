@@ -52,9 +52,24 @@ extern int cpu_notreps, cpu_notreps_latched;
 
 extern int codegen_block_cycles;
 
-void codegen_timing_start();
-void codegen_timing_prefix(uint8_t prefix);
-void codegen_timing_opcode(uint8_t opcode, uint32_t fetchdat, int op_32);
-void codegen_timing_block_end();
+extern void (*codegen_timing_start)();
+extern void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
+extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+extern void (*codegen_timing_block_start)();
+extern void (*codegen_timing_block_end)();
+
+typedef struct codegen_timing_t
+{
+        void (*start)();
+        void (*prefix)(uint8_t prefix, uint32_t fetchdat);
+        void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+        void (*block_start)();
+        void (*block_end)();
+} codegen_timing_t;
+
+extern codegen_timing_t codegen_timing_pentium;
+extern codegen_timing_t codegen_timing_486;
+
+void codegen_timing_set(codegen_timing_t *timing);
 
 #endif

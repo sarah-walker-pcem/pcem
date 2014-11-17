@@ -306,6 +306,7 @@ void codegen_block_init(uint32_t phys_addr)
         last_ssegs = -1;
         
         codegen_block_cycles = 0;
+        codegen_timing_block_start();
 }
 
 void codegen_block_remove()
@@ -357,6 +358,8 @@ void codegen_block_end()
         
         block->checksum = checksum;
 //        pclog("Checksum for %08x - %08x = %08x\n", codeblock_hash_pc[block_num] & ~3, end_pc, checksum);
+
+        codegen_timing_block_end();
 
         addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
         addbyte(0x2d);
@@ -561,8 +564,8 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         default:
                         goto generate_call;
                 }
-                codegen_timing_prefix(opcode);
                 fetchdat = fastreadl(cs + op_pc);
+                codegen_timing_prefix(opcode, fetchdat);
                 if (abrt)
                         return;
                 opcode = fetchdat & 0xff;
