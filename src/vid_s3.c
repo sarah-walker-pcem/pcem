@@ -1176,7 +1176,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                 {
                         if (s3->accel.dat_count)
                         {
-                                cpu_dat = (cpu_dat & 0xffff) | (s3->accel.dat_buf << 16);
+                                cpu_dat = ((cpu_dat & 0xffff) << 16) | s3->accel.dat_buf;
                                 count = 4;
                                 s3->accel.dat_count = 0;
                         }
