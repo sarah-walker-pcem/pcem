@@ -763,6 +763,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         resetpchard();
                         pause=0;
                         break;
+                        case IDM_FILE_RESET_CAD:
+                        pause=1;
+                        Sleep(100);
+                        resetpc_cad();
+                        pause=0;
+                        break;
                         case IDM_FILE_EXIT:
                         PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
                         break;

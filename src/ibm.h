@@ -478,3 +478,5 @@ extern int infocus;
 
 void onesec();
 
+void resetpc_cad();
+
