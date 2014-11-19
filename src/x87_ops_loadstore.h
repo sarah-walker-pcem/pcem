@@ -362,6 +362,7 @@ static int opFSTPd_a16(uint32_t fetchdat)
         x87_td t;
         FP_ENTER();
         fetch_ea_16(fetchdat);
+        CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
         if (fplog) pclog("FSTd %08X:%08X\n", easeg, eaaddr);
         t.d = ST(0);
         seteaq(t.i); if (abrt) return 1;
@@ -374,6 +375,7 @@ static int opFSTPd_a32(uint32_t fetchdat)
         x87_td t;
         FP_ENTER();
         fetch_ea_32(fetchdat);
+        CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
         if (fplog) pclog("FSTd %08X:%08X\n", easeg, eaaddr);
         t.d = ST(0);
         seteaq(t.i); if (abrt) return 1;
