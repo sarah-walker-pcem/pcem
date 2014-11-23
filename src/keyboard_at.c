@@ -254,6 +254,11 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                         
                                         case 0xf4: /*Enable keyboard*/
                                         keyboard_scan = 1;
+                                        keyboard_at_adddata_keyboard(0xfa);
+                                        break;
+                                        case 0xf5: /*Disable keyboard*/
+                                        keyboard_scan = 0;
+                                        keyboard_at_adddata_keyboard(0xfa);
                                         break;
                                         
                                         case 0xff: /*Reset*/

@@ -316,6 +316,8 @@ enum
         ROM_PCI486,
         ROM_SIS496,
         ROM_430VX,
+        ROM_ENDEAVOR,
+        ROM_REVENGE,
         
         ROM_MAX
 };

@@ -37,7 +37,7 @@ static mem_mapping_t base_mapping;
 static mem_mapping_t ram_low_mapping;
 static mem_mapping_t ram_high_mapping;
 static mem_mapping_t ram_mid_mapping;
-static mem_mapping_t bios_mapping[8];
+mem_mapping_t bios_mapping[8];
 static mem_mapping_t bios_high_mapping[8];
 static mem_mapping_t romext_mapping;
 
@@ -90,6 +90,7 @@ int loadbios()
         biosmask = 0xffff;
         
         memset(romext,0x63,0x4000);
+        memset(rom, 0xff, 0x20000);
         
         pclog("Starting with romset %i\n", romset);
         
@@ -415,6 +416,35 @@ int loadbios()
 //                f=romfopen("roms/430vx/430vx","rb");               
                 if (!f) break;
                 fread(rom,           0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                //is486=1;
+                return 1;
+
+                case ROM_REVENGE:
+                f = romfopen("roms/revenge/1009AF2_.BIO", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                fread(rom + 0x10000, 0x10000, 1, f);                
+                fclose(f);
+                f = romfopen("roms/revenge/1009AF2_.BI1", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                fread(rom, 0xc000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                //is486=1;
+                return 1;
+                case ROM_ENDEAVOR:
+                f = romfopen("roms/endeavor/1006CB0_.BIO", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                fread(rom + 0x10000, 0x10000, 1, f);                
+                fclose(f);
+                f = romfopen("roms/endeavor/1006CB0_.BI1", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                fread(rom, 0xc000, 1, f);
                 fclose(f);
                 biosmask = 0x1ffff;
                 //is486=1;

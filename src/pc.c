@@ -238,18 +238,6 @@ void initpc()
 	else
 #endif
 	        ioctl_open(cdrom_drive);
-        model_init();        
-        video_init();
-        speaker_init();        
-        sound_card_init(sound_card_current);
-        if (GUS)
-                device_add(&gus_device);
-        if (GAMEBLASTER)
-                device_add(&cms_device);
-        if (SSI2001)
-                device_add(&ssi2001_device);
-               
-        pc_reset();
         
         pit_reset();        
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();

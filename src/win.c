@@ -542,7 +542,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         }
 
         loadbios();
-
+        resetpchard();
+        
         timeBeginPeriod(1);
         
         atexit(releasemouse);

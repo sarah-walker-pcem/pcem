@@ -256,6 +256,26 @@ ROM files needed:
 SIS496-1.AWA
 
 
+Intel Premiere/PCI (Batman's Revenge) (1994)
+A Socket 4 based board with 430LX chipset.
+
+ROM files needed:
+
+1009AF2_.BI0
+1009AF2_.BI1
+
+
+Intel Advanced/EV (Endeavor) (1995)
+A Socket 5/7 based board with 430FX chipset. The real board has a Sound Blaster Vibra 16 on board,
+which is not emulated - use a discrete card instead. Some Advanced/EVs also had a Trio64 on board,
+the emulated board does not have this either.
+
+ROM files needed:
+
+1006CB0_.BI0
+1006CB0_.BI1
+
+
 Award 430VX PCI (1996)
 A generic Socket 5/7 board with 430VX chipset.
 
