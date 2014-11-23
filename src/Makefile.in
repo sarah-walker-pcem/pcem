@@ -60,7 +60,9 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-config.$(OBJEXT) pcem-cpu.$(OBJEXT) pcem-dac.$(OBJEXT) \
 	pcem-device.$(OBJEXT) pcem-dma.$(OBJEXT) pcem-fdc.$(OBJEXT) \
 	pcem-gameport.$(OBJEXT) pcem-headland.$(OBJEXT) \
-	pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) pcem-io.$(OBJEXT) \
+	pcem-i430lx.$(OBJEXT) pcem-i430fx.$(OBJEXT) \
+	pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) pcem-intel.$(OBJEXT) \
+	pcem-intel_flash.$(OBJEXT) pcem-io.$(OBJEXT) \
 	pcem-jim.$(OBJEXT) pcem-keyboard.$(OBJEXT) \
 	pcem-keyboard_amstrad.$(OBJEXT) pcem-keyboard_at.$(OBJEXT) \
 	pcem-keyboard_olim24.$(OBJEXT) pcem-keyboard_pcjr.$(OBJEXT) \
@@ -229,7 +231,8 @@ pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 pcem_SOURCES = 386.c 808x.c acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
-config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430vx.c ide.c io.c jim.c \
+config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430lx.c i430fx.c i430vx.c \
+ide.c intel.c intel_flash.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
 olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c rom.c serial.c sis496.c sound.c \
@@ -361,8 +364,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-gameport.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-headland.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-i430fx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-i430lx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-i430vx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ide.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-intel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-intel_flash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-jim.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-keyboard.Po@am__quote@
@@ -818,6 +825,34 @@ pcem-headland.obj: headland.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-headland.obj `if test -f 'headland.c'; then $(CYGPATH_W) 'headland.c'; else $(CYGPATH_W) '$(srcdir)/headland.c'; fi`
 
+pcem-i430lx.o: i430lx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-i430lx.o -MD -MP -MF $(DEPDIR)/pcem-i430lx.Tpo -c -o pcem-i430lx.o `test -f 'i430lx.c' || echo '$(srcdir)/'`i430lx.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-i430lx.Tpo $(DEPDIR)/pcem-i430lx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i430lx.c' object='pcem-i430lx.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-i430lx.o `test -f 'i430lx.c' || echo '$(srcdir)/'`i430lx.c
+
+pcem-i430lx.obj: i430lx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-i430lx.obj -MD -MP -MF $(DEPDIR)/pcem-i430lx.Tpo -c -o pcem-i430lx.obj `if test -f 'i430lx.c'; then $(CYGPATH_W) 'i430lx.c'; else $(CYGPATH_W) '$(srcdir)/i430lx.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-i430lx.Tpo $(DEPDIR)/pcem-i430lx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i430lx.c' object='pcem-i430lx.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-i430lx.obj `if test -f 'i430lx.c'; then $(CYGPATH_W) 'i430lx.c'; else $(CYGPATH_W) '$(srcdir)/i430lx.c'; fi`
+
+pcem-i430fx.o: i430fx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-i430fx.o -MD -MP -MF $(DEPDIR)/pcem-i430fx.Tpo -c -o pcem-i430fx.o `test -f 'i430fx.c' || echo '$(srcdir)/'`i430fx.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-i430fx.Tpo $(DEPDIR)/pcem-i430fx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i430fx.c' object='pcem-i430fx.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-i430fx.o `test -f 'i430fx.c' || echo '$(srcdir)/'`i430fx.c
+
+pcem-i430fx.obj: i430fx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-i430fx.obj -MD -MP -MF $(DEPDIR)/pcem-i430fx.Tpo -c -o pcem-i430fx.obj `if test -f 'i430fx.c'; then $(CYGPATH_W) 'i430fx.c'; else $(CYGPATH_W) '$(srcdir)/i430fx.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-i430fx.Tpo $(DEPDIR)/pcem-i430fx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i430fx.c' object='pcem-i430fx.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-i430fx.obj `if test -f 'i430fx.c'; then $(CYGPATH_W) 'i430fx.c'; else $(CYGPATH_W) '$(srcdir)/i430fx.c'; fi`
+
 pcem-i430vx.o: i430vx.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-i430vx.o -MD -MP -MF $(DEPDIR)/pcem-i430vx.Tpo -c -o pcem-i430vx.o `test -f 'i430vx.c' || echo '$(srcdir)/'`i430vx.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-i430vx.Tpo $(DEPDIR)/pcem-i430vx.Po
@@ -845,6 +880,34 @@ pcem-ide.obj: ide.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ide.c' object='pcem-ide.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-ide.obj `if test -f 'ide.c'; then $(CYGPATH_W) 'ide.c'; else $(CYGPATH_W) '$(srcdir)/ide.c'; fi`
+
+pcem-intel.o: intel.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-intel.o -MD -MP -MF $(DEPDIR)/pcem-intel.Tpo -c -o pcem-intel.o `test -f 'intel.c' || echo '$(srcdir)/'`intel.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-intel.Tpo $(DEPDIR)/pcem-intel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intel.c' object='pcem-intel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-intel.o `test -f 'intel.c' || echo '$(srcdir)/'`intel.c
+
+pcem-intel.obj: intel.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-intel.obj -MD -MP -MF $(DEPDIR)/pcem-intel.Tpo -c -o pcem-intel.obj `if test -f 'intel.c'; then $(CYGPATH_W) 'intel.c'; else $(CYGPATH_W) '$(srcdir)/intel.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-intel.Tpo $(DEPDIR)/pcem-intel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intel.c' object='pcem-intel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-intel.obj `if test -f 'intel.c'; then $(CYGPATH_W) 'intel.c'; else $(CYGPATH_W) '$(srcdir)/intel.c'; fi`
+
+pcem-intel_flash.o: intel_flash.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-intel_flash.o -MD -MP -MF $(DEPDIR)/pcem-intel_flash.Tpo -c -o pcem-intel_flash.o `test -f 'intel_flash.c' || echo '$(srcdir)/'`intel_flash.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-intel_flash.Tpo $(DEPDIR)/pcem-intel_flash.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intel_flash.c' object='pcem-intel_flash.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-intel_flash.o `test -f 'intel_flash.c' || echo '$(srcdir)/'`intel_flash.c
+
+pcem-intel_flash.obj: intel_flash.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-intel_flash.obj -MD -MP -MF $(DEPDIR)/pcem-intel_flash.Tpo -c -o pcem-intel_flash.obj `if test -f 'intel_flash.c'; then $(CYGPATH_W) 'intel_flash.c'; else $(CYGPATH_W) '$(srcdir)/intel_flash.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-intel_flash.Tpo $(DEPDIR)/pcem-intel_flash.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intel_flash.c' object='pcem-intel_flash.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-intel_flash.obj `if test -f 'intel_flash.c'; then $(CYGPATH_W) 'intel_flash.c'; else $(CYGPATH_W) '$(srcdir)/intel_flash.c'; fi`
 
 pcem-io.o: io.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-io.o -MD -MP -MF $(DEPDIR)/pcem-io.Tpo -c -o pcem-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c

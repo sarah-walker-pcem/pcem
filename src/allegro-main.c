@@ -118,6 +118,8 @@ int main()
                 }
         }
 
+	resetpchard();
+
         ticks = 0;
         while (!quited)
         {

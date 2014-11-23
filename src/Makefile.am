@@ -17,7 +17,8 @@ pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 pcem_SOURCES = 386.c 808x.c acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
-config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430vx.c ide.c io.c jim.c \
+config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430lx.c i430fx.c i430vx.c \
+ide.c intel.c intel_flash.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
 olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c rom.c serial.c sis496.c sound.c \
