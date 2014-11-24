@@ -44,7 +44,7 @@ extern int timing_bt, timing_bnt;
 
 typedef struct
 {
-        char name[16];
+        char name[32];
         int cpu_type;
         int speed;
         int rspeed;

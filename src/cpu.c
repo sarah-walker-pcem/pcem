@@ -233,6 +233,10 @@ CPU cpus_i486[] =
         {"i486DX2/66",   CPU_i486DX, 6,  66666666, 2, 0x430, 0, 0},
         {"iDX4/75",      CPU_i486DX, 7,  75000000, 3, 0x481, 0x481, 0}, /*CPUID available on DX4, >= 75 MHz*/
         {"iDX4/100",     CPU_i486DX,10, 100000000, 3, 0x481, 0x481, 0}, /*Is on some real Intel DX2s, limit here is pretty arbitary*/
+#ifdef DYNAREC
+        {"Pentium OverDrive/63",       CPU_PENTIUM,     6,  62500000, 3, 0x1531, 0x1531, 0},
+        {"Pentium OverDrive/83",       CPU_PENTIUM,     8,  83333333, 3, 0x1532, 0x1532, 0},
+#endif
         {"",             -1,        0, 0, 0}
 };
 
