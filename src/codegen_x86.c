@@ -45,6 +45,7 @@ int cpu_recomp_removed, cpu_recomp_removed_latched;
 static uint32_t codegen_endpc;
 
 int codegen_block_cycles;
+static int codegen_block_ins;
 
 static uint32_t last_op32;
 static x86seg *last_ea_seg;
@@ -307,6 +308,8 @@ void codegen_block_init(uint32_t phys_addr)
         
         codegen_block_cycles = 0;
         codegen_timing_block_start();
+        
+        codegen_block_ins = 0;
 }
 
 void codegen_block_remove()
@@ -361,10 +364,20 @@ void codegen_block_end()
 
         codegen_timing_block_end();
 
-        addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
-        addbyte(0x2d);
-        addlong((uint32_t)&cycles);
-        addlong((uint32_t)codegen_block_cycles);
+        if (codegen_block_cycles)
+        {
+                addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uint32_t)&cycles);
+                addlong((uint32_t)codegen_block_cycles);
+        }
+        if (codegen_block_ins)
+        {
+                addbyte(0x81); /*ADD $codegen_block_ins,ins*/
+                addbyte(0x05);
+                addlong((uint32_t)&cpu_recomp_ins);
+                addlong(codegen_block_ins);
+        }
 
         addbyte(0x83); /*ADDL $8,%esp*/
         addbyte(0xC4);
@@ -443,12 +456,231 @@ static int opcode_conditional_jump[256] =
         0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*f0*/
 };
 
+static int opcode_modrm[256] =
+{
+        1, 1, 1, 1,  0, 0, 0, 0,  1, 1, 1, 1,  0, 0, 0, 0,  /*00*/
+        1, 1, 1, 1,  0, 0, 0, 0,  1, 1, 1, 1,  0, 0, 0, 0,  /*10*/
+        1, 1, 1, 1,  0, 0, 0, 0,  1, 1, 1, 1,  0, 0, 0, 0,  /*20*/
+        1, 1, 1, 1,  0, 0, 0, 0,  1, 1, 1, 1,  0, 0, 0, 0,  /*30*/
+
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*40*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*50*/
+        0, 0, 1, 1,  0, 0, 0, 0,  0, 1, 0, 1,  0, 0, 0, 0,  /*60*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*70*/
+
+        1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  /*80*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*90*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*a0*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*b0*/
+
+        1, 1, 0, 0,  1, 1, 1, 1,  0, 0, 0, 0,  0, 0, 0, 0,  /*c0*/
+        1, 1, 1, 1,  0, 0, 0, 0,  1, 1, 1, 1,  1, 1, 1, 1,  /*d0*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  /*e0*/
+        0, 0, 0, 0,  0, 0, 1, 1,  0, 0, 0, 0,  0, 0, 1, 1,  /*f0*/
+};
+int opcode_0f_modrm[256] =
+{
+        1, 1, 1, 1,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*00*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*10*/
+        1, 1, 1, 1,  1, 1, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*20*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*30*/
+
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*40*/
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*50*/
+        1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  0, 0, 1, 1, /*60*/
+        0, 1, 1, 1,  1, 1, 1, 0,  0, 0, 0, 0,  0, 0, 1, 1, /*70*/
+
+        0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, /*80*/
+        1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, /*90*/
+        0, 0, 0, 1,  1, 1, 0, 0,  0, 0, 0, 1,  1, 1, 0, 1, /*a0*/
+        1, 1, 1, 1,  1, 1, 1, 1,  0, 0, 1, 1,  1, 1, 1, 1, /*b0*/
+
+        1, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 0, /*c0*/
+        0, 1, 1, 1,  0, 1, 0, 0,  1, 1, 0, 1,  1, 1, 0, 1, /*d0*/
+        0, 1, 1, 0,  0, 1, 0, 0,  1, 1, 0, 1,  1, 1, 0, 1, /*e0*/
+        0, 1, 1, 1,  0, 1, 0, 0,  1, 1, 1, 0,  1, 1, 1, 0  /*f0*/
+};
+        
 void codegen_debug()
 {
         if (output)
         {
                 pclog("At %04x(%08x):%04x  %04x(%08x):%04x  EAX=%08x BX=%04x BP=%04x EDX=%08x\n", CS, cs, pc, SS, ss, ESP,  EAX, BX,BP,  EDX);
         }
+}
+
+static x86seg *codegen_generate_ea_16_long(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
+{
+        if (!mod && rm == 6) 
+        { 
+                addbyte(0xC7); /*MOVL $0,(ssegs)*/
+                addbyte(0x05);
+                addlong((uint32_t)&eaaddr);
+                addlong((fetchdat >> 8) & 0xffff);
+                (*op_pc) += 2;
+        }
+        else
+        {
+                switch (mod)
+                {
+                        case 0:
+                        addbyte(0xa1); /*MOVL *mod1add[0][rm], %eax*/
+                        addlong((uint32_t)mod1add[0][rm]);
+                        addbyte(0x03); /*ADDL *mod1add[1][rm], %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)mod1add[1][rm]);
+                        break;
+                        case 1:
+                        addbyte(0xb8); /*MOVL ,%eax*/
+                        addlong((uint32_t)(int8_t)(rmdat >> 8));// pc++;
+                        addbyte(0x03); /*ADDL *mod1add[0][rm], %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)mod1add[0][rm]);
+                        addbyte(0x03); /*ADDL *mod1add[1][rm], %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)mod1add[1][rm]);
+                        (*op_pc)++;
+                        break;
+                        case 2:
+                        addbyte(0xb8); /*MOVL ,%eax*/
+                        addlong((fetchdat >> 8) & 0xffff);// pc++;
+                        addbyte(0x03); /*ADDL *mod1add[0][rm], %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)mod1add[0][rm]);
+                        addbyte(0x03); /*ADDL *mod1add[1][rm], %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)mod1add[1][rm]);
+                        (*op_pc) += 2;
+                        break;
+                }
+                addbyte(0x25); /*ANDL $0xffff, %eax*/
+                addlong(0xffff);
+                addbyte(0xa3);
+                addlong((uint32_t)&eaaddr);
+
+                if (mod1seg[rm] == &ss && !op_ssegs)
+                        op_ea_seg = &_ss;
+        }
+        return op_ea_seg;
+}
+
+static x86seg *codegen_generate_ea_32_long(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, int stack_offset)
+{
+        uint32_t new_eaaddr;
+
+        if (rm == 4)
+        {
+                uint8_t sib = fetchdat >> 8;
+                (*op_pc)++;
+                
+                switch (mod)
+                {
+                        case 0:
+                        if ((sib & 7) == 5)
+                        {
+                                new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                                addbyte(0xb8); /*MOVL ,%eax*/
+                                addlong(new_eaaddr);// pc++;
+                                (*op_pc) += 4;
+                        }
+                        else
+                        {
+                                addbyte(0xa1); /*MOVL regs[sib&7].l, %eax*/
+                                addlong((uint32_t)&regs[sib & 7].l);
+                        }
+                        break;
+                        case 1: 
+                        new_eaaddr = (uint32_t)(int8_t)((fetchdat >> 16) & 0xff);
+                        addbyte(0xb8); /*MOVL new_eaaddr, %eax*/
+                        addlong(new_eaaddr);
+                        addbyte(0x03); /*ADDL regs[sib&7].l, %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&regs[sib & 7].l);
+                        (*op_pc)++;
+                        break;
+                        case 2:
+                        new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                        addbyte(0xb8); /*MOVL new_eaaddr, %eax*/
+                        addlong(new_eaaddr);
+                        addbyte(0x03); /*ADDL regs[sib&7].l, %eax*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&regs[sib & 7].l);
+                        (*op_pc) += 4;
+                        break;
+                }
+                if (stack_offset && (sib & 7) == 4 && (mod || (sib & 7) != 5)) /*ESP*/
+                {
+                        addbyte(0x05);
+                        addlong(stack_offset);
+                }
+                if (((sib & 7) == 4 || (mod && (sib & 7) == 5)) && !op_ssegs)
+                        op_ea_seg = &_ss;
+                if (((sib >> 3) & 7) != 4)
+                {
+                        switch (sib >> 6)
+                        {
+                                case 0:
+                                addbyte(0x03); /*ADDL regs[sib&7].l, %eax*/
+                                addbyte(0x05);
+                                addlong((uint32_t)&regs[(sib >> 3) & 7].l);
+                                break;
+                                case 1:
+                                addbyte(0x8B); addbyte(0x1D); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL armregs[RD],%ebx*/
+                                addbyte(0x01); addbyte(0xD8); /*ADDL %ebx,%eax*/
+                                addbyte(0x01); addbyte(0xD8); /*ADDL %ebx,%eax*/
+                                break;
+                                case 2:
+                                addbyte(0x8B); addbyte(0x1D); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL armregs[RD],%ebx*/
+                                addbyte(0xC1); addbyte(0xE3); addbyte(2); /*SHL $2,%ebx*/
+                                addbyte(0x01); addbyte(0xD8); /*ADDL %ebx,%eax*/
+                                break;
+                                case 3:
+                                addbyte(0x8B); addbyte(0x1D); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL armregs[RD],%ebx*/
+                                addbyte(0xC1); addbyte(0xE3); addbyte(3); /*SHL $2,%ebx*/
+                                addbyte(0x01); addbyte(0xD8); /*ADDL %ebx,%eax*/
+                                break;
+                        }
+                }
+                addbyte(0xa3);
+                addlong((uint32_t)&eaaddr);
+        }
+        else
+        {
+                if (!mod && rm == 5)
+                {                
+                        new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                        addbyte(0xC7); /*MOVL $new_eaaddr,(eaaddr)*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&eaaddr);
+                        addlong(new_eaaddr);
+                        (*op_pc) += 4;
+                        return op_ea_seg;
+                }
+                addbyte(0xa1); /*MOVL regs[rm].l, %eax*/
+                addlong((uint32_t)&regs[rm].l);
+                eaaddr = regs[rm].l;
+                if (mod) 
+                {
+                        if (rm == 5 && !op_ssegs)
+                                op_ea_seg = &_ss;
+                        if (mod == 1) 
+                        {
+                                addbyte(0x05);
+                                addlong((uint32_t)(int8_t)(fetchdat >> 8)); 
+                                (*op_pc)++; 
+                        }
+                        else          
+                        {
+                                new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                                addbyte(0x05);
+                                addlong(new_eaaddr); 
+                                (*op_pc) += 4;
+                        }
+                }
+                addbyte(0xa3);
+                addlong((uint32_t)&eaaddr);
+        }
+        return op_ea_seg;
 }
 
 void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_pc, uint32_t old_pc)
@@ -463,7 +695,8 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         int opcode_mask = 0x3ff;
         int over = 0;
         int pc_off = 0;
-
+        int test_modrm = 1;
+        
         codegen_timing_start();
 
         while (!over)
@@ -513,24 +746,28 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         opcode_mask = 0x1f;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xd9:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d9_a32 : x86_dynarec_opcodes_d9_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xda:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_da_a32 : x86_dynarec_opcodes_da_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xdb:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_db_a32 : x86_dynarec_opcodes_db_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xdc:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dc_a32 : x86_dynarec_opcodes_dc_a16;
@@ -538,24 +775,28 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         opcode_mask = 0x1f;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xdd:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dd_a32 : x86_dynarec_opcodes_dd_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xde:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_de_a32 : x86_dynarec_opcodes_de_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         case 0xdf:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_df_a32 : x86_dynarec_opcodes_df_a16;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
+                        test_modrm = 0;
                         break;
                         
                         case 0xf0: /*LOCK*/
@@ -577,7 +818,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         
 generate_call:
         codegen_timing_opcode(opcode, fetchdat, op_32);
-
+        
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 //        if (output)
 //                pclog("Generate call at %08X %02X %08X %02X  %08X %08X %08X %08X %08X  %02X %02X %02X %02X\n", &codeblock[block_current][block_pos], opcode, new_pc, ram[old_pc], EAX, EBX, ECX, EDX, ESI, ram[0x7bd2+6],ram[0x7bd2+7],ram[0x7bd2+8],ram[0x7bd2+9]);
@@ -599,6 +840,41 @@ generate_call:
                 addlong((uint32_t)&ssegs);
                 addlong(op_ssegs);
         }
+
+        if (!test_modrm ||
+                (op_table == x86_dynarec_opcodes && opcode_modrm[opcode]) ||
+                (op_table == x86_dynarec_opcodes_0f && opcode_0f_modrm[opcode]))
+        {
+                int stack_offset = 0;
+                
+                if (op_table == x86_dynarec_opcodes && opcode == 0x8f) /*POP*/
+                        stack_offset = (op_32 & 0x100) ? 4 : 2;
+
+                mod = (fetchdat >> 6) & 3;
+                reg = (fetchdat >> 3) & 7;
+                rm = fetchdat & 7;
+
+                addbyte(0xC7); /*MOVL $mod,(mod)*/
+                addbyte(0x05);
+                addlong((uint32_t)&mod);
+                addlong(mod);
+                addbyte(0xC7); /*MOVL $reg,(reg)*/
+                addbyte(0x05);
+                addlong((uint32_t)&reg);
+                addlong(reg);
+                addbyte(0xC7); /*MOVL $rm,(rm)*/
+                addbyte(0x05);
+                addlong((uint32_t)&rm);
+                addlong(rm);
+
+                op_pc += pc_off;
+                if (mod != 3 && !(op_32 & 0x200))
+                        op_ea_seg = codegen_generate_ea_16_long(op_ea_seg, fetchdat, op_ssegs, &op_pc);
+                if (mod != 3 &&  (op_32 & 0x200))
+                        op_ea_seg = codegen_generate_ea_32_long(op_ea_seg, fetchdat, op_ssegs, &op_pc, stack_offset);
+                op_pc -= pc_off;
+        }
+
 //        if (op_ea_seg != last_ea_seg)
 //        {
 //                last_ea_seg = op_ea_seg;
@@ -607,6 +883,8 @@ generate_call:
                 addlong((uint32_t)&ea_seg);
                 addlong((uint32_t)op_ea_seg);
 //        }
+
+
         addbyte(0xC7); /*MOVL $new_pc,(pc)*/
         addbyte(0x05);
         addlong((uint32_t)&pc);
@@ -629,25 +907,32 @@ generate_call:
         addbyte(0x24);
         addlong(fetchdat);
   
-        addbyte(0x83); /*ADD $1,ins*/
-        addbyte(0x05);
-        addlong((uint32_t)&cpu_recomp_ins);
-        addbyte(1);
-
         addbyte(0xE8); /*CALL*/
         addlong(((uint8_t *)op - (uint8_t *)(&block->data[block_pos + 4])));
 
-        if (codegen_block_cycles &&
-            ((op_table == x86_dynarec_opcodes && ((opcode & 0xf0) == 0x70)) ||
+        codegen_block_ins++;
+
+        if (((op_table == x86_dynarec_opcodes && ((opcode & 0xf0) == 0x70)) ||
             (op_table == x86_dynarec_opcodes && ((opcode & 0xfc) == 0xe0)) ||
             (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80))))
         {
                 /*Opcode is likely to cause block to exit, update cycle count*/
-                addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
-                addbyte(0x2d);
-                addlong((uint32_t)&cycles);
-                addlong((uint32_t)codegen_block_cycles);
-                codegen_block_cycles = 0;
+                if (codegen_block_cycles)
+                {
+                        addbyte(0x81); /*SUB $codegen_block_cycles, cyclcs*/
+                        addbyte(0x2d);
+                        addlong((uint32_t)&cycles);
+                        addlong((uint32_t)codegen_block_cycles);
+                        codegen_block_cycles = 0;
+                }
+                if (codegen_block_ins)
+                {
+                        addbyte(0x81); /*ADD $codegen_block_ins,ins*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&cpu_recomp_ins);
+                        addlong(codegen_block_ins);
+                        codegen_block_ins = 0;
+                }
         }
         
         block->ins++;

@@ -269,7 +269,7 @@ void x86_int_sw(int num)
 void x86illegal()
 {
         uint16_t addr;
-        pclog("x86 illegal %04X %08X %04X:%08X %02X\n",msw,cr0,CS,pc,opcode);
+//        pclog("x86 illegal %04X %08X %04X:%08X %02X\n",msw,cr0,CS,pc,opcode);
         
 //        if (output)
 //        {
@@ -1183,44 +1183,6 @@ void exec386(int cycs)
 //        output=3;
         while (cycles>0)
         {
-                int stack_check = 0;
-                
-//                if ((pc & 0xf0000000) == 0x26470948)
-//                        fatal("Bad\n");
-                
-/*                if (SS != 0x30)
-                        stack_check = 1;
-                if (SS == 0x30 && ESP < 0x100)
-                        output = 3;*/
-//                if (stack32 && (ESP >= 2 && ESP < 0x10))
-//                        stack_check = 1;
-//                if (CS == 0x117)
-//                        output = 3;
-//                if (cs+pc == 0x7c00)
-//                        output = 3;
-//                if (output)
-//                        dump_block();
-//                if (ins > 19428567)
-//                        output = 3;
-//                if (ins > 161000000)
-//                        output = 3;
-/*                if (ins > 363365892)
-                {
-                        if (!output)
-                                timetolive = 15000;
-                        output = 3;
-                }*/
-/*                if (cr0 & (1 << 31))
-                        output = 3;
-                else
-                        output = 0;*/
-                        
-//                if (CS == 0x28 && pc == 0x8000A89D)
-//                        fatal("Over\n");
-//                if (CS == 0xFDC8 && pc == 0x00005488)
-//                        output = 3;
-//                if (ins >= 265000000) output = 1;
-
                 oldcs = CS;
                 oldpc = pc;
                 oldcpl = CPL;
@@ -1317,18 +1279,9 @@ void exec386(int cycs)
                 if (valid_block && !dirty)
                 {
                         void (*code)() = (void *)&block->data[BLOCK_START];
-/*                        if ((cs+pc) == 0xfe771)
-                                output = 1;*/
-//                        if (output && pc != 0xe790 && pc != 0xe798) pclog("Calling block %i %08X for %08X %08X %08X %08X %08X %08X %02X %02X %02X %02X\n", codeblock_hash_pnt[HASH(cs + pc)], code, cs+pc, EAX, EBX, ECX, EDX, ESI, ram[0x7bd2+6],ram[0x7bd2+7],ram[0x7bd2+8],ram[0x7bd2+9]);
-/*                        if (pc == 0xe79e)
-                        {
-                                fatal("Here\n");
-                        }*/
+
                         if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x %08x %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0], get_phys(cs+pc), block->phys);
-/*                        if (CS == 0xfef1 && pc == 0x0c07)
-                        {
-                                int a=1;
-                        }*/
+
                         oldcs = CS;
                         oldcpl = CPL;
 inrecomp=1;

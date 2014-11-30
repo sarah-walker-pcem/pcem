@@ -358,15 +358,14 @@ static int opXLAT_a32(uint32_t fetchdat)
 
 static int opMOV_b_r_a16(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                setr8(fetchdat & 7, getr8((fetchdat >> 3) & 7));
+                setr8(rm, getr8(reg));
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
-                fetch_ea_16(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr);
                 seteab(getr8(reg));
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -375,15 +374,14 @@ static int opMOV_b_r_a16(uint32_t fetchdat)
 }
 static int opMOV_b_r_a32(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                setr8(fetchdat & 7, getr8((fetchdat >> 3) & 7));
+                setr8(rm, getr8(reg));
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
-                fetch_ea_32(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr);
                 seteab(getr8(reg));
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -392,15 +390,14 @@ static int opMOV_b_r_a32(uint32_t fetchdat)
 }
 static int opMOV_w_r_a16(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[fetchdat & 7].w = regs[(fetchdat >> 3) & 7].w;
+                regs[rm].w = regs[reg].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         { 
-                fetch_ea_16(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+1);
                 seteaw(regs[reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -409,15 +406,14 @@ static int opMOV_w_r_a16(uint32_t fetchdat)
 }
 static int opMOV_w_r_a32(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[fetchdat & 7].w = regs[(fetchdat >> 3) & 7].w;
+                regs[rm].w = regs[reg].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         { 
-                fetch_ea_32(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+1);
                 seteaw(regs[reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -426,15 +422,14 @@ static int opMOV_w_r_a32(uint32_t fetchdat)
 }
 static int opMOV_l_r_a16(uint32_t fetchdat)
 {                       
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[fetchdat & 7].l = regs[(fetchdat >> 3) & 7].l;
+                regs[rm].l = regs[reg].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
-                fetch_ea_16(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+3);
                 seteal(regs[reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -443,15 +438,14 @@ static int opMOV_l_r_a16(uint32_t fetchdat)
 }
 static int opMOV_l_r_a32(uint32_t fetchdat)
 {                       
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[fetchdat & 7].l = regs[(fetchdat >> 3) & 7].l;
+                regs[rm].l = regs[reg].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
-                fetch_ea_32(fetchdat);
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+3);
                 seteal(regs[reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -461,16 +455,15 @@ static int opMOV_l_r_a32(uint32_t fetchdat)
 
 static int opMOV_r_b_a16(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                setr8((fetchdat >> 3) & 7, getr8(fetchdat & 7));
+                setr8(reg, getr8(rm));
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint8_t temp;
-                fetch_ea_16(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr);
                 temp = geteab();                if (abrt) return 1;
                 setr8(reg, temp);
@@ -480,16 +473,15 @@ static int opMOV_r_b_a16(uint32_t fetchdat)
 }
 static int opMOV_r_b_a32(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                setr8((fetchdat >> 3) & 7, getr8(fetchdat & 7));
+                setr8(reg, getr8(rm));
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint8_t temp;
-                fetch_ea_32(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr);
                 temp = geteab();                if (abrt) return 1;
                 setr8(reg, temp);
@@ -499,16 +491,15 @@ static int opMOV_r_b_a32(uint32_t fetchdat)
 }
 static int opMOV_r_w_a16(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[(fetchdat >> 3) & 7].w = regs[fetchdat & 7].w;
+                regs[reg].w = regs[rm].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint16_t temp;
-                fetch_ea_16(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr+1);
                 temp = geteaw();                if (abrt) return 1;
                 regs[reg].w = temp;
@@ -518,16 +509,15 @@ static int opMOV_r_w_a16(uint32_t fetchdat)
 }
 static int opMOV_r_w_a32(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[(fetchdat >> 3) & 7].w = regs[fetchdat & 7].w;
+                regs[reg].w = regs[rm].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint16_t temp;
-                fetch_ea_32(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr+1);
                 temp = geteaw();                if (abrt) return 1;
                 regs[reg].w = temp;
@@ -537,16 +527,15 @@ static int opMOV_r_w_a32(uint32_t fetchdat)
 }
 static int opMOV_r_l_a16(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_16(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[(fetchdat >> 3) & 7].l = regs[fetchdat & 7].l;
+                regs[reg].l = regs[rm].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint32_t temp;
-                fetch_ea_16(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr+3);
                 temp = geteal();                if (abrt) return 1;
                 regs[reg].l = temp;
@@ -556,16 +545,15 @@ static int opMOV_r_l_a16(uint32_t fetchdat)
 }
 static int opMOV_r_l_a32(uint32_t fetchdat)
 {
-        if ((uint8_t)fetchdat >= 0xc0)
+        fetch_ea_32(fetchdat);
+        if (mod == 3)
         {
-                pc++;
-                regs[(fetchdat >> 3) & 7].l = regs[fetchdat & 7].l;
+                regs[reg].l = regs[rm].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 uint32_t temp;
-                fetch_ea_32(fetchdat);
                 CHECK_READ(ea_seg, eaaddr, eaaddr+3);
                 temp = geteal();                if (abrt) return 1;
                 regs[reg].l = temp;
