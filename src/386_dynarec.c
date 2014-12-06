@@ -1296,6 +1296,8 @@ inrecomp=0;
                 }
                 else if (!abrt)
                 {
+                        uint32_t start_page = pc >> 12;
+                        
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
                         cpu_block_end = 0;
 
@@ -1338,6 +1340,9 @@ inrecomp=0;
 
                                 if (((cs + pc) >> 12) != pccache)
                                         CPU_BLOCK_END();
+                                
+                                        if ((pc >> 12) != start_page)
+                                                CPU_BLOCK_END();
 
                                         pc++;
 /*                                        if (opcode == 0xf2 || opcode == 0xf3 || ((opcode & ~7) == 0xd8)*/
@@ -1352,6 +1357,11 @@ inrecomp=0;
 
                                 if (((cs + pc) >> 12) != pccache)
                                         CPU_BLOCK_END();
+
+                                if (codeblock_page_dirty[phys_addr >> 12])
+                                        CPU_BLOCK_END();
+
+
 //pclog("cpu_block_end=%d %p\n", cpu_block_end, (void *)&cpu_block_end);
 /*                                if (ssegs)
                                 {
@@ -1361,7 +1371,7 @@ inrecomp=0;
                                         codegen_generate_seg_restore();
                                 }*/
                                 //codegen_check_abrt();
-                                if (abrt)
+                                if (abrt || codeblock_page_dirty[phys_addr >> 12])
                                 {
                                         codegen_block_remove();
                                         CPU_BLOCK_END();
@@ -1372,7 +1382,7 @@ inrecomp=0;
                                 insc++;
                         }
                         
-                        if (!abrt)
+                        if (!abrt && !codeblock_page_dirty[phys_addr >> 12])
                                 codegen_block_end();
 //                        output &= ~2;
                 }
