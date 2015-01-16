@@ -72,4 +72,38 @@ extern codegen_timing_t codegen_timing_486;
 
 void codegen_timing_set(codegen_timing_t *timing);
 
+extern int block_current;
+extern int block_pos;
+
+#define CPU_BLOCK_END() cpu_block_end = 1
+
+static inline void addbyte(uint8_t val)
+{
+        codeblock[block_current].data[block_pos++] = val;
+        if (block_pos >= 8000)
+        {
+                CPU_BLOCK_END();
+        }
+}
+
+static inline void addword(uint16_t val)
+{
+        *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
+        block_pos += 2;
+        if (block_pos >= 8000)
+        {
+                CPU_BLOCK_END();
+        }
+}
+
+static inline void addlong(uint32_t val)
+{
+        *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
+        block_pos += 4;
+        if (block_pos >= 8000)
+        {
+                CPU_BLOCK_END();
+        }
+}
+
 #endif

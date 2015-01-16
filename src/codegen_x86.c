@@ -7,20 +7,19 @@
 #include "ibm.h"
 #include "cpu.h"
 #include "x86.h"
+#include "x86_flags.h"
 #include "x86_ops.h"
 #include "x87.h"
 
 #include "codegen.h"
+#include "codegen_ops.h"
+#include "codegen_ops_x86.h"
 
 #include "386_common.h"
 
 #define BLOCK_EXIT_OFFSET 0x1ff0
 
-#define CPU_BLOCK_END() cpu_block_end = 1
-
-
-
-
+int host_reg_mapping[NR_HOST_REGS];
 codeblock_t *codeblock;
 codeblock_t **codeblock_hash;
 
@@ -33,9 +32,9 @@ page_t *pages;
 
 uint8_t *codeblock_page_dirty;
 
-static int block_current = 0;
+int block_current = 0;
 static int block_num;
-static int block_pos;
+int block_pos;
 
 int cpu_recomp_flushes, cpu_recomp_flushes_latched;
 int cpu_recomp_evicted, cpu_recomp_evicted_latched;
@@ -50,28 +49,6 @@ static int codegen_block_ins;
 static uint32_t last_op32;
 static x86seg *last_ea_seg;
 static int last_ssegs;
-
-static inline void addbyte(uint8_t val)
-{
-//        pclog("Addbyte %02X at %i %i\n", val, block_pos, cpu_block_end);
-        codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= 8000)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addlong(uint32_t val)
-{
-//        pclog("Addlong %08X at %i %i\n", val, block_pos, cpu_block_end);
-        *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 4;
-        if (block_pos >= 8000)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
 
 void codegen_init()
 {
@@ -696,6 +673,10 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         int over = 0;
         int pc_off = 0;
         int test_modrm = 1;
+        int c;
+        
+        for (c = 0; c < NR_HOST_REGS; c++)
+                host_reg_mapping[c] = -1;
         
         codegen_timing_start();
 
@@ -818,6 +799,21 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         
 generate_call:
         codegen_timing_opcode(opcode, fetchdat, op_32);
+        
+        if (op_table == x86_dynarec_opcodes && recomp_opcodes[(opcode | op_32) & 0x1ff])
+        {
+                uint32_t new_pc = recomp_opcodes[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);
+                if (new_pc)
+                {
+                        STORE_IMM_ADDR_L((uintptr_t)&pc, new_pc);
+
+                        codegen_block_ins++;
+                        block->ins++;
+                        codegen_endpc = (cs + pc) + 8;
+
+                        return;
+                }
+        }
         
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 //        if (output)
