@@ -16,8 +16,7 @@ static int opFCOM ## name ## _a ## a_size(uint32_t fetchdat)    \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         npxs &= ~(C0|C2|C3);                                    \
-        if (ST(0) == use_var)     npxs |= C3;                   \
-        else if (ST(0) < use_var) npxs |= C0;                   \
+        npxs |= x87_compare(ST(0), (double)use_var);            \
         CLOCK_CYCLES(4);                                        \
         return 0;                                               \
 }                                                               \
@@ -28,8 +27,7 @@ static int opFCOMP ## name ## _a ## a_size(uint32_t fetchdat)   \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
         npxs &= ~(C0|C2|C3);                                    \
-        if (ST(0) == use_var)     npxs |= C3;                   \
-        else if (ST(0) < use_var) npxs |= C0;                   \
+        npxs |= x87_compare(ST(0), (double)use_var);            \
         x87_pop();                                              \
         CLOCK_CYCLES(4);                                        \
         return 0;                                               \
@@ -146,8 +144,7 @@ static int opFCOMP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FCOMP\n");
         npxs &= ~(C0|C2|C3);
-        if (ST(0) == ST(fetchdat & 7))     npxs |= C3;
-        else if (ST(0) < ST(fetchdat & 7)) npxs |= C0;
+        npxs |= x87_compare(ST(0), ST(fetchdat & 7));
         x87_pop();
         CLOCK_CYCLES(4);
         return 0;
@@ -161,10 +158,9 @@ static int opFCOMPP(uint32_t fetchdat)
         npxs &= ~(C0|C2|C3);
         if (*(uint64_t *)&ST(0) == ((uint64_t)1 << 63) && *(uint64_t *)&ST(1) == 0)
                 npxs |= C0; /*Nasty hack to fix 80387 detection*/
-        else if (ST(0) == ST(1))
-                npxs |= C3;
-        else if (ST(0) < ST(1))
-                npxs |= C0;
+        else
+                npxs |= x87_compare(ST(0), ST(1));
+
         x87_pop();
         x87_pop();
         CLOCK_CYCLES(4);
@@ -176,8 +172,7 @@ static int opFUCOMPP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FUCOMPP\n", easeg, eaaddr);
         npxs &= ~(C0|C2|C3);
-        if (ST(0) == ST(1))     npxs |= C3;
-        else if (ST(0) < ST(1)) npxs |= C0;
+        npxs |= x87_ucompare(ST(0), ST(1));
         x87_pop();
         x87_pop();
         CLOCK_CYCLES(5);
@@ -335,8 +330,7 @@ static int opFUCOM(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FUCOM\n");
         npxs &= ~(C0|C2|C3);
-        if (ST(0) == ST(fetchdat&7))     npxs |= C3;
-        else if (ST(0) < ST(fetchdat&7)) npxs |= C0;
+        npxs |= x87_ucompare(ST(0), ST(fetchdat & 7));
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -347,8 +341,7 @@ static int opFUCOMP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FUCOMP\n");
         npxs &= ~(C0|C2|C3);
-        if (ST(0) == ST(fetchdat&7))     npxs |= C3;
-        else if (ST(0) < ST(fetchdat&7)) npxs |= C0;
+        npxs |= x87_ucompare(ST(0), ST(fetchdat & 7));
         x87_pop();
         CLOCK_CYCLES(4);
         return 0;

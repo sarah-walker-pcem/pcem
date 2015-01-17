@@ -164,6 +164,74 @@ static inline void x87_stmmx(MMX_REG r)
         writememw(easeg, eaaddr + 8, 0xffff);
 }
 
+static inline uint16_t x87_compare(double a, double b)
+{
+#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
+        uint32_t out;
+        
+        /* Memory barrier, to force GCC to write to the input parameters
+         * before the compare rather than after */
+        asm volatile ("" : : : "memory");
+        
+        asm(
+                "fldl %2\n"
+                "fldl %1\n"
+                "fclex\n"
+                "fcompp\n"                
+                "fnstsw %0\n"
+                : "=m" (out)
+                : "m" (a), "m" (b)
+        );
+
+        return out & (C0|C2|C3);
+#else
+        /* Generic C version is known to give incorrect results in some
+         * situations, eg comparison of infinity (Unreal) */
+        uint32_t out = 0;
+        
+        if (a == b)
+                out |= C3;
+        else if (a < b)
+                out |= C0;
+                
+        return out;
+#endif
+}
+
+static inline uint16_t x87_ucompare(double a, double b)
+{
+#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
+        uint32_t out;
+        
+        /* Memory barrier, to force GCC to write to the input parameters
+         * before the compare rather than after */
+        asm volatile ("" : : : "memory");
+        
+        asm(
+                "fldl %2\n"
+                "fldl %1\n"
+                "fclex\n"
+                "fucompp\n"                
+                "fnstsw %0\n"
+                : "=m" (out)
+                : "m" (a), "m" (b)
+        );
+
+        return out & (C0|C2|C3);
+#else
+        /* Generic C version is known to give incorrect results in some
+         * situations, eg comparison of infinity (Unreal) */
+        uint32_t out = 0;
+        
+        if (a == b)
+                out |= C3;
+        else if (a < b)
+                out |= C0;
+                
+        return out;
+#endif
+}
+
 typedef union
 {
         float s;
