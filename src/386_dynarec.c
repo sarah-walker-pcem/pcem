@@ -1158,7 +1158,7 @@ int dontprint=0;
 #include "386_ops.h"
 
 
-#define CACHE_ON() (!(cr0 & (1 << 30)) /*&& (cr0 & 1)*/)
+#define CACHE_ON() (!(cr0 & (1 << 30)) /*&& (cr0 & 1)*/ && !(flags & T_FLAG))
 //#define CACHE_ON() 0
 
 static int cycles_main = 0;
@@ -1169,7 +1169,7 @@ void exec386(int cycs)
         int tempi;
         int cycdiff;
         int oldcyc;
-        int trap = flags & T_FLAG;
+
 //output = 3;
         cycles_main += cycs;
         while (cycles_main > 0)
@@ -1237,6 +1237,8 @@ void exec386(int cycs)
                                 }*/
                                 if (abrt)
                                         CPU_BLOCK_END();
+                                if (trap)
+                                        CPU_BLOCK_END();
 
                                 ins++;
                                 insc++;
@@ -1254,7 +1256,7 @@ void exec386(int cycs)
                 int hash = HASH(phys_addr);
                 codeblock_t *block = codeblock_hash[hash];
                 int valid_block = 0;
-                
+                trap = 0;
 //                if ((cs+pc) == 0x100030)
 //                        pclog("160070 : phys=%08x %04x(%08x):%08x\n", phys_addr, SS, ss, ESP);
                 if (block)
@@ -1360,6 +1362,9 @@ inrecomp=0;
 
                                 if (codeblock_page_dirty[phys_addr >> 12])
                                         CPU_BLOCK_END();
+                                        
+                                if (trap)
+                                        CPU_BLOCK_END();
 
 
 //pclog("cpu_block_end=%d %p\n", cpu_block_end, (void *)&cpu_block_end);
@@ -1418,7 +1423,30 @@ inrecomp=0;
                         }
                 }
                 
-                if ((flags&I_FLAG) && pic_intpending)
+                if (trap)
+                {
+
+                        flags_rebuild();
+//                        oldpc=pc;
+//                        oldcs=CS;
+                        if (msw&1)
+                        {
+                                pmodeint(1,0);
+                        }
+                        else
+                        {
+                                writememw(ss,(SP-2)&0xFFFF,flags);
+                                writememw(ss,(SP-4)&0xFFFF,CS);
+                                writememw(ss,(SP-6)&0xFFFF,pc);
+                                SP-=6;
+                                addr = (1 << 2) + idt.base;
+                                flags&=~I_FLAG;
+                                flags&=~T_FLAG;
+                                pc=readmemw(0,addr);
+                                loadcs(readmemw(0,addr+2));
+                        }
+                }
+                else if ((flags&I_FLAG) && pic_intpending)
                 {
                         temp=picinterrupt();
                         if (temp!=0xFF)
