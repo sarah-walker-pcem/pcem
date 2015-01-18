@@ -288,7 +288,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
         {
                 case 0x00: /*SGDT*/
                 seteaw(gdt.limit);
-                base = is32 ? gdt.base : (gdt.base & 0xffffff);
+                base = gdt.base; //is32 ? gdt.base : (gdt.base & 0xffffff);
                 if (is286)
                         base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
