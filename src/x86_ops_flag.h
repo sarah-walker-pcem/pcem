@@ -140,10 +140,10 @@ static int opPOPF(uint32_t fetchdat)
         }
         
         tempw = POP_W();                if (abrt) return 1;
-        
-        if (!(CPL) || !(msw & 1)) flags = (tempw & 0xffd5) | 2;
-        else if (IOPLp)           flags = (flags & 0x3000) | (tempw & 0xcfd5) | 2;
-        else                      flags = (flags & 0x3200) | (tempw & 0xcdd5) | 2;
+
+        if (!(CPL) || !(msw & 1)) flags = (tempw & 0x7fd5) | 2;
+        else if (IOPLp)           flags = (flags & 0x3000) | (tempw & 0x4fd5) | 2;
+        else                      flags = (flags & 0x3200) | (tempw & 0x4dd5) | 2;
         flags_extract();
 
         CLOCK_CYCLES(5);
@@ -161,9 +161,9 @@ static int opPOPFD(uint32_t fetchdat)
         
         templ = POP_L();                if (abrt) return 1;
 
-        if (!(CPL) || !(msw & 1)) flags = (templ & 0xffd5) | 2;
-        else if (IOPLp)           flags = (flags & 0x3000) | (templ & 0xcfd5) | 2;
-        else                      flags = (flags & 0x3200) | (templ & 0xcdd5) | 2;
+        if (!(CPL) || !(msw & 1)) flags = (templ & 0x7fd5) | 2;
+        else if (IOPLp)           flags = (flags & 0x3000) | (templ & 0x4fd5) | 2;
+        else                      flags = (flags & 0x3200) | (templ & 0x4dd5) | 2;
         
         templ &= is486 ? 0x240000 : 0;
         templ |= ((eflags&3) << 16);
