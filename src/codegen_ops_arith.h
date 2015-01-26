@@ -351,7 +351,7 @@ static uint32_t rop80(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_B(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
-                STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD8);
+                STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
                 FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
