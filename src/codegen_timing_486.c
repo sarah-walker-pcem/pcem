@@ -5,6 +5,7 @@
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
+#include "mem.h"
 #include "codegen.h"
 
 #define CYCLES(c) (int *)c

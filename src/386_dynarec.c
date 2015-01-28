@@ -6,8 +6,8 @@
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
-#include "codegen.h"
 #include "mem.h"
+#include "codegen.h"
 #include "cpu.h"
 #include "fdc.h"
 #include "timer.h"
@@ -1191,11 +1191,11 @@ void exec386(int cycs)
 
                 cycdiff=0;
                 oldcyc=cycles;
-                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x %i\n", CS, pc, SS,ESP, codeblock_page_dirty[0x1de]);
+//                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x %i\n", CS, pc, SS,ESP, codeblock_page_dirty[0x1de]);
                 if (!CACHE_ON()) /*Interpret block*/
                 {
                         cpu_block_end = 0;
-                        if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
+//                        if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
                         while (!cpu_block_end)
                         {
                                 oldcs=CS;
@@ -1217,8 +1217,8 @@ void exec386(int cycs)
                                         opcode = fetchdat & 0xFF;
                                         fetchdat >>= 8;
 
-                                        if (output == 3)
-                                                pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
+//                                        if (output == 3)
+//                                                pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
 
                                         pc++;
                                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
@@ -1257,32 +1257,53 @@ void exec386(int cycs)
                 codeblock_t *block = codeblock_hash[hash];
                 int valid_block = 0;
                 trap = 0;
-//                if ((cs+pc) == 0x100030)
-//                        pclog("160070 : phys=%08x %04x(%08x):%08x\n", phys_addr, SS, ss, ESP);
+
                 if (block)
                 {
-//                if ((cs+pc) == 0x100030)
-//                        pclog("160070 : block\n", phys_addr);
+                        page_t *page = &pages[phys_addr >> 12];
 
+                        /*Block must match current CS, PC, code segment size,
+                          and physical address. The physical address check will
+                          also catch any page faults at this stage*/
                         valid_block = (block->pc == cs + pc) && (block->_cs == cs) &&
                                       (block->use32 == use32) && (block->phys == phys_addr);
-                
-                        if (valid_block && codeblock_page_dirty[phys_addr >> 12])
-                                dirty = codegen_check_dirty(phys_addr);
-                        
-//                        if (pc == 0x804003f0)
-//                        if (!(valid_block && !dirty))
-//                        if ((pc & 0xffffff00) == 0xe00 || (pc & 0xffffff00) == 0xd00)
-//                if ((cs+pc) == 0x100030)
-//                                pclog("this block pc=%08x,%08x cs=%08x,%08x use32=%03x,%03x phys=%08x,%08x v=%i d=%i\n",
-//                                        cs+pc, block->pc, cs, block->_cs, use32, block->use32, phys_addr, block->phys, valid_block, dirty);
+
+                        if (valid_block && (block->page_mask & page->dirty_mask))
+                        {
+                                codegen_check_flush(page, page->dirty_mask, phys_addr);
+                                page->dirty_mask = 0;
+                                if (!block->pc)
+                                        valid_block = 0;
+                        }
+                        if (valid_block && block->page_mask2)
+                        {
+                                /*We don't want the second page to cause a page
+                                  fault at this stage - that would break any
+                                  code crossing a page boundary where the first
+                                  page is present but the second isn't. Instead
+                                  allow the first page to be interpreted and for
+                                  the page fault to occur when the page boundary
+                                  is actually crossed.*/
+                                uint32_t phys_addr_2 = get_phys_noabrt(block->endpc) & ~0xfff;
+                                page_t *page_2 = &pages[phys_addr_2 >> 12];
+
+                                if ((block->phys_2 ^ phys_addr_2) & ~0xfff)
+                                        valid_block = 0;
+                                else if (block->page_mask2 & page_2->dirty_mask)
+                                {
+                                        codegen_check_flush(page_2, page_2->dirty_mask, phys_addr_2);
+                                        page_2->dirty_mask = 0;
+                                        if (!block->pc)
+                                                valid_block = 0;
+                                }
+                        }
                 }
-//pclog("block - %08x:%08x %08x %03x  %08x %08x %08x %i\n", cs, pc, phys_addr, hash,  codeblock_hash_pc[hash], codeblock_hash_cs[hash], codeblock_hash_phys[hash], codeblock_page_dirty[phys_addr >> 12]);
+
                 if (valid_block && !dirty)
                 {
                         void (*code)() = (void *)&block->data[BLOCK_START];
 
-                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x %08x %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0], get_phys(cs+pc), block->phys);
+//                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
 
                         oldcs = CS;
                         oldcpl = CPL;
@@ -1299,6 +1320,7 @@ inrecomp=0;
                 else if (!abrt)
                 {
                         uint32_t start_page = pc >> 12;
+                        uint32_t start_pc = pc;
                         
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
                         cpu_block_end = 0;
@@ -1307,13 +1329,7 @@ inrecomp=0;
                         
                         codegen_block_init(phys_addr);
 
-//                        if (CS == 0x70 && pc == 0x84a)
-//                                output = 3;
-//                        if (((cs + pc) & ~0x1f) == 0x0010A182)
-//                                output |= 2;
-//                        if ((cs+pc) == 0xfe771)
-//                                output = 1;
-                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
+//                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
                         while (!cpu_block_end)
                         {
                                 oldcs=CS;
@@ -1337,18 +1353,10 @@ inrecomp=0;
                                         opcode = fetchdat & 0xFF;
                                         fetchdat >>= 8;
 
-                                        if (output == 3)
-                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
-
-                                if (((cs + pc) >> 12) != pccache)
-                                        CPU_BLOCK_END();
-                                
-                                        if ((pc >> 12) != start_page)
-                                                CPU_BLOCK_END();
+//                                        if (output == 3)
+//                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
 
                                         pc++;
-/*                                        if (opcode == 0xf2 || opcode == 0xf3 || ((opcode & ~7) == 0xd8)*/
-//                                                codegen_set_op32();
                                                 
                                         codegen_generate_call(opcode, x86_opcodes[(opcode | op32) & 0x3ff], fetchdat, pc, pc-1);
 
@@ -1357,45 +1365,34 @@ inrecomp=0;
 
                                 if (!use32) pc &= 0xffff;
 
-                                if (((cs + pc) >> 12) != pccache)
-                                        CPU_BLOCK_END();
-
-                                if (codeblock_page_dirty[phys_addr >> 12])
+                                /*Cap source code at 4000 bytes per block; this
+                                  will prevent any block from spanning more than
+                                  2 pages. In practice this limit will never be
+                                  hit, as host block size is only 2kB*/
+                                if ((pc - start_pc) > 4000)
                                         CPU_BLOCK_END();
                                         
                                 if (trap)
                                         CPU_BLOCK_END();
 
 
-//pclog("cpu_block_end=%d %p\n", cpu_block_end, (void *)&cpu_block_end);
-/*                                if (ssegs)
-                                {
-                                        ds=oldds;
-                                        ss=oldss;
-                                        ssegs=0;
-                                        codegen_generate_seg_restore();
-                                }*/
-                                //codegen_check_abrt();
-                                if (abrt || codeblock_page_dirty[phys_addr >> 12])
+                                if (abrt)
                                 {
                                         codegen_block_remove();
                                         CPU_BLOCK_END();
                                 }
-//if (pc==0x5b42)
-//        cpu_block_end = 1;
+
                                 ins++;
                                 insc++;
                         }
                         
-                        if (!abrt && !codeblock_page_dirty[phys_addr >> 12])
+                        if (!abrt)
                                 codegen_block_end();
 //                        output &= ~2;
                 }
 //                        if (output && (SP & 1))
 //                                fatal("odd SP\n");
                 }
-//if (CS == 0x9087 && pc == 0x3763)
-//        fatal("Here\n");
                 cycdiff=oldcyc-cycles;                
                 tsc += cycdiff;
                 
@@ -1473,12 +1470,8 @@ inrecomp=0;
                                 }
                         }
                 }
-/*                if (SS == 0x30 && stack_check)
-                        pclog("Load stack %04x(%08x):%08x\n", SS, ss, ESP);*/
         }
                 timer_end_period(cycles);
-//if ((cs + pc) == 0x2ea5e)
-//        fatal("");
                 cycles_main -= (cycles_start - cycles);
         }
 }

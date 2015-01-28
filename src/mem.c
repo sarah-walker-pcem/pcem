@@ -20,6 +20,9 @@
 #include "codegen.h"
 #endif
 
+page_t *pages;
+page_t **page_lookup;
+
 static uint8_t         (*_mem_read_b[0x40000])(uint32_t addr, void *priv);
 static uint16_t        (*_mem_read_w[0x40000])(uint32_t addr, void *priv);
 static uint32_t        (*_mem_read_l[0x40000])(uint32_t addr, void *priv);
@@ -468,6 +471,7 @@ void resetreadlookup()
         for (c=0;c<256;c++) readlookup[c]=0xFFFFFFFF;
         readlnext=0;
         memset(writelookup2,0xFF,1024*1024*sizeof(uintptr_t));
+        memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
         for (c=0;c<256;c++) writelookup[c]=0xFFFFFFFF;
         writelnext=0;
         pccache=0xFFFFFFFF;
@@ -494,10 +498,11 @@ void flushmmucache()
                         readlookup2[readlookup[c]]=0xFFFFFFFF;
                         readlookup[c]=0xFFFFFFFF;
                 }
-                if (writelookup[c]!=0xFFFFFFFF)
+                if (writelookup[c] != 0xFFFFFFFF)
                 {
-                        writelookup2[writelookup[c]]=0xFFFFFFFF;
-                        writelookup[c]=0xFFFFFFFF;
+                        page_lookup[writelookup[c]] = NULL;
+                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup[c] = 0xFFFFFFFF;
                 }
         }
         mmuflush++;
@@ -541,10 +546,11 @@ void flushmmucache_nopc()
                         readlookup2[readlookup[c]]=0xFFFFFFFF;
                         readlookup[c]=0xFFFFFFFF;
                 }
-                if (writelookup[c]!=0xFFFFFFFF)
+                if (writelookup[c] != 0xFFFFFFFF)
                 {
-                        writelookup2[writelookup[c]]=0xFFFFFFFF;
-                        writelookup[c]=0xFFFFFFFF;
+                        page_lookup[writelookup[c]] = NULL;
+                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup[c] = 0xFFFFFFFF;
                 }
         }
 }
@@ -560,10 +566,11 @@ void flushmmucache_cr3()
                         readlookup2[readlookup[c]]=0xFFFFFFFF;
                         readlookup[c]=0xFFFFFFFF;
                 }
-                if (writelookup[c]!=0xFFFFFFFF)// && !writelookupp[c])
+                if (writelookup[c] != 0xFFFFFFFF)// && !writelookupp[c])
                 {
-                        writelookup2[writelookup[c]]=0xFFFFFFFF;
-                        writelookup[c]=0xFFFFFFFF;
+                        page_lookup[writelookup[c]] = NULL;
+                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup[c] = 0xFFFFFFFF;                        
                 }
         }
 /*        for (c = 0; c < 1024*1024; c++)
@@ -583,19 +590,27 @@ void flushmmucache_cr3()
         }*/
 }
 
-
 void mem_flush_write_page(uint32_t addr, uint32_t virt)
 {
         int c;
+        page_t *page_target = &pages[addr >> 12];
+//        pclog("mem_flush_write_page %08x %08x\n", virt, addr);
 
         for (c = 0; c < 256; c++)        
         {
-                uintptr_t target = (uintptr_t)&ram[(uintptr_t)(addr & ~0xFFF) - (uintptr_t)(writelookup[c] << 12)];
-
-                if (writelookup2[writelookup[c]] == target)
+                if (writelookup[c] != 0xffffffff)
                 {
-                        writelookup2[writelookup[c]] = 0xffffffff;
-                        writelookup[c] = 0xffffffff;
+                        uintptr_t target = (uintptr_t)&ram[(uintptr_t)(addr & ~0xfff) - (virt & ~0xfff)];
+
+//                        if ((virt & ~0xfff) == 0xc022e000)
+//                                pclog(" Checking %02x %p %p\n", (void *)writelookup2[writelookup[c]], (void *)target);
+                        if (writelookup2[writelookup[c]] == target || page_lookup[writelookup[c]] == page_target)
+                        {
+//                                pclog("  throw out %02x %p %p\n", writelookup[c], (void *)page_lookup[writelookup[c]], (void *)writelookup2[writelookup[c]]);
+                                writelookup2[writelookup[c]] = 0xffffffff;
+                                page_lookup[writelookup[c]] = NULL;
+                                writelookup[c] = 0xffffffff;
+                        }
                 }
         }
 }
@@ -649,7 +664,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
         if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && (CPL==3 || cr0&WP_FLAG)))
         {
 //                if (!nopageerrors) pclog("Page not present!  %08X   %08X   %02X %02X  %i  %08X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,frame,rmdat32, CS,pc,SS,ESP,ins,CPL,rw);
-               
+
 //                dumpregs();
 //                exit(-1);
 //                if (addr == 0x815F6E90) output = 3;
@@ -673,6 +688,29 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
         ((uint32_t *)ram)[addr2>>2]|=0x20;
         ((uint32_t *)ram)[((temp2&~0xFFF)+((addr>>10)&0xFFC))>>2]|=(rw?0x60:0x20);
 //        /*if (output) */pclog("Translate %08X %08X %08X  %08X:%08X  %08X\n",addr,(temp&~0xFFF)+(addr&0xFFF),temp,cs,pc,EDI);
+
+        return (temp&~0xFFF)+(addr&0xFFF);
+}
+
+uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
+{
+        uint32_t addr2;
+        uint32_t temp,temp2,temp3;
+        
+        if (abrt) 
+                return -1;
+
+        addr2=(cr3+((addr>>20)&0xFFC));
+        temp=temp2=((uint32_t *)ram)[addr2>>2];
+
+        if (!(temp&1))
+                return -1;
+
+        temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
+        temp3=temp&temp2;
+
+        if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && (CPL==3 || cr0&WP_FLAG)))
+                return -1;
 
         return (temp&~0xFFF)+(addr&0xFFF);
 }
@@ -738,7 +776,7 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         if (virt == 0xffffffff)
                 return;
 
-        if (writelookup2[virt>>12]!=0xFFFFFFFF)
+        if (page_lookup[virt >> 12])
         {
 /*                if (writelookup2[virt>>12] != phys&~0xfff)
                 {
@@ -761,19 +799,24 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         }
         
         cycles-=memwaitstate;
-        if (writelookup[writelnext]!=0xFFFFFFFF)
+        if (writelookup[writelnext] != 0xFFFFFFFF)
         {
+                page_lookup[writelookup[writelnext]] = NULL;
                 writelookup2[writelookup[writelnext]]=0xFFFFFFFF;
 //                writelnum--;
         }
-        writelookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
-        writelookupp[writelnext]=mmu_perm;
-        writelookup[writelnext++]=virt>>12;
-        writelnext&=(cachesize-1);
-
+//        if (page_lookup[virt >> 12] && (writelookup2[virt>>12] != 0xffffffff))
+//                fatal("Bad write mapping\n");
 #if DYNAREC
-        codegen_dirty(phys);
+        if (pages[phys >> 12].block || (phys & ~0xfff) == recomp_page)
+                page_lookup[virt >> 12] = &pages[phys >> 12];//(uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
+        else
 #endif
+                writelookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
+//        pclog("addwritelookup %08x %08x %p %p %016llx %p\n", virt, phys, (void *)page_lookup[virt >> 12], (void *)writelookup2[virt >> 12], pages[phys >> 12].dirty_mask, (void *)&pages[phys >> 12]);
+        writelookupp[writelnext] = mmu_perm;
+        writelookup[writelnext++] = virt >> 12;
+        writelnext &= (cachesize - 1);
 }
 
 #undef printf
@@ -827,6 +870,11 @@ void writemembl(uint32_t addr, uint8_t val)
 {
         mem_logical_addr = addr;
 
+        if (page_lookup[addr>>12])
+        {
+                page_lookup[addr>>12]->write_b(addr, val, page_lookup[addr>>12]);
+                return;
+        }
         if (cr0 >> 31)
         {
                 addr = mmutranslate_write(addr);
@@ -875,6 +923,11 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
         }
         
         mem_logical_addr = addr = addr + seg;
+        if (page_lookup[addr>>12])
+        {
+                page_lookup[addr>>12]->write_b(addr, val, page_lookup[addr>>12]);
+                return;
+        }
         if (cr0 >> 31)
         {
                 addr = mmutranslate_write(addr);
@@ -955,6 +1008,11 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
         {
                 x86gpf("NULL segment", 0);
                 printf("NULL segment! ww %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                return;
+        }
+        if (page_lookup[addr2>>12])
+        {
+                page_lookup[addr2>>12]->write_w(addr2, val, page_lookup[addr2>>12]);
                 return;
         }
         if (cr0>>31)
@@ -1042,6 +1100,11 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
                 printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
                 return;
         }
+        if (page_lookup[addr2>>12])
+        {
+                page_lookup[addr2>>12]->write_l(addr2, val, page_lookup[addr2>>12]);
+                return;
+        }
         if (cr0>>31)
         {
                 addr2 = mmutranslate_write(addr2);
@@ -1112,23 +1175,61 @@ uint32_t mem_read_raml(uint32_t addr, void *priv)
         return *(uint32_t *)&ram[addr];
 }
 
+static void mem_write_ramb_page(uint32_t addr, uint8_t val, page_t *p)
+{      
+        if (p->mem[addr & 0xfff] != val)
+        {
+#if DYNAREC
+                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+//                pclog("mem_write_ramb_page: %08x %02x %08x\n", addr, val, cs+pc);
+                p->dirty_mask |= mask;
+#endif
+                p->mem[addr & 0xfff] = val;
+        }
+}
+static void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
+{
+        if (*(uint16_t *)&p->mem[addr & 0xfff] != val)
+        {
+#if DYNAREC
+                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                if ((addr & 0x3f) == 0x3f)
+                        mask |= (mask << 1);
+//                pclog("mem_write_ramw_page: %08x %04x %08x\n", addr, val, cs+pc);
+                p->dirty_mask |= mask;
+#endif
+                *(uint16_t *)&p->mem[addr & 0xfff] = val;
+        }
+}
+static void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
+{       
+        if (*(uint32_t *)&p->mem[addr & 0xfff] != val)
+        {
+#if DYNAREC
+                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                if ((addr & 0x3f) >= 0x3d)
+                        mask |= (mask << 1);
+//                pclog("mem_write_raml_page: %08x %08x %08x\n", addr, val, cs+pc);
+                p->dirty_mask |= mask;
+#endif
+                *(uint32_t *)&p->mem[addr & 0xfff] = val;
+        }
+}
+
 void mem_write_ram(uint32_t addr, uint8_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
-        ram[addr] = val;
-//        if (addr >= 0xc0000 && addr < 0x0c8000) pclog("Write RAMb %08X\n", addr);
+        mem_write_ramb_page(addr, val, &pages[addr >> 12]);
 }
 void mem_write_ramw(uint32_t addr, uint16_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
-        *(uint16_t *)&ram[addr] = val;
-//        if (addr >= 0xc0000 && addr < 0x0c8000)  pclog("Write RAMw %08X %04X:%04X %i %04X  %04X:%04X  %04X:%04X\n", addr, CS, pc, ins, val, DS,SI, ES,DI);
+        mem_write_ramw_page(addr, val, &pages[addr >> 12]);
 }
 void mem_write_raml(uint32_t addr, uint32_t val, void *priv)
 {
         addwritelookup(mem_logical_addr, addr);
-        *(uint32_t *)&ram[addr] = val;
-//        if (addr >= 0xc0000 && addr < 0x0c8000) pclog("Write RAMl %08X  %04X:%04X  %04X:%04X  %04X:%04X\n", addr, CS, pc, DS,SI, ES,DI);
+        mem_write_raml_page(addr, val, &pages[addr >> 12]);
 }
 
 uint8_t mem_read_bios(uint32_t addr, void *priv)
@@ -1433,8 +1534,21 @@ void mem_init()
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         cachelookup2 = malloc(1024 * 1024);
         biosmask = 0xffff;
+        pages = malloc(((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        page_lookup = malloc((1 << 20) * sizeof(page_t *));
 
         memset(ram, 0, mem_size * 1024 * 1024);
+        memset(pages, 0, ((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        
+        memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
+        
+        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        {
+                pages[c].mem = &ram[c << 12];
+                pages[c].write_b = mem_write_ramb_page;
+                pages[c].write_w = mem_write_ramw_page;
+                pages[c].write_l = mem_write_raml_page;
+        }
 
         memset(isram, 0, sizeof(isram));
         for (c = 0; c < (mem_size * 16); c++)
@@ -1475,6 +1589,17 @@ void mem_resize()
         free(ram);
         ram = malloc(mem_size * 1024 * 1024);
         memset(ram, 0, mem_size * 1024 * 1024);
+        
+        free(pages);
+        pages = malloc(((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        memset(pages, 0, ((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        {
+                pages[c].mem = &ram[c << 12];
+                pages[c].write_b = mem_write_ramb_page;
+                pages[c].write_w = mem_write_ramw_page;
+                pages[c].write_l = mem_write_raml_page;
+        }
         
         memset(isram, 0, sizeof(isram));
         for (c = 0; c < (mem_size * 16); c++)

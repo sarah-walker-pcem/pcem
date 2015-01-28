@@ -7,6 +7,7 @@
 #include "ali1429.h"
 #include "amstrad.h"
 #include "cdrom-ioctl.h"
+#include "mem.h"
 #ifdef DYNAREC
 #include "x86_ops.h"
 #include "codegen.h"
@@ -19,7 +20,6 @@
 #include "sound_gus.h"
 #include "ide.h"
 #include "keyboard.h"
-#include "mem.h"
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"

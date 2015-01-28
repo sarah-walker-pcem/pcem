@@ -5,6 +5,7 @@
 #include "x86_ops.h"
 #include "x87.h"
 #include "x86_flags.h"
+#include "mem.h"
 #include "codegen.h"
 
 #define CPU_BLOCK_END() cpu_block_end = 1

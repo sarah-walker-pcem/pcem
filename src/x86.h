@@ -101,12 +101,3 @@ extern int inscounts[256];
 void x86illegal();
 
 void x86seg_reset();
-
-
-static inline get_phys(uint32_t addr)
-{
-        if (!(cr0 >> 31))
-                return addr & rammask;
-        
-        return mmutranslatereal(addr, 0) & rammask;
-}

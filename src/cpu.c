@@ -4,6 +4,7 @@
 #include "io.h"
 #include "x86_ops.h"
 #ifdef DYNAREC
+#include "mem.h"
 #include "codegen.h"
 #endif
 

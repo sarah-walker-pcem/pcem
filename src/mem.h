@@ -98,3 +98,39 @@ void mem_write_nulll(uint32_t addr, uint32_t val, void *p);
 FILE *romfopen(char *fn, char *mode);
 
 mem_mapping_t bios_mapping[8];
+
+
+typedef struct page_t
+{
+        void (*write_b)(uint32_t addr, uint8_t val, struct page_t *p);
+        void (*write_w)(uint32_t addr, uint16_t val, struct page_t *p);
+        void (*write_l)(uint32_t addr, uint32_t val, struct page_t *p);
+        
+        uint8_t *mem;
+        
+        struct codeblock_t *block, *block_2;
+        
+        uint64_t code_present_mask, dirty_mask;
+} page_t;
+
+extern page_t *pages;
+
+extern page_t **page_lookup;
+
+uint32_t mmutranslate_noabrt(uint32_t addr, int rw);
+
+static inline get_phys(uint32_t addr)
+{
+        if (!(cr0 >> 31))
+                return addr & rammask;
+        
+        return mmutranslatereal(addr, 0) & rammask;
+}
+
+static inline get_phys_noabrt(uint32_t addr)
+{
+        if (!(cr0 >> 31))
+                return addr & rammask;
+        
+        return mmutranslate_noabrt(addr, 0) & rammask;
+}

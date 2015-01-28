@@ -16,6 +16,7 @@
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
+#include "mem.h"
 #include "codegen.h"
 
 /*Instruction has different execution time for 16 and 32 bit data. Does not pair */

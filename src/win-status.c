@@ -10,6 +10,7 @@
 #include "win.h"
 #ifdef DYNAREC
 #include "x86_ops.h"
+#include "mem.h"
 #include "codegen.h"
 #endif
 

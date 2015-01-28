@@ -2,6 +2,7 @@
 
 #include "ibm.h"
 #include "x86_ops.h"
+#include "mem.h"
 #include "codegen.h"
 
 void (*codegen_timing_start)();
