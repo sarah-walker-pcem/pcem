@@ -10,7 +10,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);                                                                       \
                 src_reg = LOAD_REG_B((fetchdat >> 3) & 7);                                                                              \
                 op ## _HOST_REG_B(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_B_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -29,7 +28,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);                                                                      \
                 src_reg = LOAD_REG_W((fetchdat >> 3) & 7);                                                                              \
                 op ## _HOST_REG_W(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_W_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -48,7 +46,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);                                                                      \
                 src_reg = LOAD_REG_L((fetchdat >> 3) & 7);                                                                              \
                 op ## _HOST_REG_L(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_L_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -67,7 +64,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);                                                                       \
                 src_reg = LOAD_REG_B(fetchdat & 7);                                                                                     \
                 op ## _HOST_REG_B(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_B_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -86,7 +82,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);                                                                      \
                 src_reg = LOAD_REG_W(fetchdat & 7);                                                                                     \
                 op ## _HOST_REG_W(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_W_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -105,7 +100,6 @@
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);                                                                      \
                 src_reg = LOAD_REG_L(fetchdat & 7);                                                                                     \
                 op ## _HOST_REG_L(dst_reg, src_reg);                                                                                    \
-                FLAG_C_CLEAR();                                                                                                         \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_L_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -125,7 +119,6 @@ static uint32_t ropAND_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
 
         AND_HOST_REG_IMM(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_B_RELEASE(host_reg);        
         
@@ -137,7 +130,6 @@ static uint32_t ropAND_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
 
         AND_HOST_REG_IMM(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_W_RELEASE(host_reg);
         
@@ -150,7 +142,6 @@ static uint32_t ropAND_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
         fetchdat = fastreadl(cs + op_pc);
         AND_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_L_RELEASE(host_reg);
         
@@ -163,7 +154,6 @@ static uint32_t ropOR_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
 
         OR_HOST_REG_IMM(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_B_RELEASE(host_reg);        
         
@@ -175,7 +165,6 @@ static uint32_t ropOR_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
 
         OR_HOST_REG_IMM(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_W_RELEASE(host_reg);
         
@@ -188,7 +177,6 @@ static uint32_t ropOR_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         fetchdat = fastreadl(cs + op_pc);
         OR_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_L_RELEASE(host_reg);
         
@@ -201,7 +189,6 @@ static uint32_t ropTEST_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
 
         AND_HOST_REG_IMM(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -213,7 +200,6 @@ static uint32_t ropTEST_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
 
         AND_HOST_REG_IMM(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -226,7 +212,6 @@ static uint32_t ropTEST_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_3
         fetchdat = fastreadl(cs + op_pc);
         AND_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -239,7 +224,6 @@ static uint32_t ropXOR_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
 
         XOR_HOST_REG_IMM(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_B_RELEASE(host_reg);        
         
@@ -251,7 +235,6 @@ static uint32_t ropXOR_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
 
         XOR_HOST_REG_IMM(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_W_RELEASE(host_reg);
         
@@ -264,7 +247,6 @@ static uint32_t ropXOR_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
         fetchdat = fastreadl(cs + op_pc);
         XOR_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-        FLAG_C_CLEAR();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_L_RELEASE(host_reg);
         

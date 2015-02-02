@@ -25,6 +25,14 @@ enum
         FLAGS_SAR8,
         FLAGS_SAR16,
         FLAGS_SAR32,
+
+        FLAGS_INC8,
+        FLAGS_INC16,
+        FLAGS_INC32,
+        
+        FLAGS_DEC8,
+        FLAGS_DEC16,
+        FLAGS_DEC32,
 };
 
 int flags_op;
@@ -53,6 +61,12 @@ static inline int ZF_SET()
                 case FLAGS_SAR8:
                 case FLAGS_SAR16:
                 case FLAGS_SAR32:
+                case FLAGS_INC8:
+                case FLAGS_INC16:
+                case FLAGS_INC32:
+                case FLAGS_DEC8:
+                case FLAGS_DEC16:
+                case FLAGS_DEC32:
                 return !flags_res;
                 
                 case FLAGS_UNKNOWN:
@@ -70,6 +84,8 @@ static inline int NF_SET()
                 case FLAGS_SHL8:
                 case FLAGS_SHR8:
                 case FLAGS_SAR8:
+                case FLAGS_INC8:
+                case FLAGS_DEC8:
                 return flags_res & 0x80;
                 
                 case FLAGS_ZN16:
@@ -78,6 +94,8 @@ static inline int NF_SET()
                 case FLAGS_SHL16:
                 case FLAGS_SHR16:
                 case FLAGS_SAR16:
+                case FLAGS_INC16:
+                case FLAGS_DEC16:
                 return flags_res & 0x8000;
                 
                 case FLAGS_ZN32:
@@ -86,6 +104,8 @@ static inline int NF_SET()
                 case FLAGS_SHL32:
                 case FLAGS_SHR32:
                 case FLAGS_SAR32:
+                case FLAGS_INC32:
+                case FLAGS_DEC32:
                 return flags_res & 0x80000000;
                 
                 case FLAGS_UNKNOWN:
@@ -115,6 +135,12 @@ static inline int PF_SET()
                 case FLAGS_SAR8:
                 case FLAGS_SAR16:
                 case FLAGS_SAR32:
+                case FLAGS_INC8:
+                case FLAGS_INC16:
+                case FLAGS_INC32:
+                case FLAGS_DEC8:
+                case FLAGS_DEC16:
+                case FLAGS_DEC32:
                 return znptable8[flags_res & 0xff] & P_FLAG;
                 
                 case FLAGS_UNKNOWN:
@@ -135,17 +161,23 @@ static inline int VF_SET()
                 return 0;
                 
                 case FLAGS_ADD8:
+                case FLAGS_INC8:
                 return !((flags_op1 ^ flags_op2) & 0x80) && ((flags_op1 ^ flags_res) & 0x80);
                 case FLAGS_ADD16:
+                case FLAGS_INC16:
                 return !((flags_op1 ^ flags_op2) & 0x8000) && ((flags_op1 ^ flags_res) & 0x8000);
                 case FLAGS_ADD32:
+                case FLAGS_INC32:
                 return !((flags_op1 ^ flags_op2) & 0x80000000) && ((flags_op1 ^ flags_res) & 0x80000000);
                                 
                 case FLAGS_SUB8:
+                case FLAGS_DEC8:
                 return ((flags_op1 ^ flags_op2) & (flags_op1 ^ flags_res) & 0x80);
                 case FLAGS_SUB16:
+                case FLAGS_DEC16:
                 return ((flags_op1 ^ flags_op2) & (flags_op1 ^ flags_res) & 0x8000);
                 case FLAGS_SUB32:
+                case FLAGS_DEC32:
                 return ((flags_op1 ^ flags_op2) & (flags_op1 ^ flags_res) & 0x80000000);
 
                 case FLAGS_SHL8:
@@ -188,11 +220,17 @@ static inline int AF_SET()
                 case FLAGS_ADD8:
                 case FLAGS_ADD16:
                 case FLAGS_ADD32:
+                case FLAGS_INC8:
+                case FLAGS_INC16:
+                case FLAGS_INC32:
                 return ((flags_op1 & 0xF) + (flags_op2 & 0xF)) & 0x10;
 
                 case FLAGS_SUB8:
                 case FLAGS_SUB16:
                 case FLAGS_SUB32:
+                case FLAGS_DEC8:
+                case FLAGS_DEC16:
+                case FLAGS_DEC32:
                 return ((flags_op1 & 0xF) - (flags_op2 & 0xF)) & 0x10;
                 
                 case FLAGS_UNKNOWN:
@@ -200,32 +238,62 @@ static inline int AF_SET()
         }
 }
 
-#if 0
 static inline int CF_SET()
 {
         switch (flags_op)
         {
-                case FLAGS_ZN8: 
-                case FLAGS_ZN16:
-                case FLAGS_ZN32:
-                return flags & C_FLAG; /*Temporary*/
-                
                 case FLAGS_ADD8:
                 return (flags_op1 + flags_op2) & 0x100;
                 case FLAGS_ADD16:
-//                return (flags_op1 + flags_op2) & 0x10000;
-                                
+                return (flags_op1 + flags_op2) & 0x10000;
+                case FLAGS_ADD32:
+                return (flags_res < flags_op1);
+
+                case FLAGS_SUB8:
+                case FLAGS_SUB16:
+                case FLAGS_SUB32:
+                return (flags_op1 < flags_op2);
+                
+                case FLAGS_SHL8:
+                return (flags_op1 << (flags_op2 - 1)) & 0x80;
+                case FLAGS_SHL16:
+                return (flags_op1 << (flags_op2 - 1)) & 0x8000;
+                case FLAGS_SHL32:
+                return (flags_op1 << (flags_op2 - 1)) & 0x80000000;
+
+                case FLAGS_SHR8:
+                case FLAGS_SHR16:
+                case FLAGS_SHR32:
+                return (flags_op1 >> (flags_op2 - 1)) & 1;
+
+                case FLAGS_SAR8:
+                return ((int8_t)flags_op1 >> (flags_op2 - 1)) & 1;
+                case FLAGS_SAR16:
+                return ((int16_t)flags_op1 >> (flags_op2 - 1)) & 1;
+                case FLAGS_SAR32:
+                return ((int32_t)flags_op1 >> (flags_op2 - 1)) & 1;
+
+                case FLAGS_ZN8: 
+                case FLAGS_ZN16:
+                case FLAGS_ZN32:
+                return 0;
+                
+                case FLAGS_DEC8:
+                case FLAGS_DEC16:
+                case FLAGS_DEC32:
+                case FLAGS_INC8:
+                case FLAGS_INC16:
+                case FLAGS_INC32:
                 case FLAGS_UNKNOWN:
                 return flags & C_FLAG;
         }
 }
-#endif
 
 //#define ZF_SET() (flags & Z_FLAG)
 //#define NF_SET() (flags & N_FLAG)
 //#define PF_SET() (flags & P_FLAG)
 //#define VF_SET() (flags & V_FLAG)
-#define CF_SET() (flags & C_FLAG)
+//#define CF_SET() (flags & C_FLAG)
 //#define AF_SET() (flags & A_FLAG)
 
 static inline void flags_rebuild()
@@ -264,27 +332,23 @@ static inline void setznp8(uint8_t val)
 {
         flags_op = FLAGS_ZN8;
         flags_res = val;
-        flags &= ~C_FLAG;
 }
 static inline void setznp16(uint16_t val)
 {
         flags_op = FLAGS_ZN16;
         flags_res = val;
-        flags &= ~C_FLAG;
 }
 static inline void setznp32(uint32_t val)
 {
         flags_op = FLAGS_ZN32;
         flags_res = val;
-        flags &= ~C_FLAG;
 }
 
 #define set_flags_shift(op, orig, shift, res) \
         flags_op = op;                  \
         flags_res = res;                \
         flags_op1 = orig;               \
-        flags_op2 = shift;              \
-        flags &= ~C_FLAG;
+        flags_op2 = shift;
 
 static inline void setadd8(uint8_t a, uint8_t b)
 {
@@ -292,9 +356,6 @@ static inline void setadd8(uint8_t a, uint8_t b)
         flags_op2 = b;
         flags_res = (a + b) & 0xff;
         flags_op = FLAGS_ADD8;
-
-        if ((a + b) & 0x100) flags |=  C_FLAG;
-        else                 flags &= ~C_FLAG;
 }
 static inline void setadd16(uint16_t a, uint16_t b)
 {
@@ -302,9 +363,6 @@ static inline void setadd16(uint16_t a, uint16_t b)
         flags_op2 = b;
         flags_res = (a + b) & 0xffff;
         flags_op = FLAGS_ADD16;
-
-        if ((a + b) & 0x10000) flags |= C_FLAG;
-        else                   flags &= ~C_FLAG;
 }
 static inline void setadd32(uint32_t a, uint32_t b)
 {
@@ -312,30 +370,30 @@ static inline void setadd32(uint32_t a, uint32_t b)
         flags_op2 = b;
         flags_res = a + b;
         flags_op = FLAGS_ADD32;
-
-        if (flags_res < a) flags |= C_FLAG;
-        else               flags &= ~C_FLAG;
 }
 static inline void setadd8nc(uint8_t a, uint8_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = (a + b) & 0xff;
-        flags_op = FLAGS_ADD8;
+        flags_op = FLAGS_INC8;
 }
 static inline void setadd16nc(uint16_t a, uint16_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = (a + b) & 0xffff;
-        flags_op = FLAGS_ADD16;
+        flags_op = FLAGS_INC16;
 }
 static inline void setadd32nc(uint32_t a, uint32_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = a + b;
-        flags_op = FLAGS_ADD32;
+        flags_op = FLAGS_INC32;
 }
 
 static inline void setsub8(uint8_t a, uint8_t b)
@@ -344,9 +402,6 @@ static inline void setsub8(uint8_t a, uint8_t b)
         flags_op2 = b;
         flags_res = (a - b) & 0xff;
         flags_op = FLAGS_SUB8;
-
-        if (a < b) flags |=  C_FLAG;
-        else       flags &= ~C_FLAG;
 }
 static inline void setsub16(uint16_t a, uint16_t b)
 {
@@ -354,9 +409,6 @@ static inline void setsub16(uint16_t a, uint16_t b)
         flags_op2 = b;
         flags_res = (a - b) & 0xffff;
         flags_op = FLAGS_SUB16;
-
-        if (a < b) flags |=  C_FLAG;
-        else       flags &= ~C_FLAG;
 }
 static inline void setsub32(uint32_t a, uint32_t b)
 {
@@ -364,31 +416,31 @@ static inline void setsub32(uint32_t a, uint32_t b)
         flags_op2 = b;
         flags_res = a - b;
         flags_op = FLAGS_SUB32;
-        
-        if (a < b) flags |=  C_FLAG;
-        else       flags &= ~C_FLAG;
 }
 
 static inline void setsub8nc(uint8_t a, uint8_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = (a - b) & 0xff;
-        flags_op = FLAGS_SUB8;
+        flags_op = FLAGS_DEC8;
 }
 static inline void setsub16nc(uint16_t a, uint16_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = (a - b) & 0xffff;
-        flags_op = FLAGS_SUB16;
+        flags_op = FLAGS_DEC16;
 }
 static inline void setsub32nc(uint32_t a, uint32_t b)
 {
+        flags_rebuild_c();
         flags_op1 = a;
         flags_op2 = b;
         flags_res = a - b;
-        flags_op = FLAGS_SUB32;
+        flags_op = FLAGS_DEC32;
 }
 
 static inline void setadc8(uint8_t a, uint8_t b)

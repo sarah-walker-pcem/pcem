@@ -1,12 +1,16 @@
 static uint32_t ropINC_rw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
-        int host_reg = LOAD_REG_W(opcode & 7);
+        int host_reg;
+        
+        CALL_FUNC(flags_rebuild_c);
+        
+        host_reg = LOAD_REG_W(opcode & 7);
         
         STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
         ADD_HOST_REG_IMM(host_reg, 1);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, 1);
         AND_HOST_REG_IMM(host_reg, 0xffff);
-        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD16);
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_INC16);
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);
         STORE_REG_W_RELEASE(host_reg);
 
@@ -14,12 +18,16 @@ static uint32_t ropINC_rw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
 }
 static uint32_t ropINC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
-        int host_reg = LOAD_REG_L(opcode & 7);
+        int host_reg;
+
+        CALL_FUNC(flags_rebuild_c);
+        
+        host_reg = LOAD_REG_L(opcode & 7);
         
         STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
         ADD_HOST_REG_IMM(host_reg, 1);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, 1);
-        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD32);
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_INC32);
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);
         STORE_REG_L_RELEASE(host_reg);
 
@@ -27,13 +35,17 @@ static uint32_t ropINC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
 }
 static uint32_t ropDEC_rw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
-        int host_reg = LOAD_REG_W(opcode & 7);
+        int host_reg;
+        
+        CALL_FUNC(flags_rebuild_c);
+
+        host_reg = LOAD_REG_W(opcode & 7);
         
         STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
         SUB_HOST_REG_IMM(host_reg, 1);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, 1);
         AND_HOST_REG_IMM(host_reg, 0xffff);
-        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_DEC16);
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);
         STORE_REG_W_RELEASE(host_reg);
 
@@ -41,12 +53,16 @@ static uint32_t ropDEC_rw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
 }
 static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
-        int host_reg = LOAD_REG_L(opcode & 7);
+        int host_reg;
+        
+        CALL_FUNC(flags_rebuild_c);
+
+        host_reg = LOAD_REG_L(opcode & 7);
         
         STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
         SUB_HOST_REG_IMM(host_reg, 1);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, 1);
-        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_DEC32);
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);
         STORE_REG_L_RELEASE(host_reg);
 
@@ -67,7 +83,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_B(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_B_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -88,7 +103,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_W(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_W_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -109,7 +123,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_L(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_L_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -130,7 +143,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_B(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_B_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -151,7 +163,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_W(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_W_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -172,7 +183,6 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_L(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
-                FLAG_C_COPY();                                                                                                          \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);                                                                     \
                 if (writeback) STORE_REG_L_RELEASE(dst_reg);                                                                            \
                 else           RELEASE_REG(dst_reg);                                                                                    \
@@ -193,7 +203,6 @@ static uint32_t ropADD_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         ADD_HOST_REG_IMM_B(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD8);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_B_RELEASE(host_reg);
         
@@ -207,7 +216,6 @@ static uint32_t ropADD_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         ADD_HOST_REG_IMM_W(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD16);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_W_RELEASE(host_reg);
         
@@ -222,7 +230,6 @@ static uint32_t ropADD_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
         ADD_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD32);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_L_RELEASE(host_reg);
         
@@ -237,7 +244,6 @@ static uint32_t ropCMP_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         SUB_HOST_REG_IMM_B(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -251,7 +257,6 @@ static uint32_t ropCMP_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         SUB_HOST_REG_IMM_W(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -266,7 +271,6 @@ static uint32_t ropCMP_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
         SUB_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         RELEASE_REG(host_reg);
         
@@ -281,7 +285,6 @@ static uint32_t ropSUB_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         SUB_HOST_REG_IMM_B(host_reg, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_B_RELEASE(host_reg);
         
@@ -295,7 +298,6 @@ static uint32_t ropSUB_AX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         SUB_HOST_REG_IMM_W(host_reg, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat & 0xffff);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_W_RELEASE(host_reg);
         
@@ -310,7 +312,6 @@ static uint32_t ropSUB_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
         SUB_HOST_REG_IMM(host_reg, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op2, fetchdat);
         STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-        FLAG_C_COPY();
         STORE_HOST_REG_ADDR((uint32_t)&flags_res, host_reg);        
         STORE_REG_L_RELEASE(host_reg);
         
@@ -335,36 +336,30 @@ static uint32_t rop80(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_
                 ADD_HOST_REG_IMM_B(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD8);
-                FLAG_C_COPY();
                 break;
                 case 0x08: /*OR*/
                 OR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-                FLAG_C_CLEAR();
                 break;
                 case 0x20: /*AND*/
                 AND_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-                FLAG_C_CLEAR();
                 break;
                 case 0x28: /*SUB*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_B(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
-                FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
                 XOR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN8);
-                FLAG_C_CLEAR();
                 break;
                 case 0x38: /*CMP*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_B(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
-                FLAG_C_COPY();
                 break;
         }
         
@@ -395,36 +390,30 @@ static uint32_t rop81_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 ADD_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD16);
-                FLAG_C_COPY();
                 break;
                 case 0x08: /*OR*/
                 OR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x20: /*AND*/
                 AND_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x28: /*SUB*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-                FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
                 XOR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x38: /*CMP*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-                FLAG_C_COPY();
                 break;
         }
         
@@ -455,36 +444,30 @@ static uint32_t rop81_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 ADD_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD32);
-                FLAG_C_COPY();
                 break;
                 case 0x08: /*OR*/
                 OR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x20: /*AND*/
                 AND_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x28: /*SUB*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-                FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
                 XOR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x38: /*CMP*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-                FLAG_C_COPY();
                 break;
         }
         
@@ -517,36 +500,30 @@ static uint32_t rop83_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 ADD_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD16);
-                FLAG_C_COPY();
                 break;
                 case 0x08: /*OR*/
                 OR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x20: /*AND*/
                 AND_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x28: /*SUB*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-                FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
                 XOR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN16);
-                FLAG_C_CLEAR();
                 break;
                 case 0x38: /*CMP*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM_W(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
-                FLAG_C_COPY();
                 break;
         }
         
@@ -578,36 +555,30 @@ static uint32_t rop83_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 ADD_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ADD32);
-                FLAG_C_COPY();
                 break;
                 case 0x08: /*OR*/
                 OR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x20: /*AND*/
                 AND_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x28: /*SUB*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-                FLAG_C_COPY();
                 break;
                 case 0x30: /*XOR*/
                 XOR_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ZN32);
-                FLAG_C_CLEAR();
                 break;
                 case 0x38: /*CMP*/
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, host_reg);
                 SUB_HOST_REG_IMM(host_reg, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op2, imm);
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
-                FLAG_C_COPY();
                 break;
         }
         

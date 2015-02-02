@@ -1130,7 +1130,6 @@ opcodestart:
 
                 if (!abrt)
                 {               
-                        tempc = CF_SET();
                         trap = flags & T_FLAG;
                         opcode = fetchdat & 0xFF;
                         fetchdat >>= 8;

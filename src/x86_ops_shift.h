@@ -67,26 +67,17 @@
                         case 0x20: case 0x30: /*SHL b,CL*/                              \
                         seteab(temp << c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHL8, temp_orig, c, (temp << c) & 0xff);  \
-                        if ((temp << (c - 1)) & 0x80) flags |= C_FLAG;                  \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x28: /*SHR b,CL*/                                         \
                         seteab(temp >> c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHR8, temp_orig, c, temp >> c);           \
-                        if ((temp >> (c - 1)) & 1) flags |= C_FLAG;                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x38: /*SAR b,CL*/                                         \
-                        tempc = ((temp >> (c - 1)) & 1);                                \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp >>= 1;                                             \
-                                if (temp & 0x40) temp |= 0x80;                          \
-                                c--;                                                    \
-                        }                                                               \
+                        temp = (int8_t)temp >> c;                                       \
                         seteab(temp);           if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SAR8, temp_orig, c, temp);                \
-                        if (tempc) flags |= C_FLAG;                                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                 }                                                                       \
@@ -161,26 +152,17 @@
                         case 0x20: case 0x30: /*SHL w, c*/                              \
                         seteaw(temp << c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHL16, temp_orig, c, (temp << c) & 0xffff); \
-                        if ((temp << (c - 1)) & 0x8000) flags |= C_FLAG;                \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x28: /*SHR w, c*/                                         \
                         seteaw(temp >> c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHR16, temp_orig, c, temp >> c);          \
-                        if ((temp >> (c - 1)) & 1) flags |= C_FLAG;                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x38: /*SAR w, c*/                                         \
-                        tempc = ((temp >> (c - 1)) & 1);                                \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp >>= 1;                                             \
-                                if (temp & 0x4000) temp |= 0x8000;                      \
-                                c--;                                                    \
-                        }                                                               \
+                        temp = (int16_t)temp >> c;                                      \
                         seteaw(temp);           if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SAR16, temp_orig, c, temp);               \
-                        if (tempc) flags |= C_FLAG;                                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                 }                                                                       \
@@ -221,7 +203,7 @@
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x10: /*RCL l, c*/                                         \
-                        temp2 = flags & C_FLAG;                                         \
+                        temp2 = CF_SET();                                               \
                         if (is486) CLOCK_CYCLES_ALWAYS(c);                              \
                         while (c > 0)                                                   \
                         {                                                               \
@@ -255,26 +237,17 @@
                         case 0x20: case 0x30: /*SHL l, c*/                              \
                         seteal(temp << c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHL32, temp_orig, c, temp << c);          \
-                        if ((temp << (c - 1)) & 0x80000000) flags |= C_FLAG;            \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x28: /*SHR l, c*/                                         \
                         seteal(temp >> c);      if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SHR32, temp_orig, c, temp >> c);          \
-                        if ((temp >> (c - 1)) & 1) flags |= C_FLAG;                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                         case 0x38: /*SAR l, c*/                                         \
-                        tempc = ((temp >> (c - 1)) & 1);                                \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp >>= 1;                                             \
-                                if (temp & 0x40000000) temp |= 0x80000000;              \
-                                c--;                                                    \
-                        }                                                               \
+                        temp = (int32_t)temp >> c;                                      \
                         seteal(temp);           if (abrt) return 1;                     \
                         set_flags_shift(FLAGS_SAR32, temp_orig, c, temp);               \
-                        if (tempc) flags |= C_FLAG;                                     \
                         CLOCK_CYCLES((mod == 3) ? 3 : 7);                                 \
                         break;                                                          \
                 }                                                                       \

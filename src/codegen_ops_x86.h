@@ -279,27 +279,8 @@ static void XOR_HOST_REG_IMM(int host_reg, uint32_t imm)
         addlong(imm);
 }
 
-static void FLAG_C_CLEAR()
+static void CALL_FUNC(void *dest)
 {
-        addbyte(0x83); /*ANDL [flags],~1*/
-        addbyte(0x25);
-        addlong((uint32_t)&flags);
-        addbyte(0xfe);
-}
-static void FLAG_C_COPY()
-{
-        addbyte(0x8a); /*MOVB DL, [flags]*/
-        addbyte(0x05 | (REG_DL << 3));
-        addlong((uint32_t)&flags);
-        addbyte(0x0f); /*SETB DH*/
-        addbyte(0x92);
-        addbyte(0xc0 | REG_DH);
-        addbyte(0x80); /*AND DL, ~1*/
-        addbyte(0xe0 | REG_DL);
-        addbyte(0xfe);
-        addbyte(0x08); /*OR DL, DH*/
-        addbyte(0xc0 | REG_DL | (REG_DH << 3));
-        addbyte(0x88); /*MOVB [flags],DL*/
-        addbyte(0x05 | (REG_DL << 3));
-        addlong((uint32_t)&flags);
+        addbyte(0xE8); /*CALL*/
+        addlong(((uint8_t *)dest - (uint8_t *)(&codeblock[block_current].data[block_pos + 4])));
 }

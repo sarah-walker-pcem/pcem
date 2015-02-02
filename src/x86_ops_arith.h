@@ -1,7 +1,7 @@
-#define OP_ARITH(name, operation, setflags, flagops)   \
+#define OP_ARITH(name, operation, setflags, flagops, gettempc)   \
         static int op ## name ## _b_rmw_a16(uint32_t fetchdat)                                         \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -23,7 +23,7 @@
         }                                                                                       \
         static int op ## name ## _b_rmw_a32(uint32_t fetchdat)                                         \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -46,7 +46,7 @@
                                                                                                 \
         static int op ## name ## _w_rmw_a16(uint32_t fetchdat)                                         \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -68,7 +68,7 @@
         }                                                                                       \
         static int op ## name ## _w_rmw_a32(uint32_t fetchdat)                                  \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -91,7 +91,7 @@
                                                                                                 \
         static int op ## name ## _l_rmw_a16(uint32_t fetchdat)                                         \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -113,7 +113,7 @@
         }                                                                                       \
         static int op ## name ## _l_rmw_a32(uint32_t fetchdat)                                         \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 if (mod == 3)                                                                   \
                 {                                                                               \
@@ -136,8 +136,8 @@
                                                                                                 \
         static int op ## name ## _b_rm_a16(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint8_t dst, src;                                                               \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 dst = getr8(reg);                                                               \
                 src = geteab();                                         if (abrt) return 1;     \
@@ -148,8 +148,8 @@
         }                                                                                       \
         static int op ## name ## _b_rm_a32(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint8_t dst, src;                                                               \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 dst = getr8(reg);                                                               \
                 src = geteab();                                         if (abrt) return 1;     \
@@ -161,8 +161,8 @@
                                                                                                 \
         static int op ## name ## _w_rm_a16(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint16_t dst, src;                                                              \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 dst = regs[reg].w;                                                              \
                 src = geteaw();                                 if (abrt) return 1;             \
@@ -173,8 +173,8 @@
         }                                                                                       \
         static int op ## name ## _w_rm_a32(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint16_t dst, src;                                                              \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 dst = regs[reg].w;                                                              \
                 src = geteaw();                                 if (abrt) return 1;             \
@@ -186,8 +186,8 @@
                                                                                                 \
         static int op ## name ## _l_rm_a16(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint32_t dst, src;                                                              \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_16(fetchdat);                                                          \
                 dst = regs[reg].l;                                                              \
                 src = geteal();                                 if (abrt) return 1;             \
@@ -198,8 +198,8 @@
         }                                                                                       \
         static int op ## name ## _l_rm_a32(uint32_t fetchdat)                                          \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint32_t dst, src;                                                              \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 fetch_ea_32(fetchdat);                                                          \
                 dst = regs[reg].l;                                                              \
                 src = geteal();                                 if (abrt) return 1;             \
@@ -211,9 +211,9 @@
                                                                                                 \
         static int op ## name ## _AL_imm(uint32_t fetchdat)                                            \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint8_t dst = AL;                                                               \
                 uint8_t src = getbytef();                                                       \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 setflags ## 8 flagops;                                                          \
                 AL = operation;                                                                 \
                 CLOCK_CYCLES(timing_rr);                                                        \
@@ -222,9 +222,9 @@
                                                                                                 \
         static int op ## name ## _AX_imm(uint32_t fetchdat)                                            \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint16_t dst = AX;                                                              \
                 uint16_t src = getwordf();                                                      \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 setflags ## 16 flagops;                                                         \
                 AX = operation;                                                                 \
                 CLOCK_CYCLES(timing_rr);                                                        \
@@ -233,22 +233,22 @@
                                                                                                 \
         static int op ## name ## _EAX_imm(uint32_t fetchdat)                                           \
         {                                                                                       \
-                int tempc = CF_SET();                                                           \
                 uint32_t dst = EAX;                                                             \
                 uint32_t src = getlong(); if (abrt) return 1;                                   \
+                if (gettempc) tempc = CF_SET() ? 1 : 0;                                         \
                 setflags ## 32 flagops;                                                         \
                 EAX = operation;                                                                \
                 CLOCK_CYCLES(timing_rr);                                                        \
                 return 0;                                                                       \
         }
 
-OP_ARITH(ADD, dst + src,           setadd, (dst, src))
-OP_ARITH(ADC, dst + src + tempc,   setadc, (dst, src))
-OP_ARITH(SUB, dst - src,           setsub, (dst, src))
-OP_ARITH(SBB, dst - (src + tempc), setsbc, (dst, src))
-OP_ARITH(OR,  dst | src,           setznp, (dst | src))
-OP_ARITH(AND, dst & src,           setznp, (dst & src))
-OP_ARITH(XOR, dst ^ src,           setznp, (dst ^ src))
+OP_ARITH(ADD, dst + src,           setadd, (dst, src), 0)
+OP_ARITH(ADC, dst + src + tempc,   setadc, (dst, src), 1)
+OP_ARITH(SUB, dst - src,           setsub, (dst, src), 0)
+OP_ARITH(SBB, dst - (src + tempc), setsbc, (dst, src), 1)
+OP_ARITH(OR,  dst | src,           setznp, (dst | src), 0)
+OP_ARITH(AND, dst & src,           setznp, (dst & src), 0)
+OP_ARITH(XOR, dst ^ src,           setznp, (dst ^ src), 0)
 
 static int opCMP_b_rmw_a16(uint32_t fetchdat)
 {
@@ -502,11 +502,13 @@ static int opTEST_EAX(uint32_t fetchdat)
                 CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mr);               \
                 break;                                                          \
                 case 0x10: /*ADC ea, #*/                                        \
+                tempc = CF_SET() ? 1 : 0;                                       \
                 setea ## ea_width(dst + src + tempc);   if (abrt) return 1;     \
                 setadc ## flag_width(dst, src);                                 \
                 CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mr);               \
                 break;                                                          \
                 case 0x18: /*SBB ea, #*/                                        \
+                tempc = CF_SET() ? 1 : 0;                                       \
                 setea ## ea_width(dst - (src + tempc)); if (abrt) return 1;     \
                 setsbc ## flag_width(dst, src);                                 \
                 CLOCK_CYCLES((mod == 3) ? timing_rr : timing_mr);               \
