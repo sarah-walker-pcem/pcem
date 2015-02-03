@@ -23,7 +23,7 @@
                                 pclog("FPU : divide by zero\n"); \
                                 picint(1 << 13);                \
                         }                                       \
-                        return;                                 \
+                        return 1;                               \
                 }                                               \
                 else                                            \
                         dst = src1 / (double)src2;              \
@@ -667,7 +667,7 @@ OpFn OP_TABLE(fpu_de_a32)[256] =
         opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,
         opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32,
         opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,
-        opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,
+        opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32,
 
         opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,
         opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,
@@ -676,7 +676,7 @@ OpFn OP_TABLE(fpu_de_a32)[256] =
         opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,
         opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32,
         opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,
-        opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,
+        opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32,
 
         opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,
         opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,  opFMULiw_a32,
@@ -685,7 +685,7 @@ OpFn OP_TABLE(fpu_de_a32)[256] =
         opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,  opFSUBiw_a32,
         opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32, opFSUBRiw_a32,
         opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,  opFDIViw_a32,
-        opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,  opFDIVRd_a32,
+        opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32, opFDIVRiw_a32,
 
         opFADDP,       opFADDP,       opFADDP,       opFADDP,       opFADDP,       opFADDP,       opFADDP,       opFADDP,
         opFMULP,       opFMULP,       opFMULP,       opFMULP,       opFMULP,       opFMULP,       opFMULP,       opFMULP,
