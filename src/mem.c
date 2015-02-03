@@ -495,13 +495,13 @@ void flushmmucache()
         {
                 if (readlookup[c]!=0xFFFFFFFF)
                 {
-                        readlookup2[readlookup[c]]=0xFFFFFFFF;
+                        readlookup2[readlookup[c]] = -1;
                         readlookup[c]=0xFFFFFFFF;
                 }
                 if (writelookup[c] != 0xFFFFFFFF)
                 {
                         page_lookup[writelookup[c]] = NULL;
-                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup2[writelookup[c]] = -1;
                         writelookup[c] = 0xFFFFFFFF;
                 }
         }
@@ -543,13 +543,13 @@ void flushmmucache_nopc()
         {
                 if (readlookup[c]!=0xFFFFFFFF)
                 {
-                        readlookup2[readlookup[c]]=0xFFFFFFFF;
+                        readlookup2[readlookup[c]] = -1;
                         readlookup[c]=0xFFFFFFFF;
                 }
                 if (writelookup[c] != 0xFFFFFFFF)
                 {
                         page_lookup[writelookup[c]] = NULL;
-                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup2[writelookup[c]] = -1;
                         writelookup[c] = 0xFFFFFFFF;
                 }
         }
@@ -563,13 +563,13 @@ void flushmmucache_cr3()
         {
                 if (readlookup[c]!=0xFFFFFFFF)// && !readlookupp[c])
                 {
-                        readlookup2[readlookup[c]]=0xFFFFFFFF;
+                        readlookup2[readlookup[c]] = -1;
                         readlookup[c]=0xFFFFFFFF;
                 }
                 if (writelookup[c] != 0xFFFFFFFF)// && !writelookupp[c])
                 {
                         page_lookup[writelookup[c]] = NULL;
-                        writelookup2[writelookup[c]] = 0xffffffff;
+                        writelookup2[writelookup[c]] = -1;
                         writelookup[c] = 0xFFFFFFFF;                        
                 }
         }
@@ -607,7 +607,7 @@ void mem_flush_write_page(uint32_t addr, uint32_t virt)
                         if (writelookup2[writelookup[c]] == target || page_lookup[writelookup[c]] == page_target)
                         {
 //                                pclog("  throw out %02x %p %p\n", writelookup[c], (void *)page_lookup[writelookup[c]], (void *)writelookup2[writelookup[c]]);
-                                writelookup2[writelookup[c]] = 0xffffffff;
+                                writelookup2[writelookup[c]] = -1;
                                 page_lookup[writelookup[c]] = NULL;
                                 writelookup[c] = 0xffffffff;
                         }
@@ -735,7 +735,7 @@ void addreadlookup(uint32_t virt, uint32_t phys)
         if (virt == 0xffffffff)
                 return;
                 
-        if (readlookup2[virt>>12]!=0xFFFFFFFF) 
+        if (readlookup2[virt>>12] != -1) 
         {
 /*                if (readlookup2[virt>>12] != phys&~0xfff)
                 {
@@ -760,7 +760,7 @@ void addreadlookup(uint32_t virt, uint32_t phys)
         
         if (readlookup[readlnext]!=0xFFFFFFFF)
         {
-                readlookup2[readlookup[readlnext]]=0xFFFFFFFF;
+                readlookup2[readlookup[readlnext]] = -1;
 //                readlnum--;
         }
         readlookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
@@ -799,10 +799,10 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         }
         
         cycles-=memwaitstate;
-        if (writelookup[writelnext] != 0xFFFFFFFF)
+        if (writelookup[writelnext] != -1)
         {
                 page_lookup[writelookup[writelnext]] = NULL;
-                writelookup2[writelookup[writelnext]]=0xFFFFFFFF;
+                writelookup2[writelookup[writelnext]] = -1;
 //                writelnum--;
         }
 //        if (page_lookup[virt >> 12] && (writelookup2[virt>>12] != 0xffffffff))
