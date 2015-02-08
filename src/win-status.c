@@ -48,7 +48,8 @@ static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         "CPU time : %f%% (%f%%)\n"
 #ifdef DYNAREC
                         "New blocks : %i\nOld blocks : %i\nRecompiled speed : %f MIPS\nAverage size : %f\n"
-                        "Flushes : %i\nEvicted : %i\nReused : %i\nRemoved : %i\nReal speed : %f MIPS\nREP : %i\nnot REP : %i\n"
+                        "Flushes : %i\nEvicted : %i\nReused : %i\nRemoved : %i\nReal speed : %f MIPS"
+//                        "\nFully recompiled ins %% : %f%%"
 #endif
                         ,mips,
                         flops,
@@ -67,8 +68,9 @@ static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         cpu_recomp_flushes_latched, cpu_recomp_evicted_latched,
                         cpu_recomp_reuse_latched, cpu_recomp_removed_latched,
                         
-                        ((double)cpu_recomp_ins_latched / 1000000.0) / ((double)main_time / timer_freq),
-                        cpu_reps_latched, cpu_notreps_latched
+                        ((double)cpu_recomp_ins_latched / 1000000.0) / ((double)main_time / timer_freq)
+//                        ((double)cpu_recomp_full_ins_latched / (double)cpu_recomp_ins_latched) * 100.0
+//                        cpu_reps_latched, cpu_notreps_latched
 #endif
                 );
                 main_time = 0;

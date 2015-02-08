@@ -134,12 +134,19 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         {                                                                                                                               \
                 int src_reg, dst_reg;                                                                                                   \
                                                                                                                                         \
-                if ((fetchdat & 0xc0) != 0xc0)                                                                                          \
-                        return 0;                                                                                                       \
+                if ((fetchdat & 0xc0) == 0xc0)                                                                                          \
+                {                                                                                                                       \
+                        src_reg = LOAD_REG_B(fetchdat & 7);                                                                             \
+                }                                                                                                                       \
+                else                                                                                                                    \
+                {                                                                                                                       \
+                        x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        MEM_LOAD_ADDR_EA_B(target_seg);                                                                                 \
+                        src_reg = 0;                                                                                                    \
+                }                                                                                                                       \
                                                                                                                                         \
                 dst_reg = LOAD_REG_B((fetchdat >> 3) & 7);                                                                              \
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ ## op ## 8);                                                               \
-                src_reg = LOAD_REG_B(fetchdat & 7);                                                                                     \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_B(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
@@ -154,12 +161,19 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         {                                                                                                                               \
                 int src_reg, dst_reg;                                                                                                   \
                                                                                                                                         \
-                if ((fetchdat & 0xc0) != 0xc0)                                                                                          \
-                        return 0;                                                                                                       \
+                if ((fetchdat & 0xc0) == 0xc0)                                                                                          \
+                {                                                                                                                       \
+                        src_reg = LOAD_REG_W(fetchdat & 7);                                                                             \
+                }                                                                                                                       \
+                else                                                                                                                    \
+                {                                                                                                                       \
+                        x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        MEM_LOAD_ADDR_EA_W(target_seg);                                                                                 \
+                        src_reg = 0;                                                                                                    \
+                }                                                                                                                       \
                                                                                                                                         \
                 dst_reg = LOAD_REG_W((fetchdat >> 3) & 7);                                                                              \
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ ## op ## 16);                                                              \
-                src_reg = LOAD_REG_W(fetchdat & 7);                                                                                     \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_W(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \
@@ -174,12 +188,19 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         {                                                                                                                               \
                 int src_reg, dst_reg;                                                                                                   \
                                                                                                                                         \
-                if ((fetchdat & 0xc0) != 0xc0)                                                                                          \
-                        return 0;                                                                                                       \
+                if ((fetchdat & 0xc0) == 0xc0)                                                                                          \
+                {                                                                                                                       \
+                        src_reg = LOAD_REG_L(fetchdat & 7);                                                                             \
+                }                                                                                                                       \
+                else                                                                                                                    \
+                {                                                                                                                       \
+                        x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        MEM_LOAD_ADDR_EA_L(target_seg);                                                                                 \
+                        src_reg = 0;                                                                                                    \
+                }                                                                                                                       \
                                                                                                                                         \
                 dst_reg = LOAD_REG_L((fetchdat >> 3) & 7);                                                                              \
                 STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_ ## op ## 32);                                                              \
-                src_reg = LOAD_REG_L(fetchdat & 7);                                                                                     \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);                                                                     \
                 op ## _HOST_REG_L(dst_reg, src_reg);                                                                                    \
                 STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);                                                                     \

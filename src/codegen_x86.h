@@ -7,6 +7,9 @@
 
 #define HASH(l) ((l) & 0x1ffff)
 
+#define BLOCK_EXIT_OFFSET 0x7f0
+#define BLOCK_GPF_OFFSET (BLOCK_EXIT_OFFSET - 20)
+
 enum
 {
         OP_RET = 0xc3

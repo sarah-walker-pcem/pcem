@@ -372,6 +372,7 @@ void runpc()
 #if DYNAREC
                         cpu_recomp_blocks_latched = cpu_recomp_blocks;
                         cpu_recomp_ins_latched = cpu_recomp_ins;
+                        cpu_recomp_full_ins_latched = cpu_recomp_full_ins;
                         cpu_new_blocks_latched = cpu_new_blocks;
                         cpu_recomp_flushes_latched = cpu_recomp_flushes;
                         cpu_recomp_evicted_latched = cpu_recomp_evicted;
@@ -382,6 +383,7 @@ void runpc()
                                                 
                         cpu_recomp_blocks = 0;
                         cpu_recomp_ins = 0;
+                        cpu_recomp_full_ins = 0;
                         cpu_new_blocks = 0;
                         cpu_recomp_flushes = 0;
                         cpu_recomp_evicted = 0;

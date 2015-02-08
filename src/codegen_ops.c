@@ -30,7 +30,7 @@ RecompOpFn recomp_opcodes[512] =
 
 /*80*/  rop80,          rop81_w,        rop80,          rop83_w,        ropTEST_b_rm,   ropTEST_w_rm,   ropXCHG_b,      ropXCHG_w,      ropMOV_b_r,     ropMOV_w_r,     ropMOV_r_b,     ropMOV_r_w,     NULL,           NULL,           NULL,           NULL,
 /*90*/  NULL,           ropXCHG_AX_CX,  ropXCHG_AX_DX,  ropXCHG_AX_BX,  ropXCHG_AX_SP,  ropXCHG_AX_BP,  ropXCHG_AX_SI,  ropXCHG_AX_DI,  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropTEST_AL_imm, ropTEST_AX_imm, NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  ropMOV_AL_a,    ropMOV_AX_a,    ropMOV_a_AL,    ropMOV_a_AX,    NULL,           NULL,           NULL,           NULL,           ropTEST_AL_imm, ropTEST_AX_imm, NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,  ropMOV_rw_imm,
 
 /*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropMOV_b_imm,   ropMOV_w_imm,   NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
@@ -52,7 +52,7 @@ RecompOpFn recomp_opcodes[512] =
 
 /*80*/  rop80,          rop81_l,        rop80,          rop83_l,        ropTEST_b_rm,   ropTEST_l_rm,   ropXCHG_b,      ropXCHG_l,      ropMOV_b_r,     ropMOV_l_r,     ropMOV_r_b,     ropMOV_r_l,     NULL,           NULL,           NULL,           NULL,
 /*90*/  NULL,           ropXCHG_EAX_ECX,ropXCHG_EAX_EDX,ropXCHG_EAX_EBX,ropXCHG_EAX_ESP,ropXCHG_EAX_EBP,ropXCHG_EAX_ESI,ropXCHG_EAX_EDI,NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropTEST_AL_imm, ropTEST_EAX_imm,NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  ropMOV_AL_a,    ropMOV_EAX_a,   ropMOV_a_AL,    ropMOV_a_EAX,   NULL,           NULL,           NULL,           NULL,           ropTEST_AL_imm, ropTEST_EAX_imm,NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rb_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,  ropMOV_rl_imm,
 
 /*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropMOV_b_imm,   ropMOV_l_imm,   NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,

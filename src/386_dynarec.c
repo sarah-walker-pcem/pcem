@@ -21,8 +21,8 @@ int cpu_reps, cpu_reps_latched;
 int cpu_notreps, cpu_notreps_latched;
 
 int inrecomp = 0;
-int cpu_recomp_blocks, cpu_recomp_ins, cpu_new_blocks;
-int cpu_recomp_blocks_latched, cpu_recomp_ins_latched, cpu_new_blocks_latched;
+int cpu_recomp_blocks, cpu_recomp_ins, cpu_recomp_full_ins, cpu_new_blocks;
+int cpu_recomp_blocks_latched, cpu_recomp_ins_latched, cpu_recomp_full_ins_latched, cpu_new_blocks_latched;
 
 int cpu_block_end = 0;
 

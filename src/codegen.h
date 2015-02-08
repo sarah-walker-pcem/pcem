@@ -71,8 +71,8 @@ void codegen_check_flush(struct page_t *page, uint64_t mask, uint32_t phys_addr)
 
 extern int cpu_block_end;
 
-extern int cpu_recomp_blocks, cpu_recomp_ins, cpu_new_blocks;
-extern int cpu_recomp_blocks_latched, cpu_recomp_ins_latched, cpu_new_blocks_latched;
+extern int cpu_recomp_blocks, cpu_recomp_ins, cpu_recomp_full_ins, cpu_new_blocks;
+extern int cpu_recomp_blocks_latched, cpu_recomp_ins_latched, cpu_recomp_full_ins_latched, cpu_new_blocks_latched;
 extern int cpu_recomp_flushes, cpu_recomp_flushes_latched;
 extern int cpu_recomp_evicted, cpu_recomp_evicted_latched;
 extern int cpu_recomp_reuse, cpu_recomp_reuse_latched;
@@ -111,7 +111,7 @@ extern int block_pos;
 static inline void addbyte(uint8_t val)
 {
         codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= 1850)
+        if (block_pos >= 1800)
         {
                 CPU_BLOCK_END();
         }
@@ -121,7 +121,7 @@ static inline void addword(uint16_t val)
 {
         *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 2;
-        if (block_pos >= 1850)
+        if (block_pos >= 1800)
         {
                 CPU_BLOCK_END();
         }
@@ -131,7 +131,7 @@ static inline void addlong(uint32_t val)
 {
         *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 4;
-        if (block_pos >= 1850)
+        if (block_pos >= 1800)
         {
                 CPU_BLOCK_END();
         }
@@ -139,4 +139,8 @@ static inline void addlong(uint32_t val)
 
 /*Current physical page of block being recompiled. -1 if no recompilation taking place */
 extern uint32_t recomp_page;
+
+extern x86seg *op_ea_seg;
+extern int op_ssegs;
+extern uint32_t op_old_pc;
 #endif

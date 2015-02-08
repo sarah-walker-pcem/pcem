@@ -10,13 +10,15 @@
 #include "x87.h"
 #include "mem.h"
 
+#include "386_common.h"
+
 #include "codegen.h"
 #include "codegen_ops.h"
 #include "codegen_ops_x86.h"
 
-#include "386_common.h"
-
-#define BLOCK_EXIT_OFFSET 0x7f0
+x86seg *op_ea_seg;
+int op_ssegs;
+uint32_t op_old_pc;
 
 uint32_t recomp_page = -1;
 
@@ -38,6 +40,7 @@ static uint32_t codegen_endpc;
 
 int codegen_block_cycles;
 static int codegen_block_ins;
+static int codegen_block_full_ins;
 
 static uint32_t last_op32;
 static x86seg *last_ea_seg;
@@ -188,17 +191,28 @@ void codegen_block_init(uint32_t phys_addr)
         block->use32 = use32;
         block->next = block->prev = NULL;
         
-        block_pos = 0;
+        block_pos = BLOCK_GPF_OFFSET;
+        addbyte(0xc7); /*MOV [ESP],0*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addlong(0);
+        addbyte(0xc7); /*MOV [ESP+4],0*/
+        addbyte(0x44);
+        addbyte(0x24);
+        addbyte(0x04);
+        addlong(0);
+        addbyte(0xe8); /*CALL x86gpf*/
+        addlong((uint32_t)x86gpf - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        addbyte(0x83); /*ADDL $8,%esp*/
+        addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
-        addbyte(0x08);
+        addbyte(0x10);
         addbyte(0xC3); /*RET*/
         cpu_block_end = 0;
         block_pos = 0; /*Entry code*/
-        addbyte(0x83); /*SUBL $8,%esp*/
+        addbyte(0x83); /*SUBL $16,%esp*/
         addbyte(0xEC);
-        addbyte(0x08);
+        addbyte(0x10);
 
 //        pclog("New block %i for %08X   %03x\n", block_current, cs+pc, block_num);
 
@@ -210,6 +224,7 @@ void codegen_block_init(uint32_t phys_addr)
         codegen_timing_block_start();
         
         codegen_block_ins = 0;
+        codegen_block_full_ins = 0;
 
         recomp_page = phys_addr & ~0xfff;
 }
@@ -342,11 +357,22 @@ void codegen_block_end()
                 addlong((uint32_t)&cpu_recomp_ins);
                 addlong(codegen_block_ins);
         }
-
-        addbyte(0x83); /*ADDL $8,%esp*/
+#if 0
+        if (codegen_block_full_ins)
+        {
+                addbyte(0x81); /*ADD $codegen_block_ins,ins*/
+                addbyte(0x05);
+                addlong((uint32_t)&cpu_recomp_full_ins);
+                addlong(codegen_block_full_ins);
+        }
+#endif
+        addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
-        addbyte(0x08);
+        addbyte(0x10);
         addbyte(0xC3); /*RET*/
+        
+        if (block_pos > BLOCK_GPF_OFFSET)
+                fatal("Over limit!\n");
 //        pclog("End block %i\n", block_num);
 
         recomp_page = -1;
@@ -636,14 +662,16 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         uint32_t op_32 = use32;
         uint32_t op_pc = new_pc;
         OpFn *op_table = x86_dynarec_opcodes;
-        x86seg *op_ea_seg = &_ds;
-        int op_ssegs = 0;
         int opcode_shift = 0;
         int opcode_mask = 0x3ff;
         int over = 0;
         int pc_off = 0;
         int test_modrm = 1;
         int c;
+        
+        op_ea_seg = &_ds;
+        op_ssegs = 0;
+        op_old_pc = old_pc;
         
         for (c = 0; c < NR_HOST_REGS; c++)
                 host_reg_mapping[c] = -1;
@@ -779,6 +807,7 @@ generate_call:
 
                         codegen_block_ins++;
                         block->ins++;
+                        codegen_block_full_ins++;
                         codegen_endpc = (cs + pc) + 8;
 
                         return;
@@ -899,6 +928,16 @@ generate_call:
                         addlong(codegen_block_ins);
                         codegen_block_ins = 0;
                 }
+#if 0
+                if (codegen_block_full_ins)
+                {
+                        addbyte(0x81); /*ADD $codegen_block_ins,ins*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&cpu_recomp_full_ins);
+                        addlong(codegen_block_full_ins);
+                        codegen_block_full_ins = 0;
+                }
+#endif
         }
         
         block->ins++;
