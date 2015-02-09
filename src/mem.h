@@ -134,3 +134,5 @@ static inline get_phys_noabrt(uint32_t addr)
         
         return mmutranslate_noabrt(addr, 0) & rammask;
 }
+
+void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr);

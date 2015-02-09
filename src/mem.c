@@ -1300,6 +1300,21 @@ void mem_updatecache()
         }
 }
 
+void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
+{
+#ifdef DYNAREC
+        start_addr &= ~PAGE_MASK_MASK;
+        end_addr = (end_addr + PAGE_MASK_MASK) & ~PAGE_MASK_MASK;        
+        
+        for (; start_addr <= end_addr; start_addr += (1 << PAGE_MASK_SHIFT))
+        {
+                uint64_t mask = (uint64_t)1 << ((start_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                
+                pages[start_addr >> 12].dirty_mask |= mask;
+        }
+#endif
+}
+
 static inline int mem_mapping_read_allowed(uint32_t flags, int state)
 {
 //        pclog("mem_mapping_read_allowed: flags=%x state=%x\n", flags, state);

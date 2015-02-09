@@ -8,6 +8,7 @@
 #include "ibm.h"
 #include "ide.h"
 #include "io.h"
+#include "mem.h"
 #include "pci.h"
 
 #include "piix.h"
@@ -193,6 +194,8 @@ int piix_bus_master_sector_read(int channel, uint8_t *data)
         {
                 if (piix_busmaster[channel].count < (512 - transferred) && piix_busmaster[channel].eot)
                    fatal("DMA on channel %i - Read count less than 512! Addr %08X Count %04X EOT %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot);
+
+                mem_invalidate_range(piix_busmaster[channel].addr, piix_busmaster[channel].addr+511);
                 
                 if (piix_busmaster[channel].count < (512 - transferred))
                 {

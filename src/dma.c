@@ -246,6 +246,7 @@ uint8_t _dma_read(uint32_t addr)
 void _dma_write(uint32_t addr, uint8_t val)
 {
         mem_writeb_phys(addr, val);
+        mem_invalidate_range(addr, addr);
 }
 
 int dma_channel_read(int channel)
