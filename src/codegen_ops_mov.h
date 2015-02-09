@@ -166,7 +166,6 @@ static uint32_t ropMOV_b_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         }
         else
         {
-//                return 0;
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
                 uint32_t imm = fastreadb(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);
@@ -188,19 +187,15 @@ static uint32_t ropMOV_w_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         }
         else
         {
-//                if ((cs+pc) <= 0xbff70000 || (cs+pc) > 0xbff80000)
-//                        return 0;
-//                {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
                 uint32_t imm = fastreadw(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);
-//pclog("MOV imm %04x(%08x):%08x %08x %04x\n", CS, cs, pc, op_pc, imm);
+
                 STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
                 CHECK_SEG_WRITE(target_seg);
 
                 MEM_STORE_ADDR_EA_W(target_seg, host_reg);
                 RELEASE_REG(host_reg);
-//                }
         }
 
         return op_pc + 3;
@@ -215,7 +210,6 @@ static uint32_t ropMOV_l_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         }
         else
         {
-//                return 0;
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
                 uint32_t imm = fastreadl(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);

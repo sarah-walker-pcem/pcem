@@ -141,6 +141,7 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 else                                                                                                                    \
                 {                                                                                                                       \
                         x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);                                                                 \
                         MEM_LOAD_ADDR_EA_B(target_seg);                                                                                 \
                         src_reg = 0;                                                                                                    \
                 }                                                                                                                       \
@@ -168,6 +169,7 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 else                                                                                                                    \
                 {                                                                                                                       \
                         x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);                                                                 \
                         MEM_LOAD_ADDR_EA_W(target_seg);                                                                                 \
                         src_reg = 0;                                                                                                    \
                 }                                                                                                                       \
@@ -195,6 +197,7 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 else                                                                                                                    \
                 {                                                                                                                       \
                         x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                    \
+                        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);                                                                 \
                         MEM_LOAD_ADDR_EA_L(target_seg);                                                                                 \
                         src_reg = 0;                                                                                                    \
                 }                                                                                                                       \
