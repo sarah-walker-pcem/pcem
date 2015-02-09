@@ -117,8 +117,6 @@ void sound_init()
         inital();
 
         outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int16_t));
-        
-        sound_add_handler(sound_cd_poll, sound_cd_get_buffer, NULL);
 }
 
 void sound_add_handler(void (*poll)(void *p), void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
@@ -164,4 +162,6 @@ void sound_reset()
 	timer_add(sound_get_buffer, &sound_get_buffer_time, TIMER_ALWAYS_ENABLED, NULL);
 
         sound_handlers_num = 0;
+        
+        sound_add_handler(sound_cd_poll, sound_cd_get_buffer, NULL);
 }
