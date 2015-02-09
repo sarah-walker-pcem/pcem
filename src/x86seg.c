@@ -1866,9 +1866,9 @@ void pmodeint(int num, int soft)
                                 x86gpf(NULL,seg&~3);
                                 return;
                         }
+                do_seg_load(&_cs, segdat2);
                 CS=(seg&~3)|CPL;
 //                pclog("New CS = %04X\n",CS);
-                do_seg_load(&_cs, segdat2);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 if (type>0x800) pc=segdat[0]|(segdat[3]<<16);
                 else            pc=segdat[0];
