@@ -72,6 +72,7 @@ static int opDAA(uint32_t fetchdat)
 
         tempw = flags & (C_FLAG | A_FLAG);
         setznp8(AL);
+        flags_rebuild();
         flags |= tempw;
         CLOCK_CYCLES(4);
         
@@ -98,6 +99,7 @@ static int opDAS(uint32_t fetchdat)
 
         tempw = flags & (C_FLAG | A_FLAG);
         setznp8(AL);
+        flags_rebuild();
         flags |= tempw;
         CLOCK_CYCLES(4);
         
