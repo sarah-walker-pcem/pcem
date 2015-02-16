@@ -67,29 +67,35 @@ extern uint16_t ea_rseg;
 
 static inline uint8_t fastreadb(uint32_t a)
 {
+        uint8_t *t;
+        
         if ((a >> 12) == pccache) 
                 return *((uint8_t *)&pccache2[a]);
-        pccache2 = getpccache(a);
+        t = getpccache(a);
         if (abrt)
                 return;
         pccache = a >> 12;
+        pccache2 = t;
         return *((uint8_t *)&pccache2[a]);
 }
 
 static inline uint16_t fastreadw(uint32_t a)
 {
-        uint32_t t;
+        uint8_t *t;
+        uint16_t val;
         if ((a&0xFFF)>0xFFE)
         {
-                t=readmemb(0,a);
-                t|=(readmemb(0,a+1)<<8);
-                return t;
+                val = readmemb(0, a);
+                val |= (readmemb(0, a + 1) << 8);
+                return val;
         }
         if ((a>>12)==pccache) return *((uint16_t *)&pccache2[a]);
-        pccache2=getpccache(a);
+        t = getpccache(a);
         if (abrt)
                 return;
-        pccache=a>>12;
+
+        pccache = a >> 12;
+        pccache2 = t;
         return *((uint16_t *)&pccache2[a]);
 }
 
@@ -102,7 +108,8 @@ static inline uint32_t fastreadl(uint32_t a)
                 if ((a>>12)!=pccache)
                 {
                         t = getpccache(a);
-                        if (abrt) return 0;
+                        if (abrt)
+                                return 0;
                         pccache2 = t;
                         pccache=a>>12;
                         //return *((uint32_t *)&pccache2[a]);
