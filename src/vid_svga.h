@@ -103,6 +103,9 @@ typedef struct svga_t
 
         void (*overlay_draw)(struct svga_t *svga, int displine);
         
+        /*If set then another device is driving the monitor output and the SVGA
+          card should not attempt to display anything */
+        int override;
         void *p;
 } svga_t;
 
@@ -134,3 +137,6 @@ extern uint8_t svga_rotate[8][256];
 
 void svga_out(uint16_t addr, uint8_t val, void *p);
 uint8_t svga_in(uint16_t addr, void *p);
+
+svga_t *svga_get_pri();
+void svga_set_override(svga_t *svga, int val);

@@ -12,6 +12,7 @@
 #include "resources.h"
 #include "sound.h"
 #include "video.h"
+#include "vid_voodoo.h"
 #include "win.h"
 
 extern int is486;
@@ -25,7 +26,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int c, d;
         int rom, gfx, mem, fpu;
         int temp_cpu, temp_cpu_m, temp_model;
-        int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_sound_card_current;
+        int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
         {
@@ -133,6 +134,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h=GetDlgItem(hdlg, IDC_CHECK4);
                 SendMessage(h, BM_SETCHECK, cga_comp, 0);
 
+                h=GetDlgItem(hdlg, IDC_CHECKVOODOO);
+                SendMessage(h, BM_SETCHECK, voodoo_enabled, 0);
+
                 h = GetDlgItem(hdlg, IDC_COMBOCHC);
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A little");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A bit");
@@ -205,10 +209,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_CHECKSSI);
                         temp_SSI2001 = SendMessage(h, BM_GETCHECK, 0, 0);
 
+                        h = GetDlgItem(hdlg, IDC_CHECKVOODOO);
+                        temp_voodoo = SendMessage(h, BM_GETCHECK, 0, 0);
+
                         h = GetDlgItem(hdlg, IDC_COMBOSND);
                         temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
 
-                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current)
+                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current || temp_voodoo != voodoo_enabled)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -222,6 +229,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         GUS = temp_GUS;
                                         SSI2001 = temp_SSI2001;
                                         sound_card_current = temp_sound_card_current;
+                                        voodoo_enabled = temp_voodoo;
                                         
                                         mem_resize();
                                         loadbios();
@@ -372,6 +380,10 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         else
                                 EnableWindow(h, FALSE);
                         break;                                
+
+                        case IDC_CONFIGUREVOODOO:
+                        deviceconfig_open(hdlg, (void *)&voodoo_device);
+                        break;
                 }
                 break;
         }

@@ -17,6 +17,20 @@ extern uint8_t edatlookup[4][4];
 
 uint8_t svga_rotate[8][256];
 
+/*Primary SVGA device. As multiple video cards are not yet supported this is the
+  only SVGA device.*/
+static svga_t *svga_pri;
+
+svga_t *svga_get_pri()
+{
+        return svga_pri;
+}
+void svga_set_override(svga_t *svga, int val)
+{
+        if (svga->override && !val)
+                svga->fullchange = changeframecount;
+        svga->override = val;
+}
 
 void svga_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -441,12 +455,14 @@ void svga_poll(void *p)
                         
                         if (svga->hwcursor_on || svga->overlay_on)
                                 svga->changedvram[svga->ma >> 12] = svga->changedvram[(svga->ma >> 12) + 1] = 2;
-                        
-                        svga->render(svga);
+                      
+                        if (!svga->override)
+                                svga->render(svga);
                         
                         if (svga->overlay_on)
                         {
-                                svga->overlay_draw(svga, svga->displine);
+                                if (!svga->override)
+                                        svga->overlay_draw(svga, svga->displine);
                                 svga->overlay_on--;
                                 if (svga->overlay_on && svga->interlace)
                                         svga->overlay_on--;
@@ -454,7 +470,8 @@ void svga_poll(void *p)
 
                         if (svga->hwcursor_on)
                         {
-                                svga->hwcursor_draw(svga, svga->displine);
+                                if (!svga->override)
+                                        svga->hwcursor_draw(svga, svga->displine);
                                 svga->hwcursor_on--;
                                 if (svga->hwcursor_on && svga->interlace)
                                         svga->hwcursor_on--;
@@ -561,7 +578,8 @@ void svga_poll(void *p)
                         wx = x;
                         wy = svga->lastline - svga->firstline;
 
-                        svga_doblit(svga->firstline_draw, svga->lastline_draw + 1, wx, wy, svga);
+                        if (!svga->override)
+                                svga_doblit(svga->firstline_draw, svga->lastline_draw + 1, wx, wy, svga);
 
                         readflash = 0;
 
@@ -685,6 +703,9 @@ int svga_init(svga_t *svga, void *p, int memsize,
 
         timer_add(svga_poll, &svga->vidtime, TIMER_ALWAYS_ENABLED, svga);
         vramp = svga->vram;
+        
+        svga_pri = svga;
+        
         return 0;
 }
 
@@ -692,6 +713,8 @@ void svga_close(svga_t *svga)
 {
         free(svga->changedvram);
         free(svga->vram);
+        
+        svga_pri = NULL;
 }
 
 #define egacycles 1

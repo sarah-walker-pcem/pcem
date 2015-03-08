@@ -1,1 +1,1 @@
-void voodoo_init();
+extern device_t voodoo_device;

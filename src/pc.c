@@ -246,7 +246,6 @@ void initpc()
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
         shadowbios=0;
-        voodoo_init();
         
 #if __unix
 	if (cdrom_drive == -1)
@@ -294,7 +293,8 @@ void resetpchard()
                 device_add(&cms_device);
         if (SSI2001)
                 device_add(&ssi2001_device);
-        
+        if (voodoo_enabled)
+                device_add(&voodoo_device);        
         pc_reset();
         
         resetide();
@@ -486,6 +486,7 @@ void loadconfig(char *fn)
         GAMEBLASTER = config_get_int(NULL, "gameblaster", 0);
         GUS = config_get_int(NULL, "gus", 0);
         SSI2001 = config_get_int(NULL, "ssi2001", 0);
+        voodoo_enabled = config_get_int(NULL, "voodoo", 0);
         
         model = config_get_int(NULL, "model", 14);
 
@@ -540,6 +541,7 @@ void saveconfig()
         config_set_int(NULL, "gameblaster", GAMEBLASTER);
         config_set_int(NULL, "gus", GUS);
         config_set_int(NULL, "ssi2001", SSI2001);
+        config_set_int(NULL, "voodoo", voodoo_enabled);
         
         config_set_int(NULL, "model", model);
         config_set_int(NULL, "cpu_manufacturer", cpu_manufacturer);

@@ -78,6 +78,11 @@ static BOOL CALLBACK status_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 device_add_status_info(device_s, 4096);
 #endif
                 SendDlgItemMessage(hdlg, IDC_STEXT_DEVICE, WM_SETTEXT, (WPARAM)NULL, (LPARAM)device_s);
+#ifdef DYNAREC
+                device_s[0] = 0;
+                device_add_status_info(device_s, 4096);
+                SendDlgItemMessage(hdlg, IDC_STEXT1, WM_SETTEXT, (WPARAM)NULL, (LPARAM)device_s);
+#endif
                 }
                 return TRUE;
                 
