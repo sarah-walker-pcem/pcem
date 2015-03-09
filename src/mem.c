@@ -767,6 +767,8 @@ void addreadlookup(uint32_t virt, uint32_t phys)
         readlookupp[readlnext]=mmu_perm;
         readlookup[readlnext++]=virt>>12;
         readlnext&=(cachesize-1);
+        
+        cycles -= 9;
 }
 
 void addwritelookup(uint32_t virt, uint32_t phys)
@@ -817,6 +819,8 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         writelookupp[writelnext] = mmu_perm;
         writelookup[writelnext++] = virt >> 12;
         writelnext &= (cachesize - 1);
+
+        cycles -= 9;
 }
 
 #undef printf
