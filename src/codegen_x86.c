@@ -907,8 +907,10 @@ generate_call:
 
         codegen_block_ins++;
 
-        if (((op_table == x86_dynarec_opcodes && ((opcode & 0xf0) == 0x70)) ||
-            (op_table == x86_dynarec_opcodes && ((opcode & 0xfc) == 0xe0)) ||
+        if ((op_table == x86_dynarec_opcodes &&
+             ((opcode & 0xf0) == 0x70 || (opcode & 0xfc) == 0xe0 || opcode == 0xc2 ||
+              (opcode & 0xfe) == 0xca || (opcode & 0xfc) == 0xcc || (opcode & 0xfc) == 0xe8 ||
+              (opcode == 0xff && ((fetchdat & 0x38) >= 0x10 && (fetchdat & 0x38) < 0x30))) ||
             (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80))))
         {
                 /*Opcode is likely to cause block to exit, update cycle count*/
