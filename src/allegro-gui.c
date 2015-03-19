@@ -2,6 +2,7 @@
 #include "allegro-main.h"
 #include "allegro-gui.h"
 #include "device.h"
+#include "disc.h"
 #include "ide.h"
 
 static int file_return(void)
@@ -35,11 +36,11 @@ static int disc_load_a()
         int ret;
         int xsize = SCREEN_W - 32, ysize = SCREEN_H - 64;
         strcpy(fn, discfns[0]);
-        ret = file_select_ex("Please choose a disc image", fn, "IMG;IMA", 260, xsize, ysize);
+        ret = file_select_ex("Please choose a disc image", fn, "IMG;IMA;FDI", 260, xsize, ysize);
         if (ret)
         {
-                savedisc(0);
-                loaddisc(0, fn);
+                disc_close(0);
+                disc_load(0, fn);
                 saveconfig();
         }
         return D_O_K;
@@ -51,11 +52,11 @@ static int disc_load_b()
         int ret;
         int xsize = SCREEN_W - 32, ysize = SCREEN_H - 64;
         strcpy(fn, discfns[1]);
-        ret = file_select_ex("Please choose a disc image", fn, "IMG;IMA", 260, xsize, ysize);
+        ret = file_select_ex("Please choose a disc image", fn, "IMG;IMA;FDI", 260, xsize, ysize);
         if (ret)
         {
-                savedisc(1);
-                loaddisc(1, fn);
+                disc_close(1);
+                disc_load(1, fn);
                 saveconfig();
         }
         return D_O_K;
@@ -63,8 +64,7 @@ static int disc_load_b()
 
 static int disc_eject_a()
 {
-        savedisc(0);
-        ejectdisc(0);
+        disc_close(0);
         saveconfig();
         
         return D_O_K;
@@ -72,8 +72,7 @@ static int disc_eject_a()
 
 static int disc_eject_b()
 {
-        savedisc(1);
-        ejectdisc(1);
+        disc_close(1);
         saveconfig();
         
         return D_O_K;

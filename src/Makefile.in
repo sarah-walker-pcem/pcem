@@ -58,7 +58,9 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-allegro-video.$(OBJEXT) pcem-amstrad.$(OBJEXT) \
 	pcem-cdrom-ioctl-linux.$(OBJEXT) pcem-cdrom-null.$(OBJEXT) \
 	pcem-config.$(OBJEXT) pcem-cpu.$(OBJEXT) pcem-dac.$(OBJEXT) \
-	pcem-device.$(OBJEXT) pcem-dma.$(OBJEXT) pcem-fdc.$(OBJEXT) \
+	pcem-device.$(OBJEXT) pcem-disc.$(OBJEXT) \
+	pcem-disc_fdi.$(OBJEXT) pcem-disc_img.$(OBJEXT) \
+	pcem-dma.$(OBJEXT) pcem-fdc.$(OBJEXT) pcem-fdi2raw.$(OBJEXT) \
 	pcem-gameport.$(OBJEXT) pcem-headland.$(OBJEXT) \
 	pcem-i430lx.$(OBJEXT) pcem-i430fx.$(OBJEXT) \
 	pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) pcem-intel.$(OBJEXT) \
@@ -231,8 +233,8 @@ pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 pcem_SOURCES = 386.c 808x.c acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
-config.c cpu.c dac.c device.c dma.c fdc.c gameport.c headland.c i430lx.c i430fx.c i430vx.c \
-ide.c intel.c intel_flash.c io.c jim.c \
+config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c dma.c fdc.c fdi2raw.c gameport.c \
+headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
 olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c rom.c serial.c sis496.c sound.c \
@@ -360,8 +362,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cpu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dac.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-device.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_fdi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_img.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdi2raw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-gameport.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-headland.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-i430fx.Po@am__quote@
@@ -769,6 +775,48 @@ pcem-device.obj: device.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-device.obj `if test -f 'device.c'; then $(CYGPATH_W) 'device.c'; else $(CYGPATH_W) '$(srcdir)/device.c'; fi`
 
+pcem-disc.o: disc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc.o -MD -MP -MF $(DEPDIR)/pcem-disc.Tpo -c -o pcem-disc.o `test -f 'disc.c' || echo '$(srcdir)/'`disc.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc.Tpo $(DEPDIR)/pcem-disc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc.c' object='pcem-disc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc.o `test -f 'disc.c' || echo '$(srcdir)/'`disc.c
+
+pcem-disc.obj: disc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc.obj -MD -MP -MF $(DEPDIR)/pcem-disc.Tpo -c -o pcem-disc.obj `if test -f 'disc.c'; then $(CYGPATH_W) 'disc.c'; else $(CYGPATH_W) '$(srcdir)/disc.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc.Tpo $(DEPDIR)/pcem-disc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc.c' object='pcem-disc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc.obj `if test -f 'disc.c'; then $(CYGPATH_W) 'disc.c'; else $(CYGPATH_W) '$(srcdir)/disc.c'; fi`
+
+pcem-disc_fdi.o: disc_fdi.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_fdi.o -MD -MP -MF $(DEPDIR)/pcem-disc_fdi.Tpo -c -o pcem-disc_fdi.o `test -f 'disc_fdi.c' || echo '$(srcdir)/'`disc_fdi.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_fdi.Tpo $(DEPDIR)/pcem-disc_fdi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_fdi.c' object='pcem-disc_fdi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_fdi.o `test -f 'disc_fdi.c' || echo '$(srcdir)/'`disc_fdi.c
+
+pcem-disc_fdi.obj: disc_fdi.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_fdi.obj -MD -MP -MF $(DEPDIR)/pcem-disc_fdi.Tpo -c -o pcem-disc_fdi.obj `if test -f 'disc_fdi.c'; then $(CYGPATH_W) 'disc_fdi.c'; else $(CYGPATH_W) '$(srcdir)/disc_fdi.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_fdi.Tpo $(DEPDIR)/pcem-disc_fdi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_fdi.c' object='pcem-disc_fdi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_fdi.obj `if test -f 'disc_fdi.c'; then $(CYGPATH_W) 'disc_fdi.c'; else $(CYGPATH_W) '$(srcdir)/disc_fdi.c'; fi`
+
+pcem-disc_img.o: disc_img.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_img.o -MD -MP -MF $(DEPDIR)/pcem-disc_img.Tpo -c -o pcem-disc_img.o `test -f 'disc_img.c' || echo '$(srcdir)/'`disc_img.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_img.Tpo $(DEPDIR)/pcem-disc_img.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_img.c' object='pcem-disc_img.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_img.o `test -f 'disc_img.c' || echo '$(srcdir)/'`disc_img.c
+
+pcem-disc_img.obj: disc_img.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_img.obj -MD -MP -MF $(DEPDIR)/pcem-disc_img.Tpo -c -o pcem-disc_img.obj `if test -f 'disc_img.c'; then $(CYGPATH_W) 'disc_img.c'; else $(CYGPATH_W) '$(srcdir)/disc_img.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_img.Tpo $(DEPDIR)/pcem-disc_img.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_img.c' object='pcem-disc_img.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_img.obj `if test -f 'disc_img.c'; then $(CYGPATH_W) 'disc_img.c'; else $(CYGPATH_W) '$(srcdir)/disc_img.c'; fi`
+
 pcem-dma.o: dma.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-dma.o -MD -MP -MF $(DEPDIR)/pcem-dma.Tpo -c -o pcem-dma.o `test -f 'dma.c' || echo '$(srcdir)/'`dma.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-dma.Tpo $(DEPDIR)/pcem-dma.Po
@@ -796,6 +844,20 @@ pcem-fdc.obj: fdc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdc.c' object='pcem-fdc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdc.obj `if test -f 'fdc.c'; then $(CYGPATH_W) 'fdc.c'; else $(CYGPATH_W) '$(srcdir)/fdc.c'; fi`
+
+pcem-fdi2raw.o: fdi2raw.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdi2raw.o -MD -MP -MF $(DEPDIR)/pcem-fdi2raw.Tpo -c -o pcem-fdi2raw.o `test -f 'fdi2raw.c' || echo '$(srcdir)/'`fdi2raw.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-fdi2raw.Tpo $(DEPDIR)/pcem-fdi2raw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdi2raw.c' object='pcem-fdi2raw.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdi2raw.o `test -f 'fdi2raw.c' || echo '$(srcdir)/'`fdi2raw.c
+
+pcem-fdi2raw.obj: fdi2raw.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdi2raw.obj -MD -MP -MF $(DEPDIR)/pcem-fdi2raw.Tpo -c -o pcem-fdi2raw.obj `if test -f 'fdi2raw.c'; then $(CYGPATH_W) 'fdi2raw.c'; else $(CYGPATH_W) '$(srcdir)/fdi2raw.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-fdi2raw.Tpo $(DEPDIR)/pcem-fdi2raw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdi2raw.c' object='pcem-fdi2raw.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdi2raw.obj `if test -f 'fdi2raw.c'; then $(CYGPATH_W) 'fdi2raw.c'; else $(CYGPATH_W) '$(srcdir)/fdi2raw.c'; fi`
 
 pcem-gameport.o: gameport.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-gameport.o -MD -MP -MF $(DEPDIR)/pcem-gameport.Tpo -c -o pcem-gameport.o `test -f 'gameport.c' || echo '$(srcdir)/'`gameport.c

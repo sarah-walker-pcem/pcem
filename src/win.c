@@ -23,6 +23,7 @@
 #include "nvr.h"
 #include "sound.h"
 #include "thread.h"
+#include "disc.h"
 
 #include "plat-midi.h"
 #include "plat-keyboard.h"
@@ -774,29 +775,27 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
                         break;
                         case IDM_DISC_A:
-                        if (!getfile(hwnd,"Disc image (*.IMG;*.IMA)\0*.IMG;*.IMA\0All files (*.*)\0*.*\0",discfns[0]))
+                        if (!getfile(hwnd,"Disc image (*.IMG;*.IMA;*.FDI)\0*.IMG;*.IMA;*.FDI\0All files (*.*)\0*.*\0",discfns[0]))
                         {
-                                savedisc(0);
-                                loaddisc(0,openfilestring);
+                                disc_close(0);
+                                disc_load(0, openfilestring);
                                 saveconfig();
                         }
                         break;
                         case IDM_DISC_B:
-                        if (!getfile(hwnd,"Disc image (*.IMG;*.IMA)\0*.IMG;*.IMA\0All files (*.*)\0*.*\0",discfns[1]))
+                        if (!getfile(hwnd,"Disc image (*.IMG;*.IMA;*.FDI)\0*.IMG;*.IMA;*.FDI\0All files (*.*)\0*.*\0",discfns[1]))
                         {
-                                savedisc(1);
-                                loaddisc(1,openfilestring);
+                                disc_close(1);
+                                disc_load(1, openfilestring);
                                 saveconfig();
                         }
                         break;
                         case IDM_EJECT_A:
-                        savedisc(0);
-                        ejectdisc(0);
+                        disc_close(0);
                         saveconfig();
                         break;
                         case IDM_EJECT_B:
-                        savedisc(1);
-                        ejectdisc(1);
+                        disc_close(1);
                         saveconfig();
                         break;
                         case IDM_HDCONF:

@@ -3,6 +3,7 @@
 #define get_filename allegro_get_filename
 #define append_filename allegro_append_filename
 #define put_backslash allegro_put_backslash
+#define get_extension allegro_get_extension
 #define GFX_VGA allegro_GFX_VGA
 
 #include <allegro.h>
@@ -13,3 +14,4 @@
 #undef get_filename
 #undef append_filename
 #undef put_backslash
+#undef get_extension

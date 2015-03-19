@@ -354,6 +354,22 @@ void put_backslash(char *s)
            s[c] = '/';
 }
 
+char *get_extension(char *s)
+{
+        int c = strlen(s) - 1;
+
+        if (c <= 0)
+                return s;
+        
+        while (c && s[c] != '.')
+                c--;
+                
+        if (!c)
+                return &s[strlen(s)];
+
+        return &s[c+1];
+}               
+
 void config_save(char *fn)
 {
         FILE *f = fopen(fn, "wt");

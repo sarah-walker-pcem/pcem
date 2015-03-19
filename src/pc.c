@@ -221,13 +221,16 @@ void initpc()
         loadbios();
         mem_add_bios();
                 
-        loaddisc(0,discfns[0]);
-        loaddisc(1,discfns[1]);
+        disc_load(0, discfns[0]);
+        disc_load(1, discfns[1]);
         
         timer_reset();
         sound_reset();
 	fdc_init();
-        
+	disc_init();
+        fdi_init();
+        img_init();
+                
         //loadfont();
         loadnvr();
         sound_init();
@@ -283,6 +286,15 @@ void resetpchard()
         sound_reset();
         mem_resize();
         fdc_init();
+	disc_init();
+        fdi_init();
+        img_init();
+        
+        disc_close(0);
+        disc_close(1);
+        disc_load(0, discfns[0]);
+        disc_load(1, discfns[1]);
+
         model_init();
         video_init();
         speaker_init();        
@@ -447,8 +459,8 @@ void closepc()
 //        output=7;
 //        setpitclock(clocks[0][0][0]);
 //        while (1) runpc();
-        savedisc(0);
-        savedisc(1);
+        disc_close(0);
+        disc_close(1);
         dumpregs();
         closevideo();
         device_close_all();

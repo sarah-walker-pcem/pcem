@@ -2,6 +2,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "nmi.h"
 #include "pic.h"
 #include "sound.h"
 #include "sound_sn76489.h"
@@ -24,7 +25,6 @@ struct
 {
         int latched;
         int data;
-        int nmi_enabled;
         
         int serial_data[44];
         int serial_pos;
@@ -142,7 +142,7 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 break;
                 
                 case 0xa0:
-                keyboard_pcjr.nmi_enabled = val & 0x80;
+                nmi_mask = val & 0x80;
                 pit_set_using_timer(1, !(val & 0x20));
                 break;
         }
