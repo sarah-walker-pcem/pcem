@@ -103,6 +103,8 @@ void *sis496_init()
         sis496->pci_conf[0x0b] = 0x06;
         
         sis496->pci_conf[0x0e] = 0x00; /*Single function device*/
+
+	return sis496;
 }
 
 void sis496_close(void *p)
