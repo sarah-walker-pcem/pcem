@@ -2058,7 +2058,10 @@ static void voodoo_exec_command(voodoo_t *voodoo, voodoo_params_t *params)
 //                pclog("Swap buffer %08x\n", params->swapbufferCMD);
 //                voodoo->front_offset = params->front_offset;
                 if (!(params->swapbufferCMD & 1))
+                {
                         voodoo->front_offset = params->front_offset;
+                        voodoo->swap_count--;
+                }
                 else
                 {
                         voodoo->swap_interval = (params->swapbufferCMD >> 1) & 0xff;
