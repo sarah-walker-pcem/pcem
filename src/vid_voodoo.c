@@ -1244,12 +1244,11 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                         x2 -= (1 << 16);
                 else
                         x -= (1 << 16);
-                dx = (x + 0x7f) - (params->vertexAx << 12);
-                dx = ((x + 0x7f) >> 16) - (((params->vertexAx << 12) + 0x7f) >> 16);
-                start_x2 = x + 0x7f;
-                x = (x + 0x7f) >> 16;
-                x2 = (x2 + 0x7f) >> 16;
-                
+                dx = ((x + 0x7fff) >> 16) - (((params->vertexAx << 12) + 0x7fff) >> 16);
+                start_x2 = x + 0x7fff;
+                x = (x + 0x7fff) >> 16;
+                x2 = (x2 + 0x7fff) >> 16;
+
                 if (voodoo_output)
                         pclog("%03i:%03i : Ax=%08x start_x=%08x  dSdX=%016llx dx=%08x  s=%08x -> ", x, state->y, params->vertexAx << 8, start_x, params->tmu[0].dTdX, dx, tmu0_t);
                         
