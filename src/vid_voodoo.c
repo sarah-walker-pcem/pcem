@@ -8,6 +8,7 @@
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_voodoo.h"
+#include "vid_voodoo_dither.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -828,77 +829,6 @@ static void voodoo_recalc_tex(voodoo_t *voodoo)
         voodoo->params.tex_width = width;
 }
 
-static int dither_matrix_4x4[16] =
-{
-	 0,  8,  2, 10,
-	12,  4, 14,  6,
-	 3, 11,  1,  9,
-	15,  7, 13,  5
-};
-
-static int dither_rb[256][4][4];
-static int dither_g[256][4][4];
-
-static void voodoo_make_dither()
-{
-        int c, x, y;
-        int seen_rb[1024];
-        int seen_g[1024];
-        
-        for (c = 0; c < 256; c++)
-        {
-                int rb = (int)(((double)c *  496.0) / 256.0);
-                int  g = (int)(((double)c * 1008.0) / 256.0);
-//                pclog("rb %i %i\n", rb, c);
-                for (y = 0; y < 4; y++)
-                {
-                        for (x = 0; x < 4; x++)
-                        {
-                                int val;
-                                
-                                val = rb + dither_matrix_4x4[x + (y << 2)];
-                                dither_rb[c][y][x] = val >> 4;
-//                                pclog("RB %i %i, %i  %i %i %i\n", c, x, y, val, val >> 4, dither_rb[c][y][x]);
-                                
-                                if (dither_rb[c][y][x] > 31)
-                                        fatal("RB overflow %i %i %i  %i\n", c, x, y, dither_rb[c][y][x]);
-
-                                val = g + dither_matrix_4x4[x + (y << 2)];
-                                dither_g[c][y][x] = val >> 4;                                
-
-                                if (dither_g[c][y][x] > 63)
-                                        fatal("G overflow %i %i %i  %i\n", c, x, y, dither_g[c][y][x]);
-                        }
-                }
-        }
-        
-        memset(seen_rb, 0, sizeof(seen_rb));
-        memset(seen_g,  0, sizeof(seen_g));
-        
-        for (c = 0; c < 256; c++)
-        {
-                int total_rb = 0;
-                int total_g = 0;
-                for (y = 0; y < 4; y++)
-                {
-                        for (x = 0; x < 4; x++)
-                        {
-                                total_rb += dither_rb[c][y][x];
-//                                pclog("total_rb %i %i, %i  %i %i\n", c, x, y, total_rb, dither_rb[c][y][x]);
-                                total_g += dither_g[c][y][x];
-                        }
-                }
-
-                if (seen_rb[total_rb])
-                        fatal("Duplicate rb %i %i\n", c, total_rb);
-                seen_rb[total_rb] = 1;
-
-                if (seen_g[total_g])
-                        fatal("Duplicate g %i %i\n", c, total_g);
-                seen_g[total_g] = 1;
-        }
-}
-
 typedef struct voodoo_state_t
 {
         int xstart, xend, xdir;
@@ -1168,11 +1098,8 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         int alpha_func = (params->alphaMode >> 1) & 7;
         int a_ref = params->alphaMode >> 24;
         int depth_op = (params->fbzMode >> 5) & 7;
-        int dither = (params->fbzMode & FBZ_DITHER) && rgb_sel == 2;
+        int dither = params->fbzMode & FBZ_DITHER;
         
-        if (voodoo->trexInit1 & (1 << 18))
-                dither = 1;
-
         state->clamp_s = params->textureMode & TEXTUREMODE_TCLAMPS;
         state->clamp_t = params->textureMode & TEXTUREMODE_TCLAMPT;
 //        int last_x;
@@ -3285,8 +3212,6 @@ void *voodoo_init()
 
         voodoo->bilinear_enabled = device_get_config_int("bilinear");
                 
-        voodoo_make_dither();
-        
         pci_add(voodoo_pci_read, voodoo_pci_write, voodoo);
 
         mem_mapping_add(&voodoo->mapping, 0, 0, NULL, voodoo_readw, voodoo_readl, NULL, voodoo_writew, voodoo_writel,     NULL, 0, voodoo);
