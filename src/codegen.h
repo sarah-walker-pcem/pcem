@@ -44,6 +44,7 @@ typedef struct codeblock_t
         uint32_t endpc;
         uint32_t phys, phys_2;
         uint32_t use32;
+        int stack32;
         int pnt;
         int ins;
         uint64_t page_mask, page_mask2;

@@ -915,3 +915,102 @@ static x86seg *FETCH_EA(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint
                 return FETCH_EA_32(op_ea_seg, fetchdat, op_ssegs, op_pc, 0);
         return FETCH_EA_16(op_ea_seg, fetchdat, op_ssegs, op_pc);
 }
+
+
+static void LOAD_STACK_TO_EA(int off)
+{
+        if (stack32)
+        {
+                addbyte(0x8b); /*MOVL EAX,[ESP]*/
+                addbyte(0x05 | (REG_EAX << 3));
+                addlong((uint32_t)&ESP);
+                if (off)
+                {
+                        addbyte(0x83); /*ADD EAX, off*/
+                        addbyte(0xc0 | (0 << 3) | REG_EAX);
+                        addbyte(off);
+                }
+        }
+        else
+        {
+                addbyte(0x0f); /*MOVZX EAX,W[ESP]*/
+                addbyte(0xb7);
+                addbyte(0x05 | (REG_EAX << 3));
+                addlong((uint32_t)&ESP);
+                if (off)
+                {
+                        addbyte(0x66); /*ADD AX, off*/
+                        addbyte(0x05);
+                        addword(off);
+                }
+        }
+}
+
+static void LOAD_EBP_TO_EA(int off)
+{
+        if (stack32)
+        {
+                addbyte(0x8b); /*MOVL EAX,[EBP]*/
+                addbyte(0x05 | (REG_EAX << 3));
+                addlong((uint32_t)&EBP);
+                if (off)
+                {
+                        addbyte(0x83); /*ADD EAX, off*/
+                        addbyte(0xc0 | (0 << 3) | REG_EAX);
+                        addbyte(off);
+                }
+        }
+        else
+        {
+                addbyte(0x0f); /*MOVZX EAX,W[EBP]*/
+                addbyte(0xb7);
+                addbyte(0x05 | (REG_EAX << 3));
+                addlong((uint32_t)&EBP);
+                if (off)
+                {
+                        addbyte(0x66); /*ADD AX, off*/
+                        addbyte(0x05);
+                        addword(off);
+                }
+        }
+}
+
+static void SP_MODIFY(int off)
+{
+        if (stack32)
+        {
+                if (off < 0x80)
+                {
+                        addbyte(0x83); /*ADD [ESP], off*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&ESP);
+                        addbyte(off);
+                }
+                else
+                {
+                        addbyte(0x81); /*ADD [ESP], off*/
+                        addbyte(0x05);
+                        addlong((uint32_t)&ESP);
+                        addlong(off);
+                }
+        }
+        else
+        {
+                if (off < 0x80)
+                {
+                        addbyte(0x66); /*ADD [SP], off*/
+                        addbyte(0x83);
+                        addbyte(0x05);
+                        addlong((uint32_t)&SP);
+                        addbyte(off);
+                }
+                else
+                {
+                        addbyte(0x66); /*ADD [SP], off*/
+                        addbyte(0x81);
+                        addbyte(0x05);
+                        addlong((uint32_t)&SP);
+                        addword(off);
+                }
+        }
+}

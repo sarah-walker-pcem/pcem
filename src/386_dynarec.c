@@ -1191,7 +1191,7 @@ void exec386(int cycs)
 
                 cycdiff=0;
                 oldcyc=cycles;
-//                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x %i\n", CS, pc, SS,ESP, codeblock_page_dirty[0x1de]);
+//                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
                 if (!CACHE_ON()) /*Interpret block*/
                 {
                         cpu_block_end = 0;
@@ -1265,7 +1265,7 @@ void exec386(int cycs)
                           and physical address. The physical address check will
                           also catch any page faults at this stage*/
                         valid_block = (block->pc == cs + pc) && (block->_cs == cs) &&
-                                      (block->use32 == use32) && (block->phys == phys_addr);
+                                      (block->use32 == use32) && (block->phys == phys_addr) && (block->stack32 == stack32);
 
                         if (valid_block && (block->page_mask & page->dirty_mask))
                         {

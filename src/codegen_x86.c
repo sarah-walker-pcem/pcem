@@ -189,6 +189,7 @@ void codegen_block_init(uint32_t phys_addr)
         block->pnt = block_current;
         block->phys = phys_addr;
         block->use32 = use32;
+        block->stack32 = stack32;
         block->next = block->prev = NULL;
         
         block_pos = BLOCK_GPF_OFFSET;
@@ -803,7 +804,8 @@ generate_call:
                 uint32_t new_pc = recomp_opcodes[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);
                 if (new_pc)
                 {
-                        STORE_IMM_ADDR_L((uintptr_t)&pc, new_pc);
+                        if (new_pc != -1)
+                                STORE_IMM_ADDR_L((uintptr_t)&pc, new_pc);
 
                         codegen_block_ins++;
                         block->ins++;

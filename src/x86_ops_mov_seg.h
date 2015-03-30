@@ -154,7 +154,8 @@ static int opMOV_seg_w_a16(uint32_t fetchdat)
                 fetchdat = fastreadl(cs + pc);
                 pc++;
                 if (abrt) return 1;
-                return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+                x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+                return 1;
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
                 break;
@@ -192,7 +193,8 @@ static int opMOV_seg_w_a32(uint32_t fetchdat)
                 fetchdat = fastreadl(cs + pc);
                 pc++;
                 if (abrt) return 1;
-                return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+                x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+                return 1;
                 case 0x20: /*FS*/
                 loadseg(new_seg, &_fs);
                 break;
@@ -277,7 +279,7 @@ static int opLSS_w_a16(uint32_t fetchdat)
         regs[reg].w = addr;
  
         CLOCK_CYCLES(7);
-        return 0;
+        return 1;
 }
 static int opLSS_w_a32(uint32_t fetchdat)
 {
@@ -291,7 +293,7 @@ static int opLSS_w_a32(uint32_t fetchdat)
         regs[reg].w = addr;
  
         CLOCK_CYCLES(7);
-        return 0;
+        return 1;
 }
 static int opLSS_l_a16(uint32_t fetchdat)
 {
@@ -306,7 +308,7 @@ static int opLSS_l_a16(uint32_t fetchdat)
         regs[reg].l = addr;
  
         CLOCK_CYCLES(7);
-        return 0;
+        return 1;
 }
 static int opLSS_l_a32(uint32_t fetchdat)
 {
@@ -321,7 +323,7 @@ static int opLSS_l_a32(uint32_t fetchdat)
         regs[reg].l = addr;
  
         CLOCK_CYCLES(7);
-        return 0;
+        return 1;
 }
 
 #define opLsel(name, sel)                                                       \
