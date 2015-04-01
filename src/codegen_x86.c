@@ -53,7 +53,7 @@ void codegen_init()
         codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
-        memset(codeblock, 0, sizeof(BLOCK_SIZE * sizeof(codeblock_t)));
+        memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
         
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
@@ -61,7 +61,7 @@ void codegen_init()
 
 void codegen_reset()
 {
-        memset(codeblock, 0, sizeof(BLOCK_SIZE * sizeof(codeblock_t)));
+        memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 }
 
