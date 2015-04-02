@@ -141,15 +141,20 @@ void disc_set_rate(int rate)
         }
 }
 
+void disc_reset()
+{
+        curdrive = 0;
+        disc_period = 32;
+	timer_add(disc_poll, &disc_poll_time, &motoron, NULL);
+}
+
 void disc_init()
 {
 //        pclog("disc_init %p\n", drives);
         drives[0].poll = drives[1].poll = 0;
         drives[0].seek = drives[1].seek = 0;
         drives[0].readsector = drives[1].readsector = 0;
-        curdrive = 0;
-        disc_period = 32;
-	timer_add(disc_poll, &disc_poll_time, &motoron, NULL);
+        disc_reset();
 }
 
 int oldtrack[2] = {0, 0};

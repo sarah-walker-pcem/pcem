@@ -17,6 +17,7 @@ void disc_load(int drive, char *fn);
 void disc_new(int drive, char *fn);
 void disc_close(int drive);
 void disc_init();
+void disc_reset();
 void disc_poll();
 void disc_seek(int drive, int track);
 void disc_readsector(int drive, int sector, int track, int side, int density);

@@ -220,16 +220,16 @@ void initpc()
         mem_init();
         loadbios();
         mem_add_bios();
-                
-        disc_load(0, discfns[0]);
-        disc_load(1, discfns[1]);
-        
+                        
         timer_reset();
         sound_reset();
 	fdc_init();
 	disc_init();
         fdi_init();
         img_init();
+
+        disc_load(0, discfns[0]);
+        disc_load(1, discfns[1]);
                 
         //loadfont();
         loadnvr();
@@ -286,15 +286,8 @@ void resetpchard()
         sound_reset();
         mem_resize();
         fdc_init();
-	disc_init();
-        fdi_init();
-        img_init();
+	disc_reset();
         
-        disc_close(0);
-        disc_close(1);
-        disc_load(0, discfns[0]);
-        disc_load(1, discfns[1]);
-
         model_init();
         video_init();
         speaker_init();        
