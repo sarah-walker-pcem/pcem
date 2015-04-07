@@ -174,6 +174,7 @@ void pc_reset()
 {
         cpu_set();
         resetx86();
+        mem_updatecache();
         //timer_reset();
         dma_reset();
         fdc_reset();
@@ -244,7 +245,6 @@ void initpc()
         
         pit_reset();        
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
-        mem_updatecache();
         ali1429_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
