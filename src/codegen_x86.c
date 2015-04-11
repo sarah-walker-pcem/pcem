@@ -208,9 +208,11 @@ void codegen_block_init(uint32_t phys_addr)
         addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
         addbyte(0x10);
+        addbyte(0x5d); /*POP EBP*/
         addbyte(0xC3); /*RET*/
         cpu_block_end = 0;
         block_pos = 0; /*Entry code*/
+        addbyte(0x55); /*PUSH EBP*/
         addbyte(0x83); /*SUBL $16,%esp*/
         addbyte(0xEC);
         addbyte(0x10);
@@ -370,6 +372,7 @@ void codegen_block_end()
         addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
         addbyte(0x10);
+        addbyte(0x5d); /*POP EBP*/
         addbyte(0xC3); /*RET*/
         
         if (block_pos > BLOCK_GPF_OFFSET)
@@ -799,6 +802,8 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
 generate_call:
         codegen_timing_opcode(opcode, fetchdat, op_32);
         
+        addbyte(0xBD); /*MOVL EBP, &EAX*/
+        addlong((uint32_t)&EAX);
         if (op_table == x86_dynarec_opcodes && recomp_opcodes[(opcode | op_32) & 0x1ff])
         {
                 uint32_t new_pc = recomp_opcodes[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);

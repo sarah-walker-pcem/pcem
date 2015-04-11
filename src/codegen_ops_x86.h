@@ -2,6 +2,7 @@
         EBX, ECX, EDX - emulated registers
         EAX - work register, EA storage
         ESI, EDI - work registers
+        EBP - points at emulated register array
 */
 #define HOST_REG_START 1
 #define HOST_REG_END 4
@@ -45,26 +46,26 @@ static void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
 static void STORE_IMM_REG_B(int reg, uint8_t val)
 {
         addbyte(0xC6); /*MOVB [addr],val*/
-        addbyte(0x05);
+        addbyte(0x45);
         if (reg & 4)
-                addlong((uint32_t)&regs[reg & 3].b.h);
+                addbyte((uint32_t)&regs[reg & 3].b.h - (uint32_t)&EAX);
         else
-                addlong((uint32_t)&regs[reg & 3].b.l);
+                addbyte((uint32_t)&regs[reg & 3].b.l - (uint32_t)&EAX);
         addbyte(val);
 }
 static void STORE_IMM_REG_W(int reg, uint16_t val)
 {
         addbyte(0x66); /*MOVW [addr],val*/
         addbyte(0xC7);
-        addbyte(0x05);
-        addlong((uint32_t)&regs[reg & 7].w);
+        addbyte(0x45);
+        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
         addword(val);
 }
 static void STORE_IMM_REG_L(int reg, uint32_t val)
 {
         addbyte(0xC7); /*MOVL [addr],val*/
-        addbyte(0x05);
-        addlong((uint32_t)&regs[reg & 7].l);
+        addbyte(0x45);
+        addbyte((uint32_t)&regs[reg & 7].l - (uint32_t)&EAX);
         addlong(val);
 }
 
@@ -75,12 +76,12 @@ static int LOAD_REG_B(int reg)
 
         addbyte(0x0f); /*MOVZX B[reg],host_reg*/
         addbyte(0xb6);
-        addbyte(0x05 | (host_reg << 3));
+        addbyte(0x45 | (host_reg << 3));
         if (reg & 4)
-                addlong((uint32_t)&regs[reg & 3].b.h);
+                addbyte((uint32_t)&regs[reg & 3].b.h - (uint32_t)&EAX);
         else
-                addlong((uint32_t)&regs[reg & 3].b.l);
-        
+                addbyte((uint32_t)&regs[reg & 3].b.l - (uint32_t)&EAX);
+
         return host_reg;
 }
 static int LOAD_REG_W(int reg)
@@ -90,9 +91,9 @@ static int LOAD_REG_W(int reg)
 
         addbyte(0x0f); /*MOVZX W[reg],host_reg*/
         addbyte(0xb7);
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[host_reg_mapping[host_reg]].w);
-        
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+
         return host_reg;
 }
 static int LOAD_REG_L(int reg)
@@ -101,9 +102,9 @@ static int LOAD_REG_L(int reg)
         host_reg_mapping[host_reg] = reg;
 
         addbyte(0x8b); /*MOVL host_reg,[reg]*/
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[host_reg_mapping[host_reg]].l);
-        
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[reg & 7].l - (uint32_t)&EAX);
+
         return host_reg;
 }
 
@@ -122,52 +123,52 @@ static int LOAD_REG_IMM(uint32_t imm)
 static void STORE_REG_B_RELEASE(int host_reg)
 {
         addbyte(0x88); /*MOVB [reg],host_reg*/
-        addbyte(0x05 | (host_reg << 3));
+        addbyte(0x45 | (host_reg << 3));
         if (host_reg_mapping[host_reg] & 4)
-                addlong((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.h);
+                addbyte((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.h - (uint32_t)&EAX);
         else
-                addlong((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.l);
+                addbyte((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_W_RELEASE(int host_reg)
 {
         addbyte(0x66); /*MOVW [reg],host_reg*/
         addbyte(0x89);
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[host_reg_mapping[host_reg]].w);
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[host_reg_mapping[host_reg]].w - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_L_RELEASE(int host_reg)
 {
         addbyte(0x89); /*MOVL [reg],host_reg*/
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[host_reg_mapping[host_reg]].l);
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[host_reg_mapping[host_reg]].l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 
 static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
 {
         addbyte(0x88); /*MOVB [guest_reg],host_reg*/
-        addbyte(0x05 | (host_reg << 3));
+        addbyte(0x45 | (host_reg << 3));
         if (guest_reg & 4)
-                addlong((uint32_t)&regs[guest_reg & 3].b.h);
+                addbyte((uint32_t)&regs[guest_reg & 3].b.h - (uint32_t)&EAX);
         else
-                addlong((uint32_t)&regs[guest_reg & 3].b.l);
+                addbyte((uint32_t)&regs[guest_reg & 3].b.l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
 {
-        addbyte(0x66); /*MOVB [guest_reg],host_reg*/
+        addbyte(0x66); /*MOVW [guest_reg],host_reg*/
         addbyte(0x89);
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[guest_reg & 7].w);
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[guest_reg & 7].w - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_TARGET_L_RELEASE(int host_reg, int guest_reg)
 {
-        addbyte(0x89); /*MOVB [guest_reg],host_reg*/
-        addbyte(0x05 | (host_reg << 3));
-        addlong((uint32_t)&regs[guest_reg & 7].l);
+        addbyte(0x89); /*MOVL [guest_reg],host_reg*/
+        addbyte(0x45 | (host_reg << 3));
+        addbyte((uint32_t)&regs[guest_reg & 7].l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 
@@ -207,16 +208,35 @@ static void ADD_HOST_REG_IMM_B(int host_reg, uint8_t imm)
 }
 static void ADD_HOST_REG_IMM_W(int host_reg, uint16_t imm)
 {
-        addbyte(0x66); /*ADDW host_reg, imm*/
-        addbyte(0x81);
-        addbyte(0xC0 | host_reg);
-        addword(imm);
+        if (imm < 0x80 || imm >= 0xff80)
+        {
+                addbyte(0x66); /*ADDW host_reg, imm*/
+                addbyte(0x83);
+                addbyte(0xC0 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x66); /*ADDW host_reg, imm*/
+                addbyte(0x81);
+                addbyte(0xC0 | host_reg);
+                addword(imm);
+        }
 }
 static void ADD_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
-        addbyte(0x81); /*ADDL host_reg, imm*/
-        addbyte(0xC0 | host_reg);
-        addlong(imm);
+        if (imm < 0x80 || imm >= 0xffffff80)
+        {
+                addbyte(0x83); /*ADDL host_reg, imm*/
+                addbyte(0xC0 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x81); /*ADDL host_reg, imm*/
+                addbyte(0xC0 | host_reg);
+                addlong(imm);
+        }
 }
 
 #define AND_HOST_REG_B AND_HOST_REG_L
@@ -228,9 +248,18 @@ static void AND_HOST_REG_L(int dst_reg, int src_reg)
 }
 static void AND_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
-        addbyte(0x81); /*ANDL host_reg, imm*/
-        addbyte(0xE0 | host_reg);
-        addlong(imm);
+        if (imm < 0x80 || imm >= 0xffffff80)
+        {
+                addbyte(0x83); /*ANDL host_reg, imm*/
+                addbyte(0xE0 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x81); /*ANDL host_reg, imm*/
+                addbyte(0xE0 | host_reg);
+                addlong(imm);
+        }
 }
 
 #define OR_HOST_REG_B OR_HOST_REG_L
@@ -242,9 +271,18 @@ static void OR_HOST_REG_L(int dst_reg, int src_reg)
 }
 static void OR_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
-        addbyte(0x81); /*ORL host_reg, imm*/
-        addbyte(0xC8 | host_reg);
-        addlong(imm);
+        if (imm < 0x80 || imm >= 0xffffff80)
+        {
+                addbyte(0x83); /*ORL host_reg, imm*/
+                addbyte(0xC8 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x81); /*ORL host_reg, imm*/
+                addbyte(0xC8 | host_reg);
+                addlong(imm);
+        }
 }
 
 
@@ -272,16 +310,35 @@ static void SUB_HOST_REG_IMM_B(int host_reg, uint8_t imm)
 }
 static void SUB_HOST_REG_IMM_W(int host_reg, uint16_t imm)
 {
-        addbyte(0x66); /*SUBW host_reg, imm*/
-        addbyte(0x81);
-        addbyte(0xE8 | host_reg);
-        addword(imm);
+        if (imm < 0x80 || imm >= 0xff80)
+        {
+                addbyte(0x66); /*SUBW host_reg, imm*/
+                addbyte(0x83);
+                addbyte(0xE8 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x66); /*SUBW host_reg, imm*/
+                addbyte(0x81);
+                addbyte(0xE8 | host_reg);
+                addword(imm);
+        }
 }
 static void SUB_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
-        addbyte(0x81); /*SUBL host_reg, imm*/
-        addbyte(0xE8 | host_reg);
-        addlong(imm);
+        if (imm < 0x80 || imm >= 0xffffff80)
+        {
+                addbyte(0x83); /*SUBL host_reg, imm*/
+                addbyte(0xE8 | host_reg);
+                addbyte(imm);
+        }
+        else
+        {
+                addbyte(0x81); /*SUBL host_reg, imm*/
+                addbyte(0xE8 | host_reg);
+                addlong(imm);
+        }
 }
 
 #define XOR_HOST_REG_B XOR_HOST_REG_L
@@ -293,9 +350,18 @@ static void XOR_HOST_REG_L(int dst_reg, int src_reg)
 }
 static void XOR_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
-        addbyte(0x81); /*XORL host_reg, imm*/
-        addbyte(0xF0 | host_reg);
-        addlong(imm);
+        if (imm < 0x80 || imm >= 0xffffff80)
+        {
+                addbyte(0x83); /*XORL host_reg, imm*/
+                addbyte(0xF0 | host_reg);
+                addbyte(imm & 0xff);
+        }
+        else
+        {
+                addbyte(0x81); /*XORL host_reg, imm*/
+                addbyte(0xF0 | host_reg);
+                addlong(imm);
+        }
 }
 
 static void CALL_FUNC(void *dest)
@@ -757,30 +823,39 @@ static x86seg *FETCH_EA_16(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         case 0:
                         addbyte(0xa1); /*MOVL EAX, *mod1add[0][rm]*/
                         addlong((uint32_t)mod1add[0][rm]);
-                        addbyte(0x03); /*ADDL EAX, *mod1add[1][rm]*/
-                        addbyte(0x05);
-                        addlong((uint32_t)mod1add[1][rm]);
+                        if (mod1add[1][rm] != &zero)
+                        {
+                                addbyte(0x03); /*ADDL EAX, *mod1add[1][rm]*/
+                                addbyte(0x05);
+                                addlong((uint32_t)mod1add[1][rm]);
+                        }
                         break;
                         case 1:
-                        addbyte(0xb8); /*MOVL EAX, imm8*/
-                        addlong((uint32_t)(int8_t)(rmdat >> 8));// pc++;
-                        addbyte(0x03); /*ADDL EAX, *mod1add[0][rm]*/
-                        addbyte(0x05);
+                        addbyte(0xa1); /*MOVL EAX, *mod1add[0][rm]*/
                         addlong((uint32_t)mod1add[0][rm]);
-                        addbyte(0x03); /*ADDL EAX, *mod1add[1][rm]*/
-                        addbyte(0x05);
-                        addlong((uint32_t)mod1add[1][rm]);
+                        addbyte(0x83); /*ADDL EAX, imm8*/
+                        addbyte(0xc0 | REG_EAX);
+                        addbyte((int8_t)(rmdat >> 8));
+                        if (mod1add[1][rm] != &zero)
+                        {
+                                addbyte(0x03); /*ADDL EAX, *mod1add[1][rm]*/
+                                addbyte(0x05);
+                                addlong((uint32_t)mod1add[1][rm]);
+                        }
                         (*op_pc)++;
                         break;
                         case 2:
                         addbyte(0xb8); /*MOVL EAX, imm16*/
                         addlong((fetchdat >> 8) & 0xffff);// pc++;
-                        addbyte(0x03); /*EAX, ADDL *mod1add[0][rm]*/
+                        addbyte(0x03); /*ADDL EAX, *mod1add[0][rm]*/
                         addbyte(0x05);
                         addlong((uint32_t)mod1add[0][rm]);
-                        addbyte(0x03); /*EAX, ADDL *mod1add[1][rm]*/
-                        addbyte(0x05);
-                        addlong((uint32_t)mod1add[1][rm]);
+                        if (mod1add[1][rm] != &zero)
+                        {
+                                addbyte(0x03); /*ADDL EAX, *mod1add[1][rm]*/
+                                addbyte(0x05);
+                                addlong((uint32_t)mod1add[1][rm]);
+                        }
                         (*op_pc) += 2;
                         break;
                 }
@@ -817,17 +892,18 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         }
                         else
                         {
-                                addbyte(0xa1); /*MOVL EAX, regs[sib&7].l*/
-                                addlong((uint32_t)&regs[sib & 7].l);
+                                addbyte(0x8b); /*MOVL EAX, regs[sib&7].l*/
+                                addbyte(0x45);
+                                addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
                         }
                         break;
                         case 1: 
-                        new_eaaddr = (uint32_t)(int8_t)((fetchdat >> 16) & 0xff);
-                        addbyte(0xb8); /*MOVL EAX, imm8*/
-                        addlong(new_eaaddr);
-                        addbyte(0x03); /*ADDL EAX, regs[sib&7].l*/
-                        addbyte(0x05);
-                        addlong((uint32_t)&regs[sib & 7].l);
+                        addbyte(0x8b); /*MOVL EAX, regs[sib&7].l*/
+                        addbyte(0x45);
+                        addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
+                        addbyte(0x83); /*ADDL EAX, imm8*/
+                        addbyte(0xc0 | REG_EAX);
+                        addbyte((int8_t)(rmdat >> 16));
                         (*op_pc)++;
                         break;
                         case 2:
@@ -835,15 +911,24 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         addbyte(0xb8); /*MOVL EAX, new_eaaddr*/
                         addlong(new_eaaddr);
                         addbyte(0x03); /*ADDL EAX, regs[sib&7].l*/
-                        addbyte(0x05);
-                        addlong((uint32_t)&regs[sib & 7].l);
+                        addbyte(0x45);
+                        addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
                         (*op_pc) += 4;
                         break;
                 }
                 if (stack_offset && (sib & 7) == 4 && (mod || (sib & 7) != 5)) /*ESP*/
                 {
-                        addbyte(0x05); /*ADDL EAX, stack_offset*/
-                        addlong(stack_offset);
+                        if (stack_offset < 0x80 || stack_offset >= 0xffffff80)
+                        {
+                                addbyte(0x83);
+                                addbyte(0xc0 | REG_EAX);
+                                addbyte(stack_offset);
+                        }
+                        else
+                        {
+                                addbyte(0x05); /*ADDL EAX, stack_offset*/
+                                addlong(stack_offset);
+                        }
                 }
                 if (((sib & 7) == 4 || (mod && (sib & 7) == 5)) && !op_ssegs)
                         op_ea_seg = &_ss;
@@ -853,21 +938,21 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         {
                                 case 0:
                                 addbyte(0x03); /*ADDL EAX, regs[sib&7].l*/
-                                addbyte(0x05);
-                                addlong((uint32_t)&regs[(sib >> 3) & 7].l);
+                                addbyte(0x45);
+                                addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX);
                                 break;
                                 case 1:
-                                addbyte(0x8B); addbyte(0x05 | (REG_EDI << 3)); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL EDI, reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
                                 case 2:
-                                addbyte(0x8B); addbyte(0x05 | (REG_EDI << 3)); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL EDI, reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
                                 addbyte(0xC1); addbyte(0xE0 | REG_EDI); addbyte(2); /*SHL EDI, 2*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
                                 case 3:
-                                addbyte(0x8B); addbyte(0x05 | (REG_EDI << 3)); addlong((uint32_t)&regs[(sib >> 3) & 7].l); /*MOVL EDI reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI reg*/
                                 addbyte(0xC1); addbyte(0xE0 | REG_EDI); addbyte(3); /*SHL EDI, 3*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
@@ -884,8 +969,9 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         (*op_pc) += 4;
                         return op_ea_seg;
                 }
-                addbyte(0xa1); /*MOVL EAX, regs[rm].l*/
-                addlong((uint32_t)&regs[rm].l);
+                addbyte(0x8b); /*MOVL EAX, regs[rm].l*/
+                addbyte(0x45);
+                addbyte((uint32_t)&regs[rm].l - (uint32_t)&EAX);
                 eaaddr = regs[rm].l;
                 if (mod) 
                 {
@@ -893,8 +979,9 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                                 op_ea_seg = &_ss;
                         if (mod == 1) 
                         {
-                                addbyte(0x05); /*ADD EAX, imm8*/
-                                addlong((uint32_t)(int8_t)(fetchdat >> 8)); 
+                                addbyte(0x83); /*ADD EAX, imm8*/
+                                addbyte(0xc0 | REG_EAX);
+                                addbyte((int8_t)(fetchdat >> 8)); 
                                 (*op_pc)++; 
                         }
                         else          
@@ -922,8 +1009,8 @@ static void LOAD_STACK_TO_EA(int off)
         if (stack32)
         {
                 addbyte(0x8b); /*MOVL EAX,[ESP]*/
-                addbyte(0x05 | (REG_EAX << 3));
-                addlong((uint32_t)&ESP);
+                addbyte(0x45 | (REG_EAX << 3));
+                addbyte((uint32_t)&ESP - (uint32_t)&EAX);
                 if (off)
                 {
                         addbyte(0x83); /*ADD EAX, off*/
@@ -935,8 +1022,8 @@ static void LOAD_STACK_TO_EA(int off)
         {
                 addbyte(0x0f); /*MOVZX EAX,W[ESP]*/
                 addbyte(0xb7);
-                addbyte(0x05 | (REG_EAX << 3));
-                addlong((uint32_t)&ESP);
+                addbyte(0x45 | (REG_EAX << 3));
+                addbyte((uint32_t)&ESP - (uint32_t)&EAX);
                 if (off)
                 {
                         addbyte(0x66); /*ADD AX, off*/
@@ -951,8 +1038,8 @@ static void LOAD_EBP_TO_EA(int off)
         if (stack32)
         {
                 addbyte(0x8b); /*MOVL EAX,[EBP]*/
-                addbyte(0x05 | (REG_EAX << 3));
-                addlong((uint32_t)&EBP);
+                addbyte(0x45 | (REG_EAX << 3));
+                addbyte((uint32_t)&EBP - (uint32_t)&EAX);
                 if (off)
                 {
                         addbyte(0x83); /*ADD EAX, off*/
@@ -964,8 +1051,8 @@ static void LOAD_EBP_TO_EA(int off)
         {
                 addbyte(0x0f); /*MOVZX EAX,W[EBP]*/
                 addbyte(0xb7);
-                addbyte(0x05 | (REG_EAX << 3));
-                addlong((uint32_t)&EBP);
+                addbyte(0x45 | (REG_EAX << 3));
+                addbyte((uint32_t)&EBP - (uint32_t)&EAX);
                 if (off)
                 {
                         addbyte(0x66); /*ADD AX, off*/
@@ -982,15 +1069,15 @@ static void SP_MODIFY(int off)
                 if (off < 0x80)
                 {
                         addbyte(0x83); /*ADD [ESP], off*/
-                        addbyte(0x05);
-                        addlong((uint32_t)&ESP);
+                        addbyte(0x45);
+                        addbyte((uint32_t)&ESP - (uint32_t)&EAX);
                         addbyte(off);
                 }
                 else
                 {
                         addbyte(0x81); /*ADD [ESP], off*/
-                        addbyte(0x05);
-                        addlong((uint32_t)&ESP);
+                        addbyte(0x45);
+                        addbyte((uint32_t)&ESP - (uint32_t)&EAX);
                         addlong(off);
                 }
         }
@@ -1000,16 +1087,16 @@ static void SP_MODIFY(int off)
                 {
                         addbyte(0x66); /*ADD [SP], off*/
                         addbyte(0x83);
-                        addbyte(0x05);
-                        addlong((uint32_t)&SP);
+                        addbyte(0x45);
+                        addbyte((uint32_t)&SP - (uint32_t)&EAX);
                         addbyte(off);
                 }
                 else
                 {
                         addbyte(0x66); /*ADD [SP], off*/
                         addbyte(0x81);
-                        addbyte(0x05);
-                        addlong((uint32_t)&SP);
+                        addbyte(0x45);
+                        addbyte((uint32_t)&SP - (uint32_t)&EAX);
                         addword(off);
                 }
         }
