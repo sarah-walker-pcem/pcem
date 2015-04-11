@@ -11,7 +11,6 @@
 #include "cpu.h"
 #include "fdc.h"
 #include "timer.h"
-#include "video.h"
 
 #include "386_common.h"
 

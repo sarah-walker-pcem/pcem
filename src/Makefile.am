@@ -40,3 +40,14 @@ resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
 
+if DYNAREC
+pcem_CFLAGS += -DDYNAREC
+pcem_SOURCES += 386_dynarec.c 386_dynarec_ops.c codegen.c codegen_ops.c \
+codegen_timing_486.c codegen_timing_pentium.c
+
+if CPU_I386
+pcem_SOURCES += codegen_x86.c
+endif
+endif
+
+

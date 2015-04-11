@@ -567,6 +567,10 @@ OS_LINUX_FALSE
 OS_LINUX_TRUE
 OS_WIN_FALSE
 OS_WIN_TRUE
+CPU_I386_FALSE
+CPU_I386_TRUE
+DYNAREC_FALSE
+DYNAREC_TRUE
 am__fastdepCXX_FALSE
 am__fastdepCXX_TRUE
 CXXDEPMODE
@@ -612,6 +616,14 @@ am__isrc
 INSTALL_DATA
 INSTALL_SCRIPT
 INSTALL_PROGRAM
+host_os
+host_vendor
+host_cpu
+host
+build_os
+build_vendor
+build_cpu
+build
 target_alias
 host_alias
 build_alias
@@ -655,6 +667,7 @@ ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
 enable_debug
+enable_dynarec
 with_allegro_prefix
 with_allegro_exec_prefix
 enable_allegrotest
@@ -1272,6 +1285,10 @@ Program names:
   --program-prefix=PREFIX            prepend PREFIX to installed program names
   --program-suffix=SUFFIX            append SUFFIX to installed program names
   --program-transform-name=PROGRAM   run sed PROGRAM on installed program names
+
+System types:
+  --build=BUILD     configure for building on BUILD [guessed]
+  --host=HOST       cross-compile to build programs to run on HOST [BUILD]
 _ACEOF
 fi
 
@@ -1288,6 +1305,7 @@ Optional Features:
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --enable-debug          build debug executable
+  --enable-dynarec        build dynamic recompiler
   --disable-allegrotest       Do not try to compile and run a test LIBallegro program
 
 Optional Packages:
@@ -1902,8 +1920,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-am__api_version='1.11'
-
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
   for ac_t in install-sh install.sh shtool; do
@@ -1926,6 +1942,80 @@ ac_config_guess="$SHELL $ac_aux_dir/config.guess"  # Please don't use this var.
 ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
+
+# Make sure we can run config.sub.
+$SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
+  as_fn_error "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking build system type" >&5
+$as_echo_n "checking build system type... " >&6; }
+if test "${ac_cv_build+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_build_alias=$build_alias
+test "x$ac_build_alias" = x &&
+  ac_build_alias=`$SHELL "$ac_aux_dir/config.guess"`
+test "x$ac_build_alias" = x &&
+  as_fn_error "cannot guess build type; you must specify one" "$LINENO" 5
+ac_cv_build=`$SHELL "$ac_aux_dir/config.sub" $ac_build_alias` ||
+  as_fn_error "$SHELL $ac_aux_dir/config.sub $ac_build_alias failed" "$LINENO" 5
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_build" >&5
+$as_echo "$ac_cv_build" >&6; }
+case $ac_cv_build in
+*-*-*) ;;
+*) as_fn_error "invalid value of canonical build" "$LINENO" 5;;
+esac
+build=$ac_cv_build
+ac_save_IFS=$IFS; IFS='-'
+set x $ac_cv_build
+shift
+build_cpu=$1
+build_vendor=$2
+shift; shift
+# Remember, the first character of IFS is used to create $*,
+# except with old shells:
+build_os=$*
+IFS=$ac_save_IFS
+case $build_os in *\ *) build_os=`echo "$build_os" | sed 's/ /-/g'`;; esac
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking host system type" >&5
+$as_echo_n "checking host system type... " >&6; }
+if test "${ac_cv_host+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "x$host_alias" = x; then
+  ac_cv_host=$ac_cv_build
+else
+  ac_cv_host=`$SHELL "$ac_aux_dir/config.sub" $host_alias` ||
+    as_fn_error "$SHELL $ac_aux_dir/config.sub $host_alias failed" "$LINENO" 5
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_host" >&5
+$as_echo "$ac_cv_host" >&6; }
+case $ac_cv_host in
+*-*-*) ;;
+*) as_fn_error "invalid value of canonical host" "$LINENO" 5;;
+esac
+host=$ac_cv_host
+ac_save_IFS=$IFS; IFS='-'
+set x $ac_cv_host
+shift
+host_cpu=$1
+host_vendor=$2
+shift; shift
+# Remember, the first character of IFS is used to create $*,
+# except with old shells:
+host_os=$*
+IFS=$ac_save_IFS
+case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
+
+
+
+am__api_version='1.11'
 
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -3913,6 +4003,47 @@ else
 $as_echo "no" >&6; }
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use the dynamic recompiler" >&5
+$as_echo_n "checking whether to use the dynamic recompiler... " >&6; }
+# Check whether --enable-dynarec was given.
+if test "${enable_dynarec+set}" = set; then :
+  enableval=$enable_dynarec;
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_dynarec" >&5
+$as_echo "$enable_dynarec" >&6; }
+ if test "$enable_dynarec" = "yes"; then
+  DYNAREC_TRUE=
+  DYNAREC_FALSE='#'
+else
+  DYNAREC_TRUE='#'
+  DYNAREC_FALSE=
+fi
+
+if test "$enable_dynarec" = "yes"; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for cpu" >&5
+$as_echo_n "checking for cpu... " >&6; }
+	case "${host_cpu}" in
+		i?86)
+		CPU=i386
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${host_cpu}" >&5
+$as_echo "${host_cpu}" >&6; }
+		;;
+		*)
+		as_fn_error "Unsupported CPU." "$LINENO" 5
+		;;
+	esac
+fi
+
+ if test "$CPU" = "i386"; then
+  CPU_I386_TRUE=
+  CPU_I386_FALSE='#'
+else
+  CPU_I386_TRUE='#'
+  CPU_I386_FALSE=
+fi
+
+
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB
 
@@ -4196,7 +4327,7 @@ rm -f core conftest.err conftest.$ac_objext \
 
      allegro_CFLAGS=""
      allegro_LIBS=""
-     as_fn_error "building B-em requires Allegro to be installed" "$LINENO" 5
+     as_fn_error "building PCem requires Allegro to be installed" "$LINENO" 5
   fi
 
 
@@ -4502,6 +4633,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error "conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${DYNAREC_TRUE}" && test -z "${DYNAREC_FALSE}"; then
+  as_fn_error "conditional \"DYNAREC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${CPU_I386_TRUE}" && test -z "${CPU_I386_FALSE}"; then
+  as_fn_error "conditional \"CPU_I386\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${OS_WIN_TRUE}" && test -z "${OS_WIN_FALSE}"; then

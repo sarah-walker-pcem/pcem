@@ -1,3 +1,6 @@
+#ifndef _X86_OPS_H
+#define _X86_OPS_H
+
 typedef int (*OpFn)(uint32_t fetchdat);
 
 #ifdef DYNAREC
@@ -103,3 +106,5 @@ extern OpFn ops_fpu_df_a16[256];
 extern OpFn ops_fpu_df_a32[256];
 extern OpFn ops_nofpu_a16[256];
 extern OpFn ops_nofpu_a32[256];
+
+#endif /*_X86_OPS_H*/

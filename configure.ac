@@ -4,6 +4,8 @@
 AC_PREREQ([2.61])
 AC_INIT(PCem, v9, Tom Walker <tommowalker@tommowalker.co.uk>, pcem)
 
+AC_CANONICAL_HOST
+
 AM_INIT_AUTOMAKE
 AC_PROG_CC
 AC_PROG_CXX
@@ -22,6 +24,26 @@ else
    AC_MSG_RESULT([no])
 fi
 
+AC_MSG_CHECKING([whether to use the dynamic recompiler])
+AC_ARG_ENABLE(dynarec,
+	      AC_HELP_STRING([--enable-dynarec], [build dynamic recompiler]))
+AC_MSG_RESULT($enable_dynarec)
+AM_CONDITIONAL(DYNAREC, test "$enable_dynarec" = "yes")
+if test "$enable_dynarec" = "yes"; then
+	AC_MSG_CHECKING([for cpu])
+	case "${host_cpu}" in
+		i?86)
+		CPU=i386
+		AC_MSG_RESULT(${host_cpu})
+		;;
+		*)
+		AC_MSG_ERROR([Unsupported CPU.])
+		;;
+	esac
+fi
+
+AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
+
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB
 
@@ -34,7 +56,7 @@ AM_CONDITIONAL(OS_LINUX, test "$OS" = "linux")
 #       allegro.m4 from the DOS/Windows Allegro sources (the file is contained
 #       in `misc') and copy it to this directory or MSYS's `/share/aclocal'.
 if test "$OS" != "win"; then
-   AM_PATH_ALLEGRO(, , AC_MSG_ERROR(building B-em requires Allegro to be installed))
+   AM_PATH_ALLEGRO(, , AC_MSG_ERROR(building PCem requires Allegro to be installed))
 fi
 
 AC_CHECK_LIB([openal], [alGetError], [], \
