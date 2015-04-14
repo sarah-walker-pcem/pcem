@@ -33,9 +33,9 @@ PCem.exe: $(OBJ) $(FMOBJ) $(SIDOBJ)
 all : PCem.exe
 
 clean :
-	del *.o
-	del *.exe
-	del *.res
+	rm *.o
+	rm *.exe
+	rm *.res
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $<
