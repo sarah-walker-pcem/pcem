@@ -115,7 +115,7 @@ static uint32_t ropRET_16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
         LOAD_STACK_TO_EA(0);
         MEM_LOAD_ADDR_EA_W(&_ss);
-        STORE_HOST_REG_ADDR(&pc, 0);
+        STORE_HOST_REG_ADDR((uintptr_t)&pc, 0);
         SP_MODIFY(2);
         
         return -1;
@@ -127,7 +127,7 @@ static uint32_t ropRET_32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
         LOAD_STACK_TO_EA(0);
         MEM_LOAD_ADDR_EA_L(&_ss);
-        STORE_HOST_REG_ADDR(&pc, 0);
+        STORE_HOST_REG_ADDR((uintptr_t)&pc, 0);
         SP_MODIFY(4);
         
         return -1;
@@ -141,7 +141,7 @@ static uint32_t ropRET_imm_16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
         LOAD_STACK_TO_EA(0);
         MEM_LOAD_ADDR_EA_W(&_ss);
-        STORE_HOST_REG_ADDR(&pc, 0);
+        STORE_HOST_REG_ADDR((uintptr_t)&pc, 0);
         SP_MODIFY(2+offset);
         
         return -1;
@@ -154,7 +154,7 @@ static uint32_t ropRET_imm_32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32,
         STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
         LOAD_STACK_TO_EA(0);
         MEM_LOAD_ADDR_EA_L(&_ss);
-        STORE_HOST_REG_ADDR(&pc, 0);
+        STORE_HOST_REG_ADDR((uintptr_t)&pc, 0);
         SP_MODIFY(4+offset);
         
         return -1;
@@ -170,7 +170,7 @@ static uint32_t ropCALL_r16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         host_reg = LOAD_REG_IMM(op_pc+2);
         MEM_STORE_ADDR_EA_W(&_ss, host_reg);
         SP_MODIFY(-2);
-        STORE_IMM_ADDR_L(&pc, (op_pc+2+offset) & 0xffff);
+        STORE_IMM_ADDR_L((uintptr_t)&pc, (op_pc+2+offset) & 0xffff);
         
         return -1;
 }
@@ -184,7 +184,7 @@ static uint32_t ropCALL_r32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         host_reg = LOAD_REG_IMM(op_pc+4);
         MEM_STORE_ADDR_EA_L(&_ss, host_reg);
         SP_MODIFY(-4);
-        STORE_IMM_ADDR_L(&pc, op_pc+4+offset);
+        STORE_IMM_ADDR_L((uintptr_t)&pc, op_pc+4+offset);
         
         return -1;
 }
