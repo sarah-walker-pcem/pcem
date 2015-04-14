@@ -144,4 +144,9 @@ extern uint32_t recomp_page;
 extern x86seg *op_ea_seg;
 extern int op_ssegs;
 extern uint32_t op_old_pc;
+
+/*Set to 1 if flags have been changed in the block being recompiled, and hence
+  flags_op is known and can be relied on */
+extern int codegen_flags_changed;
+
 #endif

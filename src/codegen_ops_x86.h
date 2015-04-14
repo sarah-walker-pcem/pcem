@@ -108,6 +108,18 @@ static int LOAD_REG_L(int reg)
         return host_reg;
 }
 
+static int LOAD_VAR_L(uintptr_t addr)
+{
+        int host_reg = find_host_reg();
+        host_reg_mapping[host_reg] = reg;
+
+        addbyte(0x8b); /*MOVL host_reg,[reg]*/
+        addbyte(0x05 | (host_reg << 3));
+        addlong((uint32_t)addr);
+
+        return host_reg;
+}
+
 static int LOAD_REG_IMM(uint32_t imm)
 {
         int host_reg = find_host_reg();
@@ -1100,4 +1112,93 @@ static void SP_MODIFY(int off)
                         addword(off);
                 }
         }
+}
+
+
+static void TEST_ZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
+{
+        addbyte(0x66); /*CMPW host_reg, 0*/
+        addbyte(0x83);
+        addbyte(0xc0 | 0x38 | host_reg);
+        addbyte(0);
+        addbyte(0x75); /*JNZ +*/
+        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(new_pc);
+        if (taken_cycles)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(taken_cycles);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+static void TEST_ZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
+{
+        addbyte(0x83); /*CMPW host_reg, 0*/
+        addbyte(0xc0 | 0x38 | host_reg);
+        addbyte(0);
+        addbyte(0x75); /*JNZ +*/
+        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(new_pc);
+        if (taken_cycles)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(taken_cycles);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+
+static void TEST_NONZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
+{
+        addbyte(0x66); /*CMPW host_reg, 0*/
+        addbyte(0x83);
+        addbyte(0xc0 | 0x38 | host_reg);
+        addbyte(0);
+        addbyte(0x74); /*JZ +*/
+        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(new_pc);
+        if (taken_cycles)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(taken_cycles);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
+{
+        addbyte(0x83); /*CMPW host_reg, 0*/
+        addbyte(0xc0 | 0x38 | host_reg);
+        addbyte(0);
+        addbyte(0x74); /*JZ +*/
+        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(new_pc);
+        if (taken_cycles)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(taken_cycles);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }

@@ -5,6 +5,7 @@
 #include "x86_ops.h"
 #include "x86_flags.h"
 #include "386_common.h"
+#include "cpu.h"
 #include "codegen.h"
 #include "codegen_ops.h"
 #include "codegen_ops_x86.h"
@@ -28,7 +29,7 @@ RecompOpFn recomp_opcodes[512] =
 /*40*/  ropINC_rw,      ropINC_rw,      ropINC_rw,      ropINC_rw,      ropINC_rw,      ropINC_rw,      ropINC_rw,      ropINC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,      ropDEC_rw,
 /*50*/  ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPUSH_16,     ropPOP_16,      ropPOP_16,      ropPOP_16,      ropPOP_16,      ropPOP_16,      ropPOP_16,      ropPOP_16,      ropPOP_16,
 /*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropPUSH_imm_16, NULL,           ropPUSH_imm_b16,NULL,           NULL,           NULL,           NULL,           NULL,
-/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  ropJO,          ropJNO,         ropJB,          ropJNB,         ropJE,          ropJNE,         NULL,           NULL,           ropJS,          ropJNS,         ropJP,          ropJNP,         NULL,           NULL,           NULL,           NULL,
 
 /*80*/  rop80,          rop81_w,        rop80,          rop83_w,        ropTEST_b_rm,   ropTEST_w_rm,   ropXCHG_b,      ropXCHG_w,      ropMOV_b_r,     ropMOV_w_r,     ropMOV_r_b,     ropMOV_r_w,     NULL,           NULL,           NULL,           NULL,
 /*90*/  NULL,           ropXCHG_AX_CX,  ropXCHG_AX_DX,  ropXCHG_AX_BX,  ropXCHG_AX_SP,  ropXCHG_AX_BP,  ropXCHG_AX_SI,  ropXCHG_AX_DI,  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
@@ -37,7 +38,7 @@ RecompOpFn recomp_opcodes[512] =
 
 /*c0*/  NULL,           NULL,           ropRET_imm_16,  ropRET_16,      NULL,           NULL,           ropMOV_b_imm,   ropMOV_w_imm,   NULL,           ropLEAVE_16,    NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropCALL_r16,    ropJMP_r16,     NULL,           ropJMP_r8,      NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           ropLOOP,        ropJCXZ,        NULL,           NULL,           NULL,           NULL,           ropCALL_r16,    ropJMP_r16,     NULL,           ropJMP_r8,      NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
         /*32-bit data*/
@@ -50,7 +51,7 @@ RecompOpFn recomp_opcodes[512] =
 /*40*/  ropINC_rl,      ropINC_rl,      ropINC_rl,      ropINC_rl,      ropINC_rl,      ropINC_rl,      ropINC_rl,      ropINC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,      ropDEC_rl,
 /*50*/  ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPUSH_32,     ropPOP_32,      ropPOP_32,      ropPOP_32,      ropPOP_32,      ropPOP_32,      ropPOP_32,      ropPOP_32,      ropPOP_32,
 /*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropPUSH_imm_32, NULL,           ropPUSH_imm_b32,NULL,           NULL,           NULL,           NULL,           NULL,
-/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  ropJO,          ropJNO,         ropJB,          ropJNB,         ropJE,          ropJNE,         NULL,           NULL,           ropJS,          ropJNS,         ropJP,          ropJNP,         NULL,           NULL,           NULL,           NULL,
 
 /*80*/  rop80,          rop81_l,        rop80,          rop83_l,        ropTEST_b_rm,   ropTEST_l_rm,   ropXCHG_b,      ropXCHG_l,      ropMOV_b_r,     ropMOV_l_r,     ropMOV_r_b,     ropMOV_r_l,     NULL,           NULL,           NULL,           NULL,
 /*90*/  NULL,           ropXCHG_EAX_ECX,ropXCHG_EAX_EDX,ropXCHG_EAX_EBX,ropXCHG_EAX_ESP,ropXCHG_EAX_EBP,ropXCHG_EAX_ESI,ropXCHG_EAX_EDI,NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
@@ -59,7 +60,54 @@ RecompOpFn recomp_opcodes[512] =
 
 /*c0*/  NULL,           NULL,           ropRET_imm_32,  ropRET_32,      NULL,           NULL,           ropMOV_b_imm,   ropMOV_l_imm,   NULL,           ropLEAVE_32,    NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropCALL_r32,    ropJMP_r32,     NULL,           ropJMP_r8,      NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           ropLOOP,        ropJCXZ,        NULL,           NULL,           NULL,           NULL,           ropCALL_r32,    ropJMP_r32,     NULL,           ropJMP_r8,      NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+};
+
+RecompOpFn recomp_opcodes_0f[512] =
+{
+        /*16-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/        
+/*00*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropJO_w,        ropJNO_w,       ropJB_w,        ropJNB_w,       ropJE_w,        ropJNE_w,       NULL,           NULL,           ropJS_w,        ropJNS_w,       ropJP_w,        ropJNP_w,       NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+        /*32-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/        
+/*00*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropJO_l,        ropJNO_l,       ropJB_l,        ropJNB_l,       ropJE_l,        ropJNE_l,       NULL,           NULL,           ropJS_l,        ropJNS_l,       ropJP_l,        ropJNP_l,       NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
 
