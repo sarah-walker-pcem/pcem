@@ -108,6 +108,18 @@ static int LOAD_REG_L(int reg)
         return host_reg;
 }
 
+static int LOAD_VAR_W(uintptr_t addr)
+{
+        int host_reg = find_host_reg();
+        host_reg_mapping[host_reg] = reg;
+
+        addbyte(0x66); /*MOVL host_reg,[reg]*/
+        addbyte(0x8b);
+        addbyte(0x05 | (host_reg << 3));
+        addlong((uint32_t)addr);
+
+        return host_reg;
+}
 static int LOAD_VAR_L(uintptr_t addr)
 {
         int host_reg = find_host_reg();
@@ -1201,4 +1213,471 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+
+
+static void FP_ENTER()
+{
+        if (codegen_fpu_entered)
+                return;
+                
+        addbyte(0xf6); /*TEST cr0, 0xc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&cr0);
+        addbyte(0xc);
+        addbyte(0x74); /*JZ +*/
+        addbyte(7+5+5);
+        addbyte(0xc7); /*MOV [ESP], 7*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addlong(7);
+        addbyte(0xe8); /*CALL x86_int*/
+        addlong((uint32_t)x86_int - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+        
+        codegen_fpu_entered = 1;
+}
+
+static void FP_FLD(int reg)
+{
+        addbyte(0xa1); /*MOV EAX, [TOP]*/
+        addlong((uintptr_t)&TOP);
+        addbyte(0x89); /*MOV EBX, EAX*/
+        addbyte(0xc3);
+        if (reg)
+        {
+                addbyte(0x83); /*ADD EAX, reg*/
+                addbyte(0xc0);
+                addbyte(reg);
+                addbyte(0x83); /*SUB EBX, 1*/
+                addbyte(0xeb);
+                addbyte(0x01);
+                addbyte(0x83); /*AND EAX, 7*/
+                addbyte(0xe0);
+                addbyte(0x07);
+        }
+        else
+        {
+                addbyte(0x83); /*SUB EBX, 1*/
+                addbyte(0xeb);
+                addbyte(0x01);
+        }       
+
+        addbyte(0xdd); /*FLD [ST+EAX*8]*/
+        addbyte(0x04);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST);
+        addbyte(0x83); /*AND EBX, 7*/
+        addbyte(0xe3);
+        addbyte(0x07);
+        addbyte(0x8a); /*MOV AL, [tag+EAX]*/
+        addbyte(0x80);
+        addlong((uintptr_t)tag);
+        addbyte(0xdd); /*FSTP [ST+EBX*8]*/
+        addbyte(0x1c);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0x88); /*MOV [tag+EBX], AL*/
+        addbyte(0x83);
+        addlong((uintptr_t)tag);
+
+        addbyte(0x89); /*MOV [TOP], EBX*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+}
+
+static void FP_FST(int reg)
+{
+        addbyte(0xa1); /*MOV EAX, [TOP]*/
+        addlong((uintptr_t)&TOP);
+        addbyte(0xdd); /*FLD [ST+EAX*8]*/
+        addbyte(0x04);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST);
+        addbyte(0x88); /*MOV BL, [tag+EAX]*/
+        addbyte(0x98);
+        addlong((uintptr_t)tag);
+
+        if (reg)
+        {
+                addbyte(0x83); /*ADD EAX, reg*/
+                addbyte(0xc0);
+                addbyte(reg);
+                addbyte(0x83); /*AND EAX, 7*/
+                addbyte(0xe0);
+                addbyte(0x07);
+        }
+
+        addbyte(0xdd); /*FSTP [ST+EAX*8]*/
+        addbyte(0x1c);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST);
+        addbyte(0x8a); /*MOV [tag+EAX], BL*/
+        addbyte(0x98);
+        addlong((uintptr_t)tag);
+}
+
+static void FP_FXCH(int reg)
+{
+        addbyte(0xa1); /*MOV EAX, [TOP]*/
+        addlong((uintptr_t)&TOP);
+        addbyte(0x89); /*MOV EBX, EAX*/
+        addbyte(0xc3);
+        addbyte(0x83); /*ADD EAX, reg*/
+        addbyte(0xc0);
+        addbyte(reg);
+//#if 0
+        addbyte(0xdd); /*FLD [ST+EBX*8]*/
+        addbyte(0x04);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0x83); /*AND EAX, 7*/
+        addbyte(0xe0);
+        addbyte(0x07);
+        addbyte(0xdd); /*FLD [ST+EAX*8]*/
+        addbyte(0x04);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST);
+        addbyte(0xdd); /*FSTP [ST+EBX*8]*/
+        addbyte(0x1c);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0xdd); /*FSTP [ST+EAX*8]*/
+        addbyte(0x1c);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST);
+//#endif
+#if 0
+        addbyte(0xbe); /*MOVL ESI, ST*/
+        addlong((uintptr_t)ST);
+        
+        addbyte(0x8b); /*MOVL EDX, [ESI+EBX*8]*/
+        addbyte(0x14);
+        addbyte(0xde);
+        addbyte(0x83); /*AND EAX, 7*/
+        addbyte(0xe0);
+        addbyte(0x07);
+        addbyte(0x8b); /*MOVL ECX, [ESI+EAX*8]*/
+        addbyte(0x0c);
+        addbyte(0xc6);
+        addbyte(0x89); /*MOVL [ESI+EBX*8], ECX*/
+        addbyte(0x0c);
+        addbyte(0xde);
+        addbyte(0x89); /*MOVL [ESI+EAX*8], EDX*/
+        addbyte(0x14);
+        addbyte(0xc6);
+
+        addbyte(0x8b); /*MOVL ECX, [4+ESI+EAX*8]*/
+        addbyte(0x4c);
+        addbyte(0xc6);
+        addbyte(0x04);
+        addbyte(0x8b); /*MOVL EDX, [4+ESI+EBX*8]*/
+        addbyte(0x54);
+        addbyte(0xde);
+        addbyte(0x04);
+        addbyte(0x89); /*MOVL [4+ESI+EBX*8], ECX*/
+        addbyte(0x4c);
+        addbyte(0xde);
+        addbyte(0x04);
+        addbyte(0x89); /*MOVL [4+ESI+EAX*8], EDX*/
+        addbyte(0x54);
+        addbyte(0xc6);
+        addbyte(0x04);
+#endif
+}
+
+
+static void FP_LOAD_S()
+{
+        addbyte(0x8b); /*MOV EBX, TOP*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        addbyte(0x89); /*MOV [ESP], EAX*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addbyte(0x83); /*SUB EBX, 1*/
+        addbyte(0xeb);
+        addbyte(1);
+        addbyte(0xd9); /*FLD [ESP]*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addbyte(0x83); /*AND EBX, 7*/
+        addbyte(0xe3);
+        addbyte(7);
+        addbyte(0x83); /*CMP EAX, 0*/
+        addbyte(0xf8);
+        addbyte(0);
+        addbyte(0x89); /*MOV TOP, EBX*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        addbyte(0xdd); /*FSTP [ST+EBX*8]*/
+        addbyte(0x1c);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0x0f); /*SETE [tag+EBX]*/
+        addbyte(0x94);
+        addbyte(0x83);
+        addlong((uintptr_t)tag);
+}
+static void FP_LOAD_IL()
+{
+        addbyte(0x8b); /*MOV EBX, TOP*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        addbyte(0x89); /*MOV [ESP], EAX*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addbyte(0x83); /*SUB EBX, 1*/
+        addbyte(0xeb);
+        addbyte(1);
+        addbyte(0xdb); /*FILDl [ESP]*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addbyte(0x83); /*AND EBX, 7*/
+        addbyte(0xe3);
+        addbyte(7);
+        addbyte(0x83); /*CMP EAX, 0*/
+        addbyte(0xf8);
+        addbyte(0);
+        addbyte(0x89); /*MOV TOP, EBX*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        addbyte(0xdd); /*FSTP [ST+EBX*8]*/
+        addbyte(0x1c);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0x0f); /*SETE [tag+EBX]*/
+        addbyte(0x94);
+        addbyte(0x83);
+        addlong((uintptr_t)tag);
+}
+
+static int FP_LOAD_REG(int reg)
+{
+        addbyte(0x8b); /*MOV EBX, TOP*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        if (reg)
+        {
+                addbyte(0x83); /*ADD EBX, reg*/
+                addbyte(0xc3);
+                addbyte(reg);
+                addbyte(0x83); /*AND EBX, 7*/
+                addbyte(0xe3);
+                addbyte(7);
+        }
+        addbyte(0xdd); /*FLD ST[EBX*8]*/
+        addbyte(0x04);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0xd9); /*FSTP [ESP]*/
+        addbyte(0x1c);
+        addbyte(0x24);
+        addbyte(0x8b); /*MOV EAX, [ESP]*/
+        addbyte(0x04 | (REG_EBX << 3));
+        addbyte(0x24);
+        
+        return REG_EBX;
+}
+
+static double _fp_half = 0.5;
+
+static int FP_LOAD_REG_INT(int reg)
+{
+        addbyte(0x8b); /*MOV EBX, TOP*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        if (reg)
+        {
+                addbyte(0x83); /*ADD EBX, reg*/
+                addbyte(0xc3);
+                addbyte(reg);
+                addbyte(0x83); /*AND EBX, 7*/
+                addbyte(0xe3);
+                addbyte(7);
+        }
+        addbyte(0xdd); /*FLD ST[EBX*8]*/
+        addbyte(0x04);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        
+        /*Slightly dodgy assumption here, that the rounding mode will be the same
+          each time the block is called. It probably will be though. */
+        switch ((npxc>>10)&3)
+        {
+                case 0: /*Nearest*/
+                break;
+                case 1: /*Down*/
+                addbyte(0x9b); /*FSTCW [ESP+4]*/
+                addbyte(0xd9);
+                addbyte(0x7c);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0xbe); /*MOVL ESI, 0x400*/
+                addlong(0x400);
+                addbyte(0x0b); /*ORL ESI, [ESP+4]*/
+                addbyte(0x74);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0x81); /*ANDL ESI, ~0x800*/
+                addbyte(0xe6);
+                addlong(~0x800);
+                addbyte(0x89); /*MOVL [ESP], ESI*/
+                addbyte(0x34);
+                addbyte(0x24);
+                addbyte(0xd9); /*FLDCW [ESP]*/
+                addbyte(0x2c);
+                addbyte(0x24);
+                break;
+                case 2: /*Up*/
+                addbyte(0x9b); /*FSTCW [ESP+4]*/
+                addbyte(0xd9);
+                addbyte(0x7c);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0xbe); /*MOVL ESI, 0x800*/
+                addlong(0x800);
+                addbyte(0x0b); /*ORL ESI, [ESP+4]*/
+                addbyte(0x74);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0x81); /*ANDL ESI, ~0x400*/
+                addbyte(0xe6);
+                addlong(~0x400);
+                addbyte(0x89); /*MOVL [ESP], ESI*/
+                addbyte(0x34);
+                addbyte(0x24);
+                addbyte(0xd9); /*FLDCW [ESP]*/
+                addbyte(0x2c);
+                addbyte(0x24);
+                break;
+                case 3: /*Chop*/
+                addbyte(0x9b); /*FSTCW [ESP+4]*/
+                addbyte(0xd9);
+                addbyte(0x7c);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0xbe); /*MOVL ESI, 0x300*/
+                addlong(0x300);
+                addbyte(0x0b); /*ORL ESI, [ESP+4]*/
+                addbyte(0x74);
+                addbyte(0x24);
+                addbyte(0x04);
+                addbyte(0x89); /*MOVL [ESP], ESI*/
+                addbyte(0x34);
+                addbyte(0x24);
+                addbyte(0xd9); /*FLDCW [ESP]*/
+                addbyte(0x2c);
+                addbyte(0x24);
+                break;
+        }
+        
+        addbyte(0xdb); /*FISTPl [ESP]*/
+        addbyte(0x1c);
+        addbyte(0x24);
+
+        switch ((npxc>>10)&3)
+        {
+                case 1: /*Down*/
+                case 2: /*Up*/
+                case 3: /*Chop*/
+                addbyte(0xd9); /*FLDCW [ESP+4]*/
+                addbyte(0x6c);
+                addbyte(0x24);
+                addbyte(0x04);
+                break;
+        }
+
+        addbyte(0x8b); /*MOV EAX, [ESP]*/
+        addbyte(0x04 | (REG_EBX << 3));
+        addbyte(0x24);
+        
+        return REG_EBX;
+}
+
+static void FP_POP()
+{
+        addbyte(0xa1); /*MOV EAX, TOP*/
+        addlong((uintptr_t)&TOP);
+        addbyte(0xc6); /*MOVB tag[EAX], 3*/
+        addbyte(0x80);
+        addlong((uintptr_t)tag);
+        addbyte(3);
+        addbyte(0x04); /*ADD AL, 1*/
+        addbyte(1);
+        addbyte(0x24); /*AND AL, 7*/
+        addbyte(7);
+        addbyte(0xa2); /*MOV TOP, AL*/
+        addlong((uintptr_t)&TOP);
+}
+
+#define FPU_ADD 0x00
+#define FPU_DIV 0x30
+#define FPU_MUL 0x08
+#define FPU_SUB 0x20
+
+static void FP_OP_S(int op)
+{
+        addbyte(0x8b); /*MOV EBX, TOP*/
+        addbyte(0x1d);
+        addlong((uintptr_t)&TOP);
+        addbyte(0x89); /*MOV [ESP], EAX*/
+        addbyte(0x04);
+        addbyte(0x24);
+        addbyte(0xdd); /*FLD ST[EBX*8]*/
+        addbyte(0x04);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+        addbyte(0xd8); /*FADD [ESP]*/
+        addbyte(0x04 | op);
+        addbyte(0x24);
+        addbyte(0xdd); /*FSTP [ST+EBX*8]*/
+        addbyte(0x1c);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST);
+}
+
+static void FP_OP_REG(int op, int dst, int src)
+{
+        addbyte(0xa1); /*MOV EAX, TOP*/
+        addlong((uintptr_t)&TOP);
+        addbyte(0xbe); /*MOVL ESI, ST*/
+        addlong((uintptr_t)ST);
+        addbyte(0x89); /*MOV EBX, EAX*/
+        addbyte(0xc3);
+        if (src || dst)
+        {
+                addbyte(0x83); /*ADD EAX, 1*/
+                addbyte(0xc0);
+                addbyte(src ? src : dst);
+                addbyte(0x83); /*AND EAX, 7*/
+                addbyte(0xe0);
+                addbyte(7);
+        }
+
+        if (src)
+        {
+                addbyte(0xdd); /*FLD ST[EBX*8]*/
+                addbyte(0x04);
+                addbyte(0xde);
+                addbyte(0xdc); /*FADD ST[EAX*8]*/
+                addbyte(0x04 | op);
+                addbyte(0xc6);
+                addbyte(0xdd); /*FSTP ST[EBX*8]*/
+                addbyte(0x1c);
+                addbyte(0xde);
+        }
+        else
+        {
+                addbyte(0xdd); /*FLD [ESI+EAX*8]*/
+                addbyte(0x04);
+                addbyte(0xc6);
+                addbyte(0xdc); /*FADD ST[EBX*8]*/
+                addbyte(0x04 | op);
+                addbyte(0xde);
+                addbyte(0xdd); /*FSTP ST[EAX*8]*/
+                addbyte(0x1c);
+                addbyte(0xc6);
+        }
 }

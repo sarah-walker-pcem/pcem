@@ -112,7 +112,7 @@ extern int block_pos;
 static inline void addbyte(uint8_t val)
 {
         codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= 1800)
+        if (block_pos >= 1780)
         {
                 CPU_BLOCK_END();
         }
@@ -122,7 +122,7 @@ static inline void addword(uint16_t val)
 {
         *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 2;
-        if (block_pos >= 1800)
+        if (block_pos >= 1780)
         {
                 CPU_BLOCK_END();
         }
@@ -132,7 +132,7 @@ static inline void addlong(uint32_t val)
 {
         *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 4;
-        if (block_pos >= 1800)
+        if (block_pos >= 1780)
         {
                 CPU_BLOCK_END();
         }
@@ -148,5 +148,7 @@ extern uint32_t op_old_pc;
 /*Set to 1 if flags have been changed in the block being recompiled, and hence
   flags_op is known and can be relied on */
 extern int codegen_flags_changed;
+
+extern int codegen_fpu_entered;
 
 #endif

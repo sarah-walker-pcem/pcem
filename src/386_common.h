@@ -218,3 +218,5 @@ static inline void seteaq(uint64_t v)
 
 #define rmdat rmdat32
 #define fetchdat rmdat32
+
+void x86_int(int num);

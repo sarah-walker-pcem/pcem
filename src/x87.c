@@ -22,9 +22,28 @@
 double ST[8];
 MMX_REG MM[8];
 int ismmx;
-uint16_t npxs,npxc,tag;
+uint16_t npxs,npxc;
+uint8_t tag[8];
 
 int TOP;
+
+uint16_t x87_gettag()
+{
+        return tag[0] | (tag[1] << 2) | (tag[2] << 4) | (tag[3] << 6) |
+               (tag[4] << 8) | (tag[5] << 10) | (tag[6] << 12) | (tag[7] << 14);
+}
+
+void x87_settag(uint16_t new_tag)
+{
+        tag[0] = new_tag & 3;
+        tag[1] = (new_tag >> 2) & 3;
+        tag[2] = (new_tag >> 4) & 3;
+        tag[3] = (new_tag >> 6) & 3;
+        tag[4] = (new_tag >> 8) & 3;
+        tag[5] = (new_tag >> 10) & 3;
+        tag[6] = (new_tag >> 12) & 3;
+        tag[7] = (new_tag >> 14) & 3;
+}
 
 void x87_dumpregs()
 {
@@ -38,7 +57,7 @@ void x87_dumpregs()
                 pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",ST[TOP],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
                 pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7]);
         }
-        pclog("Status = %04X  Control = %04X  Tag = %04X\n",npxs,npxc,tag);
+        pclog("Status = %04X  Control = %04X  Tag = %04X\n",npxs,npxc,x87_gettag());
 }
 
 void x87_print()
@@ -51,7 +70,7 @@ void x87_print()
         else
         {
                 pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t",ST[TOP&7],ST[(TOP+1)&7],ST[(TOP+2)&7],ST[(TOP+3)&7]);
-                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t TOP=%i CR=%04X SR=%04X TAG=%04X\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7], TOP, npxc, npxs, tag);
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t TOP=%i CR=%04X SR=%04X TAG=%04X\n",ST[(TOP+4)&7],ST[(TOP+5)&7],ST[(TOP+6)&7],ST[(TOP+7)&7], TOP, npxc, npxs, x87_gettag());
         }
 }
 

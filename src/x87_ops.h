@@ -32,13 +32,13 @@
 static inline void x87_set_mmx()
 {
         TOP = 0;
-        tag = 0;
+        *(uint64_t *)tag = 0;
         ismmx = 1;
 }
 
 static inline void x87_emms()
 {
-        tag = 0xffff;
+        *tag = 0x0303030303030303ll;
         ismmx = 0;
 }
 
@@ -50,14 +50,13 @@ static inline void x87_push(double i)
 {
         TOP=(TOP-1)&7;
         ST[TOP]=i;
-        tag&=~(3<<((TOP&7)<<1));
-        if (i==0.0) tag|=(1<<((TOP&7)<<1));
+        tag[TOP&7] = (i == 0.0) ? 1 : 0;
 }
 
 static inline double x87_pop()
 {
         double t=ST[TOP];
-        tag|=(3<<((TOP&7)<<1));
+        tag[TOP&7] = 3;
         TOP=(TOP+1)&7;
         return t;
 }

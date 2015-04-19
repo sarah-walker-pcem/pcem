@@ -33,7 +33,7 @@ static int opFINIT(uint32_t fetchdat)
         pc++;
         npxc = 0x37F;
         npxs = 0;
-        tag = 0xFFFF;
+        *(uint64_t *)tag = 0x0303030303030303ll;
         TOP = 0;
         CLOCK_CYCLES(17);
         return 0;
@@ -45,21 +45,18 @@ static int opFFREE(uint32_t fetchdat)
         FP_ENTER();
         pc++;
         if (fplog) pclog("FFREE\n");
-        tag |= (3 << (((TOP + fetchdat) & 7) << 1));
+        tag[(TOP + fetchdat) & 7] = 3;
         CLOCK_CYCLES(3);
         return 0;
 }
 
 static int opFST(uint32_t fetchdat)
 {
-        int temp;
         FP_ENTER();
         pc++;
         if (fplog) pclog("FST\n");
         ST(fetchdat & 7) = ST(0);
-        temp = (tag >> ((TOP & 7) << 1)) & 3;
-        tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
-        tag |= (temp << (((TOP + fetchdat) & 7) << 1));
+        tag[(TOP + fetchdat) & 7] = tag[TOP & 7];
         CLOCK_CYCLES(3);
         return 0;
 }
@@ -71,9 +68,7 @@ static int opFSTP(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FSTP\n");
         ST(fetchdat & 7) = ST(0);
-        temp = (tag >> ((TOP & 7) << 1)) & 3;
-        tag &= ~(3 << (((TOP + fetchdat) & 7) << 1));
-        tag |= (temp << (((TOP + fetchdat) & 7) << 1));
+        tag[(TOP + fetchdat) & 7] = tag[TOP & 7];
         x87_pop();
         CLOCK_CYCLES(3);
         return 0;
@@ -90,7 +85,7 @@ static int FSTOR()
                 case 0x001: /*16-bit protected mode*/
                 npxc = readmemw(easeg, eaaddr);
                 npxs = readmemw(easeg, eaaddr+2);
-                tag = readmemw(easeg, eaaddr+4);
+                x87_settag(readmemw(easeg, eaaddr+4));
                 TOP = (npxs >> 11) & 7;
                 eaaddr += 14;
                 break;
@@ -98,7 +93,7 @@ static int FSTOR()
                 case 0x101: /*32-bit protected mode*/
                 npxc = readmemw(easeg, eaaddr);
                 npxs = readmemw(easeg, eaaddr+4);
-                tag = readmemw(easeg, eaaddr+8);
+                x87_settag(readmemw(easeg, eaaddr+8));
                 TOP = (npxs >> 11) & 7;
                 eaaddr += 28;
                 break;
@@ -116,11 +111,11 @@ static int FSTOR()
           something like this is needed*/
         if (MM[0].w[4] == 0xffff && MM[1].w[4] == 0xffff && MM[2].w[4] == 0xffff && MM[3].w[4] == 0xffff &&
             MM[4].w[4] == 0xffff && MM[5].w[4] == 0xffff && MM[6].w[4] == 0xffff && MM[7].w[4] == 0xffff &&
-            !TOP && !tag)
+            !TOP && !(*(uint64_t *)tag))
         ismmx = 1;
 
         CLOCK_CYCLES((cr0 & 1) ? 34 : 44);
-        if (fplog) pclog("FRSTOR %08X:%08X %i %i %04X\n", easeg, eaaddr, ismmx, TOP, tag);
+        if (fplog) pclog("FRSTOR %08X:%08X %i %i %04X\n", easeg, eaaddr, ismmx, TOP, x87_gettag());
         return abrt;
 }
 static int opFSTOR_a16(uint32_t fetchdat)
@@ -148,7 +143,7 @@ static int FSAVE()
                 case 0x000: /*16-bit real mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+2,npxs);
-                writememw(easeg,eaaddr+4,tag);
+                writememw(easeg,eaaddr+4,x87_gettag());
                 writememw(easeg,eaaddr+6,x87_pc_off);
                 writememw(easeg,eaaddr+10,x87_op_off);
                 eaaddr+=14;
@@ -178,7 +173,7 @@ static int FSAVE()
                 case 0x001: /*16-bit protected mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+2,npxs);
-                writememw(easeg,eaaddr+4,tag);
+                writememw(easeg,eaaddr+4,x87_gettag());
                 writememw(easeg,eaaddr+6,x87_pc_off);
                 writememw(easeg,eaaddr+8,x87_pc_seg);
                 writememw(easeg,eaaddr+10,x87_op_off);
@@ -210,7 +205,7 @@ static int FSAVE()
                 case 0x100: /*32-bit real mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+4,npxs);
-                writememw(easeg,eaaddr+8,tag);
+                writememw(easeg,eaaddr+8,x87_gettag());
                 writememw(easeg,eaaddr+12,x87_pc_off);
                 writememw(easeg,eaaddr+20,x87_op_off);
                 writememl(easeg,eaaddr+24,(x87_op_off>>16)<<12);
@@ -241,7 +236,7 @@ static int FSAVE()
                 case 0x101: /*32-bit protected mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+4,npxs);
-                writememw(easeg,eaaddr+8,tag);
+                writememw(easeg,eaaddr+8,x87_gettag());
                 writememl(easeg,eaaddr+12,x87_pc_off);
                 writememl(easeg,eaaddr+16,x87_pc_seg);
                 writememl(easeg,eaaddr+20,x87_op_off);
@@ -368,12 +363,12 @@ static int opFXAM(uint32_t fetchdat)
 {
         FP_ENTER();
         pc++;
-        if (fplog) pclog("FXAM %i %f\n", ((tag>>((TOP&7)<<1))&3), ST(0));
+        if (fplog) pclog("FXAM %i %f\n", tag[TOP&7], ST(0));
         npxs &= ~(C0|C2|C3);
-        if (((tag>>((TOP&7)<<1))&3)==3) npxs |= (C0|C3);
-        else if (ST(0) == 0.0)          npxs |= C3;
-        else                            npxs |= C2;
-        if (ST(0) < 0.0)                npxs |= C1;
+        if (tag[TOP&7] == 3)   npxs |= (C0|C3);
+        else if (ST(0) == 0.0) npxs |= C3;
+        else                   npxs |= C2;
+        if (ST(0) < 0.0)       npxs |= C1;
         CLOCK_CYCLES(8);
         return 0;
 }
@@ -444,7 +439,7 @@ static int opFLDZ(uint32_t fetchdat)
         pc++;
         if (fplog) pclog("FLDZ\n");
         x87_push(0.0);
-        tag |= (1<<((TOP&7)<<1));
+        tag[TOP&7] = 1;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -609,14 +604,14 @@ static int FLDENV()
                 case 0x001: /*16-bit protected mode*/
                 npxc = readmemw(easeg, eaaddr);
                 npxs = readmemw(easeg, eaaddr+2);
-                tag = readmemw(easeg, eaaddr+4);
+                x87_settag(readmemw(easeg, eaaddr+4));
                 TOP = (npxs >> 11) & 7;
                 break;
                 case 0x100: /*32-bit real mode*/
                 case 0x101: /*32-bit protected mode*/
                 npxc = readmemw(easeg, eaaddr);
                 npxs = readmemw(easeg, eaaddr+4);
-                tag = readmemw(easeg, eaaddr+8);
+                x87_settag(readmemw(easeg, eaaddr+8));
                 TOP = (npxs >> 11) & 7;
                 break;
         }
@@ -672,14 +667,14 @@ static int FSTENV()
                 case 0x000: /*16-bit real mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+2,npxs);
-                writememw(easeg,eaaddr+4,tag);
+                writememw(easeg,eaaddr+4,x87_gettag());
                 writememw(easeg,eaaddr+6,x87_pc_off);
                 writememw(easeg,eaaddr+10,x87_op_off);
                 break;
                 case 0x001: /*16-bit protected mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+2,npxs);
-                writememw(easeg,eaaddr+4,tag);
+                writememw(easeg,eaaddr+4,x87_gettag());
                 writememw(easeg,eaaddr+6,x87_pc_off);
                 writememw(easeg,eaaddr+8,x87_pc_seg);
                 writememw(easeg,eaaddr+10,x87_op_off);
@@ -688,7 +683,7 @@ static int FSTENV()
                 case 0x100: /*32-bit real mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+4,npxs);
-                writememw(easeg,eaaddr+8,tag);
+                writememw(easeg,eaaddr+8,x87_gettag());
                 writememw(easeg,eaaddr+12,x87_pc_off);
                 writememw(easeg,eaaddr+20,x87_op_off);
                 writememl(easeg,eaaddr+24,(x87_op_off>>16)<<12);
@@ -696,7 +691,7 @@ static int FSTENV()
                 case 0x101: /*32-bit protected mode*/
                 writememw(easeg,eaaddr,npxc);
                 writememw(easeg,eaaddr+4,npxs);
-                writememw(easeg,eaaddr+8,tag);
+                writememw(easeg,eaaddr+8,x87_gettag());
                 writememl(easeg,eaaddr+12,x87_pc_off);
                 writememl(easeg,eaaddr+16,x87_pc_seg);
                 writememl(easeg,eaaddr+20,x87_op_off);
