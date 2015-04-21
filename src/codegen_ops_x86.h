@@ -1226,7 +1226,11 @@ static void FP_ENTER()
         addlong((uintptr_t)&cr0);
         addbyte(0xc);
         addbyte(0x74); /*JZ +*/
-        addbyte(7+5+5);
+        addbyte(10+7+5+5);
+        addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&oldpc);
+        addlong(op_old_pc);
         addbyte(0xc7); /*MOV [ESP], 7*/
         addbyte(0x04);
         addbyte(0x24);
