@@ -1562,8 +1562,8 @@ static int FP_LOAD_REG_INT(int reg)
                 addbyte(0x7c);
                 addbyte(0x24);
                 addbyte(0x04);
-                addbyte(0xbe); /*MOVL ESI, 0x300*/
-                addlong(0x300);
+                addbyte(0xbe); /*MOVL ESI, 0xc00*/
+                addlong(0xc00);
                 addbyte(0x0b); /*ORL ESI, [ESP+4]*/
                 addbyte(0x74);
                 addbyte(0x24);
