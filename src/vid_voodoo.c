@@ -752,7 +752,9 @@ static void voodoo_recalc(voodoo_t *voodoo)
                 break;
 
                 default:
-                fatal("voodoo_recalc : unknown lfb destination\n");
+                /*BreakNeck sets invalid LFB write buffer select*/
+                voodoo->fb_write_offset = voodoo->params.front_offset;
+                break;
         }
 
         switch (voodoo->lfbMode & LFB_READ_MASK)
