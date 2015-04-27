@@ -32,6 +32,10 @@ typedef struct rgb_t
 {
         uint8_t r, g, b;
 } rgb_t;
+typedef struct rgba8_t
+{
+        uint8_t r, g, b, a;
+} rgba8_t;
 
 typedef union rgba_u
 {
@@ -68,7 +72,7 @@ typedef struct
         uint32_t val;
 } fifo_entry_t;
 
-static rgba_u rgb332[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000];
+static rgba8_t rgb332[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000];
 
 typedef struct voodoo_params_t
 {
@@ -206,7 +210,8 @@ typedef struct voodoo_t
         
         int voodoo_busy;
         
-        int pixel_count, tri_count;
+        int pixel_count, tri_count, frame_count;
+        int wr_count, rd_count, tex_count;
         
         int retrace_count;
         int swap_interval;
@@ -843,7 +848,7 @@ typedef struct voodoo_state_t
         int y, yend, ydir;
         int32_t dxAB, dxAC, dxBC;
         int tex_r, tex_g, tex_b, tex_a;
-        int64_t tex_s, tex_t;
+        int tex_s, tex_t;
         int clamp_s, clamp_t;
         
         uint8_t *tex;
@@ -888,11 +893,6 @@ static inline int fls(uint16_t val)
         return num;
 }
 
-typedef struct rgba_t
-{
-        int r, g, b, a;
-} rgba_t;
-
 typedef struct voodoo_texture_state_t
 {
         int s, t;
@@ -900,7 +900,7 @@ typedef struct voodoo_texture_state_t
         int tex_shift;
 } voodoo_texture_state_t;
 
-static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *texture_state, rgba_u *out)
+static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *texture_state)
 {
         uint16_t dat;
         
@@ -937,51 +937,209 @@ static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *textu
         switch (state->tformat)
         {
                 case TEX_RGB332:
-                out->u = rgb332[dat].u;
+                state->tex_r = rgb332[dat].r;
+                state->tex_g = rgb332[dat].g;
+                state->tex_b = rgb332[dat].b;
+                state->tex_a = 0xff;
                 break;
                                                 
                 case TEX_Y4I2Q2:
-                out->u = state->palette[dat].u;
+                state->tex_r = state->palette[dat].rgba.r;
+                state->tex_g = state->palette[dat].rgba.g;
+                state->tex_b = state->palette[dat].rgba.b;
+                state->tex_a = 0xff;
                 break;
                                                         
                 case TEX_A8:
-                out->rgba.r = out->rgba.g = out->rgba.b = out->rgba.a = dat & 0xff;
+                state->tex_r = state->tex_g = state->tex_b = state->tex_a = dat & 0xff;
                 break;
 
                 case TEX_I8:
-                out->rgba.r = out->rgba.g = out->rgba.b = dat & 0xff;
-                out->rgba.a = 0xff;
+                state->tex_r = state->tex_g = state->tex_b = dat & 0xff;
+                state->tex_a = 0xff;
                 break;
 
                 case TEX_AI8:
-                out->rgba.r = out->rgba.g = out->rgba.b = (dat & 0x0f) | ((dat << 4) & 0xf0);
-                out->rgba.a = (dat & 0xf0) | ((dat >> 4) & 0x0f);
+                state->tex_r = state->tex_g = state->tex_b = (dat & 0x0f) | ((dat << 4) & 0xf0);
+                state->tex_a = (dat & 0xf0) | ((dat >> 4) & 0x0f);
                 break;
                                                 
                 case TEX_PAL8:
-                out->u = state->palette[dat].u;
+                state->tex_r = state->palette[dat].rgba.r;
+                state->tex_g = state->palette[dat].rgba.g;
+                state->tex_b = state->palette[dat].rgba.b;
+                state->tex_a = 0xff;
                 break;
                                                         
                 case TEX_R5G6B5:
-                out->u = rgb565[dat].u;
+                state->tex_r = rgb565[dat].r;
+                state->tex_g = rgb565[dat].g;
+                state->tex_b = rgb565[dat].b;
+                state->tex_a = 0xff;
                 break;
 
                 case TEX_ARGB1555:
-                out->u = argb1555[dat].u;
+                state->tex_r = argb1555[dat].r;
+                state->tex_g = argb1555[dat].g;
+                state->tex_b = argb1555[dat].b;
+                state->tex_a = argb1555[dat].a;
                 break;
 
                 case TEX_ARGB4444:
-                out->u = argb4444[dat].u;
+                state->tex_r = argb4444[dat].r;
+                state->tex_g = argb4444[dat].g;
+                state->tex_b = argb4444[dat].b;
+                state->tex_a = argb4444[dat].a;
                 break;
                                                         
                 case TEX_A8I8:
-                out->rgba.r = out->rgba.g = out->rgba.b = dat & 0xff;
-                out->rgba.a = dat >> 8;
+                state->tex_r = state->tex_g = state->tex_b = dat & 0xff;
+                state->tex_a = dat >> 8;
                 break;
 
                 case TEX_APAL88:
-                out->u = state->palette[dat & 0xff].u;
-                out->rgba.a = dat >> 8;
+                state->tex_r = state->palette[dat].rgba.r;
+                state->tex_g = state->palette[dat].rgba.g;
+                state->tex_b = state->palette[dat].rgba.b;
+                state->tex_a = dat >> 8;
+                break;
+                                                        
+                default:
+                fatal("Unknown texture format %i\n", state->tformat);
+        }
+}
+
+#define LOW4(x)  ((x & 0x0f) | ((x & 0x0f) << 4))
+#define HIGH4(x) ((x & 0xf0) | ((x & 0xf0) >> 4))
+
+static inline void tex_read_4(voodoo_state_t *state, voodoo_texture_state_t *texture_state, int s, int t, int *d)
+{
+        uint16_t dat[4];
+
+        if (((s | (s + 1)) & ~texture_state->w_mask) || ((t | (t + 1)) & ~texture_state->h_mask))
+        {
+                int c;
+                for (c = 0; c < 4; c++)
+                {
+                        int _s = s + (c & 1);
+                        int _t = t + ((c & 2) >> 1);
+                
+                        if (_s & ~texture_state->w_mask)
+                        {
+                                if (state->clamp_s)
+                                {
+                                        if (_s < 0)
+                                                _s = 0;
+                                        if (_s > texture_state->w_mask)
+                                                _s = texture_state->w_mask;
+                                }
+                                else
+                                        _s &= texture_state->w_mask;
+                        }
+                        if (_t & ~texture_state->h_mask)
+                        {
+                                if (state->clamp_t)
+                                {
+                                        if (_t < 0)
+                                                _t = 0;
+                                        if (_t > texture_state->h_mask)
+                                                _t = texture_state->h_mask;
+                                }
+                                else
+                                        _t &= texture_state->h_mask;
+                        }
+                        if (state->tformat & 8)
+                                dat[c] = state->tex_w[_s + (_t << texture_state->tex_shift)];
+                        else
+                                dat[c] = state->tex[_s + (_t << texture_state->tex_shift)];
+                }
+        }
+        else
+        {
+                if (state->tformat & 8)
+                {
+                        dat[0] = state->tex_w[s +     (t << texture_state->tex_shift)];
+                        dat[1] = state->tex_w[s + 1 + (t << texture_state->tex_shift)];
+                        dat[2] = state->tex_w[s +     ((t + 1) << texture_state->tex_shift)];
+                        dat[3] = state->tex_w[s + 1 + ((t + 1) << texture_state->tex_shift)];
+                }
+                else
+                {
+                        dat[0] = state->tex[s +     (t << texture_state->tex_shift)];
+                        dat[1] = state->tex[s + 1 + (t << texture_state->tex_shift)];
+                        dat[2] = state->tex[s +     ((t + 1) << texture_state->tex_shift)];
+                        dat[3] = state->tex[s + 1 + ((t + 1) << texture_state->tex_shift)];
+                }
+        }
+
+        switch (state->tformat)
+        {
+                case TEX_RGB332:
+                state->tex_r = (rgb332[dat[0]].r * d[0] + rgb332[dat[1]].r * d[1] + rgb332[dat[2]].r * d[2] + rgb332[dat[3]].r * d[3]) >> 8;
+                state->tex_g = (rgb332[dat[0]].g * d[0] + rgb332[dat[1]].g * d[1] + rgb332[dat[2]].g * d[2] + rgb332[dat[3]].g * d[3]) >> 8;
+                state->tex_b = (rgb332[dat[0]].b * d[0] + rgb332[dat[1]].b * d[1] + rgb332[dat[2]].b * d[2] + rgb332[dat[3]].b * d[3]) >> 8;
+                state->tex_a = 0xff;
+                break;
+                                                
+                case TEX_Y4I2Q2:
+                state->tex_r = (state->palette[dat[0]].rgba.r * d[0] + state->palette[dat[1]].rgba.r * d[1] + state->palette[dat[2]].rgba.r * d[2] + state->palette[dat[3]].rgba.r * d[3]) >> 8;
+                state->tex_g = (state->palette[dat[0]].rgba.g * d[0] + state->palette[dat[1]].rgba.g * d[1] + state->palette[dat[2]].rgba.g * d[2] + state->palette[dat[3]].rgba.g * d[3]) >> 8;
+                state->tex_b = (state->palette[dat[0]].rgba.b * d[0] + state->palette[dat[1]].rgba.b * d[1] + state->palette[dat[2]].rgba.b * d[2] + state->palette[dat[3]].rgba.b * d[3]) >> 8;
+                state->tex_a = 0xff;
+                break;
+                                                        
+                case TEX_A8:
+                state->tex_r = state->tex_g = state->tex_b = state->tex_a = (dat[0] * d[0] + dat[1] * d[1] + dat[2] * d[2] + dat[3] * d[3]) >> 8;
+                break;
+
+                case TEX_I8:
+                state->tex_r = state->tex_g = state->tex_b = (dat[0] * d[0] + dat[1] * d[1] + dat[2] * d[2] + dat[3] * d[3]) >> 8;
+                state->tex_a = 0xff;
+                break;
+
+                case TEX_AI8:
+                state->tex_r = state->tex_g = state->tex_b = (LOW4(dat[0]) * d[0] + LOW4(dat[1]) * d[1] + LOW4(dat[2]) * d[2] + LOW4(dat[3]) * d[3]) >> 8;
+                state->tex_a = (HIGH4(dat[0]) * d[0] + HIGH4(dat[1]) * d[1] + HIGH4(dat[2]) * d[2] + HIGH4(dat[3]) * d[3]) >> 8;
+                break;
+                                                
+                case TEX_PAL8:
+                state->tex_r = (state->palette[dat[0]].rgba.r * d[0] + state->palette[dat[1]].rgba.r * d[1] + state->palette[dat[2]].rgba.r * d[2] + state->palette[dat[3]].rgba.r * d[3]) >> 8;
+                state->tex_g = (state->palette[dat[0]].rgba.g * d[0] + state->palette[dat[1]].rgba.g * d[1] + state->palette[dat[2]].rgba.g * d[2] + state->palette[dat[3]].rgba.g * d[3]) >> 8;
+                state->tex_b = (state->palette[dat[0]].rgba.b * d[0] + state->palette[dat[1]].rgba.b * d[1] + state->palette[dat[2]].rgba.b * d[2] + state->palette[dat[3]].rgba.b * d[3]) >> 8;
+                state->tex_a = 0xff;
+                break;
+                                                        
+                case TEX_R5G6B5:
+                state->tex_r = (rgb565[dat[0]].r * d[0] + rgb565[dat[1]].r * d[1] + rgb565[dat[2]].r * d[2] + rgb565[dat[3]].r * d[3]) >> 8;
+                state->tex_g = (rgb565[dat[0]].g * d[0] + rgb565[dat[1]].g * d[1] + rgb565[dat[2]].g * d[2] + rgb565[dat[3]].g * d[3]) >> 8;
+                state->tex_b = (rgb565[dat[0]].b * d[0] + rgb565[dat[1]].b * d[1] + rgb565[dat[2]].b * d[2] + rgb565[dat[3]].b * d[3]) >> 8;
+                state->tex_a = 0xff;
+                break;
+
+                case TEX_ARGB1555:
+                state->tex_r = (argb1555[dat[0]].r * d[0] + argb1555[dat[1]].r * d[1] + argb1555[dat[2]].r * d[2] + argb1555[dat[3]].r * d[3]) >> 8;
+                state->tex_g = (argb1555[dat[0]].g * d[0] + argb1555[dat[1]].g * d[1] + argb1555[dat[2]].g * d[2] + argb1555[dat[3]].g * d[3]) >> 8;
+                state->tex_b = (argb1555[dat[0]].b * d[0] + argb1555[dat[1]].b * d[1] + argb1555[dat[2]].b * d[2] + argb1555[dat[3]].b * d[3]) >> 8;
+                state->tex_a = (argb1555[dat[0]].a * d[0] + argb1555[dat[1]].a * d[1] + argb1555[dat[2]].a * d[2] + argb1555[dat[3]].a * d[3]) >> 8;
+                break;
+
+                case TEX_ARGB4444:
+                state->tex_r = (argb4444[dat[0]].r * d[0] + argb4444[dat[1]].r * d[1] + argb4444[dat[2]].r * d[2] + argb4444[dat[3]].r * d[3]) >> 8;
+                state->tex_g = (argb4444[dat[0]].g * d[0] + argb4444[dat[1]].g * d[1] + argb4444[dat[2]].g * d[2] + argb4444[dat[3]].g * d[3]) >> 8;
+                state->tex_b = (argb4444[dat[0]].b * d[0] + argb4444[dat[1]].b * d[1] + argb4444[dat[2]].b * d[2] + argb4444[dat[3]].b * d[3]) >> 8;
+                state->tex_a = (argb4444[dat[0]].a * d[0] + argb4444[dat[1]].a * d[1] + argb4444[dat[2]].a * d[2] + argb4444[dat[3]].a * d[3]) >> 8;
+                break;
+                                                        
+                case TEX_A8I8:
+                state->tex_r = state->tex_g = state->tex_b = ((dat[0] & 0xff) * d[0] + (dat[1] & 0xff) * d[1] + (dat[2] & 0xff) * d[2] + (dat[3] & 0xff) * d[3]) >> 8;
+                state->tex_a = ((dat[0] >> 8) * d[0] + (dat[1] >> 8) * d[1] + (dat[2] >> 8) * d[2] + (dat[3] >> 8) * d[3]) >> 8;
+                break;
+
+                case TEX_APAL88:
+                state->tex_r = (state->palette[dat[0] & 0xff].rgba.r * d[0] + state->palette[dat[1] & 0xff].rgba.r * d[1] + state->palette[dat[2] & 0xff].rgba.r * d[2] + state->palette[dat[3] & 0xff].rgba.r * d[3]) >> 8;
+                state->tex_g = (state->palette[dat[0] & 0xff].rgba.g * d[0] + state->palette[dat[1] & 0xff].rgba.g * d[1] + state->palette[dat[2] & 0xff].rgba.g * d[2] + state->palette[dat[3] & 0xff].rgba.g * d[3]) >> 8;
+                state->tex_b = (state->palette[dat[0] & 0xff].rgba.b * d[0] + state->palette[dat[1] & 0xff].rgba.b * d[1] + state->palette[dat[2] & 0xff].rgba.b * d[2] + state->palette[dat[3] & 0xff].rgba.b * d[3]) >> 8;
+                state->tex_a = ((dat[0] >> 8) * d[0] + (dat[1] >> 8) * d[1] + (dat[2] >> 8) * d[2] + (dat[3] >> 8) * d[3]) >> 8;
                 break;
                                                         
                 default:
@@ -994,7 +1152,6 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
         rgba_u tex_samples[4];
         voodoo_texture_state_t texture_state;
         int d[4];
-        int _ds, dt;
         int s, t;
 
         texture_state.w_mask = state->tex_w_mask[state->lod];
@@ -1003,45 +1160,37 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
         
         if (voodoo->bilinear_enabled && params->textureMode & 6)
         {
-                
-                state->tex_s -= 1 << (17+state->lod);
-                state->tex_t -= 1 << (17+state->lod);
+                int _ds, dt;
+                        
+                state->tex_s -= 1 << (3+state->lod);
+                state->tex_t -= 1 << (3+state->lod);
         
-                s = state->tex_s >> (18+state->lod);
-                t = state->tex_t >> (18+state->lod);
+                s = state->tex_s >> state->lod;
+                t = state->tex_t >> state->lod;
 
-                _ds = (state->tex_s >> (14+state->lod)) & 0xf;
-                dt = (state->tex_t >> (14+state->lod)) & 0xf;
+                _ds = s & 0xf;
+                dt = t & 0xf;
 
+                s >>= 4;
+                t >>= 4;
+                
 //if (x == 80)
 //if (voodoo_output)
 //        pclog("s=%08x t=%08x _ds=%02x _dt=%02x\n", s, t, _ds, dt);
-
-                texture_state.s = s;
-                texture_state.t = t;
-                tex_read(state, &texture_state, &tex_samples[0]);
-
-                texture_state.s = s+1;
-                texture_state.t = t;
-                tex_read(state, &texture_state, &tex_samples[1]);
-
-                texture_state.s = s;
-                texture_state.t = t+1;
-                tex_read(state, &texture_state, &tex_samples[2]);
-
-                texture_state.s = s+1;
-                texture_state.t = t+1;
-                tex_read(state, &texture_state, &tex_samples[3]);
-
                 d[0] = (16 - _ds) * (16 - dt);
                 d[1] =  _ds * (16 - dt);
                 d[2] = (16 - _ds) * dt;
                 d[3] = _ds * dt;
+
+//                texture_state.s = s;
+//                texture_state.t = t;
+                tex_read_4(state, &texture_state, s, t, d);
+
         
-                state->tex_r = (tex_samples[0].rgba.r * d[0] + tex_samples[1].rgba.r * d[1] + tex_samples[2].rgba.r * d[2] + tex_samples[3].rgba.r * d[3]) >> 8;
+/*                state->tex_r = (tex_samples[0].rgba.r * d[0] + tex_samples[1].rgba.r * d[1] + tex_samples[2].rgba.r * d[2] + tex_samples[3].rgba.r * d[3]) >> 8;
                 state->tex_g = (tex_samples[0].rgba.g * d[0] + tex_samples[1].rgba.g * d[1] + tex_samples[2].rgba.g * d[2] + tex_samples[3].rgba.g * d[3]) >> 8;
                 state->tex_b = (tex_samples[0].rgba.b * d[0] + tex_samples[1].rgba.b * d[1] + tex_samples[2].rgba.b * d[2] + tex_samples[3].rgba.b * d[3]) >> 8;
-                state->tex_a = (tex_samples[0].rgba.a * d[0] + tex_samples[1].rgba.a * d[1] + tex_samples[2].rgba.a * d[2] + tex_samples[3].rgba.a * d[3]) >> 8;
+                state->tex_a = (tex_samples[0].rgba.a * d[0] + tex_samples[1].rgba.a * d[1] + tex_samples[2].rgba.a * d[2] + tex_samples[3].rgba.a * d[3]) >> 8;*/
 /*                state->tex_r = tex_samples[0].r;
                 state->tex_g = tex_samples[0].g;
                 state->tex_b = tex_samples[0].b;
@@ -1058,24 +1207,50 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 //                state->tex_s -= 1 << (17+state->lod);
 //                state->tex_t -= 1 << (17+state->lod);
         
-                s = state->tex_s >> (18+state->lod);
-                t = state->tex_t >> (18+state->lod);
+                s = state->tex_s >> (4+state->lod);
+                t = state->tex_t >> (4+state->lod);
 
                 texture_state.s = s;
                 texture_state.t = t;
-                tex_read(state, &texture_state, &tex_samples[0]);
+                tex_read(state, &texture_state);
 
-                state->tex_r = tex_samples[0].rgba.r;
+/*                state->tex_r = tex_samples[0].rgba.r;
                 state->tex_g = tex_samples[0].rgba.g;
                 state->tex_b = tex_samples[0].rgba.b;
-                state->tex_a = tex_samples[0].rgba.a;
+                state->tex_a = tex_samples[0].rgba.a;*/
         }
 }
 
 
+#define _rgb_sel                 ( params->fbzColorPath & 3)
+#define a_sel                   ( (params->fbzColorPath >> 2) & 3)
+#define cc_localselect          ( params->fbzColorPath & (1 << 4))
+#define cca_localselect         ( (params->fbzColorPath >> 5) & 3)
+#define cc_localselect_override ( params->fbzColorPath & (1 << 7))
+#define cc_zero_other           ( params->fbzColorPath & (1 << 8))
+#define cc_sub_clocal           ( params->fbzColorPath & (1 << 9))
+#define cc_mselect              ( (params->fbzColorPath >> 10) & 7)
+#define cc_reverse_blend        ( params->fbzColorPath & (1 << 13))
+#define cc_add                  ( (params->fbzColorPath >> 14) & 3)
+#define cc_add_alocal           ( params->fbzColorPath & (1 << 15))
+#define cc_invert_output        ( params->fbzColorPath & (1 << 16))
+#define cca_zero_other          ( params->fbzColorPath & (1 << 17))
+#define cca_sub_clocal          ( params->fbzColorPath & (1 << 18))
+#define cca_mselect             ( (params->fbzColorPath >> 19) & 7)
+#define cca_reverse_blend       ( params->fbzColorPath & (1 << 22))
+#define cca_add                 ( (params->fbzColorPath >> 23) & 3)
+#define cca_invert_output       ( params->fbzColorPath & (1 << 25))
+#define src_afunc ( (params->alphaMode >> 8) & 0xf)
+#define dest_afunc ( (params->alphaMode >> 12) & 0xf)
+#define alpha_func ( (params->alphaMode >> 1) & 7)
+#define a_ref ( params->alphaMode >> 24)
+#define depth_op ( (params->fbzMode >> 5) & 7)
+#define dither ( params->fbzMode & FBZ_DITHER)
+
+
 static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, voodoo_state_t *state, int ystart, int yend)
 {
-        int rgb_sel                 = params->fbzColorPath & 3;
+/*        int rgb_sel                 = params->fbzColorPath & 3;
         int a_sel                   = (params->fbzColorPath >> 2) & 3;
         int cc_localselect          = params->fbzColorPath & (1 << 4);
         int cca_localselect         = (params->fbzColorPath >> 5) & 3;
@@ -1098,7 +1273,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         int alpha_func = (params->alphaMode >> 1) & 7;
         int a_ref = params->alphaMode >> 24;
         int depth_op = (params->fbzMode >> 5) & 7;
-        int dither = params->fbzMode & FBZ_DITHER;
+        int dither = params->fbzMode & FBZ_DITHER;*/
         
         state->clamp_s = params->textureMode & TEXTUREMODE_TCLAMPS;
         state->clamp_t = params->textureMode & TEXTUREMODE_TCLAMPT;
@@ -1261,36 +1436,36 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 //                        if (voodoo->fbzMode & FBZ_RGB_WMASK)
                         {
                                 int update = 1;
-                                int cother_r, cother_g, cother_b, aother;
-                                int clocal_r, clocal_g, clocal_b, alocal;
+                                uint8_t cother_r, cother_g, cother_b, aother;
+                                uint8_t clocal_r, clocal_g, clocal_b, alocal;
                                 int src_r, src_g, src_b, src_a;
                                 int msel_r, msel_g, msel_b, msel_a;
-                                int dest_r, dest_g, dest_b, dest_a;
+                                uint8_t dest_r, dest_g, dest_b, dest_a;
                                 uint16_t dat;
                                 uint16_t aux_dat;
                                 int sel;
                                 int32_t new_depth, w_depth;
-                                int exp, mant;
 
                                 if (w & 0xffff00000000)
-                                        w_depth = 0xfffff000;
+                                        w_depth = 0;
                                 else if (!(w & 0xffff0000))
                                         w_depth = 0xf001;
                                 else
                                 {
-                                        exp = fls((uint16_t)(w >> 16));
-                                        mant = ((~w >> (19 - exp))) & 0xfff;
+                                        int exp = fls((uint16_t)((uint32_t)w >> 16));
+                                        int mant = ((~(uint32_t)w >> (19 - exp))) & 0xfff;
                                         w_depth = (exp << 12) + mant + 1;
+                                        if (w_depth > 0xffff)
+                                                w_depth = 0xffff;
                                 }
 
+//                                w_depth = CLAMP16(w_depth);
+                                
                                 if (params->fbzMode & FBZ_W_BUFFER)
                                         new_depth = w_depth;
                                 else
-                                        new_depth = z >> 12;
+                                        new_depth = CLAMP16(z >> 12);
                                 
-                                new_depth = CLAMP16(new_depth);
-                                w_depth = CLAMP16(w_depth);
-
                                 if (params->fbzMode & FBZ_DEPTH_ENABLE)
                                 {
                                         uint16_t old_depth = aux_mem[x];
@@ -1341,16 +1516,16 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 if (params->textureMode & 1)
                                 {
                                         int64_t _w = 0;
-                                        if (w)
+                                        if (tmu0_w)
                                                 _w = (int64_t)((1ULL << 48) / tmu0_w);
 
-                                        state->tex_s = (int32_t)((tmu0_s * _w) >> 16);
-                                        state->tex_t = (int32_t)((tmu0_t * _w) >> 16);
+                                        state->tex_s = (int32_t)((tmu0_s * _w) >> 30);
+                                        state->tex_t = (int32_t)((tmu0_t * _w) >> 30);
                                 }
                                 else
                                 {
-                                        state->tex_s = tmu0_s;
-                                        state->tex_t = tmu0_t;
+                                        state->tex_s = (int32_t)(tmu0_s >> 14);
+                                        state->tex_t = (int32_t)(tmu0_t >> 14);
                                 }
 
                                 voodoo_get_texture(voodoo, params, state);
@@ -1385,7 +1560,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         clocal_b = CLAMP(ib >> 12);
                                 }
 
-                                switch (rgb_sel)
+                                switch (_rgb_sel)
                                 {
                                         case CC_LOCALSELECT_ITER_RGB: /*Iterated RGB*/
                                         cother_r = CLAMP(ir >> 12);
@@ -2847,7 +3022,7 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
         voodoo_t *voodoo = (voodoo_t *)p;
         uint32_t temp;
         int fifo_size;
-
+        voodoo->rd_count++;
         addr &= 0xffffff;
         
         if (addr & 0x800000) /*Texture*/
@@ -2911,7 +3086,7 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
 static void voodoo_writew(uint32_t addr, uint16_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
-
+        voodoo->wr_count++;
         addr &= 0xffffff;
 
         if ((addr & 0xc00000) == 0x400000) /*Framebuffer*/
@@ -2921,11 +3096,12 @@ static void voodoo_writew(uint32_t addr, uint16_t val, void *p)
 static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
-        
+        voodoo->wr_count++;
         addr &= 0xffffff;
 
         if (addr & 0x800000) /*Texture*/
         {
+        voodoo->tex_count++;
                 queue_command(voodoo, addr | FIFO_WRITEL_TEX, val);
         }
         else if (addr & 0x400000) /*Framebuffer*/
@@ -3166,6 +3342,7 @@ void voodoo_callback(void *p)
                                 voodoo->swap_count--;
                                 voodoo->swap_pending = 0;
                                 thread_set_event(voodoo->wake_render_thread);
+                                voodoo->frame_count++;
                         }
                 }
         }
@@ -3197,10 +3374,11 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
                 status_diff = 1;
 
         svga_add_status_info(s, max_len, &voodoo->svga);
-        sprintf(temps, "%f Mpixels/sec\n%f ktris/sec\n%f%% CPU\n%f%% CPU (real)\n\n", (double)voodoo->pixel_count/1000000.0, (double)voodoo->tri_count/1000.0, ((double)voodoo_time * 100.0) / timer_freq, ((double)voodoo_time * 100.0) / status_diff);
+        sprintf(temps, "%f Mpixels/sec\n%f ktris/sec\n%f%% CPU (%f%% real)\n%d frames/sec\n%d reads/sec\n%d write/sec\n%d tex/sec\n", (double)voodoo->pixel_count/1000000.0, (double)voodoo->tri_count/1000.0, ((double)voodoo_time * 100.0) / timer_freq, ((double)voodoo_time * 100.0) / status_diff, voodoo->frame_count, voodoo->rd_count, voodoo->wr_count, voodoo->tex_count);
         strncat(s, temps, max_len);
 
-        voodoo->pixel_count = voodoo->tri_count = 0;
+        voodoo->pixel_count = voodoo->tri_count = voodoo->frame_count = 0;
+        voodoo->rd_count = voodoo->wr_count = voodoo->tex_count = 0;
         voodoo_time = 0;
 }
 
@@ -3232,42 +3410,42 @@ void *voodoo_init()
 
         for (c = 0; c < 0x100; c++)
         {
-                rgb332[c].rgba.r = c & 0xe0;
-                rgb332[c].rgba.g = (c << 3) & 0xe0;
-                rgb332[c].rgba.b = (c << 6) & 0xc0;
-                rgb332[c].rgba.r = rgb332[c].rgba.r | (rgb332[c].rgba.r >> 3) | (rgb332[c].rgba.r >> 6);
-                rgb332[c].rgba.g = rgb332[c].rgba.g | (rgb332[c].rgba.g >> 3) | (rgb332[c].rgba.g >> 6);
-                rgb332[c].rgba.b = rgb332[c].rgba.b | (rgb332[c].rgba.b >> 2);
-                rgb332[c].rgba.b = rgb332[c].rgba.b | (rgb332[c].rgba.b >> 4);
-                rgb332[c].rgba.a = 0xff;
+                rgb332[c].r = c & 0xe0;
+                rgb332[c].g = (c << 3) & 0xe0;
+                rgb332[c].b = (c << 6) & 0xc0;
+                rgb332[c].r = rgb332[c].r | (rgb332[c].r >> 3) | (rgb332[c].r >> 6);
+                rgb332[c].g = rgb332[c].g | (rgb332[c].g >> 3) | (rgb332[c].g >> 6);
+                rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 2);
+                rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 4);
+                rgb332[c].a = 0xff;
         }
                 
         for (c = 0; c < 0x10000; c++)
         {
-                rgb565[c].rgba.r = (c >> 8) & 0xf8;
-                rgb565[c].rgba.g = (c >> 3) & 0xfc;
-                rgb565[c].rgba.b = (c << 3) & 0xf8;
-                rgb565[c].rgba.r |= (rgb565[c].rgba.r >> 5);
-                rgb565[c].rgba.g |= (rgb565[c].rgba.g >> 6);
-                rgb565[c].rgba.b |= (rgb565[c].rgba.b >> 5);
-                rgb565[c].rgba.a = 0xff;
+                rgb565[c].r = (c >> 8) & 0xf8;
+                rgb565[c].g = (c >> 3) & 0xfc;
+                rgb565[c].b = (c << 3) & 0xf8;
+                rgb565[c].r |= (rgb565[c].r >> 5);
+                rgb565[c].g |= (rgb565[c].g >> 6);
+                rgb565[c].b |= (rgb565[c].b >> 5);
+                rgb565[c].a = 0xff;
 
-                argb1555[c].rgba.r = (c >> 7) & 0xf8;
-                argb1555[c].rgba.g = (c >> 2) & 0xf8;
-                argb1555[c].rgba.b = (c << 3) & 0xf8;
-                argb1555[c].rgba.r |= (argb1555[c].rgba.r >> 5);
-                argb1555[c].rgba.g |= (argb1555[c].rgba.g >> 5);
-                argb1555[c].rgba.b |= (argb1555[c].rgba.b >> 5);
-                argb1555[c].rgba.a = (c & 0x8000) ? 0xff : 0;
+                argb1555[c].r = (c >> 7) & 0xf8;
+                argb1555[c].g = (c >> 2) & 0xf8;
+                argb1555[c].b = (c << 3) & 0xf8;
+                argb1555[c].r |= (argb1555[c].r >> 5);
+                argb1555[c].g |= (argb1555[c].g >> 5);
+                argb1555[c].b |= (argb1555[c].b >> 5);
+                argb1555[c].a = (c & 0x8000) ? 0xff : 0;
 
-                argb4444[c].rgba.a = (c >> 8) & 0xf0;
-                argb4444[c].rgba.r = (c >> 4) & 0xf0;
-                argb4444[c].rgba.g = c & 0xf0;
-                argb4444[c].rgba.b = (c << 4) & 0xf0;
-                argb4444[c].rgba.a |= (argb4444[c].rgba.a >> 4);
-                argb4444[c].rgba.r |= (argb4444[c].rgba.r >> 4);
-                argb4444[c].rgba.g |= (argb4444[c].rgba.g >> 4);
-                argb4444[c].rgba.b |= (argb4444[c].rgba.b >> 4);
+                argb4444[c].a = (c >> 8) & 0xf0;
+                argb4444[c].r = (c >> 4) & 0xf0;
+                argb4444[c].g = c & 0xf0;
+                argb4444[c].b = (c << 4) & 0xf0;
+                argb4444[c].a |= (argb4444[c].a >> 4);
+                argb4444[c].r |= (argb4444[c].r >> 4);
+                argb4444[c].g |= (argb4444[c].g >> 4);
+                argb4444[c].b |= (argb4444[c].b >> 4);
         }
 
         return voodoo;
