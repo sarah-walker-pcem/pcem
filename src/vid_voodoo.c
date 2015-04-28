@@ -1000,9 +1000,9 @@ static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *textu
                 break;
 
                 case TEX_APAL88:
-                state->tex_r = state->palette[dat].rgba.r;
-                state->tex_g = state->palette[dat].rgba.g;
-                state->tex_b = state->palette[dat].rgba.b;
+                state->tex_r = state->palette[dat & 0xff].rgba.r;
+                state->tex_g = state->palette[dat & 0xff].rgba.g;
+                state->tex_b = state->palette[dat & 0xff].rgba.b;
                 state->tex_a = dat >> 8;
                 break;
                                                         
