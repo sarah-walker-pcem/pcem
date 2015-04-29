@@ -511,9 +511,10 @@ enum
         FBZ_W_BUFFER = (1 << 3),
         FBZ_DEPTH_ENABLE = (1 << 4),
         
-        FBZ_DITHER  = 0x100,
-        FBZ_RGB_WMASK = (1 << 9),
+        FBZ_DITHER      = (1 << 8),
+        FBZ_RGB_WMASK   = (1 << 9),
         FBZ_DEPTH_WMASK = (1 << 10),
+        FBZ_DITHER_2x2  = (1 << 11),
         
         FBZ_DRAW_FRONT = 0x0000,
         FBZ_DRAW_BACK  = 0x4000,
@@ -1248,7 +1249,7 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 #define a_ref ( params->alphaMode >> 24)
 #define depth_op ( (params->fbzMode >> 5) & 7)
 #define dither ( params->fbzMode & FBZ_DITHER)
-
+#define dither2x2 (params->fbzMode & FBZ_DITHER_2x2)
 
 static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, voodoo_state_t *state, int ystart, int yend)
 {
@@ -1508,10 +1509,10 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 
                                 dat = fb_mem[x];
                                 dest_r = (dat >> 8) & 0xf8;
-                                dest_g = (dat >> 3) & 0xf8;
+                                dest_g = (dat >> 3) & 0xfc;
                                 dest_b = (dat << 3) & 0xf8;
                                 dest_r |= (dest_r >> 5);
-                                dest_g |= (dest_g >> 5);
+                                dest_g |= (dest_g >> 6);
                                 dest_b |= (dest_b >> 5);
                                 dest_a = 0xff;
 
@@ -1971,9 +1972,18 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 {
                                         if (dither)
                                         {
-                                                src_r = dither_rb[src_r][state->y & 3][x & 3];
-                                                src_g =  dither_g[src_g][state->y & 3][x & 3];
-                                                src_b = dither_rb[src_b][state->y & 3][x & 3];
+                                                if (dither2x2)
+                                                {
+                                                        src_r = dither_rb2x2[src_r][state->y & 1][x & 1];
+                                                        src_g =  dither_g2x2[src_g][state->y & 1][x & 1];
+                                                        src_b = dither_rb2x2[src_b][state->y & 1][x & 1];
+                                                }
+                                                else
+                                                {
+                                                        src_r = dither_rb[src_r][state->y & 3][x & 3];
+                                                        src_g =  dither_g[src_g][state->y & 3][x & 3];
+                                                        src_b = dither_rb[src_b][state->y & 3][x & 3];
+                                                }
                                         }
                                         else
                                         {
