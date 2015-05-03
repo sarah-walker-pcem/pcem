@@ -1181,43 +1181,34 @@ uint32_t mem_read_raml(uint32_t addr, void *priv)
 
 static void mem_write_ramb_page(uint32_t addr, uint8_t val, page_t *p)
 {      
-        if (p->mem[addr & 0xfff] != val)
-        {
 #if DYNAREC
-                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-//                pclog("mem_write_ramb_page: %08x %02x %08x\n", addr, val, cs+pc);
-                p->dirty_mask |= mask;
+        uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+//        pclog("mem_write_ramb_page: %08x %02x %08x %llx %llx\n", addr, val, cs+pc, p->dirty_mask, mask);
+        p->dirty_mask |= mask;
 #endif
-                p->mem[addr & 0xfff] = val;
-        }
+        p->mem[addr & 0xfff] = val;
 }
 static void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
 {
-        if (*(uint16_t *)&p->mem[addr & 0xfff] != val)
-        {
 #if DYNAREC
-                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                if ((addr & 0x3f) == 0x3f)
-                        mask |= (mask << 1);
-//                pclog("mem_write_ramw_page: %08x %04x %08x\n", addr, val, cs+pc);
-                p->dirty_mask |= mask;
+        uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+        if ((addr & 0x3f) == 0x3f)
+                mask |= (mask << 1);
+//        pclog("mem_write_ramw_page: %08x %04x %08x\n", addr, val, cs+pc);
+        p->dirty_mask |= mask;
 #endif
-                *(uint16_t *)&p->mem[addr & 0xfff] = val;
-        }
+        *(uint16_t *)&p->mem[addr & 0xfff] = val;
 }
 static void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
 {       
-        if (*(uint32_t *)&p->mem[addr & 0xfff] != val)
-        {
 #if DYNAREC
-                uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                if ((addr & 0x3f) >= 0x3d)
-                        mask |= (mask << 1);
-//                pclog("mem_write_raml_page: %08x %08x %08x\n", addr, val, cs+pc);
-                p->dirty_mask |= mask;
+        uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+        if ((addr & 0x3f) >= 0x3d)
+                mask |= (mask << 1);
+//        pclog("mem_write_raml_page: %08x %08x %08x\n", addr, val, cs+pc);
+        p->dirty_mask |= mask;
 #endif
-                *(uint32_t *)&p->mem[addr & 0xfff] = val;
-        }
+        *(uint32_t *)&p->mem[addr & 0xfff] = val;
 }
 
 void mem_write_ram(uint32_t addr, uint8_t val, void *priv)
