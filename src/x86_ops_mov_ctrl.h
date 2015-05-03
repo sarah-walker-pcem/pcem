@@ -80,7 +80,7 @@ static int opMOV_r_DRx_a16(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
-        regs[rm].l = 0;
+        regs[rm].l = dr[reg];
         CLOCK_CYCLES(6);
         return 0;
 }
@@ -93,7 +93,7 @@ static int opMOV_r_DRx_a32(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_32(fetchdat);
-        regs[rm].l = 0;
+        regs[rm].l = dr[reg];
         CLOCK_CYCLES(6);
         return 0;
 }
@@ -188,6 +188,7 @@ static int opMOV_DRx_r_a16(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
+        dr[reg] = regs[rm].l;
         CLOCK_CYCLES(6);
         return 0;
 }
@@ -200,6 +201,7 @@ static int opMOV_DRx_r_a32(uint32_t fetchdat)
                 return 1;
         }
         fetch_ea_16(fetchdat);
+        dr[reg] = regs[rm].l;
         CLOCK_CYCLES(6);
         return 0;
 }

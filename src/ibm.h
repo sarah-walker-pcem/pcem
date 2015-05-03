@@ -155,6 +155,7 @@ union
 #define msw CR0.w
 
 uint32_t cr2, cr3, cr4;
+uint32_t dr[8];
 
 #define C_FLAG  0x0001
 #define P_FLAG  0x0004
