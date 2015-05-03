@@ -465,6 +465,17 @@ static int opFYL2X(uint32_t fetchdat)
         return 0;
 }
 
+static int opFYL2XP1(uint32_t fetchdat)
+{
+        FP_ENTER();
+        pc++;
+        if (fplog) pclog("FYL2XP1\n");
+        ST(1) = ST(1) * (log(ST(0)+1.0) / log(2.0));
+        x87_pop();
+        CLOCK_CYCLES(250);
+        return 0;
+}
+
 static int opFPTAN(uint32_t fetchdat)
 {
         FP_ENTER();
