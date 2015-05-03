@@ -29,7 +29,7 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                 switch (addr)
                 {
                         case 0x04:
-                        card_piix_ide[0x04] = (card_piix_ide[0x04] & ~1) | (val & 1);
+                        card_piix_ide[0x04] = (card_piix_ide[0x04] & ~5) | (val & 5);
                         break;
                         case 0x07:
                         card_piix_ide[0x07] = (card_piix_ide[0x07] & ~0x38) | (val & 0x38);
@@ -70,11 +70,12 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         card_piix_ide[0x43] = val;
                         break;
                 }
-                if ((addr & ~3) == 0x20) /*Bus master base address*/                
+                if (addr == 4 || (addr & ~3) == 0x20) /*Bus master base address*/                
                 {
                         uint16_t base = (card_piix_ide[0x20] & 0xf0) | (card_piix_ide[0x21] << 8);
                         io_removehandler(0, 0x10000, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
-                        io_sethandler(base, 0x10, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
+                        if (card_piix_ide[0x04] & 1)
+                                io_sethandler(base, 0x10, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
                 }
 //                pclog("PIIX write %02X %02X\n", addr, val);
         }

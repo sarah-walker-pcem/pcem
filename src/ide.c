@@ -175,6 +175,7 @@ static inline void ide_irq_raise(IDE *ide)
 #else
 //                if (ide->board && !ide->irqstat) pclog("IDE_IRQ_RAISE\n");
                 picint((ide->board)?(1<<15):(1<<14));
+                ide_bus_master_set_irq(ide->board);
 #endif
 	}
 	ide->irqstat=1;
@@ -1197,7 +1198,6 @@ void callbackide(int ide_board)
                                 else
                                 {
                                         ide_irq_raise(ide);
-                                        ide_bus_master_set_irq(ide_board);
                                 }
                         }
                 }
@@ -1281,7 +1281,6 @@ void callbackide(int ide_board)
                                 else
                                 {
                                         ide_irq_raise(ide);
-                                        ide_bus_master_set_irq(ide_board);
                                 }
                         }
                 }
