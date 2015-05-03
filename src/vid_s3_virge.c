@@ -629,9 +629,13 @@ static void s3_virge_updatemapping(virge_t *virge)
                 }
                 else
                         mem_mapping_set_addr(&virge->linear_mapping, virge->linear_base, virge->linear_size);
+                svga->fb_only = 1;
         }
         else
+        {
                 mem_mapping_disable(&virge->linear_mapping);
+                svga->fb_only = 0;
+        }
         
         pclog("Memory mapped IO %02X\n", svga->crtc[0x53] & 0x18);
         if (svga->crtc[0x53] & 0x10) /*Old MMIO*/
@@ -1596,7 +1600,7 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                                                                  virge->s3d.rop, virge->s3d.dest_base);*/
                 }
 
-                while (count)
+                while (count && virge->s3d.h)
                 {
                         uint32_t dest_addr = virge->s3d.dest_base + (virge->s3d.dest_x * x_mul) + (virge->s3d.dest_y * virge->s3d.dest_str);
                         uint32_t source = 0, dest, pattern = virge->s3d.pat_fg_clr;
