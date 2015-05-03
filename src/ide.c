@@ -175,7 +175,8 @@ static inline void ide_irq_raise(IDE *ide)
 #else
 //                if (ide->board && !ide->irqstat) pclog("IDE_IRQ_RAISE\n");
                 picint((ide->board)?(1<<15):(1<<14));
-                ide_bus_master_set_irq(ide->board);
+                if (ide_bus_master_set_irq)
+                        ide_bus_master_set_irq(ide->board);
 #endif
 	}
 	ide->irqstat=1;
