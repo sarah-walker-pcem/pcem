@@ -844,9 +844,11 @@ typedef struct voodoo_state_t
         struct
         {
                 int64_t base_s, base_t, base_w;
+                int lod;
         } tmu[1];
         int64_t base_w;
         int lod;
+        int lod_min, lod_max;
         int dx1, dx2;
         int y, yend, ydir;
         int32_t dxAB, dxAC, dxBC;
@@ -854,8 +856,8 @@ typedef struct voodoo_state_t
         int tex_s, tex_t;
         int clamp_s, clamp_t;
         
-        uint8_t *tex;
-        uint16_t *tex_w;
+        uint8_t *tex[LOD_MAX+1];
+        uint16_t *tex_w[LOD_MAX+1];
         int tformat;
         
         rgba_u *palette;
@@ -866,6 +868,74 @@ typedef struct voodoo_state_t
 } voodoo_state_t;
 
 static int voodoo_output = 0;
+
+static uint8_t logtable[256] =
+{
+        0x00,0x01,0x02,0x04,0x05,0x07,0x08,0x09,0x0b,0x0c,0x0e,0x0f,0x10,0x12,0x13,0x15,
+        0x16,0x17,0x19,0x1a,0x1b,0x1d,0x1e,0x1f,0x21,0x22,0x23,0x25,0x26,0x27,0x28,0x2a,
+        0x2b,0x2c,0x2e,0x2f,0x30,0x31,0x33,0x34,0x35,0x36,0x38,0x39,0x3a,0x3b,0x3d,0x3e,
+        0x3f,0x40,0x41,0x43,0x44,0x45,0x46,0x47,0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x50,0x51,
+        0x52,0x53,0x54,0x55,0x57,0x58,0x59,0x5a,0x5b,0x5c,0x5d,0x5e,0x60,0x61,0x62,0x63,
+        0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x6c,0x6d,0x6e,0x6f,0x70,0x71,0x72,0x73,0x74,
+        0x75,0x76,0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f,0x80,0x81,0x83,0x84,0x85,
+        0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,0x8c,0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,
+        0x95,0x96,0x97,0x98,0x99,0x9a,0x9b,0x9c,0x9d,0x9e,0x9f,0xa0,0xa1,0xa2,0xa2,0xa3,
+        0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xab,0xac,0xad,0xad,0xae,0xaf,0xb0,0xb1,0xb2,
+        0xb3,0xb4,0xb5,0xb5,0xb6,0xb7,0xb8,0xb9,0xba,0xbb,0xbc,0xbc,0xbd,0xbe,0xbf,0xc0,
+        0xc1,0xc2,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc8,0xc9,0xca,0xcb,0xcc,0xcd,0xcd,
+        0xce,0xcf,0xd0,0xd1,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd6,0xd7,0xd8,0xd9,0xda,0xda,
+        0xdb,0xdc,0xdd,0xde,0xde,0xdf,0xe0,0xe1,0xe1,0xe2,0xe3,0xe4,0xe5,0xe5,0xe6,0xe7,
+        0xe8,0xe8,0xe9,0xea,0xeb,0xeb,0xec,0xed,0xee,0xef,0xef,0xf0,0xf1,0xf2,0xf2,0xf3,
+        0xf4,0xf5,0xf5,0xf6,0xf7,0xf7,0xf8,0xf9,0xfa,0xfa,0xfb,0xfc,0xfd,0xfd,0xfe,0xff
+};
+
+static inline int fastlog(uint64_t val)
+{
+        uint64_t oldval = val;
+        int exp = 63;
+        int frac;
+        
+        if (!val || val & (1ULL << 63))
+                return 0x80000000;
+        
+        if (!(val & 0xffffffff00000000))
+        {
+                exp -= 32;
+                val <<= 32;
+        }
+        if (!(val & 0xffff000000000000))
+        {
+                exp -= 16;
+                val <<= 16;
+        }
+        if (!(val & 0xff00000000000000))
+        {
+                exp -= 8;
+                val <<= 8;
+        }
+        if (!(val & 0xf000000000000000))
+        {
+                exp -= 4;
+                val <<= 4;
+        }
+        if (!(val & 0xc000000000000000))
+        {
+                exp -= 2;
+                val <<= 2;
+        }
+        if (!(val & 0x8000000000000000))
+        {
+                exp -= 1;
+                val <<= 1;
+        }
+        
+        if (exp >= 8)
+                frac = (oldval >> (exp - 8)) & 0xff;
+        else
+                frac = (oldval << (8 - exp)) & 0xff;
+
+        return (exp << 8) | logtable[frac];
+}
 
 static inline int fls(uint16_t val)
 {
@@ -933,9 +1003,9 @@ static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *textu
         }
 
         if (state->tformat & 8)
-                dat = state->tex_w[texture_state->s + (texture_state->t << texture_state->tex_shift)];
+                dat = state->tex_w[state->lod][texture_state->s + (texture_state->t << texture_state->tex_shift)];
         else
-                dat = state->tex[texture_state->s + (texture_state->t << texture_state->tex_shift)];
+                dat = state->tex[state->lod][texture_state->s + (texture_state->t << texture_state->tex_shift)];
 
         switch (state->tformat)
         {
@@ -1052,26 +1122,26 @@ static inline void tex_read_4(voodoo_state_t *state, voodoo_texture_state_t *tex
                                         _t &= texture_state->h_mask;
                         }
                         if (state->tformat & 8)
-                                dat[c] = state->tex_w[_s + (_t << texture_state->tex_shift)];
+                                dat[c] = state->tex_w[state->lod][_s + (_t << texture_state->tex_shift)];
                         else
-                                dat[c] = state->tex[_s + (_t << texture_state->tex_shift)];
+                                dat[c] = state->tex[state->lod][_s + (_t << texture_state->tex_shift)];
                 }
         }
         else
         {
                 if (state->tformat & 8)
                 {
-                        dat[0] = state->tex_w[s +     (t << texture_state->tex_shift)];
-                        dat[1] = state->tex_w[s + 1 + (t << texture_state->tex_shift)];
-                        dat[2] = state->tex_w[s +     ((t + 1) << texture_state->tex_shift)];
-                        dat[3] = state->tex_w[s + 1 + ((t + 1) << texture_state->tex_shift)];
+                        dat[0] = state->tex_w[state->lod][s +     (t << texture_state->tex_shift)];
+                        dat[1] = state->tex_w[state->lod][s + 1 + (t << texture_state->tex_shift)];
+                        dat[2] = state->tex_w[state->lod][s +     ((t + 1) << texture_state->tex_shift)];
+                        dat[3] = state->tex_w[state->lod][s + 1 + ((t + 1) << texture_state->tex_shift)];
                 }
                 else
                 {
-                        dat[0] = state->tex[s +     (t << texture_state->tex_shift)];
-                        dat[1] = state->tex[s + 1 + (t << texture_state->tex_shift)];
-                        dat[2] = state->tex[s +     ((t + 1) << texture_state->tex_shift)];
-                        dat[3] = state->tex[s + 1 + ((t + 1) << texture_state->tex_shift)];
+                        dat[0] = state->tex[state->lod][s +     (t << texture_state->tex_shift)];
+                        dat[1] = state->tex[state->lod][s + 1 + (t << texture_state->tex_shift)];
+                        dat[2] = state->tex[state->lod][s +     ((t + 1) << texture_state->tex_shift)];
+                        dat[3] = state->tex[state->lod][s + 1 + ((t + 1) << texture_state->tex_shift)];
                 }
         }
 
@@ -1277,14 +1347,18 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         int a_ref = params->alphaMode >> 24;
         int depth_op = (params->fbzMode >> 5) & 7;
         int dither = params->fbzMode & FBZ_DITHER;*/
+        int c;
         
         state->clamp_s = params->textureMode & TEXTUREMODE_TCLAMPS;
         state->clamp_t = params->textureMode & TEXTUREMODE_TCLAMPT;
 //        int last_x;
 //        pclog("voodoo_triangle : bottom-half %X %X %X %X %X %i  %i %i %i\n", xstart, xend, dx1, dx2, dx2 * 36, xdir,  y, yend, ydir);
 
-        state->tex_w = &voodoo->tex_mem_w[(params->tex_base[state->lod] >> 1) & 0xfffff];
-        state->tex = &voodoo->tex_mem[params->tex_base[state->lod] & 0x1fffff];
+        for (c = 0; c <= LOD_MAX; c++)
+        {
+                state->tex_w[c] = &voodoo->tex_mem_w[(params->tex_base[c] >> 1) & 0xfffff];
+                state->tex[c] = &voodoo->tex_mem[params->tex_base[c] & 0x1fffff];
+        }
         
         state->tformat = params->tformat;
 
@@ -1524,12 +1598,21 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
                                         state->tex_s = (int32_t)((tmu0_s * _w) >> 30);
                                         state->tex_t = (int32_t)((tmu0_t * _w) >> 30);
+//                                        state->lod = state->tmu[0].lod + (int)(log2((double)_w / (double)(1 << 19)) * 256.0);
+                                        state->lod = state->tmu[0].lod + (fastlog(_w) - (19 << 8));
                                 }
                                 else
                                 {
                                         state->tex_s = (int32_t)(tmu0_s >> 14);
                                         state->tex_t = (int32_t)(tmu0_t >> 14);
+                                        state->lod = state->tmu[0].lod;
                                 }
+                                
+                                if (state->lod < state->lod_min)
+                                        state->lod = state->lod_min;
+                                else if (state->lod > state->lod_max)
+                                        state->lod = state->lod_max;
+                                state->lod >>= 8;
 
                                 voodoo_get_texture(voodoo, params, state);
 
@@ -2054,6 +2137,11 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params)
         int vertexCy_adjusted;
         int dx, dy;
         
+        uint64_t tempdx, tempdy;
+        uint64_t tempLOD;
+        int LOD;
+        int lodbias;
+        
         voodoo->tri_count++;
         
         dx = 8 - ((params->vertexAx + 7) & 0xf);
@@ -2115,7 +2203,10 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params)
         else
                 state.dxBC = 0;
 
-        state.lod = (params->tLOD >> 2) & 15;
+        state.lod_min = (params->tLOD & 0x3f) << 6;
+        state.lod_max = ((params->tLOD >> 6) & 0x3f) << 6;
+        if (state.lod_max > 0x800)
+                state.lod_max = 0x800;
         state.xstart = state.xend = params->vertexAx << 8;
         state.xdir = params->sign ? -1 : 1;
 
@@ -2131,6 +2222,22 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params)
         state.tmu[0].base_t = params->tmu[0].startT;
         state.tmu[0].base_w = params->tmu[0].startW;
         state.base_w = params->startW;
+
+        tempdx = params->tmu[0].dSdX * params->tmu[0].dSdX + params->tmu[0].dTdX * params->tmu[0].dTdX;
+        tempdy = params->tmu[0].dSdY * params->tmu[0].dSdY + params->tmu[0].dTdY * params->tmu[0].dTdY;
+        
+        if (tempdx > tempdy)
+                tempLOD = tempdx;
+        else
+                tempLOD = tempdy;
+
+        LOD = (int)(log2((double)tempLOD / (double)(1ULL << 36)) * 256);
+        LOD >>= 2;
+
+        lodbias = (params->tLOD >> 12) & 0x3f;
+        if (lodbias & 0x20)
+                lodbias |= ~0x3f;
+        state.tmu[0].lod = LOD + (lodbias << 6);
 
         switch (params->tformat)
         {
