@@ -1423,10 +1423,10 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                         x2 -= (1 << 16);
                 else
                         x -= (1 << 16);
-                dx = ((x + 0x7fff) >> 16) - (((params->vertexAx << 12) + 0x7fff) >> 16);
-                start_x2 = x + 0x7fff;
-                x = (x + 0x7fff) >> 16;
-                x2 = (x2 + 0x7fff) >> 16;
+                dx = ((x + 0x7000) >> 16) - (((params->vertexAx << 12) + 0x7000) >> 16);
+                start_x2 = x + 0x7000;
+                x = (x + 0x7000) >> 16;
+                x2 = (x2 + 0x7000) >> 16;
 
                 if (voodoo_output)
                         pclog("%03i:%03i : Ax=%08x start_x=%08x  dSdX=%016llx dx=%08x  s=%08x -> ", x, state->y, params->vertexAx << 8, start_x, params->tmu[0].dTdX, dx, tmu0_t);
@@ -1445,7 +1445,9 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                         pclog("%08llx %lli %lli\n", tmu0_t, tmu0_t >> (18+state->lod), (tmu0_t + (1 << 17+state->lod)) >> (18+state->lod));
 
                 if (params->fbzMode & (1 << 17))
-                        state->y = voodoo->v_disp - state->y;
+                        real_y = voodoo->v_disp - (real_y >> 4);
+                else
+                        real_y >>= 4;
 
                 if (params->fbzMode & 1)
                 {
@@ -1498,8 +1500,8 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                 if (x2 > x && state->xdir < 0)
                         goto next_line;
 
-                fb_mem = &voodoo->fb_mem[params->draw_offset + (state->y * voodoo->row_width)];
-                aux_mem = &voodoo->fb_mem[params->aux_offset + (state->y * voodoo->row_width)];
+                fb_mem = &voodoo->fb_mem[params->draw_offset + (real_y * voodoo->row_width)];
+                aux_mem = &voodoo->fb_mem[params->aux_offset + (real_y * voodoo->row_width)];
                 
                 if (voodoo_output)
                         pclog("%03i: x=%08x x2=%08x xstart=%08x xend=%08x dx=%08x start_x2=%08x\n", state->y, x, x2, state->xstart, state->xend, dx, start_x2);
@@ -2057,15 +2059,15 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         {
                                                 if (dither2x2)
                                                 {
-                                                        src_r = dither_rb2x2[src_r][state->y & 1][x & 1];
-                                                        src_g =  dither_g2x2[src_g][state->y & 1][x & 1];
-                                                        src_b = dither_rb2x2[src_b][state->y & 1][x & 1];
+                                                        src_r = dither_rb2x2[src_r][real_y & 1][x & 1];
+                                                        src_g =  dither_g2x2[src_g][real_y & 1][x & 1];
+                                                        src_b = dither_rb2x2[src_b][real_y & 1][x & 1];
                                                 }
                                                 else
                                                 {
-                                                        src_r = dither_rb[src_r][state->y & 3][x & 3];
-                                                        src_g =  dither_g[src_g][state->y & 3][x & 3];
-                                                        src_b = dither_rb[src_b][state->y & 3][x & 3];
+                                                        src_r = dither_rb[src_r][real_y & 3][x & 3];
+                                                        src_g =  dither_g[src_g][real_y & 3][x & 3];
+                                                        src_b = dither_rb[src_b][real_y & 3][x & 3];
                                                 }
                                         }
                                         else
@@ -2112,9 +2114,6 @@ skip_pixel:
                 } while (start_x != x2);
 
 next_line:
-                if (params->fbzMode & (1 << 17))
-                        state->y = voodoo->v_disp - state->y;
-
                 state->base_r += params->dRdY;
                 state->base_g += params->dGdY;
                 state->base_b += params->dBdY;
@@ -2144,22 +2143,29 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params)
         
         voodoo->tri_count++;
         
-        dx = 8 - ((params->vertexAx + 7) & 0xf);
-        dy = 8 - ((params->vertexAy + 7) & 0xf);
-        
+        dx = 8 - (params->vertexAx & 0xf);
+        if ((params->vertexAx & 0xf) > 8)
+                dx += 16;
+        dy = 8 - (params->vertexAy & 0xf);
+        if ((params->vertexAy & 0xf) > 8)
+                dy += 16;
+
 /*        pclog("voodoo_triangle %i : vA %f, %f  vB %f, %f  vC %f, %f f %i\n", tris, (float)params->vertexAx / 16.0, (float)params->vertexAy / 16.0, 
                                                                      (float)params->vertexBx / 16.0, (float)params->vertexBy / 16.0, 
                                                                      (float)params->vertexCx / 16.0, (float)params->vertexCy / 16.0, params->tformat);*/
 
-        params->startR += (dx*params->dRdX + dy*params->dRdY) >> 4;
-        params->startG += (dx*params->dGdX + dy*params->dGdY) >> 4;
-        params->startB += (dx*params->dBdX + dy*params->dBdY) >> 4;
-        params->startA += (dx*params->dAdX + dy*params->dAdY) >> 4;
-        params->startZ += (dx*params->dZdX + dy*params->dZdY) >> 4;
-        params->tmu[0].startS += (dx*params->tmu[0].dSdX + dy*params->tmu[0].dSdY) >> 4;
-        params->tmu[0].startT += (dx*params->tmu[0].dTdX + dy*params->tmu[0].dTdY) >> 4;
-        params->tmu[0].startW += (dx*params->tmu[0].dWdX + dy*params->tmu[0].dWdY) >> 4;
-        params->startW += (dx*params->dWdX + dy*params->dWdY) >> 4;
+        if (params->fbzColorPath & FBZ_PARAM_ADJUST)
+        {
+                params->startR += (dx*params->dRdX + dy*params->dRdY) >> 4;
+                params->startG += (dx*params->dGdX + dy*params->dGdY) >> 4;
+                params->startB += (dx*params->dBdX + dy*params->dBdY) >> 4;
+                params->startA += (dx*params->dAdX + dy*params->dAdY) >> 4;
+                params->startZ += (dx*params->dZdX + dy*params->dZdY) >> 4;
+                params->tmu[0].startS += (dx*params->tmu[0].dSdX + dy*params->tmu[0].dSdY) >> 4;
+                params->tmu[0].startT += (dx*params->tmu[0].dTdX + dy*params->tmu[0].dTdY) >> 4;
+                params->tmu[0].startW += (dx*params->tmu[0].dWdX + dy*params->tmu[0].dWdY) >> 4;
+                params->startW += (dx*params->dWdX + dy*params->dWdY) >> 4;
+        }
 
         tris++;
 
