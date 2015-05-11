@@ -220,6 +220,12 @@ typedef struct voodoo_t
         
         int bilinear_enabled;
         
+        int fb_size;
+        uint32_t fb_mask;
+
+        int texture_size;
+        uint32_t texture_mask;
+        
         fifo_entry_t fifo[FIFO_SIZE];
         int fifo_read_idx, fifo_write_idx;
         int cmd_read, cmd_written;
@@ -1356,8 +1362,8 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
         for (c = 0; c <= LOD_MAX; c++)
         {
-                state->tex_w[c] = &voodoo->tex_mem_w[(params->tex_base[c] >> 1) & 0xfffff];
-                state->tex[c] = &voodoo->tex_mem[params->tex_base[c] & 0x1fffff];
+                state->tex[c] = &voodoo->tex_mem[params->tex_base[c] & voodoo->texture_mask];
+                state->tex_w[c] = (uint16_t *)state->tex[c];
         }
         
         state->tformat = params->tformat;
@@ -2274,7 +2280,7 @@ static void voodoo_fastfill(voodoo_t *voodoo, voodoo_params_t *params)
 
                 for (y = params->clipLowY; y < params->clipHighY; y++)
                 {
-                        uint16_t *cbuf = (uint16_t *)&voodoo->fb_mem[(params->draw_offset + y*voodoo->row_width) & 0x1fffff];
+                        uint16_t *cbuf = (uint16_t *)&voodoo->fb_mem[(params->draw_offset + y*voodoo->row_width) & voodoo->fb_mask];
                         int x;
                 
                         for (x = params->clipLeft; x < params->clipRight; x++)
@@ -2285,7 +2291,7 @@ static void voodoo_fastfill(voodoo_t *voodoo, voodoo_params_t *params)
         {        
                 for (y = params->clipLowY; y < params->clipHighY; y++)
                 {
-                        uint16_t *abuf = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + y*voodoo->row_width) & 0x1fffff];
+                        uint16_t *abuf = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + y*voodoo->row_width) & voodoo->fb_mask];
                         int x;
                 
                         for (x = params->clipLeft; x < params->clipRight; x++)
@@ -2929,10 +2935,10 @@ static uint16_t voodoo_fb_readw(uint32_t addr, void *p)
         y = (addr >> 11) & 0x3ff;
         read_addr = voodoo->fb_read_offset + (x << 1) + (y * voodoo->row_width);
 
-        if (read_addr >= 0x200000)
+        if (read_addr > voodoo->fb_mask)
                 return 0xffff;
 
-        temp = *(uint16_t *)(&voodoo->fb_mem[read_addr & 0x1fffff]);
+        temp = *(uint16_t *)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
 
 //        pclog("voodoo_fb_readw : %08X %08X  %i %i  %08X %08X  %08x:%08x %i\n", addr, temp, x, y, read_addr, *(uint32_t *)(&voodoo->fb_mem[4]), cs, pc, fb_reads++);
         return temp;
@@ -2948,10 +2954,10 @@ static uint32_t voodoo_fb_readl(uint32_t addr, void *p)
         y = (addr >> 11) & 0x3ff;
         read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
 
-        if (read_addr >= 0x200000)
+        if (read_addr > voodoo->fb_mask)
                 return 0xffffffff;
 
-        temp = *(uint32_t *)(&voodoo->fb_mem[read_addr & 0x1fffff]);
+        temp = *(uint32_t *)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
 
 //        pclog("voodoo_fb_readl : %08X %08x %08X  x=%i y=%i  %08X %08X  %08x:%08x %i ro=%08x rw=%i\n", addr, read_addr, temp, x, y, read_addr, *(uint32_t *)(&voodoo->fb_mem[4]), cs, pc, fb_reads++, voodoo->fb_read_offset, voodoo->row_width);
         return temp;
@@ -2994,9 +3000,9 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
         while (count--)
         {               
                 if (write_mask & LFB_WRITE_COLOUR)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr & 0x1ffffe]) = colour_data;
+                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = colour_data;
                 if (write_mask & LFB_WRITE_DEPTH)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & 0x1ffffe]) = depth_data;
+                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
                         
                 colour_data >>= 16;
                 depth_data >>= 16;
@@ -3056,9 +3062,9 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
         while (count--)
         {               
                 if (write_mask & LFB_WRITE_COLOUR)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr & 0x1ffffe]) = colour_data;
+                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = colour_data;
                 if (write_mask & LFB_WRITE_DEPTH)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & 0x1ffffe]) = depth_data;
+                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
                         
                 colour_data >>= 16;
                 depth_data >>= 16;
@@ -3100,7 +3106,7 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
                 addr = voodoo->params.tex_base[lod] + s*2 + (t << voodoo->params.tex_shift[lod])*2;
         else
                 addr = voodoo->params.tex_base[lod] + s + (t << voodoo->params.tex_shift[lod]);
-        *(uint32_t *)(&voodoo->tex_mem[addr & 0x1fffff]) = val;
+        *(uint32_t *)(&voodoo->tex_mem[addr & voodoo->texture_mask]) = val;
 }
 
 static inline void queue_command(voodoo_t *voodoo, uint32_t addr_type, uint32_t val)
@@ -3514,13 +3520,17 @@ void *voodoo_init()
         memset(voodoo, 0, sizeof(voodoo_t));
 
         voodoo->bilinear_enabled = device_get_config_int("bilinear");
+        voodoo->texture_size = device_get_config_int("texture_memory");
+        voodoo->texture_mask = (voodoo->texture_size << 20) - 1;
+        voodoo->fb_size = device_get_config_int("framebuffer_memory");
+        voodoo->fb_mask = (voodoo->fb_size << 20) - 1;
                 
         pci_add(voodoo_pci_read, voodoo_pci_write, voodoo);
 
         mem_mapping_add(&voodoo->mapping, 0, 0, NULL, voodoo_readw, voodoo_readl, NULL, voodoo_writew, voodoo_writel,     NULL, 0, voodoo);
 
-        voodoo->fb_mem = malloc(2 * 1024 * 1024);
-        voodoo->tex_mem = malloc(2 * 1024 * 1024);
+        voodoo->fb_mem = malloc(voodoo->fb_size * 1024 * 1024);
+        voodoo->tex_mem = malloc(voodoo->texture_size * 1024 * 1024);
         voodoo->tex_mem_w = (uint16_t *)voodoo->tex_mem;
 
         timer_add(voodoo_callback, &voodoo->timer_count, TIMER_ALWAYS_ENABLED, voodoo);
@@ -3597,6 +3607,46 @@ void voodoo_close(void *p)
 
 static device_config_t voodoo_config[] =
 {
+        {
+                .name = "framebuffer_memory",
+                .description = "Framebuffer memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = "4 MB",
+                                .value = 4
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+        {
+                .name = "texture_memory",
+                .description = "Texture memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = "4 MB",
+                                .value = 4
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
         {
                 .name = "bilinear",
                 .description = "Bilinear filtering",
