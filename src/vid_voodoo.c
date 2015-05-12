@@ -1604,15 +1604,15 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         if (tmu0_w)
                                                 _w = (int64_t)((1ULL << 48) / tmu0_w);
 
-                                        state->tex_s = (int32_t)((tmu0_s * _w) >> 30);
-                                        state->tex_t = (int32_t)((tmu0_t * _w) >> 30);
+                                        state->tex_s = (int32_t)(((tmu0_s >> 14) * _w) >> 30);
+                                        state->tex_t = (int32_t)(((tmu0_t >> 14)  * _w) >> 30);
 //                                        state->lod = state->tmu[0].lod + (int)(log2((double)_w / (double)(1 << 19)) * 256.0);
                                         state->lod = state->tmu[0].lod + (fastlog(_w) - (19 << 8));
                                 }
                                 else
                                 {
-                                        state->tex_s = (int32_t)(tmu0_s >> 14);
-                                        state->tex_t = (int32_t)(tmu0_t >> 14);
+                                        state->tex_s = (int32_t)(tmu0_s >> (14+14));
+                                        state->tex_t = (int32_t)(tmu0_t >> (14+14));
                                         state->lod = state->tmu[0].lod;
                                 }
                                 
@@ -2235,8 +2235,8 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params)
         state.tmu[0].base_w = params->tmu[0].startW;
         state.base_w = params->startW;
 
-        tempdx = params->tmu[0].dSdX * params->tmu[0].dSdX + params->tmu[0].dTdX * params->tmu[0].dTdX;
-        tempdy = params->tmu[0].dSdY * params->tmu[0].dSdY + params->tmu[0].dTdY * params->tmu[0].dTdY;
+        tempdx = (params->tmu[0].dSdX >> 14) * (params->tmu[0].dSdX >> 14) + (params->tmu[0].dTdX >> 14) * (params->tmu[0].dTdX >> 14);
+        tempdy = (params->tmu[0].dSdY >> 14) * (params->tmu[0].dSdY >> 14) + (params->tmu[0].dTdY >> 14) * (params->tmu[0].dTdY >> 14);
         
         if (tempdx > tempdy)
                 tempLOD = tempdx;
@@ -2434,11 +2434,11 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_startS: case SST_remap_startS:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].startS = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].startS = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_startT: case SST_remap_startT:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].startT = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].startT = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_startW: case SST_remap_startW:
                 if (chip & CHIP_FBI)
@@ -2464,11 +2464,11 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_dSdX: case SST_remap_dSdX:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dSdX = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].dSdX = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_dTdX: case SST_remap_dTdX:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dTdX = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].dTdX = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_dWdX: case SST_remap_dWdX:
                 if (chip & CHIP_TREX0)
@@ -2494,11 +2494,11 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_dSdY: case SST_remap_dSdY:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dSdY = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].dSdY = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_dTdY: case SST_remap_dTdY:
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dTdY = (int64_t)(int32_t)val;
+                        voodoo->params.tmu[0].dTdY = ((int64_t)(int32_t)val) << 14;
                 break;
                 case SST_dWdY: case SST_remap_dWdY:
                 if (chip & CHIP_TREX0)
@@ -2556,12 +2556,12 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_fstartS: case SST_remap_fstartS:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].startS = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].startS = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fstartT: case SST_remap_fstartT:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].startT = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].startT = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fstartW: case SST_remap_fstartW:
                 tempif.i = val;
@@ -2589,12 +2589,12 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_fdSdX: case SST_remap_fdSdX:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dSdX = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].dSdX = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fdTdX: case SST_remap_fdTdX:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dTdX = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].dTdX = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fdWdX: case SST_remap_fdWdX:
                 tempif.i = val;
@@ -2622,12 +2622,12 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_fdSdY: case SST_remap_fdSdY:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dSdY = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].dSdY = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fdTdY: case SST_remap_fdTdY:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
-                        voodoo->params.tmu[0].dTdY = (int64_t)(tempif.f * 262144.0f);
+                        voodoo->params.tmu[0].dTdY = (int64_t)(tempif.f * 4294967296.0f);
                 break;
                 case SST_fdWdY: case SST_remap_fdWdY:
                 tempif.i = val;
