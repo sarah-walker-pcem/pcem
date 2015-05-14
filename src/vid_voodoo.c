@@ -1741,7 +1741,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         src_b -= clocal_b;
                                 }
 
-                                if (cc_sub_clocal)
+                                if (cca_sub_clocal)
                                         src_a -= alocal;
 
                                 switch (cc_mselect)
