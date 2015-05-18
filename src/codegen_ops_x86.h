@@ -1275,6 +1275,14 @@ static void FP_FLD(int reg)
         addbyte(0x83); /*AND EBX, 7*/
         addbyte(0xe3);
         addbyte(0x07);
+        addbyte(0x8b); /*MOV EDX, [ST_i64+EAX]*/
+        addbyte(0x14);
+        addbyte(0xc5);
+        addlong((uintptr_t)ST_i64);
+        addbyte(0x8b); /*MOV ECX, [ST_i64+4+EAX]*/
+        addbyte(0x0c);
+        addbyte(0xc5);
+        addlong(((uintptr_t)ST_i64) + 4);
         addbyte(0x8a); /*MOV AL, [tag+EAX]*/
         addbyte(0x80);
         addlong((uintptr_t)tag);
@@ -1285,6 +1293,14 @@ static void FP_FLD(int reg)
         addbyte(0x88); /*MOV [tag+EBX], AL*/
         addbyte(0x83);
         addlong((uintptr_t)tag);
+        addbyte(0x89); /*MOV [ST_i64+EBX], EDX*/
+        addbyte(0x14);
+        addbyte(0xdd);
+        addlong((uintptr_t)ST_i64);
+        addbyte(0x89); /*MOV [ST_i64+EBX+4], ECX*/
+        addbyte(0x0c);
+        addbyte(0xdd);
+        addlong(((uintptr_t)ST_i64) + 4);
 
         addbyte(0x89); /*MOV [TOP], EBX*/
         addbyte(0x1d);
@@ -1351,6 +1367,51 @@ static void FP_FXCH(int reg)
         addbyte(0x1c);
         addbyte(0xc5);
         addlong((uintptr_t)ST);
+        addbyte(0xbe); /*MOVL ESI, tag*/
+        addlong((uintptr_t)tag);
+        addbyte(0x8a); /*MOV CL, tag[EAX]*/
+        addbyte(0x0c);
+        addbyte(0x06);
+        addbyte(0x8a); /*MOV DL, tag[EBX]*/
+        addbyte(0x14);
+        addbyte(0x1e);
+        addbyte(0x88); /*MOV tag[EBX], CL*/
+        addbyte(0x0c);
+        addbyte(0x1e);
+        addbyte(0x88); /*MOV tag[EAX], DL*/
+        addbyte(0x14);
+        addbyte(0x06);
+        addbyte(0xbe); /*MOVL ESI, ST_int64*/
+        addlong((uintptr_t)ST_i64);
+        addbyte(0x8b); /*MOV ECX, ST_int64[EAX*8]*/
+        addbyte(0x0c);
+        addbyte(0xc6);
+        addbyte(0x8b); /*MOV EDX, ST_int64[EBX*8]*/
+        addbyte(0x14);
+        addbyte(0xde);
+        addbyte(0x89); /*MOV ST_int64[EBX*8], ECX*/
+        addbyte(0x0c);
+        addbyte(0xde);
+        addbyte(0x89); /*MOV ST_int64[EAX*8], EDX*/
+        addbyte(0x14);
+        addbyte(0xc6);
+        addbyte(0x8b); /*MOV ECX, ST_int64[EAX*8]+4*/
+        addbyte(0x4c);
+        addbyte(0xc6);
+        addbyte(0x04);
+        addbyte(0x8b); /*MOV EDX, ST_int64[EBX*8]+4*/
+        addbyte(0x54);
+        addbyte(0xde);
+        addbyte(0x04);
+        addbyte(0x89); /*MOV ST_int64[EBX*8]+4, ECX*/
+        addbyte(0x4c);
+        addbyte(0xde);
+        addbyte(0x04);
+        addbyte(0x89); /*MOV ST_int64[EAX*8]+4, EDX*/
+        addbyte(0x54);
+        addbyte(0xc6);
+        addbyte(0x04);
+        reg = reg;
 //#endif
 #if 0
         addbyte(0xbe); /*MOVL ESI, ST*/
@@ -1633,6 +1694,10 @@ static void FP_OP_S(int op)
         addbyte(0x04);
         addbyte(0xdd);
         addlong((uintptr_t)ST);
+        addbyte(0x80); /*AND tag[EBX], ~TAG_UINT64*/
+        addbyte(0xa3);
+        addlong((uintptr_t)tag);
+        addbyte(~TAG_UINT64);
         addbyte(0xd8); /*FADD [ESP]*/
         addbyte(0x04 | op);
         addbyte(0x24);
@@ -1665,6 +1730,10 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0xdd); /*FLD ST[EBX*8]*/
                 addbyte(0x04);
                 addbyte(0xde);
+                addbyte(0x80); /*AND tag[EBX], ~TAG_UINT64*/
+                addbyte(0xa3);
+                addlong((uintptr_t)tag);
+                addbyte(~TAG_UINT64);
                 addbyte(0xdc); /*FADD ST[EAX*8]*/
                 addbyte(0x04 | op);
                 addbyte(0xc6);
@@ -1677,6 +1746,10 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0xdd); /*FLD [ESI+EAX*8]*/
                 addbyte(0x04);
                 addbyte(0xc6);
+                addbyte(0x80); /*AND tag[EAX], ~TAG_UINT64*/
+                addbyte(0xa0);
+                addlong((uintptr_t)tag);
+                addbyte(~TAG_UINT64);
                 addbyte(0xdc); /*FADD ST[EBX*8]*/
                 addbyte(0x04 | op);
                 addbyte(0xde);

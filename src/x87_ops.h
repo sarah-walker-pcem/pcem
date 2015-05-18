@@ -149,6 +149,39 @@ static inline void x87_st80(double d)
 	writememw(easeg,eaaddr+8,test.begin);
 }
 
+static inline void x87_st_fsave(int reg)
+{
+        reg = (TOP + reg) & 7;
+        
+        if (tag[reg] & TAG_UINT64)
+        {
+        	writememl(easeg, eaaddr, ST_i64[reg] & 0xffffffff);
+        	writememl(easeg, eaaddr + 4, ST_i64[reg] >> 32);
+        	writememw(easeg, eaaddr + 8, 0x5555);
+        }
+        else
+                x87_st80(ST[reg]);
+}
+
+static inline void x87_ld_frstor(int reg)
+{
+        uint16_t temp;
+        
+        reg = (TOP + reg) & 7;
+        
+        temp = readmemw(easeg, eaaddr + 8);
+
+        if (temp == 0x5555 && tag[reg] == 2)
+        {
+                tag[reg] = TAG_UINT64;
+                ST_i64[reg] = readmeml(easeg, eaaddr);
+                ST_i64[reg] |= ((uint64_t)readmeml(easeg, eaaddr + 4) << 32);
+                ST[reg] = (double)ST_i64[reg];
+        }
+        else
+                ST[reg] = x87_ld80();
+}
+
 static inline void x87_ldmmx(MMX_REG *r)
 {
         r->l[0] = readmeml(easeg, eaaddr);

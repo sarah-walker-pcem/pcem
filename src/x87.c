@@ -20,6 +20,7 @@
 #include "386_common.h"
 
 double ST[8];
+uint64_t ST_i64[8];
 MMX_REG MM[8];
 int ismmx;
 uint16_t npxs,npxc;
@@ -29,8 +30,18 @@ int TOP;
 
 uint16_t x87_gettag()
 {
-        return tag[0] | (tag[1] << 2) | (tag[2] << 4) | (tag[3] << 6) |
-               (tag[4] << 8) | (tag[5] << 10) | (tag[6] << 12) | (tag[7] << 14);
+        uint16_t ret = 0;
+        int c;
+        
+        for (c = 0; c < 8; c++)
+        {
+                if (tag[c] & TAG_UINT64)
+                        ret |= 2 << (c*2);
+                else
+                        ret |= (tag[c] << (c*2));
+        }
+
+        return ret;
 }
 
 void x87_settag(uint16_t new_tag)

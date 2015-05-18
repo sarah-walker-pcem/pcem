@@ -88,6 +88,9 @@ static int opFILDiq_a16(uint32_t fetchdat)
         temp64 = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,eaaddr), readmeml(easeg,eaaddr+4));
         x87_push((double)temp64);
+        ST_i64[TOP] = temp64;
+        tag[TOP] |= TAG_UINT64;
+
         CLOCK_CYCLES(10);
         return 0;
 }
@@ -100,6 +103,9 @@ static int opFILDiq_a32(uint32_t fetchdat)
         temp64 = geteaq(); if (abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,eaaddr), readmeml(easeg,eaaddr+4));
         x87_push((double)temp64);
+        ST_i64[TOP] = temp64;
+        tag[TOP] |= TAG_UINT64;
+
         CLOCK_CYCLES(10);
         return 0;
 }
@@ -163,7 +169,10 @@ static int FISTPiq_a16(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FISTPl %08X:%08X\n", easeg, eaaddr);
-        temp64 = x87_fround(ST(0));
+        if (tag[TOP] & TAG_UINT64)
+                temp64 = ST_i64[TOP];
+        else
+                temp64 = x87_fround(ST(0));
         seteaq(temp64); if (abrt) return 1;
         x87_pop();
         CLOCK_CYCLES(29);
@@ -175,7 +184,10 @@ static int FISTPiq_a32(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FISTPl %08X:%08X\n", easeg, eaaddr);
-        temp64 = x87_fround(ST(0));
+        if (tag[TOP] & TAG_UINT64)
+                temp64 = ST_i64[TOP];
+        else
+                temp64 = x87_fround(ST(0));
         seteaq(temp64); if (abrt) return 1;
         x87_pop();
         CLOCK_CYCLES(29);
