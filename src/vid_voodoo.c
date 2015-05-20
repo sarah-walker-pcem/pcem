@@ -1301,6 +1301,248 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 }
 
 
+#define DEPTH_TEST()                                    \
+        do                                              \
+        {                                               \
+                switch (depth_op)                       \
+                {                                       \
+                        case DEPTHOP_NEVER:             \
+                        goto skip_pixel;                \
+                        case DEPTHOP_LESSTHAN:          \
+                        if (!(new_depth < old_depth))   \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_EQUAL:             \
+                        if (!(new_depth == old_depth))  \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_LESSTHANEQUAL:     \
+                        if (!(new_depth <= old_depth))  \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_GREATERTHAN:       \
+                        if (!(new_depth > old_depth))   \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_NOTEQUAL:          \
+                        if (!(new_depth != old_depth))  \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_GREATERTHANEQUAL:  \
+                        if (!(new_depth >= old_depth))  \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case DEPTHOP_ALWAYS:            \
+                        break;                          \
+                }                                       \
+        } while (0)
+
+#define APPLY_FOG(src_r, src_g, src_b)                                  \
+        do                                                              \
+        {                                                               \
+                if (params->fogMode & FOG_CONSTANT)                     \
+                {                                                       \
+                        src_r += params->fogColor.r;                    \
+                        src_g += params->fogColor.g;                    \
+                        src_b += params->fogColor.b;                    \
+                }                                                       \
+                else                                                    \
+                {                                                       \
+                        int fog_r, fog_g, fog_b, fog_a;                 \
+                                                                        \
+                        if (!(params->fogMode & FOG_ADD))               \
+                        {                                               \
+                                fog_r = params->fogColor.r;             \
+                                fog_g = params->fogColor.g;             \
+                                fog_b = params->fogColor.b;             \
+                        }                                               \
+                        else                                            \
+                                fog_r = fog_g = fog_b = 0;              \
+                                                                        \
+                        if (!(params->fogMode & FOG_MULT))              \
+                        {                                               \
+                                fog_r -= src_r;                         \
+                                fog_g -= src_g;                         \
+                                fog_b -= src_b;                         \
+                        }                                               \
+                                                                        \
+                        if (params->fogMode & FOG_Z)                    \
+                                fog_a = (z >> 20) & 0xff;               \
+                        else if (params->fogMode & FOG_ALPHA)           \
+                                fog_a = CLAMP(ia >> 12);                \
+                        else                                            \
+                        {                                               \
+                                int fog_idx = (w_depth >> 10) & 0x3f;   \
+                                                                        \
+                                fog_a = params->fogTable[fog_idx].fog;  \
+                                fog_a += (params->fogTable[fog_idx].dfog * ((w_depth >> 2) & 0xff)) >> 10;      \
+                        }                                               \
+                        fog_a++;                                        \
+                                                                        \
+                        fog_r = (fog_r * fog_a) >> 8;                   \
+                        fog_g = (fog_g * fog_a) >> 8;                   \
+                        fog_b = (fog_b * fog_a) >> 8;                   \
+                                                                        \
+                        if (params->fogMode & FOG_MULT)                 \
+                        {                                               \
+                                src_r = fog_r;                          \
+                                src_g = fog_g;                          \
+                                src_b = fog_b;                          \
+                        }                                               \
+                        else                                            \
+                        {                                               \
+                                src_r += fog_r;                         \
+                                src_g += fog_g;                         \
+                                src_b += fog_b;                         \
+                        }                                               \
+                }                                                       \
+                                                                        \
+                src_r = CLAMP(src_r);                                   \
+                src_g = CLAMP(src_g);                                   \
+                src_b = CLAMP(src_b);                                   \
+        } while (0)
+
+#define ALPHA_TEST(src_a)                               \
+        do                                              \
+        {                                               \
+                switch (alpha_func)                     \
+                {                                       \
+                        case AFUNC_NEVER:               \
+                        goto skip_pixel;                \
+                        case AFUNC_LESSTHAN:            \
+                        if (!(src_a < a_ref))           \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_EQUAL:               \
+                        if (!(src_a == a_ref))          \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_LESSTHANEQUAL:       \
+                        if (!(src_a <= a_ref))          \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_GREATERTHAN:         \
+                        if (!(src_a > a_ref))           \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_NOTEQUAL:            \
+                        if (!(src_a != a_ref))          \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_GREATERTHANEQUAL:    \
+                        if (!(src_a >= a_ref))          \
+                                goto skip_pixel;        \
+                        break;                          \
+                        case AFUNC_ALWAYS:              \
+                        break;                          \
+                }                                       \
+        } while (0)
+
+#define ALPHA_BLEND(src_r, src_g, src_b, src_a)                         \
+        do                                                              \
+        {                                                               \
+                int _a;                                                 \
+                int newdest_r, newdest_g, newdest_b;                    \
+                                                                        \
+                switch (dest_afunc)                                     \
+                {                                                       \
+                        case AFUNC_AZERO:                               \
+                        newdest_r = newdest_g = newdest_b = 0;          \
+                        break;                                          \
+                        case AFUNC_ASRC_ALPHA:                          \
+                        newdest_r = (dest_r * src_a) / 255;             \
+                        newdest_g = (dest_g * src_a) / 255;             \
+                        newdest_b = (dest_b * src_a) / 255;             \
+                        break;                                          \
+                        case AFUNC_A_COLOR:                             \
+                        newdest_r = (dest_r * src_r) / 255;             \
+                        newdest_g = (dest_g * src_g) / 255;             \
+                        newdest_b = (dest_b * src_b) / 255;             \
+                        break;                                          \
+                        case AFUNC_ADST_ALPHA:                          \
+                        newdest_r = (dest_r * dest_a) / 255;            \
+                        newdest_g = (dest_g * dest_a) / 255;            \
+                        newdest_b = (dest_b * dest_a) / 255;            \
+                        break;                                          \
+                        case AFUNC_AONE:                                \
+                        newdest_r = dest_r;                             \
+                        newdest_g = dest_g;                             \
+                        newdest_b = dest_b;                             \
+                        break;                                          \
+                        case AFUNC_AOMSRC_ALPHA:                        \
+                        newdest_r = (dest_r * (255-src_a)) / 255;       \
+                        newdest_g = (dest_g * (255-src_a)) / 255;       \
+                        newdest_b = (dest_b * (255-src_a)) / 255;       \
+                        break;                                          \
+                        case AFUNC_AOM_COLOR:                           \
+                        newdest_r = (dest_r * (255-src_r)) / 255;       \
+                        newdest_g = (dest_g * (255-src_g)) / 255;       \
+                        newdest_b = (dest_b * (255-src_b)) / 255;       \
+                        break;                                          \
+                        case AFUNC_AOMDST_ALPHA:                        \
+                        newdest_r = (dest_r * (255-dest_a)) / 255;      \
+                        newdest_g = (dest_g * (255-dest_a)) / 255;      \
+                        newdest_b = (dest_b * (255-dest_a)) / 255;      \
+                        break;                                          \
+                        case AFUNC_ASATURATE:                           \
+                        _a = MIN(src_a, 1-dest_a);                      \
+                        newdest_r = (dest_r * _a) / 255;                \
+                        newdest_g = (dest_g * _a) / 255;                \
+                        newdest_b = (dest_b * _a) / 255;                \
+                        break;                                          \
+                }                                                       \
+                                                                        \
+                switch (src_afunc)                                      \
+                {                                                       \
+                        case AFUNC_AZERO:                               \
+                        src_r = src_g = src_b = 0;                      \
+                        break;                                          \
+                        case AFUNC_ASRC_ALPHA:                          \
+                        src_r = (src_r * src_a) / 255;                  \
+                        src_g = (src_g * src_a) / 255;                  \
+                        src_b = (src_b * src_a) / 255;                  \
+                        break;                                          \
+                        case AFUNC_A_COLOR:                             \
+                        src_r = (src_r * dest_r) / 255;                 \
+                        src_g = (src_g * dest_g) / 255;                 \
+                        src_b = (src_b * dest_b) / 255;                 \
+                        break;                                          \
+                        case AFUNC_ADST_ALPHA:                          \
+                        src_r = (src_r * dest_a) / 255;                 \
+                        src_g = (src_g * dest_a) / 255;                 \
+                        src_b = (src_b * dest_a) / 255;                 \
+                        break;                                          \
+                        case AFUNC_AONE:                                \
+                        break;                                          \
+                        case AFUNC_AOMSRC_ALPHA:                        \
+                        src_r = (src_r * (255-src_a)) / 255;            \
+                        src_g = (src_g * (255-src_a)) / 255;            \
+                        src_b = (src_b * (255-src_a)) / 255;            \
+                        break;                                          \
+                        case AFUNC_AOM_COLOR:                           \
+                        src_r = (src_r * (255-dest_r)) / 255;           \
+                        src_g = (src_g * (255-dest_g)) / 255;           \
+                        src_b = (src_b * (255-dest_b)) / 255;           \
+                        break;                                          \
+                        case AFUNC_AOMDST_ALPHA:                        \
+                        src_r = (src_r * (255-dest_a)) / 255;           \
+                        src_g = (src_g * (255-dest_a)) / 255;           \
+                        src_b = (src_b * (255-dest_a)) / 255;           \
+                        break;                                          \
+                        case AFUNC_ACOLORBEFOREFOG:                     \
+                        break;                                          \
+                }                                                       \
+                                                                        \
+                src_r += newdest_r;                                     \
+                src_g += newdest_g;                                     \
+                src_b += newdest_b;                                     \
+                                                                        \
+                src_r = CLAMP(src_r);                                   \
+                src_g = CLAMP(src_g);                                   \
+                src_b = CLAMP(src_b);                                   \
+        } while(0)
+
+
 #define _rgb_sel                 ( params->fbzColorPath & 3)
 #define a_sel                   ( (params->fbzColorPath >> 2) & 3)
 #define cc_localselect          ( params->fbzColorPath & (1 << 4))
@@ -1555,38 +1797,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 {
                                         uint16_t old_depth = aux_mem[x];
 
-                                        switch (depth_op)
-                                        {
-                                                case DEPTHOP_NEVER:
-                                                goto skip_pixel;
-
-                                                case DEPTHOP_LESSTHAN:
-                                                if (!(new_depth < old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_EQUAL:
-                                                if (!(new_depth == old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_LESSTHANEQUAL:
-                                                if (!(new_depth <= old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_GREATERTHAN:
-                                                if (!(new_depth > old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_NOTEQUAL:
-                                                if (!(new_depth != old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_GREATERTHANEQUAL:
-                                                if (!(new_depth >= old_depth))
-                                                        goto skip_pixel;
-                                                break;
-                                                case DEPTHOP_ALWAYS:
-                                                break;
-                                        }
+                                        DEPTH_TEST();
                                 }
                                 
                                 dat = fb_mem[x];
@@ -1853,211 +2064,13 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         src_a ^= 0xff;
 
                                 if (params->fogMode & FOG_ENABLE)
-                                {
-                                        if (params->fogMode & FOG_CONSTANT)
-                                        {
-                                                src_r += params->fogColor.r;
-                                                src_g += params->fogColor.g;
-                                                src_b += params->fogColor.b;
-                                        }
-                                        else
-                                        {
-                                                int fog_r, fog_g, fog_b, fog_a;
-                                                
-                                                if (!(params->fogMode & FOG_ADD))
-                                                {
-                                                        fog_r = params->fogColor.r;
-                                                        fog_g = params->fogColor.g;
-                                                        fog_b = params->fogColor.b;
-                                                }
-                                                else
-                                                        fog_r = fog_g = fog_b = 0;
-
-                                                if (!(params->fogMode & FOG_MULT))
-                                                {
-                                                        fog_r -= src_r;
-                                                        fog_g -= src_g;
-                                                        fog_b -= src_b;
-                                                }
-
-                                                if (params->fogMode & FOG_Z)
-                                                        fog_a = (z >> 20) & 0xff;
-                                                else if (params->fogMode & FOG_ALPHA)
-                                                        fog_a = CLAMP(ia >> 12);
-                                                else
-                                                {
-                                                        int fog_idx = (w_depth >> 10) & 0x3f;
-                                                        
-                                                        fog_a = params->fogTable[fog_idx].fog;
-                                                        fog_a += (params->fogTable[fog_idx].dfog * ((w_depth >> 2) & 0xff)) >> 10;
-//                                                        if ((x == 32 && state->y == 461) || x == 320) pclog("x=%03i y=%03i: w=%04x idx=%02x a=%02x w2=%02x a2=%02x  %02x %02x\n", x, state->y, w_depth, fog_idx, params->fogTable[fog_idx].fog, (w_depth >> 2) & 0xff, fog_a, params->fogTable[0x20].fog, params->fogTable[0x21].fog);
-                                                }
-                                                fog_a++;
-//pclog("src %02x %02x %02x fog_a %02x\n", src_r, src_g, src_b, fog_a);  
-//                                                if ((x == 32 && state->y == 461) || x == 320) pclog("  fog_r=%02x fog_g=%02x fog_b=%02x\n", fog_r, fog_g, fog_b);
-                                                fog_r = (fog_r * fog_a) >> 8;
-                                                fog_g = (fog_g * fog_a) >> 8;
-                                                fog_b = (fog_b * fog_a) >> 8;
-//                                                if ((x == 32 && state->y == 461) || x == 320) pclog("  fog_r=%02x fog_g=%02x fog_b=%02x\n", fog_r, fog_g, fog_b);
-//                                                if ((x == 32 && state->y == 461) || x == 320) pclog("  src_r=%02x src_g=%02x src_b=%02x\n", src_r, src_g, src_b);
-                                                if (params->fogMode & FOG_MULT)
-                                                {
-                                                        src_r = fog_r;
-                                                        src_g = fog_g;
-                                                        src_b = fog_b;
-                                                }
-                                                else
-                                                {
-                                                        src_r += fog_r;
-                                                        src_g += fog_g;
-                                                        src_b += fog_b;
-                                                }
-//                                                if ((x == 32 && state->y == 461) || x == 320) pclog("  src_r=%02x src_g=%02x src_b=%02x %016llx\n", src_r, src_g, src_b, w);
-                                        }
-
-                                        src_r = CLAMP(src_r);
-                                        src_g = CLAMP(src_g);
-                                        src_b = CLAMP(src_b);
-                                }
+                                        APPLY_FOG(src_r, src_g, src_b);
                                 
                                 if (params->alphaMode & 1)
-                                {
-                                        switch (alpha_func)
-                                        {
-                                                case AFUNC_NEVER:
-                                                goto skip_pixel;
-                                                break;
-                                                case AFUNC_LESSTHAN:
-                                                if (!(src_a < a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_EQUAL:
-                                                if (!(src_a == a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_LESSTHANEQUAL:
-                                                if (!(src_a <= a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_GREATERTHAN:
-                                                if (!(src_a > a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_NOTEQUAL:
-                                                if (!(src_a != a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_GREATERTHANEQUAL:
-                                                if (!(src_a >= a_ref))
-                                                        goto skip_pixel;
-                                                break;
-                                                case AFUNC_ALWAYS:
-                                                break;
-                                        }
-                                }
+                                        ALPHA_TEST(src_a);
 
                                 if (params->alphaMode & (1 << 4))
-                                {
-                                        int _a;
-                                        int newdest_r, newdest_g, newdest_b;
-                                        
-                                        switch (dest_afunc)
-                                        {
-                                                case AFUNC_AZERO:
-                                                newdest_r = newdest_g = newdest_b = 0;
-                                                break;
-                                                case AFUNC_ASRC_ALPHA:
-                                                newdest_r = (dest_r * src_a) / 255;
-                                                newdest_g = (dest_g * src_a) / 255;
-                                                newdest_b = (dest_b * src_a) / 255;
-                                                break;
-                                                case AFUNC_A_COLOR:
-                                                newdest_r = (dest_r * src_r) / 255;
-                                                newdest_g = (dest_g * src_g) / 255;
-                                                newdest_b = (dest_b * src_b) / 255;
-                                                break;
-                                                case AFUNC_ADST_ALPHA:
-                                                newdest_r = (dest_r * dest_a) / 255;
-                                                newdest_g = (dest_g * dest_a) / 255;
-                                                newdest_b = (dest_b * dest_a) / 255;
-                                                break;
-                                                case AFUNC_AONE:
-                                                newdest_r = dest_r;
-                                                newdest_g = dest_g;
-                                                newdest_b = dest_b;
-                                                break;
-                                                case AFUNC_AOMSRC_ALPHA:
-                                                newdest_r = (dest_r * (255-src_a)) / 255;
-                                                newdest_g = (dest_g * (255-src_a)) / 255;
-                                                newdest_b = (dest_b * (255-src_a)) / 255;
-                                                break;
-                                                case AFUNC_AOM_COLOR:
-                                                newdest_r = (dest_r * (255-src_r)) / 255;
-                                                newdest_g = (dest_g * (255-src_g)) / 255;
-                                                newdest_b = (dest_b * (255-src_b)) / 255;
-                                                break;
-                                                case AFUNC_AOMDST_ALPHA:
-                                                newdest_r = (dest_r * (255-dest_a)) / 255;
-                                                newdest_g = (dest_g * (255-dest_a)) / 255;
-                                                newdest_b = (dest_b * (255-dest_a)) / 255;
-                                                break;
-                                                case AFUNC_ASATURATE:
-                                                _a = MIN(src_a, 1-dest_a);
-                                                newdest_r = (dest_r * _a) / 255;
-                                                newdest_g = (dest_g * _a) / 255;
-                                                newdest_b = (dest_b * _a) / 255;
-                                                break;
-                                        }
-
-                                        switch (src_afunc)
-                                        {
-                                                case AFUNC_AZERO:
-                                                src_r = src_g = src_b = 0;
-                                                break;
-                                                case AFUNC_ASRC_ALPHA:
-                                                src_r = (src_r * src_a) / 255;
-                                                src_g = (src_g * src_a) / 255;
-                                                src_b = (src_b * src_a) / 255;
-                                                break;
-                                                case AFUNC_A_COLOR:
-                                                src_r = (src_r * dest_r) / 255;
-                                                src_g = (src_g * dest_g) / 255;
-                                                src_b = (src_b * dest_b) / 255;
-                                                break;
-                                                case AFUNC_ADST_ALPHA:
-                                                src_r = (src_r * dest_a) / 255;
-                                                src_g = (src_g * dest_a) / 255;
-                                                src_b = (src_b * dest_a) / 255;
-                                                break;
-                                                case AFUNC_AONE:
-                                                break;
-                                                case AFUNC_AOMSRC_ALPHA:
-                                                src_r = (src_r * (255-src_a)) / 255;
-                                                src_g = (src_g * (255-src_a)) / 255;
-                                                src_b = (src_b * (255-src_a)) / 255;
-                                                break;
-                                                case AFUNC_AOM_COLOR:
-                                                src_r = (src_r * (255-dest_r)) / 255;
-                                                src_g = (src_g * (255-dest_g)) / 255;
-                                                src_b = (src_b * (255-dest_b)) / 255;
-                                                break;
-                                                case AFUNC_AOMDST_ALPHA:
-                                                src_r = (src_r * (255-dest_a)) / 255;
-                                                src_g = (src_g * (255-dest_a)) / 255;
-                                                src_b = (src_b * (255-dest_a)) / 255;
-                                                break;
-                                                case AFUNC_ACOLORBEFOREFOG:
-                                                break;
-                                        }
-
-                                        src_r += newdest_r;
-                                        src_g += newdest_g;
-                                        src_b += newdest_b;
-
-                                        src_r = CLAMP(src_r);
-                                        src_g = CLAMP(src_g);
-                                        src_b = CLAMP(src_b);
-                                }
+                                        ALPHA_BLEND(src_r, src_g, src_b, src_a);
 
                                 if (update)
                                 {
@@ -2962,26 +2975,60 @@ static uint32_t voodoo_fb_readl(uint32_t addr, void *p)
 //        pclog("voodoo_fb_readl : %08X %08x %08X  x=%i y=%i  %08X %08X  %08x:%08x %i ro=%08x rw=%i\n", addr, read_addr, temp, x, y, read_addr, *(uint32_t *)(&voodoo->fb_mem[4]), cs, pc, fb_reads++, voodoo->fb_read_offset, voodoo->row_width);
         return temp;
 }
+
+static inline uint16_t do_dither(voodoo_params_t *params, rgba8_t col, int x, int y)
+{
+        int r, g, b;
+        
+        if (dither)
+        {
+                if (dither2x2)
+                {
+                        r = dither_rb2x2[col.r][y & 1][x & 1];
+                        g =  dither_g2x2[col.g][y & 1][x & 1];
+                        b = dither_rb2x2[col.b][y & 1][x & 1];
+                }
+                else
+                {
+                        r = dither_rb[col.r][y & 3][x & 3];
+                        g =  dither_g[col.g][y & 3][x & 3];
+                        b = dither_rb[col.b][y & 3][x & 3];
+                }
+        }
+        else
+        {
+                r = col.r >> 3;
+                g = col.g >> 2;
+                b = col.b >> 3;
+        }
+
+        return b | (g << 5) | (r << 11);
+}
+
 static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
+        voodoo_params_t *params = &voodoo->params;
         int x, y;
         uint32_t write_addr, write_addr_aux;
-        uint32_t colour_data, depth_data;
-        int write_mask, count = 1;
+        rgba8_t colour_data;
+        uint16_t depth_data;
+        uint8_t alpha_data;
+        int write_mask;
 
+        depth_data = voodoo->params.zaColor & 0xffff;
+        alpha_data = voodoo->params.zaColor >> 24;
+        
 //        while (!RB_EMPTY)
 //                thread_reset_event(voodoo->not_full_event);
         
 //        pclog("voodoo_fb_writew : %08X %04X\n", addr, val);
         
-        if (voodoo->lfbMode & 0x100)
-                fatal("voodoo_fb_writew : using pixel processing\n");
-                
+               
         switch (voodoo->lfbMode & LFB_FORMAT_MASK)
         {
                 case LFB_FORMAT_RGB565:
-                colour_data = val;
+                colour_data = rgb565[val];
                 write_mask = LFB_WRITE_COLOUR;
                 break;
                 
@@ -2992,57 +3039,116 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
         x = addr & 0x7fe;
         y = (addr >> 11) & 0x3ff;
 
-        write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);      
+        write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
         write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
         
 //        pclog("fb_writew %08x %i %i %i %08x\n", addr, x, y, voodoo->row_width, write_addr);
-        
-        while (count--)
+
+        if (voodoo->lfbMode & 0x100)
+        {
+                {
+                        rgba8_t write_data = colour_data;
+                        uint16_t new_depth = depth_data;
+
+                        if (params->fbzMode & FBZ_DEPTH_ENABLE)
+                        {
+                                uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
+
+                                DEPTH_TEST();
+                        }
+
+                        if ((params->fbzMode & FBZ_CHROMAKEY) &&
+                                write_data.r == params->chromaKey_r &&
+                                write_data.g == params->chromaKey_g &&
+                                write_data.b == params->chromaKey_b)
+                                goto skip_pixel;
+
+                        if (params->fogMode & FOG_ENABLE)
+                        {
+                                int32_t z = new_depth << 12;
+                                int32_t w_depth = new_depth;
+                                int32_t ia = alpha_data << 12;
+
+                                APPLY_FOG(write_data.r, write_data.g, write_data.b);
+                        }
+
+                        if (params->alphaMode & 1)
+                                ALPHA_TEST(alpha_data);
+
+                        if (params->alphaMode & (1 << 4))
+                        {
+                                uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
+                                int dest_r, dest_g, dest_b, dest_a;
+                                
+                                dest_r = (dat >> 8) & 0xf8;
+                                dest_g = (dat >> 3) & 0xfc;
+                                dest_b = (dat << 3) & 0xf8;
+                                dest_r |= (dest_r >> 5);
+                                dest_g |= (dest_g >> 6);
+                                dest_b |= (dest_b >> 5);
+                                dest_a = 0xff;
+                                
+                                ALPHA_BLEND(write_data.r, write_data.g, write_data.b, alpha_data);
+                        }
+
+                        if (params->fbzMode & FBZ_RGB_WMASK)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, x >> 1, y);
+                        if (params->fbzMode & FBZ_DEPTH_WMASK)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
+
+skip_pixel:
+                        x = x;
+                }
+        }
+        else
         {               
                 if (write_mask & LFB_WRITE_COLOUR)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = colour_data;
+                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data, x >> 1, y);
                 if (write_mask & LFB_WRITE_DEPTH)
                         *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
-                        
-                colour_data >>= 16;
-                depth_data >>= 16;
-                
-                write_addr += 2;
-                write_addr_aux += 2;
         }
 }
+
+
 static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
+        voodoo_params_t *params = &voodoo->params;
         int x, y;
         uint32_t write_addr, write_addr_aux;
-        uint32_t colour_data, depth_data;
+        rgba8_t colour_data[2];
+        uint16_t depth_data[2];
+        uint8_t alpha_data[2];
         int write_mask, count = 1;
 
+        depth_data[0] = depth_data[1] = voodoo->params.zaColor & 0xffff;
+        alpha_data[0] = alpha_data[1] = voodoo->params.zaColor >> 24;
 //        while (!RB_EMPTY)
 //                thread_reset_event(voodoo->not_full_event);
         
 //        pclog("voodoo_fb_writel : %08X %08X\n", addr, val);
         
-        if (voodoo->lfbMode & 0x100)
-                fatal("voodoo_fb_writel : using pixel processing\n");
-                
         switch (voodoo->lfbMode & LFB_FORMAT_MASK)
         {
                 case LFB_FORMAT_RGB565:
-                colour_data = val;
+                colour_data[0] = rgb565[val & 0xffff];
+                colour_data[1] = rgb565[val >> 16];
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
                 
                 case LFB_FORMAT_ARGB8888:
-                colour_data = ((val >> 3) & 0x1f) | ((val >> 5) & 0x7e0) | ((val >> 8) & 0xf800);
+                colour_data[0].b = val & 0xff;
+                colour_data[0].g = (val >> 8) & 0xff;
+                colour_data[0].r = (val >> 16) & 0xff;
+                colour_data[0].a = (val >> 24) & 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 addr >>= 1;
                 break;
                 
                 case LFB_FORMAT_DEPTH:
-                depth_data = val;
+                depth_data[0] = val;
+                depth_data[1] = val >> 16;
                 write_mask = LFB_WRITE_DEPTH;
                 count = 2;
                 break;
@@ -3058,19 +3164,81 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
         write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
         
 //        pclog("fb_writel %08x x=%i y=%i rw=%i %08x wo=%08x\n", addr, x, y, voodoo->row_width, write_addr, voodoo->fb_write_offset);
-        
-        while (count--)
-        {               
-                if (write_mask & LFB_WRITE_COLOUR)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = colour_data;
-                if (write_mask & LFB_WRITE_DEPTH)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
-                        
-                colour_data >>= 16;
-                depth_data >>= 16;
+
+        if (voodoo->lfbMode & 0x100)
+        {
+                int c;
                 
-                write_addr += 2;
-                write_addr_aux += 2;
+                for (c = 0; c < count; c++)
+                {
+                        rgba8_t write_data = colour_data[c];
+                        uint16_t new_depth = depth_data[c];
+
+                        if (params->fbzMode & FBZ_DEPTH_ENABLE)
+                        {
+                                uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
+
+                                DEPTH_TEST();
+                        }
+
+                        if ((params->fbzMode & FBZ_CHROMAKEY) &&
+                                write_data.r == params->chromaKey_r &&
+                                write_data.g == params->chromaKey_g &&
+                                write_data.b == params->chromaKey_b)
+                                goto skip_pixel;
+
+                        if (params->fogMode & FOG_ENABLE)
+                        {
+                                int32_t z = new_depth << 12;
+                                int32_t w_depth = new_depth;
+                                int32_t ia = alpha_data[c] << 12;
+
+                                APPLY_FOG(write_data.r, write_data.g, write_data.b);
+                        }
+
+                        if (params->alphaMode & 1)
+                                ALPHA_TEST(alpha_data[c]);
+
+                        if (params->alphaMode & (1 << 4))
+                        {
+                                uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
+                                int dest_r, dest_g, dest_b, dest_a;
+                                
+                                dest_r = (dat >> 8) & 0xf8;
+                                dest_g = (dat >> 3) & 0xfc;
+                                dest_b = (dat << 3) & 0xf8;
+                                dest_r |= (dest_r >> 5);
+                                dest_g |= (dest_g >> 6);
+                                dest_b |= (dest_b >> 5);
+                                dest_a = 0xff;
+                                
+                                ALPHA_BLEND(write_data.r, write_data.g, write_data.b, alpha_data[c]);
+                        }
+
+                        if (params->fbzMode & FBZ_RGB_WMASK)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, (x >> 1) + c, y);
+                        if (params->fbzMode & FBZ_DEPTH_WMASK)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
+
+skip_pixel:
+                        write_addr += 2;
+                        write_addr_aux += 2;
+                }
+        }
+        else
+        {
+                int c;
+                
+                for (c = 0; c < count; c++)
+                {
+                        if (write_mask & LFB_WRITE_COLOUR)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data[c], (x >> 1) + c, y);
+                        if (write_mask & LFB_WRITE_DEPTH)
+                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data[c];
+                        
+                        write_addr += 2;
+                        write_addr_aux += 2;
+                }
         }
 }
 
