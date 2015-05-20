@@ -434,4 +434,43 @@ POP_SEG_OPS(DS, &_ds);
 POP_SEG_OPS(ES, &_es);
 POP_SEG_OPS(FS, &_fs);
 POP_SEG_OPS(GS, &_gs);
-POP_SEG_OPS(SS, &_ss);
+
+
+static int opPOP_SS_w(uint32_t fetchdat)
+{
+        uint16_t temp_seg;
+        uint32_t temp_esp = ESP;
+        temp_seg = POP_W();                     if (abrt) return 1;
+        loadseg(temp_seg, &_ss);                if (abrt) ESP = temp_esp;
+        CLOCK_CYCLES(is486 ? 3 : 7);
+        
+        oldpc = pc;
+        op32 = use32;
+        ssegs = 0;
+        ea_seg = &_ds;
+        fetchdat = fastreadl(cs + pc);
+        pc++;
+        if (abrt) return 1;
+        x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+
+        return 1;
+}
+static int opPOP_SS_l(uint32_t fetchdat)
+{
+        uint32_t temp_seg;
+        uint32_t temp_esp = ESP;
+        temp_seg = POP_L();                     if (abrt) return 1;
+        loadseg(temp_seg & 0xffff, &_ss);       if (abrt) ESP = temp_esp;
+        CLOCK_CYCLES(is486 ? 3 : 7);
+
+        oldpc = pc;
+        op32 = use32;
+        ssegs = 0;
+        ea_seg = &_ds;
+        fetchdat = fastreadl(cs + pc);
+        pc++;
+        if (abrt) return 1;
+        x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+
+        return 1;
+}
