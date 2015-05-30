@@ -874,6 +874,18 @@ void fdc_headercrcerror()
 
 void fdc_writeprotect()
 {
+        disctime = 0;
+
+        fdc_int();
+        fdc.stat=0xD0;
+        fdc.res[4]=0x40|(fdc.head?4:0)|fdc.drive;
+        fdc.res[5]=0x02; /*Not writeable*/
+        fdc.res[6]=0;
+        fdc.res[7]=0;
+        fdc.res[8]=0;
+        fdc.res[9]=0;
+        fdc.res[10]=0;
+        paramstogo=7;
 }
 
 int fdc_getdata(int last)
