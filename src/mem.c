@@ -1401,6 +1401,7 @@ static void mem_mapping_recalc(uint64_t base, uint64_t size)
                 }
                 mapping = mapping->next;
         }       
+        flushmmucache_cr3();
 }
 
 void mem_mapping_add(mem_mapping_t *mapping,
