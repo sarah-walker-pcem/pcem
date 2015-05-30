@@ -238,6 +238,8 @@ void codegen_block_init(uint32_t phys_addr)
         addbyte(0x83); /*SUBL $16,%esp*/
         addbyte(0xEC);
         addbyte(0x10);
+        addbyte(0xBD); /*MOVL EBP, &EAX*/
+        addlong((uint32_t)&EAX);
 
 //        pclog("New block %i for %08X   %03x\n", block_current, cs+pc, block_num);
 
@@ -872,8 +874,6 @@ generate_call:
 #endif
         }
 
-        addbyte(0xBD); /*MOVL EBP, &EAX*/
-        addlong((uint32_t)&EAX);
         if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff])
         {
                 uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);

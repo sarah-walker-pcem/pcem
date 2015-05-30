@@ -394,7 +394,63 @@ static void CALL_FUNC(void *dest)
         addlong(((uint8_t *)dest - (uint8_t *)(&codeblock[block_current].data[block_pos + 4])));
 }
 
-
+static void SHL_B_IMM(int reg, int count)
+{
+        addbyte(0xc0); /*SHL reg, count*/
+        addbyte(0xc0 | reg | 0x20);
+        addbyte(count);
+}
+static void SHL_W_IMM(int reg, int count)
+{
+        addbyte(0x66); /*SHL reg, count*/
+        addbyte(0xc1);
+        addbyte(0xc0 | reg | 0x20);
+        addbyte(count);
+}
+static void SHL_L_IMM(int reg, int count)
+{
+        addbyte(0xc1); /*SHL reg, count*/
+        addbyte(0xc0 | reg | 0x20);
+        addbyte(count);
+}
+static void SHR_B_IMM(int reg, int count)
+{
+        addbyte(0xc0); /*SHR reg, count*/
+        addbyte(0xc0 | reg | 0x28);
+        addbyte(count);
+}
+static void SHR_W_IMM(int reg, int count)
+{
+        addbyte(0x66); /*SHR reg, count*/
+        addbyte(0xc1);
+        addbyte(0xc0 | reg | 0x28);
+        addbyte(count);
+}
+static void SHR_L_IMM(int reg, int count)
+{
+        addbyte(0xc1); /*SHR reg, count*/
+        addbyte(0xc0 | reg | 0x28);
+        addbyte(count);
+}
+static void SAR_B_IMM(int reg, int count)
+{
+        addbyte(0xc0); /*SAR reg, count*/
+        addbyte(0xc0 | reg | 0x38);
+        addbyte(count);
+}
+static void SAR_W_IMM(int reg, int count)
+{
+        addbyte(0x66); /*SAR reg, count*/
+        addbyte(0xc1);
+        addbyte(0xc0 | reg | 0x38);
+        addbyte(count);
+}
+static void SAR_L_IMM(int reg, int count)
+{
+        addbyte(0xc1); /*SAR reg, count*/
+        addbyte(0xc0 | reg | 0x38);
+        addbyte(count);
+}
 
 
 static void CHECK_SEG_READ(x86seg *seg)
@@ -1215,6 +1271,142 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
 
+static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+{
+        if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+        {
+                addbyte(0x83); /*CMP flags_res, 0*/
+                addbyte(0x05 | 0x38);
+                addlong((uintptr_t)&flags_res);
+                addbyte(0);
+                addbyte(0x74); /*JZ +*/
+        }
+        else
+        {
+                CALL_FUNC(ZF_SET);
+                addbyte(0x85); /*TEST EAX,EAX*/
+                addbyte(0xc0);
+                addbyte(0x75); /*JNZ +*/
+        }
+        if (not)
+                addbyte(5+2+2+10+5+(timing_bt ? 7 : 0));
+        else
+                addbyte(5+2+2);
+        CALL_FUNC(CF_SET);
+        addbyte(0x85); /*TEST EAX,EAX*/
+        addbyte(0xc0);
+        if (not)
+                addbyte(0x75); /*JNZ +*/
+        else
+                addbyte(0x74); /*JZ +*/
+        addbyte(10+5+(timing_bt ? 7 : 0));        
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(op_pc+pc_offset+offset);
+        if (timing_bt)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(timing_bt);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+
+static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+{
+        CALL_FUNC(NF_SET);
+        addbyte(0x85); /*TEST EAX,EAX*/
+        addbyte(0xc0);
+        addbyte(0x0f); /*SETNE BL*/
+        addbyte(0x95);
+        addbyte(0xc3);
+        CALL_FUNC(VF_SET);
+        addbyte(0x85); /*TEST EAX,EAX*/
+        addbyte(0xc0);
+        addbyte(0x0f); /*SETNE AL*/
+        addbyte(0x95);
+        addbyte(0xc0);
+        addbyte(0x38); /*CMP AL, BL*/
+        addbyte(0xd8);
+        if (not)
+                addbyte(0x75); /*JNZ +*/
+        else
+                addbyte(0x74); /*JZ +*/
+        addbyte(10+5+(timing_bt ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(op_pc+pc_offset+offset);
+        if (timing_bt)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(timing_bt);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+
+static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+{
+        if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+        {
+                addbyte(0x83); /*CMP flags_res, 0*/
+                addbyte(0x05 | 0x38);
+                addlong((uintptr_t)&flags_res);
+                addbyte(0);
+                addbyte(0x74); /*JZ +*/
+        }
+        else
+        {
+                CALL_FUNC(ZF_SET);
+                addbyte(0x85); /*TEST EAX,EAX*/
+                addbyte(0xc0);
+                addbyte(0x75); /*JNZ +*/
+        }
+        if (not)
+                addbyte(5+2+3+5+2+3+2+2+10+5+(timing_bt ? 7 : 0));
+        else
+                addbyte(5+2+3+5+2+3+2+2);
+
+        CALL_FUNC(NF_SET);
+        addbyte(0x85); /*TEST EAX,EAX*/
+        addbyte(0xc0);
+        addbyte(0x0f); /*SETNE BL*/
+        addbyte(0x95);
+        addbyte(0xc3);
+        CALL_FUNC(VF_SET);
+        addbyte(0x85); /*TEST EAX,EAX*/
+        addbyte(0xc0);
+        addbyte(0x0f); /*SETNE AL*/
+        addbyte(0x95);
+        addbyte(0xc0);
+        addbyte(0x38); /*CMP AL, BL*/
+        addbyte(0xd8);
+        if (not)
+                addbyte(0x75); /*JNZ +*/
+        else
+                addbyte(0x74); /*JZ +*/
+        addbyte(10+5+(timing_bt ? 7 : 0));
+        addbyte(0xC7); /*MOVL [pc], new_pc*/
+        addbyte(0x05);
+        addlong((uintptr_t)&pc);
+        addlong(op_pc+pc_offset+offset);
+        if (timing_bt)
+        {
+                addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
+                addbyte(0x2d);
+                addlong((uintptr_t)&cycles);
+                addbyte(timing_bt);
+        }
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+}
+
 
 static void FP_ENTER()
 {
@@ -1757,4 +1949,42 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x1c);
                 addbyte(0xc6);
         }
+}
+
+static void ZERO_EXTEND_W_B(int reg)
+{
+        addbyte(0x0f); /*MOVZX regl, regb*/
+        addbyte(0xb6);
+        addbyte(0xc0 | reg | (reg << 3));
+}
+static void ZERO_EXTEND_L_B(int reg)
+{
+        addbyte(0x0f); /*MOVZX regl, regb*/
+        addbyte(0xb6);
+        addbyte(0xc0 | reg | (reg << 3));
+}
+static void ZERO_EXTEND_L_W(int reg)
+{
+        addbyte(0x0f); /*MOVZX regl, regw*/
+        addbyte(0xb7);
+        addbyte(0xc0 | reg | (reg << 3));
+}
+
+static void SIGN_EXTEND_W_B(int reg)
+{
+        addbyte(0x0f); /*MOVSX regl, regb*/
+        addbyte(0xbe);
+        addbyte(0xc0 | reg | (reg << 3));
+}
+static void SIGN_EXTEND_L_B(int reg)
+{
+        addbyte(0x0f); /*MOVSX regl, regb*/
+        addbyte(0xbe);
+        addbyte(0xc0 | reg | (reg << 3));
+}
+static void SIGN_EXTEND_L_W(int reg)
+{
+        addbyte(0x0f); /*MOVSX regl, regw*/
+        addbyte(0xbf);
+        addbyte(0xc0 | reg | (reg << 3));
 }

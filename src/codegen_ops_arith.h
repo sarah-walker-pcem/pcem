@@ -77,7 +77,7 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
         return op_pc;
 }
 
-#define ROP_ARITH(name, op, writeback) \
+#define ROP_ARITH_RMW(name, op, writeback) \
         static uint32_t rop ## name ## _b_rmw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)    \
         {                                                                                                                               \
                 int src_reg, dst_reg;                                                                                                   \
@@ -140,7 +140,9 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                                                                                                                                         \
                 codegen_flags_changed = 1;                                                                                              \
                 return op_pc + 1;                                                                                                       \
-        }                                                                                                                               \
+        }
+
+#define ROP_ARITH_RM(name, op, writeback) \
         static uint32_t rop ## name ## _b_rm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)     \
         {                                                                                                                               \
                 int src_reg, dst_reg;                                                                                                   \
@@ -229,9 +231,97 @@ static uint32_t ropDEC_rl(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
                 return op_pc + 1;                                                                                                       \
         }
 
-ROP_ARITH(ADD, ADD, 1)
-ROP_ARITH(SUB, SUB, 1)
-ROP_ARITH(CMP, SUB, 0)
+ROP_ARITH_RMW(ADD, ADD, 1)
+ROP_ARITH_RMW(SUB, SUB, 1)
+ROP_ARITH_RM(ADD, ADD, 1)
+ROP_ARITH_RM(SUB, SUB, 1)
+ROP_ARITH_RM(CMP, SUB, 0)
+
+static uint32_t ropCMP_b_rmw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        int src_reg, dst_reg;
+
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                dst_reg = LOAD_REG_B(fetchdat & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                MEM_LOAD_ADDR_EA_B(target_seg);
+                dst_reg = 0;
+        }
+
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB8);
+        src_reg = LOAD_REG_B((fetchdat >> 3) & 7);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);
+        SUB_HOST_REG_B(dst_reg, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);
+        RELEASE_REG(dst_reg);
+        RELEASE_REG(src_reg);
+
+        codegen_flags_changed = 1;
+        return op_pc + 1;
+}
+static uint32_t ropCMP_w_rmw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        int src_reg, dst_reg;
+
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                dst_reg = LOAD_REG_W(fetchdat & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                MEM_LOAD_ADDR_EA_W(target_seg);
+                dst_reg = 0;
+        }                                                                                                                       \
+
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB16);
+        src_reg = LOAD_REG_W((fetchdat >> 3) & 7);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);
+        SUB_HOST_REG_W(dst_reg, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);
+        RELEASE_REG(dst_reg);
+        RELEASE_REG(src_reg);
+
+        codegen_flags_changed = 1;
+        return op_pc + 1;
+}
+static uint32_t ropCMP_l_rmw(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        int src_reg, dst_reg;
+
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                dst_reg = LOAD_REG_L(fetchdat & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                MEM_LOAD_ADDR_EA_L(target_seg);
+                dst_reg = 0;
+        }
+
+        STORE_IMM_ADDR_L((uint32_t)&flags_op, FLAGS_SUB32);
+        src_reg = LOAD_REG_L((fetchdat >> 3) & 7);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op1, dst_reg);
+        SUB_HOST_REG_L(dst_reg, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_op2, src_reg);
+        STORE_HOST_REG_ADDR((uint32_t)&flags_res, dst_reg);
+        RELEASE_REG(dst_reg);
+        RELEASE_REG(src_reg);
+
+        codegen_flags_changed = 1;
+        return op_pc + 1;
+}
+
 
 static uint32_t ropADD_AL_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {

@@ -1249,7 +1249,6 @@ void exec386(int cycs)
                 }
                 else
                 {
-                int dirty = 0;
                 uint32_t phys_addr = get_phys(cs+pc);
                 int hash = HASH(phys_addr);
                 codeblock_t *block = codeblock_hash[hash];
@@ -1297,14 +1296,12 @@ void exec386(int cycs)
                         }
                 }
 
-                if (valid_block && !dirty)
+                if (valid_block)
                 {
                         void (*code)() = (void *)&block->data[BLOCK_START];
 
 //                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
 
-                        oldcs = CS;
-                        oldcpl = CPL;
 inrecomp=1;
                         code();
 inrecomp=0;

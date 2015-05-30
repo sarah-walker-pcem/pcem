@@ -337,3 +337,170 @@ static uint32_t ropMOV_a_EAX(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         
         return op_pc + ((op_32 & 0x200) ? 4 : 2);
 }
+
+static uint32_t ropLEA_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        int dest_reg = (fetchdat >> 3) & 7;
+        
+        if ((fetchdat & 0xc0) == 0xc0)
+                return 0;
+        
+        FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+        
+        STORE_REG_TARGET_W_RELEASE(0, dest_reg);
+
+        return op_pc + 1;
+}
+static uint32_t ropLEA_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        int dest_reg = (fetchdat >> 3) & 7;
+        
+        if ((fetchdat & 0xc0) == 0xc0)
+                return 0;
+        
+        FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+        
+        STORE_REG_TARGET_L_RELEASE(0, dest_reg);
+
+        return op_pc + 1;
+}
+
+static uint32_t ropMOVZX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_B(fetchdat & 7);
+                ZERO_EXTEND_W_B(host_reg);
+                STORE_REG_TARGET_W_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_B(target_seg);
+                ZERO_EXTEND_W_B(0);
+                STORE_REG_TARGET_W_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
+static uint32_t ropMOVZX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_B(fetchdat & 7);
+                ZERO_EXTEND_L_B(host_reg);
+                STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_B(target_seg);
+                ZERO_EXTEND_L_B(0);
+                STORE_REG_TARGET_L_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
+static uint32_t ropMOVZX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_W(fetchdat & 7);
+                ZERO_EXTEND_L_W(host_reg);
+                STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_W(target_seg);
+                ZERO_EXTEND_L_W(0);
+                STORE_REG_TARGET_L_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
+
+static uint32_t ropMOVSX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_B(fetchdat & 7);
+                SIGN_EXTEND_W_B(host_reg);
+                STORE_REG_TARGET_W_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_B(target_seg);
+                SIGN_EXTEND_W_B(0);
+                STORE_REG_TARGET_W_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
+static uint32_t ropMOVSX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_B(fetchdat & 7);
+                SIGN_EXTEND_L_B(host_reg);
+                STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_B(target_seg);
+                SIGN_EXTEND_L_B(0);
+                STORE_REG_TARGET_L_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
+static uint32_t ropMOVSX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                int host_reg = LOAD_REG_W(fetchdat & 7);
+                SIGN_EXTEND_L_W(host_reg);
+                STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
+        }
+        else
+        {
+                x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
+
+                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                        
+                CHECK_SEG_READ(target_seg);
+
+                MEM_LOAD_ADDR_EA_W(target_seg);
+                SIGN_EXTEND_L_W(0);
+                STORE_REG_TARGET_L_RELEASE(0, (fetchdat >> 3) & 7);
+        }
+        
+        return op_pc + 1;
+}
