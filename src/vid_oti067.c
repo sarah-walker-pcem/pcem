@@ -18,6 +18,8 @@ typedef struct oti067_t
         int index;
         uint8_t regs[32];
         
+        uint8_t pos;
+        
         uint32_t vram_size;
         uint32_t vram_mask;
 } oti067_t;
@@ -115,6 +117,28 @@ uint8_t oti067_in(uint16_t addr, void *p)
         return temp;
 }
 
+void oti067_pos_out(uint16_t addr, uint8_t val, void *p)
+{
+        oti067_t *oti067 = (oti067_t *)p;
+
+        if ((val & 8) != (oti067->pos & 8))
+        {
+                if (val & 8)
+                        io_sethandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
+                else
+                        io_removehandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
+        }
+        
+        oti067->pos = val;
+}
+
+uint8_t oti067_pos_in(uint16_t addr, void *p)
+{
+        oti067_t *oti067 = (oti067_t *)p;
+
+        return oti067->pos;
+}        
+
 void oti067_recalctimings(svga_t *svga)
 {
         oti067_t *oti067 = (oti067_t *)svga->p;
@@ -141,7 +165,8 @@ void *oti067_common_init(char *bios_fn, int vram_size)
                    NULL);
 
         io_sethandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
-
+        io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
+        
         oti067->svga.miscout = 1;
         return oti067;
 }
