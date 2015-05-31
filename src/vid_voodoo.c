@@ -229,6 +229,8 @@ typedef struct voodoo_t
         fifo_entry_t fifo[FIFO_SIZE];
         int fifo_read_idx, fifo_write_idx;
         int cmd_read, cmd_written;
+        
+        int flush;
 } voodoo_t;
 
 enum
@@ -2406,6 +2408,14 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         {
                                 thread_wait_event(voodoo->wake_render_thread, -1);
                                 thread_reset_event(voodoo->wake_render_thread);
+                                if (voodoo->swap_pending && voodoo->flush)
+                                {
+                                        /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
+                                        voodoo->front_offset = voodoo->params.front_offset;
+                                        voodoo->swap_count--;
+                                        voodoo->swap_pending = 0;
+                                        break;
+                                }
                         }
                 }
                 voodoo->cmd_read++;
@@ -3306,9 +3316,13 @@ static uint16_t voodoo_readw(uint32_t addr, void *p)
 
         if ((addr & 0xc00000) == 0x400000) /*Framebuffer*/
         {
-                uint16_t temp;
+                voodoo->flush = 1;
                 while (!FIFO_EMPTY)
+                {
                         thread_wait_event(voodoo->not_full_event, -1);
+                        thread_set_event(voodoo->wake_render_thread);
+                }
+                voodoo->flush = 0;
                 
                 return voodoo_fb_readw(addr, voodoo);
         }
@@ -3329,8 +3343,13 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
         }
         else if (addr & 0x400000) /*Framebuffer*/
         {
+                voodoo->flush = 1;
                 while (!FIFO_EMPTY)
+                {
                         thread_wait_event(voodoo->not_full_event, -1);
+                        thread_set_event(voodoo->wake_render_thread);
+                }
+                voodoo->flush = 0;
                 
                 temp = voodoo_fb_readl(addr, voodoo);
         }
@@ -3534,9 +3553,8 @@ static void render_thread(void *param)
                                 break;
                         }
                                                 
-                        fifo->addr_type = FIFO_INVALID;
-
                         voodoo->fifo_read_idx++;
+                        fifo->addr_type = FIFO_INVALID;
                         thread_set_event(voodoo->not_full_event);
 
                         end_time = timer_read();
