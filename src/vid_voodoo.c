@@ -3549,7 +3549,7 @@ static void render_thread(void *param)
 
 static void voodoo_recalcmapping(voodoo_t *voodoo)
 {
-        if (voodoo->pci_enable)
+        if (voodoo->pci_enable && voodoo->memBaseAddr)
         {
                 pclog("voodoo_recalcmapping : memBaseAddr %08X\n", voodoo->memBaseAddr);
                 mem_mapping_set_addr(&voodoo->mapping, voodoo->memBaseAddr, 0x01000000);
