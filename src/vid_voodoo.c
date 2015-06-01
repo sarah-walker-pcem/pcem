@@ -3287,6 +3287,11 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
         *(uint32_t *)(&voodoo->tex_mem[addr & voodoo->texture_mask]) = val;
 }
 
+static inline void wake_render_thread(voodoo_t *voodoo)
+{
+        thread_set_event(voodoo->wake_render_thread); /*Wake up render thread if moving from idle*/
+}
+
 static inline void queue_command(voodoo_t *voodoo, uint32_t addr_type, uint32_t val)
 {
         fifo_entry_t *fifo = &voodoo->fifo[voodoo->fifo_write_idx & FIFO_MASK];
@@ -3305,7 +3310,9 @@ static inline void queue_command(voodoo_t *voodoo, uint32_t addr_type, uint32_t 
         fifo->addr_type = addr_type;
 
         voodoo->fifo_write_idx++;
-        thread_set_event(voodoo->wake_render_thread); /*Wake up render thread if moving from idle*/
+        
+        if (FIFO_ENTRIES > 0xe000)
+                wake_render_thread(voodoo);
 }
 
 static uint16_t voodoo_readw(uint32_t addr, void *p)
@@ -3319,8 +3326,8 @@ static uint16_t voodoo_readw(uint32_t addr, void *p)
                 voodoo->flush = 1;
                 while (!FIFO_EMPTY)
                 {
-                        thread_wait_event(voodoo->not_full_event, -1);
-                        thread_set_event(voodoo->wake_render_thread);
+                        wake_render_thread(voodoo);
+                        thread_wait_event(voodoo->not_full_event, 1);
                 }
                 voodoo->flush = 0;
                 
@@ -3346,8 +3353,8 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 voodoo->flush = 1;
                 while (!FIFO_EMPTY)
                 {
-                        thread_wait_event(voodoo->not_full_event, -1);
-                        thread_set_event(voodoo->wake_render_thread);
+                        wake_render_thread(voodoo);
+                        thread_wait_event(voodoo->not_full_event, 1);
                 }
                 voodoo->flush = 0;
                 
@@ -3365,6 +3372,8 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp |= (voodoo->swap_count << 28);
                 if (voodoo->cmd_written - voodoo->cmd_read)
                         temp |= 0x380; /*Busy*/
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                 
                 case SST_lfbMode:
@@ -3432,22 +3441,32 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->cmd_written++;
                 voodoo->swap_count++;
                 queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                 case SST_triangleCMD:
                 voodoo->cmd_written++;
                 queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                 case SST_ftriangleCMD:
                 voodoo->cmd_written++;
                 queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                 case SST_fastfillCMD:
                 voodoo->cmd_written++;
                 queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                 case SST_nopCMD:
                 voodoo->cmd_written++;
                 queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
+                if (!voodoo->voodoo_busy)
+                        wake_render_thread(voodoo);
                 break;
                         
                 case SST_fbiInit4:
@@ -3555,7 +3574,9 @@ static void render_thread(void *param)
                                                 
                         voodoo->fifo_read_idx++;
                         fifo->addr_type = FIFO_INVALID;
-                        thread_set_event(voodoo->not_full_event);
+
+                        if (FIFO_ENTRIES > 0xe000)
+                                thread_set_event(voodoo->not_full_event);
 
                         end_time = timer_read();
                         voodoo_time += end_time - start_time;
