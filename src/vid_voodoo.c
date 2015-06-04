@@ -502,6 +502,8 @@ enum
 enum
 {
         LFB_FORMAT_RGB565 = 0,
+        LFB_FORMAT_RGB555 = 1,
+        LFB_FORMAT_ARGB1555 = 2,
         LFB_FORMAT_ARGB8888 = 5,
         LFB_FORMAT_DEPTH = 15,
         LFB_FORMAT_MASK = 15
@@ -3039,6 +3041,17 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
         {
                 case LFB_FORMAT_RGB565:
                 colour_data = rgb565[val];
+                alpha_data = 0xff;
+                write_mask = LFB_WRITE_COLOUR;
+                break;
+                case LFB_FORMAT_RGB555:
+                colour_data = argb1555[val];
+                alpha_data = 0xff;
+                write_mask = LFB_WRITE_COLOUR;
+                break;
+                case LFB_FORMAT_ARGB1555:
+                colour_data = argb1555[val];
+                alpha_data = colour_data.a;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
                 
@@ -3146,12 +3159,26 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
+                case LFB_FORMAT_RGB555:
+                colour_data[0] = argb1555[val & 0xffff];
+                colour_data[1] = argb1555[val >> 16];
+                write_mask = LFB_WRITE_COLOUR;
+                count = 2;
+                break;
+                case LFB_FORMAT_ARGB1555:
+                colour_data[0] = argb1555[val & 0xffff];
+                alpha_data[0] = colour_data[0].a;
+                colour_data[1] = argb1555[val >> 16];
+                alpha_data[1] = colour_data[1].a;
+                write_mask = LFB_WRITE_COLOUR;
+                count = 2;
+                break;
                 
                 case LFB_FORMAT_ARGB8888:
                 colour_data[0].b = val & 0xff;
                 colour_data[0].g = (val >> 8) & 0xff;
                 colour_data[0].r = (val >> 16) & 0xff;
-                colour_data[0].a = (val >> 24) & 0xff;
+                alpha_data[0] = (val >> 24) & 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 addr >>= 1;
                 break;
