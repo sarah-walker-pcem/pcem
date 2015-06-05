@@ -3404,8 +3404,13 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 break;
                 
                 case SST_lfbMode:
+                voodoo->flush = 1;
                 while (!FIFO_EMPTY)
-                        thread_wait_event(voodoo->not_full_event, -1);
+                {
+                        wake_render_thread(voodoo);
+                        thread_wait_event(voodoo->not_full_event, 1);
+                }
+                voodoo->flush = 0;
 
                 temp = voodoo->lfbMode;
                 break;
@@ -3573,6 +3578,7 @@ static void render_thread(void *param)
         
         while (1)
         {
+                thread_set_event(voodoo->not_full_event);
                 thread_wait_event(voodoo->wake_render_thread, -1);
                 thread_reset_event(voodoo->wake_render_thread);
 
