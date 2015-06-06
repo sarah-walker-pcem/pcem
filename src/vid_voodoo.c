@@ -3701,20 +3701,20 @@ void voodoo_callback(void *p)
                                 p[x] = video_16to32[src[x]];
                         }
                 }
-                if (voodoo->line == voodoo->v_disp)
+        }
+        if (voodoo->line == voodoo->v_disp)
+        {
+//                pclog("retrace %i %i %08x %i\n", voodoo->retrace_count, voodoo->swap_interval, voodoo->swap_offset, voodoo->swap_pending);
+                voodoo->retrace_count++;
+                if (voodoo->swap_pending && (voodoo->retrace_count > voodoo->swap_interval))
                 {
-//                        pclog("retrace %i %i %08x %i\n", voodoo->retrace_count, voodoo->swap_interval, voodoo->swap_offset, voodoo->swap_pending);
-                        voodoo->retrace_count++;
-                        if (voodoo->swap_pending && (voodoo->retrace_count > voodoo->swap_interval))
-                        {
-//                                pclog("Retrace swap %i %p\n", voodoo->swap_count, &voodoo->swap_count);
-                                voodoo->retrace_count = 0;
-                                voodoo->front_offset = voodoo->swap_offset;
-                                voodoo->swap_count--;
-                                voodoo->swap_pending = 0;
-                                thread_set_event(voodoo->wake_render_thread);
-                                voodoo->frame_count++;
-                        }
+//                        pclog("Retrace swap %i %p\n", voodoo->swap_count, &voodoo->swap_count);
+                        voodoo->retrace_count = 0;
+                        voodoo->front_offset = voodoo->swap_offset;
+                        voodoo->swap_count--;
+                        voodoo->swap_pending = 0;
+                        thread_set_event(voodoo->wake_render_thread);
+                        voodoo->frame_count++;
                 }
         }
         voodoo->line++;
