@@ -23,6 +23,7 @@
 
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
+int codegen_fpu_loaded_iq[8];
 x86seg *op_ea_seg;
 int op_ssegs;
 uint32_t op_old_pc;
@@ -257,6 +258,9 @@ void codegen_block_init(uint32_t phys_addr)
         
         codegen_flags_changed = 0;
         codegen_fpu_entered = 0;
+
+        codegen_fpu_loaded_iq[0] = codegen_fpu_loaded_iq[1] = codegen_fpu_loaded_iq[2] = codegen_fpu_loaded_iq[3] =
+        codegen_fpu_loaded_iq[4] = codegen_fpu_loaded_iq[5] = codegen_fpu_loaded_iq[6] = codegen_fpu_loaded_iq[7] = 0;
 }
 
 void codegen_block_remove()
@@ -771,7 +775,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xda:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_da_a32 : x86_dynarec_opcodes_da_a16;
-                        recomp_op_table = NULL;
+                        recomp_op_table = recomp_opcodes_da;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;

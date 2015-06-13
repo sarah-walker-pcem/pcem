@@ -1142,6 +1142,105 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
 //        pclog("Bad writememll %08X %08X\n", addr2, val);
 }
 
+uint64_t readmemql(uint32_t seg, uint32_t addr)
+{
+        uint32_t addr2 = mem_logical_addr = seg + addr;
+        if ((addr2&0xFFF)>0xFF8)
+        {
+                if (cr0>>31)
+                {
+                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
+                        if (mmutranslate_read(addr2+7) == 0xffffffff) return 0xffffffff;
+                }
+                return readmemll(seg,addr)|((uint64_t)readmemll(seg,addr+4)<<32);
+        }
+
+        if (seg==-1)
+        {
+                x86gpf("NULL segment", 0);
+                printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                return -1;
+        }
+        
+        if (cr0>>31)
+        {
+                addr2 = mmutranslate_read(addr2);
+                if (addr2==0xFFFFFFFF) return 0xFFFFFFFF;
+        }
+
+        addr2&=rammask;
+
+        if (_mem_read_l[addr2 >> 14])
+                return _mem_read_l[addr2 >> 14](addr2, _mem_priv_r[addr2 >> 14]) |
+                                 ((uint64_t)_mem_read_l[addr2 >> 14](addr2 + 4, _mem_priv_r[addr2 >> 14]) << 32);
+
+        return readmemll(seg,addr) | ((uint64_t)readmemll(seg,addr+4)<<32);
+}
+
+void writememql(uint32_t seg, uint32_t addr, uint64_t val)
+{
+        uint32_t addr2 = mem_logical_addr = seg + addr;
+
+        if ((addr2 & 0xFFF) > 0xFF8)
+        {
+                if (cr0>>31)
+                {
+                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                        if (mmutranslate_write(addr2+7) == 0xffffffff) return;
+                }
+                writememll(seg, addr, val);
+                writememll(seg, addr+4, val >> 32);
+                return;
+        }
+        if (seg==-1)
+        {
+                x86gpf("NULL segment", 0);
+                printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                return;
+        }
+        if (page_lookup[addr2>>12])
+        {
+                page_lookup[addr2>>12]->write_l(addr2, val, page_lookup[addr2>>12]);
+                page_lookup[addr2>>12]->write_l(addr2 + 4, val >> 32, page_lookup[addr2>>12]);
+                return;
+        }
+        if (cr0>>31)
+        {
+                addr2 = mmutranslate_write(addr2);
+                if (addr2==0xFFFFFFFF) return;
+        }
+        
+        addr2&=rammask;
+
+        if (_mem_write_l[addr2 >> 14]) 
+        {
+                _mem_write_l[addr2 >> 14](addr2,   val,       _mem_priv_w[addr2 >> 14]);
+                _mem_write_l[addr2 >> 14](addr2+4, val >> 32, _mem_priv_w[addr2 >> 14]);
+                return;
+        }
+        if (_mem_write_w[addr2 >> 14]) 
+        {
+                _mem_write_w[addr2 >> 14](addr2,     val,       _mem_priv_w[addr2 >> 14]);
+                _mem_write_w[addr2 >> 14](addr2 + 2, val >> 16, _mem_priv_w[addr2 >> 14]);
+                _mem_write_w[addr2 >> 14](addr2 + 4, val >> 32, _mem_priv_w[addr2 >> 14]);
+                _mem_write_w[addr2 >> 14](addr2 + 6, val >> 48, _mem_priv_w[addr2 >> 14]);
+                return;
+        }
+        if (_mem_write_b[addr2 >> 14]) 
+        {
+                _mem_write_b[addr2 >> 14](addr2,     val,       _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 1, val >> 8,  _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 2, val >> 16, _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 3, val >> 24, _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 4, val >> 32, _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 5, val >> 40, _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 6, val >> 48, _mem_priv_w[addr2 >> 14]);
+                _mem_write_b[addr2 >> 14](addr2 + 7, val >> 56, _mem_priv_w[addr2 >> 14]);
+                return;
+        }
+//        pclog("Bad writememql %08X %08X\n", addr2, val);
+}
+
 uint8_t mem_readb_phys(uint32_t addr)
 {
         mem_logical_addr = 0xffffffff;

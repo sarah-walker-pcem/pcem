@@ -36,6 +36,8 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr);
 void writememwl(uint32_t seg, uint32_t addr, uint16_t val);
 uint32_t readmemll(uint32_t seg, uint32_t addr);
 void writememll(uint32_t seg, uint32_t addr, uint32_t val);
+uint64_t readmemql(uint32_t seg, uint32_t addr);
+void writememql(uint32_t seg, uint32_t addr, uint64_t val);
 
 uint8_t *getpccache(uint32_t a);
 

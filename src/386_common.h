@@ -5,11 +5,13 @@ extern uint16_t ea_rseg;
 
 
 #define readmemb(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF)?readmemb386l(s,a): *(uint8_t *)(readlookup2[((s)+(a))>>12] + (s) + (a)) )
+#define readmemq(s,a) ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFF8)?readmemql(s,a):*(uint64_t *)(readlookup2[((s)+(a))>>12]+(s)+(a)))
 
 #define writememb(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF) writememb386l(s,a,v); else *(uint8_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
 #define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFE) writememwl(s,a,v); else *(uint16_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 #define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFFC) writememll(s,a,v); else *(uint32_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
+#define writememq(s,a,v) if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a))&0xFFF)>0xFF8) writememql(s,a,v); else *(uint64_t *)(writelookup2[((s) + (a)) >> 12] + (s) + (a)) = v
 
 
 #define check_io_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
@@ -177,7 +179,7 @@ static inline uint32_t geteal()
 
 static inline uint64_t geteaq()
 {
-        return readmeml(easeg,eaaddr) | ((uint64_t)readmeml(easeg, eaaddr + 4) << 32);
+        return readmemq(easeg,eaaddr);
 }
 
 static inline uint8_t geteab_mem()
@@ -198,8 +200,7 @@ static inline uint32_t geteal_mem()
 
 static inline void seteaq(uint64_t v)
 {
-        writememll(easeg, eaaddr, v & 0xffffffff); if (abrt) return;
-        writememll(easeg, eaaddr + 4, v >> 32);
+        writememql(easeg, eaaddr, v);
 }
 
 #define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) regs[rm&3].b.h=v; else regs[rm].b.l=v

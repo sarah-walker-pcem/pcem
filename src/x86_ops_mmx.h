@@ -11,8 +11,7 @@
         }                                                                       \
         else                                                                    \
         {                                                                       \
-                src.l[0] = readmeml(easeg, eaaddr);                             \
-                src.l[1] = readmeml(easeg, eaaddr + 4); if (abrt) return 1;     \
+                src.q = readmemq(easeg, eaaddr); if (abrt) return 1;            \
                 CLOCK_CYCLES(2);                                                \
         }
 
