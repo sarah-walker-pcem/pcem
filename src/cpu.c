@@ -320,6 +320,14 @@ CPU cpus_Pentium[] =
         {"Pentium MMX 166",  CPU_PENTIUMMMX, 12, 166666666, 3, 0x543, 0x543, 0},
         {"Pentium MMX 200",  CPU_PENTIUMMMX, 12, 200000000, 3, 0x543, 0x543, 0},
         {"Pentium MMX 233",  CPU_PENTIUMMMX, 12, 233333333, 4, 0x543, 0x543, 0},
+        {"Mobile Pentium MMX 120",  CPU_PENTIUMMMX, 12, 120000000, 2, 0x543, 0x543, 0},
+        {"Mobile Pentium MMX 133",  CPU_PENTIUMMMX, 12, 133333333, 2, 0x543, 0x543, 0},
+        {"Mobile Pentium MMX 150",  CPU_PENTIUMMMX, 12, 150000000, 3, 0x544, 0x544, 0},
+        {"Mobile Pentium MMX 166",  CPU_PENTIUMMMX, 12, 166666666, 3, 0x544, 0x544, 0},
+        {"Mobile Pentium MMX 200",  CPU_PENTIUMMMX, 12, 200000000, 3, 0x581, 0x581, 0},
+        {"Mobile Pentium MMX 233",  CPU_PENTIUMMMX, 12, 233333333, 4, 0x581, 0x581, 0},
+        {"Mobile Pentium MMX 266",  CPU_PENTIUMMMX, 12, 266666666, 4, 0x582, 0x582, 0},
+        {"Mobile Pentium MMX 300",  CPU_PENTIUMMMX, 12, 300000000, 5, 0x582, 0x582, 0},
         {"",             -1,        0, 0, 0}
 };
 #endif
