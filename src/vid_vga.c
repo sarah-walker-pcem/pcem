@@ -84,7 +84,7 @@ void *vga_init()
         vga_t *vga = malloc(sizeof(vga_t));
         memset(vga, 0, sizeof(vga_t));
 
-        rom_init(&vga->bios_rom, "roms/ibm_vga.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&vga->bios_rom, "roms/ibm_vga.bin", 0xc0000, 0x8000, 0x7fff, 0x2000, MEM_MAPPING_EXTERNAL);
 
         svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
                    NULL,
@@ -138,7 +138,7 @@ void vga_add_status_info(char *s, int max_len, void *p)
 device_t vga_device =
 {
         "VGA",
-        DEVICE_NOT_WORKING,
+        0,
         vga_init,
         vga_close,
         vga_available,
