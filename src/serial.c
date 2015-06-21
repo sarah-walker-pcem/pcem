@@ -110,7 +110,7 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                         serial->dlab2 = val;
                         return;
                 }
-                serial->ier = val;
+                serial->ier = val & 0xf;
                 serial_update_ints(serial);
                 break;
                 case 3:
@@ -159,6 +159,9 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                 if (serial->msr & 0x0f)
                         serial->int_status |= SERIAL_INT_MSR;
                 serial_update_ints(serial);
+                break;
+                case 7:
+                serial->scratch = val;
                 break;
         }
 }
@@ -220,6 +223,9 @@ uint8_t serial_read(uint16_t addr, void *p)
                 serial->msr &= ~0x0f;
                 serial->int_status &= ~SERIAL_INT_MSR;
                 serial_update_ints(serial);
+                break;
+                case 7:
+                temp = serial->scratch;
                 break;
         }
 //        pclog("%02X\n",temp);

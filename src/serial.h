@@ -14,6 +14,7 @@ typedef struct
         uint8_t dlab1,dlab2;
         uint8_t dat;
         uint8_t int_status;
+        uint8_t scratch;
         
         int irq;
 
