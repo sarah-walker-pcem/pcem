@@ -158,6 +158,7 @@ static int opMOV_b_imm_a16(uint32_t fetchdat)
         uint8_t temp;
         fetch_ea_16(fetchdat);
         temp = readmemb(cs,pc); pc++;               if (abrt) return 1;
+        CHECK_WRITE(ea_seg, eaaddr, eaaddr);
         seteab(temp);
         CLOCK_CYCLES(timing_rr);
         return abrt;

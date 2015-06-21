@@ -44,7 +44,7 @@ extern uint16_t ea_rseg;
         }
 
 #define CHECK_WRITE(seg, low, high)  \
-        if ((low < (seg)->limit_low) || (high > (seg)->limit_high))       \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || !((seg)->access & 2))       \
         {                                       \
                 x86gpf("Limit check", 0);       \
                 return 1;                       \

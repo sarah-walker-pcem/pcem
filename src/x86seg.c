@@ -59,7 +59,7 @@ uint8_t opcode2;
 
 static void seg_reset(x86seg *s)
 {
-        s->access = 0 << 5;
+        s->access = (0 << 5) | 2;
         s->limit = 0xFFFF;
         s->limit_low = 0;
         s->limit_high = 0xffff;
@@ -201,7 +201,7 @@ static void do_seg_load(x86seg *s, uint16_t *segdat)
 
 static void do_seg_v86_init(x86seg *s)
 {
-        s->access = 3 << 5;
+        s->access = (3 << 5) | 2;
         s->limit = 0xffff;
         s->limit_low = 0;
         s->limit_high = 0xffff;
@@ -399,6 +399,7 @@ void loadseg(uint16_t seg, x86seg *s)
         }
         else
         {
+                s->access = (3 << 5) | 2;
                 s->base = seg << 4;
                 s->seg = seg;
                 if (s == &_ss)
@@ -525,8 +526,8 @@ void loadcs(uint16_t seg)
                 _cs.limit_low = 0;
                 _cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=3<<5;
-                else                _cs.access=0<<5;
+                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
+                else                _cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
         }
 }
@@ -759,8 +760,8 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                 _cs.limit_low = 0;
                 _cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=3<<5;
-                else                _cs.access=0<<5;
+                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
+                else                _cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
         }
 }
@@ -1265,8 +1266,8 @@ void loadcscall(uint16_t seg)
                 _cs.limit_low = 0;
                 _cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=3<<5;
-                else                _cs.access=0<<5;
+                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
+                else                _cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
         }
 }
@@ -2063,7 +2064,7 @@ void pmodeiret(int is32)
                         _cs.limit_low = 0;
                         _cs.limit_high = 0xffff;
                         CS=seg;
-                        _cs.access=3<<5;
+                        _cs.access=(3<<5) | 2;
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 
                         ESP=newsp;
