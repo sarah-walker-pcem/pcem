@@ -104,6 +104,12 @@ void disc_close(int drive)
         if (loaders[driveloaders[drive]].close) loaders[driveloaders[drive]].close(drive);
         drive_empty[drive] = 1;
         discfns[drive][0] = 0;
+        drives[drive].poll = NULL;
+        drives[drive].seek = NULL;
+        drives[drive].readsector = NULL;
+        drives[drive].writesector = NULL;
+        drives[drive].readaddress = NULL;
+        drives[drive].format = NULL;
 }
 
 int disc_notfound=0;
@@ -189,8 +195,6 @@ void disc_readaddress(int drive, int track, int side, int density)
 {
         if (drives[drive].readaddress)
                 drives[drive].readaddress(drive, track, side, density);
-        else
-                disc_notfound = 1000;
 }
 
 void disc_format(int drive, int track, int side, int density)

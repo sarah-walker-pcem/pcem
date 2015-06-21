@@ -517,6 +517,8 @@ void fdc_callback()
                 fdc.res[10] = (fdc.params[0] & 7) | 0x28;
                 if (!fdc.track[fdc.drive])
                         fdc.res[10] |= 0x10;
+                if (writeprot[fdc.drive])
+                        fdc.res[10] |= 0x40;
 
                 fdc.stat = (fdc.stat & 0xf) | 0xd0;
                 paramstogo = 1;
