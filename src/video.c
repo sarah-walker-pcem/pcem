@@ -257,6 +257,10 @@ void video_init()
                 case ROM_ACER386:
                 device_add(&oti067_device);
                 return;
+                
+                case ROM_IBMPS1_2011:
+                device_add(&ps1vga_device);
+                return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);
 }

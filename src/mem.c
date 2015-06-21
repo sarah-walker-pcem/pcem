@@ -452,6 +452,31 @@ int loadbios()
                 biosmask = 0x1ffff;
                 //is486=1;
                 return 1;
+
+                case ROM_IBMPS1_2011:
+#if 0
+                f=romfopen("roms/ibmps1es/ibm_1057757_24-05-90.bin","rb");
+                ff=romfopen("roms/ibmps1es/ibm_1057757_29-15-90.bin","rb");
+                fseek(f, 0x10000, SEEK_SET);
+                fseek(ff, 0x10000, SEEK_SET);
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+#endif
+//#if 0
+                f = romfopen("roms/ibmps1es/f80000.bin", "rb");
+                if (!f) break;
+                fseek(f, 0x60000, SEEK_SET);
+                fread(rom, 0x20000, 1, f);                
+                fclose(f);
+//#endif
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

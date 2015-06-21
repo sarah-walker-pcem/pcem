@@ -100,6 +100,26 @@ void *vga_init()
         return vga;
 }
 
+/*PS/1 uses a standard VGA controller, but with no option ROM*/
+void *ps1vga_init()
+{
+        vga_t *vga = malloc(sizeof(vga_t));
+        memset(vga, 0, sizeof(vga_t));
+       
+        svga_init(&vga->svga, vga, 1 << 18, /*256kb*/
+                   NULL,
+                   vga_in, vga_out,
+                   NULL,
+                   NULL);
+
+        io_sethandler(0x03c0, 0x0020, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);
+
+        vga->svga.bpp = 8;
+        vga->svga.miscout = 1;
+        
+        return vga;
+}
+
 static int vga_available()
 {
         return rom_present("roms/ibm_vga.bin");
@@ -140,6 +160,17 @@ device_t vga_device =
         "VGA",
         0,
         vga_init,
+        vga_close,
+        vga_available,
+        vga_speed_changed,
+        vga_force_redraw,
+        vga_add_status_info
+};
+device_t ps1vga_device =
+{
+        "PS/1 VGA",
+        0,
+        ps1vga_init,
         vga_close,
         vga_available,
         vga_speed_changed,

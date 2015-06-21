@@ -321,6 +321,7 @@ enum
         ROM_430VX,
         ROM_ENDEAVOR,
         ROM_REVENGE,
+        ROM_IBMPS1_2011,
         
         ROM_MAX
 };

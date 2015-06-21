@@ -34,6 +34,7 @@
 #include "pic.h"
 #include "piix.h"
 #include "pit.h"
+#include "ps1.h"
 #include "serial.h"
 #include "sis496.h"
 #include "sound_sn76489.h"
@@ -49,6 +50,7 @@ void           ams_init();
 void        europc_init();
 void        olim24_init();
 void            at_init();
+void           ps1_init();
 void       at_neat_init();
 void  at_acer386sx_init();
 void    at_wd76c10_init();
@@ -64,37 +66,38 @@ int model;
 
 MODEL models[] =
 {
-        {"IBM PC",              ROM_IBMPC,     { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
-        {"IBM XT",              ROM_IBMXT,     { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
-        {"IBM PCjr",            ROM_IBMPCJR,   { "",      cpus_pcjr,    "",    NULL,         "",      NULL},         1,    pcjr_init},
-        {"Generic XT clone",    ROM_GENXT,     { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
-        {"DTK XT clone",        ROM_DTKXT,     { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},        
-        {"Tandy 1000",          ROM_TANDY,     { "",      cpus_8088,    "",    NULL,         "",      NULL},         1, tandy1k_init},
-        {"Amstrad PC1512",      ROM_PC1512,    { "",      cpus_pc1512,  "",    NULL,         "",      NULL},         1,     ams_init},
-        {"Sinclair PC200",      ROM_PC200,     { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
-        {"Euro PC",             ROM_EUROPC,    { "",      cpus_8086,    "",    NULL,         "",      NULL},         0,  europc_init},
-        {"Olivetti M24",        ROM_OLIM24,    { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,  olim24_init},        
-        {"Amstrad PC1640",      ROM_PC1640,    { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
-        {"Amstrad PC2086",      ROM_PC2086,    { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},        
-        {"Amstrad PC3086",      ROM_PC3086,    { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
-        {"IBM AT",              ROM_IBMAT,     { "",      cpus_ibmat,   "",    NULL,         "",      NULL},         0,      at_init},
-        {"Commodore PC 30 III", ROM_CMDPC30,   { "",      cpus_286,     "",    NULL,         "",      NULL},         0,      at_init},        
-        {"AMI 286 clone",       ROM_AMI286,    { "",      cpus_286,     "",    NULL,         "",      NULL},         0,      at_neat_init},        
-        {"DELL System 200",     ROM_DELL200,   { "",      cpus_286,     "",    NULL,         "",      NULL},         0,           at_init},
-        {"Acer 386SX25/N",      ROM_ACER386,   { "Intel", cpus_acer,    "",    NULL,         "",      NULL},         1, at_acer386sx_init},
-        {"Amstrad MegaPC",      ROM_MEGAPC,    { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 1,   at_wd76c10_init},
-        {"AMI 386 clone",       ROM_AMI386,    { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0,  at_headland_init},
-        {"AMI 486 clone",       ROM_AMI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
-        {"AMI WinBIOS 486",     ROM_WIN486,    { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
+        {"IBM PC",              ROM_IBMPC,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
+        {"IBM XT",              ROM_IBMXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
+        {"IBM PCjr",            ROM_IBMPCJR,     { "",      cpus_pcjr,    "",    NULL,         "",      NULL},         1,    pcjr_init},
+        {"Generic XT clone",    ROM_GENXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
+        {"DTK XT clone",        ROM_DTKXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},        
+        {"Tandy 1000",          ROM_TANDY,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         1, tandy1k_init},
+        {"Amstrad PC1512",      ROM_PC1512,      { "",      cpus_pc1512,  "",    NULL,         "",      NULL},         1,     ams_init},
+        {"Sinclair PC200",      ROM_PC200,       { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
+        {"Euro PC",             ROM_EUROPC,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         0,  europc_init},
+        {"Olivetti M24",        ROM_OLIM24,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,  olim24_init},        
+        {"Amstrad PC1640",      ROM_PC1640,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
+        {"Amstrad PC2086",      ROM_PC2086,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},        
+        {"Amstrad PC3086",      ROM_PC3086,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         1,     ams_init},
+        {"IBM AT",              ROM_IBMAT,       { "",      cpus_ibmat,   "",    NULL,         "",      NULL},         0,      at_init},
+        {"Commodore PC 30 III", ROM_CMDPC30,     { "",      cpus_286,     "",    NULL,         "",      NULL},         0,      at_init},        
+        {"AMI 286 clone",       ROM_AMI286,      { "",      cpus_286,     "",    NULL,         "",      NULL},         0,      at_neat_init},        
+        {"DELL System 200",     ROM_DELL200,     { "",      cpus_286,     "",    NULL,         "",      NULL},         0,           at_init},
+        {"IBM PS/1 model 2011", ROM_IBMPS1_2011, { "",      cpus_286,     "",    NULL,         "",      NULL},         1,          ps1_init},
+        {"Acer 386SX25/N",      ROM_ACER386,     { "Intel", cpus_acer,    "",    NULL,         "",      NULL},         1, at_acer386sx_init},
+        {"Amstrad MegaPC",      ROM_MEGAPC,      { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 1,   at_wd76c10_init},
+        {"AMI 386 clone",       ROM_AMI386,      { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0,  at_headland_init},
+        {"AMI 486 clone",       ROM_AMI486,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
+        {"AMI WinBIOS 486",     ROM_WIN486,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,   at_ali1429_init},
 /*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0,   at_um8881f_init},*/
-        {"Award SiS 496/497",   ROM_SIS496,    { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,    at_sis496_init},
+        {"Award SiS 496/497",   ROM_SIS496,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0,    at_sis496_init},
 #ifdef DYNAREC
-        {"Intel Premiere/PCI",  ROM_REVENGE,   { "Intel", cpus_Pentium5V, "",  NULL,         "",      NULL},         0,    at_batman_init},
-        {"Intel Advanced/EV",   ROM_ENDEAVOR,  { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0,  at_endeavor_init},
-        {"Award 430VX PCI",     ROM_430VX,     { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0,    at_i430vx_init},
+        {"Intel Premiere/PCI",  ROM_REVENGE,     { "Intel", cpus_Pentium5V, "",  NULL,         "",      NULL},         0,    at_batman_init},
+        {"Intel Advanced/EV",   ROM_ENDEAVOR,    { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0,  at_endeavor_init},
+        {"Award 430VX PCI",     ROM_430VX,       { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0,    at_i430vx_init},
 #else
-        {"Intel Advanced/EV",   ROM_ENDEAVOR,  { "IDT", cpus_WinChip,   "",    NULL,         "",      NULL},         0,  at_endeavor_init},
-        {"Award 430VX PCI",     ROM_430VX,     { "IDT", cpus_WinChip,   "",    NULL,         "",      NULL},         0,    at_i430vx_init},
+        {"Intel Advanced/EV",   ROM_ENDEAVOR,    { "IDT", cpus_WinChip,   "",    NULL,         "",      NULL},         0,  at_endeavor_init},
+        {"Award 430VX PCI",     ROM_430VX,       { "IDT", cpus_WinChip,   "",    NULL,         "",      NULL},         0,    at_i430vx_init},
 #endif
         {"", -1, {"", 0, "", 0, "", 0}, 0}
 };
@@ -180,6 +183,7 @@ void ams_init()
         nvr_init();
         xtide_init();
 	nmi_init();
+	fdc_set_dskchg_activelow();
 }
 
 void europc_init()
@@ -213,6 +217,20 @@ void at_init()
            mouse_serial_init();
         nvr_init();
         pic2_init();
+}
+
+void ps1_init()
+{
+        common_init();
+        pit_set_out_func(1, pit_refresh_timer_at);
+        dma16_init();
+        ide_init();
+        keyboard_at_init();
+        mouse_ps2_init();
+        nvr_init();
+        pic2_init();
+        ps1mb_init();
+        fdc_set_dskchg_activelow();
 }
 
 void at_neat_init()
