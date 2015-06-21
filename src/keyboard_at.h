@@ -4,3 +4,4 @@ void keyboard_at_poll();
 
 void (*mouse_write)(uint8_t val);
 extern int mouse_queue_start, mouse_queue_end;
+extern int mouse_scan;

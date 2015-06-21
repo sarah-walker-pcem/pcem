@@ -4,6 +4,8 @@
 #include "mouse_ps2.h"
 #include "plat-mouse.h"
 
+int mouse_scan = 0;
+
 enum
 {
         MOUSE_STREAM,
@@ -105,6 +107,9 @@ void mouse_ps2_poll(int x, int y, int b)
 {
         uint8_t packet[3] = {0x08, 0, 0};
         if (!x && !y && b == ps2_b) return;        
+
+        if (!mouse_scan)
+                return;
         ps2_x += x;
         ps2_y -= y;        
         if (mouse_ps2.mode == MOUSE_STREAM && (mouse_ps2.flags & MOUSE_ENABLE) &&
