@@ -205,6 +205,14 @@ ROM files needed:
 amic206.bin
 
 
+IBM PS/1 Model 2011 (1990)
+This is a 286 with integrated VGA and a basic GUI and DOS 4.01 in ROM.
+
+ROM files needed:
+
+f80000.bin
+
+
 Acermate 386SX/25N (1992?)
 An integrated 386SX clone, with onboard Oak SVGA and IO.
 
@@ -534,6 +542,10 @@ The BIOS is available at :
 http://code.google.com/p/xtideuniversalbios/
 
 v2.0.0 beta 1 is the only version that has been tested.
+
+For the PS/1, you will need v1.1.5. The PS/1 is a bit fussy with XTIDE, and I've found that it works best
+when the XTIDE configuration has 'Full Operating Mode' disabled. This version must be called
+ide_at_1_1_5.bin and should also be placed in the ROMS directory.
 
 
 Notes :

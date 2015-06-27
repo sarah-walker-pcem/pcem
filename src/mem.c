@@ -83,6 +83,19 @@ static void mem_load_atide_bios()
         }
 }
 
+static void mem_load_atide115_bios()
+{
+        FILE *f;
+        f=romfopen("roms/ide_at_1_1_5.bin","rb");
+
+//        is486=0;
+        if (f)
+        {
+                fread(romext,16384,1,f);
+                fclose(f);
+        }
+}
+        
 int loadbios()
 {
         FILE *f=NULL,*ff=NULL;
@@ -476,6 +489,7 @@ int loadbios()
                 fclose(f);
 //#endif
                 biosmask = 0x1ffff;
+                mem_load_atide115_bios();
                 return 1;
         }
         printf("Failed to load ROM!\n");
