@@ -322,6 +322,7 @@ enum
         ROM_ENDEAVOR,
         ROM_REVENGE,
         ROM_IBMPS1_2011,
+        ROM_DESKPRO_386,
         
         ROM_MAX
 };

@@ -141,6 +141,7 @@ void loadnvr()
                 case ROM_AMI286:      f = romfopen("ami286.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_DELL200:     f = romfopen("dell200.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_IBMAT386:    f = romfopen("at386.nvr",       "rb"); nvrmask = 127; break;
+                case ROM_DESKPRO_386: f = romfopen("deskpro386.nvr",  "rb"); break;
                 case ROM_ACER386:     f = romfopen("acer386.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_MEGAPC:      f = romfopen("megapc.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AMI386:      f = romfopen("ami386.nvr",      "rb"); nvrmask = 127; break;
@@ -181,6 +182,7 @@ void savenvr()
                 case ROM_AMI286:      f = romfopen("ami286.nvr",      "wb"); break;
                 case ROM_DELL200:     f = romfopen("dell200.nvr",     "wb"); break;
                 case ROM_IBMAT386:    f = romfopen("at386.nvr",       "wb"); break;
+                case ROM_DESKPRO_386: f = romfopen("deskpro386.nvr",  "wb"); break;
                 case ROM_ACER386:     f = romfopen("acer386.nvr",     "wb"); break;
                 case ROM_MEGAPC:      f = romfopen("megapc.nvr",      "wb"); break;
                 case ROM_AMI386:      f = romfopen("ami386.nvr",      "wb"); break;
