@@ -114,6 +114,9 @@ typedef struct
         uint8_t access;
         uint16_t seg;
         uint32_t limit_low, limit_high;
+#ifdef DYNAREC
+        int checked; /*Non-zero if selector is known to be valid*/
+#endif
 } x86seg;
 
 x86seg gdt,ldt,idt,tr;

@@ -462,6 +462,15 @@ static void SAR_L_IMM(int reg, int count)
 
 static void CHECK_SEG_READ(x86seg *seg)
 {
+        /*Segments always valid in real/V86 mode*/
+        if (!(cr0 & 1) || (eflags & VM_FLAG))
+                return;
+        /*CS and SS must always be valid*/
+        if (seg == &_cs || seg == &_ss)
+                return;
+        if (seg->checked)
+                return;
+
         addbyte(0x83); /*CMP seg->base, -1*/
         addbyte(0x05|0x38);
         addlong((uint32_t)&seg->base);
@@ -469,9 +478,20 @@ static void CHECK_SEG_READ(x86seg *seg)
         addbyte(0x0f);
         addbyte(0x84); /*JE end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+        
+        seg->checked = 1;
 }
 static void CHECK_SEG_WRITE(x86seg *seg)
 {
+        /*Segments always valid in real/V86 mode*/
+        if (!(cr0 & 1) || (eflags & VM_FLAG))
+                return;
+        /*CS and SS must always be valid*/
+        if (seg == &_cs || seg == &_ss)
+                return;
+        if (seg->checked)
+                return;
+                
         addbyte(0x83); /*CMP seg->base, -1*/
         addbyte(0x05|0x38);
         addlong((uint32_t)&seg->base);
@@ -479,6 +499,8 @@ static void CHECK_SEG_WRITE(x86seg *seg)
         addbyte(0x0f);
         addbyte(0x84); /*JE end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+
+        seg->checked = 1;
 }
 static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
 {

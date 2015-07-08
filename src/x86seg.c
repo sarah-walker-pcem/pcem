@@ -396,6 +396,9 @@ void loadseg(uint16_t seg, x86seg *s)
 #ifndef CS_ACCESSED
                 }
 #endif
+#ifdef DYNAREC
+                s->checked = 0;
+#endif
         }
         else
         {
@@ -404,6 +407,9 @@ void loadseg(uint16_t seg, x86seg *s)
                 s->seg = seg;
                 if (s == &_ss)
                         stack32 = 0;
+#ifdef DYNAREC
+                s->checked = 1;
+#endif
         }
 }
 
