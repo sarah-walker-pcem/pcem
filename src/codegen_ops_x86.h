@@ -549,12 +549,13 @@ static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
         addbyte(0xfa);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+2);
-        addbyte(0x8a); /*MOV AL, [EDX+EDI]*/
+        addbyte(4+2);
+        addbyte(0x0f); /*MOVZX EAX, B[EDX+EDI]*/
+        addbyte(0xb6);
         addbyte(0x04);
         addbyte(0x3a);
         addbyte(0xeb); /*JMP done*/
-        addbyte(4+3+5+7+6);
+        addbyte(4+3+5+7+6+3);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
         addbyte(0x44);
         addbyte(0x24);
@@ -571,10 +572,10 @@ static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
-        /*done:*/
         addbyte(0x0f); /*MOVZX EAX, AL*/
         addbyte(0xb6);
         addbyte(0xc0);
+        /*done:*/
         host_reg_mapping[0] = 8;
 }
 static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
@@ -586,11 +587,9 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         addbyte(0xd6);
         addbyte(0x01); /*ADDL EDX, EAX*/
         addbyte(0xc2);
-        addbyte(0x89); /*MOV EDI, EDX*/
-        addbyte(0xd7);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 1[EDX]*/
+        addbyte(0x7a);
+        addbyte(0x01);
         addbyte(0xc1); /*SHR EDX, 12*/
         addbyte(0xea);
         addbyte(12);
@@ -602,21 +601,19 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         addbyte(0x95);
         addlong((uint32_t)readlookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+4+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+5+2);
         addbyte(0x83); /*CMP EDX, -1*/
         addbyte(0xfa);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(4+2);
-        addbyte(0x66); /*MOV AX, [EDX+EDI]*/
-        addbyte(0x8b);
-        addbyte(0x04);
+        addbyte(5+2);
+        addbyte(0x0f); /*MOVZX EAX, -1[EDX+EDI]W*/
+        addbyte(0xb7);
+        addbyte(0x44);
         addbyte(0x3a);
+        addbyte(-1);
         addbyte(0xeb); /*JMP done*/
-        addbyte(4+3+5+7+6);
+        addbyte(4+3+5+7+6+3);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
         addbyte(0x44);
         addbyte(0x24);
@@ -633,10 +630,10 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         addbyte(0x0f);
         addbyte(0x85); /*JNE end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
-        /*done:*/
         addbyte(0x0f); /*MOVZX EAX, AX*/
         addbyte(0xb7);
         addbyte(0xc0);
+        /*done:*/
         host_reg_mapping[0] = 8;
 }
 static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
@@ -648,11 +645,9 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
         addbyte(0xd6);
         addbyte(0x01); /*ADDL EDX, EAX*/
         addbyte(0xc2);
-        addbyte(0x89); /*MOV EDI, EDX*/
-        addbyte(0xd7);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 3[EDX]*/
+        addbyte(0x7a);
+        addbyte(0x03);
         addbyte(0xc1); /*SHR EDX, 12*/
         addbyte(0xea);
         addbyte(12);
@@ -664,18 +659,16 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
         addbyte(0x95);
         addlong((uint32_t)readlookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+3+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+4+2);
         addbyte(0x83); /*CMP EDX, -1*/
         addbyte(0xfa);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+2);
-        addbyte(0x8b); /*MOV EAX, [EDX+EDI]*/
-        addbyte(0x04);
+        addbyte(4+2);
+        addbyte(0x8b); /*MOV EAX, -3[EDX+EDI]*/
+        addbyte(0x44);
         addbyte(0x3a);
+        addbyte(-3);
         addbyte(0xeb); /*JMP done*/
         addbyte(4+3+5+7+6);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
@@ -697,6 +690,7 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
         /*done:*/
         host_reg_mapping[0] = 8;
 }
+
 static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
 {
         addbyte(0x8b); /*MOVL EDX, seg->base*/
@@ -706,11 +700,9 @@ static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
         addbyte(0xd6);
         addbyte(0x01); /*ADDL EDX, EAX*/
         addbyte(0xc2);
-        addbyte(0x89); /*MOV EDI, EDX*/
-        addbyte(0xd7);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 7[EDX]*/
+        addbyte(0x7a);
+        addbyte(0x07);
         addbyte(0xc1); /*SHR EDX, 12*/
         addbyte(0xea);
         addbyte(12);
@@ -722,22 +714,20 @@ static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
         addbyte(0x95);
         addlong((uint32_t)readlookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+3+4+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+4+4+2);
         addbyte(0x83); /*CMP EDX, -1*/
         addbyte(0xfa);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+4+2);
+        addbyte(4+4+2);
         addbyte(0x8b); /*MOV EAX, [EDX+EDI]*/
-        addbyte(0x04);
+        addbyte(0x44);
         addbyte(0x3a);
+        addbyte(-7);
         addbyte(0x8b); /*MOV EDX, [EDX+EDI+4]*/
         addbyte(0x54);
         addbyte(0x3a);
-        addbyte(0x04);
+        addbyte(-7+4);
         addbyte(0xeb); /*JMP done*/
         addbyte(4+3+5+7+6);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
@@ -791,9 +781,6 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xe8 | REG_ESI);
         addbyte(12);
-        addbyte(0xf7); /*TEST EDI, 0xfff*/
-        addbyte(0xc7);
-        addlong(0xfff);
         addbyte(0x8b); /*MOV ESI, readlookup2[ESI*4]*/
         addbyte(0x04 | (REG_ESI << 3));
         addbyte(0x85 | (REG_ESI << 3));
@@ -839,11 +826,9 @@ static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
         addlong((uint32_t)&seg->base);
         addbyte(0x01); /*ADDL ESI, EAX*/
         addbyte(0xc0 | (REG_EAX << 3) | REG_ESI);
-        addbyte(0x89); /*MOV EDI, ESI*/
-        addbyte(0xc0 | (REG_ESI << 3) | REG_EDI);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 1[ESI]*/
+        addbyte(0x7e);
+        addbyte(0x01);
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xe8 | REG_ESI);
         addbyte(12);
@@ -855,19 +840,17 @@ static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
         addbyte(0x85 | (REG_ESI << 3));
         addlong((uint32_t)writelookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+4+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+5+2);
         addbyte(0x83); /*CMP ESI, -1*/
         addbyte(0xf8 | REG_ESI);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(4+2);
-        addbyte(0x66); /*MOV [EDI+ESI],host_reg*/
+        addbyte(5+2);
+        addbyte(0x66); /*MOV -1[EDI+ESI],host_reg*/
         addbyte(0x89);
-        addbyte(0x04 | (host_reg << 3));
+        addbyte(0x44 | (host_reg << 3));
         addbyte(REG_EDI | (REG_ESI << 3));
+        addbyte(-1);
         addbyte(0xeb); /*JMP done*/
         addbyte(4+5+4+3+5+7+6);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
@@ -901,11 +884,9 @@ static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
         addlong((uint32_t)&seg->base);
         addbyte(0x01); /*ADDL ESI, EAX*/
         addbyte(0xc0 | (REG_EAX << 3) | REG_ESI);
-        addbyte(0x89); /*MOV EDI, ESI*/
-        addbyte(0xc0 | (REG_ESI << 3) | REG_EDI);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 3[ESI]*/
+        addbyte(0x7e);
+        addbyte(0x03);
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xe8 | REG_ESI);
         addbyte(12);
@@ -917,18 +898,16 @@ static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
         addbyte(0x85 | (REG_ESI << 3));
         addlong((uint32_t)writelookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+3+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+4+2);
         addbyte(0x83); /*CMP ESI, -1*/
         addbyte(0xf8 | REG_ESI);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+2);
-        addbyte(0x89); /*MOV [EDI+ESI],host_reg*/
-        addbyte(0x04 | (host_reg << 3));
+        addbyte(4+2);
+        addbyte(0x89); /*MOV -3[EDI+ESI],host_reg*/
+        addbyte(0x44 | (host_reg << 3));
         addbyte(REG_EDI | (REG_ESI << 3));
+        addbyte(-3);
         addbyte(0xeb); /*JMP done*/
         addbyte(4+5+4+3+5+7+6);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
@@ -962,11 +941,9 @@ static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
         addlong((uint32_t)&seg->base);
         addbyte(0x01); /*ADDL ESI, EAX*/
         addbyte(0xc0 | (REG_EAX << 3) | REG_ESI);
-        addbyte(0x89); /*MOV EDI, ESI*/
-        addbyte(0xc0 | (REG_ESI << 3) | REG_EDI);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(0x8d); /*LEA EDI, 7[ESI]*/
+        addbyte(0x7e);
+        addbyte(0x07);
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xe8 | REG_ESI);
         addbyte(12);
@@ -978,22 +955,20 @@ static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
         addbyte(0x85 | (REG_ESI << 3));
         addlong((uint32_t)writelookup2);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+3+2+3+4+2);
-        addbyte(0x83); /*XOR EDI, -1*/
-        addbyte(0xf7);
-        addbyte(-1);
+        addbyte(3+2+4+4+2);
         addbyte(0x83); /*CMP ESI, -1*/
         addbyte(0xf8 | REG_ESI);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(3+4+2);
+        addbyte(4+4+2);
         addbyte(0x89); /*MOV [EDI+ESI],host_reg*/
-        addbyte(0x04 | (host_reg << 3));
+        addbyte(0x44 | (host_reg << 3));
         addbyte(REG_EDI | (REG_ESI << 3));
+        addbyte(-7);
         addbyte(0x89); /*MOV [EDI+ESI+4],host_reg2*/
         addbyte(0x44 | (host_reg2 << 3));
         addbyte(REG_EDI | (REG_ESI << 3));
-        addbyte(0x04);
+        addbyte(-7+0x04);
         addbyte(0xeb); /*JMP done*/
         addbyte(4+5+4+4+3+5+7+6);
         addbyte(0x89); /*slowpath: MOV [ESP+4], EAX*/
