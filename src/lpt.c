@@ -4,6 +4,8 @@
 #include "lpt.h"
 
 static uint8_t lpt1_dat, lpt2_dat;
+static uint8_t lpt1_ctrl, lpt2_ctrl;
+
 void lpt1_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port & 3)
@@ -14,6 +16,7 @@ void lpt1_write(uint16_t port, uint8_t val, void *priv)
                 break;
                 case 2:
                 writedacctrl(val);
+                lpt1_ctrl = val;
                 break;
         }
 }
@@ -25,6 +28,8 @@ uint8_t lpt1_read(uint16_t port, void *priv)
                 return lpt1_dat;
                 case 1:
                 return readdacfifo();
+                case 2:
+                return lpt1_ctrl;
         }
         return 0xff;
 }
@@ -39,6 +44,7 @@ void lpt2_write(uint16_t port, uint8_t val, void *priv)
                 break;
                 case 2:
                 writedacctrl(val);
+                lpt2_ctrl = val;
                 break;
         }
 }
@@ -50,6 +56,8 @@ uint8_t lpt2_read(uint16_t port, void *priv)
                 return lpt2_dat;
                 case 1:
                 return readdacfifo();
+                case 2:
+                return lpt2_ctrl;
         }
         return 0xff;
 }
