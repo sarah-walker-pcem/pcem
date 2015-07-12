@@ -454,7 +454,7 @@ typedef struct
         int tracks;
 } PcemHDC;
 
-PcemHDC hdc[2];
+PcemHDC hdc[4];
 
 /*Keyboard*/
 int keybsenddelay;

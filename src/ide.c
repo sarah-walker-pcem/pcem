@@ -150,7 +150,7 @@ IDE ide_drives[4];
 
 IDE *ext_ide;
 
-char ide_fn[2][512];
+char ide_fn[4][512];
 
 int (*ide_bus_master_read_sector)(int channel, uint8_t *data);
 int (*ide_bus_master_write_sector)(int channel, uint8_t *data);
@@ -277,9 +277,9 @@ static void ide_identify(IDE *ide)
 	ide->buffer[3] = 16;  /* Heads */
 	ide->buffer[6] = 63;  /* Sectors */
 #else
-	ide->buffer[1] = hdc[cur_ide[0]].tracks; /* Cylinders */
-	ide->buffer[3] = hdc[cur_ide[0]].hpc;  /* Heads */
-	ide->buffer[6] = hdc[cur_ide[0]].spt;  /* Sectors */
+	ide->buffer[1] = hdc[cur_ide[ide->board]].tracks; /* Cylinders */
+	ide->buffer[3] = hdc[cur_ide[ide->board]].hpc;  /* Heads */
+	ide->buffer[6] = hdc[cur_ide[ide->board]].spt;  /* Sectors */
 #endif
 	ide_padstr((char *) (ide->buffer + 10), "", 20); /* Serial Number */
 	ide_padstr((char *) (ide->buffer + 23), "v1.0", 8); /* Firmware */
@@ -301,8 +301,8 @@ static void ide_identify(IDE *ide)
 	ide->buffer[60] = (65535 * 16 * 63) & 0xFFFF; /* Total addressable sectors (LBA) */
 	ide->buffer[61] = (65535 * 16 * 63) >> 16;
 #else
-	ide->buffer[60] = (hdc[cur_ide[0]].tracks * hdc[cur_ide[0]].hpc * hdc[cur_ide[0]].spt) & 0xFFFF; /* Total addressable sectors (LBA) */
-	ide->buffer[61] = (hdc[cur_ide[0]].tracks * hdc[cur_ide[0]].hpc * hdc[cur_ide[0]].spt) >> 16;
+	ide->buffer[60] = (hdc[cur_ide[ide->board]].tracks * hdc[cur_ide[ide->board]].hpc * hdc[cur_ide[ide->board]].spt) & 0xFFFF; /* Total addressable sectors (LBA) */
+	ide->buffer[61] = (hdc[cur_ide[ide->board]].tracks * hdc[cur_ide[ide->board]].hpc * hdc[cur_ide[ide->board]].spt) >> 16;
 #endif
 	ide->buffer[63] = 7; /*Multiword DMA*/
 	ide->buffer[80] = 0xe; /*ATA-1 to ATA-3 supported*/
@@ -565,8 +565,11 @@ void resetide(void)
 #else
         loadhd(&ide_drives[0], 0, ide_fn[0]);
         loadhd(&ide_drives[1], 1, ide_fn[1]);
+        loadhd(&ide_drives[2], 2, ide_fn[2]);
         if (cdrom_enabled)
-           ide_drives[2].type = IDE_CDROM;
+                ide_drives[3].type = IDE_CDROM;
+        else
+                loadhd(&ide_drives[3], 3, ide_fn[3]);
 #endif
 
         cur_ide[0] = 0;

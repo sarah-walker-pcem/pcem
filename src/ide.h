@@ -43,6 +43,6 @@ extern int ideboard;
 
 extern int idecallback[2];
 
-extern char ide_fn[2][512];
+extern char ide_fn[4][512];
 
 #endif //__IDE__

@@ -539,6 +539,18 @@ void loadconfig(char *fn)
         p = (char *)config_get_string(NULL, "hdd_fn", "");
         if (p) strcpy(ide_fn[1], p);
         else   strcpy(ide_fn[1], "");
+        hdc[2].spt = config_get_int(NULL, "hde_sectors", 0);
+        hdc[2].hpc = config_get_int(NULL, "hde_heads", 0);
+        hdc[2].tracks = config_get_int(NULL, "hde_cylinders", 0);
+        p = (char *)config_get_string(NULL, "hde_fn", "");
+        if (p) strcpy(ide_fn[2], p);
+        else   strcpy(ide_fn[2], "");
+        hdc[3].spt = config_get_int(NULL, "hdf_sectors", 0);
+        hdc[3].hpc = config_get_int(NULL, "hdf_heads", 0);
+        hdc[3].tracks = config_get_int(NULL, "hdf_cylinders", 0);
+        p = (char *)config_get_string(NULL, "hdf_fn", "");
+        if (p) strcpy(ide_fn[3], p);
+        else   strcpy(ide_fn[3], "");
 }
 
 void saveconfig()
@@ -578,6 +590,14 @@ void saveconfig()
         config_set_int(NULL, "hdd_heads", hdc[1].hpc);
         config_set_int(NULL, "hdd_cylinders", hdc[1].tracks);
         config_set_string(NULL, "hdd_fn", ide_fn[1]);
+        config_set_int(NULL, "hde_sectors", hdc[2].spt);
+        config_set_int(NULL, "hde_heads", hdc[2].hpc);
+        config_set_int(NULL, "hde_cylinders", hdc[2].tracks);
+        config_set_string(NULL, "hde_fn", ide_fn[2]);
+        config_set_int(NULL, "hdf_sectors", hdc[3].spt);
+        config_set_int(NULL, "hdf_heads", hdc[3].hpc);
+        config_set_int(NULL, "hdf_cylinders", hdc[3].tracks);
+        config_set_string(NULL, "hdf_fn", ide_fn[3]);
         
         config_save(config_file_default);
 }
