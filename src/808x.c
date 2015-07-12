@@ -619,6 +619,7 @@ chdir(pcempath);
 }
 
 int resets = 0;
+int x86_was_reset = 0;
 void resetx86()
 {
         pclog("x86 reset\n");
@@ -655,6 +656,7 @@ void resetx86()
 #ifdef DYNAREC
         codegen_reset();
 #endif
+        x86_was_reset = 1;
 }
 
 void softresetx86()

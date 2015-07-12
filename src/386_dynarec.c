@@ -1319,6 +1319,7 @@ inrecomp=0;
                         
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
                         cpu_block_end = 0;
+                        x86_was_reset = 0;
 
                         cpu_new_blocks++;
                         
@@ -1356,6 +1357,13 @@ inrecomp=0;
 
                                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
                                 }
+                                
+                                if (x86_was_reset)
+                                {
+                                        x86_was_reset = 0;
+                                        /*Codeblock structure will have been cleared so no need for CODE_BLOCK_END()*/
+                                        goto recomp_end;
+                                }
 
                                 if (!use32) pc &= 0xffff;
 
@@ -1387,7 +1395,8 @@ inrecomp=0;
 //                        if (output && (SP & 1))
 //                                fatal("odd SP\n");
                 }
-                cycdiff=oldcyc-cycles;                
+recomp_end:
+                cycdiff=oldcyc-cycles;
                 tsc += cycdiff;
                 
 //                timer_end_period(cycles);
