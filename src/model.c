@@ -297,7 +297,7 @@ void at_sis496_init()
 void at_batman_init()
 {
         at_init();
-        mouse_serial_init();
+        mouse_ps2_init();
         pci_init(PCI_CONFIG_TYPE_2, 0xd, 0x10);
         i430lx_init();
         um8669f_init();
