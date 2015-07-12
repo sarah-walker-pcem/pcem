@@ -1800,6 +1800,20 @@ void mem_resize()
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
+void mem_reset_page_blocks()
+{
+        int c;
+        
+        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        {
+                pages[c].write_b = mem_write_ramb_page;
+                pages[c].write_w = mem_write_ramw_page;
+                pages[c].write_l = mem_write_raml_page;
+                pages[c].block = NULL;
+                pages[c].block_2 = NULL;
+        }
+}
+
 int mem_a20_key = 0, mem_a20_alt = 0;
 static int mem_a20_state = 0;
 

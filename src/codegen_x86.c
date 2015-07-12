@@ -86,6 +86,7 @@ void codegen_reset()
 {
         memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
+        mem_reset_page_blocks();
 }
 
 void dump_block()
