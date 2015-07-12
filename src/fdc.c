@@ -40,6 +40,7 @@ typedef struct FDC
         int inread;
         
         int dskchg_activelow;
+        int enable_3f1;
 } FDC;
 
 static FDC fdc;
@@ -376,6 +377,8 @@ uint8_t fdc_read(uint16_t addr, void *priv)
         switch (addr&7)
         {
                 case 1: /*???*/
+                if (!fdc.enable_3f1)
+                        return 0xff;
 //                temp=0x50;
                 temp = 0x70;
                 if (fdc.dor & 1)
@@ -950,6 +953,7 @@ void fdc_init()
 {
 	timer_add(fdc_callback, &disctime, &disctime, NULL);
 	fdc.dskchg_activelow = 0;
+	fdc.enable_3f1 = 1;
 }
 
 void fdc_add()
@@ -980,4 +984,9 @@ void fdc_discchange_clear(int drive)
 void fdc_set_dskchg_activelow()
 {
         fdc.dskchg_activelow = 1;
+}
+
+void fdc_3f1_enable(int enable)
+{
+        fdc.enable_3f1 = enable;
 }

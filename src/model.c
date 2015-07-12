@@ -10,6 +10,7 @@
 #include "device.h"
 #include "dma.h"
 #include "fdc.h"
+#include "fdc37c665.h"
 #include "gameport.h"
 #include "headland.h"
 #include "i430fx.h"
@@ -300,7 +301,7 @@ void at_batman_init()
         mouse_ps2_init();
         pci_init(PCI_CONFIG_TYPE_2, 0xd, 0x10);
         i430lx_init();
-        um8669f_init();
+        fdc37c665_init();
         intel_batman_init();
 }
 void at_endeavor_init()
