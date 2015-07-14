@@ -1356,13 +1356,9 @@ inrecomp=0;
                                         codegen_generate_call(opcode, x86_opcodes[(opcode | op32) & 0x3ff], fetchdat, pc, pc-1);
 
                                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
-                                }
-                                
-                                if (x86_was_reset)
-                                {
-                                        x86_was_reset = 0;
-                                        /*Codeblock structure will have been cleared so no need for CODE_BLOCK_END()*/
-                                        goto recomp_end;
+
+                                        if (x86_was_reset)
+                                                break;
                                 }
 
                                 if (!use32) pc &= 0xffff;
@@ -1388,14 +1384,14 @@ inrecomp=0;
                                 insc++;
                         }
                         
-                        if (!abrt)
+                        if (!abrt && !x86_was_reset)
                                 codegen_block_end();
 //                        output &= ~2;
                 }
 //                        if (output && (SP & 1))
 //                                fatal("odd SP\n");
                 }
-recomp_end:
+
                 cycdiff=oldcyc-cycles;
                 tsc += cycdiff;
                 
