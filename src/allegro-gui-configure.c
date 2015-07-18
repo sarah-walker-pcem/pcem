@@ -191,10 +191,10 @@ static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 236*2,256,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 236*2,272,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 176,  232, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 246,  232, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 176,  248, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 246,  248, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
@@ -214,6 +214,7 @@ static DIALOG configure_dialog[] =
         {d_check_proc,   14*2, 188, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
         {d_check_proc,   14*2, 204, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
         {d_check_proc,   14*2, 220, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
+        {d_check_proc,   14*2, 236, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
 
         {d_text_proc,    16*2,  16,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Machine :", 0, 0},
         {d_text_proc,    16*2,  36,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video :", 0, 0},
@@ -384,6 +385,11 @@ pclog("video_card_available : %i\n", c);
         else
                 configure_dialog[15].flags &= ~D_SELECTED;
 
+        if (voodoo_enabled)
+                configure_dialog[16].flags |= D_SELECTED;
+        else
+                configure_dialog[16].flags &= ~D_SELECTED;
+
         sprintf(mem_size_str, "%i", mem_size);
         
         while (1)
@@ -406,6 +412,7 @@ pclog("video_card_available : %i\n", c);
                         int new_GAMEBLASTER = (configure_dialog[12].flags & D_SELECTED) ? 1 : 0;
                         int new_GUS = (configure_dialog[13].flags & D_SELECTED) ? 1 : 0;
                         int new_SSI2001 = (configure_dialog[14].flags & D_SELECTED) ? 1 : 0;
+                        int new_voodoo = (configure_dialog[16].flags & D_SELECTED) ? 1 : 0;
                         
                         sscanf(mem_size_str, "%i", &new_mem_size);
                         if (new_mem_size < 1 || new_mem_size > 256)
@@ -416,7 +423,7 @@ pclog("video_card_available : %i\n", c);
                         
                         if (new_model != model || new_gfxcard != gfxcard || new_mem_size != mem_size || 
                             new_has_fpu != hasfpu || new_GAMEBLASTER != GAMEBLASTER || new_GUS != GUS ||
-                            new_SSI2001 != SSI2001 || new_sndcard != sound_card_current)
+                            new_SSI2001 != SSI2001 || new_sndcard != sound_card_current || new_voodoo != voodoo_enabled)
                         {
                                 if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
                                         continue;
@@ -431,6 +438,7 @@ pclog("video_card_available : %i\n", c);
                                 GUS = new_GUS;
                                 SSI2001 = new_SSI2001;
                                 sound_card_current = new_sndcard;
+				voodoo_enabled = new_voodoo;
                                         
                                 mem_resize();
                                 loadbios();
