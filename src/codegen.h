@@ -138,6 +138,16 @@ static inline void addlong(uint32_t val)
         }
 }
 
+static inline void addquad(uint64_t val)
+{
+        *(uint64_t *)&codeblock[block_current].data[block_pos] = val;
+        block_pos += 8;
+        if (block_pos >= 1760)
+        {
+                CPU_BLOCK_END();
+        }
+}
+
 /*Current physical page of block being recompiled. -1 if no recompilation taking place */
 extern uint32_t recomp_page;
 

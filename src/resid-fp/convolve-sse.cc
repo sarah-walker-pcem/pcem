@@ -32,7 +32,7 @@ float convolve_sse(const float *a, const float *b, int n)
     int diff = (int) (a - b) & 0xf;
     /* long cast is no-op for x86-32, but x86-64 gcc needs 64 bit intermediate
      * to convince compiler we mean this. */
-    unsigned int a_align = (unsigned int) (unsigned long) a & 0xf;
+    unsigned int a_align = (unsigned int) (uintptr_t) a & 0xf;
 
     /* advance if necessary. We can't let n fall < 0, so no while (n --). */
     while (n > 0 && a_align != 0 && a_align != 16) {

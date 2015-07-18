@@ -50,7 +50,7 @@ int optype;
 #define JMP 1
 #define CALL 2
 #define IRET 3
-#define INT 4
+#define OPTYPE_INT 4
 
 uint32_t oxpc;
 

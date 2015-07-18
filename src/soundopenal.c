@@ -4,7 +4,11 @@
 #include <stdlib.h>
 #ifdef USE_OPENAL
 #include <AL/al.h>
+#ifdef __MINGW64__
+#include <AL/alc.h>
+#else
 #include <AL/alut.h>
+#endif
 #endif
 #include "ibm.h"
 
@@ -18,7 +22,40 @@ ALenum format;     // internal format
 #define BUFLEN SOUNDBUFLEN
 
 void closeal();
+#ifdef __MINGW64__
+ALvoid  alutInit(ALint *argc,ALbyte **argv) 
+{
+	ALCcontext *Context;
+	ALCdevice *Device;
+	
+	//Open device
+ 	Device=alcOpenDevice((ALubyte*)"DirectSound3D");
+	//Create context(s)
+	Context=alcCreateContext(Device,NULL);
+	//Set active context
+	alcMakeContextCurrent(Context);
+	//Register extensions
+}
 
+ALvoid  alutExit(ALvoid) 
+{
+	ALCcontext *Context;
+	ALCdevice *Device;
+
+	//Unregister extensions
+
+	//Get active context
+	Context=alcGetCurrentContext();
+	//Get device for active context
+	Device=alcGetContextsDevice(Context);
+	//Disable context
+	alcMakeContextCurrent(NULL);
+	//Release context(s)
+	alcDestroyContext(Context);
+	//Close device
+	alcCloseDevice(Device);
+}
+#endif
 void initalmain(int argc, char *argv[])
 {
 #ifdef USE_OPENAL

@@ -2,20 +2,26 @@
 
 #include <windows.h>
 #include <io.h>
+#ifdef __MINGW64__
+#include "ntddcdrm.h"
+#else
 #include "ddk/ntddcdrm.h"
-//#include "ntddcdrm.h"
+#endif
 #include "ibm.h"
 #include "ide.h"
 #include "cdrom-ioctl.h"
 
 int cdrom_drive;
 
+#ifndef __MINGW64__
 typedef struct _CDROM_TOC_SESSION_DATA {
   UCHAR      Length[2];
   UCHAR      FirstCompleteSession;
   UCHAR      LastCompleteSession;
   TRACK_DATA TrackData[1];
 } CDROM_TOC_SESSION_DATA, *PCDROM_TOC_SESSION_DATA;
+#endif
+
 static ATAPI ioctl_atapi;
 
 static uint32_t last_block = 0;

@@ -135,10 +135,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
         }
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
-                if ( readlookup2[(easeg + eaaddr) >> 12] != -1)
-                   eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
-                if (writelookup2[(easeg + eaaddr) >> 12] != -1)
-                   eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
+                uint32_t addr = easeg + eaaddr;
+                if ( readlookup2[addr >> 12] != -1)
+                   eal_r = (uint32_t *)(readlookup2[addr >> 12] + addr);
+                if (writelookup2[addr >> 12] != -1)
+                   eal_w = (uint32_t *)(writelookup2[addr >> 12] + addr);
         }
 }
 
@@ -176,10 +177,11 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         }
         if (easeg != 0xFFFFFFFF && ((easeg + eaaddr) & 0xFFF) <= 0xFFC)
         {
-                if ( readlookup2[(easeg + eaaddr) >> 12] != -1)
-                   eal_r = (uint32_t *)(readlookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
-                if (writelookup2[(easeg + eaaddr) >> 12] != -1)
-                   eal_w = (uint32_t *)(writelookup2[(easeg + eaaddr) >> 12] + easeg + eaaddr);
+                uint32_t addr = easeg + eaaddr;
+                if ( readlookup2[addr >> 12] != -1)
+                   eal_r = (uint32_t *)(readlookup2[addr >> 12] + addr);
+                if (writelookup2[addr >> 12] != -1)
+                   eal_w = (uint32_t *)(writelookup2[addr >> 12] + addr);
         }
 }
 

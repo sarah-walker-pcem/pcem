@@ -1934,7 +1934,7 @@ void pmodeint(int num, int soft)
                                         x86np("Int task gate not present\n", segdat[1] & 0xfffc);
                                         return;
                                 }
-                optype=INT;
+                optype=OPTYPE_INT;
                 cpl_override=1;
                 taskswitch286(seg,segdat2,segdat2[2]&0x800);
                 cpl_override=0;
@@ -2366,7 +2366,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 new_ldt=readmemw(base,0x60);
                 
                 if (abrt) return;
-                if (optype==JMP || optype==INT)
+                if (optype==JMP || optype==OPTYPE_INT)
                 {
                         if (tr.seg&4) tempw=readmemw(ldt.base,(tr.seg&~7)+4);
                         else          tempw=readmemw(gdt.base,(tr.seg&~7)+4);
@@ -2402,13 +2402,13 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 writememl(tr.base,0x5C,GS);
                 writememl(tr.base,0x60,ldt.seg);
                 
-                if (optype==INT)
+                if (optype==OPTYPE_INT)
                 {
                         writememl(base,0,tr.seg);
                         new_flags|=NT_FLAG;
                 }
                 if (abrt) return;
-                if (optype==JMP || optype==INT)
+                if (optype==JMP || optype==OPTYPE_INT)
                 {
                         if (tr.seg&4) tempw=readmemw(ldt.base,(seg&~7)+4);
                         else          tempw=readmemw(gdt.base,(seg&~7)+4);

@@ -1,6 +1,10 @@
 #include <windows.h>
 #include "resources.h"
 
+#ifndef UPDOWN_CLASS
+#define UPDOWN_CLASS L"msctls_updown32"
+#endif
+
 MainMenu MENU DISCARDABLE
 BEGIN
         POPUP "&File"
