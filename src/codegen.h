@@ -1,6 +1,8 @@
 #ifdef DYNAREC
 
-#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
+#ifdef __amd64__
+#include "codegen_x86-64.h"
+#elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
 #include "codegen_x86.h"
 #else
 #error Dynamic recompiler not implemented on your platform

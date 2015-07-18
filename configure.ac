@@ -36,6 +36,10 @@ if test "$enable_dynarec" = "yes"; then
 		CPU=i386
 		AC_MSG_RESULT(${host_cpu})
 		;;
+		x86_64)
+		CPU=x86_64
+		AC_MSG_RESULT(${host_cpu})
+		;;
 		*)
 		AC_MSG_ERROR([Unsupported CPU.])
 		;;
@@ -43,6 +47,7 @@ if test "$enable_dynarec" = "yes"; then
 fi
 
 AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
+AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
 
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB

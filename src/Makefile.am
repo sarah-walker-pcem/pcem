@@ -17,11 +17,11 @@ pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 pcem_SOURCES = 386.c 808x.c acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
-config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c dma.c fdc.c fdi2raw.c gameport.c \
+compaq.c config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c dma.c fdc.c fdc37c665.c fdi2raw.c gameport.c \
 headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
-olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c rom.c serial.c sis496.c sound.c \
+olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c sound.c \
 sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 sound_speaker.c sound_ssi2001.c sound_wss.c soundopenal.c thread-pthread.c timer.c um8669f.c \
@@ -48,6 +48,11 @@ codegen_timing_486.c codegen_timing_pentium.c
 if CPU_I386
 pcem_SOURCES += codegen_x86.c
 endif
+
+if CPU_X86_64
+pcem_SOURCES += codegen_x86-64.c
+endif
+
 endif
 
 

@@ -567,6 +567,8 @@ OS_LINUX_FALSE
 OS_LINUX_TRUE
 OS_WIN_FALSE
 OS_WIN_TRUE
+CPU_X86_64_FALSE
+CPU_X86_64_TRUE
 CPU_I386_FALSE
 CPU_I386_TRUE
 DYNAREC_FALSE
@@ -4029,6 +4031,11 @@ $as_echo_n "checking for cpu... " >&6; }
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${host_cpu}" >&5
 $as_echo "${host_cpu}" >&6; }
 		;;
+		x86_64)
+		CPU=x86_64
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${host_cpu}" >&5
+$as_echo "${host_cpu}" >&6; }
+		;;
 		*)
 		as_fn_error "Unsupported CPU." "$LINENO" 5
 		;;
@@ -4041,6 +4048,14 @@ fi
 else
   CPU_I386_TRUE='#'
   CPU_I386_FALSE=
+fi
+
+ if test "$CPU" = "x86_64"; then
+  CPU_X86_64_TRUE=
+  CPU_X86_64_FALSE='#'
+else
+  CPU_X86_64_TRUE='#'
+  CPU_X86_64_FALSE=
 fi
 
 
@@ -4641,6 +4656,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CPU_I386_TRUE}" && test -z "${CPU_I386_FALSE}"; then
   as_fn_error "conditional \"CPU_I386\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${CPU_X86_64_TRUE}" && test -z "${CPU_X86_64_FALSE}"; then
+  as_fn_error "conditional \"CPU_X86_64\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${OS_WIN_TRUE}" && test -z "${OS_WIN_FALSE}"; then

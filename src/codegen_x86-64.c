@@ -24,6 +24,65 @@
 #include <windows.h>
 #endif
 
+static void load_param_1_32(codeblock_t *block, uint32_t param)
+{
+#if WIN64
+        addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
+#else
+        addbyte(0xbf); /*MOVL $fetchdat,%edi*/
+#endif
+        addlong(param);
+}
+static void load_param_1_64(codeblock_t *block, uint64_t param)
+{
+	addbyte(0x48);
+#if WIN64
+        addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
+#else
+        addbyte(0xbf); /*MOVL $fetchdat,%edi*/
+#endif
+        addquad(param);
+}
+
+static void load_param_2_32(codeblock_t *block, uint32_t param)
+{
+#if WIN64
+        addbyte(0xba); /*MOVL $fetchdat,%edx*/
+#else
+        addbyte(0xbe); /*MOVL $fetchdat,%esi*/
+#endif
+        addlong(param);
+}
+static void load_param_2_64(codeblock_t *block, uint64_t param)
+{
+	addbyte(0x48);
+#if WIN64
+        addbyte(0xba); /*MOVL $fetchdat,%edx*/
+#else
+        addbyte(0xbe); /*MOVL $fetchdat,%esi*/
+#endif
+        addquad(param);
+}
+
+static void call(codeblock_t *block, uintptr_t func)
+{
+	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
+
+	if (diff >= -0x80000000 && diff < 0x7fffffff)
+	{
+	        addbyte(0xE8); /*CALL*/
+	        addlong((uint32_t)diff);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RAX, func*/
+		addbyte(0xb8);
+		addquad(func);
+		addbyte(0xff); /*CALL RAX*/
+		addbyte(0xd0);
+	}
+}
+
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
 int codegen_fpu_loaded_iq[8];
@@ -224,13 +283,20 @@ void codegen_block_init(uint32_t phys_addr)
         block->next = block->prev = NULL;
         
         block_pos = BLOCK_GPF_OFFSET;
+#if WIN64
         addbyte(0x48); /*XOR RCX, RCX*/
         addbyte(0x31);
         addbyte(0xc9);
-        addbyte(0xe1); /*XOR EDX, EDX*/
+        addbyte(0x31); /*XOR EDX, EDX*/
         addbyte(0xd2);
-        addbyte(0xe8); /*CALL x86gpf*/
-        addlong((uint32_t)x86gpf - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
+#else
+        addbyte(0x48); /*XOR RDI, RDI*/
+        addbyte(0x31);
+        addbyte(0xff);
+        addbyte(0x31); /*XOR ESI, ESI*/
+        addbyte(0xf6);
+#endif
+	call(block, (uintptr_t)x86gpf);
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
         addbyte(0x48); /*ADDL $32,%rsp*/
         addbyte(0x83);
@@ -849,7 +915,6 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                 opcode = fetchdat & 0xff;
                 if (!pc_off)
                         fetchdat >>= 8;
-                
                 op_pc++;
         }
         
@@ -1003,11 +1068,8 @@ generate_call:
                 addlong(op_32);
         }
 
-        addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
-        addlong(fetchdat);
-  
-        addbyte(0xE8); /*CALL*/
-        addlong(((uint8_t *)op - (uint8_t *)(&block->data[block_pos + 4])));
+	load_param_1_32(block, fetchdat);
+	call(block, (uintptr_t)op);  
 
         codegen_block_ins++;
         
@@ -1018,8 +1080,7 @@ generate_call:
         addbyte(0x0F); addbyte(0x85); /*JNZ 0*/
         addlong((uint32_t)&block->data[BLOCK_EXIT_OFFSET] - (uint32_t)(&block->data[block_pos + 4]));
 
-//        addbyte(0xE8); /*CALL*/
-//        addlong(((uint8_t *)codegen_debug - (uint8_t *)(&block->data[block_pos + 4])));
+//	call(block, codegen_debug);
 
         codegen_endpc = (cs + pc) + 8;
 }
