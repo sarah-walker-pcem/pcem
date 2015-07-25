@@ -286,7 +286,7 @@ int driveempty[2];
 #define ET4000 (gfxcard==GFX_ET4000 && VGA)
 #define ET4000W32 (gfxcard==GFX_ET4000W32 && VGA)
 #define AT (romset>=ROM_IBMAT)
-#define PCI (romset >= ROM_PCI486)
+#define PCI (romset >= ROM_PCI486 && romset < ROM_IBMPS1_2011)
 #define PCJR (romset == ROM_IBMPCJR)
 
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
@@ -326,6 +326,7 @@ enum
         ROM_REVENGE,
         ROM_IBMPS1_2011,
         ROM_DESKPRO_386,
+        ROM_AMIXT,      /*XT Clone with AMI BIOS*/
         
         ROM_MAX
 };

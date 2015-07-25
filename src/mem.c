@@ -506,6 +506,14 @@ int loadbios()
                 biosmask = 0x7fff;
                 mem_load_atide_bios();
                 return 1;
+
+                case ROM_AMIXT:
+                f = romfopen("roms/amixt/AMI_8088_BIOS_31JAN89.BIN", "rb");
+                if (!f) break;
+                fread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                mem_load_xtide_bios();
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

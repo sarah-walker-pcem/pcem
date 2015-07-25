@@ -73,6 +73,7 @@ MODEL models[] =
         {"IBM XT",              ROM_IBMXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
         {"IBM PCjr",            ROM_IBMPCJR,     { "",      cpus_pcjr,    "",    NULL,         "",      NULL},         1,    pcjr_init},
         {"Generic XT clone",    ROM_GENXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
+        {"AMI XT clone",        ROM_AMIXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
         {"DTK XT clone",        ROM_DTKXT,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},        
         {"Tandy 1000",          ROM_TANDY,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         1, tandy1k_init},
         {"Amstrad PC1512",      ROM_PC1512,      { "",      cpus_pc1512,  "",    NULL,         "",      NULL},         1,     ams_init},
