@@ -327,7 +327,9 @@ enum
         ROM_IBMPS1_2011,
         ROM_DESKPRO_386,
         ROM_AMIXT,      /*XT Clone with AMI BIOS*/
-        
+	ROM_LTXT,
+	ROM_LXT3,
+	
         ROM_MAX
 };
 

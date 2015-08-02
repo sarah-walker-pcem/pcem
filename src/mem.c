@@ -514,6 +514,23 @@ int loadbios()
                 fclose(f);
                 mem_load_xtide_bios();
                 return 1;
+                
+                case ROM_LTXT:
+                f = romfopen("roms/ltxt/27C64.bin", "rb");
+                if (!f) break;
+                fread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                mem_load_xtide_bios();
+                return 1;
+
+                case ROM_LXT3:
+                f = romfopen("roms/lxt3/27C64D.bin", "rb");
+                if (!f) break;
+                fread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                mem_load_xtide_bios();
+                return 1;
+
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
