@@ -370,7 +370,7 @@ static uint32_t ropMOVZX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_B(fetchdat & 7);
-                ZERO_EXTEND_W_B(host_reg);
+                host_reg = ZERO_EXTEND_W_B(host_reg);
                 STORE_REG_TARGET_W_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else
@@ -393,7 +393,7 @@ static uint32_t ropMOVZX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_B(fetchdat & 7);
-                ZERO_EXTEND_L_B(host_reg);
+                host_reg = ZERO_EXTEND_L_B(host_reg);
                 STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else
@@ -416,7 +416,7 @@ static uint32_t ropMOVZX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_W(fetchdat & 7);
-                ZERO_EXTEND_L_W(host_reg);
+                host_reg = ZERO_EXTEND_L_W(host_reg);
                 STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else
@@ -440,7 +440,7 @@ static uint32_t ropMOVSX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_B(fetchdat & 7);
-                SIGN_EXTEND_W_B(host_reg);
+                host_reg = SIGN_EXTEND_W_B(host_reg);
                 STORE_REG_TARGET_W_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else
@@ -463,7 +463,7 @@ static uint32_t ropMOVSX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_B(fetchdat & 7);
-                SIGN_EXTEND_L_B(host_reg);
+                host_reg = SIGN_EXTEND_L_B(host_reg);
                 STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else
@@ -486,7 +486,7 @@ static uint32_t ropMOVSX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int host_reg = LOAD_REG_W(fetchdat & 7);
-                SIGN_EXTEND_L_W(host_reg);
+                host_reg = SIGN_EXTEND_L_W(host_reg);
                 STORE_REG_TARGET_L_RELEASE(host_reg, (fetchdat >> 3) & 7);
         }
         else

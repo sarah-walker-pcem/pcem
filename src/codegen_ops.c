@@ -9,7 +9,12 @@
 #include "cpu.h"
 #include "codegen.h"
 #include "codegen_ops.h"
+
+#ifdef __amd64__
+#include "codegen_ops_x86-64.h"
+#elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
 #include "codegen_ops_x86.h"
+#endif
 
 #include "codegen_ops_arith.h"
 #include "codegen_ops_fpu.h"

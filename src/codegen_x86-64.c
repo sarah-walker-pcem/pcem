@@ -24,64 +24,6 @@
 #include <windows.h>
 #endif
 
-static void load_param_1_32(codeblock_t *block, uint32_t param)
-{
-#if WIN64
-        addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
-#else
-        addbyte(0xbf); /*MOVL $fetchdat,%edi*/
-#endif
-        addlong(param);
-}
-static void load_param_1_64(codeblock_t *block, uint64_t param)
-{
-	addbyte(0x48);
-#if WIN64
-        addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
-#else
-        addbyte(0xbf); /*MOVL $fetchdat,%edi*/
-#endif
-        addquad(param);
-}
-
-static void load_param_2_32(codeblock_t *block, uint32_t param)
-{
-#if WIN64
-        addbyte(0xba); /*MOVL $fetchdat,%edx*/
-#else
-        addbyte(0xbe); /*MOVL $fetchdat,%esi*/
-#endif
-        addlong(param);
-}
-static void load_param_2_64(codeblock_t *block, uint64_t param)
-{
-	addbyte(0x48);
-#if WIN64
-        addbyte(0xba); /*MOVL $fetchdat,%edx*/
-#else
-        addbyte(0xbe); /*MOVL $fetchdat,%esi*/
-#endif
-        addquad(param);
-}
-
-static void call(codeblock_t *block, uintptr_t func)
-{
-	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
-
-	if (diff >= -0x80000000 && diff < 0x7fffffff)
-	{
-	        addbyte(0xE8); /*CALL*/
-	        addlong((uint32_t)diff);
-	}
-	else
-	{
-		addbyte(0x48); /*MOV RAX, func*/
-		addbyte(0xb8);
-		addquad(func);
-		addbyte(0xff); /*CALL RAX*/
-		addbyte(0xd0);
-	}
-}
 
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
@@ -1142,7 +1084,6 @@ generate_call:
                 }
 #endif
         }
-#if 0
         if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff])
         {
                 uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);
@@ -1159,7 +1100,7 @@ generate_call:
                         return;
                 }
         }
-#endif        
+
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 //        if (output)
 //                pclog("Generate call at %08X %02X %08X %02X  %08X %08X %08X %08X %08X  %02X %02X %02X %02X\n", &codeblock[block_current][block_pos], opcode, new_pc, ram[old_pc], EAX, EBX, ECX, EDX, ESI, ram[0x7bd2+6],ram[0x7bd2+7],ram[0x7bd2+8],ram[0x7bd2+9]);

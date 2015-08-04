@@ -197,9 +197,9 @@ static uint32_t ropLEAVE_16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         LOAD_EBP_TO_EA(0);
         MEM_LOAD_ADDR_EA_W(&_ss);
         host_reg = LOAD_REG_W(REG_BP); /*SP = BP + 2*/
-        STORE_REG_TARGET_W_RELEASE(0, REG_BP); /*BP = POP_W()*/
         ADD_HOST_REG_IMM_W(host_reg, 2);
         STORE_REG_TARGET_W_RELEASE(host_reg, REG_SP);
+        STORE_REG_TARGET_W_RELEASE(0, REG_BP); /*BP = POP_W()*/
 
         return op_pc;
 }
@@ -211,9 +211,9 @@ static uint32_t ropLEAVE_32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         LOAD_EBP_TO_EA(0);
         MEM_LOAD_ADDR_EA_L(&_ss);
         host_reg = LOAD_REG_L(REG_EBP); /*ESP = EBP + 4*/
-        STORE_REG_TARGET_L_RELEASE(0, REG_EBP); /*EBP = POP_L()*/
         ADD_HOST_REG_IMM(host_reg, 4);
         STORE_REG_TARGET_L_RELEASE(host_reg, REG_ESP);
-
+        STORE_REG_TARGET_L_RELEASE(0, REG_EBP); /*EBP = POP_L()*/
+        
         return op_pc;
 }
