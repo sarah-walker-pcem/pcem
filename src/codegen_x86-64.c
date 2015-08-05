@@ -28,6 +28,7 @@
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
 int codegen_fpu_loaded_iq[8];
+int codegen_reg_loaded[8];
 x86seg *op_ea_seg;
 int op_ssegs;
 uint32_t op_old_pc;
@@ -296,6 +297,9 @@ void codegen_block_init(uint32_t phys_addr)
         codegen_fpu_loaded_iq[4] = codegen_fpu_loaded_iq[5] = codegen_fpu_loaded_iq[6] = codegen_fpu_loaded_iq[7] = 0;
         
         _ds.checked = _es.checked = _fs.checked = _gs.checked = (cr0 & 1) ? 0 : 1;
+
+        codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] =
+        codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
 }
 
 void codegen_block_remove()

@@ -6,6 +6,9 @@ static void call(codeblock_t *block, uintptr_t func)
 {
 	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
 
+        codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] = 0;
+        codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
+
 	if (diff >= -0x80000000 && diff < 0x7fffffff)
 	{
 	        addbyte(0xE8); /*CALL*/
@@ -23,6 +26,9 @@ static void call(codeblock_t *block, uintptr_t func)
 
 static void call_long(uintptr_t func)
 {
+        codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] = 0;
+        codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
+
 	addbyte(0x48); /*MOV RAX, func*/
 	addbyte(0xb8);
 	addquad(func);
@@ -155,6 +161,9 @@ static void load_param_3_reg_64(int reg)
 
 static void CALL_FUNC(uintptr_t func)
 {
+        codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] = 0;
+        codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
+
 	addbyte(0x48); /*MOV RAX, func*/
 	addbyte(0xb8);
 	addquad(func);
@@ -171,12 +180,16 @@ static int LOAD_REG_B(int reg)
         int host_reg = reg & 3;
 //        host_reg_mapping[host_reg] = reg;
 
-        addbyte(0x44); /*MOVZX W[reg],host_reg*/
-        addbyte(0x0f);
-        addbyte(0xb7);
-        addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[reg & 3].w - (uint32_t)&EAX);
+        if (!codegen_reg_loaded[reg & 3])
+        {
+                addbyte(0x44); /*MOVZX W[reg],host_reg*/
+                addbyte(0x8b);
+                addbyte(0x45 | (host_reg << 3));
+                addbyte((uint32_t)&regs[host_reg & 3].b - (uint32_t)&EAX);
+        }
 
+        codegen_reg_loaded[reg & 3] = 1;
+        
         if (reg & 4)
                 return host_reg | 0x18;
                 
@@ -187,12 +200,16 @@ static int LOAD_REG_W(int reg)
         int host_reg = reg;
 //        host_reg_mapping[host_reg] = reg;
 
-        addbyte(0x44); /*MOVZX W[reg],host_reg*/
-        addbyte(0x0f);
-        addbyte(0xb7);
-        addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+        if (!codegen_reg_loaded[reg & 7])
+        {
+                addbyte(0x44); /*MOVZX W[reg],host_reg*/
+                addbyte(0x8b);
+                addbyte(0x45 | (host_reg << 3));
+                addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+        }
 
+        codegen_reg_loaded[reg & 7] = 1;
+        
         return host_reg | 8;
 }
 static int LOAD_REG_L(int reg)
@@ -200,11 +217,16 @@ static int LOAD_REG_L(int reg)
         int host_reg = reg;
 //        host_reg_mapping[host_reg] = reg;
 
-        addbyte(0x44); /*MOVZX W[reg],host_reg*/
-        addbyte(0x8b);
-        addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+        if (!codegen_reg_loaded[reg & 7])// || CS != 0x1ac7 || pc < 0x1340 || pc >= 0x1354)
+        {
+                addbyte(0x44); /*MOVZX W[reg],host_reg*/
+                addbyte(0x8b);
+                addbyte(0x45 | (host_reg << 3));
+                addbyte((uint32_t)&regs[reg & 7].l - (uint32_t)&EAX);
+        }
 
+        codegen_reg_loaded[reg & 7] = 1;
+        
         return host_reg | 8;
 }
 
@@ -282,12 +304,20 @@ static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
                                 addbyte(0x44);
                                 addbyte(0x89);
                                 addbyte(0xc0 | ((host_reg & 3) << 3));
+                                addbyte(0x88); /*MOV AL, AH*/
+                                addbyte(0xe0);
+                                addbyte(0x41); /*MOV dest_reg, AL*/
+                                addbyte(0x88);
+                                addbyte(0xc0 | (dest_reg & 7));
                                 addbyte(0x88); /*MOVB regs[reg].b, AH*/
                                 addbyte(0x65);
                                 addbyte((uint32_t)&regs[guest_reg & 3].b - (uint32_t)&EAX);
                         }
                         else
                         {
+                                addbyte(0x45); /*MOVB dest_reg, host_reg*/
+                                addbyte(0x88);
+                                addbyte(0xc0 | (dest_reg & 7) | ((host_reg & 7) << 3));
                                 addbyte(0x44); /*MOVB regs[guest_reg].b, host_reg*/
                                 addbyte(0x88);
                                 addbyte(0x45 | ((host_reg & 3) << 3));
@@ -302,6 +332,9 @@ static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
                                 addbyte(0xe8 | (host_reg & 7));
                                 addbyte(8);
                         }
+                        addbyte(0x41); /*MOVB dest_reg, host_reg*/
+                        addbyte(0x88);
+                        addbyte(0xc0 | (dest_reg & 7) | ((host_reg & 7) << 3));
                         addbyte(0x88); /*MOVB regs[guest_reg].b, host_reg*/
                         addbyte(0x45 | ((host_reg & 3) << 3));
                         addbyte((uint32_t)&regs[guest_reg & 3].b - (uint32_t)&EAX);
