@@ -29,7 +29,7 @@ ALvoid  alutInit(ALint *argc,ALbyte **argv)
 	ALCdevice *Device;
 	
 	//Open device
- 	Device=alcOpenDevice((ALubyte*)"DirectSound3D");
+ 	Device=alcOpenDevice((ALubyte*)"");
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
 	//Set active context
