@@ -238,6 +238,11 @@ typedef struct voodoo_t
         int clutData_dirty;
         rgb_t clutData256[256];
         uint32_t video_16to32[0x10000];
+        
+        uint8_t dirty_line[1024];
+        int dirty_line_low, dirty_line_high;
+        
+        int fb_write_buffer, fb_draw_buffer;
 
         uint16_t thefilter[1024][1024]; // pixel filter, feeding from one or two
         uint16_t thefilterg[1024][1024]; // for green
@@ -750,7 +755,6 @@ static void voodoo_update_ncc(voodoo_t *voodoo)
         }
 }
 
-
 static void voodoo_recalc(voodoo_t *voodoo)
 {
         uint32_t buffer_offset = ((voodoo->fbiInit2 >> 11) & 511) * 4096;
@@ -771,9 +775,11 @@ static void voodoo_recalc(voodoo_t *voodoo)
         {
                 case LFB_WRITE_FRONT:
                 voodoo->fb_write_offset = voodoo->params.front_offset;
+                voodoo->fb_write_buffer = voodoo->disp_buffer ? 1 : 0;
                 break;
                 case LFB_WRITE_BACK:
                 voodoo->fb_write_offset = voodoo->back_offset;
+                voodoo->fb_write_buffer = voodoo->disp_buffer ? 0 : 1;
                 break;
 
                 default:
@@ -802,9 +808,11 @@ static void voodoo_recalc(voodoo_t *voodoo)
         {
                 case FBZ_DRAW_FRONT:
                 voodoo->params.draw_offset = voodoo->params.front_offset;
+                voodoo->fb_draw_buffer = voodoo->disp_buffer ? 1 : 0;
                 break;
                 case FBZ_DRAW_BACK:
                 voodoo->params.draw_offset = voodoo->back_offset;
+                voodoo->fb_draw_buffer = voodoo->disp_buffer ? 0 : 1;
                 break;
 
                 default:
@@ -2149,7 +2157,9 @@ skip_pixel:
 
                         x += state->xdir;
                 } while (start_x != x2);
-
+                
+                if (voodoo->params.draw_offset == voodoo->params.front_offset)
+                        voodoo->dirty_line[real_y] = 1;
 next_line:
                 state->base_r += params->dRdY;
                 state->base_g += params->dGdY;
@@ -2411,6 +2421,7 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 //                voodoo->front_offset = params->front_offset;
                 if (!(val & 1))
                 {
+                        memset(voodoo->dirty_line, 1, 1024);
                         voodoo->front_offset = voodoo->params.front_offset;
                         voodoo->swap_count--;
                 }
@@ -2427,6 +2438,7 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                                 if (voodoo->swap_pending && voodoo->flush)
                                 {
                                         /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
+                                        memset(voodoo->dirty_line, 1, 1024);
                                         voodoo->front_offset = voodoo->params.front_offset;
                                         voodoo->swap_count--;
                                         voodoo->swap_pending = 0;
@@ -3075,7 +3087,10 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
 
         x = addr & 0x7fe;
         y = (addr >> 11) & 0x3ff;
-
+        
+        if (voodoo->fb_write_offset == voodoo->params.front_offset)
+                voodoo->dirty_line[y] = 1;
+        
         write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
         write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
         
@@ -3211,6 +3226,9 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
         x = addr & 0x7fe;
         y = (addr >> 11) & 0x3ff;
 
+        if (voodoo->fb_write_offset == voodoo->params.front_offset)
+                voodoo->dirty_line[y] = 1;
+        
         write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
         write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
         
@@ -3846,27 +3864,37 @@ void voodoo_callback(void *p)
         {
                 if (voodoo->line < voodoo->v_disp)
                 {
-                        uint32_t *p = &((uint32_t *)buffer32->line[voodoo->line])[32];
-                        uint16_t *src = (uint16_t *)&voodoo->fb_mem[voodoo->front_offset + voodoo->line*voodoo->row_width];
-                        int x;
-
-                        if (voodoo->scrfilter)
+                        if (voodoo->dirty_line[voodoo->line])
                         {
-                                int j, offset;
-                                uint16_t fil[(voodoo->h_disp + 1) * 3];              /* interleaved 24-bit RGB */
+                                uint32_t *p = &((uint32_t *)buffer32->line[voodoo->line])[32];
+                                uint16_t *src = (uint16_t *)&voodoo->fb_mem[voodoo->front_offset + voodoo->line*voodoo->row_width];
+                                int x;
 
-                                voodoo_filterline(voodoo, fil, voodoo->h_disp, src, voodoo->line);
-
-                                for (x = 0; x < voodoo->h_disp; x++)
+                                voodoo->dirty_line[voodoo->line] = 0;
+                                
+                                if (voodoo->line < voodoo->dirty_line_low)
+                                        voodoo->dirty_line_low = voodoo->line;
+                                if (voodoo->line > voodoo->dirty_line_high)
+                                        voodoo->dirty_line_high = voodoo->line;
+                                
+                                if (voodoo->scrfilter)
                                 {
-                                        p[x] = (voodoo->clutData256[fil[x*3]].b << 0 | voodoo->clutData256[fil[x*3+1]].g << 8 | voodoo->clutData256[fil[x*3+2]].r << 16);
+                                        int j, offset;
+                                        uint16_t fil[(voodoo->h_disp + 1) * 3];              /* interleaved 24-bit RGB */
+
+                                        voodoo_filterline(voodoo, fil, voodoo->h_disp, src, voodoo->line);
+
+                                        for (x = 0; x < voodoo->h_disp; x++)
+                                        {
+                                                p[x] = (voodoo->clutData256[fil[x*3]].b << 0 | voodoo->clutData256[fil[x*3+1]].g << 8 | voodoo->clutData256[fil[x*3+2]].r << 16);
+                                        }
                                 }
-                        }
-                        else
-                        {
-                                for (x = 0; x < voodoo->h_disp; x++)
+                                else
                                 {
-                                        p[x] = voodoo->video_16to32[src[x]];
+                                        for (x = 0; x < voodoo->h_disp; x++)
+                                        {
+                                                p[x] = voodoo->video_16to32[src[x]];
+                                        }
                                 }
                         }
                 }
@@ -3878,6 +3906,7 @@ void voodoo_callback(void *p)
                 if (voodoo->swap_pending && (voodoo->retrace_count > voodoo->swap_interval))
                 {
 //                        pclog("Retrace swap %i %p\n", voodoo->swap_count, &voodoo->swap_count);
+                        memset(voodoo->dirty_line, 1, 1024);
                         voodoo->retrace_count = 0;
                         voodoo->front_offset = voodoo->swap_offset;
                         voodoo->swap_count--;
@@ -3892,12 +3921,15 @@ void voodoo_callback(void *p)
         {
                 if (voodoo->line == voodoo->v_disp)
                 {
-                        svga_doblit(0, voodoo->v_disp, voodoo->h_disp, voodoo->v_disp, voodoo->svga);
+                        if (voodoo->dirty_line_high > voodoo->dirty_line_low)
+                                svga_doblit(0, voodoo->v_disp, voodoo->h_disp, voodoo->v_disp, voodoo->svga);
                         if (voodoo->clutData_dirty)
                         {
                                 voodoo->clutData_dirty = 0;
                                 voodoo_calc_clutData(voodoo);
                         }
+                        voodoo->dirty_line_high = -1;
+                        voodoo->dirty_line_low = 2000;
                 }
         }
         
