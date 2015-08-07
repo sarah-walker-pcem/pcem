@@ -322,10 +322,10 @@ int rep386(int fv)
                 ea_seg = &_gs;
                 goto startrep;
                 case 0x66: case 0x166: case 0x266: case 0x366: /*Data size prefix*/
-                rep32 = (rep32 & 0x200) | (use32 ^ 0x100);
+                rep32 = (rep32 & 0x200) | ((use32 ^ 0x100) & 0x100);
                 goto startrep;
                 case 0x67: case 0x167: case 0x267: case 0x367:  /*Address size prefix*/
-                rep32 = (rep32 & 0x100) | (use32 ^ 0x200);
+                rep32 = (rep32 & 0x100) | ((use32 ^ 0x200) & 0x200);
                 goto startrep;
                 case 0x6C: case 0x16C: /*REP INSB*/
                 if (c>0)
