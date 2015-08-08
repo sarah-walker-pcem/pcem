@@ -342,6 +342,22 @@ static void OR_HOST_REG_IMM(int host_reg, uint32_t imm)
         }
 }
 
+static void NEG_HOST_REG_B(int reg)
+{
+        addbyte(0xf6);
+        addbyte(0xd8 | reg);
+}
+static void NEG_HOST_REG_W(int reg)
+{
+        addbyte(0x66);
+        addbyte(0xf7);
+        addbyte(0xd8 | reg);
+}
+static void NEG_HOST_REG_L(int reg)
+{
+        addbyte(0xf7);
+        addbyte(0xd8 | reg);
+}
 
 static void SUB_HOST_REG_B(int dst_reg, int src_reg)
 {

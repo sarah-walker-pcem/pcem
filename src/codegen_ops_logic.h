@@ -355,7 +355,7 @@ static uint32_t ropXOR_EAX_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32
 static uint32_t ropF6(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
         x86seg *target_seg;
-        int host_reg, imm_reg;
+        int host_reg;
         uint8_t imm;
         
         switch (fetchdat & 0x38)
@@ -391,14 +391,13 @@ static uint32_t ropF6(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_
                 case 0x18: /*NEG b*/
                 if ((fetchdat & 0xc0) != 0xc0)
                         return 0;
-                imm_reg = LOAD_REG_IMM(0);
                 STORE_IMM_ADDR_L((uintptr_t)&flags_op, FLAGS_SUB8);
                 host_reg = LOAD_REG_B(fetchdat & 7);
-                STORE_HOST_REG_ADDR_BL((uintptr_t)&flags_op1, imm_reg);
-                SUB_HOST_REG_B(imm_reg, host_reg);
                 STORE_HOST_REG_ADDR_BL((uintptr_t)&flags_op2, host_reg);
-                STORE_REG_TARGET_B_RELEASE(imm_reg, fetchdat & 7);
-                STORE_HOST_REG_ADDR_BL((uintptr_t)&flags_res, imm_reg);
+                NEG_HOST_REG_B(host_reg);
+                STORE_IMM_ADDR_L((uintptr_t)&flags_op1, 0);
+                STORE_REG_B_RELEASE(host_reg);
+                STORE_HOST_REG_ADDR_BL((uintptr_t)&flags_res, host_reg);
                 return op_pc + 1;
         }
         
@@ -407,7 +406,7 @@ static uint32_t ropF6(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_
 static uint32_t ropF7_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
         x86seg *target_seg;
-        int host_reg, imm_reg;
+        int host_reg;
         uint16_t imm;
         
         switch (fetchdat & 0x38)
@@ -443,14 +442,13 @@ static uint32_t ropF7_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 case 0x18: /*NEG w*/
                 if ((fetchdat & 0xc0) != 0xc0)
                         return 0;
-                imm_reg = LOAD_REG_IMM(0);
                 STORE_IMM_ADDR_L((uintptr_t)&flags_op, FLAGS_SUB16);
                 host_reg = LOAD_REG_W(fetchdat & 7);
-                STORE_HOST_REG_ADDR_WL((uintptr_t)&flags_op1, imm_reg);
-                SUB_HOST_REG_W(imm_reg, host_reg);
                 STORE_HOST_REG_ADDR_WL((uintptr_t)&flags_op2, host_reg);
-                STORE_REG_TARGET_W_RELEASE(imm_reg, fetchdat & 7);
-                STORE_HOST_REG_ADDR_WL((uintptr_t)&flags_res, imm_reg);
+                NEG_HOST_REG_W(host_reg);
+                STORE_IMM_ADDR_L((uintptr_t)&flags_op1, 0);
+                STORE_REG_W_RELEASE(host_reg);
+                STORE_HOST_REG_ADDR_WL((uintptr_t)&flags_res, host_reg);
                 return op_pc + 1;
         }
         
@@ -459,7 +457,7 @@ static uint32_t ropF7_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
 static uint32_t ropF7_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
         x86seg *target_seg;
-        int host_reg, imm_reg;
+        int host_reg;
         uint32_t imm;
         
         switch (fetchdat & 0x38)
@@ -495,14 +493,13 @@ static uint32_t ropF7_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint3
                 case 0x18: /*NEG l*/
                 if ((fetchdat & 0xc0) != 0xc0)
                         return 0;
-                imm_reg = LOAD_REG_IMM(0);
                 STORE_IMM_ADDR_L((uintptr_t)&flags_op, FLAGS_SUB32);
                 host_reg = LOAD_REG_L(fetchdat & 7);
-                STORE_HOST_REG_ADDR((uintptr_t)&flags_op1, imm_reg);
-                SUB_HOST_REG_L(imm_reg, host_reg);
                 STORE_HOST_REG_ADDR((uintptr_t)&flags_op2, host_reg);
-                STORE_REG_TARGET_L_RELEASE(imm_reg, fetchdat & 7);
-                STORE_HOST_REG_ADDR((uintptr_t)&flags_res, imm_reg);
+                NEG_HOST_REG_L(host_reg);
+                STORE_IMM_ADDR_L((uintptr_t)&flags_op1, 0);
+                STORE_REG_L_RELEASE(host_reg);
+                STORE_HOST_REG_ADDR((uintptr_t)&flags_res, host_reg);
                 return op_pc + 1;
         }
         

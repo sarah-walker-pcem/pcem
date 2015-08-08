@@ -217,7 +217,7 @@ static int LOAD_REG_L(int reg)
         int host_reg = reg;
 //        host_reg_mapping[host_reg] = reg;
 
-        if (!codegen_reg_loaded[reg & 7])// || CS != 0x1ac7 || pc < 0x1340 || pc >= 0x1354)
+        if (!codegen_reg_loaded[reg & 7])
         {
                 addbyte(0x44); /*MOVZX W[reg],host_reg*/
                 addbyte(0x8b);
@@ -234,7 +234,7 @@ static int LOAD_REG_IMM(uint32_t imm)
 {
         int host_reg = REG_EBX;
 
-        addbyte(0xbb); /*MOVL EBX, imm*/
+        addbyte(0xb8 | REG_EBX); /*MOVL EBX, imm*/
         addlong(imm);
         
         return host_reg;
@@ -3238,6 +3238,46 @@ static void SAR_L_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x38);
         addbyte(count);
 }
+
+static void NEG_HOST_REG_B(int reg)
+{
+        if (reg & 0x10)
+        {
+                if (reg & 8)
+                        addbyte(0x44);
+                addbyte(0x89); /*MOV BX, reg*/
+                addbyte(0xc3 | ((reg & 7) << 3));
+                addbyte(0xf6); /*NEG BH*/
+                addbyte(0xdf);
+                if (reg & 8)
+                        addbyte(0x41);
+                addbyte(0x89); /*MOV reg, BX*/
+                addbyte(0xd8 | (reg & 7));
+        }
+        else
+        {
+                if (reg & 8)
+                        addbyte(0x41);
+                addbyte(0xf6);
+                addbyte(0xd8 | (reg & 7));
+        }
+}
+static void NEG_HOST_REG_W(int reg)
+{
+        addbyte(0x66);
+        if (reg & 8)
+                addbyte(0x41);
+        addbyte(0xf7);
+        addbyte(0xd8 | (reg & 7));
+}
+static void NEG_HOST_REG_L(int reg)
+{
+        if (reg & 8)
+                addbyte(0x41);
+        addbyte(0xf7);
+        addbyte(0xd8 | (reg & 7));
+}
+        
 
 static void FP_ENTER()
 {
