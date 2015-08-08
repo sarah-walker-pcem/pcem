@@ -717,7 +717,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 if (addr==0x77f61000) output = 3;
                 if (addr==0x77f62000) { dumpregs(); exit(-1); }
                 if (addr==0x77f9a000) { dumpregs(); exit(-1); }*/
-        addr2=(cr3+((addr>>20)&0xFFC));
+        addr2 = ((cr3 & ~0xfff) + ((addr >> 20) & 0xffc));
         temp=temp2=((uint32_t *)ram)[addr2>>2];
 //        if (output == 3) pclog("Do translate %08X %i %08X\n", addr, rw, temp);
         if (!(temp&1))// || (CPL==3 && !(temp&4) && !cpl_override) || (rw && !(temp&2) && (CPL==3 || cr0&WP_FLAG)))
@@ -779,7 +779,7 @@ uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
         if (abrt) 
                 return -1;
 
-        addr2=(cr3+((addr>>20)&0xFFC));
+        addr2 = ((cr3 & ~0xfff) + ((addr >> 20) & 0xffc));
         temp=temp2=((uint32_t *)ram)[addr2>>2];
 
         if (!(temp&1))
