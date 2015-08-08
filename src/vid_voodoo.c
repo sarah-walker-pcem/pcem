@@ -144,8 +144,12 @@ typedef struct voodoo_t
         int pci_enable;
 
         uint8_t dac_data[8];
-        int dac_reg;
+        int dac_reg, dac_reg_ff;
         uint8_t dac_readdata;
+        uint16_t dac_pll_regs[16];
+        
+        float pixel_clock;
+        int line_time;
         
         voodoo_params_t params;
         
@@ -3484,6 +3488,30 @@ static void voodoo_writew(uint32_t addr, uint16_t val, void *p)
                 queue_command(voodoo, addr | FIFO_WRITEW_FB, val);
 }
 
+static void voodoo_pixelclock_update(voodoo_t *voodoo)
+{
+        int m  =  (voodoo->dac_pll_regs[0] & 0x7f) + 2;
+        int n1 = ((voodoo->dac_pll_regs[0] >>  8) & 0x1f) + 2;
+        int n2 = ((voodoo->dac_pll_regs[0] >> 13) & 0x07);
+        float t = (14318184.0 * ((float)m / (float)n1)) / (float)(1 << n2);
+        double clock_const;
+        int line_length;
+        
+        if ((voodoo->dac_data[6] & 0xf0) == 0x20 ||
+            (voodoo->dac_data[6] & 0xf0) == 0x60 ||
+            (voodoo->dac_data[6] & 0xf0) == 0x70)
+                t /= 2.0f;
+                
+        line_length = (voodoo->hSync & 0xff) + ((voodoo->hSync >> 16) & 0x3ff);
+        
+//        pclog("Pixel clock %f MHz hsync %08x line_length %d\n", t, voodoo->hSync, line_length);
+        
+        voodoo->pixel_clock = t;
+
+        clock_const = cpuclock / t;
+        voodoo->line_time = (int)((double)line_length * clock_const * (double)(1 << TIMER_SHIFT));
+}
+
 static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
@@ -3570,6 +3598,7 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
 
                 case SST_hSync:
                 voodoo->hSync = val;
+                voodoo_pixelclock_update(voodoo);
                 break;
                 case SST_vSync:
                 voodoo->vSync = val;
@@ -3602,7 +3631,26 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                                 voodoo->dac_readdata = voodoo->dac_data[voodoo->dac_readdata];
                 }
                 else
-                        voodoo->dac_data[voodoo->dac_reg] = val & 0xff;
+                {
+                        if (voodoo->dac_reg == 5)
+                        {
+                                if (!voodoo->dac_reg_ff)
+                                        voodoo->dac_pll_regs[voodoo->dac_data[4] & 0xf] = (voodoo->dac_pll_regs[voodoo->dac_data[4] & 0xf] & 0xff00) | val;
+                                else
+                                        voodoo->dac_pll_regs[voodoo->dac_data[4] & 0xf] = (voodoo->dac_pll_regs[voodoo->dac_data[4] & 0xf] & 0xff) | (val << 8);
+//                                pclog("Write PLL reg %x %04x\n", voodoo->dac_data[4] & 0xf, voodoo->dac_pll_regs[voodoo->dac_data[4] & 0xf]);
+                                voodoo->dac_reg_ff = !voodoo->dac_reg_ff;
+                                if (!voodoo->dac_reg_ff)
+                                        voodoo->dac_data[4]++;
+
+                        }
+                        else
+                        {
+                                voodoo->dac_data[voodoo->dac_reg] = val & 0xff;
+                                voodoo->dac_reg_ff = 0;
+                        }
+                        voodoo_pixelclock_update(voodoo);
+                }
                 break;
 
                 default:
@@ -3935,8 +3983,10 @@ void voodoo_callback(void *p)
         
         if (voodoo->line >= voodoo->v_total)
                 voodoo->line = 0;
-                
-        voodoo->timer_count += TIMER_USEC * 32;
+        if (voodoo->line_time)
+                voodoo->timer_count += voodoo->line_time;
+        else
+                voodoo->timer_count += TIMER_USEC * 32;
 }
 
 static void voodoo_add_status_info(char *s, int max_len, void *p)
@@ -3957,6 +4007,13 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         voodoo->pixel_count = voodoo->tri_count = voodoo->frame_count = 0;
         voodoo->rd_count = voodoo->wr_count = voodoo->tex_count = 0;
         voodoo_time = 0;
+}
+
+static void voodoo_speed_changed(void *p)
+{
+        voodoo_t *voodoo = (voodoo_t *)p;
+        
+        voodoo_pixelclock_update(voodoo);
 }
 
 void *voodoo_init()
@@ -4120,7 +4177,7 @@ device_t voodoo_device =
         voodoo_init,
         voodoo_close,
         NULL,
-        NULL,
+        voodoo_speed_changed,
         NULL,
         voodoo_add_status_info,
         voodoo_config
