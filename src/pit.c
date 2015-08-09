@@ -252,6 +252,8 @@ static void pit_over(int t)
                         pit_set_out(t, 1);
                 }
                 pit.thit[t] = 1;
+                pit.count[t] += 0xffff;
+                pit.c[t] += (int)((0xffff << TIMER_SHIFT) * PITCONST);
                 break;
         }
         pit.running[t] = pit.enabled[t] && pit.using_timer[t];
