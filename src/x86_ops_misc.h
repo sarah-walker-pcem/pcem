@@ -95,6 +95,7 @@ static int opF6_a16(uint32_t fetchdat)
                 else
                 {
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(is486 ? 16 : 14);
                 break;
@@ -116,6 +117,7 @@ static int opF6_a16(uint32_t fetchdat)
                 {
 //                        pclog("IDIVb exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(19);
                 break;
@@ -183,6 +185,7 @@ static int opF6_a32(uint32_t fetchdat)
                 else
                 {
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(is486 ? 16 : 14);
                 break;
@@ -204,6 +207,7 @@ static int opF6_a32(uint32_t fetchdat)
                 {
 //                        pclog("IDIVb exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(19);
                 break;
@@ -274,6 +278,7 @@ static int opF7_w_a16(uint32_t fetchdat)
                 {
 //                        fatal("DIVw BY 0 %04X:%04X %i\n",cs>>4,pc,ins);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(is486 ? 24 : 22);
                 break;
@@ -291,6 +296,7 @@ static int opF7_w_a16(uint32_t fetchdat)
                 {
 //                        pclog("IDIVw exception - %X / %08X = %X\n",tempws, dst, tempws2);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(27);
                 break;
@@ -358,6 +364,7 @@ static int opF7_w_a32(uint32_t fetchdat)
                 {
 //                        fatal("DIVw BY 0 %04X:%04X %i\n",cs>>4,pc,ins);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(is486 ? 24 : 22);
                 break;
@@ -375,6 +382,7 @@ static int opF7_w_a32(uint32_t fetchdat)
                 {
 //                        pclog("IDIVw exception - %X / %08X = %X\n", tempws, dst, tempws2);
                         x86_int(0);
+                        return 1;
                 }
                 CLOCK_CYCLES(27);
                 break;
