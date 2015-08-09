@@ -165,13 +165,14 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
 void deviceconfig_open(HWND hwnd, device_t *device)
 {
         device_config_t *config = device->config;
-        uint16_t *data = malloc(16384);
-        DLGTEMPLATE *dlg = (DLGTEMPLATE *)data;
+        uint16_t *data_block = malloc(16384);
+        uint16_t *data;
+        DLGTEMPLATE *dlg = (DLGTEMPLATE *)data_block;
         DLGITEMTEMPLATE *item;
         int y = 10;
         int id = IDC_CONFIG_BASE;
 
-        memset(data, 0, 4096);
+        memset(data_block, 0, 4096);
         
         dlg->style = DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU;
         dlg->x  = 10;
@@ -313,5 +314,5 @@ void deviceconfig_open(HWND hwnd, device_t *device)
         
         DialogBoxIndirect(hinstance, dlg, hwnd, deviceconfig_dlgproc);
 
-        free(data);
+        free(data_block);
 }
