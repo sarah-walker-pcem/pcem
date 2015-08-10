@@ -1579,6 +1579,7 @@ void pmodeint(int num, int soft)
         uint32_t newsp;
         uint16_t seg;
         int stack_changed=0;
+        int new_cpl;
         
 //        if (!num) pclog("Pmode int 0 at %04X(%06X):%08X\n",CS,cs,pc);
 //        pclog("Pmode int %02X %i %04X:%08X %04X:%08X %i\n",num,soft,CS,pc, SS, ESP, abrt);
@@ -1649,6 +1650,7 @@ void pmodeint(int num, int soft)
                                 return;
                         }
                         seg=segdat[1];
+                        new_cpl = seg & 3;
 //                        pclog("Interrupt gate : %04X:%04X%04X\n",seg,segdat[3],segdat[0]);
                         
                         addr=seg&~7;
@@ -1867,6 +1869,7 @@ void pmodeint(int num, int soft)
 //                                        if (soft) pclog("Pushwc PC %04X\n", pc);
                                         PUSHW(pc); if (abrt) return;
                                 }
+                                new_cpl = CS & 3;
                                 break;
                                 default:
                                 pclog("Int gate CS not code segment - %04X %04X %04X %04X\n",segdat2[0],segdat2[1],segdat2[2],segdat2[3]);
@@ -1874,7 +1877,8 @@ void pmodeint(int num, int soft)
                                 return;
                         }
                 do_seg_load(&_cs, segdat2);
-                CS=(seg&~3)|CPL;
+                CS = (seg & ~3) | new_cpl;
+                _cs.access = (_cs.access & ~(3 << 5)) | (new_cpl << 5);
 //                pclog("New CS = %04X\n",CS);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 if (type>0x800) pc=segdat[0]|(segdat[3]<<16);
