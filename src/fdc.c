@@ -978,7 +978,8 @@ void fdc_remove()
 
 void fdc_discchange_clear(int drive)
 {
-        disc_changed[drive] = 0;
+        if (drive < 2)
+                disc_changed[drive] = 0;
 }
 
 void fdc_set_dskchg_activelow()
