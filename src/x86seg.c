@@ -1400,6 +1400,7 @@ void pmoderetf(int is32, uint16_t off)
                    segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
                 CS = seg;
                 do_seg_load(&_cs, segdat);
+                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
                 
@@ -2191,6 +2192,7 @@ void pmodeiret(int is32)
 //                pclog("Same level\n");
                 CS=seg;
                 do_seg_load(&_cs, segdat);
+                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
 
@@ -2305,6 +2307,7 @@ void pmodeiret(int is32)
 
                 CS=seg;
                 do_seg_load(&_cs, segdat);
+                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 use32=(segdat[3]&0x40)?0x300:0;
                         
