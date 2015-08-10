@@ -79,6 +79,7 @@ static int opFSTP(uint32_t fetchdat)
 
 static int FSTOR()
 {
+        FP_ENTER();
         switch ((cr0 & 1) | (op32 & 0x100))
         {
                 case 0x000: /*16-bit real mode*/
@@ -136,6 +137,7 @@ static int opFSTOR_a32(uint32_t fetchdat)
 
 static int FSAVE()
 {
+        FP_ENTER();
         if (fplog) pclog("FSAVE %08X:%08X %i\n", easeg, eaaddr, ismmx);
         npxs = (npxs & ~(7 << 11)) | (TOP << 11);
 
@@ -639,6 +641,7 @@ static int opFCOS(uint32_t fetchdat)
 
 static int FLDENV()
 {
+        FP_ENTER();
         if (fplog) pclog("FLDENV %08X:%08X\n", easeg, eaaddr);
         switch ((cr0 & 1) | (op32 & 0x100))
         {
@@ -703,6 +706,7 @@ static int opFLDCW_a32(uint32_t fetchdat)
 
 static int FSTENV()
 {
+        FP_ENTER();
         if (fplog) pclog("FSTENV %08X:%08X\n", easeg, eaaddr);
         switch ((cr0 & 1) | (op32 & 0x100))
         {
