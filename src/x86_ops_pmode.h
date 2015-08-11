@@ -296,7 +296,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286)
                 break;
                 case 0x08: /*SIDT*/
                 seteaw(idt.limit);
-                base = is32 ? idt.base : (idt.base & 0xffffff);
+                base = idt.base;
                 if (is286)
                         base |= 0xff000000;
                 writememl(easeg, eaaddr + 2, base);
