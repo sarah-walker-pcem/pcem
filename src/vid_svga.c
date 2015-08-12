@@ -162,6 +162,7 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                         case 5: svga->writemode=val&3; svga->readmode=val&8; break;
                         case 6:
 //                                pclog("svga_out recalcmapping %p\n", svga);
+                        svga->chain2 = val & 2;
                         if ((svga->gdcreg[6] & 0xc) != (val & 0xc))
                         {
 //                                pclog("Write mapping %02X\n", val);
@@ -740,6 +741,14 @@ void svga_write(uint32_t addr, uint8_t val, void *p)
                 writemask2=1<<(addr&3);
                 addr&=~3;
         }
+        else if (svga->chain2)
+        {
+                writemask2 &= ~0xa;
+                if (addr & 1)
+                        writemask2 <<= 1;
+                addr &= ~1;
+                addr <<= 2;
+        }
         else
         {
                 addr<<=2;
@@ -900,6 +909,7 @@ uint8_t svga_read(uint32_t addr, void *p)
 {
         svga_t *svga = (svga_t *)p;
         uint8_t temp, temp2, temp3, temp4;
+        int readplane = svga->readplane;
         
         cycles -= video_timing_b;
         cycles_lost += video_timing_b;
@@ -918,7 +928,14 @@ uint8_t svga_read(uint32_t addr, void *p)
                    return 0xff;
                 return svga->vram[addr];
         }
-        else        addr<<=2;
+        else if (svga->chain2)
+        {
+                readplane = (readplane & 2) | (addr & 1);
+                addr &= ~1;
+                addr <<= 2;
+        }
+        else
+                addr<<=2;
         
         addr &= 0x7fffff;
         
@@ -946,7 +963,7 @@ uint8_t svga_read(uint32_t addr, void *p)
                 return ~(temp | temp2 | temp3 | temp4);
         }
 //pclog("Read %02X %04X %04X\n",vram[addr|svga->readplane],addr,svga->readplane);
-        return svga->vram[addr | svga->readplane];
+        return svga->vram[addr | readplane];
 }
 
 void svga_write_linear(uint32_t addr, uint8_t val, void *p)

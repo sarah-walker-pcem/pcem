@@ -23,7 +23,7 @@ typedef struct ega_t
         int fast;
         uint8_t colourcompare, colournocare;
         int readmode, writemode, readplane;
-        int chain4;
+        int chain4, chain2;
         uint8_t writemask;
         uint32_t charseta, charsetb;
         

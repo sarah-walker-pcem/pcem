@@ -52,7 +52,7 @@ void svga_render_text_40(svga_t *svga)
                 {
                         drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
                         chr  = svga->vram[(svga->ma << 1) & svga->vrammask];
-                        attr = svga->vram[((svga->ma << 1) + 4) & svga->vrammask];
+                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vrammask];
                         if (attr & 8) charaddr = svga->charsetb + (chr * 128);
                         else          charaddr = svga->charseta + (chr * 128);
 
@@ -115,7 +115,7 @@ void svga_render_text_80(svga_t *svga)
                 {
                         drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
                         chr  = svga->vram[(svga->ma << 1) & svga->vrammask];
-                        attr = svga->vram[((svga->ma << 1) + 4) & svga->vrammask];
+                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vrammask];
                         if (attr & 8) charaddr = svga->charsetb + (chr * 128);
                         else          charaddr = svga->charseta + (chr * 128);
 
