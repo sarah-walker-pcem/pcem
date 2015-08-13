@@ -20,7 +20,8 @@ typedef struct svga_t
         
         uint8_t dac_mask, dac_status;
         int dac_read, dac_write, dac_pos;
-        
+        int dac_r, dac_g;
+                
         uint8_t cgastat;
         
         uint8_t plane_mask;

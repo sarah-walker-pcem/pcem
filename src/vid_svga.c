@@ -133,16 +133,16 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                 switch (svga->dac_pos)
                 {
                         case 0: 
-                        svga->vgapal[svga->dac_write].r = val & 63;
-                        svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r * 4, svga->vgapal[svga->dac_write].g * 4, svga->vgapal[svga->dac_write].b * 4); 
+                        svga->dac_r = val & 63;
                         svga->dac_pos++; 
                         break;
                         case 1: 
-                        svga->vgapal[svga->dac_write].g = val & 63; 
-                        svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r * 4, svga->vgapal[svga->dac_write].g * 4, svga->vgapal[svga->dac_write].b * 4); 
+                        svga->dac_g = val & 63;
                         svga->dac_pos++; 
                         break;
                         case 2: 
+                        svga->vgapal[svga->dac_write].r = svga->dac_r; 
+                        svga->vgapal[svga->dac_write].g = svga->dac_g;
                         svga->vgapal[svga->dac_write].b = val & 63; 
                         svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r * 4, svga->vgapal[svga->dac_write].g * 4, svga->vgapal[svga->dac_write].b * 4); 
                         svga->dac_pos = 0; 
