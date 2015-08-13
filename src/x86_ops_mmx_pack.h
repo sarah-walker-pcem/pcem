@@ -49,7 +49,8 @@ static int opPUNPCKHDQ_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         MMX_GETSRC();
         
-        MM[reg].l[0] = src.l[1];
+        MM[reg].l[0] = MM[reg].l[1];
+        MM[reg].l[1] = src.l[1];
 
         return 0;
 }
@@ -60,8 +61,9 @@ static int opPUNPCKHDQ_a32(uint32_t fetchdat)
         
         fetch_ea_32(fetchdat);
         MMX_GETSRC();
-        
-        MM[reg].l[0] = src.l[1];
+
+        MM[reg].l[0] = MM[reg].l[1];
+        MM[reg].l[1] = src.l[1];
 
         return 0;
 }
