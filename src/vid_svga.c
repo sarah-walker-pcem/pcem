@@ -111,6 +111,7 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                                 svga->charsetb += 0x8000;
                         break;
                         case 4: 
+                        svga->chain2_write = !(val & 4);
                         svga->chain4 = val & 8;
                         svga->fast = (svga->gdcreg[8] == 0xff && !(svga->gdcreg[3] & 0x18) && !svga->gdcreg[1]) && svga->chain4;
                         break;
@@ -159,10 +160,13 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 2: svga->colourcompare=val; break;
                         case 4: svga->readplane=val&3; break;
-                        case 5: svga->writemode=val&3; svga->readmode=val&8; break;
+                        case 5:
+                        svga->writemode = val & 3;
+                        svga->readmode = val & 8;
+                        svga->chain2_read = val & 0x10;
+                        break;
                         case 6:
 //                                pclog("svga_out recalcmapping %p\n", svga);
-                        svga->chain2 = val & 2;
                         if ((svga->gdcreg[6] & 0xc) != (val & 0xc))
                         {
 //                                pclog("Write mapping %02X\n", val);
@@ -741,7 +745,7 @@ void svga_write(uint32_t addr, uint8_t val, void *p)
                 writemask2=1<<(addr&3);
                 addr&=~3;
         }
-        else if (svga->chain2)
+        else if (svga->chain2_write)
         {
                 writemask2 &= ~0xa;
                 if (addr & 1)
@@ -928,7 +932,7 @@ uint8_t svga_read(uint32_t addr, void *p)
                    return 0xff;
                 return svga->vram[addr];
         }
-        else if (svga->chain2)
+        else if (svga->chain2_read)
         {
                 readplane = (readplane & 2) | (addr & 1);
                 addr &= ~1;

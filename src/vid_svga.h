@@ -31,7 +31,7 @@ typedef struct svga_t
         int fast;
         uint8_t colourcompare, colournocare;
         int readmode, writemode, readplane;
-        int chain4, chain2;
+        int chain4, chain2_write, chain2_read;
         uint8_t writemask;
         uint32_t charseta, charsetb;
         

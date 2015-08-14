@@ -77,6 +77,9 @@ void ega_out(uint16_t addr, uint8_t val, void *p)
                         ega->charsetb = (((val >> 2) & 3) * 0x10000) + 2;
                         ega->charseta = ((val & 3)        * 0x10000) + 2;
                         break;
+                        case 4:
+                        ega->chain2_write = !(val & 4);
+                        break;
                 }
                 break;
                 case 0x3ce: 
@@ -95,10 +98,10 @@ void ega_out(uint16_t addr, uint8_t val, void *p)
                         case 5: 
                         ega->writemode = val & 3;
                         ega->readmode = val & 8; 
+                        ega->chain2_read = val & 0x10;
                         break;
                         case 6:
 //                                pclog("Write mapping %02X\n", val);
-                        ega->chain2 = val & 2;
                         switch (val & 0xc)
                         {
                                 case 0x0: /*128k at A0000*/
@@ -622,7 +625,7 @@ void ega_write(uint32_t addr, uint8_t val, void *p)
         if (addr >= 0xB0000) addr &= 0x7fff;
         else                 addr &= 0xffff;
 
-        if (ega->chain2)
+        if (ega->chain2_write)
         {
                 writemask2 &= ~0xa;
                 if (addr & 1)
@@ -755,7 +758,7 @@ uint8_t ega_read(uint32_t addr, void *p)
         if (addr >= 0xb0000) addr &= 0x7fff;
         else                 addr &= 0xffff;
 
-        if (ega->chain2)
+        if (ega->chain2_read)
         {
                 readplane = (readplane & 2) | (addr & 1);
                 addr &= ~1;
