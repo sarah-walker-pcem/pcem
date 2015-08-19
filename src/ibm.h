@@ -331,6 +331,8 @@ enum
 	ROM_LXT3,
 	ROM_PX386,
         ROM_DTK386,
+        ROM_PXXT,
+        ROM_JUKOPC,
 	
         ROM_MAX
 };

@@ -552,6 +552,22 @@ int loadbios()
                 fclose(f);
                 mem_load_atide_bios();
                 return 1;
+
+                case ROM_PXXT:
+                f = romfopen("roms/pxxt/000p001.bin", "rb");
+                if (!f) break;
+                fread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                mem_load_xtide_bios();
+                return 1;
+
+                case ROM_JUKOPC:
+                f = romfopen("roms/jukopc/000o001.bin", "rb");
+                if (!f) break;
+                fread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                mem_load_xtide_bios();
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
