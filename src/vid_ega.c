@@ -453,12 +453,12 @@ void ega_poll(void *p)
                                                 if (ega->sc & 1 && !(ega->crtc[0x17] & 1))
                                                 {
                                                         edat[0] = ega->vram[(ega->ma << 1) + 0x8000];
-                                                        edat[1] = ega->vram[(ega->ma << 1) + 0x8004];
+                                                        edat[1] = ega->vram[(ega->ma << 1) + 0x8001];
                                                 }
                                                 else
                                                 {
                                                         edat[0] = ega->vram[(ega->ma << 1)];
-                                                        edat[1] = ega->vram[(ega->ma << 1) + 4];
+                                                        edat[1] = ega->vram[(ega->ma << 1) + 1];
                                                 }
                                                 ega->ma += 4; 
                                                 ega->ma &= ega->vrammask;

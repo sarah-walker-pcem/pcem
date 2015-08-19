@@ -184,12 +184,12 @@ void svga_render_2bpp_lowres(svga_t *svga)
                         if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
                         {
                                 dat[0] = svga->vram[(svga->ma << 1) + 0x8000];
-                                dat[1] = svga->vram[(svga->ma << 1) + 0x8004];
+                                dat[1] = svga->vram[(svga->ma << 1) + 0x8001];
                         }
                         else
                         {
                                 dat[0] = svga->vram[(svga->ma << 1)];
-                                dat[1] = svga->vram[(svga->ma << 1) + 4];
+                                dat[1] = svga->vram[(svga->ma << 1) + 1];
                         }
                         svga->ma += 4; 
                         svga->ma &= svga->vrammask;
@@ -234,12 +234,12 @@ void svga_render_2bpp_highres(svga_t *svga)
                         if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
                         {
                                 dat[0] = svga->vram[(svga->ma << 1) + 0x8000];
-                                dat[1] = svga->vram[(svga->ma << 1) + 0x8004];
+                                dat[1] = svga->vram[(svga->ma << 1) + 0x8001];
                         }
                         else
                         {
                                 dat[0] = svga->vram[(svga->ma << 1)];
-                                dat[1] = svga->vram[(svga->ma << 1) + 4];
+                                dat[1] = svga->vram[(svga->ma << 1) + 1];
                         }
                         svga->ma += 4; 
                         svga->ma &= svga->vrammask;
