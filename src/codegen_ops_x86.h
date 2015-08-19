@@ -1487,32 +1487,73 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
 
 static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
         {
-                addbyte(0x83); /*CMP flags_res, 0*/
-                addbyte(0x05 | 0x38);
-                addlong((uintptr_t)&flags_res);
-                addbyte(0);
-                addbyte(0x74); /*JZ +*/
-        }
-        else
-        {
-                CALL_FUNC(ZF_SET);
+                case FLAGS_SUB8:
+                addbyte(0xa0); /*MOV AL, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3a); /*CMP AL, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x76); /*JBE*/
+                else
+                        addbyte(0x77); /*JNBE*/
+                break;
+                case FLAGS_SUB16:
+                addbyte(0x66); /*MOV AX, flags_op1*/
+                addbyte(0xa1);
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x66); /*CMP AX, flags_op2*/
+                addbyte(0x3b);
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x76); /*JBE*/
+                else
+                        addbyte(0x77); /*JNBE*/
+                break;
+                case FLAGS_SUB32:
+                addbyte(0xa1); /*MOV EAX, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3b); /*CMP EAX, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x76); /*JBE*/
+                else
+                        addbyte(0x77); /*JNBE*/
+                break;
+                
+                default:
+                if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+                {
+                        addbyte(0x83); /*CMP flags_res, 0*/
+                        addbyte(0x05 | 0x38);
+                        addlong((uintptr_t)&flags_res);
+                        addbyte(0);
+                        addbyte(0x74); /*JZ +*/
+                }
+                else
+                {
+                        CALL_FUNC(ZF_SET);
+                        addbyte(0x85); /*TEST EAX,EAX*/
+                        addbyte(0xc0);
+                        addbyte(0x75); /*JNZ +*/
+                }
+                if (not)
+                        addbyte(5+2+2+10+5+(timing_bt ? 7 : 0));
+                else
+                        addbyte(5+2+2);
+                CALL_FUNC(CF_SET);
                 addbyte(0x85); /*TEST EAX,EAX*/
                 addbyte(0xc0);
-                addbyte(0x75); /*JNZ +*/
+                if (not)
+                        addbyte(0x75); /*JNZ +*/
+                else
+                        addbyte(0x74); /*JZ +*/
+                break;
         }
-        if (not)
-                addbyte(5+2+2+10+5+(timing_bt ? 7 : 0));
-        else
-                addbyte(5+2+2);
-        CALL_FUNC(CF_SET);
-        addbyte(0x85); /*TEST EAX,EAX*/
-        addbyte(0xc0);
-        if (not)
-                addbyte(0x75); /*JNZ +*/
-        else
-                addbyte(0x74); /*JZ +*/
         addbyte(10+5+(timing_bt ? 7 : 0));        
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x05);
@@ -1531,24 +1572,65 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
 
 static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        CALL_FUNC(NF_SET);
-        addbyte(0x85); /*TEST EAX,EAX*/
-        addbyte(0xc0);
-        addbyte(0x0f); /*SETNE BL*/
-        addbyte(0x95);
-        addbyte(0xc3);
-        CALL_FUNC(VF_SET);
-        addbyte(0x85); /*TEST EAX,EAX*/
-        addbyte(0xc0);
-        addbyte(0x0f); /*SETNE AL*/
-        addbyte(0x95);
-        addbyte(0xc0);
-        addbyte(0x38); /*CMP AL, BL*/
-        addbyte(0xd8);
-        if (not)
-                addbyte(0x75); /*JNZ +*/
-        else
-                addbyte(0x74); /*JZ +*/
+        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
+        {
+                case FLAGS_SUB8:
+                addbyte(0xa0); /*MOV AL, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3a); /*CMP AL, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7c); /*JL*/
+                else
+                        addbyte(0x7d); /*JNL*/
+                break;
+                case FLAGS_SUB16:
+                addbyte(0x66); /*MOV AX, flags_op1*/
+                addbyte(0xa1);
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x66); /*CMP AX, flags_op2*/
+                addbyte(0x3b);
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7c); /*JL*/
+                else
+                        addbyte(0x7d); /*JNL*/
+                break;
+                case FLAGS_SUB32:
+                addbyte(0xa1); /*MOV EAX, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3b); /*CMP EAX, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7c); /*JL*/
+                else
+                        addbyte(0x7d); /*JNL*/
+                break;
+
+                default:
+                CALL_FUNC(NF_SET);
+                addbyte(0x85); /*TEST EAX,EAX*/
+                addbyte(0xc0);
+                addbyte(0x0f); /*SETNE BL*/
+                addbyte(0x95);
+                addbyte(0xc3);
+                CALL_FUNC(VF_SET);
+                addbyte(0x85); /*TEST EAX,EAX*/
+                addbyte(0xc0);
+                addbyte(0x0f); /*SETNE AL*/
+                addbyte(0x95);
+                addbyte(0xc0);
+                addbyte(0x38); /*CMP AL, BL*/
+                addbyte(0xd8);
+                if (not)
+                        addbyte(0x75); /*JNZ +*/
+                else
+                        addbyte(0x74); /*JZ +*/
+                break;
+        }
         addbyte(10+5+(timing_bt ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x05);
@@ -1567,44 +1649,85 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
 
 static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
         {
-                addbyte(0x83); /*CMP flags_res, 0*/
-                addbyte(0x05 | 0x38);
-                addlong((uintptr_t)&flags_res);
-                addbyte(0);
-                addbyte(0x74); /*JZ +*/
-        }
-        else
-        {
-                CALL_FUNC(ZF_SET);
+                case FLAGS_SUB8:
+                addbyte(0xa0); /*MOV AL, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3a); /*CMP AL, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7e); /*JLE*/
+                else
+                        addbyte(0x7f); /*JNLE*/
+                break;
+                case FLAGS_SUB16:
+                addbyte(0x66); /*MOV AX, flags_op1*/
+                addbyte(0xa1);
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x66); /*CMP AX, flags_op2*/
+                addbyte(0x3b);
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7e); /*JLE*/
+                else
+                        addbyte(0x7f); /*JNLE*/
+                break;
+                case FLAGS_SUB32:
+                addbyte(0xa1); /*MOV EAX, flags_op1*/
+                addlong((uint32_t)&flags_op1);
+                addbyte(0x3b); /*CMP EAX, flags_op2*/
+                addbyte(0x05);
+                addlong((uint32_t)&flags_op2);
+                if (not)
+                        addbyte(0x7e); /*JLE*/
+                else
+                        addbyte(0x7f); /*JNLE*/
+                break;
+
+                default:
+                if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+                {
+                        addbyte(0x83); /*CMP flags_res, 0*/
+                        addbyte(0x05 | 0x38);
+                        addlong((uintptr_t)&flags_res);
+                        addbyte(0);
+                        addbyte(0x74); /*JZ +*/
+                }
+                else
+                {
+                        CALL_FUNC(ZF_SET);
+                        addbyte(0x85); /*TEST EAX,EAX*/
+                        addbyte(0xc0);
+                        addbyte(0x75); /*JNZ +*/
+                }
+                if (not)
+                        addbyte(5+2+3+5+2+3+2+2+10+5+(timing_bt ? 7 : 0));
+                else
+                        addbyte(5+2+3+5+2+3+2+2);
+
+                CALL_FUNC(NF_SET);
                 addbyte(0x85); /*TEST EAX,EAX*/
                 addbyte(0xc0);
-                addbyte(0x75); /*JNZ +*/
+                addbyte(0x0f); /*SETNE BL*/
+                addbyte(0x95);
+                addbyte(0xc3);
+                CALL_FUNC(VF_SET);
+                addbyte(0x85); /*TEST EAX,EAX*/
+                addbyte(0xc0);
+                addbyte(0x0f); /*SETNE AL*/
+                addbyte(0x95);
+                addbyte(0xc0);
+                addbyte(0x38); /*CMP AL, BL*/
+                addbyte(0xd8);
+                if (not)
+                        addbyte(0x75); /*JNZ +*/
+                else
+                        addbyte(0x74); /*JZ +*/
+                break;
         }
-        if (not)
-                addbyte(5+2+3+5+2+3+2+2+10+5+(timing_bt ? 7 : 0));
-        else
-                addbyte(5+2+3+5+2+3+2+2);
-
-        CALL_FUNC(NF_SET);
-        addbyte(0x85); /*TEST EAX,EAX*/
-        addbyte(0xc0);
-        addbyte(0x0f); /*SETNE BL*/
-        addbyte(0x95);
-        addbyte(0xc3);
-        CALL_FUNC(VF_SET);
-        addbyte(0x85); /*TEST EAX,EAX*/
-        addbyte(0xc0);
-        addbyte(0x0f); /*SETNE AL*/
-        addbyte(0x95);
-        addbyte(0xc0);
-        addbyte(0x38); /*CMP AL, BL*/
-        addbyte(0xd8);
-        if (not)
-                addbyte(0x75); /*JNZ +*/
-        else
-                addbyte(0x74); /*JZ +*/
         addbyte(10+5+(timing_bt ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x05);
