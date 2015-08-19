@@ -531,6 +531,27 @@ int loadbios()
                 mem_load_xtide_bios();
                 return 1;
 
+                case ROM_PX386: /*Phoenix 80386 BIOS*/
+                f=romfopen("roms/px386/3iip001l.bin","rb");
+                ff=romfopen("roms/px386/3iip001h.bin","rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x10000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                mem_load_atide_bios();
+                return 1;
+
+                case ROM_DTK386: /*Uses NEAT chipset*/
+                f = romfopen("roms/dtk386/3cto001.bin", "rb");
+                if (!f) break;
+                fread(rom, 65536, 1, f);
+                fclose(f);
+                mem_load_atide_bios();
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

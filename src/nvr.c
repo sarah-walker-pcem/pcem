@@ -152,6 +152,8 @@ void loadnvr()
                 case ROM_430VX:       f = romfopen("430vx.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_REVENGE:     f = romfopen("revenge.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_ENDEAVOR:    f = romfopen("endeavor.nvr",    "rb"); nvrmask = 127; break;
+                case ROM_PX386:       f = romfopen("px386.nvr",       "rb"); nvrmask = 127; break;
+                case ROM_DTK386:      f = romfopen("dtk386.nvr",      "rb"); nvrmask = 127; break;
                 default: return;
         }
         if (!f)
@@ -193,6 +195,8 @@ void savenvr()
                 case ROM_430VX:       f = romfopen("430vx.nvr",       "wb"); break;
                 case ROM_REVENGE:     f = romfopen("revenge.nvr",     "wb"); break;
                 case ROM_ENDEAVOR:    f = romfopen("endeavor.nvr",    "wb"); break;
+                case ROM_PX386:       f = romfopen("px386.nvr",       "wb"); break;
+                case ROM_DTK386:      f = romfopen("dtk386.nvr",      "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);

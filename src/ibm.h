@@ -329,6 +329,8 @@ enum
         ROM_AMIXT,      /*XT Clone with AMI BIOS*/
 	ROM_LTXT,
 	ROM_LXT3,
+	ROM_PX386,
+        ROM_DTK386,
 	
         ROM_MAX
 };
