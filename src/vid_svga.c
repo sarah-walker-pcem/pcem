@@ -989,6 +989,14 @@ void svga_write_linear(uint32_t addr, uint8_t val, void *p)
                 writemask2=1<<(addr&3);
                 addr&=~3;
         }
+        else if (svga->chain2_write)
+        {
+                writemask2 &= ~0xa;
+                if (addr & 1)
+                        writemask2 <<= 1;
+                addr &= ~1;
+                addr <<= 2;
+        }
         else
         {
                 addr<<=2;
@@ -1147,6 +1155,7 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
 {
         svga_t *svga = (svga_t *)p;
         uint8_t temp, temp2, temp3, temp4;
+        int readplane = svga->readplane;
   
         cycles -= video_timing_b;
         cycles_lost += video_timing_b;
@@ -1160,7 +1169,14 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
                    return 0xff;
                 return svga->vram[addr & 0x7fffff]; 
         }
-        else        addr<<=2;
+        else if (svga->chain2_read)
+        {
+                readplane = (readplane & 2) | (addr & 1);
+                addr &= ~1;
+                addr <<= 2;
+        }
+        else
+                addr<<=2;
 
         addr &= 0x7fffff;
         
@@ -1188,7 +1204,7 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
                 return ~(temp | temp2 | temp3 | temp4);
         }
 //printf("Read %02X %04X %04X\n",vram[addr|svga->readplane],addr,svga->readplane);
-        return svga->vram[addr | svga->readplane];
+        return svga->vram[addr | readplane];
 }
 
 void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
