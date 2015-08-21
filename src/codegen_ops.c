@@ -1,5 +1,3 @@
-#ifdef DYNAREC
-
 #include "ibm.h"
 #include "x86.h"
 #include "x86_ops.h"
@@ -495,5 +493,3 @@ RecompOpFn recomp_opcodes_df[512] =
 /*e0*/  ropFSTSW_AX,    NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
-
-#endif

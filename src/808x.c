@@ -653,9 +653,7 @@ void resetx86()
         mmu_perm=4;
         memset(inscounts, 0, sizeof(inscounts));
         x86seg_reset();
-#ifdef DYNAREC
         codegen_reset();
-#endif
         x86_was_reset = 1;
 }
 

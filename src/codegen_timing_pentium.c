@@ -9,8 +9,6 @@
         - MMX latencies
 */
 
-#ifdef DYNAREC
-
 #include "ibm.h"
 #include "cpu.h"
 #include "x86.h"
@@ -1061,4 +1059,3 @@ codegen_timing_t codegen_timing_pentium =
         codegen_timing_pentium_block_start,
         codegen_timing_pentium_block_end
 };
-#endif

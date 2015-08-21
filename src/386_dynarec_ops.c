@@ -1,4 +1,3 @@
-#ifdef DYNAREC
 #include "ibm.h"
 #include "cpu.h"
 #include "x86.h"
@@ -56,4 +55,3 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 #define CLOCK_CYCLES_ALWAYS(c) cycles -= (c)
 
 #include "386_ops.h"
-#endif

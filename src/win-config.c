@@ -27,6 +27,8 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int rom, gfx, mem, fpu;
         int temp_cpu, temp_cpu_m, temp_model;
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
+        int temp_dynarec;
+        int cpu_flags;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
         {
@@ -137,6 +139,14 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h=GetDlgItem(hdlg, IDC_CHECKVOODOO);
                 SendMessage(h, BM_SETCHECK, voodoo_enabled, 0);
 
+                cpu_flags = models[romstomodel[romset]].cpu[cpu_manufacturer].cpus[cpu].cpu_flags;
+                h=GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                        EnableWindow(h, FALSE);
+                else
+                        EnableWindow(h, TRUE);
+                SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && cpu_use_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
+
                 h = GetDlgItem(hdlg, IDC_COMBOCHC);
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A little");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A bit");
@@ -215,7 +225,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_COMBOSND);
                         temp_sound_card_current = settings_list_to_sound[SendMessage(h, CB_GETCURSEL, 0, 0)];
 
-                        if (temp_model != model || gfx != gfxcard || mem != mem_size || fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS || temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current || temp_voodoo != voodoo_enabled)
+                        h = GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                        temp_dynarec = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                        if (temp_model != model || gfx != gfxcard || mem != mem_size ||
+                            fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
+                            temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
+                            temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -230,6 +246,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         SSI2001 = temp_SSI2001;
                                         sound_card_current = temp_sound_card_current;
                                         voodoo_enabled = temp_voodoo;
+                                        cpu_use_dynarec = temp_dynarec;
                                         
                                         mem_resize();
                                         loadbios();
@@ -319,6 +336,17 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 }
                                 if (temp_cpu >= c) temp_cpu = c - 1;
                                 SendMessage(h, CB_SETCURSEL, temp_cpu, 0);
+
+                                h = GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                temp_dynarec = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                                cpu_flags = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_flags;
+                                h=GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                                        EnableWindow(h, FALSE);
+                                else
+                                        EnableWindow(h, TRUE);
+                                SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
                         }
                         break;
                         case IDC_COMBOCPUM:
@@ -341,6 +369,39 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 }
                                 if (temp_cpu >= c) temp_cpu = c - 1;
                                 SendMessage(h, CB_SETCURSEL, temp_cpu, 0);
+
+                                h = GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                temp_dynarec = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                                cpu_flags = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_flags;
+                                h=GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                                        EnableWindow(h, FALSE);
+                                else
+                                        EnableWindow(h, TRUE);
+                                SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
+                        }
+                        break;
+                        case IDC_COMBO3:
+                        if (HIWORD(wParam) == CBN_SELCHANGE)
+                        {
+                                h = GetDlgItem(hdlg, IDC_COMBO1);
+                                temp_model = listtomodel[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                                h = GetDlgItem(hdlg, IDC_COMBOCPUM);
+                                temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
+                                h=GetDlgItem(hdlg, IDC_COMBO3);
+                                temp_cpu = SendMessage(h, CB_GETCURSEL, 0, 0);
+
+                                h = GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                temp_dynarec = SendMessage(h, BM_GETCHECK, 0, 0);
+
+                                cpu_flags = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_flags;
+                                h=GetDlgItem(hdlg, IDC_CHECKDYNAREC);
+                                if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                                        EnableWindow(h, FALSE);
+                                else
+                                        EnableWindow(h, TRUE);
+                                SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
                         }
                         break;
                         

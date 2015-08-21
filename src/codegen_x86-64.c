@@ -1,4 +1,3 @@
-#ifdef DYNAREC
 #ifdef __amd64__
 
 #include <stdlib.h>
@@ -1228,5 +1227,4 @@ void codegen_check_abrt()
         addlong((uint32_t)&block->data[BLOCK_EXIT_OFFSET] - (uint32_t)(&block->data[block_pos + 4]));
 }
 
-#endif
 #endif

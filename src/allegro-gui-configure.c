@@ -191,39 +191,41 @@ static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 236*2,272,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 236*2,292,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 176,  248, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 246,  248, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 176,  268, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 246,  268, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
         {list_proc,      70*2, 32,  152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_video, 0, 0},
 
         {list_proc,      70*2,  52, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_cpumanu, 0, 0}, //5
-        {d_list_proc,    70*2,  72, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_cpu, 0, 0},
-        {d_list_proc,    70*2,  92, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_cache, 0, 0},
-        {d_list_proc,    70*2, 112, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0},
-        {list_proc,      70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //9
+        {list_proc,      70*2,  72, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_cpu, 0, 0},
+        {d_list_proc,    70*2, 112, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_cache, 0, 0},
+        {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0},
+        {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //9
         
-        {d_edit_proc,    70*2, 156,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 176,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
                         
-        {d_text_proc,    98*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "MB", 0, 0},
+        {d_text_proc,    98*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "MB", 0, 0},
         
-        {d_check_proc,   14*2, 172, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
-        {d_check_proc,   14*2, 188, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
-        {d_check_proc,   14*2, 204, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
-        {d_check_proc,   14*2, 220, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
-        {d_check_proc,   14*2, 236, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
+        {d_check_proc,   14*2, 192, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
+        {d_check_proc,   14*2, 208, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
+        {d_check_proc,   14*2, 224, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
+        {d_check_proc,   14*2, 240, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
+        {d_check_proc,   14*2, 256, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
 
         {d_text_proc,    16*2,  16,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Machine :", 0, 0},
         {d_text_proc,    16*2,  36,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video :", 0, 0},
         {d_text_proc,    16*2,  56,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "CPU type :", 0, 0},
         {d_text_proc,    16*2,  76,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "CPU :", 0, 0},
-        {d_text_proc,    16*2,  96,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Cache :", 0, 0},
-        {d_text_proc,    16*2, 116,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video speed :", 0, 0},
-        {d_text_proc,    16*2, 136,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Soundcard :", 0, 0},
-        {d_text_proc,    16*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
+        {d_text_proc,    16*2, 116,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Cache :", 0, 0},
+        {d_text_proc,    16*2, 136,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video speed :", 0, 0},
+        {d_text_proc,    16*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Soundcard :", 0, 0},
+        {d_text_proc,    16*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
+
+        {d_check_proc,   14*2,  92, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Dynamic Recompiler", 0, 0},
         
         {0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL}
 };
@@ -236,6 +238,10 @@ static int list_proc(int msg, DIALOG *d, int c)
         if (d->d1 != old)
         {
                 int new_model = model_list[configure_dialog[3].d1].num;
+                int new_cpu_m = configure_dialog[5].d1;
+                int new_cpu = configure_dialog[6].d1;
+                int new_dynarec = configure_dialog[25].flags & D_SELECTED;
+                int cpu_flags;
 
                 reset_list();
 
@@ -243,6 +249,11 @@ static int list_proc(int msg, DIALOG *d, int c)
                         configure_dialog[4].flags |= D_DISABLED;
                 else
                         configure_dialog[4].flags &= ~D_DISABLED;
+
+                cpu_flags = models[new_model].cpu[new_cpu_m].cpus[new_cpu].cpu_flags;
+                configure_dialog[25].flags = (((cpu_flags & CPU_SUPPORTS_DYNAREC) && new_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC)) ? D_SELECTED : 0;
+                if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                        configure_dialog[25].flags |= D_DISABLED;
 
                 return D_REDRAW;
         }
@@ -286,6 +297,7 @@ static void reset_list()
 int settings_configure()
 {
         int c, d;
+        int cpu_flags;
         
         memset(model_list, 0, sizeof(model_list));
         memset(video_list, 0, sizeof(video_list));
@@ -391,6 +403,11 @@ pclog("video_card_available : %i\n", c);
                 configure_dialog[16].flags &= ~D_SELECTED;
 
         sprintf(mem_size_str, "%i", mem_size);
+
+        cpu_flags = models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_flags;
+        configure_dialog[25].flags = (((cpu_flags & CPU_SUPPORTS_DYNAREC) && cpu_use_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC)) ? D_SELECTED : 0;
+        if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
+                configure_dialog[25].flags |= D_DISABLED;
         
         while (1)
         {
@@ -413,6 +430,7 @@ pclog("video_card_available : %i\n", c);
                         int new_GUS = (configure_dialog[13].flags & D_SELECTED) ? 1 : 0;
                         int new_SSI2001 = (configure_dialog[14].flags & D_SELECTED) ? 1 : 0;
                         int new_voodoo = (configure_dialog[16].flags & D_SELECTED) ? 1 : 0;
+                        int new_dynarec = (configure_dialog[25].flags & D_SELECTED) ? 1 : 0;
                         
                         sscanf(mem_size_str, "%i", &new_mem_size);
                         if (new_mem_size < 1 || new_mem_size > 256)
@@ -423,7 +441,8 @@ pclog("video_card_available : %i\n", c);
                         
                         if (new_model != model || new_gfxcard != gfxcard || new_mem_size != mem_size || 
                             new_has_fpu != hasfpu || new_GAMEBLASTER != GAMEBLASTER || new_GUS != GUS ||
-                            new_SSI2001 != SSI2001 || new_sndcard != sound_card_current || new_voodoo != voodoo_enabled)
+                            new_SSI2001 != SSI2001 || new_sndcard != sound_card_current || new_voodoo != voodoo_enabled ||
+                            new_dynarec != cpu_use_dynarec)
                         {
                                 if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
                                         continue;
@@ -439,6 +458,7 @@ pclog("video_card_available : %i\n", c);
                                 SSI2001 = new_SSI2001;
                                 sound_card_current = new_sndcard;
 				voodoo_enabled = new_voodoo;
+				cpu_use_dynarec = new_dynarec;
                                         
                                 mem_resize();
                                 loadbios();

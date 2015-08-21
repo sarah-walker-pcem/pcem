@@ -1,4 +1,3 @@
-#ifdef DYNAREC
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
 
 #include <stdlib.h>
@@ -1014,5 +1013,4 @@ void codegen_check_abrt()
         addlong((uint32_t)&block->data[BLOCK_EXIT_OFFSET] - (uint32_t)(&block->data[block_pos + 4]));
 }
 
-#endif
 #endif

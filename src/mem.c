@@ -15,10 +15,8 @@
 #include "x86.h"
 #include "cpu.h"
 #include "rom.h"
-#if DYNAREC
 #include "x86_ops.h"
 #include "codegen.h"
-#endif
 
 page_t *pages;
 page_t **page_lookup;
@@ -647,9 +645,7 @@ void flushmmucache()
                         exit(-1);
                 }
         }*/
-#if DYNAREC
         codegen_flush();
-#endif
 }
 
 void flushmmucache_nopc()
@@ -925,11 +921,10 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         }
 //        if (page_lookup[virt >> 12] && (writelookup2[virt>>12] != 0xffffffff))
 //                fatal("Bad write mapping\n");
-#if DYNAREC
+
         if (pages[phys >> 12].block || (phys & ~0xfff) == recomp_page)
                 page_lookup[virt >> 12] = &pages[phys >> 12];//(uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
         else
-#endif
                 writelookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
 //        pclog("addwritelookup %08x %08x %p %p %016llx %p\n", virt, phys, (void *)page_lookup[virt >> 12], (void *)writelookup2[virt >> 12], pages[phys >> 12].dirty_mask, (void *)&pages[phys >> 12]);
         writelookupp[writelnext] = mmu_perm;
@@ -1396,33 +1391,27 @@ uint32_t mem_read_raml(uint32_t addr, void *priv)
 
 void mem_write_ramb_page(uint32_t addr, uint8_t val, page_t *p)
 {      
-#if DYNAREC
         uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
 //        pclog("mem_write_ramb_page: %08x %02x %08x %llx %llx\n", addr, val, cs+pc, p->dirty_mask, mask);
         p->dirty_mask |= mask;
-#endif
         p->mem[addr & 0xfff] = val;
 }
 void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
 {
-#if DYNAREC
         uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
         if ((addr & 0x3f) == 0x3f)
                 mask |= (mask << 1);
 //        pclog("mem_write_ramw_page: %08x %04x %08x\n", addr, val, cs+pc);
         p->dirty_mask |= mask;
-#endif
         *(uint16_t *)&p->mem[addr & 0xfff] = val;
 }
 void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
 {       
-#if DYNAREC
         uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
         if ((addr & 0x3f) >= 0x3d)
                 mask |= (mask << 1);
 //        pclog("mem_write_raml_page: %08x %08x %08x\n", addr, val, cs+pc);
         p->dirty_mask |= mask;
-#endif
         *(uint32_t *)&p->mem[addr & 0xfff] = val;
 }
 
@@ -1512,7 +1501,6 @@ void mem_updatecache()
 
 void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
 {
-#ifdef DYNAREC
         start_addr &= ~PAGE_MASK_MASK;
         end_addr = (end_addr + PAGE_MASK_MASK) & ~PAGE_MASK_MASK;        
         
@@ -1522,7 +1510,6 @@ void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
                 
                 pages[start_addr >> 12].dirty_mask |= mask;
         }
-#endif
 }
 
 static inline int mem_mapping_read_allowed(uint32_t flags, int state)

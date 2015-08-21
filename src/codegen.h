@@ -1,5 +1,3 @@
-#ifdef DYNAREC
-
 #ifdef __amd64__
 #include "codegen_x86-64.h"
 #elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
@@ -165,5 +163,3 @@ extern int codegen_fpu_entered;
 
 extern int codegen_fpu_loaded_iq[8];
 extern int codegen_reg_loaded[8];
-
-#endif

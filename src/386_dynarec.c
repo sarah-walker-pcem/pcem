@@ -1,4 +1,3 @@
-#ifdef DYNAREC
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -532,7 +531,7 @@ int rep386(int fv)
 //                cpu_notreps++;
                 break;
                 case 0xA4: case 0x1A4: /*REP MOVSB*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI);
                         temp2 = readmemb(ea_seg->base, SI); if (abrt) break;
@@ -543,13 +542,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A4: case 0x3A4: /*REP MOVSB*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI);
                         temp2 = readmemb(ea_seg->base, ESI); if (abrt) break;
@@ -559,13 +560,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xA5: /*REP MOVSW*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI+1);
                         tempw = readmemw(ea_seg->base, SI); if (abrt) break;
@@ -575,13 +578,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1A5: /*REP MOVSL*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI+3);
                         templ = readmeml(ea_seg->base, SI); if (abrt) break;
@@ -592,13 +597,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A5: /*REP MOVSW*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI+1);
                         tempw = readmemw(ea_seg->base, ESI); if (abrt) break;
@@ -609,13 +616,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3A5: /*REP MOVSL*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI+3);
                         templ = readmeml(ea_seg->base, ESI); if (abrt) break;
@@ -627,6 +636,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
@@ -745,7 +756,7 @@ int rep386(int fv)
                 break;
 
                 case 0xAA: case 0x1AA: /*REP STOSB*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI);
                         writememb(es,DI,AL);
@@ -755,13 +766,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AA: case 0x3AA: /*REP STOSB*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI);
                         writememb(es,EDI,AL);
@@ -771,13 +784,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAB: /*REP STOSW*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI+1);
                         writememw(es,DI,AX);
@@ -787,13 +802,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AB: /*REP STOSW*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI+1);
                         writememw(es,EDI,AX);
@@ -803,13 +820,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AB: /*REP STOSL*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, DI, DI+3);
                         writememl(es,DI,EAX);
@@ -819,13 +838,15 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AB: /*REP STOSL*/
-                while (c > 0 && cycles > 0)
+                while (c > 0)
                 {
                         CHECK_WRITE_REP(&_es, EDI, EDI+3);
                         writememl(es,EDI,EAX);
@@ -835,6 +856,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if (c>0) { firstrepcycle=0; pc=ipc; }
@@ -935,7 +958,7 @@ int rep386(int fv)
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASB %04X(%06X):%06X\n",CS,cs,pc);
 //                tempz=(fv)?1:0;
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         temp2=readmemb(es,DI);
                         if (abrt) { flags=of; break; }
@@ -946,6 +969,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -956,7 +981,7 @@ int rep386(int fv)
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASB %04X(%06X):%06X\n",CS,cs,pc);
 //                tempz=(fv)?1:0;
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         temp2=readmemb(es,EDI);
                         if (abrt) { flags=of; break; }
@@ -968,6 +993,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -977,7 +1004,7 @@ int rep386(int fv)
                 cpu_notreps++;
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASW %04X(%06X):%06X\n",CS,cs,pc);
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         tempw=readmemw(es,DI);
                         if (abrt) { flags=of; break; }
@@ -988,6 +1015,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -997,7 +1026,7 @@ int rep386(int fv)
                 cpu_notreps++;
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASL %04X(%06X):%06X\n",CS,cs,pc);
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         templ=readmeml(es,DI);
                         if (abrt) { flags=of; break; }
@@ -1008,6 +1037,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -1017,7 +1048,7 @@ int rep386(int fv)
                 cpu_notreps++;
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASW %04X(%06X):%06X\n",CS,cs,pc);
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         tempw=readmemw(es,EDI);
                         if (abrt) { flags=of; break; }
@@ -1028,6 +1059,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -1037,7 +1070,7 @@ int rep386(int fv)
                 cpu_notreps++;
 //                if (es==0xFFFFFFFF) pclog("Null selector REP SCASL %04X(%06X):%06X\n",CS,cs,pc);
                 tempz = (fv) ? 1 : 0;
-                while ((c > 0) && (fv == tempz) && (cycles > 0))
+                while ((c > 0) && (fv == tempz))
                 {
                         templ=readmeml(es,EDI);
                         if (abrt) { flags=of; break; }
@@ -1048,6 +1081,8 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
+                        if (cycles < 0)
+                                break;
                 }
                 ins--;
                 if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
@@ -1163,7 +1198,7 @@ int dontprint=0;
 //#define CACHE_ON() 0
 
 static int cycles_main = 0;
-void exec386(int cycs)
+void exec386_dynarec(int cycs)
 {
         uint8_t temp;
         uint32_t addr;
@@ -1476,4 +1511,3 @@ inrecomp=0;
                 cycles_main -= (cycles_start - cycles);
         }
 }
-#endif

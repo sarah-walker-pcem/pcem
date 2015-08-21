@@ -1,5 +1,3 @@
-#ifdef DYNAREC
-
 #include "ibm.h"
 #include "cpu.h"
 #include "x86.h"
@@ -375,4 +373,3 @@ codegen_timing_t codegen_timing_486 =
         codegen_timing_486_block_start,
         codegen_timing_486_block_end
 };
-#endif

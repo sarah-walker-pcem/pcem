@@ -24,10 +24,8 @@ extern int cpu, cpu_manufacturer;
 
 /*586 class CPUs*/
 #define CPU_WINCHIP 14
-#ifdef DYNAREC
 #define CPU_PENTIUM 15
 #define CPU_PENTIUMMMX 16
-#endif
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -52,6 +50,7 @@ typedef struct
         uint32_t edx_reset;
         uint32_t cpuid_model;
         uint16_t cyrix_id;
+        int cpu_flags;
 } CPU;
 
 extern CPU cpus_8088[];
@@ -64,10 +63,8 @@ extern CPU cpus_i486[];
 extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
 extern CPU cpus_WinChip[];
-#ifdef DYNAREC
 extern CPU cpus_Pentium5V[];
 extern CPU cpus_Pentium[];
-#endif
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_pc1512[];
@@ -91,6 +88,9 @@ extern int cpu_hasCR4;
 
 extern uint64_t cpu_CR4_mask;
 
+#define CPU_SUPPORTS_DYNAREC 1
+#define CPU_REQUIRES_DYNAREC 2
+
 extern uint64_t tsc;
 
 void cyrix_write(uint16_t addr, uint8_t val, void *priv);
@@ -100,3 +100,5 @@ extern int is8086;
 
 void cpu_RDMSR();
 void cpu_WRMSR();
+
+extern int cpu_use_dynarec;

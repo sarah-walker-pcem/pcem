@@ -3,7 +3,6 @@
 
 typedef int (*OpFn)(uint32_t fetchdat);
 
-#ifdef DYNAREC
 void x86_setopcodes(OpFn *opcodes, OpFn *opcodes_0f, OpFn *dynarec_opcodes, OpFn *dynarec_opcodes_0f);
 
 extern OpFn *x86_dynarec_opcodes;
@@ -54,9 +53,6 @@ extern OpFn dynarec_ops_fpu_df_a16[256];
 extern OpFn dynarec_ops_fpu_df_a32[256];
 extern OpFn dynarec_ops_nofpu_a16[256];
 extern OpFn dynarec_ops_nofpu_a32[256];
-#else
-void x86_setopcodes(OpFn *opcodes, OpFn *opcodes_0f);
-#endif
 
 extern OpFn *x86_opcodes;
 extern OpFn *x86_opcodes_0f;

@@ -70,9 +70,9 @@ static int opSAHF(uint32_t fetchdat)
         flags_rebuild();
         flags = (flags & 0xff00) | (AH & 0xd5) | 2;
         CLOCK_CYCLES(3);
-#ifdef DYNAREC
+
         codegen_flags_changed = 0;
-#endif
+
         return 0;
 }
 static int opLAHF(uint32_t fetchdat)
@@ -130,9 +130,9 @@ static int opPOPF_286(uint32_t fetchdat)
         flags_extract();
 
         CLOCK_CYCLES(5);
-#ifdef DYNAREC
+
         codegen_flags_changed = 0;
-#endif
+
         return 0;
 }
 static int opPOPF(uint32_t fetchdat)
@@ -153,9 +153,9 @@ static int opPOPF(uint32_t fetchdat)
         flags_extract();
 
         CLOCK_CYCLES(5);
-#ifdef DYNAREC
+
         codegen_flags_changed = 0;
-#endif
+
         return 0;
 }
 static int opPOPFD(uint32_t fetchdat)
@@ -183,8 +183,8 @@ static int opPOPFD(uint32_t fetchdat)
         flags_extract();
 
         CLOCK_CYCLES(5);
-#ifdef DYNAREC
+
         codegen_flags_changed = 0;
-#endif
+
         return 0;
 }

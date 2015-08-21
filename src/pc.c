@@ -8,10 +8,8 @@
 #include "amstrad.h"
 #include "cdrom-ioctl.h"
 #include "mem.h"
-#ifdef DYNAREC
 #include "x86_ops.h"
 #include "codegen.h"
-#endif
 #include "cdrom-null.h"
 #include "config.h"
 #include "cpu.h"
@@ -207,9 +205,7 @@ void initpc()
         loadconfig(NULL);
         pclog("Config loaded\n");
 
-#if DYNAREC
         codegen_init();
-#endif  
         
         cpuspeed2=(AT)?2:1;
 //        cpuspeed2=cpuspeed;
@@ -349,9 +345,19 @@ void runpc()
 
         startblit();
         clockrate = models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed;
-                if (is386)   exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
-                else if (AT) exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
-                else         execx86(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+        
+        if (is386)   
+        {
+                if (cpu_use_dynarec)
+                        exec386_dynarec(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                else
+                        exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+        }
+        else if (AT)
+                exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+        else
+                execx86(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+        
                 keyboard_poll_host();
                 keyboard_process();
 //                checkkeys();
@@ -374,7 +380,7 @@ void runpc()
                         segareads=egareads;
                         segawrites=egawrites;
                         scycles_lost = cycles_lost;
-#if DYNAREC
+
                         cpu_recomp_blocks_latched = cpu_recomp_blocks;
                         cpu_recomp_ins_latched = cpu_recomp_ins;
                         cpu_recomp_full_ins_latched = cpu_recomp_full_ins;
@@ -396,7 +402,7 @@ void runpc()
                         cpu_recomp_removed = 0;
                         cpu_reps = 0;
                         cpu_notreps = 0;
-#endif
+
                         updatestatus=1;
                         readlnum=writelnum=0;
                         egareads=egawrites=0;
@@ -501,6 +507,7 @@ void loadconfig(char *fn)
         romset = model_getromset();
         cpu_manufacturer = config_get_int(NULL, "cpu_manufacturer", 0);
         cpu = config_get_int(NULL, "cpu", 0);
+        cpu_use_dynarec = config_get_int(NULL, "cpu_use_dynarec", 0);
         
         gfxcard = config_get_int(NULL, "gfxcard", 0);
         video_speed = config_get_int(NULL, "video_speed", 3);
@@ -563,6 +570,7 @@ void saveconfig()
         config_set_int(NULL, "model", model);
         config_set_int(NULL, "cpu_manufacturer", cpu_manufacturer);
         config_set_int(NULL, "cpu", cpu);
+        config_set_int(NULL, "cpu_use_dynarec", cpu_use_dynarec);
         
         config_set_int(NULL, "gfxcard", gfxcard);
         config_set_int(NULL, "video_speed", video_speed);
