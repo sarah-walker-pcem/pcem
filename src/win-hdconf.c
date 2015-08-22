@@ -70,7 +70,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                         }
                         if (hd_new_hpc > 16)
                         {
-                                MessageBox(ghwnd, "Drive has too many heads (maximum is 128)", "PCem error", MB_OK);
+                                MessageBox(ghwnd, "Drive has too many heads (maximum is 16)", "PCem error", MB_OK);
                                 return TRUE;
                         }
                         if (hd_new_cyl > 16383)
@@ -172,7 +172,7 @@ BOOL CALLBACK hdsize_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
                         }
                         if (hd_new_hpc > 16)
                         {
-                                MessageBox(ghwnd,"Drive has too many heads (maximum is 128)","PCem error",MB_OK);
+                                MessageBox(ghwnd,"Drive has too many heads (maximum is 16)","PCem error",MB_OK);
                                 return TRUE;
                         }
                         if (hd_new_cyl > 16383)
