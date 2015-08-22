@@ -127,7 +127,8 @@ void img_readsector(int drive, int sector, int track, int side, int rate)
 //        pclog("imgS Read sector drive=%i side=%i track=%i sector=%i rate=%i\n",drive,side,track,sector, rate);
 
         if (!img[drive].f || (side && img[drive].sides == 1) ||
-            (rate != img[drive].rate) || (track != disc_track[drive]))
+            (rate != img[drive].rate) || (track != disc_track[drive]) ||
+            sector > img[drive].sectors)
         {
 //                pclog("Sector not found rate %i,%i track %i,%i\n", rate, img[drive].rate, track, disc_track[drive]);
                 img_notfound=500;
@@ -149,7 +150,8 @@ void img_writesector(int drive, int sector, int track, int side, int rate)
 //        printf("imgS Write sector %i %i %i %i\n",drive,side,track,sector);
 
         if (!img[drive].f || (side && img[drive].sides == 1) ||
-            (rate != img[drive].rate) || (track != disc_track[drive]))
+            (rate != img[drive].rate) || (track != disc_track[drive]) ||
+            sector > img[drive].sectors)
         {
                 img_notfound = 500;
                 return;
