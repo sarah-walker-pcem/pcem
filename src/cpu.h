@@ -47,6 +47,7 @@ typedef struct
         int speed;
         int rspeed;
         int multi;
+        int pci_speed;
         uint32_t edx_reset;
         uint32_t cpuid_model;
         uint16_t cyrix_id;

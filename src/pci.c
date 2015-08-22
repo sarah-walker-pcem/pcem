@@ -9,6 +9,7 @@ uint8_t  (*pci_card_read[32])(int func, int addr, void *priv);
 void           *pci_priv[32];
 static int pci_index, pci_func, pci_card, pci_bus, pci_enable, pci_key;
 static int pci_min_card, pci_max_card;
+int pci_burst_time, pci_nonburst_time;
 
 void pci_cf8_write(uint16_t port, uint32_t val, void *p)
 {
