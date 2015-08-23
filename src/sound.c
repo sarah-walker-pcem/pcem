@@ -16,6 +16,7 @@
 #include "sound_wss.h"
 
 #include "timer.h"
+#include "thread.h"
 
 int sound_card_current = 0;
 static int sound_card_last = 0;
@@ -88,24 +89,34 @@ static int sound_poll_time = 0, sound_get_buffer_time = 0;
 
 int soundon = 1;
 
+static int16_t cd_buffer[CD_BUFLEN * 2];
+static thread_t *sound_cd_thread_h;
+static event_t *sound_cd_event;
+static unsigned int cd_vol_l, cd_vol_r;
 
-static int16_t cd_buffer[SOUNDBUFLEN * 2];
-
-void sound_cd_poll(void *p)
+void sound_set_cd_volume(unsigned int vol_l, unsigned int vol_r)
 {
+        cd_vol_l = vol_l;
+        cd_vol_r = vol_r;
 }
 
-void sound_cd_get_buffer(int16_t *buffer, int len, void *p)
+static void sound_cd_thread(void *param)
 {
-        int pos, c;
-        ioctl_audio_callback(cd_buffer, (len * 2  * 441) / 480);
-        pos = 0;
-
-        for (c = 0; c < len * 2; c+=2)
+        while (1)
         {
-                buffer[c]     += cd_buffer[((pos >> 16) << 1)]     / 2;
-                buffer[c + 1] += cd_buffer[((pos >> 16) << 1) + 1] / 2;                        
-                pos += 60211; //(44100 * 65536) / 48000;
+                int c;
+                
+                thread_wait_event(sound_cd_event, -1);
+                ioctl_audio_callback(cd_buffer, CD_BUFLEN*2);
+                if (soundon)
+                {
+                        for (c = 0; c < CD_BUFLEN*2; c += 2)
+                        {
+                                cd_buffer[c]   = ((int32_t)cd_buffer[c]   * cd_vol_l) / 65535;
+                                cd_buffer[c+1] = ((int32_t)cd_buffer[c+1] * cd_vol_r) / 65535;
+                        }
+                        givealbuffer_cd(cd_buffer);
+                }
         }
 }
 
@@ -117,6 +128,9 @@ void sound_init()
         inital();
 
         outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int16_t));
+        
+        sound_cd_event = thread_create_event();
+        sound_cd_thread_h = thread_create(sound_cd_thread, NULL);
 }
 
 void sound_add_handler(void (*poll)(void *p), void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
@@ -154,6 +168,8 @@ void sound_get_buffer(void *priv)
         fwrite(outbuffer,(SOUNDBUFLEN)*2*2,1,soundf);*/
         
         if (soundon) givealbuffer(outbuffer);
+        
+        thread_set_event(sound_cd_event);
 }
 
 void sound_reset()
@@ -163,5 +179,5 @@ void sound_reset()
 
         sound_handlers_num = 0;
         
-        sound_add_handler(sound_cd_poll, sound_cd_get_buffer, NULL);
+        sound_set_cd_volume(65535, 65535);
 }

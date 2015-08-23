@@ -11,11 +11,12 @@
 
 typedef struct sb_mixer_t
 {
-        int master_l, master_r;
-        int voice_l,  voice_r;
-        int fm_l,     fm_r;
-        int bass_l,   bass_r;
-        int treble_l, treble_r;
+        unsigned int master_l, master_r;
+        unsigned int voice_l,  voice_r;
+        unsigned int fm_l,     fm_r;
+        unsigned int cd_l,     cd_r;
+        unsigned int bass_l,   bass_r;
+        unsigned int treble_l, treble_r;
         int filter;
 
         int index;
@@ -104,8 +105,8 @@ static void sb_get_buffer(int16_t *buffer, int len, void *p)
                 }
                 else
                 {
-                        out_l += ((sb->dsp_buffer[c]     * mixer->voice_l) / 3) >> 16;
-                        out_r += ((sb->dsp_buffer[c + 1] * mixer->voice_r) / 3) >> 16;
+                        out_l += ((int32_t)(sb->dsp_buffer[c]     * mixer->voice_l) / 3) >> 16;
+                        out_r += ((int32_t)(sb->dsp_buffer[c + 1] * mixer->voice_r) / 3) >> 16;
                 }
                 
                 out_l = (out_l * mixer->master_l) >> 16;
@@ -148,9 +149,13 @@ void sb_pro_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->voice_r  = sb_att[(mixer->regs[0x04] & 0xf) | 0x11];
                 mixer->fm_l     = sb_att[(mixer->regs[0x26] >> 4)  | 0x11];
                 mixer->fm_r     = sb_att[(mixer->regs[0x26] & 0xf) | 0x11];
+                mixer->cd_l     = sb_att[(mixer->regs[0x28] >> 4)  | 0x11];
+                mixer->cd_r     = sb_att[(mixer->regs[0x28] & 0xf) | 0x11];
                 mixer->filter   = !(mixer->regs[0xe] & 0x20);
                 mixer->bass_l   = mixer->bass_r   = 8;
                 mixer->treble_l = mixer->treble_r = 8;
+                sound_set_cd_volume((mixer->master_l * mixer->cd_l) / 65535,
+                                    (mixer->master_r * mixer->cd_r) / 65535);
 //                pclog("%02X %02X %02X\n", mixer->regs[0x04], mixer->regs[0x22], mixer->regs[0x26]);
 //                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
                 if (mixer->index == 0xe)
@@ -193,6 +198,10 @@ void sb_16_mixer_write(uint16_t addr, uint8_t val, void *p)
                         mixer->regs[0x34] = ((mixer->regs[0x26] >> 4)  | 0x11) << 3;
                         mixer->regs[0x35] = ((mixer->regs[0x26] & 0xf) | 0x11) << 3;
                         break;
+                        case 0x28:
+                        mixer->regs[0x36] = ((mixer->regs[0x28] >> 4)  | 0x11) << 3;
+                        mixer->regs[0x37] = ((mixer->regs[0x28] & 0xf) | 0x11) << 3;
+                        break;
                         case 0x80:
                         if (val & 1) sb->dsp.sb_irqnum = 2;
                         if (val & 2) sb->dsp.sb_irqnum = 5;
@@ -206,11 +215,15 @@ void sb_16_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->voice_r  = sb_att[mixer->regs[0x33] >> 3];
                 mixer->fm_l     = sb_att[mixer->regs[0x34] >> 3];
                 mixer->fm_r     = sb_att[mixer->regs[0x35] >> 3];
+                mixer->cd_l     = sb_att[mixer->regs[0x36] >> 3];
+                mixer->cd_r     = sb_att[mixer->regs[0x37] >> 3];
                 mixer->bass_l   = mixer->regs[0x46] >> 4;
                 mixer->bass_r   = mixer->regs[0x47] >> 4;
                 mixer->treble_l = mixer->regs[0x44] >> 4;
                 mixer->treble_r = mixer->regs[0x45] >> 4;
                 mixer->filter = 0;
+                sound_set_cd_volume((mixer->master_l * mixer->cd_l) / 65535,
+                                    (mixer->master_r * mixer->cd_r) / 65535);
 //                pclog("%02X %02X %02X %02X %02X %02X\n", mixer->regs[0x30], mixer->regs[0x31], mixer->regs[0x32], mixer->regs[0x33], mixer->regs[0x34], mixer->regs[0x35]);
 //                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
         }
