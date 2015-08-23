@@ -616,6 +616,19 @@ static device_config_t sb_pro_config[] =
         }
 };
 
+static device_config_t sb_16_config[] =
+{
+        {
+                .name = "midi",
+                .description = "MIDI out device",
+                .type = CONFIG_MIDI,
+                .default_int = 0
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t sb_1_device =
 {
         "Sound Blaster v1.0",
@@ -685,7 +698,8 @@ device_t sb_16_device =
         NULL,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_16_config
 };
 device_t sb_awe32_device =
 {
@@ -696,5 +710,6 @@ device_t sb_awe32_device =
         sb_awe32_available,
         sb_speed_changed,
         NULL,
-        sb_add_status_info
+        sb_add_status_info,
+        sb_16_config
 };

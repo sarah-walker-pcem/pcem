@@ -465,10 +465,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 	get_registry_key_map();
 
         ghwnd=hwnd;
-        
-        midi_init();
-        atexit(midi_close);
-        
+                
         initpc();
         
         vid_apis[0][vid_api].init(ghwnd);

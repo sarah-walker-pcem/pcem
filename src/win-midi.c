@@ -15,13 +15,19 @@ void midi_init()
         MIDIOUTCAPS ocaps;
         MMRESULT hr;
         
-        midi_id=0;
-        
+        midi_id = config_get_int(NULL, "midi", 0);
+
         hr = midiOutOpen(&midi_out_device, midi_id, 0,
 		   0, CALLBACK_NULL);
         if (hr != MMSYSERR_NOERROR) {
                 printf("midiOutOpen error - %08X\n",hr);
-                return;
+                midi_id = 0;
+                hr = midiOutOpen(&midi_out_device, midi_id, 0,
+        		   0, CALLBACK_NULL);
+                if (hr != MMSYSERR_NOERROR) {
+                        printf("midiOutOpen error - %08X\n",hr);
+                        return;
+                }
         }
         
         midiOutReset(midi_out_device);
@@ -35,6 +41,18 @@ void midi_close()
                 midiOutClose(midi_out_device);
                 midi_out_device = NULL;
         }
+}
+
+int midi_get_num_devs()
+{
+        return midiOutGetNumDevs();
+}
+void midi_get_dev_name(int num, char *s)
+{
+        MIDIOUTCAPS caps;
+
+        midiOutGetDevCaps(num, &caps, sizeof(caps));
+        strcpy(s, caps.szPname);
 }
 
 static int midi_pos, midi_len;
