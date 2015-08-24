@@ -56,3 +56,4 @@ extern int writeprot[2], fwriteprot[2];
 extern int disc_track[2];
 extern int disc_changed[2];
 extern int drive_empty[2];
+extern int drive_type[2];

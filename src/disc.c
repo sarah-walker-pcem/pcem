@@ -14,6 +14,7 @@ int disc_track[2];
 int writeprot[2], fwriteprot[2];
 
 DRIVE drives[2];
+int drive_type[2];
 
 int curdrive = 0;
 

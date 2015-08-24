@@ -87,7 +87,12 @@ void img_seek(int drive, int track)
         if (!img[drive].f)
                 return;
 //        pclog("Seek drive=%i track=%i sectors=%i sector_size=%i sides=%i\n", drive, track, img[drive].sectors,img[drive].sector_size, img[drive].sides);
+
+        if (drive_type[drive] && img[drive].tracks == 40)
+                track /= 2;
+
         disc_track[drive] = track;
+
         if (img[drive].sides == 2)
         {
                 fseek(img[drive].f, track * img[drive].sectors * img[drive].sector_size * 2, SEEK_SET);
@@ -120,6 +125,9 @@ void img_writeback(int drive, int track)
 
 void img_readsector(int drive, int sector, int track, int side, int rate)
 {
+        if (drive_type[drive] && rate == 1)
+                rate = 2;
+
         img_sector = sector - 1;
         img_track  = track;
         img_side   = side;
@@ -142,6 +150,9 @@ void img_readsector(int drive, int sector, int track, int side, int rate)
 
 void img_writesector(int drive, int sector, int track, int side, int rate)
 {
+        if (drive_type[drive] && rate == 1)
+                rate = 2;
+
 //        if (imgdblstep[drive]) track/=2;
         img_sector = sector - 1;
         img_track  = track;
@@ -163,6 +174,9 @@ void img_writesector(int drive, int sector, int track, int side, int rate)
 
 void img_readaddress(int drive, int track, int side, int rate)
 {
+        if (drive_type[drive] && rate == 1)
+                rate = 2;
+
         img_drive = drive;
         img_track = track;
         img_side  = side;
@@ -183,6 +197,9 @@ void img_readaddress(int drive, int track, int side, int rate)
 
 void img_format(int drive, int track, int side, int rate)
 {
+        if (drive_type[drive] && rate == 1)
+                rate = 2;
+
         img_drive = drive;
         img_track = track;
         img_side  = side;

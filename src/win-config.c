@@ -8,6 +8,7 @@
 #include "ibm.h"
 #include "cpu.h"
 #include "device.h"
+#include "disc.h"
 #include "model.h"
 #include "resources.h"
 #include "sound.h"
@@ -181,6 +182,15 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 else
                         EnableWindow(h, FALSE);
                         
+                h = GetDlgItem(hdlg, IDC_COMBODRA);
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k / 3.5\"");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M");
+                SendMessage(h, CB_SETCURSEL, drive_type[0], 0);
+                h = GetDlgItem(hdlg, IDC_COMBODRB);
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k / 3.5\"");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M");
+                SendMessage(h, CB_SETCURSEL, drive_type[1], 0);
+
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -273,6 +283,11 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_COMBOCHC);
                         cache=SendMessage(h, CB_GETCURSEL, 0, 0);
                         mem_updatecache();
+
+                        h = GetDlgItem(hdlg, IDC_COMBODRA);
+                        drive_type[0] = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        h = GetDlgItem(hdlg, IDC_COMBODRB);
+                        drive_type[1] = SendMessage(h, CB_GETCURSEL, 0, 0);
                         
                         saveconfig();
 
