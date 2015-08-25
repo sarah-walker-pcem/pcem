@@ -293,7 +293,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
         			disctime = 1024 * (1 << TIMER_SHIFT);
         			timer_update_outstanding();
                                 fdc.drive = fdc.params[0] & 3;
-                                disc_drivesel = fdc.drive;
+                                disc_drivesel = fdc.drive & 1;
                                 switch (discint)
                                 {
                                         case 5: /*Write data*/
