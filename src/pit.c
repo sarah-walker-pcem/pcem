@@ -336,6 +336,8 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                         pit.rereadlatch[val>>6]=1;
                         if ((val>>6)==2) ppispeakon=speakon=(pit.m[2]==0)?0:1;
                         pit.initial[t] = 1;
+                        if (!pit.m[val >> 6])
+                                pit_set_out(val >> 6, 0);
 //                                pclog("ppispeakon %i\n",ppispeakon);
                 }
                 pit.wp=0;
