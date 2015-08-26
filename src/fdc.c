@@ -541,9 +541,9 @@ void fdc_callback()
                 fdc.sector++;
                 if (fdc.sector > fdc.params[5])
                 {
+                        fdc.sector = 1;
                         if (fdc.command & 0x80)
                         {
-                                fdc.sector=1;
                                 fdc.head ^= 1;
                                 if (!fdc.head)
                                 {
@@ -581,9 +581,9 @@ void fdc_callback()
                 fdc.sector++;
                 if (fdc.sector > fdc.params[5])
                 {
+                        fdc.sector = 1;
                         if (fdc.command & 0x80)
                         {
-                                fdc.sector=1;
                                 fdc.head ^= 1;
                                 if (!fdc.head)
                                 {
