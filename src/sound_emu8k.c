@@ -45,9 +45,11 @@ static inline int16_t EMU8K_READ(emu8k_t *emu8k, uint32_t addr)
         addr &= 0xffffff;
         if (addr < 0x80000)
                 return emu8k->rom[addr];
-        if (addr < 0x200000 || addr >= 0x400000)
+        if (addr < 0x200000 || addr >= emu8k->ram_end_addr)
                 return 0;
-        return emu8k->ram[addr & 0x1fffff];
+        if (!emu8k->ram)
+                return 0;
+        return emu8k->ram[addr - 0x200000];
 }
 
 static inline int16_t EMU8K_READ_INTERP(emu8k_t *emu8k, uint32_t addr)
@@ -60,8 +62,8 @@ static inline int16_t EMU8K_READ_INTERP(emu8k_t *emu8k, uint32_t addr)
 static inline void EMU8K_WRITE(emu8k_t *emu8k, uint32_t addr, uint16_t val)
 {
         addr &= 0xffffff;
-        if (addr >= 0x200000 && addr < 0x400000)
-                emu8k->ram[addr & 0x1fffff] = val;
+        if (emu8k->ram && addr >= 0x200000 && addr < emu8k->ram_end_addr)
+                emu8k->ram[addr - 0x200000] = val;
 }
 static int ff = 0;
 static int voice_count = 0;
@@ -641,7 +643,7 @@ void emu8k_poll_getsamp(emu8k_t *emu8k, int16_t *l, int16_t *r)
         *r = emu8k->out_r;
 }
 
-void emu8k_init(emu8k_t *emu8k)
+void emu8k_init(emu8k_t *emu8k, int onboard_ram)
 {
         FILE *f;
         int c;
@@ -650,8 +652,13 @@ void emu8k_init(emu8k_t *emu8k)
         f = romfopen("roms/awe32.raw", "rb");
         if (!f)
                 fatal("ROMS/AWE32.RAW not found\n");
-                
-        emu8k->ram = malloc(4096 * 1024);
+        
+        if (onboard_ram)
+        {
+                emu8k->ram = malloc(onboard_ram * 1024);
+                emu8k->ram_end_addr = 0x200000 + ((onboard_ram * 1024) / 2);
+        }
+
         emu8k->rom = malloc(1024 * 1024);        
         
         fread(emu8k->rom, 1024 * 1024, 1, f);
@@ -715,3 +722,8 @@ void emu8k_init(emu8k_t *emu8k)
         emu8k->hwcf3 = 0x04;
 }
 
+void emu8k_close(emu8k_t *emu8k)
+{
+        free(emu8k->rom);
+        free(emu8k->ram);
+}

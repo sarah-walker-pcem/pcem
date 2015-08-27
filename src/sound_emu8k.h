@@ -72,6 +72,8 @@ typedef struct emu8k_t
         
         int16_t *ram, *rom;
         
+        uint32_t ram_end_addr;
+        
         int cur_reg, cur_voice;
         
         int timer_count;
@@ -79,5 +81,7 @@ typedef struct emu8k_t
         int16_t out_l, out_r;
 } emu8k_t;
 
-void emu8k_init(emu8k_t *emu8k);
+void emu8k_init(emu8k_t *emu8k, int onboard_ram);
+void emu8k_close(emu8k_t *emu8k);
+
 void emu8k_poll_getsamp(emu8k_t *dsp, int16_t *l, int16_t *r);

@@ -412,6 +412,7 @@ int sb_awe32_available()
 void *sb_awe32_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
+        int onboard_ram = device_get_config_int("onboard_ram");
         memset(sb, 0, sizeof(sb_t));
 
         opl3_init(&sb->opl);
@@ -424,7 +425,7 @@ void *sb_awe32_init()
         io_sethandler(0x0224, 0x0002, sb_16_mixer_read, NULL, NULL, sb_16_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_emu8k_poll, sb_get_buffer, sb);
         mpu401_uart_init(&sb->mpu, 0x330);       
-        emu8k_init(&sb->emu8k);
+        emu8k_init(&sb->emu8k, onboard_ram);
 
         sb->mixer.regs[0x30] = 31 << 3;
         sb->mixer.regs[0x31] = 31 << 3;
@@ -447,6 +448,15 @@ void sb_close(void *p)
 {
         sb_t *sb = (sb_t *)p;
         
+        free(sb);
+}
+
+void sb_awe32_close(void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        
+        emu8k_close(&sb->emu8k);
+
         free(sb);
 }
 
@@ -629,6 +639,51 @@ static device_config_t sb_16_config[] =
         }
 };
 
+static device_config_t sb_awe32_config[] =
+{
+        {
+                .name = "midi",
+                .description = "MIDI out device",
+                .type = CONFIG_MIDI,
+                .default_int = 0
+        },
+        {
+                .name = "onboard_ram",
+                .description = "Onboard RAM",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "None",
+                                .value = 0
+                        },
+                        {
+                                .description = "512 KB",
+                                .value = 512
+                        },
+                        {
+                                .description = "2 MB",
+                                .value = 2048
+                        },
+                        {
+                                .description = "8 MB",
+                                .value = 8192
+                        },
+                        {
+                                .description = "28 MB",
+                                .value = 28*1024
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 512
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t sb_1_device =
 {
         "Sound Blaster v1.0",
@@ -711,5 +766,5 @@ device_t sb_awe32_device =
         sb_speed_changed,
         NULL,
         sb_add_status_info,
-        sb_16_config
+        sb_awe32_config
 };
