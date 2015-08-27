@@ -6,7 +6,7 @@ typedef struct
         {
                 char name[8];
                 CPU *cpus;
-        } cpu[3];
+        } cpu[4];
         int fixed_gfxcard;
         void (*init)();
 } MODEL;
