@@ -385,7 +385,7 @@ static int opFXAM(uint32_t fetchdat)
         FP_ENTER();
         pc++;
         if (fplog) pclog("FXAM %i %f\n", tag[TOP&7], ST(0));
-        npxs &= ~(C0|C2|C3);
+        npxs &= ~(C0|C1|C2|C3);
         if (tag[TOP&7] == 3)   npxs |= (C0|C3);
         else if (ST(0) == 0.0) npxs |= C3;
         else                   npxs |= C2;
