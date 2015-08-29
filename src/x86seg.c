@@ -737,6 +737,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 pc=oxpc;
                                 cpl_override=1;
                                 taskswitch286(seg,segdat,segdat[2]&0x800);
+                                flags &= ~NT_FLAG;
                                 cpl_override=0;
 //                                case 0xB00: /*386 Busy task gate*/
 //                                if (optype==JMP) pclog("Task switch!\n");
