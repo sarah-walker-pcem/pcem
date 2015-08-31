@@ -191,6 +191,10 @@ void mainthread(LPVOID param)
                         leave_fullscreen_flag = 0;
                         SendMessage(ghwnd, WM_LEAVEFULLSCREEN, 0, 0);
                 }
+                if (video_fullscreen)
+                {
+                        SetCursorPos(9999, 9999);
+                }
         }
 }
 
@@ -1031,7 +1035,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         pcclip.bottom -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
                         ClipCursor(&pcclip);
                         mousecapture = 1;
-                        ShowCursor(FALSE);
+//                        ShowCursor(FALSE);
+                        while (1)
+                        {
+                                if (ShowCursor(FALSE) < 0) break;
+                        }
                 }
                 break;
 
