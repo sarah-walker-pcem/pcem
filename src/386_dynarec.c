@@ -1423,6 +1423,9 @@ inrecomp=0;
                         
                         if (!abrt && !x86_was_reset)
                                 codegen_block_end();
+                        
+                        if (x86_was_reset)
+                                codegen_reset();
 //                        output &= ~2;
                 }
 //                        if (output && (SP & 1))

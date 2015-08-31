@@ -33,6 +33,8 @@ static int opOUT_AL_imm(uint32_t fetchdat)
         check_io_perm(port);
         outb(port, AL);
         CLOCK_CYCLES(10);
+        if (port == 0x64)
+                return x86_was_reset;
         return 0;
 }
 static int opOUT_AX_imm(uint32_t fetchdat)
@@ -87,7 +89,7 @@ static int opOUT_AL_DX(uint32_t fetchdat)
         check_io_perm(DX);
         outb(DX, AL);
         CLOCK_CYCLES(11);
-        return 0;
+        return x86_was_reset;
 }
 static int opOUT_AX_DX(uint32_t fetchdat)
 {

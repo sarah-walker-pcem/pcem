@@ -676,6 +676,7 @@ void softresetx86()
         flags=2;
         idt.base = 0;
         x86seg_reset();
+        x86_was_reset = 1;
 }
 
 static void setznp8(uint8_t val)
