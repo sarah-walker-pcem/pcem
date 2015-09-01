@@ -64,7 +64,7 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                                 case 0xc0: case 0xd0:
                                 ramdac->render = svga_render_24bpp_highres;
                                 break;
-                                case 0xe2:
+                                case 0xe2: case 0xf7:
                                 ramdac->render = svga_render_32bpp_highres;
                                 break;
                                 case 0xf2:
