@@ -191,7 +191,7 @@ void mainthread(LPVOID param)
                         leave_fullscreen_flag = 0;
                         SendMessage(ghwnd, WM_LEAVEFULLSCREEN, 0, 0);
                 }
-                if (video_fullscreen)
+                if (video_fullscreen && infocus)
                 {
                         SetCursorPos(9999, 9999);
                 }
