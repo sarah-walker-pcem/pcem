@@ -669,7 +669,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 //        int c;
 //      rpclog("Write IDE %08X %02X %08X %08X\n",addr,val,PC,armregs[12]);
 
-        if (ide->type == IDE_NONE && addr != 0x1f6) return;
+        if (ide->type == IDE_NONE && addr != 0x1f6 && addr != 0x3f6) return;
         
         switch (addr)
         {
@@ -720,15 +720,21 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 {
                         cur_ide[ide_board]=((val>>4)&1)+(ide_board<<1);
 
-                        if (ide->reset)
+                        if (ide->reset || ide_other->reset)
                         {
-                                ide->atastat = READY_STAT | DSC_STAT;
-                                ide->error=1;
-                                ide->secount=1;
-                                ide->sector=1;
-                                ide->head=0;
-                                ide->cylinder=0;
-                                ide->reset = 0;
+                                ide->atastat = ide_other->atastat = READY_STAT | DSC_STAT;
+                                ide->error = ide_other->error = 1;
+                                ide->secount = ide_other->secount = 1;
+                                ide->sector = ide_other->sector = 1;
+                                ide->head = ide_other->head = 0;
+                                ide->cylinder = ide_other->cylinder = 0;
+                                ide->reset = ide_other->reset = 0;
+                                ide->blocksize = ide_other->blocksize = 0;
+                                if (IDE_DRIVE_IS_CDROM(ide))
+                                        ide->cylinder=0xEB14;
+                                if (IDE_DRIVE_IS_CDROM(ide_other))
+                                        ide_other->cylinder=0xEB14;
+
                                 idecallback[ide_board] = 0;
                                 timer_update_outstanding();
                                 return;
@@ -905,14 +911,14 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 return;
 
         case 0x3F6: /* Device control */
-                if ((ide->fdisk&4) && !(val&4) && (ide->type != IDE_NONE))
+                if ((ide->fdisk&4) && !(val&4) && (ide->type != IDE_NONE || ide_other->type != IDE_NONE))
                 {
 			timer_process();
                         idecallback[ide_board]=500*IDE_TIME;
                         timer_update_outstanding();
-                        ide->reset = 1;
-                        ide->atastat = BUSY_STAT;
-//                        pclog("IDE Reset\n");
+                        ide->reset = ide_other->reset = 1;
+                        ide->atastat = ide_other->atastat = BUSY_STAT;
+//                        pclog("IDE Reset %i\n", ide_board);
                 }
                 ide->fdisk=val;
                 ide_irq_update(ide);
@@ -1099,6 +1105,7 @@ int times30=0;
 void callbackide(int ide_board)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
+        IDE *ide_other = &ide_drives[cur_ide[ide_board] ^ 1];
         off64_t addr;
         int c;
         ext_ide = ide;
@@ -1111,14 +1118,18 @@ void callbackide(int ide_board)
 //                output=1;
         if (ide->reset)
         {
-                ide->atastat = READY_STAT | DSC_STAT;
-                ide->error=1;
-                ide->secount=1;
-                ide->sector=1;
-                ide->head=0;
-                ide->cylinder=0;
-                ide->reset = 0;
-                ide->blocksize = 0;
+                ide->atastat = ide_other->atastat = READY_STAT | DSC_STAT;
+                ide->error = ide_other->error = 1;
+                ide->secount = ide_other->secount = 1;
+                ide->sector = ide_other->sector = 1;
+                ide->head = ide_other->head = 0;
+                ide->cylinder = ide_other->cylinder = 0;
+                ide->reset = ide_other->reset = 0;
+                ide->blocksize = ide_other->blocksize = 0;
+                if (IDE_DRIVE_IS_CDROM(ide))
+                        ide->cylinder=0xEB14;
+                if (IDE_DRIVE_IS_CDROM(ide_other))
+                        ide_other->cylinder=0xEB14;
 //                pclog("Reset callback\n");
                 return;
         }
