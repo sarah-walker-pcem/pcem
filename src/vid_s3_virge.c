@@ -293,7 +293,8 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         virge->ma_ext = (virge->ma_ext & 0x1c) | ((val & 0x30) >> 4);
                         break;
                         case 0x32:
-                        svga->vrammask = (val & 0x40) ? 0x3ffff : ((virge->memory_size << 20) - 1);
+                        if ((svga->crtc[0x67] & 0xc) != 0xc)
+                                svga->vrammask = (val & 0x40) ? 0x3ffff : ((virge->memory_size << 20) - 1);
                         break;
                         
                         case 0x50:
@@ -505,6 +506,7 @@ static void s3_virge_recalctimings(svga_t *svga)
                 {
                         svga->rowoffset = (svga->rowoffset * 3) / 4; /*Hack*/
                 }
+                svga->vrammask = (svga->crtc[0x32] & 0x40) ? 0x3ffff : ((virge->memory_size << 20) - 1);
 //pclog("VGA mode   x_disp=%i dispend=%i vtotal=%i\n", svga->hdisp, svga->dispend, svga->vtotal);
         }
         else /*Streams mode*/
@@ -551,6 +553,7 @@ static void s3_virge_recalctimings(svga_t *svga)
                         svga->render = svga_render_32bpp_highres; 
                         break;
                 }
+                svga->vrammask = (virge->memory_size << 20) - 1;
         }
 
         if (((svga->miscout >> 2) & 3) == 3)
