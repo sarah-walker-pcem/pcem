@@ -259,6 +259,21 @@ static void pit_over(int t)
         pit.running[t] = pit.enabled[t] && pit.using_timer[t];
 }
 
+int pit_get_timer_0()
+{
+        int read = (int)((pit.c[0] + ((1 << TIMER_SHIFT) - 1)) / PITCONST) >> TIMER_SHIFT;
+//pclog("pit_get_timer_0: t=%i using_timer=%i m=%i\n", 0, pit.using_timer[0], pit.m[0]);
+        if (pit.m[0] == 2)
+                read++;
+        if (read < 0)
+                read = 0;
+        if (read > 0x10000)
+                read = 0x10000;
+        if (pit.m[0] == 3)
+                read <<= 1;
+        return read;
+}
+        
 static int pit_read_timer(int t)
 {
         timer_clock();
@@ -333,7 +348,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                                 pit.rm[val>>6]=3;
                                 pit.rl[t] = pit_read_timer(t);
                         }
-                        pit.rereadlatch[val>>6]=1;
+//                        pit.rereadlatch[val>>6]=1;
                         if ((val>>6)==2) ppispeakon=speakon=(pit.m[2]==0)?0:1;
                         pit.initial[t] = 1;
                         if (!pit.m[val >> 6])
