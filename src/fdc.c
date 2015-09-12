@@ -556,7 +556,10 @@ void fdc_callback()
                                 }
                         }
                         else
+                        {
+                                fdc.track[fdc.drive]++;
                                 fdc.tc = 1;
+                        }
                 }
                 if (fdc.tc)
                 {
@@ -596,7 +599,10 @@ void fdc_callback()
                                 }
                         }
                         else
+                        {
+                                fdc.track[fdc.drive]++;
                                 fdc.tc = 1;
+                        }
                 }
                 if (fdc.tc)
                 {
