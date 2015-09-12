@@ -136,7 +136,7 @@ static int opMOVQ_mm_q_a16(uint32_t fetchdat)
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
-                writememq(easeg, eaaddr,     MM[reg].l[0]);
+                writememq(easeg, eaaddr,     MM[reg].l[0]); if (abrt) return 1;
                 CLOCK_CYCLES(2);
         }
         return 0;
@@ -154,7 +154,7 @@ static int opMOVQ_mm_q_a32(uint32_t fetchdat)
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr + 7);
-                writememq(easeg, eaaddr,     MM[reg].q);
+                writememq(easeg, eaaddr,     MM[reg].q); if (abrt) return 1;
                 CLOCK_CYCLES(2);
         }
         return 0;
