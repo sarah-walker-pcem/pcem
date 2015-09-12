@@ -31,29 +31,49 @@ void timer_process()
 {
 	int c;
 	int retry;
+	int process = 0;
 	/*Get actual elapsed time*/
 	int diff = timer_latch - timer_count;
-
+	int enable[TIMERS_MAX];
 
 	timer_latch = 0;
 
-        do
+        for (c = 0; c < timers_present; c++)
         {
-                retry = 0;
-        	for (c = 0; c < timers_present; c++)
+                enable[c] = *timers[c].enable;
+                if (*timers[c].enable)
                 {
-                        if (*timers[c].enable)
+                        *timers[c].count = *timers[c].count - (diff << TIMER_SHIFT);
+                        if (*timers[c].count <= 0)
+                                process = 1;
+                }
+        }
+        
+        if (!process)
+                return;
+
+        while (1)
+        {
+                int lowest = 1, lowest_c;
+                
+                for (c = 0; c < timers_present; c++)
+                {
+                        if (enable[c])
                         {
-                                *timers[c].count = *timers[c].count - (diff << TIMER_SHIFT);
-                                if (*timers[c].count <= 0)
-                                        timers[c].callback(timers[c].priv);
-                                if (*timers[c].count <= 0)
-                                        retry = 1;
-			}
-		}
-		diff = 0;
-	}
-	while (retry);
+                                if (*timers[c].count < lowest)
+                                {
+                                        lowest = *timers[c].count;
+                                        lowest_c = c;
+                                }
+                        }
+                }
+                
+                if (lowest > 0)
+                        break;
+
+                timers[lowest_c].callback(timers[lowest_c].priv);
+                enable[lowest_c] = *timers[lowest_c].enable;
+        }              
 }
 
 void timer_update_outstanding()
