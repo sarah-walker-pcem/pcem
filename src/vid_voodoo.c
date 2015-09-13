@@ -211,6 +211,7 @@ typedef struct voodoo_t
         
         int v_total, v_disp;
         int h_disp;
+        int v_retrace;
 
         struct
         {
@@ -3562,6 +3563,8 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp |= (voodoo->swap_count << 28);
                 if (voodoo->cmd_written - voodoo->cmd_read)
                         temp |= 0x380; /*Busy*/
+                if (!voodoo->v_retrace)
+                        temp |= 0x40;
                 if (!voodoo->voodoo_busy)
                         wake_fifo_thread(voodoo);
                 break;
@@ -4106,6 +4109,7 @@ void voodoo_callback(void *p)
                         thread_set_event(voodoo->wake_fifo_thread);
                         voodoo->frame_count++;
                 }
+                voodoo->v_retrace = 1;
         }
         voodoo->line++;
         
@@ -4126,7 +4130,10 @@ void voodoo_callback(void *p)
         }
         
         if (voodoo->line >= voodoo->v_total)
+        {
                 voodoo->line = 0;
+                voodoo->v_retrace = 0;
+        }
         if (voodoo->line_time)
                 voodoo->timer_count += voodoo->line_time;
         else
