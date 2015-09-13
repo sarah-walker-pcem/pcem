@@ -266,6 +266,12 @@ typedef struct voodoo_t
         int scrfilter;
 
         uint32_t last_write_addr;
+
+        uint32_t fbiPixelsIn;
+        uint32_t fbiChromaFail;
+        uint32_t fbiZFuncFail;
+        uint32_t fbiAFuncFail;
+        uint32_t fbiPixelsOut;
                 
         rgb_t clutData[33];
         int clutData_dirty;
@@ -381,6 +387,12 @@ enum
         SST_color0 = 0x144,
         SST_color1 = 0x148,
         
+        SST_fbiPixelsIn = 0x14c,
+        SST_fbiChromaFail = 0x150,
+        SST_fbiZFuncFail = 0x154,
+        SST_fbiAFuncFail = 0x158,
+        SST_fbiPixelsOut = 0x15c,
+
         SST_fogTable00 = 0x160,
         SST_fogTable01 = 0x164,
         SST_fogTable02 = 0x168,
@@ -1368,30 +1380,49 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
                 switch (depth_op)                       \
                 {                                       \
                         case DEPTHOP_NEVER:             \
+                        voodoo->fbiZFuncFail++;         \
                         goto skip_pixel;                \
                         case DEPTHOP_LESSTHAN:          \
                         if (!(new_depth < old_depth))   \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_EQUAL:             \
                         if (!(new_depth == old_depth))  \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_LESSTHANEQUAL:     \
                         if (!(new_depth <= old_depth))  \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_GREATERTHAN:       \
                         if (!(new_depth > old_depth))   \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_NOTEQUAL:          \
                         if (!(new_depth != old_depth))  \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_GREATERTHANEQUAL:  \
                         if (!(new_depth >= old_depth))  \
+                        {                               \
+                                voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case DEPTHOP_ALWAYS:            \
                         break;                          \
@@ -1469,30 +1500,49 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
                 switch (alpha_func)                     \
                 {                                       \
                         case AFUNC_NEVER:               \
+                        voodoo->fbiAFuncFail++;         \
                         goto skip_pixel;                \
                         case AFUNC_LESSTHAN:            \
                         if (!(src_a < a_ref))           \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_EQUAL:               \
                         if (!(src_a == a_ref))          \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_LESSTHANEQUAL:       \
                         if (!(src_a <= a_ref))          \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_GREATERTHAN:         \
                         if (!(src_a > a_ref))           \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_NOTEQUAL:            \
                         if (!(src_a != a_ref))          \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_GREATERTHANEQUAL:    \
                         if (!(src_a >= a_ref))          \
+                        {                               \
+                                voodoo->fbiAFuncFail++; \
                                 goto skip_pixel;        \
+                        }                               \
                         break;                          \
                         case AFUNC_ALWAYS:              \
                         break;                          \
@@ -1822,6 +1872,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                 {
                         start_x = x;
                         voodoo->pixel_count[odd_even]++;
+                        voodoo->fbiPixelsIn++;
                         if (voodoo_output)
                                 pclog("  X=%03i T=%08x\n", x, tmu0_t);
 //                        if (voodoo->fbzMode & FBZ_RGB_WMASK)
@@ -1903,7 +1954,10 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         state->tex_r == params->chromaKey_r &&
                                         state->tex_g == params->chromaKey_g &&
                                         state->tex_b == params->chromaKey_b)
+                                {
+                                        voodoo->fbiChromaFail++;
                                         goto skip_pixel;
+                                }
 
                                 if (voodoo->trexInit1 & (1 << 18))
                                 {
@@ -2167,6 +2221,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 }
                         }
                         voodoo_output &= ~2;
+                        voodoo->fbiPixelsOut++;
 skip_pixel:
                         if (state->xdir > 0)
                         {                                
@@ -2887,6 +2942,11 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 
                 case SST_nopCMD:
                 voodoo->cmd_read++;
+                voodoo->fbiPixelsIn = 0;
+                voodoo->fbiChromaFail = 0;
+                voodoo->fbiZFuncFail = 0;
+                voodoo->fbiAFuncFail = 0;
+                voodoo->fbiPixelsOut = 0;
                 break;
                 case SST_fastfillCMD:
                 wait_for_render_thread_idle(voodoo);
@@ -3582,6 +3642,22 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp = voodoo->lfbMode;
                 break;
                 
+                case SST_fbiPixelsIn:
+                temp = voodoo->fbiPixelsIn & 0xffffff;
+                break;
+                case SST_fbiChromaFail:
+                temp = voodoo->fbiChromaFail & 0xffffff;
+                break;
+                case SST_fbiZFuncFail:
+                temp = voodoo->fbiZFuncFail & 0xffffff;
+                break;
+                case SST_fbiAFuncFail:
+                temp = voodoo->fbiAFuncFail & 0xffffff;
+                break;
+                case SST_fbiPixelsOut:
+                temp = voodoo->fbiPixelsOut & 0xffffff;
+                break;
+
                 case SST_fbiInit4:
                 temp = voodoo->fbiInit4;
                 break;
