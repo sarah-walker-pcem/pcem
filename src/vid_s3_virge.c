@@ -517,7 +517,8 @@ static void s3_virge_recalctimings(svga_t *svga)
                         svga->ma_latch = virge->streams.pri_fb0 >> 2;
                         
                 svga->hdisp = virge->streams.pri_w + 1;
-                svga->dispend = virge->streams.pri_h;
+                if (virge->streams.pri_h < svga->dispend)
+                        svga->dispend = virge->streams.pri_h;
                 
                 svga->overlay.x = virge->streams.sec_x - virge->streams.pri_x;
                 svga->overlay.y = virge->streams.sec_y - virge->streams.pri_y;
