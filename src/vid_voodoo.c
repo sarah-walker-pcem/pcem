@@ -53,8 +53,8 @@ typedef union rgba_u
 #define FIFO_ENTRY_SIZE (1 << 31)
 
 #define FIFO_ENTRIES (voodoo->fifo_write_idx - voodoo->fifo_read_idx)
-#define FIFO_FULL  (voodoo->fifo[voodoo->fifo_write_idx & FIFO_MASK].addr_type & FIFO_TYPE)
-#define FIFO_EMPTY !(voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK].addr_type & FIFO_TYPE)
+#define FIFO_FULL    ((voodoo->fifo_write_idx - voodoo->fifo_read_idx) >= FIFO_SIZE)
+#define FIFO_EMPTY   (voodoo->fifo_read_idx == voodoo->fifo_write_idx)
 
 #define FIFO_TYPE 0xff000000
 #define FIFO_ADDR 0x00ffffff
@@ -255,7 +255,7 @@ typedef struct voodoo_t
         uint32_t texture_mask;
         
         fifo_entry_t fifo[FIFO_SIZE];
-        int fifo_read_idx, fifo_write_idx;
+        volatile int fifo_read_idx, fifo_write_idx;
         int cmd_read, cmd_written;
 
         voodoo_params_t params_buffer[PARAM_SIZE];
