@@ -306,6 +306,13 @@ enum
         ROM_PC1640,
         ROM_PC2086,
         ROM_PC3086,        
+        ROM_AMIXT,      /*XT Clone with AMI BIOS*/
+	ROM_LTXT,
+	ROM_LXT3,
+	ROM_PX386,
+        ROM_DTK386,
+        ROM_PXXT,
+        ROM_JUKOPC,
         ROM_IBMAT,
         ROM_CMDPC30,
         ROM_AMI286,
@@ -324,13 +331,6 @@ enum
         ROM_REVENGE,
         ROM_IBMPS1_2011,
         ROM_DESKPRO_386,
-        ROM_AMIXT,      /*XT Clone with AMI BIOS*/
-	ROM_LTXT,
-	ROM_LXT3,
-	ROM_PX386,
-        ROM_DTK386,
-        ROM_PXXT,
-        ROM_JUKOPC,
 	
         ROM_MAX
 };
