@@ -213,6 +213,7 @@ typedef struct PIT
         int count[3];
         int using_timer[3];
         int initial[3];
+        int latched[3];
 } PIT;
 
 PIT pit;

@@ -336,6 +336,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                         pit.ctrl |= 0x30;
                         pit.rereadlatch[t] = 0;
                         pit.rm[t] = 3;
+                        pit.latched[t] = 1;
                 }
                 else
                 {
@@ -348,7 +349,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                                 pit.rm[val>>6]=3;
                                 pit.rl[t] = pit_read_timer(t);
                         }
-//                        pit.rereadlatch[val>>6]=1;
+                        pit.rereadlatch[val>>6]=1;
                         if ((val>>6)==2) ppispeakon=speakon=(pit.m[2]==0)?0:1;
                         pit.initial[t] = 1;
                         if (!pit.m[val >> 6])
@@ -421,7 +422,7 @@ uint8_t pit_read(uint16_t addr, void *priv)
         {
                 case 0: case 1: case 2: /*Timers*/
                 t = addr & 3;
-                if (pit.rereadlatch[addr & 3])
+                if (pit.rereadlatch[addr & 3] && !pit.latched[addr & 3])
                 {
                         pit.rereadlatch[addr & 3] = 0;
                         pit.rl[t] = pit_read_timer(t);
@@ -431,14 +432,17 @@ uint8_t pit_read(uint16_t addr, void *priv)
                         case 0:
                         temp = pit.rl[addr & 3] >> 8;
                         pit.rm[addr & 3] = 3;
+                        pit.latched[addr & 3] = 0;
                         pit.rereadlatch[addr & 3] = 1;
                         break;
                         case 1:
                         temp = (pit.rl[addr & 3]) & 0xFF;
+                        pit.latched[addr & 3] = 0;
                         pit.rereadlatch[addr & 3] = 1;
                         break;
                         case 2:
                         temp = (pit.rl[addr & 3]) >> 8;
+                        pit.latched[addr & 3] = 0;
                         pit.rereadlatch[addr & 3] = 1;
                         break;
                         case 3:
