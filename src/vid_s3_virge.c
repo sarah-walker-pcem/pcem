@@ -257,7 +257,7 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                 if (svga->seqaddr >= 0x10)
                 {
                         svga->seqregs[svga->seqaddr & 0x1f]=val;
-                        s3_virge_recalctimings(svga);
+                        svga_recalctimings(svga);
                         return;
                 }
                 if (svga->seqaddr == 4) /*Chain-4 - update banking*/
@@ -895,7 +895,7 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
         {
                 case 0x8180:
                 virge->streams.pri_ctrl = val;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x8184:
@@ -926,39 +926,39 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 case 0x81c0:
 //                        pclog("Write pri_fb0 %08x\n", val);
                 virge->streams.pri_fb0 = val & 0x3fffff;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81c4:
 //                        pclog("Write pri_fb1 %08x\n", val);
                 virge->streams.pri_fb1 = val & 0x3fffff;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81c8:
                 virge->streams.pri_stride = val & 0xfff;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81cc:
 //                        pclog("Write buffer_ctrl %08x\n", val);
                 virge->streams.buffer_ctrl = val;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81d0:
                 virge->streams.sec_fb0 = val;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81d4:
                 virge->streams.sec_fb1 = val;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81d8:
                 virge->streams.sec_stride = val;
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81dc:
@@ -986,28 +986,28 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 virge->streams.pri_start = val;
                 virge->streams.pri_x = (val >> 16) & 0x7ff;
                 virge->streams.pri_y = val & 0x7ff;                
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81f4:
                 virge->streams.pri_size = val;
                 virge->streams.pri_w = (val >> 16) & 0x7ff;
                 virge->streams.pri_h = val & 0x7ff;                
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81f8:
                 virge->streams.sec_start = val;
                 virge->streams.sec_x = (val >> 16) & 0x7ff;
                 virge->streams.sec_y = val & 0x7ff;                
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 case 0x81fc:
                 virge->streams.sec_size = val;
                 virge->streams.sec_w = (val >> 16) & 0x7ff;
                 virge->streams.sec_h = val & 0x7ff;                
-                s3_virge_recalctimings(svga);
+                svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
                 break;
                 
