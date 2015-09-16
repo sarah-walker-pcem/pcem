@@ -120,6 +120,8 @@ void pci_init(int type, int min_card, int max_card)
 {
         int c;
 
+        PCI = 1;
+        
         if (type == PCI_CONFIG_TYPE_1)
         {
                 io_sethandler(0x0cf8, 0x0001, NULL, NULL, pci_cf8_read, NULL, NULL, pci_cf8_write,  NULL);

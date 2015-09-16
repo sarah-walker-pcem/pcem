@@ -67,6 +67,8 @@ void   at_endeavor_init();
 
 int model;
 
+int AMSTRAD, AT, PCI, TANDY;
+
 MODEL models[] =
 {
         {"IBM PC",              ROM_IBMPC,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         0,      xt_init},
@@ -173,6 +175,7 @@ void pcjr_init()
 
 void tandy1k_init()
 {
+        TANDY = 1;
         common_init();
         keyboard_xt_init();
         mouse_serial_init();
@@ -183,6 +186,7 @@ void tandy1k_init()
 
 void ams_init()
 {
+        AMSTRAD = 1;
         common_init();
         amstrad_init();
         keyboard_amstrad_init();
@@ -223,6 +227,7 @@ void at_init()
            mouse_serial_init();
         nvr_init();
         pic2_init();
+        AT = 1;
 }
 
 void deskpro386_init()
@@ -234,6 +239,7 @@ void deskpro386_init()
 
 void ps1_init()
 {
+        AT = 1;
         common_init();
         pit_set_out_func(1, pit_refresh_timer_at);
         dma16_init();
@@ -331,6 +337,7 @@ void at_i430vx_init()
 void model_init()
 {
         pclog("Initting as %s\n", model_getname());
+        AMSTRAD = AT = PCI = TANDY = 0;
         io_init();
         
         models[model].init();

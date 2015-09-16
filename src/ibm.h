@@ -269,28 +269,13 @@ int disctime;
 char discfns[2][256];
 int driveempty[2];
 
-
-/*Config stuff*/
 #define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
-#define HERCULES (gfxcard==GFX_HERCULES && (romset<ROM_TANDY || romset>=ROM_IBMAT))
-#define AMSTRAD (romset==ROM_PC1512 || romset==ROM_PC1640 || romset==ROM_PC3086)
-#define AMSTRADIO (romset==ROM_PC1512 || romset==ROM_PC1640 || romset==ROM_PC200 || romset==ROM_PC2086 || romset == ROM_PC3086)
-#define TANDY (romset==ROM_TANDY/* || romset==ROM_IBMPCJR*/)
-#define VID_EGA (gfxcard==GFX_EGA)
-#define EGA (romset==ROM_PC1640 || VID_EGA || VGA)
 #define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200)
-#define SVGA (gfxcard==GFX_ET4000 && VGA)
-#define TRIDENT (gfxcard==GFX_TVGA && !OTI067)
-#define OTI067 (romset==ROM_ACER386)
-#define ET4000 (gfxcard==GFX_ET4000 && VGA)
-#define ET4000W32 (gfxcard==GFX_ET4000W32 && VGA)
-#define AT (romset>=ROM_IBMAT)
-#define PCI (romset >= ROM_PCI486 && romset < ROM_IBMPS1_2011)
 #define PCJR (romset == ROM_IBMPCJR)
-
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
 
 int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
+extern int AMSTRAD, AT, is386, PCI, TANDY;
 
 enum
 {
@@ -337,10 +322,6 @@ enum
 };
 
 extern int romspresent[ROM_MAX];
-
-//#define ROM_IBMPCJR 5 /*Not working! ROMs are corrupt*/
-#define is386 (romset>=ROM_IBMAT386)
-#define is386sx 0
 
 int hasfpu;
 int romset;

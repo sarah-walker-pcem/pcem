@@ -90,7 +90,7 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
         switch (addr&7)
         {
                 case 0:
-                if (serial->lcr & 0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80)
                 {
                         serial->dlab1 = val;
                         return;
@@ -105,7 +105,7 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                 }
                 break;
                 case 1:
-                if (serial->lcr & 0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80)
                 {
                         serial->dlab2 = val;
                         return;
@@ -174,7 +174,7 @@ uint8_t serial_read(uint16_t addr, void *p)
         switch (addr&7)
         {
                 case 0:
-                if (serial->lcr & 0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80)
                 {
                         temp = serial->dlab1;
                         break;
@@ -188,7 +188,7 @@ uint8_t serial_read(uint16_t addr, void *p)
                         serial->recieve_delay = 1000 * TIMER_USEC;
                 break;
                 case 1:
-                if (serial->lcr & 0x80 && !AMSTRADIO)
+                if (serial->lcr & 0x80)
                         temp = serial->dlab2;
                 else
                         temp = serial->ier;
