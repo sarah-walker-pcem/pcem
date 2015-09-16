@@ -87,6 +87,7 @@ void pic_write(uint16_t addr, uint8_t val, void *priv)
                         pic.mask2=0;
                         pic.icw=1;
                         pic.icw1=val;
+                        pic.ins = 0;
                         pic_updatepending();
                 }
                 else if (!(val&8)) /*OCW2*/
@@ -187,6 +188,7 @@ void pic2_write(uint16_t addr, uint8_t val, void *priv)
                         pic2.mask2=0;
                         pic2.icw=1;
                         pic2.icw1=val;
+                        pic2.ins = 0;
                         pic_updatepending();
                 }
                 else if (!(val&8)) /*OCW2*/
