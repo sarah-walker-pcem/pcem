@@ -8,6 +8,7 @@ typedef struct svga_t
         int gdcaddr;
         uint8_t attrregs[32];
         int attraddr, attrff;
+        int attr_palette_enable;
         uint8_t seqregs[64];
         int seqaddr;
         

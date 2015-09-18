@@ -42,7 +42,15 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
         {
                 case 0x3C0:
                 if (!svga->attrff)
-                   svga->attraddr = val & 31;
+                {
+                        svga->attraddr = val & 31;
+                        if ((val & 0x20) != svga->attr_palette_enable)
+                        {
+                                svga->fullchange = 3;
+                                svga->attr_palette_enable = val & 0x20;
+                                svga_recalctimings(svga);
+                        }
+                }
                 else
                 {
                         svga->attrregs[svga->attraddr & 31] = val;
@@ -209,7 +217,7 @@ uint8_t svga_in(uint16_t addr, void *p)
         switch (addr)
         {
                 case 0x3C0: 
-                return svga->attraddr;
+                return svga->attraddr | svga->attr_palette_enable;
                 case 0x3C1: 
                 return svga->attrregs[svga->attraddr];
                 case 0x3c2:
@@ -309,7 +317,7 @@ void svga_recalctimings(svga_t *svga)
 
         svga->hdisp_time = svga->hdisp;
         svga->render = svga_render_blank;
-        if (!svga->scrblank)
+        if (!svga->scrblank && svga->attr_palette_enable)
         {
                 if (!(svga->gdcreg[6] & 1)) /*Text mode*/
                 {
