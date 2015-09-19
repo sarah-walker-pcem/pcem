@@ -472,7 +472,7 @@ void fdc_callback()
                 case -1: /*Reset*/
 //rpclog("Reset\n");
                 fdc_int();
-                fdc_reset_stat = 4;
+                fdc_reset_stat = 5;
                 return;
                 case 2: /*Read track*/
 /*                if (!fdc.pos)
@@ -642,8 +642,11 @@ void fdc_callback()
 
                 if (fdc_reset_stat)
                 {
-                        fdc.st0 = (fdc.st0 & 0xf8) | (4 - fdc_reset_stat) | (fdc.head ? 4 : 0);
                         fdc_reset_stat--;
+                        if (!fdc_reset_stat)
+                                fdc.st0 = 0;
+                        else
+                                fdc.st0 = (fdc.st0 & 0xf8) | (4 - fdc_reset_stat) | (fdc.head ? 4 : 0);
                 }
                 fdc.stat    = (fdc.stat & 0xf) | 0xd0;
                 fdc.res[9]  = fdc.st0;
