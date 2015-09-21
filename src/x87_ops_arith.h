@@ -5,7 +5,11 @@ static int opFADD ## name ## _a ## a_size(uint32_t fetchdat)    \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
         load_var = get(); if (abrt) return 1;                   \
+        if ((npxc >> 10) & 3)                                   \
+                fesetround(rounding_modes[(npxc >> 10) & 3]);   \
         ST(0) += use_var;                                       \
+        if ((npxc >> 10) & 3)                                   \
+                fesetround(FE_TONEAREST);                       \
         tag[TOP] &= ~TAG_UINT64;                                \
         CLOCK_CYCLES(8);                                        \
         return 0;                                               \

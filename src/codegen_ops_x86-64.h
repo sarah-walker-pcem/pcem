@@ -4080,7 +4080,40 @@ static void FP_OP_D(int op)
         addbyte(0x0f);
         addbyte(0x6e);
         addbyte(0xc8);
+        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        {
+                addbyte(0x0f); /*STMXCSR [ESP+8]*/
+                addbyte(0xae);
+                addbyte(0x5c);
+                addbyte(0x24);
+                addbyte(0x08);
+                addbyte(0x8b); /*MOV EAX, [ESP+8]*/
+                addbyte(0x44);
+                addbyte(0x24);
+                addbyte(0x08);
+                addbyte(0x25); /*AND EAX, ~(3 << 13)*/
+                addlong(~(3 << 10));
+                addbyte(0x0d); /*OR EAX, (npxc & (3 << 10)) << 3*/
+                addlong((npxc & (3 << 10)) << 3);
+                addbyte(0x89); /*MOV [RSP+12], EAX*/
+                addbyte(0x44);
+                addbyte(0x24);
+                addbyte(0x0c);
+                addbyte(0x0f); /*LDMXCSR [RSP+12]*/
+                addbyte(0xae);
+                addbyte(0x54);
+                addbyte(0x24);
+                addbyte(0x0c);
+        }
         FP_OP_MEM(op);
+        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        {
+                addbyte(0x0f); /*LDMXCSR [RSP+8]*/
+                addbyte(0xae);
+                addbyte(0x54);
+                addbyte(0x24);
+                addbyte(0x08);
+        }
 }
 static void FP_OP_IW(int op)
 {

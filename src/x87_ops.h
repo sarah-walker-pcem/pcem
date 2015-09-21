@@ -1,6 +1,9 @@
 #include <math.h>
+#include <fenv.h>
 
 #define fplog 0
+
+static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZERO};
 
 #define ST(x) ST[((TOP+(x))&7)]
 
