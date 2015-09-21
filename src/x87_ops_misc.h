@@ -562,6 +562,23 @@ static int opFPREM(uint32_t fetchdat)
         CLOCK_CYCLES(100);
         return 0;
 }
+static int opFPREM1(uint32_t fetchdat)
+{
+        int64_t temp64;
+        FP_ENTER();
+        pc++;
+        if (fplog) pclog("FPREM1 %f %f  ", ST(0), ST(1));
+        temp64 = (int64_t)(ST(0) / ST(1));
+        ST(0) = ST(0) - (ST(1) * (double)temp64);
+        tag[TOP] &= ~TAG_UINT64;
+        if (fplog) pclog("%f\n", ST(0));
+        npxs &= ~(C0|C1|C2|C3);
+        if (temp64 & 4) npxs|=C0;
+        if (temp64 & 2) npxs|=C3;
+        if (temp64 & 1) npxs|=C1;
+        CLOCK_CYCLES(100);
+        return 0;
+}
 
 static int opFSQRT(uint32_t fetchdat)
 {

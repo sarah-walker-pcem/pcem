@@ -362,7 +362,7 @@ OpFn OP_TABLE(fpu_d9_a16)[256] =
         opFSTP,  opFSTP,   opFSTP,   opFSTP,    opFSTP,    opFSTP,   opFSTP,    opFSTP,  /*Invalid*/
         opFCHS,  opFABS,   ILLEGAL,  ILLEGAL,   opFTST,    opFXAM,   ILLEGAL,   ILLEGAL,
         opFLD1,  opFLDL2T, opFLDL2E, opFLDPI,   opFLDEG2,  opFLDLN2, opFLDZ,    ILLEGAL,
-        opF2XM1, opFYL2X,  opFPTAN,  opFPATAN,  ILLEGAL,   ILLEGAL,  opFDECSTP, opFINCSTP,
+        opF2XM1, opFYL2X,  opFPTAN,  opFPATAN,  ILLEGAL,   opFPREM1, opFDECSTP, opFINCSTP,
         opFPREM, opFYL2XP1,opFSQRT,  opFSINCOS, opFRNDINT, opFSCALE, opFSIN,    opFCOS
 };
 
@@ -401,7 +401,7 @@ OpFn OP_TABLE(fpu_d9_a32)[256] =
         opFSTP,  opFSTP,   opFSTP,   opFSTP,    opFSTP,    opFSTP,   opFSTP,    opFSTP,  /*Invalid*/
         opFCHS,  opFABS,   ILLEGAL,  ILLEGAL,   opFTST,    opFXAM,   ILLEGAL,   ILLEGAL,
         opFLD1,  opFLDL2T, opFLDL2E, opFLDPI,   opFLDEG2,  opFLDLN2, opFLDZ,    ILLEGAL,
-        opF2XM1, opFYL2X,  opFPTAN,  opFPATAN,  ILLEGAL,   ILLEGAL,  opFDECSTP, opFINCSTP,
+        opF2XM1, opFYL2X,  opFPTAN,  opFPATAN,  ILLEGAL,   opFPREM1, opFDECSTP, opFINCSTP,
         opFPREM, opFYL2XP1,opFSQRT,  opFSINCOS, opFRNDINT, opFSCALE, opFSIN,    opFCOS
 };
 
