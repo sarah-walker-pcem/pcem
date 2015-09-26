@@ -69,7 +69,10 @@ static inline int64_t x87_fround(double b)
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-                return (int64_t)(b+0.5);
+		if (b < 0.0)
+	                return (int64_t)(b-0.5);
+		else
+	                return (int64_t)(b+0.5);
                 case 1: /*Down*/
                 return (int64_t)floor(b);
                 case 2: /*Up*/

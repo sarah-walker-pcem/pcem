@@ -2257,7 +2257,10 @@ static int32_t x87_fround32(double b)
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-                return (int32_t)(b+0.5);
+		if (b < 0.0)
+	                return (int32_t)(b-0.5);
+		else
+	                return (int32_t)(b+0.5);
                 case 1: /*Down*/
                 return (int32_t)floor(b);
                 case 2: /*Up*/
@@ -2271,7 +2274,10 @@ static int64_t x87_fround64(double b)
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-                return (int64_t)(b+0.5);
+		if (b < 0.0)
+	                return (int64_t)(b-0.5);
+		else
+	                return (int64_t)(b+0.5);
                 case 1: /*Down*/
                 return (int64_t)floor(b);
                 case 2: /*Up*/
