@@ -2254,13 +2254,19 @@ static void FP_RESTORE_ROUNDING()
 
 static int32_t x87_fround32(double b)
 {
+        int64_t a, c;
+        
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-		if (b < 0.0)
-	                return (int32_t)(b-0.5);
-		else
-	                return (int32_t)(b+0.5);
+                a = (int64_t)floor(b);
+                c = (int64_t)floor(b + 1.0);
+                if ((b - a) < (b - c))
+                        return a;
+                else if ((b - a) > (b - c))
+                        return b;
+                else
+                        return (a & 1) ? c : a;
                 case 1: /*Down*/
                 return (int32_t)floor(b);
                 case 2: /*Up*/
@@ -2271,13 +2277,19 @@ static int32_t x87_fround32(double b)
 }
 static int64_t x87_fround64(double b)
 {
+        int64_t a, c;
+        
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-		if (b < 0.0)
-	                return (int64_t)(b-0.5);
-		else
-	                return (int64_t)(b+0.5);
+                a = (int64_t)floor(b);
+                c = (int64_t)floor(b + 1.0);
+                if ((b - a) < (b - c))
+                        return a;
+                else if ((b - a) > (b - c))
+                        return b;
+                else
+                        return (a & 1) ? c : a;
                 case 1: /*Down*/
                 return (int64_t)floor(b);
                 case 2: /*Up*/

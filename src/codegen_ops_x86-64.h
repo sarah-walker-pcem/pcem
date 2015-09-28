@@ -3737,10 +3737,19 @@ static void FP_LOAD_REG_D(int reg, int *host_reg1, int *host_reg2)
 }
 static int64_t x87_fround(double b)
 {
+        int64_t a, c;
+        
         switch ((npxc>>10)&3)
         {
                 case 0: /*Nearest*/
-                return (int64_t)(b+0.5);
+                a = (int64_t)floor(b);
+                c = (int64_t)floor(b + 1.0);
+                if ((b - a) < (b - c))
+                        return a;
+                else if ((b - a) > (b - c))
+                        return b;
+                else
+                        return (a & 1) ? c : a;
                 case 1: /*Down*/
                 return (int64_t)floor(b);
                 case 2: /*Up*/
