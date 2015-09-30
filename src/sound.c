@@ -180,4 +180,5 @@ void sound_reset()
         sound_handlers_num = 0;
         
         sound_set_cd_volume(65535, 65535);
+        ioctl_audio_stop();
 }

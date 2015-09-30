@@ -80,6 +80,7 @@
 #define GPCMD_SEND_DVD_STRUCTURE	0xad
 #define GPCMD_SET_SPEED			0xbb
 #define GPCMD_START_STOP_UNIT		0x1b
+#define GPCMD_STOP_PLAY_SCAN            0x4e
 #define GPCMD_TEST_UNIT_READY		0x00
 
 /* Mode page codes for mode sense/set */
@@ -1127,9 +1128,15 @@ void callbackide(int ide_board)
                 ide->reset = ide_other->reset = 0;
                 ide->blocksize = ide_other->blocksize = 0;
                 if (IDE_DRIVE_IS_CDROM(ide))
+                {
                         ide->cylinder=0xEB14;
+                        atapi->stop();
+                }
                 if (IDE_DRIVE_IS_CDROM(ide_other))
+                {
                         ide_other->cylinder=0xEB14;
+                        atapi->stop();
+                }
 //                pclog("Reset callback\n");
                 return;
         }
@@ -1143,6 +1150,7 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         ide->cylinder = 0xeb14;
                         ide->atastat = 0;
+                        atapi->stop();
                 } else {
                         ide->cylinder = 0;
                 }
@@ -2005,7 +2013,13 @@ static void atapicommand(int ide_board)
                 ide->packetstatus=0x80;
                 idecallback[ide_board]=50*IDE_TIME;
                 break;
-                
+
+        case GPCMD_STOP_PLAY_SCAN:
+                if (!atapi->ready()) { atapi_notready(ide); return; }
+                atapi->stop();
+                ide->packetstatus=2;
+                idecallback[ide_board]=50*IDE_TIME;
+                break;
 /*                default:
                 pclog("Bad ATAPI command %02X\n",idebufferb[0]);
                 pclog("Packet data :\n");
