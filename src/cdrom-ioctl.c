@@ -130,8 +130,14 @@ static void ioctl_playaudio(uint32_t pos, uint32_t len, int ismsf)
         pclog("Play audio - %08X %08X %i\n", pos, len, ismsf);
         if (ismsf)
         {
-                pos = (pos & 0xff) + (((pos >> 8) & 0xff) * 75) + (((pos >> 16) & 0xff) * 75 * 60);
-                len = (len & 0xff) + (((len >> 8) & 0xff) * 75) + (((len >> 16) & 0xff) * 75 * 60);
+                int m = (pos >> 16) & 0xff;
+                int s = (pos >> 8) & 0xff;
+                int f = pos & 0xff;
+                pos = MSFtoLBA(m, s, f);
+                m = (len >> 16) & 0xff;
+                s = (len >> 8) & 0xff;
+                f = len & 0xff;
+                len = MSFtoLBA(m, s, f);
                 pclog("MSF - pos = %08X len = %08X\n", pos, len);
         }
         else
