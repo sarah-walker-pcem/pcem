@@ -54,6 +54,8 @@ typedef struct sb_dsp_t
         uint16_t sb_addr;
         
         int stereo;
+        
+        int asp_data_len;
 } sb_dsp_t;
 
 void sb_dsp_init(sb_dsp_t *dsp, int type);

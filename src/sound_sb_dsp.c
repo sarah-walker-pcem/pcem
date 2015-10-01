@@ -30,7 +30,7 @@ static int sbe2dat[4][9] = {
 
 static int sb_commands[256]=
 {
-        -1,-1,-1,-1, 1, 2,-1, 0, 1,-1,-1,-1,-1,-1, 2, 1,
+        -1, 2,-1,-1, 1, 2,-1, 0, 1,-1,-1,-1,-1,-1, 2, 1,
          1,-1,-1,-1, 2,-1, 2, 2,-1,-1,-1,-1, 0,-1,-1, 0,
          0,-1,-1,-1, 2,-1,-1,-1,-1,-1,-1,-1, 0,-1,-1,-1,
         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -133,6 +133,8 @@ void sb_dsp_reset(sb_dsp_t *dsp)
         dsp->sbenable = dsp->sb_enable_i = dsp->sb_count_i = 0;
 
         picintc(1 << dsp->sb_irqnum);
+        
+        dsp->asp_data_len = 0;
 }
 
 void sb_doreset(sb_dsp_t *dsp)
@@ -175,6 +177,7 @@ void sb_add_data(sb_dsp_t *dsp, uint8_t v)
 
 void sb_start_dma(sb_dsp_t *dsp, int dma8, int autoinit, uint8_t format, int len)
 {
+        dsp->sb_pausetime = -1;
         if (dma8)
         {
                 dsp->sb_8_length = len;
@@ -273,7 +276,8 @@ void sb_exec_command(sb_dsp_t *dsp)
         switch (dsp->sb_command)
         {
                 case 0x01: /*???*/
-                sb_add_data(dsp, 0);
+                if (dsp->sb_type < SB16) break;
+                dsp->asp_data_len = dsp->sb_data[0] + (dsp->sb_data[1] << 8) + 1;
                 break;
                 case 0x03: /*ASP status*/
                 sb_add_data(dsp, 0);
@@ -525,9 +529,19 @@ void sb_write(uint16_t a, uint8_t v, void *priv)
                 dsp->sbreset = v;
                 return;
                 case 0xC: /*Command/data write*/
+                if (dsp->asp_data_len)
+                {
+//                        pclog("ASP data %i\n", dsp->asp_data_len);
+                        dsp->asp_data_len--;
+                        if (!dsp->asp_data_len)
+                                sb_add_data(dsp, 0);
+                        return;
+                }
                 if (dsp->sb_data_stat == -1)
                 {
                         dsp->sb_command = v;
+                        if (v == 0x01)
+                                sb_add_data(dsp, 0);
 //                        if (sb_commands[v]==-1)
 //                           fatal("Bad SB command %02X\n",v);
                         dsp->sb_data_stat++;
