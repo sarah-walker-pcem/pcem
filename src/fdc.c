@@ -10,6 +10,7 @@
 
 extern int motoron;
 
+static int fdc_reset_stat = 0;
 /*FDC*/
 typedef struct FDC
 {
@@ -329,6 +330,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                         break;
                                         
                                         case 7: /*Recalibrate*/
+                                        fdc_reset_stat = 0;
                                         fdc.stat =  1 << fdc.drive;
                                         disctime = 0;
                                         disc_seek(fdc.drive, 0);
@@ -452,7 +454,6 @@ uint8_t fdc_read(uint16_t addr, void *priv)
         return temp;
 }
 
-static int fdc_reset_stat = 0;
 void fdc_callback()
 {
         int temp;
@@ -626,7 +627,7 @@ void fdc_callback()
                 case 7: /*Recalibrate*/
                 fdc.track[fdc.drive]=0;
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
-                fdc.st0=0x20|fdc.drive|(fdc.head?4:0);
+                fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);
@@ -712,7 +713,7 @@ void fdc_callback()
                 fdc.track[fdc.drive]=fdc.params[1];
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
 //                printf("Seeked to track %i %i\n",fdc.track[fdc.drive], fdc.drive);
-                fdc.st0=0x20|fdc.drive|(fdc.head?4:0);
+                fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);
