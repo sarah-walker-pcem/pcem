@@ -303,6 +303,8 @@ void fdi_poll()
                         fdi_inread = fdi_inreadaddr = 0;
                         return;
                 }
+                if (fdi_sector == SECTOR_FIRST)
+                        fdi_sector = SECTOR_NEXT;
         }
         if (pollbitsleft)
         {
@@ -322,7 +324,7 @@ void fdi_poll()
                                 if (!pollbytesleft)
                                 {
 //                                        pclog("Header over %i,%i %i,%i\n", fdi_sectordat[0], fdi_sectordat[2], fdi_track, fdi_sector);
-                                        if ((fdi_sectordat[0] == fdi_track && fdi_sectordat[2] == fdi_sector) || fdi_inreadaddr)
+                                        if ((fdi_sectordat[0] == fdi_track && (fdi_sectordat[2] == fdi_sector || fdi_sector == SECTOR_NEXT)) || fdi_inreadaddr)
                                         {
                                                 crc = (fdi_density) ? 0xcdb4 : 0xffff;
                                                 calccrc(0xFE);
@@ -348,7 +350,7 @@ void fdi_poll()
                                                         return;
                                                 }
 //                                                pclog("Sector %i,%i %i,%i\n", fdi_sectordat[0], fdi_sectordat[2], fdi_track, fdi_sector);
-                                                if (fdi_sectordat[0] == fdi_track && fdi_sectordat[2] == fdi_sector && fdi_inread && !fdi_inreadaddr)
+                                                if (fdi_sectordat[0] == fdi_track && (fdi_sectordat[2] == fdi_sector || fdi_sector == SECTOR_NEXT) && fdi_inread && !fdi_inreadaddr)
                                                 {
                                                         fdi_nextsector = 1;
                                                         readidpoll = 0;

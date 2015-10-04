@@ -23,6 +23,7 @@ static int img_inread,   img_readpos, img_inwrite, img_inreadaddr;
 static int img_notfound;
 static int img_rsector=0;
 static int img_informat=0;
+static int img_sector_next;
 
 static int img_pause = 0;
 static int img_index = 6250;
@@ -128,7 +129,18 @@ void img_readsector(int drive, int sector, int track, int side, int rate)
         if (drive_type[drive] && rate == 1)
                 rate = 2;
 
-        img_sector = sector - 1;
+        if (sector == SECTOR_FIRST)
+        {
+                img_sector = 1 - 1;
+                img_sector_next = 2;
+        }
+        else if (sector == SECTOR_NEXT)
+        {
+                img_sector = img_sector_next - 1;
+                img_sector_next++;
+        }
+        else
+                img_sector = sector - 1;
         img_track  = track;
         img_side   = side;
         img_drive  = drive;
@@ -136,7 +148,7 @@ void img_readsector(int drive, int sector, int track, int side, int rate)
 
         if (!img[drive].f || (side && img[drive].sides == 1) ||
             (rate != img[drive].rate) || (track != disc_track[drive]) ||
-            sector > img[drive].sectors)
+            img_sector > img[drive].sectors)
         {
 //                pclog("Sector not found rate %i,%i track %i,%i\n", rate, img[drive].rate, track, disc_track[drive]);
                 img_notfound=500;

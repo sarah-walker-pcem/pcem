@@ -176,6 +176,12 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
 //                        pclog("Starting FDC command %02X\n",fdc.command);
                         switch (fdc.command&0x1F)
                         {
+                                case 2: /*Read track*/
+                                fdc.pnum=0;
+                                fdc.ptot=8;
+                                fdc.stat=0x90;
+                                fdc.pos=0;
+                                break;
                                 case 3: /*Specify*/
                                 fdc.pnum=0;
                                 fdc.ptot=2;
@@ -297,6 +303,20 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                 disc_drivesel = fdc.drive & 1;
                                 switch (discint)
                                 {
+                                        case 2: /*Read a track*/
+                                        fdc.track[fdc.drive]=fdc.params[1];
+                                        fdc.head=fdc.params[2];
+                                        fdc.sector=fdc.params[3];
+                                        fdc.eot[fdc.drive] = fdc.params[5];
+                                        if (fdc.config & 0x40)
+                                                disc_seek(fdc.drive, fdc.track[fdc.drive]);
+//                                        pclog("Read a track track=%i head=%i sector=%i eot=%i\n", fdc.track[fdc.drive], fdc.head, fdc.sector, fdc.eot[fdc.drive]);
+                                        disc_readsector(fdc.drive, SECTOR_FIRST, fdc.track[fdc.drive], fdc.head, fdc.rate);
+                                        disctime = 0;
+                                        readflash = 1;
+                                        fdc.inread = 1;
+                                        break;
+
                                         case 5: /*Write data*/
                                         fdc.track[fdc.drive]=fdc.params[1];
                                         fdc.head=fdc.params[2];
@@ -476,49 +496,28 @@ void fdc_callback()
                 fdc_reset_stat = 5;
                 return;
                 case 2: /*Read track*/
-/*                if (!fdc.pos)
+                readflash = 1;
+                fdc.eot[fdc.drive]--;
+//                pclog("Read a track callback, eot=%i\n", fdc.eot[fdc.drive]);
+                if (!fdc.eot[fdc.drive] || fdc.tc)
                 {
-//                        printf("Read Track Side %i Track %i Sector %02X sector size %i end sector %02X %05X\n",fdc.head,fdc.track,fdc.sector,fdc.params[4],fdc.params[5],(dma.page[2]<<16)+dma.ac[2]);
-                }
-                if (fdc.pos<512)
-                {
-                        fdc.dat=disc[fdc.drive][fdc.head][fdc.track[fdc.drive]][fdc.sector-1][fdc.pos];
-//                        pclog("Read %i %i %i %i %02X\n",fdc.head,fdc.track,fdc.sector,fdc.pos,fdc.dat);
-                        if (fdc.pcjr)
-                                fdc.stat = 0xf0;
-                        else
-                                dma_channel_write(2, fdc.dat);
-                        timer_process();
-                        disctime = 60 * (1 << TIMER_SHIFT);
-                        timer_update_outstanding();
-                }
-                else
-                {
-                        disctime=0;
+//                        pclog("Complete\n");
+                        fdc.inread = 0;
                         discint=-2;
-//                        pclog("RT\n");
                         fdc_int();
                         fdc.stat=0xD0;
                         fdc.res[4]=(fdc.head?4:0)|fdc.drive;
-                        fdc.res[5]=fdc.res[2]=0;
-                        fdc.res[6]=fdc.track[fdc.drive];
-                        fdc.res[7]=fdc.head;
-                        fdc.res[8]=fdc.sector;
-                        fdc.res[9]=fdc.params[4];
+                        fdc.res[5]=fdc.res[6]=0;
+                        fdc.res[7]=fdc.track[fdc.drive];
+                        fdc.res[8]=fdc.head;
+                        fdc.res[9]=fdc.sector;
+                        fdc.res[10]=fdc.params[4];
                         paramstogo=7;
                         return;
                 }
-                fdc.pos++;
-                if (fdc.pos==512 && fdc.params[5]!=1)
-                {
-                        fdc.pos=0;
-                        fdc.sector++;
-                        if (fdc.sector==SECTORS[fdc.drive]+1)
-                        {
-                                fdc.sector=1;
-                        }
-                        fdc.params[5]--;
-                }*/
+                else
+                        disc_readsector(fdc.drive, SECTOR_NEXT, fdc.track[fdc.drive], fdc.head, fdc.rate);
+                fdc.inread = 1;
                 return;
                 case 3: /*Specify*/
                 fdc.stat=0x80;

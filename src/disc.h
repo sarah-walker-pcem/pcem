@@ -57,3 +57,7 @@ extern int disc_track[2];
 extern int disc_changed[2];
 extern int drive_empty[2];
 extern int drive_type[2];
+
+/*Used in the Read A Track command. Only valid for disc_readsector(). */
+#define SECTOR_FIRST -2
+#define SECTOR_NEXT  -1
