@@ -975,11 +975,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 
         			// pclog("Keyboard input received: S:%X VK:%X F:%X\n", c, d, e);
 
-        			if (rawKB.VKey == VK_NUMLOCK)
-        			{
-        				/* This is for proper handling of Pause/Break and Num Lock */
-        				scancode = (MapVirtualKey(rawKB.VKey, MAPVK_VK_TO_VSC) | 0x100);
-        			}
         			/* If it's not a scan code that starts with 0xE1 */
         			if (!(rawKB.Flags & RI_KEY_E1))
         			{
