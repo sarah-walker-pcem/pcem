@@ -754,6 +754,11 @@ enum
         CMD_SWAPBUF
 };
 
+enum
+{
+        FBZCP_TEXTURE_ENABLED = (1 << 27)
+};
+
 static void voodoo_update_ncc(voodoo_t *voodoo)
 {
         int tbl;
@@ -1924,39 +1929,42 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 dest_b |= (dest_b >> 5);
                                 dest_a = 0xff;
 
-                                if (params->textureMode & 1)
+                                if (params->fbzColorPath & FBZCP_TEXTURE_ENABLED)
                                 {
-                                        int64_t _w = 0;
-                                        if (tmu0_w)
-                                                _w = (int64_t)((1ULL << 48) / tmu0_w);
+                                        if (params->textureMode & 1)
+                                        {
+                                                int64_t _w = 0;
+                                                if (tmu0_w)
+                                                        _w = (int64_t)((1ULL << 48) / tmu0_w);
 
-                                        state->tex_s = (int32_t)(((tmu0_s >> 14) * _w) >> 30);
-                                        state->tex_t = (int32_t)(((tmu0_t >> 14)  * _w) >> 30);
+                                                state->tex_s = (int32_t)(((tmu0_s >> 14) * _w) >> 30);
+                                                state->tex_t = (int32_t)(((tmu0_t >> 14)  * _w) >> 30);
 //                                        state->lod = state->tmu[0].lod + (int)(log2((double)_w / (double)(1 << 19)) * 256.0);
-                                        state->lod = state->tmu[0].lod + (fastlog(_w) - (19 << 8));
-                                }
-                                else
-                                {
-                                        state->tex_s = (int32_t)(tmu0_s >> (14+14));
-                                        state->tex_t = (int32_t)(tmu0_t >> (14+14));
-                                        state->lod = state->tmu[0].lod;
-                                }
+                                                state->lod = state->tmu[0].lod + (fastlog(_w) - (19 << 8));
+                                        }
+                                        else
+                                        {
+                                                state->tex_s = (int32_t)(tmu0_s >> (14+14));
+                                                state->tex_t = (int32_t)(tmu0_t >> (14+14));
+                                                state->lod = state->tmu[0].lod;
+                                        }
                                 
-                                if (state->lod < state->lod_min)
-                                        state->lod = state->lod_min;
-                                else if (state->lod > state->lod_max)
-                                        state->lod = state->lod_max;
-                                state->lod >>= 8;
+                                        if (state->lod < state->lod_min)
+                                                state->lod = state->lod_min;
+                                        else if (state->lod > state->lod_max)
+                                                state->lod = state->lod_max;
+                                        state->lod >>= 8;
 
-                                voodoo_get_texture(voodoo, params, state);
+                                        voodoo_get_texture(voodoo, params, state);
 
-                                if ((params->fbzMode & FBZ_CHROMAKEY) &&
-                                        state->tex_r == params->chromaKey_r &&
-                                        state->tex_g == params->chromaKey_g &&
-                                        state->tex_b == params->chromaKey_b)
-                                {
-                                        voodoo->fbiChromaFail++;
-                                        goto skip_pixel;
+                                        if ((params->fbzMode & FBZ_CHROMAKEY) &&
+                                                state->tex_r == params->chromaKey_r &&
+                                                state->tex_g == params->chromaKey_g &&
+                                                state->tex_b == params->chromaKey_b)
+                                        {
+                                                voodoo->fbiChromaFail++;
+                                                goto skip_pixel;
+                                        }
                                 }
 
                                 if (voodoo->trexInit1 & (1 << 18))
