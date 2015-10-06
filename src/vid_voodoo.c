@@ -4268,7 +4268,7 @@ void *voodoo_init()
 
         mem_mapping_add(&voodoo->mapping, 0, 0, NULL, voodoo_readw, voodoo_readl, NULL, voodoo_writew, voodoo_writel,     NULL, 0, voodoo);
 
-        voodoo->fb_mem = malloc(voodoo->fb_size * 1024 * 1024);
+        voodoo->fb_mem = malloc(4 * 1024 * 1024);
         voodoo->tex_mem = malloc(voodoo->texture_size * 1024 * 1024);
         voodoo->tex_mem_w = (uint16_t *)voodoo->tex_mem;
 
