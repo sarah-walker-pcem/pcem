@@ -178,12 +178,6 @@ typedef struct voodoo_t
 
         int_float fvertexAx, fvertexAy, fvertexBx, fvertexBy, fvertexCx, fvertexCy;
 
-        int_float fstartR, fstartG, fstartB, fstartZ, fstartA, fstartS, fstartT, fstartW;
-
-        int_float fdRdX, fdGdX, fdBdX, fdZdX, fdAdX;
-        
-        int_float fdRdY, fdGdY, fdBdY, fdZdY, fdAdY;
-
         uint32_t front_offset, back_offset;
         
         uint32_t fb_read_offset, fb_write_offset;
@@ -2778,19 +2772,24 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case SST_fstartR: case SST_remap_fstartR:
-                voodoo->fstartR.i = val;
+                tempif.i = val;
+                voodoo->params.startR = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fstartG: case SST_remap_fstartG:
-                voodoo->fstartG.i = val;
+                tempif.i = val;
+                voodoo->params.startG = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fstartB: case SST_remap_fstartB:
-                voodoo->fstartB.i = val;
+                tempif.i = val;
+                voodoo->params.startB = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fstartZ: case SST_remap_fstartZ:
-                voodoo->fstartZ.i = val;
+                tempif.i = val;
+                voodoo->params.startZ = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fstartA: case SST_remap_fstartA:
-                voodoo->fstartA.i = val;
+                tempif.i = val;
+                voodoo->params.startA = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fstartS: case SST_remap_fstartS:
                 tempif.i = val;
@@ -2811,19 +2810,24 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case SST_fdRdX: case SST_remap_fdRdX:
-                voodoo->fdRdX.i = val;
+                tempif.i = val;
+                voodoo->params.dRdX = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdGdX: case SST_remap_fdGdX:
-                voodoo->fdGdX.i = val;
+                tempif.i = val;
+                voodoo->params.dGdX = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdBdX: case SST_remap_fdBdX:
-                voodoo->fdBdX.i = val;
+                tempif.i = val;
+                voodoo->params.dBdX = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdZdX: case SST_remap_fdZdX:
-                voodoo->fdZdX.i = val;
+                tempif.i = val;
+                voodoo->params.dZdX = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdAdX: case SST_remap_fdAdX:
-                voodoo->fdAdX.i = val;
+                tempif.i = val;
+                voodoo->params.dAdX = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdSdX: case SST_remap_fdSdX:
                 tempif.i = val;
@@ -2844,19 +2848,24 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case SST_fdRdY: case SST_remap_fdRdY:
-                voodoo->fdRdY.i = val;
+                tempif.i = val;
+                voodoo->params.dRdY = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdGdY: case SST_remap_fdGdY:
-                voodoo->fdGdY.i = val;
+                tempif.i = val;
+                voodoo->params.dGdY = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdBdY: case SST_remap_fdBdY:
-                voodoo->fdBdY.i = val;
+                tempif.i = val;
+                voodoo->params.dBdY = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdZdY: case SST_remap_fdZdY:
-                voodoo->fdZdY.i = val;
+                tempif.i = val;
+                voodoo->params.dZdY = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdAdY: case SST_remap_fdAdY:
-                voodoo->fdAdY.i = val;
+                tempif.i = val;
+                voodoo->params.dAdY = (int32_t)(tempif.f * 4096.0f);
                 break;
                 case SST_fdSdY: case SST_remap_fdSdY:
                 tempif.i = val;
@@ -2883,30 +2892,6 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->params.vertexBy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBy.f * 16.0f) & 0xffff;
                 voodoo->params.vertexCx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCx.f * 16.0f) & 0xffff;
                 voodoo->params.vertexCy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCy.f * 16.0f) & 0xffff;
-/*                pclog("ftriangle %f(%08x),%f(%08x) %f,%f %f,%f  %08x,%08x %08x,%08x %08x,%08x\n",
-                        voodoo->fvertexAx.f, voodoo->fvertexAx.i, voodoo->fvertexAy.f, voodoo->fvertexAy.i,
-                        voodoo->fvertexBx.f, voodoo->fvertexBy.f,
-                        voodoo->fvertexCx.f, voodoo->fvertexCy.f,
-                        voodoo->vertexAx, voodoo->vertexAy,
-                        voodoo->vertexBx, voodoo->vertexBy,
-                        voodoo->vertexCx, voodoo->vertexCy);*/
-                voodoo->params.startR = (int32_t)(voodoo->fstartR.f * 4096.0f);
-                voodoo->params.startG = (int32_t)(voodoo->fstartG.f * 4096.0f);
-                voodoo->params.startB = (int32_t)(voodoo->fstartB.f * 4096.0f);
-                voodoo->params.startZ = (int32_t)(voodoo->fstartZ.f * 4096.0f);
-                voodoo->params.startA = (int32_t)(voodoo->fstartA.f * 4096.0f);
-
-                voodoo->params.dRdX = (int32_t)(voodoo->fdRdX.f * 4096.0f);
-                voodoo->params.dGdX = (int32_t)(voodoo->fdGdX.f * 4096.0f);
-                voodoo->params.dBdX = (int32_t)(voodoo->fdBdX.f * 4096.0f);
-                voodoo->params.dZdX = (int32_t)(voodoo->fdZdX.f * 4096.0f);
-                voodoo->params.dAdX = (int32_t)(voodoo->fdAdX.f * 4096.0f);
-
-                voodoo->params.dRdY = (int32_t)(voodoo->fdRdY.f * 4096.0f);
-                voodoo->params.dGdY = (int32_t)(voodoo->fdGdY.f * 4096.0f);
-                voodoo->params.dBdY = (int32_t)(voodoo->fdBdY.f * 4096.0f);
-                voodoo->params.dZdY = (int32_t)(voodoo->fdZdY.f * 4096.0f);
-                voodoo->params.dAdY = (int32_t)(voodoo->fdAdY.f * 4096.0f);
 
                 voodoo->params.sign = val & (1 << 31);
 
