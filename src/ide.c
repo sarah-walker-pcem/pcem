@@ -1126,7 +1126,6 @@ void callbackide(int ide_board)
                 ide->head = ide_other->head = 0;
                 ide->cylinder = ide_other->cylinder = 0;
                 ide->reset = ide_other->reset = 0;
-                ide->blocksize = ide_other->blocksize = 0;
                 if (IDE_DRIVE_IS_CDROM(ide))
                 {
                         ide->cylinder=0xEB14;
