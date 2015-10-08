@@ -843,6 +843,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         video_fullscreen = 1;
                         vid_apis[1][vid_api].init(ghwnd);
                         mouse_init();
+                        leave_fullscreen_flag = 0;
                         endblit();
                         device_force_redraw();
                         break;
@@ -1015,6 +1016,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 }
 //                pclog("Lost focus!\n");
                 memset(rawinputkey, 0, sizeof(rawinputkey));
+                if (video_fullscreen)
+                        leave_fullscreen_flag = 1;
                 break;
 
                 case WM_LBUTTONUP:

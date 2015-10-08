@@ -31,8 +31,6 @@ void mouse_init()
            fatal("mouse_init : SetCooperativeLevel failed\n");
         if (FAILED(lpdi_mouse->SetDataFormat(&c_dfDIMouse)))
            fatal("mouse_init : SetDataFormat failed\n");
-        if (FAILED(lpdi_mouse->Acquire()))
-           fatal("mouse_init : Acquire failed\n");
 }
 
 void mouse_close()
