@@ -111,13 +111,11 @@ void pic_write(uint16_t addr, uint8_t val, void *priv)
                                         if (pic.ins&(1<<c))
                                         {
                                                 pic.ins&=~(1<<c);
-                                                pic.pend &= ~(1 << c);
                                                 pic_update_mask(&pic.mask2, pic.ins);
 
                                                 if (c == 2 && (pic2.pend&~pic2.mask)&~pic2.mask2)
                                                         pic.pend |= (1 << 2);
 
-//                                                pic.pend&=~(1<<c);
                                                 if (c==1 && keywaiting)
                                                 {
                                                         intclear&=~1;

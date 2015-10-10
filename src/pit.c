@@ -87,6 +87,7 @@ static void pit_load(int t)
         int l = pit.l[t] ? pit.l[t] : 0x10000;
         timer_process();
         pit.newcount[t] = 0;
+        pit.disabled[t] = 0;
 //        pclog("pit_load: t=%i l=%x\n", t, l);
         switch (pit.m[t])
         {
@@ -146,6 +147,10 @@ static void pit_load(int t)
 void pit_set_gate(int t, int gate)
 {
         int l = pit.l[t] ? pit.l[t] : 0x10000;
+
+        if (pit.disabled[t])
+                return;
+
         timer_process();
         switch (pit.m[t])
         {
@@ -194,7 +199,14 @@ void pit_set_gate(int t, int gate)
 static void pit_over(int t)
 {
         int l = pit.l[t] ? pit.l[t] : 0x10000;
-//        if (!t) pclog("pit_over: t=%i l=%x c=%x %i\n", t, pit.l[t], pit.c[t], pit.c[t] >> TIMER_SHIFT);
+        if (pit.disabled[t])
+        {
+                pit.count[t] += 0xffff;
+                pit.c[t] += (int)((0xffff << TIMER_SHIFT) * PITCONST);
+                return;
+        }
+                
+//        if (!t) pclog("pit_over: t=%i l=%x c=%x %i hit=%i\n", t, pit.l[t], pit.c[t], pit.c[t] >> TIMER_SHIFT, pit.thit[t]);
         switch (pit.m[t])
         {
                 case 0: /*Interrupt on terminal count*/
@@ -354,6 +366,9 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                         pit.initial[t] = 1;
                         if (!pit.m[val >> 6])
                                 pit_set_out(val >> 6, 0);
+                        else
+                                pit_set_out(val >> 6, 1);
+                        pit.disabled[val >> 6] = 1;
 //                                pclog("ppispeakon %i\n",ppispeakon);
                 }
                 pit.wp=0;

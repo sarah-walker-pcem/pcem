@@ -214,6 +214,7 @@ typedef struct PIT
         int using_timer[3];
         int initial[3];
         int latched[3];
+        int disabled[3];
 } PIT;
 
 PIT pit;
