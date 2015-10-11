@@ -257,6 +257,11 @@ uint8_t s3_in(uint16_t addr, void *p)
 //        if (addr != 0x3da) pclog("S3 in %04X %08x:%02x\n", addr, CS, pc);
         switch (addr)
         {
+                case 0x3c1:
+                if (svga->attraddr > 0x14)
+                        return 0xff;
+                break;
+                        
                 case 0x3c5:
                 if (svga->seqaddr >= 0x10 && svga->seqaddr < 0x20)
                         return svga->seqregs[svga->seqaddr];
@@ -1587,8 +1592,8 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                         if (cpu_input/* && (s3->accel.multifunc[0xa] & 0xc0) == 0x80*/) return;
                                         if (s3->accel.sy < 0)
                                         {
-                                                s3->accel.cur_x = s3->accel.cx;
-                                                s3->accel.cur_y = s3->accel.cy;
+//                                                s3->accel.cur_x = s3->accel.cx;
+//                                                s3->accel.cur_y = s3->accel.cy;
                                                 return;
                                         }
                                 }
@@ -1837,7 +1842,7 @@ uint8_t s3_pci_read(int func, int addr, void *p)
                 case 0x08: return 0; /*Revision ID*/
                 case 0x09: return 0; /*Programming interface*/
                 
-                case 0x0a: return 0x01; /*Supports VGA interface*/
+                case 0x0a: return 0x00; /*Supports VGA interface*/
                 case 0x0b: return 0x03;
                 
                 case 0x10: return 0x00; /*Linear frame buffer address*/
