@@ -1736,6 +1736,9 @@ void mem_add_bios()
         mem_mapping_add(&bios_high_mapping[7], 0xffffc000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_null, mem_write_nullw, mem_write_nulll, rom + (0x1c000 & biosmask), 0, 0);
 }
 
+int mem_a20_key = 0, mem_a20_alt = 0;
+static int mem_a20_state = 1;
+
 void mem_init()
 {
         int c;
@@ -1847,6 +1850,8 @@ void mem_resize()
         mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   romext, 0, NULL);
 
 //        pclog("Mem resize %i %i\n",mem_size,c);
+        mem_a20_key = 2;
+        mem_a20_recalc();
 }
 
 void mem_reset_page_blocks()
@@ -1862,9 +1867,6 @@ void mem_reset_page_blocks()
                 pages[c].block_2 = NULL;
         }
 }
-
-int mem_a20_key = 0, mem_a20_alt = 0;
-static int mem_a20_state = 0;
 
 void mem_a20_recalc()
 {

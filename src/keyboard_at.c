@@ -340,6 +340,15 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         keyboard_at.status |= STAT_SYSFLAG;
                         keyboard_at.mem[0] |= 0x04;
                         keyboard_at_adddata(0x55);
+                        /*Self-test also resets the output port, enabling A20*/
+                        if (!(keyboard_at.output_port & 0x02))
+                        {
+                                mem_a20_key = 2;
+                                mem_a20_recalc();
+//                                pclog("Rammask change to %08X %02X\n", rammask, val & 0x02);
+                                flushmmucache();
+                        }
+                        keyboard_at.output_port = 0xcf;
                         break;
                         
                         case 0xab: /*Interface test*/
@@ -445,7 +454,7 @@ void keyboard_at_reset()
         keyboard_at.status = STAT_LOCK | STAT_CD;
         keyboard_at.mem[0] = 0x11;
         keyboard_at.wantirq = 0;
-        keyboard_at.output_port = 0;
+        keyboard_at.output_port = 0xcf;
         keyboard_at.input_port = 0xb0;
         keyboard_at.out_new = -1;
         keyboard_at.last_irq = 0;
