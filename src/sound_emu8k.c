@@ -631,8 +631,22 @@ void emu8k_poll(void *p)
                 emu8k->voice[c].lfo2_count += (emu8k->voice[c].fm2frq2 & 0xff);
         }
         
-        emu8k->out_l = out_l >> 16;
-        emu8k->out_r = out_r >> 16;
+        out_l >>= 15;
+        out_r >>= 15;
+        
+        if (out_l < -32768)
+                emu8k->out_l = -32768;
+        else if (out_l > 32767)
+                emu8k->out_l = 32767;
+        else
+                emu8k->out_l = out_l;
+                
+        if (out_r < -32768)
+                emu8k->out_r = -32768;
+        else if (out_r > 32767)
+                emu8k->out_r = 32767;
+        else
+                emu8k->out_r = out_r;
         
         emu8k->wc++;
 }
