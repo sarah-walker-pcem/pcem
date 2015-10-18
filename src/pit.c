@@ -139,7 +139,7 @@ static void pit_load(int t)
                 break;
         }
         pit.initial[t] = 0;
-        pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        pit.running[t] = pit.enabled[t] && pit.using_timer[t] && !pit.disabled[t];
         timer_update_outstanding();
 //        pclog("pit_load: t=%i running=%i thit=%i enabled=%i m=%i l=%x c=%g gate=%i\n", t, pit.running[t], pit.thit[t], pit.enabled[t], pit.m[t], pit.l[t], pit.c[t], pit.gate[t]);
 }
@@ -149,8 +149,11 @@ void pit_set_gate(int t, int gate)
         int l = pit.l[t] ? pit.l[t] : 0x10000;
 
         if (pit.disabled[t])
+        {
+                pit.gate[t] = gate;
                 return;
-
+        }
+                
         timer_process();
         switch (pit.m[t])
         {
@@ -191,7 +194,7 @@ void pit_set_gate(int t, int gate)
                 break;
         }
         pit.gate[t] = gate;
-        pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        pit.running[t] = pit.enabled[t] && pit.using_timer[t] && !pit.disabled[t];
         timer_update_outstanding();
 //        pclog("pit_set_gate: t=%i gate=%i\n", t, gate);
 }
@@ -268,7 +271,7 @@ static void pit_over(int t)
                 pit.c[t] += (int)((0xffff << TIMER_SHIFT) * PITCONST);
                 break;
         }
-        pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        pit.running[t] = pit.enabled[t] && pit.using_timer[t] && !pit.disabled[t];
 }
 
 int pit_get_timer_0()
@@ -519,7 +522,7 @@ void pit_set_using_timer(int t, int using_timer)
         if (!pit.using_timer[t] && using_timer)
                 pit.c[t] = (int)((pit.count[t] << TIMER_SHIFT) * PITCONST);
         pit.using_timer[t] = using_timer;
-        pit.running[t] = pit.enabled[t] && pit.using_timer[t];
+        pit.running[t] = pit.enabled[t] && pit.using_timer[t] && !pit.disabled[t];
         timer_update_outstanding();
 }
 
