@@ -22,6 +22,7 @@ static struct
         
         uint8_t flags;
         uint8_t resolution;
+        uint8_t sample_rate;
         
         uint8_t command;
         
@@ -41,6 +42,7 @@ void mouse_ps2_write(uint8_t val)
                         break;
                         
                         case 0xf3: /*Set sample rate*/
+                        mouse_ps2.sample_rate = val;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
                         
@@ -50,6 +52,8 @@ void mouse_ps2_write(uint8_t val)
         }
         else
         {
+                uint8_t temp;
+                
                 mouse_ps2.command = val;
                 switch (mouse_ps2.command)
                 {
@@ -67,7 +71,21 @@ void mouse_ps2_write(uint8_t val)
                         mouse_ps2.cd = 1;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-
+                        
+                        case 0xe9: /*Status request*/
+                        keyboard_at_adddata_mouse(0xfa);
+                        temp = mouse_ps2.flags;
+                        if (mouse_buttons & 1)
+                                temp |= 1;
+                        if (mouse_buttons & 2)
+                                temp |= 2;
+                        if (mouse_buttons & 4)
+                                temp |= 3;
+                        keyboard_at_adddata_mouse(temp);
+                        keyboard_at_adddata_mouse(mouse_ps2.resolution);
+                        keyboard_at_adddata_mouse(mouse_ps2.sample_rate);
+                        break;
+                        
                         case 0xf2: /*Read ID*/
                         keyboard_at_adddata_mouse(0xfa);
                         keyboard_at_adddata_mouse(0x00);
