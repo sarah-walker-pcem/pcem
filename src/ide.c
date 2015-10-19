@@ -568,7 +568,12 @@ void resetide(void)
         loadhd(&ide_drives[1], 1, ide_fn[1]);
         loadhd(&ide_drives[2], 2, ide_fn[2]);
         if (cdrom_enabled)
-                ide_drives[3].type = IDE_CDROM;
+        {
+                if (ide_drives[2].type == IDE_NONE)
+                        ide_drives[2].type = IDE_CDROM;
+                else
+                        ide_drives[3].type = IDE_CDROM;
+        }
         else
                 loadhd(&ide_drives[3], 3, ide_fn[3]);
 #endif
