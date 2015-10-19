@@ -2261,10 +2261,10 @@ static int32_t x87_fround32(double b)
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);
                 c = (int64_t)floor(b + 1.0);
-                if ((b - a) < (b - c))
+                if ((b - a) < (c - b))
                         return a;
-                else if ((b - a) > (b - c))
-                        return b;
+                else if ((b - a) > (c - b))
+                        return c;
                 else
                         return (a & 1) ? c : a;
                 case 1: /*Down*/
@@ -2284,10 +2284,10 @@ static int64_t x87_fround64(double b)
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);
                 c = (int64_t)floor(b + 1.0);
-                if ((b - a) < (b - c))
+                if ((b - a) < (c - b))
                         return a;
-                else if ((b - a) > (b - c))
-                        return b;
+                else if ((b - a) > (c - b))
+                        return c;
                 else
                         return (a & 1) ? c : a;
                 case 1: /*Down*/
