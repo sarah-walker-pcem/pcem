@@ -325,6 +325,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         case 0xa7: /*Disable mouse port*/
                         mouse_scan = 0;
                         break;
+
+                        case 0xa8: /*Enable mouse port*/
+                        mouse_scan = 1;
+                        break;
                         
                         case 0xa9: /*Test mouse port*/
                         keyboard_at_adddata(0x00); /*no error*/
