@@ -98,14 +98,14 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
         switch (port)
         {
                 case 0x60:
-                if (keyboard_xt.pb & 0x80)
+                if ((romset == ROM_IBMPC) && (keyboard_xt.pb & 0x80))
                 {
-                        if (VGA) 
-                           temp = 0x4D;
+                        if (VGA || gfxcard == GFX_EGA) 
+                                temp = 0x4D;
                         else if (MDA) 
-                           temp = 0x7D;
+                                temp = 0x7D;
                         else            
-                           temp = 0x6D;
+                                temp = 0x6D;
                 }
                 else
                 {
@@ -128,17 +128,27 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                 break;
                 
                 case 0x62:
-                if (keyboard_xt.pb & 0x08)
+                if (romset == ROM_IBMPC)
                 {
-                        if (VGA) 
-                           temp = 4;
-                        else if (MDA)
-                           temp = 7;
+                        if (keyboard_xt.pb & 0x04)
+                                temp = 0x02;
                         else
-                           temp = 6;
+                                temp = 0x01;
                 }
                 else
-                   temp = 0xD;
+                {
+                        if (keyboard_xt.pb & 0x08)
+                        {
+                                if (VGA || gfxcard == GFX_EGA)
+                                        temp = 4;
+                                else if (MDA)
+                                        temp = 7;
+                                else
+                                        temp = 6;
+                        }
+                        else
+                                temp = 0xD;
+                }
                 temp |= (ppispeakon ? 0x20 : 0);
                 break;
                 
