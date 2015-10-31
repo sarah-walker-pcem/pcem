@@ -46,6 +46,8 @@ int shadowbios,shadowbios_write;
 
 static unsigned char isram[0x10000];
 
+static uint8_t ff_array[0x1000];
+
 int mem_size;
 int cache=4;
 uint32_t biosmask;
@@ -961,7 +963,8 @@ uint8_t *getpccache(uint32_t a)
                 return &_mem_exec[a >> 14][(uintptr_t)(a & 0x3000) - (uintptr_t)(a2 & ~0xFFF)];
         }
 
-        fatal("Bad getpccache %08X\n", a);
+        pclog("Bad getpccache %08X\n", a);
+        return &ff_array[0-(uintptr_t)(a2 & ~0xFFF)];
 }
 #define printf pclog
 
@@ -1586,7 +1589,10 @@ static void mem_mapping_recalc(uint64_t base, uint64_t size)
                                         _mem_read_b[c >> 14] = mapping->read_b;
                                         _mem_read_w[c >> 14] = mapping->read_w;
                                         _mem_read_l[c >> 14] = mapping->read_l;
-                                        _mem_exec[c >> 14] = mapping->exec + (c - mapping->base);
+                                        if (mapping->exec)
+                                                _mem_exec[c >> 14] = mapping->exec + (c - mapping->base);
+                                        else
+                                                _mem_exec[c >> 14] = NULL;
                                         _mem_priv_r[c >> 14] = mapping->p;
                                         _mem_mapping_r[c >> 14] = mapping;
                                 }
@@ -1780,6 +1786,9 @@ void mem_init()
         memset(_mem_write_b, 0, sizeof(_mem_write_b));
         memset(_mem_write_w, 0, sizeof(_mem_write_w));
         memset(_mem_write_l, 0, sizeof(_mem_write_l));
+        memset(_mem_exec, 0, sizeof(_mem_exec));
+        
+        memset(ff_array, 0xff, sizeof(ff_array));
 
         memset(&base_mapping, 0, sizeof(base_mapping));
 
@@ -1831,7 +1840,8 @@ void mem_resize()
         memset(_mem_write_b, 0, sizeof(_mem_write_b));
         memset(_mem_write_w, 0, sizeof(_mem_write_w));
         memset(_mem_write_l, 0, sizeof(_mem_write_l));
-
+        memset(_mem_exec, 0, sizeof(_mem_exec));
+        
         memset(&base_mapping, 0, sizeof(base_mapping));
         
         memset(_mem_state, 0, sizeof(_mem_state));
