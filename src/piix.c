@@ -201,7 +201,13 @@ int piix_bus_master_sector_read(int channel, uint8_t *data)
                 if (piix_busmaster[channel].count < (512 - transferred))
                 {
 //                        pclog("Transferring smaller - %i bytes\n", piix_busmaster[channel].count);
-                        memcpy(&ram[piix_busmaster[channel].addr], data + transferred, piix_busmaster[channel].count);
+                        if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
+                        {
+                                int count = piix_busmaster[channel].count;
+                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
+                                        count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
+                                memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
+                        }
                         transferred += piix_busmaster[channel].count;
                         piix_busmaster[channel].addr += piix_busmaster[channel].count;
                         piix_busmaster[channel].count = 0;
@@ -209,6 +215,13 @@ int piix_bus_master_sector_read(int channel, uint8_t *data)
                 else
                 {
 //                        pclog("Transferring larger - %i bytes\n", 512 - transferred);
+                        if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
+                        {
+                                int count = 512;
+                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
+                                        count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
+                                memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
+                        }
                         memcpy(&ram[piix_busmaster[channel].addr], data + transferred, 512 - transferred);
                         piix_busmaster[channel].addr += (512 - transferred);
                         piix_busmaster[channel].count -= (512 - transferred);
@@ -246,7 +259,13 @@ int piix_bus_master_sector_write(int channel, uint8_t *data)
                 if (piix_busmaster[channel].count < (512 - transferred))
                 {
 //                        pclog("Transferring smaller - %i bytes\n", piix_busmaster[channel].count);
-                        memcpy(data + transferred, &ram[piix_busmaster[channel].addr], piix_busmaster[channel].count);
+                        if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
+                        {
+                                int count = piix_busmaster[channel].count;
+                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
+                                        count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
+                                memcpy(data + transferred, &ram[piix_busmaster[channel].addr], count);
+                        }
                         transferred += piix_busmaster[channel].count;
                         piix_busmaster[channel].addr += piix_busmaster[channel].count;
                         piix_busmaster[channel].count = 0;
@@ -254,7 +273,13 @@ int piix_bus_master_sector_write(int channel, uint8_t *data)
                 else
                 {
 //                        pclog("Transferring larger - %i bytes\n", 512 - transferred);
-                        memcpy(data + transferred, &ram[piix_busmaster[channel].addr], 512 - transferred);
+                        if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
+                        {
+                                int count = 512;
+                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
+                                        count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
+                                memcpy(data + transferred, &ram[piix_busmaster[channel].addr], count);
+                        }
                         piix_busmaster[channel].addr += (512 - transferred);
                         piix_busmaster[channel].count -= (512 - transferred);
                         transferred += (512 - transferred);                        
