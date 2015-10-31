@@ -1,25 +1,29 @@
-PCem v9
+PCem v10
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v8.1:
+Changes since v9:
 
-- New machines - IBM PCjr
-- New graphics cards - Diamond Stealth 3D 2000 (S3 ViRGE/325), S3 ViRGE/DX
-- New sound cards - Innovation SSI-2001 (using ReSID-FP)
-- CPU fixes - Windows NT now works, OS/2 2.0+ works better
-- Fixed issue with port 3DA when in blanking, DOS 6.2/V now works
-- Re-written PIT emulation
-- IRQs 8-15 now handled correctly, Civilization no longer hangs
-- Fixed vertical axis on Amstrad mouse
-- Serial fixes - fixes mouse issues on Win 3.x and OS/2
-- New Windows keyboard code - should work better with international keyboards
-- Changes to keyboard emulation - should fix stuck keys
-- Some CD-ROM fixes
-- Joystick emulation
-- Preliminary Linux port
+- New machines - AMI XT clone, DTK XT clone, VTech Laser Turbo XT, VTech Laser XT3,
+  Phoenix XT clone, Juko XT clone, IBM PS/1 model 2011, Compaq Deskpro 386, DTK
+  386SX clone, Phoenix 386 clone, Intel Premiere/PCI, Intel Advanced/EV
+- New graphics cards - IBM VGA, 3DFX Voodoo Graphics
+- Experimental dynamic recompiler - up to 3x speedup
+- Pentium and Pentium MMX emulation
+- CPU fixes - fixed issues in Unreal, Half-Life, Final Fantasy VII,
+  Little Big Adventure 2, Windows 9x setup, Coherent, BeOS and others
+- Improved FDC emulation - more accurate, supports FDI images, supports 1.2MB 5.25"
+  floppy drive emulation, supports write protect correctly
+- Internal timer improvements, fixes sound in some games (eg Lion King)
+- Added support for up to 4 IDE hard drives
+- MIDI OUT code now handles sysex commands correctly
+- CD-ROM code now no longer crashes Windows 9x when CD-ROM drive empty
+- Fixes to ViRGE, S3 Vision series, ATI Mach64 and OAK OTI-067 cards
+- Now supports 4 IDE hard drives
+- Various other fixes/changes
 
-Thanks to HalfMinute, SA1988 and Battler for contributions towards this release.
+Thanks to te_lanus, ecksemmess, nerd73, GeeDee, Battler, leilei and kurumushi for
+contributions towards this release.
 
 
 PCem emulates the following machines:
@@ -30,11 +34,11 @@ Disc drives quickly became standard, along with more memory.
 
 ROM files needed:
 
-pc102782.bin
-basicc11.f6
-basicc11.f8
-basicc11.fa
-basicc11.fc
+ibmpc\pc102782.bin
+ibmpc\basicc11.f6
+ibmpc\basicc11.f8
+ibmpc\basicc11.fa
+ibmpc\basicc11.fc
 
 
 IBM 5160 XT (1983)
@@ -44,8 +48,8 @@ However, this was targetted as businesses and was more successful than the origi
 
 ROM files needed:
 
-5000027.u19
-1501512.u18
+ibmxt\5000027.u19
+ibmxt\1501512.u18
 
 
 IBM PCjr (1984)
@@ -54,7 +58,7 @@ with the PC.
 
 ROM files needed:
 
-bios.rom
+ibmpcjr\bios.rom
 
 
 IBM AT (1984)
@@ -63,8 +67,8 @@ This was the 'next generation' PC, fully 16-bit with an 80286. The original mode
 
 ROM files needed:
 
-at111585.0
-at111585.1
+ibmat\at111585.0
+ibmat\at111585.1
 
 
 Olivetti M24 (1984)
@@ -73,8 +77,8 @@ CGA display.
 
 ROM files needed:
 
-olivetti_m24_version_1.43_low.bin
-olivetti_m24_version_1.43_high.bin
+olivetti_m24\olivetti_m24_version_1.43_low.bin
+olivetti_m24\olivetti_m24_version_1.43_high.bin
 
 
 Tandy 1000 (1985)
@@ -85,7 +89,7 @@ from the late 80s support the Tandy.
 
 ROM files needed:
 
-tandy1t1.020
+tandy\tandy1t1.020
 
 
 DTK Clone XT (1986)
@@ -93,7 +97,7 @@ A generic clone XT board.
 
 ROM files needed:
 
-DTK_ERSO_2.42_2764.bin
+dtk\DTK_ERSO_2.42_2764.bin
 
 
 Amstrad PC1512 (1986)
@@ -109,9 +113,9 @@ machine).
 
 ROM files needed:
 
-40043.v1
-40044.v2
-40078.ic127
+pc1512\40043.v1
+pc1512\40044.v2
+pc1512\40078.ic127
 
 
 Amstrad PC1640 (1987)
@@ -120,9 +124,9 @@ mostly the same.
 
 ROM files needed:
 
-40043.v3
-40044.v3
-40100
+pc1640\40043.v3
+pc1640\40044.v3
+pc1640\40100
 
 
 Sinclair PC200/Amstrad PC20 (1988)
@@ -132,9 +136,9 @@ system. With stock CGA and PC speaker, it couldn't compare with the ST or Amiga.
 
 ROM files needed:
 
-pc20v2.0
-pc20v2.1
-40109.bin
+pc200\pc20v2.0
+pc200\pc20v2.1
+pc200\40109.bin
 
 
 Schneider Euro PC (1988)
@@ -144,8 +148,8 @@ only model that does not support hard discs.
 
 ROM files needed:
 
-50145
-50146
+europc\50145
+europc\50146
 
 
 (c)Anonymous Generic Turbo XT BIOS (1988?)
@@ -155,7 +159,49 @@ this BIOS (and the source code) is at http://dizzie.narod.ru/bios.txt
 
 ROM files needed:
 
-pcxt.rom
+genxt\pcxt.rom
+
+
+AMI XT clone (1989)
+
+ROM files needed:
+
+amixt\AMI_8088_BIOS_31JAN89.BIN
+
+
+DTK XT clone (1988)
+
+ROM files needed:
+
+dtk\DTK_ERSO_2.42_2764.bin
+
+
+VTech Laser Turbo XT (1987)
+
+ROM files needed:
+
+ltxt\27C64.bin
+
+
+VTech Laser XT3 (1989)
+
+ROM files needed:
+
+lxt3\27C64D.bin
+
+
+Phoenix XT clone (1986)
+
+ROM files needed:
+
+pxxt\000p001.bin
+
+
+Juko XT clone (1988)
+
+ROM files needed:
+
+jukopc\000o001.bin
 
 
 Commodore PC30-III (1988)
@@ -163,8 +209,8 @@ A fairly generic 286 clone.
 
 ROM files needed:
 
-commodore pc 30 iii even.bin
-commodore pc 30 iii odd.bin
+cmdpc30\commodore pc 30 iii even.bin
+cmdpc30\commodore pc 30 iii odd.bin
 
 
 Amstrad PC2086 (1989)
@@ -172,9 +218,9 @@ The PC2086 is essentially a PC1640 with VGA and 3.5" floppy drives.
 
 ROM files needed:
 
-40179.ic129
-40180.ic132
-40186.ic171
+pc2086\40179.ic129
+pc2086\40180.ic132
+pc2086\40186.ic171
 
 
 Amstrad PC3086 (1990)
@@ -182,8 +228,8 @@ The PC3086 is a version of the PC2086 with a more standard case.
 
 ROM files needed:
 
-fc00.bin
-c000.bin
+pc3086\fc00.bin
+pc3086\c000.bin
 
 
 Dell System 200 (1990?)
@@ -193,8 +239,8 @@ HIMEM.SYS doesn't appear to work on this one, for some reason.
 
 ROM files needed:
 
-dell0.bin
-dell1.bin
+dells200\dell0.bin
+dells200\dell1.bin
 
 
 AMI 286 clone (1990)
@@ -202,7 +248,7 @@ This is a generic 286 clone with an AMI BIOS.
 
 ROM files needed:
 
-amic206.bin
+ami286\amic206.bin
 
 
 IBM PS/1 Model 2011 (1990)
@@ -210,15 +256,40 @@ This is a 286 with integrated VGA and a basic GUI and DOS 4.01 in ROM.
 
 ROM files needed:
 
-f80000.bin
+ibmps1\f80000.bin
+
+
+Compaq Deskpro 386 (1989)
+An early 386 system. I don't think this BIOS is from the original 1986 version
+(the very first 386 system), but from a 1989 refresh.
+
+ROM files needed:
+
+deskpro386\109592-005.U11.bin
+deskpro386\109591-005.U13.bin
 
 
 Acermate 386SX/25N (1992?)
 An integrated 386SX clone, with onboard Oak SVGA and IO.
 
 ROM files needed:
-acer386.bin
-oti067.bin
+acer386\acer386.bin
+acer386\oti067.bin
+
+
+DTK 386SX clone (1990)
+
+ROM files needed:
+
+dtk386\3cto001.bin
+
+
+Phoenix 386 clone (1989)
+
+ROM files needed:
+
+px386\3iip001l.bin
+px386\3iip001h.bin
 
 
 Amstrad MegaPC (1992)
@@ -226,8 +297,8 @@ A 386SX clone (otherwise known as the PC7386SX) with a built-in Sega Megadrive. 
 is emulated, obv.
 
 ROM files needed:
-41651-bios lo.u18
-211253-bios hi.u19
+megapc\41651-bios lo.u18
+megapc\211253-bios hi.u19
 
 
 AMI 386 clone (1994)
@@ -236,7 +307,7 @@ dated June 1994.
 
 ROM files needed:
 
-ami495.bin
+ami386\ami386.bin
 
 
 AMI 486 clone (1993)
@@ -245,7 +316,7 @@ This is a generic 486 clone with an AMI BIOS. The BIOS came from my 486SX/25, bo
 
 ROM files needed:
 
-ami1429.bin
+ami486\ami486.bin
 
 
 AMI WinBIOS 486 clone (1994)
@@ -253,7 +324,7 @@ A 486 clone with a newer AMI BIOS.
 
 ROM files needed:
 
-ali1429g.amw
+win486\ali1429g.amw
 
 
 Award SiS 496/497 (1995)
@@ -261,16 +332,18 @@ A 486 clone using the SiS 496/497 chipset, with PCI bus and Award BIOS.
 
 ROM files needed:
 
-SIS496-1.AWA
+sis496\SIS496-1.AWA
 
 
 Intel Premiere/PCI (Batman's Revenge) (1994)
 A Socket 4 based board with 430LX chipset.
 
+Has an odd bug where on soft-reset, the memory count never ends. Hard-reset works okay.
+
 ROM files needed:
 
-1009AF2_.BI0
-1009AF2_.BI1
+revenge\1009AF2_.BI0
+revenge\1009AF2_.BI1
 
 
 Intel Advanced/EV (Endeavor) (1995)
@@ -278,10 +351,12 @@ A Socket 5/7 based board with 430FX chipset. The real board has a Sound Blaster 
 which is not emulated - use a discrete card instead. Some Advanced/EVs also had a Trio64 on board,
 the emulated board does not have this either.
 
+Has essentially the same BIOS as the Premiere/PCI, and the same soft-reset bug.
+
 ROM files needed:
 
-1006CB0_.BI0
-1006CB0_.BI1
+endeavor\1006CB0_.BI0
+endeavor\1006CB0_.BI1
 
 
 Award 430VX PCI (1996)
@@ -289,7 +364,7 @@ A generic Socket 5/7 board with 430VX chipset.
 
 ROM files needed:
 
-55XWUQ0E.BIN
+430vx\55XWUQ0E.BIN
 
 
 
@@ -426,7 +501,27 @@ ROM files needed:
 86c375_1.bin
 
 
+3DFX Voodoo Graphics
+3D accelerator. Widely supported in late 90s games.
+
+PCem emulates this in software. The emulation isn't quite as fast as the real thing, but in
+most games the emulated CPU is the bottleneck rather than the 3DFX, unless you insist on
+running in 800x600. PCem can split rendering over two threads - this doesn't double performance,
+but can give a noticeable improvement.
+
+PCem can emulate 6 and 8 MB configurations, but defaults to 4 MB for compatibility. It can also
+emulate the screen filter present on the original card, though this does at present have a
+noticeable performance hit.
+
+Almost everything I've tried works okay, with a very few exceptions - Screamer 2 and Rally have
+serious issues, and Need For Speed II SE and III don't draw the map correctly.
+
+
+
 Some models have fixed graphics adapters :
+
+IBM PCjr
+CGA with various new modes - 160x200x16, 320x200x16, 640x200x4.
 
 Olivetti M24
 CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
@@ -434,8 +529,7 @@ ROM for this yet, so if one is not provided the MDA font will be used - which lo
 as it is 14-line instead of 16-line.
 
 Tandy 1000
-CGA with various new modes - 160x200x16, 320x200x16, 640x200x4. Widely supported in 80s 
-games.
+Clone of PCjr video. Widely supported in 80s games.
 
 Amstrad PC1512
 CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
@@ -445,6 +539,9 @@ Paradise EGA.
 
 Amstrad PC2086/PC3086
 Paradise PVGA1. An early SVGA clone with 256kb VRAM.
+
+IBM PS/1 Model 2011
+Stock VGA with 256kb VRAM.
 
 Amstrad MegaPC
 Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
@@ -494,16 +591,13 @@ AWE32 requires a ROM dump called awe32.raw. AWE-DUMP is a utility which can get 
 card. Most EMU8000 functionality should work, however filters are not correct and reverb/chorus
 effects are not currently emulated.
 
-
 Gravis Ultrasound
 32 voice sample playback. Port address is fixed to 240, IRQ and DMA can be changed from the drivers.
 Emulation is improved significantly over previous versions.
 
-
 Windows Sound System
 16-bit digital + OPL3. Note that this only emulates WSS itself, and should not be used with drivers
 from compatible boards with additional components (eg Turtle Beach Monte Carlo)
-
 
 Innovation SSI-2001
 SID6581. Emulated using resid-fp. Board is fixed to port 280.
@@ -522,7 +616,8 @@ PC1512 mouse
 The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this one.
 
 PS/2 mouse
-A PS/2 mouse is emulated on the MegaPC and 386SX/25N model. As with serial, compatible drivers are common.
+A PS/2 mouse is emulated on the MegaPC, 386SX/25N and Premiere/PCI models. As with serial,
+compatible drivers are common.
 
 ATAPI CD-ROM
 Works with OAKCDROM.SYS. It can only work with actual CD-ROM drives at the minute, so to use ISO images
@@ -541,7 +636,7 @@ The BIOS is available at :
 
 http://code.google.com/p/xtideuniversalbios/
 
-v2.0.0 beta 1 is the only version that has been tested.
+v2.0.0 beta 1 is the version I've mostly tested. v2.0.0 beta 3 is known to have some issues.
 
 For the PS/1, you will need v1.1.5. The PS/1 is a bit fussy with XTIDE, and I've found that it works best
 when the XTIDE configuration has 'Full Operating Mode' disabled. This version must be called
@@ -550,9 +645,6 @@ ide_at_1_1_5.bin and should also be placed in the ROMS directory.
 
 Notes :
 
-- The AT and AMI 286 both fail part of their self test. This doesn't really affect anything, 
-  just puts an irritating message on the screen.
-
 - The time on the PC1512 clock is wrong. The date is correct, though since the PC1512's bios isn't
   Y2k compliant, it thinks it's 1988.
 
@@ -560,79 +652,140 @@ Notes :
 
 - Some of the more unusual VGA features are not emulated. I haven't found anything that uses them yet.
 
-- Windows 3.x should work okay in all modes now.
-
-- Windows 95/98/ME run, with the following caveats :
-  - Setup sometimes crashes in the first stage (during file copying). This appears to be a side effect of the 
-    bugs fixed making OS/2 work. Unfortunately I haven't been able to eliminate this issue.
-  - On some versions of Windows the AWE32 is not set up correctly, claiming a resource conflict. To correct
-    this open the relevant item in Device Manager, choose 'Set Configuration Manually' and accept the
-    options presented.
-
-- OS/2 1.3 seems to work okay, but I haven't tested it very thoroughly.
-
-- Linux appears to work. fdlinux runs okay, but is relatively useless. SuSE 6.3 seemed
-  mostly okay. RedHat Seawolf also seems to work fine.
-
-- Windows NT works okay now. I've tested NT 3.51, NT 4, and 2000. I've also been informed
-  that NT 3.1 works. XP does not currently run as PCem doesn't emulate any processor with
-  the required CMPXCHG8B instruction.
+- On some versions of Windows the AWE32 is not set up correctly, claiming a resource conflict. To correct
+  this open the relevant item in Device Manager, choose 'Set Configuration Manually' and accept the
+  options presented.
 
 
 Software tested:
 
-
-MS-DOS 3.30
-PC-DOS 3.30
-PC-DOS 5.02
+MS-DOS 3.3
 MS-DOS 6.22
  - Most of the supplied software seems to work, eg Drivespace, Defrag, Scandisk, QBASIC
    etc
 
-Windows/286
-Windows/386
+Windows 1.03
+Windows 2.03
+Windows/286 2.1
+Windows/386 2.1
 Windows 3.0
 Windows 3.1
 Windows 3.11 for Workgroups
+Windows NT 3.1
+Windows NT 3.51
+Windows NT 4
 Windows 95
-Windows 95 OSR 2.5
+Windows 95 OSR 2
 Windows 98
 Windows 98 SE
 Windows ME
-Windows NT 3.51
-Windows NT 4
 Windows 2000
+Windows XP
 
+OS/2 1.0  - hard disk must be formatted beforehand
+OS/2 1.21 - hard disk must be formatted beforehand
+OS/2 1.3
+OS/2 2.0
+OS/2 Warp 3
+OS/2 Warp 4
+
+BeOS 5 Personal Edition (only seems to work correctly on Award SiS 496/497)
+
+Mandrake Linux 7.1
+RedHat Linux 7.1 (Seawolf)
+SUSE Linux 6.3
+
+NetBSD 6.1.5
+
+Office 97
+Word for Windows 2.0
+Works for Windows 3.0
+
+Alien vs Predator
 All New World of Lemmings
-Command and Conquer : Red Alert
-Croc (demo, ViRGE)
+Alley Cat
+Breakneck
+Civilization (DOS and Windows versions)
+Colin Mcrae Rally
+Colonization
+Command and Conquer : Red Alert (DOS and Windows versions)
+Croc (demo, ViRGE and 3DFX)
+Curse of Monkey Island
 Dawn Patrol
+Deus Ex (3DFX) (slow)
+Discworld 2
 Doom
 Duke Nukem 3D
+Dune (floppy and CD versions)
+Ecstatica
 Epic Pinball
-Final Fantasy 7 (i430VX only)
-Forsaken (ViRGE)
-Grand Theft Auto
-Grim Fandango (ViRGE)
-Incoming (ViRGE, SLOW)
-Jedi Knight (ViRGE)
+Expendable (3DFX) (slow)
+Final Fantasy VII (3DFX)
+Forsaken (3DFX)
+G-Police (ViRGE and 3DFX)
+Grand Theft Auto (3DFX)
+Grand Theft Auto 2 (3DFX)
+Grim Fandango (ViRGE and 3DFX)
+Half-Life (3DFX)
+Incoming (3DFX)
+Interstate '76
+Jazz Jackrabbit
+Jazz Jackrabbit 2
+Jedi Knight (3DFX)
+Kings Quest (PC booter, PCjr and Tandy 1000)
+Kings Quest II (booter)
 Lemmings
+Lemmings 2 : The Tribes
+Lotus III
+Mortal Kombat Trilogy (DOS and Windows versions)
+Mystic Towers
+Need for Speed II SE (3DFX)
+Need for Speed III
 Network Q RAC Rally
+Oddworld : Abe's Oddysee
+Overlord
+Pinball Fantasies
+Populous : The Beginning (3DFX)
+Power Drive
+Prince of Persia
 Pro Pinball : Big Race USA
+Pro Pinball : The Web
 Psycho Pinball
-Quake
-Quake 2 (SLOW - unsurprisingly)
-Screamer Rally
-Simcity 2000
-Simcity 3000 (SLOW)
-Syndicate
+Quake (3DFX)
+Quake II (3DFX)
+Rebel Assault
+Return of Arcade
+Rise of the Triad
+Rollercoaster Tycoon
+Screamer
+Screamer Rally (not 3DFX)
+Secret of Monkey Island
+Sensible World of Soccer
+Simcity 2000 (DOS, Windows 3.1, Windows 95 and OS/2 versions)
+Simcity 3000
+SiN (3DFX)
+Stargunner
 System Shock
+Terminal Velocity
+The 7th Guest
+The Humans
+Theme Hospital (DOS and Windows versions)
 Theme Park
-Tomb Raider (ViRGE version has oversized display)
-Tomb Raider II (ViRGE - has display artifacts that also occur on real hardware)
+Tomb Raider (ViRGE and 3DFX)
+Tomb Raider II (3DFX)
+Total Annihilation
 Transport Tycoon
+Turok (3DFX)
 Tyrian
+UFO : Enemy Unknown
+Ultima Underworld II
+Unreal
+Unreal Tournament (3DFX)
+Wacky Wheels
+Wing Commander III
 Wolfenstein 3D
 Worms
-UFO : Enemy Unknown
 X-Com : Apocalypse
+X-Com : Terror From The Deep
+X-Wing
+
