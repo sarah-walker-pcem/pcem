@@ -222,7 +222,6 @@ int piix_bus_master_sector_read(int channel, uint8_t *data)
                                         count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
                                 memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
                         }
-                        memcpy(&ram[piix_busmaster[channel].addr], data + transferred, 512 - transferred);
                         piix_busmaster[channel].addr += (512 - transferred);
                         piix_busmaster[channel].count -= (512 - transferred);
                         transferred += (512 - transferred);                        
