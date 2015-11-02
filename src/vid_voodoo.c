@@ -4336,11 +4336,11 @@ void voodoo_close(void *p)
 {
         FILE *f;
         voodoo_t *voodoo = (voodoo_t *)p;
-        
+#ifndef RELEASE_BUILD        
         f = romfopen("texram.dmp", "wb");
         fwrite(voodoo->tex_mem, 2048*1024, 1, f);
         fclose(f);
-        
+#endif
         thread_kill(voodoo->fifo_thread);
         thread_kill(voodoo->render_thread[0]);
         if (voodoo->render_threads == 2)
