@@ -48,7 +48,7 @@ uint64_t timer_read()
         return 0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
         int frames = 0;
         int c, d;
@@ -59,7 +59,7 @@ int main()
 	install_int_ex(onesec, BPS_TO_TIMER(1));
 	midi_init();
         
-        initpc();
+        initpc(argc, argv);
 
         d = romset;
         for (c = 0; c < ROM_MAX; c++)

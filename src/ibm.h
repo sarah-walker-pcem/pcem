@@ -478,3 +478,4 @@ void onesec();
 
 void resetpc_cad();
 
+extern int start_in_fullscreen;

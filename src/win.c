@@ -391,6 +391,77 @@ void get_registry_key_map()
 	pclog("Done preparing!\n");
 }
 
+static char **argv;
+static int argc;
+static char *argbuf;
+
+static void process_command_line()
+{
+        char *cmdline;
+        int argc_max;
+        int i, q;
+
+        cmdline = GetCommandLine();
+        i = strlen(cmdline) + 1;
+        argbuf = malloc(i);
+        memcpy(argbuf, cmdline, i);
+
+        argc = 0;
+        argc_max = 64;
+        argv = malloc(sizeof(char *) * argc_max);
+        if (!argv)
+        {
+                free(argbuf);
+                return;
+        }
+
+        i = 0;
+
+        /* parse commandline into argc/argv format */
+        while (argbuf[i])
+        {
+                while (argbuf[i] == ' ')
+                        i++;
+
+                if (argbuf[i])
+                {
+                        if ((argbuf[i] == '\'') || (argbuf[i] == '"'))
+                        {
+                                q = argbuf[i++];
+                                if (!argbuf[i])
+                                        break;
+                        }
+                        else
+                                q = 0;
+
+                        argv[argc++] = &argbuf[i];
+
+                        if (argc >= argc_max)
+                        {
+                                argc_max += 64;
+                                argv = realloc(argv, sizeof(char *) * argc_max);
+                                if (!argv)
+                                {
+                                        free(argbuf);
+                                        return;
+                                }
+                        }
+
+                        while ((argbuf[i]) && ((q) ? (argbuf[i] != q) : (argbuf[i] != ' ')))
+                                i++;
+
+                        if (argbuf[i])
+                        {
+                                argbuf[i] = 0;
+                                i++;
+                        }
+                        pclog("Arg %i - %s\n",argc-1,argv[argc-1]);
+                }
+        }
+
+        argv[argc] = NULL;
+}
+
 int WINAPI WinMain (HINSTANCE hThisInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR lpszArgument,
@@ -403,6 +474,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         int c, d;
         LARGE_INTEGER qpc_freq;
 
+        process_command_line();
+        
         hinstance=hThisInstance;
         /* The Window structure */
         wincl.hInstance = hThisInstance;
@@ -470,7 +543,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
         ghwnd=hwnd;
                 
-        initpc();
+        initpc(argc, argv);
         
         vid_apis[0][vid_api].init(ghwnd);
 
@@ -568,7 +641,20 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 //        setrefresh(100);
 
 //        ShowCursor(TRUE);
-        
+
+        if (start_in_fullscreen)
+        {
+                startblit();
+                mouse_close();
+                vid_apis[0][vid_api].close();
+                video_fullscreen = 1;
+                vid_apis[1][vid_api].init(ghwnd);
+                mouse_init();
+                leave_fullscreen_flag = 0;
+                endblit();
+                device_force_redraw();
+        }
+                        
         /* Run the message loop. It will run until GetMessage() returns 0 */
         while (!quited)
         {

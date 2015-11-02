@@ -36,6 +36,7 @@
 #include "vid_voodoo.h"
 #include "video.h"
 
+int start_in_fullscreen = 0;
 int frame = 0;
 
 int cdrom_enabled;
@@ -189,15 +190,30 @@ void pc_reset()
 //        video_init();
 }
 
-void initpc()
+void initpc(int argc, char *argv[])
 {
         char *p;
+        int c;
 //        allegro_init();
         get_executable_name(pcempath,511);
         pclog("executable_name = %s\n", pcempath);
         p=get_filename(pcempath);
         *p=0;
         pclog("path = %s\n", pcempath);        
+
+        for (c = 1; c < argc; c++)
+        {
+                if (!strcasecmp(argv[c], "--help"))
+                {
+                        printf("PCem command line options :\n\n");
+                        printf("-fullscreen - start in fullscreen mode\n");
+                        exit(-1);
+                }
+                else if (!strcasecmp(argv[c], "--fullscreen"))
+                {
+                        start_in_fullscreen = 1;
+                }
+        }
 
         keyboard_init();
         mouse_init();
