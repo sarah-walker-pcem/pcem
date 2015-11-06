@@ -193,6 +193,7 @@ void pc_reset()
 void initpc(int argc, char *argv[])
 {
         char *p;
+        char *config_file = NULL;
         int c;
 //        allegro_init();
         get_executable_name(pcempath,511);
@@ -206,12 +207,20 @@ void initpc(int argc, char *argv[])
                 if (!strcasecmp(argv[c], "--help"))
                 {
                         printf("PCem command line options :\n\n");
-                        printf("-fullscreen - start in fullscreen mode\n");
+                        printf("--config file.cfg - use given config file as initial configuration\n");
+                        printf("--fullscreen      - start in fullscreen mode\n");
                         exit(-1);
                 }
                 else if (!strcasecmp(argv[c], "--fullscreen"))
                 {
                         start_in_fullscreen = 1;
+                }
+                else if (!strcasecmp(argv[c], "--config"))
+                {
+                        if ((c+1) == argc)
+                                break;
+                        config_file = argv[c+1];
+                        c++;
                 }
         }
 
@@ -219,9 +228,13 @@ void initpc(int argc, char *argv[])
         mouse_init();
         joystick_init();
         midi_init();
+
+        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
         
-        loadconfig(NULL);
+        loadconfig(config_file);
         pclog("Config loaded\n");
+        if (config_file)
+                saveconfig();
 
         codegen_init();
         
@@ -508,11 +521,7 @@ void loadconfig(char *fn)
         char *p;
         
         if (!fn)
-        {
-                append_filename(config_file_default, pcempath, "pcem.cfg", 511);
-        
                 config_load(config_file_default);
-        }
         else
                 config_load(fn);
         
