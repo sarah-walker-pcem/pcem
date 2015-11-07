@@ -14,10 +14,11 @@ pcem_CFLAGS = $(allegro_CFLAGS)
 
 pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 
-pcem_SOURCES = 386.c 808x.c acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
-allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
+pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c allegro-gui.c \
+allegro-gui-configure.c allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-null.c \
-compaq.c config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c dma.c fdc.c fdc37c665.c fdi2raw.c gameport.c \
+codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_pentium.c compaq.c config.c cpu.c \
+dac.c device.c disc.c disc_fdi.c disc_img.c dma.c fdc.c fdc37c665.c fdi2raw.c gameport.c \
 headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
@@ -39,12 +40,6 @@ resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
-
-if DYNAREC
-pcem_CFLAGS += -DDYNAREC
-pcem_SOURCES += 386_dynarec.c 386_dynarec_ops.c codegen.c codegen_ops.c \
-codegen_timing_486.c codegen_timing_pentium.c
-
 if CPU_I386
 pcem_SOURCES += codegen_x86.c
 endif
@@ -52,7 +47,4 @@ endif
 if CPU_X86_64
 pcem_SOURCES += codegen_x86-64.c
 endif
-
-endif
-
 

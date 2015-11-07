@@ -1,29 +1,13 @@
-PCem v10
+PCem v10.1
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v9:
+Changes since v10:
 
-- New machines - AMI XT clone, DTK XT clone, VTech Laser Turbo XT, VTech Laser XT3,
-  Phoenix XT clone, Juko XT clone, IBM PS/1 model 2011, Compaq Deskpro 386, DTK
-  386SX clone, Phoenix 386 clone, Intel Premiere/PCI, Intel Advanced/EV
-- New graphics cards - IBM VGA, 3DFX Voodoo Graphics
-- Experimental dynamic recompiler - up to 3x speedup
-- Pentium and Pentium MMX emulation
-- CPU fixes - fixed issues in Unreal, Half-Life, Final Fantasy VII,
-  Little Big Adventure 2, Windows 9x setup, Coherent, BeOS and others
-- Improved FDC emulation - more accurate, supports FDI images, supports 1.2MB 5.25"
-  floppy drive emulation, supports write protect correctly
-- Internal timer improvements, fixes sound in some games (eg Lion King)
-- Added support for up to 4 IDE hard drives
-- MIDI OUT code now handles sysex commands correctly
-- CD-ROM code now no longer crashes Windows 9x when CD-ROM drive empty
-- Fixes to ViRGE, S3 Vision series, ATI Mach64 and OAK OTI-067 cards
-- Now supports 4 IDE hard drives
-- Various other fixes/changes
-
-Thanks to te_lanus, ecksemmess, nerd73, GeeDee, Battler, leilei and kurumushi for
-contributions towards this release.
+- Fixed buffer overruns in PIIX and ET4000/W32p emulation
+- Add command line options to start in fullscreen and to specify config file
+- Emulator doesn't die when the CPU jumps to an unexecutable address
+- Removed Voodoo memory dump on exit
 
 
 PCem emulates the following machines:

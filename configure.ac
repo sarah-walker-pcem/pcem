@@ -2,7 +2,7 @@
 #
 
 AC_PREREQ([2.61])
-AC_INIT(PCem, v9, Tom Walker <tommowalker@tommowalker.co.uk>, pcem)
+AC_INIT(PCem, v10.1, Tom Walker <tommowalker@tommowalker.co.uk>, pcem)
 
 AC_CANONICAL_HOST
 
@@ -24,27 +24,20 @@ else
    AC_MSG_RESULT([no])
 fi
 
-AC_MSG_CHECKING([whether to use the dynamic recompiler])
-AC_ARG_ENABLE(dynarec,
-	      AC_HELP_STRING([--enable-dynarec], [build dynamic recompiler]))
-AC_MSG_RESULT($enable_dynarec)
-AM_CONDITIONAL(DYNAREC, test "$enable_dynarec" = "yes")
-if test "$enable_dynarec" = "yes"; then
-	AC_MSG_CHECKING([for cpu])
-	case "${host_cpu}" in
-		i?86)
-		CPU=i386
-		AC_MSG_RESULT(${host_cpu})
-		;;
-		x86_64)
-		CPU=x86_64
-		AC_MSG_RESULT(${host_cpu})
-		;;
-		*)
-		AC_MSG_ERROR([Unsupported CPU.])
-		;;
-	esac
-fi
+AC_MSG_CHECKING([for cpu])
+case "${host_cpu}" in
+	i?86)
+	CPU=i386
+	AC_MSG_RESULT(${host_cpu})
+	;;
+	x86_64)
+	CPU=x86_64
+	AC_MSG_RESULT(${host_cpu})
+	;;
+	*)
+	AC_MSG_ERROR([Unsupported CPU.])
+	;;
+esac
 
 AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
 AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
