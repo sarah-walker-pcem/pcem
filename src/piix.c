@@ -217,7 +217,7 @@ int piix_bus_master_sector_read(int channel, uint8_t *data)
 //                        pclog("Transferring larger - %i bytes\n", 512 - transferred);
                         if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
                         {
-                                int count = 512;
+                                int count = 512 - transferred;
                                 if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
                                         count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
                                 memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
@@ -274,7 +274,7 @@ int piix_bus_master_sector_write(int channel, uint8_t *data)
 //                        pclog("Transferring larger - %i bytes\n", 512 - transferred);
                         if (piix_busmaster[channel].addr < (mem_size * 1024 * 1024))
                         {
-                                int count = 512;
+                                int count = 512 - transferred;
                                 if ((piix_busmaster[channel].addr + count) > (mem_size * 1024 * 1024))
                                         count = (mem_size * 1024 * 1024) - piix_busmaster[channel].addr;
                                 memcpy(data + transferred, &ram[piix_busmaster[channel].addr], count);
