@@ -460,7 +460,7 @@ int loadbios()
                 f = romfopen("roms/endeavor/1006CB0_.BI1", "rb");
                 if (!f) break;
                 fseek(f, 0x80, SEEK_SET);
-                fread(rom, 0xc000, 1, f);
+                fread(rom, 0xd000, 1, f);
                 fclose(f);
                 biosmask = 0x1ffff;
                 //is486=1;
