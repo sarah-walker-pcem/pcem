@@ -349,7 +349,7 @@ void cpu_set()
 
         CPUID    = cpu_s->cpuid_model;
         cpuspeed = cpu_s->speed;
-        is8086   = (cpu_s->cpu_type >= CPU_8088);
+        is8086   = (cpu_s->cpu_type > CPU_8088);
         is386    = (cpu_s->cpu_type >= CPU_386SX);
         is486    = (cpu_s->cpu_type >= CPU_i486SX) || (cpu_s->cpu_type == CPU_486SLC || cpu_s->cpu_type == CPU_486DLC);
         hasfpu   = (cpu_s->cpu_type >= CPU_i486DX);
