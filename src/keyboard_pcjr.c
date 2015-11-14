@@ -124,6 +124,10 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 
                 case 0x61:
                 keyboard_pcjr.pb = val;
+
+                timer_process();
+                timer_update_outstanding();
+
                 speaker_gated = val & 1;
                 speaker_enable = val & 2;
                 if (speaker_enable) 

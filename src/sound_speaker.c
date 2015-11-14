@@ -20,6 +20,8 @@ static void speaker_poll(void *p)
         {
                 if (!pit.m[2] || pit.m[2]==4)
                         speaker_buffer[speaker_pos] = speakval;
+                else if (pit.l[2] < 0x40)
+                        speaker_buffer[speaker_pos] = 0xa00;
                 else 
                         speaker_buffer[speaker_pos] = speakon ? 0x1400 : 0;
         }
