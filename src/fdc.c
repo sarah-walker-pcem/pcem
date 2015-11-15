@@ -60,7 +60,7 @@ void fdc_reset()
 {
         fdc.stat=0x80;
         fdc.pnum=fdc.ptot=0;
-        fdc.st0=0xC0;
+        fdc.st0=0;
         fdc.lock = 0;
         fdc.head = 0;
         fdc.abort = 0;
@@ -301,6 +301,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
         			timer_update_outstanding();
                                 fdc.drive = fdc.params[0] & 3;
                                 disc_drivesel = fdc.drive & 1;
+                                fdc_reset_stat = 0;
                                 switch (discint)
                                 {
                                         case 2: /*Read a track*/
@@ -350,7 +351,6 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                         break;
                                         
                                         case 7: /*Recalibrate*/
-                                        fdc_reset_stat = 0;
                                         fdc.stat =  1 << fdc.drive;
                                         disctime = 0;
                                         disc_seek(fdc.drive, 0);
@@ -493,7 +493,7 @@ void fdc_callback()
                 case -1: /*Reset*/
 //rpclog("Reset\n");
                 fdc_int();
-                fdc_reset_stat = 5;
+                fdc_reset_stat = 4;
                 return;
                 case 2: /*Read track*/
                 readflash = 1;
@@ -637,21 +637,17 @@ void fdc_callback()
 
                 case 8: /*Sense interrupt status*/
 //                pclog("Sense interrupt status %i\n", fdc_reset_stat);
-                
-                fdc.dat = fdc.st0;
 
+                fdc.stat    = (fdc.stat & 0xf) | 0xd0;                
                 if (fdc_reset_stat)
-                {
-                        fdc_reset_stat--;
-                        if (!fdc_reset_stat)
-                                fdc.st0 = 0;
-                        else
-                                fdc.st0 = (fdc.st0 & 0xf8) | (4 - fdc_reset_stat) | (fdc.head ? 4 : 0);
-                }
-                fdc.stat    = (fdc.stat & 0xf) | 0xd0;
-                fdc.res[9]  = fdc.st0;
+                        fdc.res[9] = 0xc0 | (4 - fdc_reset_stat) | (fdc.head ? 4 : 0);
+                else
+                        fdc.res[9] = fdc.st0;
                 fdc.res[10] = fdc.track[fdc.drive];
-                if (!fdc_reset_stat) fdc.st0 = 0x80;
+                if (!fdc_reset_stat)
+                        fdc.st0 = 0x80;
+                else
+                        fdc_reset_stat--;
 
                 paramstogo = 2;
                 discint = 0;
