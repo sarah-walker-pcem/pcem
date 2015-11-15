@@ -190,12 +190,12 @@ void img_readaddress(int drive, int track, int side, int rate)
                 rate = 2;
 
         img_drive = drive;
-        img_track = track;
+        img_track = disc_track[drive];
         img_side  = side;
 //        pclog("Read address %i %i %i  %i\n",drive,side,track, rate);
 
         if (!img[drive].f || (side && img[drive].sides == 1) ||
-            (rate != img[drive].rate) || (track != disc_track[drive]))
+            (rate != img[drive].rate))
         {
 //                pclog("Address not found rate %i,%i track %i,%i\n", rate, img[drive].rate, track, disc_track[drive]);
                 img_notfound=500;
