@@ -3008,6 +3008,16 @@ static int COPY_REG(int src_reg)
         return REG_ECX | (src_reg & 0x10);
 }
 
+static int LOAD_HOST_REG(int host_reg)
+{
+        if (host_reg & 8)
+                addbyte(0x44);
+        addbyte(0x89);
+        addbyte(0xc0 | REG_ECX | ((host_reg & 7) << 3));
+        
+        return REG_ECX | (host_reg & 0x10);
+}
+
 static int ZERO_EXTEND_W_B(int reg)
 {
         if (reg & 0x10)
@@ -4297,4 +4307,43 @@ static void FP_COMPARE_IL()
         addbyte(0x2a);
         addbyte(0xc8);
         FP_COMPARE_MEM();
+}
+
+static void SET_BITS(uintptr_t addr, uint32_t val)
+{
+        if (val & ~0xff)
+        {
+                addbyte(0x81);
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong(addr);
+                addlong(val);
+        }
+        else
+       {
+                addbyte(0x80);
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong(addr);
+                addbyte(val);
+        }
+}
+static void CLEAR_BITS(uintptr_t addr, uint32_t val)
+{
+        if (val & ~0xff)
+        {
+                addbyte(0x81);
+                addbyte(0x24);
+                addbyte(0x25);
+                addlong(addr);
+                addlong(~val);
+        }
+        else
+       {
+                addbyte(0x80);
+                addbyte(0x24);
+                addbyte(0x25);
+                addlong(addr);
+                addbyte(~val);
+        }
 }

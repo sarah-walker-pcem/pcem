@@ -217,3 +217,34 @@ static uint32_t ropLEAVE_32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         
         return op_pc;
 }
+
+#define ROP_PUSH_SEG(seg) \
+static uint32_t ropPUSH_ ## seg ## _16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)   \
+{                                                                                                                               \
+        int host_reg;                                                                                                           \
+                                                                                                                                \
+        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);                                                                         \
+        LOAD_STACK_TO_EA(-2);                                                                                                   \
+        host_reg = LOAD_VAR_W((uintptr_t)&seg);                                                                                 \
+        MEM_STORE_ADDR_EA_W(&_ss, host_reg);                                                                                    \
+        SP_MODIFY(-2);                                                                                                          \
+                                                                                                                                \
+        return op_pc;                                                                                                           \
+}                                                                                                                               \
+static uint32_t ropPUSH_ ## seg ## _32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)   \
+{                                                                                                                               \
+        int host_reg;                                                                                                           \
+                                                                                                                                \
+        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);                                                                         \
+        LOAD_STACK_TO_EA(-4);                                                                                                   \
+        host_reg = LOAD_VAR_W((uintptr_t)&seg);                                                                                 \
+        MEM_STORE_ADDR_EA_L(&_ss, host_reg);                                                                                    \
+        SP_MODIFY(-4);                                                                                                          \
+                                                                                                                                \
+        return op_pc;                                                                                                           \
+}
+
+ROP_PUSH_SEG(CS)
+ROP_PUSH_SEG(DS)
+ROP_PUSH_SEG(ES)
+ROP_PUSH_SEG(SS)

@@ -122,7 +122,7 @@ static inline void addword(uint16_t val)
 {
         *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 2;
-        if (block_pos >= 1760)
+        if (block_pos >= 1720)
         {
                 CPU_BLOCK_END();
         }
@@ -132,7 +132,7 @@ static inline void addlong(uint32_t val)
 {
         *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 4;
-        if (block_pos >= 1760)
+        if (block_pos >= 1720)
         {
                 CPU_BLOCK_END();
         }
@@ -142,7 +142,7 @@ static inline void addquad(uint64_t val)
 {
         *(uint64_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 8;
-        if (block_pos >= 1760)
+        if (block_pos >= 1720)
         {
                 CPU_BLOCK_END();
         }

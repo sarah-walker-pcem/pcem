@@ -144,6 +144,17 @@ static int LOAD_REG_IMM(uint32_t imm)
         return host_reg;
 }
 
+static int LOAD_HOST_REG(int host_reg)
+{
+        int new_host_reg = find_host_reg();
+        host_reg_mapping[new_host_reg] = reg;
+        
+        addbyte(0x89); /*MOV new_host_reg, host_reg*/
+        addbyte(0xc0 | (host_reg << 3) | new_host_reg);
+        
+        return new_host_reg;
+}
+
 static void STORE_REG_B_RELEASE(int host_reg)
 {
         addbyte(0x88); /*MOVB [reg],host_reg*/
@@ -2949,4 +2960,39 @@ static int SIGN_EXTEND_L_W(int reg)
 static int COPY_REG(int src_reg)
 {
         return src_reg;
+}
+
+static void SET_BITS(uintptr_t addr, uint32_t val)
+{
+        if (val & ~0xff)
+        {
+                addbyte(0x81);
+                addbyte(0x0d);
+                addlong(addr);
+                addlong(val);
+        }
+        else
+       {
+                addbyte(0x80);
+                addbyte(0x0d);
+                addlong(addr);
+                addbyte(val);
+        }
+}
+static void CLEAR_BITS(uintptr_t addr, uint32_t val)
+{
+        if (val & ~0xff)
+        {
+                addbyte(0x81);
+                addbyte(0x25);
+                addlong(addr);
+                addlong(~val);
+        }
+        else
+       {
+                addbyte(0x80);
+                addbyte(0x25);
+                addlong(addr);
+                addbyte(~val);
+        }
 }
