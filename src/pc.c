@@ -552,7 +552,7 @@ void loadconfig(char *fn)
         if (p) strcpy(discfns[1], p);
         else   strcpy(discfns[1], "");
 
-        mem_size = config_get_int(NULL, "mem_size", 4);
+        mem_size = config_get_int(NULL, "mem_size", 4096);
         cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
         

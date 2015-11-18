@@ -30,6 +30,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
         int temp_dynarec;
         int cpu_flags;
+        UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
         {
@@ -167,8 +168,20 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                 h = GetDlgItem(hdlg, IDC_MEMSPIN);
                 SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
-                SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
-                SendMessage(h, UDM_SETPOS, 0, mem_size);
+                accel.nSec = 0;
+                if (!models[model].is_at)
+                {
+                        SendMessage(h, UDM_SETRANGE, 0, (64 << 16) | 640);
+                        SendMessage(h, UDM_SETPOS, 0, mem_size);
+                        accel.nInc = 64;
+                }
+                else
+                {
+                        SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
+                        SendMessage(h, UDM_SETPOS, 0, mem_size / 1024);
+                        accel.nInc = 1;
+                }
+                SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
 
                 h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
                 if (video_card_has_config(video_old_to_new(gfxcard)))
@@ -191,25 +204,35 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M");
                 SendMessage(h, CB_SETCURSEL, drive_type[1], 0);
 
+                h = GetDlgItem(hdlg, IDC_TEXT_MB);
+                if (models[model].is_at)
+                        SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
+                else
+                        SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
                 return TRUE;
                 
                 case WM_COMMAND:
                 switch (LOWORD(wParam))
                 {
                         case IDOK:
-			h = GetDlgItem(hdlg, IDC_MEMTEXT);
-			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
-			sscanf(temp_str, "%i", &mem);
-			if (mem < 1 || mem > 256)
-			{
-				MessageBox(NULL, "Invalid memory size\nMemory must be between 1 and 256 MB", "PCem", MB_OK);
-				break;
-			}
-			
-			
                         h = GetDlgItem(hdlg, IDC_COMBO1);
                         temp_model = listtomodel[SendMessage(h, CB_GETCURSEL, 0, 0)];
 
+			h = GetDlgItem(hdlg, IDC_MEMTEXT);
+			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
+			sscanf(temp_str, "%i", &mem);
+			if ((models[temp_model].is_at && (mem < 1 || mem > 256)) ||
+			    (!models[temp_model].is_at && (mem < 64 || mem > 640)))
+			{
+                                if (models[temp_model].is_at)
+        				MessageBox(NULL, "Invalid memory size\nMemory must be between 1 and 256 MB", "PCem", MB_OK);
+        			else
+        				MessageBox(NULL, "Invalid memory size\nMemory must be between 64 and 640 kB", "PCem", MB_OK);
+				break;
+			}
+			if (models[temp_model].is_at)
+                                mem *= 1024;			
+			
                         h = GetDlgItem(hdlg, IDC_COMBOVID);
                         SendMessage(h, CB_GETLBTEXT, SendMessage(h, CB_GETCURSEL, 0, 0), (LPARAM)temp_str);
                         gfx = video_new_to_old(video_card_getid(temp_str));
@@ -362,6 +385,36 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 else
                                         EnableWindow(h, TRUE);
                                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
+
+                                h = GetDlgItem(hdlg, IDC_TEXT_MB);
+                                if (models[temp_model].is_at)
+                                        SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
+                                else
+                                        SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
+
+        			h = GetDlgItem(hdlg, IDC_MEMTEXT);
+        			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
+        			sscanf(temp_str, "%i", &mem);
+
+                                h = GetDlgItem(hdlg, IDC_MEMSPIN);
+                                accel.nSec = 0;
+                                if (!models[temp_model].is_at)
+                                {
+                                        SendMessage(h, UDM_SETRANGE, 0, (models[temp_model].min_ram << 16) | models[temp_model].max_ram);
+                                        accel.nInc = 64;
+                                        mem &= ~0x3f;
+                                }
+                                else
+                                {
+                                        SendMessage(h, UDM_SETRANGE, 0, (models[temp_model].min_ram << 16) | models[temp_model].max_ram);
+                                        accel.nInc = 1;
+                                }
+                                if (mem < models[temp_model].min_ram)
+                                        mem = models[temp_model].min_ram;
+                                else if (mem > models[temp_model].max_ram)
+                                        mem = models[temp_model].max_ram;
+                                SendMessage(h, UDM_SETPOS, 0, mem);
+                                SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
                         }
                         break;
                         case IDC_COMBOCPUM:

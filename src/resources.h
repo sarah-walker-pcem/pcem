@@ -80,6 +80,7 @@
 #define IDC_STEXT7 1106
 #define IDC_STEXT8 1107
 #define IDC_STEXT_DEVICE 1108
+#define IDC_TEXT_MB 1120
 
 #define IDC_EDIT_C_SPT  1200
 #define IDC_EDIT_C_HPC  1201

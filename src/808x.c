@@ -516,7 +516,7 @@ chdir(pcempath);
         for (c=0;c<0x8000000;c++) putc(readmemb(c+0x10000000),f);
         fclose(f);*/
         f=fopen("ram.dmp","wb");
-        fwrite(ram,mem_size*1024*1024,1,f);
+        fwrite(ram,mem_size*1024,1,f);
         fclose(f);
 /*        pclog("Dumping rram5.dmp\n");
         f=fopen("rram5.dmp","wb");

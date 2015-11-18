@@ -8,6 +8,8 @@ typedef struct
                 CPU *cpus;
         } cpu[4];
         int fixed_gfxcard;
+        int is_at;
+        int min_ram, max_ram;
         void (*init)();
 } MODEL;
 

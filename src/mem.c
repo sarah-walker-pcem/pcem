@@ -1749,22 +1749,22 @@ void mem_init()
 {
         int c;
 
-        ram = malloc(mem_size * 1024 * 1024);
+        ram = malloc(mem_size * 1024);
         rom = malloc(0x20000);
         vram = malloc(0x800000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         cachelookup2 = malloc(1024 * 1024);
         biosmask = 0xffff;
-        pages = malloc(((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        pages = malloc(((mem_size * 1024) >> 12) * sizeof(page_t));
         page_lookup = malloc((1 << 20) * sizeof(page_t *));
 
-        memset(ram, 0, mem_size * 1024 * 1024);
-        memset(pages, 0, ((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
+        memset(ram, 0, mem_size * 1024);
+        memset(pages, 0, ((mem_size * 1024) >> 12) * sizeof(page_t));
         
         memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
         
-        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        for (c = 0; c < ((mem_size * 1024) >> 12); c++)
         {
                 pages[c].mem = &ram[c << 12];
                 pages[c].write_b = mem_write_ramb_page;
@@ -1773,7 +1773,7 @@ void mem_init()
         }
 
         memset(isram, 0, sizeof(isram));
-        for (c = 0; c < (mem_size * 16); c++)
+        for (c = 0; c < (mem_size / 256); c++)
         {
                 isram[c] = 1;
                 if (c >= 0xa && c <= 0xf) 
@@ -1794,13 +1794,13 @@ void mem_init()
 
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0x000000, 0xa0000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x000000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
         mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
-        mem_set_mem_state(0x100000, (mem_size - 1) * 1024 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x100000, (mem_size - 1024) * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
 
-        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
-        if (mem_size > 1)
-                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
+        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
+        if (mem_size > 1024)
+                mem_mapping_add(&ram_high_mapping, 0x100000, ((mem_size - 1024) * 1024), mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
         mem_mapping_add(&ram_mid_mapping,   0xc0000, 0x40000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0xc0000,  MEM_MAPPING_INTERNAL, NULL);
 
         mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   romext, 0, NULL);
@@ -1812,13 +1812,13 @@ void mem_resize()
         int c;
         
         free(ram);
-        ram = malloc(mem_size * 1024 * 1024);
-        memset(ram, 0, mem_size * 1024 * 1024);
+        ram = malloc(mem_size * 1024);
+        memset(ram, 0, mem_size * 1024);
         
         free(pages);
-        pages = malloc(((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
-        memset(pages, 0, ((mem_size * 1024 * 1024) >> 12) * sizeof(page_t));
-        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        pages = malloc(((mem_size * 1024) >> 12) * sizeof(page_t));
+        memset(pages, 0, ((mem_size * 1024) >> 12) * sizeof(page_t));
+        for (c = 0; c < ((mem_size * 1024) >> 12); c++)
         {
                 pages[c].mem = &ram[c << 12];
                 pages[c].write_b = mem_write_ramb_page;
@@ -1827,7 +1827,7 @@ void mem_resize()
         }
         
         memset(isram, 0, sizeof(isram));
-        for (c = 0; c < (mem_size * 16); c++)
+        for (c = 0; c < (mem_size / 256); c++)
         {
                 isram[c] = 1;
                 if (c >= 0xa && c <= 0xf) 
@@ -1846,13 +1846,13 @@ void mem_resize()
         
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0x000000, 0xa0000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x000000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
         mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
-        mem_set_mem_state(0x100000, (mem_size - 1) * 1024 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x100000, (mem_size - 1024) * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
         
-        mem_mapping_add(&ram_low_mapping, 0x00000, 0xa0000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
-        if (mem_size > 1)
-                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1) * 1024 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
+        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
+        if (mem_size > 1024)
+                mem_mapping_add(&ram_high_mapping, 0x100000, (mem_size - 1024) * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
         mem_mapping_add(&ram_mid_mapping,   0xc0000, 0x40000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0xc0000,  MEM_MAPPING_INTERNAL, NULL);
 
         mem_add_bios();
@@ -1868,7 +1868,7 @@ void mem_reset_page_blocks()
 {
         int c;
         
-        for (c = 0; c < ((mem_size * 1024 * 1024) >> 12); c++)
+        for (c = 0; c < ((mem_size * 1024) >> 12); c++)
         {
                 pages[c].write_b = mem_write_ramb_page;
                 pages[c].write_w = mem_write_ramw_page;
