@@ -691,8 +691,8 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         uint32_t src_dat, dest_dat;
                         uint32_t host_dat;
                         int mix;
-                        int dst_x = mach64->accel.dst_x + mach64->accel.dst_x_start;
-                        int dst_y = mach64->accel.dst_y + mach64->accel.dst_y_start;
+                        int dst_x = (mach64->accel.dst_x + mach64->accel.dst_x_start) & 0xfff;
+                        int dst_y = (mach64->accel.dst_y + mach64->accel.dst_y_start) & 0xfff;
 
                         if (mach64->accel.source_host)
                         {
@@ -741,8 +741,8 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         if (dst_x >= mach64->accel.sc_left && dst_x <= mach64->accel.sc_right &&
                             dst_y >= mach64->accel.sc_top  && dst_y <= mach64->accel.sc_bottom)
                         {
-                                int src_x = mach64->accel.src_x + mach64->accel.src_x_start;
-                                int src_y = mach64->accel.src_y + mach64->accel.src_y_start;
+                                int src_x = (mach64->accel.src_x + mach64->accel.src_x_start) & 0xfff;
+                                int src_y = (mach64->accel.src_y + mach64->accel.src_y_start) & 0xfff;
                                 
                                 switch (mix ? mach64->accel.source_fg : mach64->accel.source_bg)
                                 {
