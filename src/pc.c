@@ -553,6 +553,9 @@ void loadconfig(char *fn)
         else   strcpy(discfns[1], "");
 
         mem_size = config_get_int(NULL, "mem_size", 4096);
+        if (mem_size < (models[model].is_at ? models[model].min_ram*1024 : models[model].min_ram))
+                mem_size = (models[model].is_at ? models[model].min_ram*1024 : models[model].min_ram);
+
         cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
         
