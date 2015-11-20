@@ -886,7 +886,7 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                         if (mach64->dst_cntl & DST_X_TILE)
                                                 mach64->dst_y_x = (mach64->dst_y_x & 0xfff) | ((mach64->dst_y_x + (mach64->accel.dst_width << 16)) & 0xfff0000);
                                         if (mach64->dst_cntl & DST_Y_TILE)
-                                                mach64->dst_y_x = (mach64->dst_y_x & 0xfff0000) | ((mach64->dst_y_x + mach64->accel.dst_height) & 0xfff);
+                                                mach64->dst_y_x = (mach64->dst_y_x & 0xfff0000) | ((mach64->dst_y_x + (mach64->dst_height_width & 0x1fff)) & 0xfff);
                                         return;
                                 }
                                 if (mach64->accel.source_host)
