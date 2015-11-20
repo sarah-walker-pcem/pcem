@@ -138,6 +138,7 @@ typedef struct mach64_t
                 int clr_cmp_src;
                 
                 int err;
+                int poly_draw;
         } accel;
 } mach64_t;
 
@@ -186,13 +187,20 @@ enum
         DP_BYTE_PIX_ORDER = (1 << 24)
 };
 
-static int mach64_width[8] = {0, 0, 0, 1, 1, 2, 2, 0};
+#define WIDTH_1BIT 3
+
+static int mach64_width[8] = {WIDTH_1BIT, 0, 0, 1, 1, 2, 2, 0};
 
 enum
 {
-        DST_X_TILE    = 0x08,
-        DST_Y_TILE    = 0x10,
-        DST_24_ROT_EN = 0x80
+        DST_X_DIR      = 0x01,
+        DST_Y_DIR      = 0x02,
+        DST_Y_MAJOR    = 0x04,
+        DST_X_TILE     = 0x08,
+        DST_Y_TILE     = 0x10,
+        DST_LAST_PEL   = 0x20,
+        DST_POLYGON_EN = 0x40,
+        DST_24_ROT_EN  = 0x80
 };
 
 void mach64_write(uint32_t addr, uint8_t val, void *priv);
@@ -509,13 +517,20 @@ void mach64_start_fill(mach64_t *mach64)
         mach64->accel.dst_x     *= mach64_inc[mach64->accel.dst_pix_width];
         mach64->accel.dst_pitch *= mach64_inc[mach64->accel.dst_pix_width];*/
         
-        mach64->accel.src_offset >>= mach64->accel.src_size;
-        mach64->accel.dst_offset >>= mach64->accel.dst_size;
+        if (mach64->accel.src_size == WIDTH_1BIT)
+                mach64->accel.src_offset <<= 3;
+        else
+                mach64->accel.src_offset >>= mach64->accel.src_size;
+        
+        if (mach64->accel.dst_size == WIDTH_1BIT)
+                mach64->accel.dst_offset <<= 3;
+        else
+                mach64->accel.dst_offset >>= mach64->accel.dst_size;
                 
 /*        if (mach64->accel.source_fg == SRC_BLITSRC || mach64->accel.source_bg == SRC_BLITSRC)
         {*/
-                mach64->accel.xinc = (mach64->dst_cntl & 1) ? 1 : -1;
-                mach64->accel.yinc = (mach64->dst_cntl & 2) ? 1 : -1;        
+                mach64->accel.xinc = (mach64->dst_cntl & DST_X_DIR) ? 1 : -1;
+                mach64->accel.yinc = (mach64->dst_cntl & DST_Y_DIR) ? 1 : -1;        
 /*        }
         else
         {
@@ -554,6 +569,8 @@ void mach64_start_fill(mach64_t *mach64)
         mach64->accel.clr_cmp_fn = mach64->clr_cmp_cntl & 7;
         mach64->accel.clr_cmp_src = mach64->clr_cmp_cntl & (1 << 24);
         
+        mach64->accel.poly_draw = 0;
+        
         mach64->accel.busy = 1;
 #ifdef MACH64_DEBUG
         pclog("mach64_start_fill : dst %i, %i  src %i, %i  size %i, %i  src pitch %i offset %X  dst pitch %i offset %X  scissor %i %i %i %i  src_fg %i  mix %02X %02X\n", mach64->accel.dst_x_start, mach64->accel.dst_y_start, mach64->accel.src_x_start, mach64->accel.src_y_start, mach64->accel.dst_width, mach64->accel.dst_height, mach64->accel.src_pitch, mach64->accel.src_offset, mach64->accel.dst_pitch, mach64->accel.dst_offset, mach64->accel.sc_left, mach64->accel.sc_right, mach64->accel.sc_top, mach64->accel.sc_bottom, mach64->accel.source_fg, mach64->accel.mix_fg, mach64->accel.mix_bg);
@@ -591,8 +608,15 @@ void mach64_start_line(mach64_t *mach64)
         mach64->accel.dst_size = mach64_width[mach64->accel.dst_pix_width];
         mach64->accel.src_size = mach64_width[mach64->accel.src_pix_width];
 
-        mach64->accel.src_offset >>= mach64->accel.src_size;
-        mach64->accel.dst_offset >>= mach64->accel.dst_size;
+        if (mach64->accel.src_size == WIDTH_1BIT)
+                mach64->accel.src_offset <<= 3;
+        else
+                mach64->accel.src_offset >>= mach64->accel.src_size;
+        
+        if (mach64->accel.dst_size == WIDTH_1BIT)
+                mach64->accel.dst_offset <<= 3;
+        else
+                mach64->accel.dst_offset >>= mach64->accel.dst_size;
 
 /*        mach64->accel.src_pitch *= mach64_inc[mach64->accel.src_pix_width];
         mach64->accel.dst_pitch *= mach64_inc[mach64->accel.dst_pix_width];*/
@@ -633,7 +657,8 @@ void mach64_start_line(mach64_t *mach64)
 
 #define READ(addr, dat, width) if (width == 0)      dat =               svga->vram[((addr))      & mach64->vram_mask]; \
                                else if (width == 1) dat = *(uint16_t *)&svga->vram[((addr) << 1) & mach64->vram_mask]; \
-                               else                 dat = *(uint32_t *)&svga->vram[((addr) << 2) & mach64->vram_mask];
+                               else if (width == 2) dat = *(uint32_t *)&svga->vram[((addr) << 2) & mach64->vram_mask]; \
+                               else                 dat = (svga->vram[((addr) >> 3) & mach64->vram_mask] >> ((addr) & 7)) & 1;
 
 #define MIX     switch (mix ? mach64->accel.mix_fg : mach64->accel.mix_bg)                                \
                 {                                                                                       \
@@ -665,10 +690,18 @@ void mach64_start_line(mach64_t *mach64)
                                         *(uint16_t *)&svga->vram[((addr) << 1) & mach64->vram_mask] = dest_dat;          \
                                         svga->changedvram[(((addr) << 1) & mach64->vram_mask) >> 12] = changeframecount; \
                                 }                                                                       \
-                                else                                                                    \
+                                else if (width == 2)                                                    \
                                 {                                                                       \
                                         *(uint32_t *)&svga->vram[((addr) << 2) & mach64->vram_mask] = dest_dat;          \
                                         svga->changedvram[(((addr) << 2) & mach64->vram_mask) >> 12] = changeframecount; \
+                                }                                                                                               \
+                                else                                                                                            \
+                                {                                                                                               \
+                                        if (dest_dat & 1)                                                                       \
+                                                svga->vram[((addr) >> 3) & mach64->vram_mask] |= 1 << ((addr) & 7);             \
+                                        else                                                                                    \
+                                                svga->vram[((addr) >> 3) & mach64->vram_mask] &= ~(1 << ((addr) & 7));          \
+                                        svga->changedvram[(((addr) >> 3) & mach64->vram_mask) >> 12] = changeframecount;        \
                                 }
 
 void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
@@ -762,26 +795,35 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                         src_dat = 0;
                                         break;
                                 }
-                
-                                READ(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, dest_dat, mach64->accel.dst_size);
-
-                                switch (mach64->accel.clr_cmp_fn)
+                                if (mach64->dst_cntl & DST_POLYGON_EN)
                                 {
-                                        case 1: /*TRUE*/
-                                        cmp_clr = 1;
-                                        break;
-                                        case 4: /*DST_CLR != CLR_CMP_CLR*/
-                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) != mach64->accel.clr_cmp_clr;
-                                        break;
-                                        case 5: /*DST_CLR == CLR_CMP_CLR*/
-                                        cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) == mach64->accel.clr_cmp_clr;
-                                        break;
+                                        int poly_src;
+                                        READ(mach64->accel.src_offset + (src_y * mach64->accel.src_pitch) + src_x, poly_src, mach64->accel.src_size);
+                                        if (poly_src)
+                                                mach64->accel.poly_draw = !mach64->accel.poly_draw;
                                 }
-                                
-                                if (!cmp_clr)
-                                        MIX
+                                if (!(mach64->dst_cntl & DST_POLYGON_EN) || mach64->accel.poly_draw)
+                                {
+                                        READ(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, dest_dat, mach64->accel.dst_size);
 
-                                WRITE(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, mach64->accel.dst_size);
+                                        switch (mach64->accel.clr_cmp_fn)
+                                        {
+                                                case 1: /*TRUE*/
+                                                cmp_clr = 1;
+                                                break;
+                                                case 4: /*DST_CLR != CLR_CMP_CLR*/
+                                                cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) != mach64->accel.clr_cmp_clr;
+                                                break;
+                                                case 5: /*DST_CLR == CLR_CMP_CLR*/
+                                                cmp_clr = (((mach64->accel.clr_cmp_src) ? src_dat : dest_dat) & mach64->accel.clr_cmp_mask) == mach64->accel.clr_cmp_clr;
+                                                break;
+                                        }
+                                
+                                        if (!cmp_clr)
+                                                MIX
+
+                                        WRITE(mach64->accel.dst_offset + (dst_y * mach64->accel.dst_pitch) + dst_x, mach64->accel.dst_size);
+                                }
                         }
                 
                         if (mach64->dst_cntl & DST_24_ROT_EN)
@@ -830,6 +872,8 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                                 mach64->accel.src_y_count = mach64->accel.src_height1;
                                 }
 
+                                mach64->accel.poly_draw = 0;
+                                
                                 mach64->accel.dst_height--;
                 
                                 if (mach64->accel.dst_height <= 0)
@@ -857,6 +901,7 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         uint32_t src_dat, dest_dat;
                         uint32_t host_dat;
                         int mix;
+                        int draw_pixel = !(mach64->dst_cntl & DST_POLYGON_EN);
                 
                         if (mach64->accel.source_host)
                         {
@@ -894,8 +939,21 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                 break;
                         }
                 
+                        if (mach64->dst_cntl & DST_POLYGON_EN)
+                        {
+                                if (mach64->dst_cntl & DST_Y_MAJOR)
+                                        draw_pixel = 1;
+                                else if ((mach64->dst_cntl & DST_X_DIR) && mach64->accel.err < (mach64->dst_bres_dec + mach64->dst_bres_inc)) /*X+*/
+                                        draw_pixel = 1;
+                                else if (!(mach64->dst_cntl & DST_X_DIR) && mach64->accel.err >= 0) /*X-*/
+                                        draw_pixel = 1;
+                        }
+
+                        if (mach64->accel.x_count == 1 && !(mach64->dst_cntl & DST_LAST_PEL))
+                                draw_pixel = 0;
+
                         if (mach64->accel.dst_x >= mach64->accel.sc_left && mach64->accel.dst_x <= mach64->accel.sc_right &&
-                            mach64->accel.dst_y >= mach64->accel.sc_top  && mach64->accel.dst_y <= mach64->accel.sc_bottom)
+                            mach64->accel.dst_y >= mach64->accel.sc_top  && mach64->accel.dst_y <= mach64->accel.sc_bottom && draw_pixel)
                         {
                                 switch (mix ? mach64->accel.source_fg : mach64->accel.source_bg)
                                 {
