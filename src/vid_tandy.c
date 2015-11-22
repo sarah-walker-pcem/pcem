@@ -13,6 +13,7 @@ static int i_filt[8],q_filt[8];
 typedef struct tandy_t
 {
         mem_mapping_t mapping;
+        mem_mapping_t ram_mapping;
         
         uint8_t crtc[32];
         int crtcreg;
@@ -87,7 +88,7 @@ void tandy_out(uint16_t addr, uint8_t val, void *p)
                 tandy_recalcaddress(tandy);
                 break;
                 case 0xa0:
-                tandy->base = ((val >> 1) & 7) * 128 * 1024;
+                mem_mapping_set_addr(&tandy->ram_mapping, ((val >> 1) & 7) * 128 * 1024, 0x20000);
                 tandy_recalcaddress(tandy);
                 break;
         }
@@ -123,6 +124,20 @@ void tandy_recalcaddress(tandy_t *tandy)
                 tandy->b8000 = &ram[((tandy->memctrl & 0x38) << 11) + tandy->base];
 //                printf("VRAM at %05X B8000 at %05X\n",((tandy->memctrl&0x7)<<14)+tandy->base,((tandy->memctrl&0x38)<<11)+tandy->base);
         }
+}
+
+void tandy_ram_write(uint32_t addr, uint8_t val, void *p)
+{
+        tandy_t *tandy = (tandy_t *)p;
+//        pclog("Tandy RAM write %05X %02X %04X:%04X\n",addr,val,CS,pc);
+        ram[tandy->base + (addr & 0x1ffff)] = val;
+}
+
+uint8_t tandy_ram_read(uint32_t addr, void *p)
+{
+        tandy_t *tandy = (tandy_t *)p;
+//        pclog("Tandy RAM read %05X %02X %04X:%04X\n",addr,ram[tandy->base + (addr & 0x1ffff)],CS,pc);
+        return ram[tandy->base + (addr & 0x1ffff)];
 }
 
 void tandy_write(uint32_t addr, uint8_t val, void *p)
@@ -660,6 +675,7 @@ void *tandy_init()
         memset(tandy, 0, sizeof(tandy_t));
 
         tandy->memctrl = -1;
+        tandy->base = (mem_size - 128) * 1024;
         
         for (c = 0; c < 8; c++)
         {
@@ -668,6 +684,9 @@ void *tandy_init()
         }
         timer_add(tandy_poll, &tandy->vidtime, TIMER_ALWAYS_ENABLED, tandy);
         mem_mapping_add(&tandy->mapping, 0xb8000, 0x08000, tandy_read, NULL, NULL, tandy_write, NULL, NULL,  NULL, 0, tandy);
+        mem_mapping_add(&tandy->ram_mapping, 0x80000, 0x20000, tandy_ram_read, NULL, NULL, tandy_ram_write, NULL, NULL,  NULL, 0, tandy);
+        /*Base 128k mapping is controlled via port 0xA0, so we remove it from the main mapping*/
+        mem_mapping_set_addr(&ram_low_mapping, 0, (mem_size - 128) * 1024);
         io_sethandler(0x03d0, 0x0010, tandy_in, NULL, NULL, tandy_out, NULL, NULL, tandy);
         io_sethandler(0x00a0, 0x0001, tandy_in, NULL, NULL, tandy_out, NULL, NULL, tandy);
         return tandy;

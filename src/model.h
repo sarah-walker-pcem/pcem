@@ -10,6 +10,7 @@ typedef struct
         int fixed_gfxcard;
         int is_at;
         int min_ram, max_ram;
+        int ram_granularity;
         void (*init)();
 } MODEL;
 

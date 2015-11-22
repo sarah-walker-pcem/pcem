@@ -168,19 +168,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                 h = GetDlgItem(hdlg, IDC_MEMSPIN);
                 SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
-                accel.nSec = 0;
+                SendMessage(h, UDM_SETRANGE, 0, (models[romstomodel[romset]].min_ram << 16) | models[romstomodel[romset]].max_ram);
                 if (!models[model].is_at)
-                {
-                        SendMessage(h, UDM_SETRANGE, 0, (64 << 16) | 640);
                         SendMessage(h, UDM_SETPOS, 0, mem_size);
-                        accel.nInc = 64;
-                }
                 else
-                {
-                        SendMessage(h, UDM_SETRANGE, 0, (1 << 16) | 256);
                         SendMessage(h, UDM_SETPOS, 0, mem_size / 1024);
-                        accel.nInc = 1;
-                }
+                accel.nSec = 0;
+                accel.nInc = models[temp_model].ram_granularity;
                 SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
 
                 h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
@@ -221,6 +215,11 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 			h = GetDlgItem(hdlg, IDC_MEMTEXT);
 			SendMessage(h, WM_GETTEXT, 255, (LPARAM)temp_str);
 			sscanf(temp_str, "%i", &mem);
+                        mem &= ~(models[temp_model].ram_granularity - 1);
+                        if (mem < models[temp_model].min_ram)
+                                mem = models[temp_model].min_ram;
+                        else if (mem > models[temp_model].max_ram)
+                                mem = models[temp_model].max_ram;
 			if ((models[temp_model].is_at && (mem < 1 || mem > 256)) ||
 			    (!models[temp_model].is_at && (mem < 64 || mem > 640)))
 			{
@@ -397,23 +396,15 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         			sscanf(temp_str, "%i", &mem);
 
                                 h = GetDlgItem(hdlg, IDC_MEMSPIN);
-                                accel.nSec = 0;
-                                if (!models[temp_model].is_at)
-                                {
-                                        SendMessage(h, UDM_SETRANGE, 0, (models[temp_model].min_ram << 16) | models[temp_model].max_ram);
-                                        accel.nInc = 64;
-                                        mem &= ~0x3f;
-                                }
-                                else
-                                {
-                                        SendMessage(h, UDM_SETRANGE, 0, (models[temp_model].min_ram << 16) | models[temp_model].max_ram);
-                                        accel.nInc = 1;
-                                }
+                                SendMessage(h, UDM_SETRANGE, 0, (models[temp_model].min_ram << 16) | models[temp_model].max_ram);
+                                mem &= ~(models[temp_model].ram_granularity - 1);
                                 if (mem < models[temp_model].min_ram)
                                         mem = models[temp_model].min_ram;
                                 else if (mem > models[temp_model].max_ram)
                                         mem = models[temp_model].max_ram;
                                 SendMessage(h, UDM_SETPOS, 0, mem);
+                                accel.nSec = 0;
+                                accel.nInc = models[temp_model].ram_granularity;
                                 SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
                         }
                         break;

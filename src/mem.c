@@ -35,7 +35,7 @@ static mem_mapping_t *_mem_mapping_w[0x40000];
 static int                _mem_state[0x40000];
 
 static mem_mapping_t base_mapping;
-static mem_mapping_t ram_low_mapping;
+mem_mapping_t ram_low_mapping;
 static mem_mapping_t ram_high_mapping;
 static mem_mapping_t ram_mid_mapping;
 mem_mapping_t bios_mapping[8];
