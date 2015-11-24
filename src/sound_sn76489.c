@@ -168,7 +168,7 @@ void *sn76489_init()
         sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
         memset(sn76489, 0, sizeof(sn76489_t));
 
-        io_sethandler(0x00C0, 0x0001, NULL, NULL, NULL, sn76489_write, NULL, NULL, sn76489);
+        io_sethandler(0x00C0, 0x0008, NULL, NULL, NULL, sn76489_write, NULL, NULL, sn76489);
 
         sound_add_handler(sn76489_poll, sn76489_get_buffer, sn76489);
 
