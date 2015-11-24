@@ -47,7 +47,7 @@ void sn76489_poll(void *p)
                 else                         result += (int16_t) (volslog[sn76489->vol[c]] * 127);
 
                 sn76489->count[c] -= (256 * PSGCONST);
-                while ((int)sn76489->count[c] < 0 && sn76489->latch[c])
+                while ((int)sn76489->count[c] < 0)
                 {
                         sn76489->count[c] += sn76489->latch[c];
                         sn76489->stat[c] = -sn76489->stat[c];
@@ -104,6 +104,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0:
                         sn76489->freqlo[3] = data & 0xf;
                         sn76489->latch[3] = (sn76489->freqlo[3] | (sn76489->freqhi[3] << 4)) << 6;
+                        if (!sn76489->latch[3])
+                                sn76489->latch[3] = 1024 << 6;
                         sn76489->lasttone = 3;
                         break;
                         case 0x10:
@@ -113,6 +115,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x20:
                         sn76489->freqlo[2] = data & 0xf;
                         sn76489->latch[2] = (sn76489->freqlo[2] | (sn76489->freqhi[2] << 4)) << 6;
+                        if (!sn76489->latch[2])
+                                sn76489->latch[2] = 1024 << 6;
                         sn76489->lasttone = 2;
                         break;
                         case 0x30:
@@ -122,6 +126,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x40:
                         sn76489->freqlo[1] = data & 0xf;
                         sn76489->latch[1] = (sn76489->freqlo[1] | (sn76489->freqhi[1] << 4)) << 6;
+                        if (!sn76489->latch[1])
+                                sn76489->latch[1] = 1024 << 6;
                         sn76489->lasttone = 1;
                         break;
                         case 0x50:
@@ -134,6 +140,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
+                        if (!sn76489->latch[0])
+                                sn76489->latch[0] = 1024 << 6;
                         break;
                         case 0x70:
                         data &= 0xf;
@@ -151,13 +159,17 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
+                        if (!sn76489->latch[0])
+                                sn76489->latch[0] = 1024 << 6;
                 }
                 else
                 {
                         sn76489->freqhi[sn76489->lasttone] = data & 0x3F;
                         freq = sn76489->freqlo[sn76489->lasttone] | (sn76489->freqhi[sn76489->lasttone] << 4);
+                        if (!freq)
+                                freq = 1024;
                         if ((sn76489->noise & 3) == 3 && sn76489->lasttone == 1)
-                           sn76489->latch[0] = freq << 6;
+                                sn76489->latch[0] = freq << 6;
                         sn76489->latch[sn76489->lasttone] = freq << 6;
                 }
         }
