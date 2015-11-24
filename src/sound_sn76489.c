@@ -58,7 +58,7 @@ void sn76489_poll(void *p)
         sn76489->count[0] -= (512 * PSGCONST);
         while ((int)sn76489->count[0] < 0 && sn76489->latch[0])
         {
-                sn76489->count[0] += (sn76489->latch[0] * 2);
+                sn76489->count[0] += (sn76489->latch[0] * 4);
                 if (!(sn76489->noise & 4))
                 {
                         if (sn76489->shift & 1) 
@@ -135,8 +135,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->vol[1] = 0xf - data;
                         break;
                         case 0x60:
-                        sn76489->shift = 0x4000;
-                        if ((data & 3) != (sn76489->noise & 3)) sn76489->count[0] = 0;
+                        if ((data & 4) != (sn76489->noise & 4))
+                                sn76489->shift = 0x4000;
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
@@ -153,9 +153,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
         {
                 if ((sn76489->firstdat & 0x70) == 0x60)
                 {
-                        sn76489->shift = 0x4000;
-                        if ((data & 3) != (sn76489->noise & 3)) 
-                                sn76489->count[0] = 0;
+                        if ((data & 4) != (sn76489->noise & 4))
+                                sn76489->shift = 0x4000;
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
