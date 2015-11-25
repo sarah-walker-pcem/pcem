@@ -2852,6 +2852,10 @@ void execx86(int cycs)
                         setznp16(AX);
                         cycles-=60;
                         break;
+                        case 0xD6: /*SETALC*/
+                        AL = (flags & C_FLAG) ? 0xff : 0;
+                        cycles -= 4;
+                        break;
                         case 0xD7: /*XLAT*/
                         addr=BX+AL;
                         AL=readmemb(ds+addr);
