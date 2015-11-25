@@ -165,7 +165,10 @@ static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         }
         if (!ddsd.lpSurface) return;
         for (yy = y1; yy < y2; yy++)
-            memcpy(ddsd.lpSurface + (yy * ddsd.lPitch), &(((uint32_t *)buffer32->line[y + yy])[x]), w * 4);
+        {
+                if ((y + yy) >= 0 && (y + yy) < buffer->h)
+                        memcpy(ddsd.lpSurface + (yy * ddsd.lPitch), &(((uint32_t *)buffer32->line[y + yy])[x]), w * 4);
+        }
         lpdds_back->Unlock(NULL);
 
         po.x = po.y = 0;
