@@ -103,3 +103,5 @@ void cpu_RDMSR();
 void cpu_WRMSR();
 
 extern int cpu_use_dynarec;
+
+extern int xt_cpu_multi;

@@ -13,7 +13,7 @@
 #include "pit.h"
 #include "timer.h"
 #include "video.h"
-
+#include "model.h"
 /*B0 to 40, two writes to 43, then two reads - value does not change!*/
 /*B4 to 40, two writes to 43, then two reads - value _does_ change!*/
 //Tyrian writes 4300 or 17512
@@ -36,6 +36,10 @@ void setpitclock(float clock)
         isa_timing = clock/8000000.0;
         bus_timing = clock/(double)cpu_busspeed;
         video_updatetiming();
+//        pclog("PITCONST=%f CGACONST=%f\n", PITCONST, CGACONST);
+//        pclog("CPUMULTI=%g\n", ((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed));
+        
+        xt_cpu_multi = (int)((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
 //        pclog("egacycles %i egacycles2 %i temp %f clock %f\n",egacycles,egacycles2,temp,clock);
 /*        if (video_recalctimings)
                 video_recalctimings();*/

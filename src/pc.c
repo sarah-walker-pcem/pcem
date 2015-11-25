@@ -182,7 +182,10 @@ void pc_reset()
         pit_reset();
         serial_reset();
 
-        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+        if (AT)
+                setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+        else
+                setpitclock(14318184.0);
         
 //        sb_reset();
 
@@ -463,7 +466,10 @@ void fullspeed()
         if (!atfullspeed)
         {
                 printf("Set fullspeed - %i %i %i\n",is386,AT,cpuspeed2);
-                setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+                if (AT)
+                        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+                else
+                        setpitclock(14318184.0);
 //                if (is386) setpitclock(clocks[2][cpuspeed2][0]);
 //                else       setpitclock(clocks[AT?1:0][cpuspeed2][0]);
         }
@@ -473,13 +479,10 @@ void fullspeed()
 
 void speedchanged()
 {
-        if (atfullspeed)
-        {
-                cpuspeed2=cpuspeed;
+        if (AT)
                 setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
-//                if (is386) setpitclock(clocks[2][cpuspeed2][0]);
-//                else       setpitclock(clocks[AT?1:0][cpuspeed2][0]);
-        }
+        else
+                setpitclock(14318184.0);
         mem_updatecache();
         nvr_recalc();
 }

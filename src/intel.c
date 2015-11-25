@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "cpu.h"
 #include "io.h"
 #include "mem.h"
 #include "pit.h"

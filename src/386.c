@@ -227,7 +227,7 @@ void exec386(int cycs)
         {
                 cycdiff=0;
                 oldcyc=cycles;
-                timer_start_period(cycles);
+                timer_start_period(cycles << TIMER_SHIFT);
 //                pclog("%i %02X\n", ins, ram[8]);
                 while (cycdiff<100)
                 {
@@ -375,6 +375,6 @@ opcodestart:
                 
                 tsc += cycdiff;
                 
-                timer_end_period(cycles);
+                timer_end_period(cycles << TIMER_SHIFT);
         }
 }

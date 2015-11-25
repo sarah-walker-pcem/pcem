@@ -43,7 +43,7 @@ void timer_process()
                 enable[c] = *timers[c].enable;
                 if (*timers[c].enable)
                 {
-                        *timers[c].count = *timers[c].count - (diff << TIMER_SHIFT);
+                        *timers[c].count = *timers[c].count - diff;
                         if (*timers[c].count <= 0)
                                 process = 1;
                 }

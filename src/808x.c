@@ -20,6 +20,7 @@
 #include "timer.h"
 #include "x86.h"
 
+int xt_cpu_multi;
 int nmi = 0;
 
 int nextcyc=0;
@@ -807,7 +808,7 @@ void clockhardware()
         
         current_diff += diff;
   
-        timer_end_period(cycles);      
+        timer_end_period(cycles*xt_cpu_multi);
 }
 
 static int takeint = 0;
@@ -1084,7 +1085,7 @@ void execx86(int cycs)
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
 //                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
-                timer_start_period(cycles);
+                timer_start_period(cycles*xt_cpu_multi);
                 current_diff = 0;
                 cycles-=nextcyc;
 //                if (instime) pclog("Cycles %i %i\n",cycles,cycdiff);

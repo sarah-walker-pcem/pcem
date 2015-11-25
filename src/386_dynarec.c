@@ -1215,7 +1215,7 @@ void exec386_dynarec(int cycs)
                 cycles += 1000;
                 cycles_start = cycles;
 
-                timer_start_period(cycles);
+                timer_start_period(cycles << TIMER_SHIFT);
 //        output=3;
         while (cycles>0)
         {
@@ -1510,7 +1510,7 @@ inrecomp=0;
                         }
                 }
         }
-                timer_end_period(cycles);
+                timer_end_period(cycles << TIMER_SHIFT);
                 cycles_main -= (cycles_start - cycles);
         }
 }
