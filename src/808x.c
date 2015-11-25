@@ -806,10 +806,6 @@ void clockhardware()
         int diff = cycdiff - cycles - current_diff;
         
         current_diff += diff;
-        if (pit.running[0]) pit.c[0] -= diff;
-        if (pit.running[1]) pit.c[1] -= diff;
-        if (pit.running[2]) pit.c[2] -= diff;
-        if ((pit.c[0] < 1) || (pit.c[1] < 1) || (pit.c[2] < 1)) pit_poll();
   
         timer_end_period(cycles);      
 }
