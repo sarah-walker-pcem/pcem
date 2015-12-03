@@ -15,21 +15,6 @@ static float volslog[16]=
         7.51785f,9.46440f,11.9194f,15.0000f
 };
 
-typedef struct sn76489_t
-{
-        int stat[4];
-        int latch[4], count[4];
-        int freqlo[4], freqhi[4];
-        int vol[4];
-        uint32_t shift;
-        uint8_t noise;
-        int lasttone;
-        uint8_t firstdat;
-        
-        int16_t buffer[SOUNDBUFLEN];
-        int pos;
-} sn76489_t;
-
 #define PSGCONST ((3579545.0 / 64.0) / 48000.0)
 
 void sn76489_poll(void *p)
@@ -104,8 +89,10 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0:
                         sn76489->freqlo[3] = data & 0xf;
                         sn76489->latch[3] = (sn76489->freqlo[3] | (sn76489->freqhi[3] << 4)) << 6;
+                        if (sn76489->extra_divide)
+                                sn76489->latch[3] &= 0x3ff;
                         if (!sn76489->latch[3])
-                                sn76489->latch[3] = 1024 << 6;
+                                sn76489->latch[3] = (sn76489->extra_divide ? 2048 : 1024) << 6;
                         sn76489->lasttone = 3;
                         break;
                         case 0x10:
@@ -115,8 +102,10 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x20:
                         sn76489->freqlo[2] = data & 0xf;
                         sn76489->latch[2] = (sn76489->freqlo[2] | (sn76489->freqhi[2] << 4)) << 6;
+                        if (sn76489->extra_divide)
+                                sn76489->latch[2] &= 0x3ff;
                         if (!sn76489->latch[2])
-                                sn76489->latch[2] = 1024 << 6;
+                                sn76489->latch[2] = (sn76489->extra_divide ? 2048 : 1024) << 6;
                         sn76489->lasttone = 2;
                         break;
                         case 0x30:
@@ -126,8 +115,10 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x40:
                         sn76489->freqlo[1] = data & 0xf;
                         sn76489->latch[1] = (sn76489->freqlo[1] | (sn76489->freqhi[1] << 4)) << 6;
+                        if (sn76489->extra_divide)
+                                sn76489->latch[1] &= 0x3ff;
                         if (!sn76489->latch[1])
-                                sn76489->latch[1] = 1024 << 6;
+                                sn76489->latch[1] = (sn76489->extra_divide ? 2048 : 1024) << 6;
                         sn76489->lasttone = 1;
                         break;
                         case 0x50:
@@ -135,13 +126,15 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->vol[1] = 0xf - data;
                         break;
                         case 0x60:
-                        if ((data & 4) != (sn76489->noise & 4))
+                        if ((data & 4) != (sn76489->noise & 4) || sn76489->type == SN76496)
                                 sn76489->shift = 0x4000;
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
+                        if (sn76489->extra_divide)
+                                sn76489->latch[0] &= 0x3ff;
                         if (!sn76489->latch[0])
-                                sn76489->latch[0] = 1024 << 6;
+                                sn76489->latch[0] = (sn76489->extra_divide ? 2048 : 1024) << 6;
                         break;
                         case 0x70:
                         data &= 0xf;
@@ -153,7 +146,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
         {
                 if ((sn76489->firstdat & 0x70) == 0x60)
                 {
-                        if ((data & 4) != (sn76489->noise & 4))
+                        if ((data & 4) != (sn76489->noise & 4) || sn76489->type == SN76496)
                                 sn76489->shift = 0x4000;
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
@@ -163,10 +156,12 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                 }
                 else
                 {
-                        sn76489->freqhi[sn76489->lasttone] = data & 0x3F;
+                        sn76489->freqhi[sn76489->lasttone] = data & 0x7F;
                         freq = sn76489->freqlo[sn76489->lasttone] | (sn76489->freqhi[sn76489->lasttone] << 4);
+                        if (sn76489->extra_divide)
+                                freq &= 0x3ff;
                         if (!freq)
-                                freq = 1024;
+                                freq = sn76489->extra_divide ? 2048 : 1024;
                         if ((sn76489->noise & 3) == 3 && sn76489->lasttone == 1)
                                 sn76489->latch[0] = freq << 6;
                         sn76489->latch[sn76489->lasttone] = freq << 6;
@@ -174,13 +169,13 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
         }
 }
 
-void *sn76489_init()
+void sn74689_set_extra_divide(sn76489_t *sn76489, int enable)
 {
-        sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
-        memset(sn76489, 0, sizeof(sn76489_t));
+        sn76489->extra_divide = enable;
+}
 
-        io_sethandler(0x00C0, 0x0008, NULL, NULL, NULL, sn76489_write, NULL, NULL, sn76489);
-
+void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type)
+{
         sound_add_handler(sn76489_poll, sn76489_get_buffer, sn76489);
 
         sn76489->latch[0] = sn76489->latch[1] = sn76489->latch[2] = sn76489->latch[3] = 0x3FF << 6;
@@ -194,13 +189,33 @@ void *sn76489_init()
         sn76489->count[3] = (rand()&0x3FF)<<6;
         sn76489->noise = 3;
         sn76489->shift = 0x4000;
+        sn76489->type = type;
 
         sn76489_mute = 0;
+
+        io_sethandler(base, size, NULL, NULL, NULL, sn76489_write, NULL, NULL, sn76489);
+}
+
+void *sn76489_device_init()
+{
+        sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
+        memset(sn76489, 0, sizeof(sn76489_t));
+
+        sn76489_init(sn76489, 0x00c0, 0x0008, SN76496);
+
+        return sn76489;
+}
+void *ncr8496_device_init()
+{
+        sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
+        memset(sn76489, 0, sizeof(sn76489_t));
+
+        sn76489_init(sn76489, 0x00c0, 0x0008, NCR8496);
 
         return sn76489;
 }
 
-void sn76489_close(void *p)
+void sn76489_device_close(void *p)
 {
         sn76489_t *sn76489 = (sn76489_t *)p;
 
@@ -211,8 +226,19 @@ device_t sn76489_device =
 {
         "TI SN74689 PSG",
         0,
-        sn76489_init,
-        sn76489_close,
+        sn76489_device_init,
+        sn76489_device_close,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+device_t ncr8496_device =
+{
+        "NCR8496 PSG",
+        0,
+        ncr8496_device_init,
+        sn76489_device_close,
         NULL,
         NULL,
         NULL,

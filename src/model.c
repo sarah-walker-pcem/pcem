@@ -39,7 +39,10 @@
 #include "ps1.h"
 #include "serial.h"
 #include "sis496.h"
+#include "sound_pssj.h"
 #include "sound_sn76489.h"
+#include "tandy_eeprom.h"
+#include "tandy_rom.h"
 #include "um8669f.h"
 #include "um8881f.h"
 #include "wd76c10.h"
@@ -48,6 +51,7 @@
 void            xt_init();
 void          pcjr_init();
 void       tandy1k_init();
+void    tandy1ksl2_init();
 void           ams_init();
 void        europc_init();
 void        olim24_init();
@@ -82,6 +86,8 @@ MODEL models[] =
         {"Phoenix XT clone",    ROM_PXXT,        { "",      cpus_8088,    "",    NULL,         "",      NULL},         0, 0, 128, 640, 64,     xt_init},
         {"Juko XT clone",       ROM_JUKOPC,      { "",      cpus_8088,    "",    NULL,         "",      NULL},         0, 0, 128, 640, 64,     xt_init},
         {"Tandy 1000",          ROM_TANDY,       { "",      cpus_8088,    "",    NULL,         "",      NULL},         1, 0, 128, 640, 128, tandy1k_init},
+        {"Tandy 1000 HX",       ROM_TANDY1000HX, { "",      cpus_8088,    "",    NULL,         "",      NULL},         1, 0, 256, 640, 128, tandy1k_init},
+        {"Tandy 1000 SL/2",     ROM_TANDY1000SL2,{ "",      cpus_8086,    "",    NULL,         "",      NULL},         1, 0, 512, 768, 128, tandy1ksl2_init},
         {"Amstrad PC1512",      ROM_PC1512,      { "",      cpus_pc1512,  "",    NULL,         "",      NULL},         1, 0, 512, 640, 128,     ams_init},
         {"Sinclair PC200",      ROM_PC200,       { "",      cpus_8086,    "",    NULL,         "",      NULL},         1, 0, 512, 640, 128,     ams_init},
         {"Euro PC",             ROM_EUROPC,      { "",      cpus_8086,    "",    NULL,         "",      NULL},         0, 0, 512, 640, 128,  europc_init},
@@ -177,11 +183,28 @@ void tandy1k_init()
 {
         TANDY = 1;
         common_init();
-        keyboard_xt_init();
+        keyboard_tandy_init();
         mouse_serial_init();
-        device_add(&sn76489_device);
+        if (romset == ROM_TANDY)
+                device_add(&sn76489_device);
+        else
+                device_add(&ncr8496_device);
         xtide_init();
 	nmi_init();
+	if (romset != ROM_TANDY)
+                device_add(&tandy_eeprom_device);
+}
+void tandy1ksl2_init()
+{
+//        TANDY = 1;
+        common_init();
+        keyboard_tandy_init();
+        mouse_serial_init();
+        device_add(&pssj_device);
+        xtide_init();
+	nmi_init();
+        device_add(&tandy_rom_device);
+        device_add(&tandy_eeprom_device);
 }
 
 void ams_init()

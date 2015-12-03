@@ -120,6 +120,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                 fdc_reset();
                         }
                         motoron = val & 0x01;
+                        fdc.drive = 0;
 /*                        if (motoron)
                                 output = 3;
                         else
@@ -143,6 +144,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
 			timer_process();
                         motoron = (val & 0xf0) ? 1 : 0;
 			timer_update_outstanding();
+                        fdc.drive = val & 3;
                 }
                 fdc.dor=val;
 //                printf("DOR now %02X\n",val);
@@ -299,7 +301,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
         			timer_process();
         			disctime = 1024 * (1 << TIMER_SHIFT);
         			timer_update_outstanding();
-                                fdc.drive = fdc.params[0] & 3;
+//                                fdc.drive = fdc.params[0] & 3;
                                 disc_drivesel = fdc.drive & 1;
                                 fdc_reset_stat = 0;
                                 switch (discint)
@@ -456,7 +458,7 @@ uint8_t fdc_read(uint16_t addr, void *priv)
                 break;
                 case 7: /*Disk change*/
                 if (fdc.dor & (0x10 << (fdc.dor & 1)))
-                   temp = (disc_changed[fdc.dor & 1] || drive_empty[fdc.dor & 1])?0x80:0;
+                   temp = (disc_changed[fdc.drive] || drive_empty[fdc.drive]) ? 0x80 : 0;
                 else
                    temp = 0;
                 if (fdc.dskchg_activelow)  /*PC2086/3086 seem to reverse this bit*/
@@ -626,7 +628,10 @@ void fdc_callback()
                 case 7: /*Recalibrate*/
                 fdc.track[fdc.drive]=0;
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
-                fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                if (fdc.drive <= 1)
+                        fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                else
+                        fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);
@@ -708,7 +713,10 @@ void fdc_callback()
                 fdc.track[fdc.drive]=fdc.params[1];
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
 //                printf("Seeked to track %i %i\n",fdc.track[fdc.drive], fdc.drive);
-                fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                if (fdc.drive <= 1)
+                        fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                else
+                        fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);

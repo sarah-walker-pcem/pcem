@@ -25,6 +25,8 @@ struct
         
         uint8_t pa;        
         uint8_t pb;
+        
+        int tandy;
 } keyboard_xt;
 
 static uint8_t key_queue[16];
@@ -59,7 +61,7 @@ void keyboard_xt_adddata(uint8_t val)
 
 void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
 {
-        pclog("keyboard_xt : write %04X %02X %02X\n", port, val, keyboard_xt.pb);
+//        pclog("keyboard_xt : write %04X %02X %02X\n", port, val, keyboard_xt.pb);
 /*        if (ram[8] == 0xc3) 
         {
                 output = 3;
@@ -67,7 +69,7 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
         switch (port)
         {
                 case 0x61:
-                pclog("keyboard_xt : pb write %02X %02X  %i %02X %i\n", val, keyboard_xt.pb, !(keyboard_xt.pb & 0x40), keyboard_xt.pb & 0x40, (val & 0x40));
+//                pclog("keyboard_xt : pb write %02X %02X  %i %02X %i\n", val, keyboard_xt.pb, !(keyboard_xt.pb & 0x40), keyboard_xt.pb & 0x40, (val & 0x40));
                 if (!(keyboard_xt.pb & 0x40) && (val & 0x40)) /*Reset keyboard*/
                 {
                         pclog("keyboard_xt : reset keyboard\n");
@@ -97,7 +99,7 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
 uint8_t keyboard_xt_read(uint16_t port, void *priv)
 {
         uint8_t temp;
-        pclog("keyboard_xt : read %04X ", port);
+//        pclog("keyboard_xt : read %04X ", port);
         switch (port)
         {
                 case 0x60:
@@ -153,6 +155,8 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                                 temp = 0xD;
                 }
                 temp |= (ppispeakon ? 0x20 : 0);
+                if (keyboard_xt.tandy)
+                        temp |= (tandy_eeprom_read() ? 0x10 : 0);
                 break;
                 
                 default:
@@ -160,7 +164,7 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                 //dumpregs();
                 //exit(-1);
         }
-        pclog("%02X\n", temp);
+//        pclog("%02X\n", temp);
         return temp;
 }
 
@@ -178,6 +182,19 @@ void keyboard_xt_init()
         keyboard_xt_reset();
         keyboard_send = keyboard_xt_adddata;
         keyboard_poll = keyboard_xt_poll;
+        keyboard_xt.tandy = 0;
 
+        timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+}
+
+void keyboard_tandy_init()
+{
+        //return;
+        io_sethandler(0x0060, 0x0004, keyboard_xt_read, NULL, NULL, keyboard_xt_write, NULL, NULL,  NULL);
+        keyboard_xt_reset();
+        keyboard_send = keyboard_xt_adddata;
+        keyboard_poll = keyboard_xt_poll;
+        keyboard_xt.tandy = (romset != ROM_TANDY) ? 1 : 0;
+        
         timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }

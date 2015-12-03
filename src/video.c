@@ -31,6 +31,7 @@
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
 #include "vid_tandy.h"
+#include "vid_tandysl.h"
 #include "vid_tgui9440.h"
 #include "vid_tvga.h"
 #include "vid_vga.h"
@@ -223,7 +224,12 @@ void video_init()
                 return;
                 
                 case ROM_TANDY:
+                case ROM_TANDY1000HX:
                 device_add(&tandy_device);
+                return;
+
+                case ROM_TANDY1000SL2:
+                device_add(&tandysl_device);
                 return;
 
                 case ROM_PC1512:

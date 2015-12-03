@@ -220,15 +220,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 mem = models[temp_model].min_ram;
                         else if (mem > models[temp_model].max_ram)
                                 mem = models[temp_model].max_ram;
-			if ((models[temp_model].is_at && (mem < 1 || mem > 256)) ||
-			    (!models[temp_model].is_at && (mem < 64 || mem > 640)))
-			{
-                                if (models[temp_model].is_at)
-        				MessageBox(NULL, "Invalid memory size\nMemory must be between 1 and 256 MB", "PCem", MB_OK);
-        			else
-        				MessageBox(NULL, "Invalid memory size\nMemory must be between 64 and 640 kB", "PCem", MB_OK);
-				break;
-			}
 			if (models[temp_model].is_at)
                                 mem *= 1024;			
 			

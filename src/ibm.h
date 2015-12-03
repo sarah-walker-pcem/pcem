@@ -300,6 +300,8 @@ enum
         ROM_DTK386,
         ROM_PXXT,
         ROM_JUKOPC,
+        ROM_TANDY1000HX,
+        ROM_TANDY1000SL2,
         ROM_IBMAT,
         ROM_CMDPC30,
         ROM_AMI286,
