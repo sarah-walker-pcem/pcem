@@ -1,10 +1,11 @@
 typedef struct
 {
         void (*seek)(int drive, int track);
-        void (*readsector)(int drive, int sector, int track, int side, int density);
-        void (*writesector)(int drive, int sector, int track, int side, int density);
+        void (*readsector)(int drive, int sector, int track, int side, int density, int sector_size);
+        void (*writesector)(int drive, int sector, int track, int side, int density, int sector_size);
         void (*readaddress)(int drive, int track, int side, int density);
-        void (*format)(int drive, int track, int side, int density);
+        void (*format)(int drive, int track, int side, int density, uint8_t fill);
+        uint8_t (*hole)(int drive);
         void (*stop)();
         void (*poll)();
 } DRIVE;
@@ -20,13 +21,15 @@ void disc_init();
 void disc_reset();
 void disc_poll();
 void disc_seek(int drive, int track);
-void disc_readsector(int drive, int sector, int track, int side, int density);
-void disc_writesector(int drive, int sector, int track, int side, int density);
+void disc_readsector(int drive, int sector, int track, int side, int density, int sector_size);
+void disc_writesector(int drive, int sector, int track, int side, int density, int sector_size);
 void disc_readaddress(int drive, int track, int side, int density);
-void disc_format(int drive, int track, int side, int density);
+void disc_format(int drive, int track, int side, int density, uint8_t fill);
+int disc_hole(int drive);
 void disc_stop(int drive);
 int disc_empty(int drive);
-void disc_set_rate(int rate);
+void disc_set_rate(int drive, int drvden, int rate);
+void disc_set_drivesel(int drive);
 extern int disc_time;
 extern int disc_poll_time;
 extern int disc_drivesel;

@@ -8,7 +8,7 @@
 #include "ibm.h"
 #include "cpu.h"
 #include "device.h"
-#include "disc.h"
+#include "fdd.h"
 #include "model.h"
 #include "resources.h"
 #include "sound.h"
@@ -30,6 +30,8 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
         int temp_dynarec;
         int cpu_flags;
+        int temp_fda_type, temp_fdb_type;
+        
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
@@ -190,13 +192,25 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         EnableWindow(h, FALSE);
                         
                 h = GetDlgItem(hdlg, IDC_COMBODRA);
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k / 3.5\"");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"None");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M");
-                SendMessage(h, CB_SETCURSEL, drive_type[0], 0);
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M Dual RPM");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 720k");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 1.44M");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 1.44M 3-Mode");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 2.88M");
+                SendMessage(h, CB_SETCURSEL, fdd_get_type(0), 0);
                 h = GetDlgItem(hdlg, IDC_COMBODRB);
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k / 3.5\"");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"None");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 360k");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M");
-                SendMessage(h, CB_SETCURSEL, drive_type[1], 0);
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5.25\" 1.2M Dual RPM");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 720k");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 1.44M");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 1.44M 3-Mode");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3.5\" 2.88M");
+                SendMessage(h, CB_SETCURSEL, fdd_get_type(1), 0);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_MB);
                 if (models[model].is_at)
@@ -251,10 +265,16 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_CHECKDYNAREC);
                         temp_dynarec = SendMessage(h, BM_GETCHECK, 0, 0);
 
+                        h = GetDlgItem(hdlg, IDC_COMBODRA);
+                        temp_fda_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        h = GetDlgItem(hdlg, IDC_COMBODRB);
+                        temp_fdb_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        
                         if (temp_model != model || gfx != gfxcard || mem != mem_size ||
                             fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
                             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
-                            temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec)
+                            temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
+			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1))
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -270,6 +290,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         sound_card_current = temp_sound_card_current;
                                         voodoo_enabled = temp_voodoo;
                                         cpu_use_dynarec = temp_dynarec;
+
+					fdd_set_type(0, temp_fda_type);
+					fdd_set_type(1, temp_fdb_type);
                                         
                                         mem_resize();
                                         loadbios();
@@ -297,11 +320,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         cache=SendMessage(h, CB_GETCURSEL, 0, 0);
                         mem_updatecache();
 
-                        h = GetDlgItem(hdlg, IDC_COMBODRA);
-                        drive_type[0] = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        h = GetDlgItem(hdlg, IDC_COMBODRB);
-                        drive_type[1] = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        
                         saveconfig();
 
                         speedchanged();

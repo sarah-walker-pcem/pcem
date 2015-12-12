@@ -16,6 +16,7 @@
 #include "cpu.h"
 #include "dma.h"
 #include "fdc.h"
+#include "fdd.h"
 #include "sound_gus.h"
 #include "ide.h"
 #include "keyboard.h"
@@ -596,8 +597,8 @@ void loadconfig(char *fn)
         if (p) strcpy(ide_fn[3], p);
         else   strcpy(ide_fn[3], "");
 
-        drive_type[0] = config_get_int(NULL, "drive_a_type", 0);
-        drive_type[1] = config_get_int(NULL, "drive_b_type", 0);
+	fdd_set_type(0, config_get_int(NULL, "drive_a_type", 0));
+        fdd_set_type(1, config_get_int(NULL, "drive_b_type", 0));
 }
 
 void saveconfig()
@@ -647,8 +648,8 @@ void saveconfig()
         config_set_int(NULL, "hdf_cylinders", hdc[3].tracks);
         config_set_string(NULL, "hdf_fn", ide_fn[3]);
 
-        config_set_int(NULL, "drive_a_type", drive_type[0]);
-        config_set_int(NULL, "drive_b_type", drive_type[1]);
+        config_set_int(NULL, "drive_a_type", fdd_get_type(0));
+        config_set_int(NULL, "drive_b_type", fdd_get_type(1));
         
         config_save(config_file_default);
 }

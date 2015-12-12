@@ -1,6 +1,7 @@
 #include "ibm.h"
 
 #include "fdc.h"
+#include "fdd.h"
 #include "io.h"
 #include "lpt.h"
 #include "serial.h"
@@ -109,6 +110,11 @@ void fdc37c665_write(uint16_t port, uint8_t val, void *priv)
                                 lpt1_init(0x278);
                                 break;
                         }
+
+			fdc_update_enh_mode((fdc37c665_regs[3] & 2) ? 1 : 0);
+
+			fdc_update_densel_force((fdc37c665_regs[5] & 0x18) >> 3);
+			fdd_swap = ((fdc37c665_regs[5] & 0x20) >> 5);
                 }
         }
         else
@@ -133,6 +139,8 @@ void fdc37c665_init()
 {
         io_sethandler(0x03f0, 0x0002, fdc37c665_read, NULL, NULL, fdc37c665_write, NULL, NULL,  NULL);
 
+        fdc_update_is_nsc(0);
+        
         fdc37c665_lock[0] = fdc37c665_lock[1] = 0;
         fdc37c665_regs[0x0] = 0x3b;
         fdc37c665_regs[0x1] = 0x9f;
@@ -150,4 +158,8 @@ void fdc37c665_init()
         fdc37c665_regs[0xd] = 0x65;
         fdc37c665_regs[0xe] = 0x01;
         fdc37c665_regs[0xf] = 0x00;
+
+	fdc_update_densel_polarity(1);
+	fdc_update_densel_force(0);
+	fdd_swap = 0;
 }

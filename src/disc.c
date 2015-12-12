@@ -5,6 +5,7 @@
 #include "disc_fdi.h"
 #include "disc_img.h"
 #include "fdc.h"
+#include "fdd.h"
 #include "timer.h"
 
 int disc_drivesel = 0;
@@ -57,6 +58,8 @@ loaders[]=
 {
         {"IMG", img_load,       img_close, -1},
         {"IMA", img_load,       img_close, -1},
+        {"360", img_load,       img_close, -1},
+	{"XDF", img_load,       img_close, -1},
         {"FDI", fdi_load,       fdi_close, -1},
         {0,0,0}
 };
@@ -105,6 +108,7 @@ void disc_close(int drive)
         if (loaders[driveloaders[drive]].close) loaders[driveloaders[drive]].close(drive);
         drive_empty[drive] = 1;
         discfns[drive][0] = 0;
+        drives[drive].hole = NULL;
         drives[drive].poll = NULL;
         drives[drive].seek = NULL;
         drives[drive].readsector = NULL;
@@ -115,6 +119,20 @@ void disc_close(int drive)
 
 int disc_notfound=0;
 static int disc_period = 32;
+
+int disc_hole(int drive)
+{
+	drive ^= fdd_swap;
+
+	if (drives[drive].hole)
+	{
+		return drives[drive].hole(drive);
+	}
+	else
+	{
+		return 0;
+	}
+}
 
 void disc_poll()
 {
@@ -131,14 +149,50 @@ void disc_poll()
         }
 }
 
-void disc_set_rate(int rate)
+int disc_get_bitcell_period(int rate)
+{
+        int bit_rate;
+        
+        switch (rate)
+        {
+                case 0: /*High density*/
+                bit_rate = 500;
+                break;
+                case 1: /*Double density (360 rpm)*/
+                bit_rate = 300;
+                break;
+                case 2: /*Double density*/
+                bit_rate = 250;
+                break;
+                case 3: /*Extended density*/
+                bit_rate = 1000;
+                break;
+        }
+        
+        return 1000000 / bit_rate*2; /*Bitcell period in ns*/
+}
+
+
+void disc_set_rate(int drive, int drvden, int rate)
 {
         switch (rate)
         {
                 case 0: /*High density*/
-                case 1: /*High density (360 rpm)*/
                 disc_period = 16;
                 break;
+                case 1:
+		switch(drvden)
+		{
+			case 0: /*Double density (360 rpm)*/
+		                disc_period = 26;
+		                break;
+			case 1: /*High density (360 rpm)*/
+		                disc_period = 16;
+		                break;
+			case 2:
+		                disc_period = 4;
+		                break;
+		}
                 case 2: /*Double density*/
                 disc_period = 32;
                 break;
@@ -167,47 +221,64 @@ void disc_init()
 int oldtrack[2] = {0, 0};
 void disc_seek(int drive, int track)
 {
+//        pclog("disc_seek: drive=%i track=%i\n", drive, track);
         if (drives[drive].seek)
                 drives[drive].seek(drive, track);
 //        if (track != oldtrack[drive])
-                fdc_discchange_clear(drive);
+//                fdc_discchange_clear(drive);
 //        ddnoise_seek(track - oldtrack[drive]);
-        oldtrack[drive] = track;
-        disctime = 5000;
+//        oldtrack[drive] = track;
 }
 
-void disc_readsector(int drive, int sector, int track, int side, int density)
+void disc_readsector(int drive, int sector, int track, int side, int density, int sector_size)
 {
+        drive ^= fdd_swap;
+
         if (drives[drive].readsector)
-                drives[drive].readsector(drive, sector, track, side, density);
+                drives[drive].readsector(drive, sector, track, side, density, sector_size);
         else
                 disc_notfound = 1000;
 }
 
-void disc_writesector(int drive, int sector, int track, int side, int density)
+void disc_writesector(int drive, int sector, int track, int side, int density, int sector_size)
 {
+        drive ^= fdd_swap;
+
         if (drives[drive].writesector)
-                drives[drive].writesector(drive, sector, track, side, density);
+                drives[drive].writesector(drive, sector, track, side, density, sector_size);
         else
                 disc_notfound = 1000;
 }
 
 void disc_readaddress(int drive, int track, int side, int density)
 {
+        drive ^= fdd_swap;
+
         if (drives[drive].readaddress)
                 drives[drive].readaddress(drive, track, side, density);
 }
 
-void disc_format(int drive, int track, int side, int density)
+void disc_format(int drive, int track, int side, int density, uint8_t fill)
 {
+        drive ^= fdd_swap;
+        
         if (drives[drive].format)
-                drives[drive].format(drive, track, side, density);
+                drives[drive].format(drive, track, side, density, fill);
         else
                 disc_notfound = 1000;
 }
 
 void disc_stop(int drive)
 {
+        drive ^= fdd_swap;
+        
         if (drives[drive].stop)
                 drives[drive].stop(drive);
+}
+
+void disc_set_drivesel(int drive)
+{
+        drive ^= fdd_swap;
+        
+        disc_drivesel = drive;
 }

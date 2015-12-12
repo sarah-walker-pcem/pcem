@@ -22,7 +22,7 @@ static uint8_t fdi_timing[256*1024];
 static int fdi_pos;
 static int fdi_revs;
 
-static int fdi_sector, fdi_track,   fdi_side,    fdi_drive, fdi_density;
+static int fdi_sector, fdi_track,   fdi_side,    fdi_drive, fdi_density, fdi_n;
 static int fdi_inread, fdi_inwrite, fdi_readpos, fdi_inreadaddr;
 
 static uint16_t CRCTable[256];
@@ -62,6 +62,19 @@ void fdi_init()
         fdi_setupcrc(0x1021, 0xcdb4);
 }
 
+int fdi_hole(int drive)
+{
+	switch (fdi2raw_get_bit_rate(fdi[drive].h))
+	{
+		case 1000:
+			return 2;
+		case 500:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
 void fdi_load(int drive, char *fn)
 {
         writeprot[drive] = fwriteprot[drive] = 1;
@@ -76,6 +89,7 @@ void fdi_load(int drive, char *fn)
         drives[drive].readsector  = fdi_readsector;
         drives[drive].writesector = fdi_writesector;
         drives[drive].readaddress = fdi_readaddress;
+        drives[drive].hole        = fdi_hole;
         drives[drive].poll        = fdi_poll;
         drives[drive].format      = fdi_format;
         drives[drive].stop        = fdi_stop;
@@ -137,12 +151,13 @@ void fdi_writeback(int drive, int track)
         return;
 }
 
-void fdi_readsector(int drive, int sector, int track, int side, int rate)
+void fdi_readsector(int drive, int sector, int track, int side, int rate, int sector_size)
 {
         fdi_revs = 0;
         fdi_sector = sector;
         fdi_track  = track;
         fdi_side   = side;
+	fdi_n = sector_size;
         fdi_drive  = drive;
         if (rate == 2)
                 fdi_density = 1;
@@ -161,12 +176,13 @@ void fdi_readsector(int drive, int sector, int track, int side, int rate)
         fdi_readpos = 0;
 }
 
-void fdi_writesector(int drive, int sector, int track, int side, int rate)
+void fdi_writesector(int drive, int sector, int track, int side, int rate, int sector_size)
 {
         fdi_revs = 0;
         fdi_sector = sector;
         fdi_track  = track;
         fdi_side   = side;
+	fdi_n = sector_size;
         fdi_drive  = drive;
         if (rate == 2)
                 fdi_density = 1;
@@ -202,7 +218,7 @@ void fdi_readaddress(int drive, int track, int side, int rate)
         fdi_readpos    = 0;
 }
 
-void fdi_format(int drive, int track, int side, int rate)
+void fdi_format(int drive, int track, int side, int rate, uint8_t fill)
 {
         fdi_revs = 0;
         fdi_track = track;
@@ -324,7 +340,7 @@ void fdi_poll()
                                 if (!pollbytesleft)
                                 {
 //                                        pclog("Header over %i,%i %i,%i\n", fdi_sectordat[0], fdi_sectordat[2], fdi_track, fdi_sector);
-                                        if ((fdi_sectordat[0] == fdi_track && (fdi_sectordat[2] == fdi_sector || fdi_sector == SECTOR_NEXT)) || fdi_inreadaddr)
+                                        if ((fdi_sectordat[0] == fdi_track && (fdi_sectordat[3] == fdi_n) && (fdi_sectordat[2] == fdi_sector || fdi_sector == SECTOR_NEXT)) || fdi_inreadaddr)
                                         {
                                                 crc = (fdi_density) ? 0xcdb4 : 0xffff;
                                                 calccrc(0xFE);

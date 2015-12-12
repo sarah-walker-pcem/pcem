@@ -9,3 +9,15 @@ void fdc_abort();
 void fdc_discchange_clear(int drive);
 void fdc_set_dskchg_activelow();
 void fdc_3f1_enable(int enable);
+int fdc_get_bitcell_period();
+
+/* A few functions to communicate between Super I/O chips and the FDC. */
+void fdc_update_is_nsc(int is_nsc);
+void fdc_update_enh_mode(int enh_mode);
+int fdc_get_rwc(int drive);
+void fdc_update_rwc(int drive, int rwc);
+int fdc_get_boot_drive();
+void fdc_update_boot_drive(int boot_drive);
+void fdc_update_densel_polarity(int densel_polarity);
+void fdc_update_densel_force(int densel_force);
+void fdc_update_drvrate(int drive, int drvrate);
