@@ -14,6 +14,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "ibm.h"
+#include "cdrom-ioctl.h"
+#include "cdrom-iso.h"
 #include "config.h"
 #include "video.h"
 #include "resources.h"
@@ -552,8 +554,13 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
         if (!cdrom_enabled)
            CheckMenuItem(menu, IDM_CDROM_DISABLED, MF_CHECKED);
-        else           
-           CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
+        else         
+        {
+        	if (cdrom_drive == CDROM_ISO)
+			CheckMenuItem(menu, IDM_CDROM_ISO, MF_CHECKED);
+		else
+			CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
+	}  
         if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
@@ -827,6 +834,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
         HMENU hmenu;
         RECT rect;
+        char temp_iso_path[1024];
 //        pclog("Message %i %08X\n",message,message);
         switch (message)
         {
@@ -973,9 +981,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
                                    break;
                         }   
+                        atapi->exit();
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_CHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY,              MF_UNCHECKED);
+                        CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
                         if (cdrom_enabled)
                         {
                                 pause = 1;
@@ -997,6 +1007,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         ioctl_open(0);
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
+                        CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
                         cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY, MF_CHECKED);
                         saveconfig();
@@ -1010,6 +1021,36 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 pause = 0;
                         }
                         break;
+
+                        case IDM_CDROM_ISO:
+                        if (!getfile(hwnd,"CD-ROM image (*.ISO)\0*.ISO\0All files (*.*)\0*.*\0",iso_path))
+                        {
+                                if (!cdrom_enabled)
+                                {
+                                        if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
+                                           break;
+                                }
+				atapi->exit();
+				strcpy(temp_iso_path, openfilestring);
+                                CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
+				cdrom_drive = CDROM_ISO;
+				iso_open(temp_iso_path);
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO, MF_CHECKED);
+                                saveconfig();
+                                if (!cdrom_enabled)
+                                {
+                                        pause = 1;
+                                        Sleep(100);
+                                        cdrom_enabled = 1;
+                                        saveconfig();
+                                        resetpchard();
+                                        pause = 0;
+                                }
+                        }
+			break;
+
                         default:
                         if (LOWORD(wParam)>=IDM_CDROM_REAL && LOWORD(wParam)<(IDM_CDROM_REAL+100))
                         {
@@ -1022,6 +1063,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 ioctl_open(LOWORD(wParam)-IDM_CDROM_REAL);
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                                 CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
                                 cdrom_drive = LOWORD(wParam) - IDM_CDROM_REAL;
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
                                 saveconfig();

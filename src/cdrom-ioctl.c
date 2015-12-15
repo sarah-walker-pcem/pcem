@@ -531,13 +531,18 @@ int ioctl_open(char d)
         {
                 ioctl_inited=1;
                 CloseHandle(hIOCTL);
+                hIOCTL = NULL;
         }
         return 0;
 }
 
 static void ioctl_close(void)
 {
-        CloseHandle(hIOCTL);
+        if (hIOCTL)
+        {
+                CloseHandle(hIOCTL);
+                hIOCTL = NULL;
+        }
 }
 
 static void ioctl_exit(void)
@@ -545,6 +550,7 @@ static void ioctl_exit(void)
         ioctl_stop();
         ioctl_inited=0;
         tocvalid=0;
+        ioctl_close();
 }
 
 static ATAPI ioctl_atapi=

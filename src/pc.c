@@ -7,6 +7,7 @@
 #include "ali1429.h"
 #include "amstrad.h"
 #include "cdrom-ioctl.h"
+#include "cdrom-iso.h"
 #include "disc.h"
 #include "mem.h"
 #include "x86_ops.h"
@@ -272,7 +273,16 @@ void initpc(int argc, char *argv[])
 	        cdrom_null_open(cdrom_drive);	
 	else
 #endif
-	        ioctl_open(cdrom_drive);
+	{
+		if (cdrom_drive == CDROM_ISO)
+		{
+			iso_open(iso_path);
+		}
+		else
+		{
+			ioctl_open(cdrom_drive);
+		}
+	}
         
         pit_reset();        
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
@@ -286,7 +296,16 @@ void initpc(int argc, char *argv[])
 	        cdrom_null_reset();	
 	else
 #endif
-	        ioctl_reset();
+	{
+		if (cdrom_drive == CDROM_ISO)
+		{
+			iso_reset();
+		}
+		else
+		{
+			ioctl_reset();
+		}
+	}
 }
 
 void resetpc()
@@ -356,7 +375,16 @@ void resetpchard()
 	        cdrom_null_reset();	
 	else
 #endif
-	        ioctl_reset();
+	{
+		if (cdrom_drive == CDROM_ISO)
+		{
+			iso_reset();
+		}
+		else
+		{
+			ioctl_reset();
+		}
+	}
 }
 
 char romsets[17][40]={"IBM PC","IBM XT","Generic Turbo XT","Euro PC","Tandy 1000","Amstrad PC1512","Sinclair PC200","Amstrad PC1640","IBM AT","AMI 286 clone","Dell System 200","Misc 286","IBM AT 386","Misc 386","386 clone","486 clone","486 clone 2"};
@@ -562,6 +590,10 @@ void loadconfig(char *fn)
 
         cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
+
+        p = (char *)config_get_string(NULL, "cdrom_path", "");
+        if (p) strcpy(iso_path, p);
+        else   strcpy(iso_path, "");
         
         slowega = config_get_int(NULL, "slow_video", 1);
         cache = config_get_int(NULL, "cache", 3);
@@ -626,6 +658,7 @@ void saveconfig()
         config_set_int(NULL, "mem_size", mem_size);
         config_set_int(NULL, "cdrom_drive", cdrom_drive);
         config_set_int(NULL, "cdrom_enabled", cdrom_enabled);
+        config_set_string(NULL, "cdrom_path", iso_path);
         config_set_int(NULL, "vid_resize", vid_resize);
         config_set_int(NULL, "vid_api", vid_api);
         config_set_int(NULL, "video_fullscreen_scale", video_fullscreen_scale);

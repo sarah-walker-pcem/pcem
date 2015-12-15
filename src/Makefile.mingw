@@ -3,7 +3,7 @@ CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
 CFLAGS = -O3 -march=i686 -fomit-frame-pointer
-OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o \
+OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-iso.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_pentium.o codegen_x86.o compaq.o config.o cpu.o dac.o \
 	device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o headland.o i430lx.o i430fx.o \
 	i430vx.o ide.o intel.o intel_flash.o io.o jim.o keyboard.o keyboard_amstrad.o keyboard_at.o \
