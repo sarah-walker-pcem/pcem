@@ -144,7 +144,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
         }
         else
         {
-                if ((sn76489->firstdat & 0x70) == 0x60)
+                if ((sn76489->firstdat & 0x70) == 0x60 && (sn76489->type == SN76496))
                 {
                         if ((data & 4) != (sn76489->noise & 4) || sn76489->type == SN76496)
                                 sn76489->shift = 0x4000;
@@ -154,7 +154,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         if (!sn76489->latch[0])
                                 sn76489->latch[0] = 1024 << 6;
                 }
-                else
+                else if ((sn76489->firstdat & 0x70) != 0x60)
                 {
                         sn76489->freqhi[sn76489->lasttone] = data & 0x7F;
                         freq = sn76489->freqlo[sn76489->lasttone] | (sn76489->freqhi[sn76489->lasttone] << 4);
