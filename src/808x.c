@@ -1682,66 +1682,79 @@ void execx86(int cycs)
                         break;
 
 
+			case 0x60: /*JO alias*/
                         case 0x70: /*JO*/
                         offset=(int8_t)FETCH();
                         if (flags&V_FLAG) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x61: /*JNO alias*/
                         case 0x71: /*JNO*/
                         offset=(int8_t)FETCH();
                         if (!(flags&V_FLAG)) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x62: /*JB alias*/
                         case 0x72: /*JB*/
                         offset=(int8_t)FETCH();
                         if (flags&C_FLAG) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x63: /*JNB alias*/
                         case 0x73: /*JNB*/
                         offset=(int8_t)FETCH();
                         if (!(flags&C_FLAG)) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x64: /*JE alias*/
                         case 0x74: /*JE*/
                         offset=(int8_t)FETCH();
                         if (flags&Z_FLAG) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x65: /*JNE alias*/
                         case 0x75: /*JNE*/
                         offset=(int8_t)FETCH();
                         cycles-=4;
                         if (!(flags&Z_FLAG)) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         break;
+			case 0x66: /*JBE alias*/
                         case 0x76: /*JBE*/
                         offset=(int8_t)FETCH();
                         if (flags&(C_FLAG|Z_FLAG)) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x67: /*JNBE alias*/
                         case 0x77: /*JNBE*/
                         offset=(int8_t)FETCH();
                         if (!(flags&(C_FLAG|Z_FLAG))) { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x68: /*JS alias*/
                         case 0x78: /*JS*/
                         offset=(int8_t)FETCH();
                         if (flags&N_FLAG)  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x69: /*JNS alias*/
                         case 0x79: /*JNS*/
                         offset=(int8_t)FETCH();
                         if (!(flags&N_FLAG))  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6A: /*JP alias*/
                         case 0x7A: /*JP*/
                         offset=(int8_t)FETCH();
                         if (flags&P_FLAG)  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6B: /*JNP alias*/
                         case 0x7B: /*JNP*/
                         offset=(int8_t)FETCH();
                         if (!(flags&P_FLAG))  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6C: /*JL alias*/
                         case 0x7C: /*JL*/
                         offset=(int8_t)FETCH();
                         temp=(flags&N_FLAG)?1:0;
@@ -1749,6 +1762,7 @@ void execx86(int cycs)
                         if (temp!=temp2)  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6D: /*JNL alias*/
                         case 0x7D: /*JNL*/
                         offset=(int8_t)FETCH();
                         temp=(flags&N_FLAG)?1:0;
@@ -1756,6 +1770,7 @@ void execx86(int cycs)
                         if (temp==temp2)  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6E: /*JLE alias*/
                         case 0x7E: /*JLE*/
                         offset=(int8_t)FETCH();
                         temp=(flags&N_FLAG)?1:0;
@@ -1763,6 +1778,7 @@ void execx86(int cycs)
                         if ((flags&Z_FLAG) || (temp!=temp2))  { pc+=offset; cycles-=12; FETCHCLEAR(); }
                         cycles-=4;
                         break;
+			case 0x6F: /*JNLE alias*/
                         case 0x7F: /*JNLE*/
                         offset=(int8_t)FETCH();
                         temp=(flags&N_FLAG)?1:0;
@@ -2290,6 +2306,7 @@ void execx86(int cycs)
                         cycles-=4;
                         break;
 
+			case 0xC0: /*RET alias*/
                         case 0xC2: /*RET*/
                         tempw=getword();
                         if (ssegs) ss=oldss;
@@ -2300,6 +2317,7 @@ void execx86(int cycs)
                         cycles-=24;
                         FETCHCLEAR();
                         break;
+			case 0xC1: /*RET alias*/
                         case 0xC3: /*RET*/
                         if (ssegs) ss=oldss;
                         pc=readmemw(ss,SP);
@@ -2337,6 +2355,7 @@ void execx86(int cycs)
                         cycles-=((mod==3)?4:14);
                         break;
 
+			case 0xC8: /*RETF alias*/
                         case 0xCA: /*RETF*/
                         tempw=getword();
                         if (ssegs) ss=oldss;
@@ -2348,6 +2367,7 @@ void execx86(int cycs)
                         cycles-=33;
                         FETCHCLEAR();
                         break;
+			case 0xC9: /*RETF alias*/
                         case 0xCB: /*RETF*/
                         if (ssegs) ss=oldss;
                         pc=readmemw(ss,SP);
@@ -2971,6 +2991,7 @@ void execx86(int cycs)
                         break;
 
                         case 0xF0: /*LOCK*/
+			case 0xF1: /*LOCK alias*/
                         cycles-=4;
                         break;
 
