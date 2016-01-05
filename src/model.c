@@ -111,7 +111,7 @@ MODEL models[] =
 /*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0, 1,  1, 256, 1, at_um8881f_init},*/
         {"Award SiS 496/497",   ROM_SIS496,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0, 1,   1, 256, 1,      at_sis496_init},
         {"Intel Premiere/PCI",  ROM_REVENGE,     { "Intel", cpus_Pentium5V, "",  NULL,         "",      NULL},         0, 1,   1, 128, 1,      at_batman_init},
-        {"Intel Advanced/EV",   ROM_ENDEAVOR,    { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0, 1,   1, 128, 1,    at_endeavor_init},
+        {"Intel Advanced/EV",   ROM_ENDEAVOR,    { "Intel", cpus_PentiumS5, "IDT", cpus_WinChip, "",      NULL},         0, 1,   1, 128, 1,    at_endeavor_init},
         {"Award 430VX PCI",     ROM_430VX,       { "Intel", cpus_Pentium, "IDT", cpus_WinChip, "",      NULL},         0, 1,   1, 256, 1,      at_i430vx_init},
         {"", -1, {"", 0, "", 0, "", 0}, 0,0,0, 0}
 };

@@ -65,6 +65,7 @@ extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
 extern CPU cpus_WinChip[];
 extern CPU cpus_Pentium5V[];
+extern CPU cpus_PentiumS5[];
 extern CPU cpus_Pentium[];
 
 extern CPU cpus_pcjr[];
