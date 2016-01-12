@@ -2,7 +2,7 @@ VPATH = . dosbox resid-fp
 CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
-CFLAGS = -O3 -march=i686 -fomit-frame-pointer
+CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-iso.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_pentium.o codegen_x86.o compaq.o config.o cpu.o dac.o \
 	device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o headland.o i430lx.o i430fx.o \
@@ -22,7 +22,7 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	win-ddraw-fs.o win-deviceconfig.o win-hdconf.o win-joystick.o win-keyboard.o win-midi.o win-mouse.o \
 	win-status.o win-time.o win-video.o x86seg.o x87.o xtide.o pc.res
 FMOBJ = dbopl.o
-SIDOBJ = convolve.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
+SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 
 LIBS = -mwindows -lwinmm -lalut -lopenal32 -lddraw -ldinput -ldxguid -ld3d9 -lstdc++

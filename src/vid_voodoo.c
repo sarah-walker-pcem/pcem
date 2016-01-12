@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stddef.h>
 #include "ibm.h"
 #include "device.h"
 #include "mem.h"
@@ -32,11 +33,12 @@ typedef union int_float
 
 typedef struct rgb_t
 {
-        uint8_t r, g, b;
+        uint8_t b, g, r;
+        uint8_t pad;
 } rgb_t;
 typedef struct rgba8_t
 {
-        uint8_t r, g, b, a;
+        uint8_t b, g, r, a;
 } rgba8_t;
 
 typedef union rgba_u
@@ -85,7 +87,7 @@ typedef struct
         uint32_t val;
 } fifo_entry_t;
 
-static rgba8_t rgb332[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000];
+static rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
 
 typedef struct voodoo_params_t
 {
@@ -95,17 +97,17 @@ typedef struct voodoo_params_t
 
         uint32_t startR, startG, startB, startZ, startA;
         
-         int32_t dRdX, dGdX, dBdX, dZdX, dAdX;
+         int32_t dBdX, dGdX, dRdX, dAdX, dZdX;
         
-         int32_t dRdY, dGdY, dBdY, dZdY, dAdY;
+         int32_t dBdY, dGdY, dRdY, dAdY, dZdY;
 
         int64_t startW, dWdX, dWdY;
 
         struct
         {
-                int64_t startS, dSdX, dSdY;
-                int64_t startT, dTdX, dTdY;
-                int64_t startW, dWdX, dWdY;
+                int64_t startS, startT, startW, p1;
+                int64_t dSdX, dTdX, dWdX, p2;
+                int64_t dSdY, dTdY, dWdY, p3;
         } tmu[1];
 
         uint32_t color0, color1;
@@ -125,6 +127,7 @@ typedef struct voodoo_params_t
         uint32_t zaColor;
         
         int chromaKey_r, chromaKey_g, chromaKey_b;
+        uint32_t chromaKey;
 
         uint32_t textureMode;
         uint32_t tLOD;
@@ -134,6 +137,7 @@ typedef struct voodoo_params_t
         uint32_t tex_base[LOD_MAX+1];
         int tex_width;
         int tex_w_mask[LOD_MAX+1];
+        int tex_w_nmask[LOD_MAX+1];
         int tex_h_mask[LOD_MAX+1];
         int tex_shift[LOD_MAX+1];
         
@@ -282,6 +286,9 @@ typedef struct voodoo_t
 
         /* the voodoo adds purple lines for some reason */
         uint16_t purpleline[1024];
+
+        int use_recompiler;        
+        void *codegen_data;
 } voodoo_t;
 
 enum
@@ -896,6 +903,7 @@ static void voodoo_recalc_tex(voodoo_t *voodoo)
                         shift = 0;
                 voodoo->params.tex_base[lod] = base;
                 voodoo->params.tex_w_mask[lod] = width - 1;
+                voodoo->params.tex_w_nmask[lod] = ~(width - 1);
                 voodoo->params.tex_h_mask[lod] = height - 1;
                 voodoo->params.tex_shift[lod] = shift;
 //                pclog("LOD%i base=%08x %i-%i %i,%i wm=%02x hm=%02x sh=%i\n", lod, base, lod_min, lod_max, width, height, voodoo->params.tex_w_mask[lod], voodoo->params.tex_h_mask[lod], voodoo->params.tex_shift[lod]);
@@ -928,7 +936,7 @@ typedef struct voodoo_state_t
         int dx1, dx2;
         int y, yend, ydir;
         int32_t dxAB, dxAC, dxBC;
-        int tex_r, tex_g, tex_b, tex_a;
+        int tex_b, tex_g, tex_r, tex_a;
         int tex_s, tex_t;
         int clamp_s, clamp_t;
 
@@ -943,6 +951,22 @@ typedef struct voodoo_state_t
         int *tex_w_mask;
         int *tex_h_mask;
         int *tex_shift;
+
+        uint16_t *fb_mem, *aux_mem;
+
+        int32_t ib, ig, ir, ia;
+        int32_t z;
+        
+        int32_t new_depth;
+
+        int64_t tmu0_s, tmu0_t;
+        int64_t tmu0_w;
+        int64_t w;
+        
+        int pixel_count;
+        int x, x2;
+        
+        uint32_t w_depth;
 } voodoo_state_t;
 
 static int voodoo_output = 0;
@@ -1428,7 +1452,7 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
                 }                                       \
         } while (0)
 
-#define APPLY_FOG(src_r, src_g, src_b)                                  \
+#define APPLY_FOG(src_r, src_g, src_b, z, ia)                           \
         do                                                              \
         {                                                               \
                 if (params->fogMode & FOG_CONSTANT)                     \
@@ -1679,6 +1703,13 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 #define dither ( params->fbzMode & FBZ_DITHER)
 #define dither2x2 (params->fbzMode & FBZ_DITHER_2x2)
 
+#if (defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32) && !(defined __amd64__)
+#include "vid_voodoo_codegen_x86.h"
+#else
+#define NO_CODEGEN
+static int voodoo_recomp = 0;
+#endif
+
 static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, voodoo_state_t *state, int ystart, int yend, int odd_even)
 {
 /*        int rgb_sel                 = params->fbzColorPath & 3;
@@ -1706,6 +1737,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         int depth_op = (params->fbzMode >> 5) & 7;
         int dither = params->fbzMode & FBZ_DITHER;*/
         int c;
+        uint8_t (*voodoo_draw)(voodoo_state_t *state, voodoo_params_t *params, int x, int real_y);
         
         state->clamp_s = params->textureMode & TEXTUREMODE_TCLAMPS;
         state->clamp_t = params->textureMode & TEXTUREMODE_TCLAMPT;
@@ -1748,25 +1780,32 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
         state->y = ystart;
 //        yend--;
+
+#ifndef NO_CODEGEN
+        if (voodoo->use_recompiler)
+                voodoo_draw = voodoo_get_block(voodoo, params, state, odd_even);
+#endif
+              
         if (voodoo_output)
                 pclog("dxAB=%08x dxBC=%08x dxAC=%08x\n", state->dxAB, state->dxBC, state->dxAC);
 //        pclog("Start %i %i\n", ystart, voodoo->fbzMode & (1 << 17));
         for (; state->y < yend; state->y++)
         {
-                int x, x2;// = state->xstart, x2 = state->xend;
+                int x, x2;
                 int real_y = (state->y << 4) + 8;
                 int start_x, start_x2;
                 int dx;
-                int32_t ir = state->base_r;
-                int32_t ig = state->base_g;
-                int32_t ib = state->base_b;
-                int32_t ia = state->base_a;
-                int32_t z = state->base_z;
-                int64_t tmu0_s = state->tmu[0].base_s;
-                int64_t tmu0_t = state->tmu[0].base_t;
-                int64_t tmu0_w = state->tmu[0].base_w;
-                int64_t w = state->base_w;
                 uint16_t *fb_mem, *aux_mem;
+
+                state->ir = state->base_r;
+                state->ig = state->base_g;
+                state->ib = state->base_b;
+                state->ia = state->base_a;
+                state->z = state->base_z;
+                state->tmu0_s = state->tmu[0].base_s;
+                state->tmu0_t = state->tmu[0].base_t;
+                state->tmu0_w = state->tmu[0].base_w;
+                state->w = state->base_w;
 
                 x = (state->vertexAx << 12) + ((state->dxAC * (real_y - state->vertexAy)) >> 4);
 
@@ -1795,20 +1834,20 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                 x2 = (x2 + 0x7000) >> 16;
 
                 if (voodoo_output)
-                        pclog("%03i:%03i : Ax=%08x start_x=%08x  dSdX=%016llx dx=%08x  s=%08x -> ", x, state->y, state->vertexAx << 8, start_x, params->tmu[0].dTdX, dx, tmu0_t);
+                        pclog("%03i:%03i : Ax=%08x start_x=%08x  dSdX=%016llx dx=%08x  s=%08x -> ", x, state->y, state->vertexAx << 8, start_x, params->tmu[0].dTdX, dx, state->tmu0_t);
                         
-                ir += (params->dRdX * dx);
-                ig += (params->dGdX * dx);
-                ib += (params->dBdX * dx);
-                ia += (params->dAdX * dx);
-                z += (params->dZdX * dx);
-                tmu0_s += (params->tmu[0].dSdX * dx);
-                tmu0_t += (params->tmu[0].dTdX * dx);
-                tmu0_w += (params->tmu[0].dWdX * dx);
-                w += (params->dWdX * dx);
+                state->ir += (params->dRdX * dx);
+                state->ig += (params->dGdX * dx);
+                state->ib += (params->dBdX * dx);
+                state->ia += (params->dAdX * dx);
+                state->z += (params->dZdX * dx);
+                state->tmu0_s += (params->tmu[0].dSdX * dx);
+                state->tmu0_t += (params->tmu[0].dTdX * dx);
+                state->tmu0_w += (params->tmu[0].dWdX * dx);
+                state->w += (params->dWdX * dx);
 
                 if (voodoo_output)
-                        pclog("%08llx %lli %lli\n", tmu0_t, tmu0_t >> (18+state->lod), (tmu0_t + (1 << 17+state->lod)) >> (18+state->lod));
+                        pclog("%08llx %lli %lli\n", state->tmu0_t, state->tmu0_t >> (18+state->lod), (state->tmu0_t + (1 << 17+state->lod)) >> (18+state->lod));
 
                 if (params->fbzMode & 1)
                 {
@@ -1818,15 +1857,15 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 {
                                         int dx = params->clipLeft - x;
 
-                                        ir += params->dRdX*dx;
-                                        ig += params->dGdX*dx;
-                                        ib += params->dBdX*dx;
-                                        ia += params->dAdX*dx;
-                                        z += params->dZdX*dx;
-                                        tmu0_s += params->tmu[0].dSdX*dx;
-                                        tmu0_t += params->tmu[0].dTdX*dx;
-                                        tmu0_w += params->tmu[0].dWdX*dx;
-                                        w += params->dWdX*dx;
+                                        state->ir += params->dRdX*dx;
+                                        state->ig += params->dGdX*dx;
+                                        state->ib += params->dBdX*dx;
+                                        state->ia += params->dAdX*dx;
+                                        state->z += params->dZdX*dx;
+                                        state->tmu0_s += params->tmu[0].dSdX*dx;
+                                        state->tmu0_t += params->tmu[0].dTdX*dx;
+                                        state->tmu0_w += params->tmu[0].dWdX*dx;
+                                        state->w += params->dWdX*dx;
                                         
                                         x = params->clipLeft;
                                 }
@@ -1839,15 +1878,15 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 {
                                         int dx = params->clipRight - x;
 
-                                        ir += params->dRdX*dx;
-                                        ig += params->dGdX*dx;
-                                        ib += params->dBdX*dx;
-                                        ia += params->dAdX*dx;
-                                        z += params->dZdX*dx;
-                                        tmu0_s += params->tmu[0].dSdX*dx;
-                                        tmu0_t += params->tmu[0].dTdX*dx;
-                                        tmu0_w += params->tmu[0].dWdX*dx;
-                                        w += params->dWdX*dx;
+                                        state->ir += params->dRdX*dx;
+                                        state->ig += params->dGdX*dx;
+                                        state->ib += params->dBdX*dx;
+                                        state->ia += params->dAdX*dx;
+                                        state->z += params->dZdX*dx;
+                                        state->tmu0_s += params->tmu[0].dSdX*dx;
+                                        state->tmu0_t += params->tmu[0].dTdX*dx;
+                                        state->tmu0_w += params->tmu[0].dWdX*dx;
+                                        state->w += params->dWdX*dx;
                                         
                                         x = params->clipRight;
                                 }
@@ -1861,19 +1900,30 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                 if (x2 > x && state->xdir < 0)
                         goto next_line;
 
-                fb_mem = &voodoo->fb_mem[params->draw_offset + (real_y * voodoo->row_width)];
-                aux_mem = &voodoo->fb_mem[params->aux_offset + (real_y * voodoo->row_width)];
+                state->fb_mem = fb_mem = &voodoo->fb_mem[params->draw_offset + (real_y * voodoo->row_width)];
+                state->aux_mem = aux_mem = &voodoo->fb_mem[params->aux_offset + (real_y * voodoo->row_width)];
                 
                 if (voodoo_output)
                         pclog("%03i: x=%08x x2=%08x xstart=%08x xend=%08x dx=%08x start_x2=%08x\n", state->y, x, x2, state->xstart, state->xend, dx, start_x2);
 
+                state->pixel_count = 0;
+                state->x = x;
+                state->x2 = x2;
+
+#ifndef NO_CODEGEN
+                if (voodoo->use_recompiler)
+                {
+                        voodoo_draw(state, params, x, real_y);
+                }
+                else
+#endif
                 do
                 {
                         start_x = x;
                         voodoo->pixel_count[odd_even]++;
                         voodoo->fbiPixelsIn++;
                         if (voodoo_output)
-                                pclog("  X=%03i T=%08x\n", x, tmu0_t);
+                                pclog("  X=%03i T=%08x\n", x, state->tmu0_t);
 //                        if (voodoo->fbzMode & FBZ_RGB_WMASK)
                         {
                                 int update = 1;
@@ -1887,14 +1937,14 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 int sel;
                                 int32_t new_depth, w_depth;
 
-                                if (w & 0xffff00000000)
+                                if (state->w & 0xffff00000000)
                                         w_depth = 0;
-                                else if (!(w & 0xffff0000))
+                                else if (!(state->w & 0xffff0000))
                                         w_depth = 0xf001;
                                 else
                                 {
-                                        int exp = fls((uint16_t)((uint32_t)w >> 16));
-                                        int mant = ((~(uint32_t)w >> (19 - exp))) & 0xfff;
+                                        int exp = fls((uint16_t)((uint32_t)state->w >> 16));
+                                        int mant = ((~(uint32_t)state->w >> (19 - exp))) & 0xfff;
                                         w_depth = (exp << 12) + mant + 1;
                                         if (w_depth > 0xffff)
                                                 w_depth = 0xffff;
@@ -1905,7 +1955,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 if (params->fbzMode & FBZ_W_BUFFER)
                                         new_depth = w_depth;
                                 else
-                                        new_depth = CLAMP16(z >> 12);
+                                        new_depth = CLAMP16(state->z >> 12);
                                 
                                 if (params->fbzMode & FBZ_DEPTH_ENABLE)
                                 {
@@ -1928,18 +1978,18 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         if (params->textureMode & 1)
                                         {
                                                 int64_t _w = 0;
-                                                if (tmu0_w)
-                                                        _w = (int64_t)((1ULL << 48) / tmu0_w);
+                                                if (state->tmu0_w)
+                                                        _w = (int64_t)((1ULL << 48) / state->tmu0_w);
 
-                                                state->tex_s = (int32_t)(((tmu0_s >> 14) * _w) >> 30);
-                                                state->tex_t = (int32_t)(((tmu0_t >> 14)  * _w) >> 30);
+                                                state->tex_s = (int32_t)(((state->tmu0_s >> 14) * _w) >> 30);
+                                                state->tex_t = (int32_t)(((state->tmu0_t >> 14)  * _w) >> 30);
 //                                        state->lod = state->tmu[0].lod + (int)(log2((double)_w / (double)(1 << 19)) * 256.0);
                                                 state->lod = state->tmu[0].lod + (fastlog(_w) - (19 << 8));
                                         }
                                         else
                                         {
-                                                state->tex_s = (int32_t)(tmu0_s >> (14+14));
-                                                state->tex_t = (int32_t)(tmu0_t >> (14+14));
+                                                state->tex_s = (int32_t)(state->tmu0_s >> (14+14));
+                                                state->tex_t = (int32_t)(state->tmu0_t >> (14+14));
                                                 state->lod = state->tmu[0].lod;
                                         }
                                 
@@ -1980,17 +2030,17 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 }
                                 else
                                 {
-                                        clocal_r = CLAMP(ir >> 12);
-                                        clocal_g = CLAMP(ig >> 12);
-                                        clocal_b = CLAMP(ib >> 12);
+                                        clocal_r = CLAMP(state->ir >> 12);
+                                        clocal_g = CLAMP(state->ig >> 12);
+                                        clocal_b = CLAMP(state->ib >> 12);
                                 }
 
                                 switch (_rgb_sel)
                                 {
                                         case CC_LOCALSELECT_ITER_RGB: /*Iterated RGB*/
-                                        cother_r = CLAMP(ir >> 12);
-                                        cother_g = CLAMP(ig >> 12);
-                                        cother_b = CLAMP(ib >> 12);
+                                        cother_r = CLAMP(state->ir >> 12);
+                                        cother_g = CLAMP(state->ig >> 12);
+                                        cother_b = CLAMP(state->ib >> 12);
                                         break;                                        
 
                                         case CC_LOCALSELECT_TEX: /*TREX Color Output*/
@@ -2015,7 +2065,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 switch (cca_localselect)
                                 {
                                         case CCA_LOCALSELECT_ITER_A:
-                                        alocal = CLAMP(ia >> 12);
+                                        alocal = CLAMP(state->ia >> 12);
                                         break;
 
                                         case CCA_LOCALSELECT_COLOR0:
@@ -2023,7 +2073,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         break;
                                         
                                         case CCA_LOCALSELECT_ITER_Z:
-                                        alocal = CLAMP(z >> 20);
+                                        alocal = CLAMP(state->z >> 20);
                                         break;
                                         
                                         default:
@@ -2034,7 +2084,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 switch (a_sel)
                                 {
                                         case A_SEL_ITER_A:
-                                        aother = CLAMP(ia >> 12);
+                                        aother = CLAMP(state->ia >> 12);
                                         break;
                                         case A_SEL_TEX:
                                         aother = state->tex_a;
@@ -2184,7 +2234,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         src_a ^= 0xff;
 
                                 if (params->fogMode & FOG_ENABLE)
-                                        APPLY_FOG(src_r, src_g, src_b);
+                                        APPLY_FOG(src_r, src_g, src_b, state->z, state->ia);
                                 
                                 if (params->alphaMode & 1)
                                         ALPHA_TEST(src_a);
@@ -2227,31 +2277,34 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 skip_pixel:
                         if (state->xdir > 0)
                         {                                
-                                ir += params->dRdX;
-                                ig += params->dGdX;
-                                ib += params->dBdX;
-                                ia += params->dAdX;
-                                z += params->dZdX;
-                                tmu0_s += params->tmu[0].dSdX;
-                                tmu0_t += params->tmu[0].dTdX;
-                                tmu0_w += params->tmu[0].dWdX;
-                                w += params->dWdX;
+                                state->ir += params->dRdX;
+                                state->ig += params->dGdX;
+                                state->ib += params->dBdX;
+                                state->ia += params->dAdX;
+                                state->z += params->dZdX;
+                                state->tmu0_s += params->tmu[0].dSdX;
+                                state->tmu0_t += params->tmu[0].dTdX;
+                                state->tmu0_w += params->tmu[0].dWdX;
+                                state->w += params->dWdX;
                         }
                         else
                         {                                
-                                ir -= params->dRdX;
-                                ig -= params->dGdX;
-                                ib -= params->dBdX;
-                                ia -= params->dAdX;
-                                z -= params->dZdX;
-                                tmu0_s -= params->tmu[0].dSdX;
-                                tmu0_t -= params->tmu[0].dTdX;
-                                tmu0_w -= params->tmu[0].dWdX;
-                                w -= params->dWdX;
+                                state->ir -= params->dRdX;
+                                state->ig -= params->dGdX;
+                                state->ib -= params->dBdX;
+                                state->ia -= params->dAdX;
+                                state->z -= params->dZdX;
+                                state->tmu0_s -= params->tmu[0].dSdX;
+                                state->tmu0_t -= params->tmu[0].dTdX;
+                                state->tmu0_w -= params->tmu[0].dWdX;
+                                state->w -= params->dWdX;
                         }
 
                         x += state->xdir;
                 } while (start_x != x2);
+
+                voodoo->pixel_count[odd_even] += state->pixel_count;
+                voodoo->fbiPixelsIn += state->pixel_count;
                 
                 if (voodoo->params.draw_offset == voodoo->params.front_offset)
                         voodoo->dirty_line[real_y] = 1;
@@ -2292,9 +2345,10 @@ static void voodoo_triangle(voodoo_t *voodoo, voodoo_params_t *params, int odd_e
         if ((params->vertexAy & 0xf) > 8)
                 dy += 16;
 
-/*        pclog("voodoo_triangle %i %i %i : vA %f, %f  vB %f, %f  vC %f, %f f %i\n", odd_even, voodoo->params_read_idx[odd_even], voodoo->params_read_idx[odd_even] & PARAM_MASK, (float)params->vertexAx / 16.0, (float)params->vertexAy / 16.0, 
+/*        pclog("voodoo_triangle %i %i %i : vA %f, %f  vB %f, %f  vC %f, %f f %i %08x %08x %08x\n", odd_even, voodoo->params_read_idx[odd_even], voodoo->params_read_idx[odd_even] & PARAM_MASK, (float)params->vertexAx / 16.0, (float)params->vertexAy / 16.0, 
                                                                      (float)params->vertexBx / 16.0, (float)params->vertexBy / 16.0, 
-                                                                     (float)params->vertexCx / 16.0, (float)params->vertexCy / 16.0, params->tformat);*/
+                                                                     (float)params->vertexCx / 16.0, (float)params->vertexCy / 16.0, (params->fbzColorPath & FBZCP_TEXTURE_ENABLED) ? params->tformat : 0, params->fbzColorPath, params->alphaMode, params->textureMode);*/
+
         state.base_r = params->startR;
         state.base_g = params->startG;
         state.base_b = params->startB;
@@ -2960,6 +3014,7 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->params.chromaKey_r = (val >> 16) & 0xff;
                 voodoo->params.chromaKey_g = (val >> 8) & 0xff;
                 voodoo->params.chromaKey_b = val & 0xff;
+                voodoo->params.chromaKey = val & 0xffffff;
                 break;
                 
                 case SST_color0:
@@ -3300,7 +3355,7 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                                 int32_t w_depth = new_depth;
                                 int32_t ia = alpha_data << 12;
 
-                                APPLY_FOG(write_data.r, write_data.g, write_data.b);
+                                APPLY_FOG(write_data.r, write_data.g, write_data.b, z, ia);
                         }
 
                         if (params->alphaMode & 1)
@@ -3441,7 +3496,7 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                                 int32_t w_depth = new_depth;
                                 int32_t ia = alpha_data[c] << 12;
 
-                                APPLY_FOG(write_data.r, write_data.g, write_data.b);
+                                APPLY_FOG(write_data.r, write_data.g, write_data.b, z, ia);
                         }
 
                         if (params->alphaMode & 1)
@@ -4227,7 +4282,10 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         pixel_count_current[0] = voodoo->pixel_count[0];
         pixel_count_current[1] = voodoo->pixel_count[1];
         pixel_count_total = (pixel_count_current[0] + pixel_count_current[1]) - (voodoo->pixel_count_old[0] + voodoo->pixel_count_old[1]);
-        sprintf(temps, "%f Mpixels/sec\n%f ktris/sec\n%f%% CPU (%f%% real)\n%d frames/sec\n%f%% CPU (%f%% real)\n%f%% CPU (%f%% real)\n"/*%d reads/sec\n%d write/sec\n%d tex/sec\n*/, (double)pixel_count_total/1000000.0, (double)voodoo->tri_count/1000.0, ((double)voodoo_time * 100.0) / timer_freq, ((double)voodoo_time * 100.0) / status_diff, voodoo->frame_count,
+        sprintf(temps, "%f Mpixels/sec (%f)\n%f ktris/sec\n%f%% CPU (%f%% real)\n%d frames/sec (%i)\n%f%% CPU (%f%% real)\n%f%% CPU (%f%% real)\n"/*%d reads/sec\n%d write/sec\n%d tex/sec\n*/,
+                (double)pixel_count_total/1000000.0,
+                ((double)pixel_count_total/1000000.0) / ((double)voodoo_render_time[0] / status_diff),
+                (double)voodoo->tri_count/1000.0, ((double)voodoo_time * 100.0) / timer_freq, ((double)voodoo_time * 100.0) / status_diff, voodoo->frame_count, voodoo_recomp,
                 ((double)voodoo_render_time[0] * 100.0) / timer_freq, ((double)voodoo_render_time[0] * 100.0) / status_diff,
                 ((double)voodoo_render_time[1] * 100.0) / timer_freq, ((double)voodoo_render_time[1] * 100.0) / status_diff);
         strncat(s, temps, max_len);
@@ -4238,6 +4296,7 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         voodoo->rd_count = voodoo->wr_count = voodoo->tex_count = 0;
         voodoo_time = 0;
         voodoo_render_time[0] = voodoo_render_time[1] = 0;
+        voodoo_recomp = 0;
 }
 
 static void voodoo_speed_changed(void *p)
@@ -4261,7 +4320,9 @@ void *voodoo_init()
         voodoo->fb_mask = (voodoo->fb_size << 20) - 1;
         voodoo->render_threads = device_get_config_int("render_threads");
         voodoo->odd_even_mask = voodoo->render_threads - 1;
-                
+#ifndef NO_CODEGEN
+        voodoo->use_recompiler = device_get_config_int("recompiler");
+#endif                        
         voodoo_generate_filter(voodoo);   /*generate filter lookup tables*/
         
         pci_add(voodoo_pci_read, voodoo_pci_write, voodoo);
@@ -4299,6 +4360,10 @@ void *voodoo_init()
                 rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 2);
                 rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 4);
                 rgb332[c].a = 0xff;
+                
+                ai44[c].a = (c & 0xf0) | ((c & 0xf0) >> 4);
+                ai44[c].r = (c & 0x0f) | ((c & 0x0f) << 4);
+                ai44[c].g = ai44[c].b = ai44[c].r;
         }
                 
         for (c = 0; c < 0x10000; c++)
@@ -4327,8 +4392,15 @@ void *voodoo_init()
                 argb4444[c].r |= (argb4444[c].r >> 4);
                 argb4444[c].g |= (argb4444[c].g >> 4);
                 argb4444[c].b |= (argb4444[c].b >> 4);
+                
+                ai88[c].a = (c >> 8);
+                ai88[c].r = c & 0xff;
+                ai88[c].g = c & 0xff;
+                ai88[c].b = c & 0xff;
         }
-
+#ifndef NO_CODEGEN
+        voodoo_codegen_init(voodoo);
+#endif
         return voodoo;
 }
 
@@ -4341,6 +4413,7 @@ void voodoo_close(void *p)
         fwrite(voodoo->tex_mem, 2048*1024, 1, f);
         fclose(f);
 #endif
+
         thread_kill(voodoo->fifo_thread);
         thread_kill(voodoo->render_thread[0]);
         if (voodoo->render_threads == 2)
@@ -4352,7 +4425,9 @@ void voodoo_close(void *p)
         thread_destroy_event(voodoo->wake_render_thread[1]);
         thread_destroy_event(voodoo->render_not_full_event[0]);
         thread_destroy_event(voodoo->render_not_full_event[1]);
-
+#ifndef NO_CODEGEN
+        voodoo_codegen_close(voodoo);
+#endif
         free(voodoo->fb_mem);
         free(voodoo->tex_mem);
         free(voodoo);
@@ -4432,6 +4507,14 @@ static device_config_t voodoo_config[] =
                 },
                 .default_int = 2
         },
+#ifndef NO_CODEGEN
+        {
+                .name = "recompiler",
+                .description = "Recompiler",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+#endif
         {
                 .type = -1
         }
