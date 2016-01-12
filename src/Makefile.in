@@ -55,29 +55,30 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
 	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-null.c codegen.c \
-	codegen_ops.c codegen_timing_486.c codegen_timing_pentium.c \
-	compaq.c config.c cpu.c dac.c device.c disc.c disc_fdi.c \
-	disc_img.c dma.c fdc.c fdc37c665.c fdi2raw.c gameport.c \
-	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
-	intel_flash.c io.c jim.c keyboard.c keyboard_amstrad.c \
-	keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
-	linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c \
-	mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c opti.c pc.c \
-	pci.c pic.c piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c \
-	sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c \
-	sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c \
-	sound_opl.c sound_pas16.c sound_sb.c sound_sb_dsp.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	codegen.c codegen_ops.c codegen_timing_486.c \
+	codegen_timing_pentium.c compaq.c config.c cpu.c dac.c \
+	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
+	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c headland.c \
+	i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c \
+	jim.c keyboard.c keyboard_amstrad.c keyboard_at.c \
+	keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c linux-time.c \
+	lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c \
+	neat.c nmi.c nvr.c olivetti_m24.c opti.c pc.c pci.c pic.c \
+	piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c sound.c \
+	sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c \
+	sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c \
+	sound_pas16.c sound_pssj.c sound_sb.c sound_sb_dsp.c \
 	sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c \
-	soundopenal.c thread-pthread.c timer.c um8669f.c um8881f.c \
-	vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
-	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
-	vid_ega.c vid_et4000.c vid_et4000w32.c vid_hercules.c \
-	vid_icd2061.c vid_ics2595.c vid_mda.c vid_olivetti_m24.c \
-	vid_oti067.c vid_paradise.c vid_pc200.c vid_pc1512.c \
-	vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c thread-pthread.c \
+	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
+	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
+	vid_cl5429.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_mda.c \
+	vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
+	vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
 	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
-	vid_svga_render.c vid_tandy.c vid_tgui9440.c \
+	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c x86seg.c x87.c xtide.c \
 	sound_dbopl.cc sound_resid.cc dosbox/dbopl.cpp \
@@ -101,14 +102,15 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-allegro-keyboard.$(OBJEXT) pcem-allegro-main.$(OBJEXT) \
 	pcem-allegro-midi.$(OBJEXT) pcem-allegro-mouse.$(OBJEXT) \
 	pcem-allegro-video.$(OBJEXT) pcem-amstrad.$(OBJEXT) \
-	pcem-cdrom-ioctl-linux.$(OBJEXT) pcem-cdrom-null.$(OBJEXT) \
-	pcem-codegen.$(OBJEXT) pcem-codegen_ops.$(OBJEXT) \
-	pcem-codegen_timing_486.$(OBJEXT) \
+	pcem-cdrom-ioctl-linux.$(OBJEXT) pcem-cdrom-iso.$(OBJEXT) \
+	pcem-cdrom-null.$(OBJEXT) pcem-codegen.$(OBJEXT) \
+	pcem-codegen_ops.$(OBJEXT) pcem-codegen_timing_486.$(OBJEXT) \
 	pcem-codegen_timing_pentium.$(OBJEXT) pcem-compaq.$(OBJEXT) \
 	pcem-config.$(OBJEXT) pcem-cpu.$(OBJEXT) pcem-dac.$(OBJEXT) \
 	pcem-device.$(OBJEXT) pcem-disc.$(OBJEXT) \
 	pcem-disc_fdi.$(OBJEXT) pcem-disc_img.$(OBJEXT) \
-	pcem-dma.$(OBJEXT) pcem-fdc.$(OBJEXT) pcem-fdc37c665.$(OBJEXT) \
+	pcem-disc_sector.$(OBJEXT) pcem-dma.$(OBJEXT) \
+	pcem-fdc.$(OBJEXT) pcem-fdc37c665.$(OBJEXT) pcem-fdd.$(OBJEXT) \
 	pcem-fdi2raw.$(OBJEXT) pcem-gameport.$(OBJEXT) \
 	pcem-headland.$(OBJEXT) pcem-i430lx.$(OBJEXT) \
 	pcem-i430fx.$(OBJEXT) pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) \
@@ -130,26 +132,28 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-sound_adlibgold.$(OBJEXT) pcem-sound_cms.$(OBJEXT) \
 	pcem-sound_emu8k.$(OBJEXT) pcem-sound_gus.$(OBJEXT) \
 	pcem-sound_mpu401_uart.$(OBJEXT) pcem-sound_opl.$(OBJEXT) \
-	pcem-sound_pas16.$(OBJEXT) pcem-sound_sb.$(OBJEXT) \
-	pcem-sound_sb_dsp.$(OBJEXT) pcem-sound_sn76489.$(OBJEXT) \
-	pcem-sound_speaker.$(OBJEXT) pcem-sound_ssi2001.$(OBJEXT) \
-	pcem-sound_wss.$(OBJEXT) pcem-soundopenal.$(OBJEXT) \
-	pcem-thread-pthread.$(OBJEXT) pcem-timer.$(OBJEXT) \
-	pcem-um8669f.$(OBJEXT) pcem-um8881f.$(OBJEXT) \
-	pcem-vid_ati_eeprom.$(OBJEXT) pcem-vid_ati_mach64.$(OBJEXT) \
-	pcem-vid_ati18800.$(OBJEXT) pcem-vid_ati28800.$(OBJEXT) \
-	pcem-vid_ati68860_ramdac.$(OBJEXT) pcem-vid_cga.$(OBJEXT) \
-	pcem-vid_cl5429.$(OBJEXT) pcem-vid_ega.$(OBJEXT) \
-	pcem-vid_et4000.$(OBJEXT) pcem-vid_et4000w32.$(OBJEXT) \
-	pcem-vid_hercules.$(OBJEXT) pcem-vid_icd2061.$(OBJEXT) \
-	pcem-vid_ics2595.$(OBJEXT) pcem-vid_mda.$(OBJEXT) \
-	pcem-vid_olivetti_m24.$(OBJEXT) pcem-vid_oti067.$(OBJEXT) \
-	pcem-vid_paradise.$(OBJEXT) pcem-vid_pc200.$(OBJEXT) \
-	pcem-vid_pc1512.$(OBJEXT) pcem-vid_pc1640.$(OBJEXT) \
-	pcem-vid_pcjr.$(OBJEXT) pcem-vid_s3.$(OBJEXT) \
-	pcem-vid_s3_virge.$(OBJEXT) pcem-vid_sdac_ramdac.$(OBJEXT) \
-	pcem-vid_stg_ramdac.$(OBJEXT) pcem-vid_svga.$(OBJEXT) \
-	pcem-vid_svga_render.$(OBJEXT) pcem-vid_tandy.$(OBJEXT) \
+	pcem-sound_pas16.$(OBJEXT) pcem-sound_pssj.$(OBJEXT) \
+	pcem-sound_sb.$(OBJEXT) pcem-sound_sb_dsp.$(OBJEXT) \
+	pcem-sound_sn76489.$(OBJEXT) pcem-sound_speaker.$(OBJEXT) \
+	pcem-sound_ssi2001.$(OBJEXT) pcem-sound_wss.$(OBJEXT) \
+	pcem-soundopenal.$(OBJEXT) pcem-tandy_eeprom.$(OBJEXT) \
+	pcem-tandy_rom.$(OBJEXT) pcem-thread-pthread.$(OBJEXT) \
+	pcem-timer.$(OBJEXT) pcem-um8669f.$(OBJEXT) \
+	pcem-um8881f.$(OBJEXT) pcem-vid_ati_eeprom.$(OBJEXT) \
+	pcem-vid_ati_mach64.$(OBJEXT) pcem-vid_ati18800.$(OBJEXT) \
+	pcem-vid_ati28800.$(OBJEXT) pcem-vid_ati68860_ramdac.$(OBJEXT) \
+	pcem-vid_cga.$(OBJEXT) pcem-vid_cl5429.$(OBJEXT) \
+	pcem-vid_ega.$(OBJEXT) pcem-vid_et4000.$(OBJEXT) \
+	pcem-vid_et4000w32.$(OBJEXT) pcem-vid_hercules.$(OBJEXT) \
+	pcem-vid_icd2061.$(OBJEXT) pcem-vid_ics2595.$(OBJEXT) \
+	pcem-vid_mda.$(OBJEXT) pcem-vid_olivetti_m24.$(OBJEXT) \
+	pcem-vid_oti067.$(OBJEXT) pcem-vid_paradise.$(OBJEXT) \
+	pcem-vid_pc200.$(OBJEXT) pcem-vid_pc1512.$(OBJEXT) \
+	pcem-vid_pc1640.$(OBJEXT) pcem-vid_pcjr.$(OBJEXT) \
+	pcem-vid_s3.$(OBJEXT) pcem-vid_s3_virge.$(OBJEXT) \
+	pcem-vid_sdac_ramdac.$(OBJEXT) pcem-vid_stg_ramdac.$(OBJEXT) \
+	pcem-vid_svga.$(OBJEXT) pcem-vid_svga_render.$(OBJEXT) \
+	pcem-vid_tandy.$(OBJEXT) pcem-vid_tandysl.$(OBJEXT) \
 	pcem-vid_tgui9440.$(OBJEXT) pcem-vid_tkd8001_ramdac.$(OBJEXT) \
 	pcem-vid_tvga.$(OBJEXT) pcem-vid_unk_ramdac.$(OBJEXT) \
 	pcem-vid_vga.$(OBJEXT) pcem-vid_voodoo.$(OBJEXT) \
@@ -291,29 +295,30 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
 	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
 	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-null.c codegen.c \
-	codegen_ops.c codegen_timing_486.c codegen_timing_pentium.c \
-	compaq.c config.c cpu.c dac.c device.c disc.c disc_fdi.c \
-	disc_img.c dma.c fdc.c fdc37c665.c fdi2raw.c gameport.c \
-	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
-	intel_flash.c io.c jim.c keyboard.c keyboard_amstrad.c \
-	keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
-	linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c \
-	mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c opti.c pc.c \
-	pci.c pic.c piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c \
-	sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c \
-	sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c \
-	sound_opl.c sound_pas16.c sound_sb.c sound_sb_dsp.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	codegen.c codegen_ops.c codegen_timing_486.c \
+	codegen_timing_pentium.c compaq.c config.c cpu.c dac.c \
+	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
+	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c headland.c \
+	i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c \
+	jim.c keyboard.c keyboard_amstrad.c keyboard_at.c \
+	keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c linux-time.c \
+	lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c \
+	neat.c nmi.c nvr.c olivetti_m24.c opti.c pc.c pci.c pic.c \
+	piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c sound.c \
+	sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c \
+	sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c \
+	sound_pas16.c sound_pssj.c sound_sb.c sound_sb_dsp.c \
 	sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c \
-	soundopenal.c thread-pthread.c timer.c um8669f.c um8881f.c \
-	vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
-	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
-	vid_ega.c vid_et4000.c vid_et4000w32.c vid_hercules.c \
-	vid_icd2061.c vid_ics2595.c vid_mda.c vid_olivetti_m24.c \
-	vid_oti067.c vid_paradise.c vid_pc200.c vid_pc1512.c \
-	vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c thread-pthread.c \
+	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
+	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
+	vid_cl5429.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_mda.c \
+	vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
+	vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
 	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
-	vid_svga_render.c vid_tandy.c vid_tgui9440.c \
+	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c x86seg.c x87.c xtide.c \
 	sound_dbopl.cc sound_resid.cc dosbox/dbopl.cpp \
@@ -429,6 +434,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-video.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-amstrad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-ioctl-linux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-iso.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-null.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen_ops.Po@am__quote@
@@ -444,9 +450,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_fdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_img.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_sector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc37c665.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdi2raw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-gameport.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-headland.Po@am__quote@
@@ -497,6 +505,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_mpu401_uart.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_opl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_pas16.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_pssj.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sb_dsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sn76489.Po@am__quote@
@@ -504,6 +513,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_ssi2001.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_wss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-soundopenal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-tandy_eeprom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-tandy_rom.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-thread-pthread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-um8669f.Po@am__quote@
@@ -536,6 +547,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_svga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_svga_render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tandy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tandysl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tgui9440.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tkd8001_ramdac.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tvga.Po@am__quote@
@@ -814,6 +826,20 @@ pcem-cdrom-ioctl-linux.obj: cdrom-ioctl-linux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-ioctl-linux.obj `if test -f 'cdrom-ioctl-linux.c'; then $(CYGPATH_W) 'cdrom-ioctl-linux.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-ioctl-linux.c'; fi`
 
+pcem-cdrom-iso.o: cdrom-iso.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-iso.o -MD -MP -MF $(DEPDIR)/pcem-cdrom-iso.Tpo -c -o pcem-cdrom-iso.o `test -f 'cdrom-iso.c' || echo '$(srcdir)/'`cdrom-iso.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-cdrom-iso.Tpo $(DEPDIR)/pcem-cdrom-iso.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom-iso.c' object='pcem-cdrom-iso.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-iso.o `test -f 'cdrom-iso.c' || echo '$(srcdir)/'`cdrom-iso.c
+
+pcem-cdrom-iso.obj: cdrom-iso.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-iso.obj -MD -MP -MF $(DEPDIR)/pcem-cdrom-iso.Tpo -c -o pcem-cdrom-iso.obj `if test -f 'cdrom-iso.c'; then $(CYGPATH_W) 'cdrom-iso.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-iso.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-cdrom-iso.Tpo $(DEPDIR)/pcem-cdrom-iso.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cdrom-iso.c' object='pcem-cdrom-iso.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-iso.obj `if test -f 'cdrom-iso.c'; then $(CYGPATH_W) 'cdrom-iso.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-iso.c'; fi`
+
 pcem-cdrom-null.o: cdrom-null.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-null.o -MD -MP -MF $(DEPDIR)/pcem-cdrom-null.Tpo -c -o pcem-cdrom-null.o `test -f 'cdrom-null.c' || echo '$(srcdir)/'`cdrom-null.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-cdrom-null.Tpo $(DEPDIR)/pcem-cdrom-null.Po
@@ -996,6 +1022,20 @@ pcem-disc_img.obj: disc_img.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_img.obj `if test -f 'disc_img.c'; then $(CYGPATH_W) 'disc_img.c'; else $(CYGPATH_W) '$(srcdir)/disc_img.c'; fi`
 
+pcem-disc_sector.o: disc_sector.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_sector.o -MD -MP -MF $(DEPDIR)/pcem-disc_sector.Tpo -c -o pcem-disc_sector.o `test -f 'disc_sector.c' || echo '$(srcdir)/'`disc_sector.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_sector.Tpo $(DEPDIR)/pcem-disc_sector.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_sector.c' object='pcem-disc_sector.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_sector.o `test -f 'disc_sector.c' || echo '$(srcdir)/'`disc_sector.c
+
+pcem-disc_sector.obj: disc_sector.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-disc_sector.obj -MD -MP -MF $(DEPDIR)/pcem-disc_sector.Tpo -c -o pcem-disc_sector.obj `if test -f 'disc_sector.c'; then $(CYGPATH_W) 'disc_sector.c'; else $(CYGPATH_W) '$(srcdir)/disc_sector.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-disc_sector.Tpo $(DEPDIR)/pcem-disc_sector.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='disc_sector.c' object='pcem-disc_sector.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-disc_sector.obj `if test -f 'disc_sector.c'; then $(CYGPATH_W) 'disc_sector.c'; else $(CYGPATH_W) '$(srcdir)/disc_sector.c'; fi`
+
 pcem-dma.o: dma.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-dma.o -MD -MP -MF $(DEPDIR)/pcem-dma.Tpo -c -o pcem-dma.o `test -f 'dma.c' || echo '$(srcdir)/'`dma.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-dma.Tpo $(DEPDIR)/pcem-dma.Po
@@ -1037,6 +1077,20 @@ pcem-fdc37c665.obj: fdc37c665.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdc37c665.c' object='pcem-fdc37c665.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdc37c665.obj `if test -f 'fdc37c665.c'; then $(CYGPATH_W) 'fdc37c665.c'; else $(CYGPATH_W) '$(srcdir)/fdc37c665.c'; fi`
+
+pcem-fdd.o: fdd.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdd.o -MD -MP -MF $(DEPDIR)/pcem-fdd.Tpo -c -o pcem-fdd.o `test -f 'fdd.c' || echo '$(srcdir)/'`fdd.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-fdd.Tpo $(DEPDIR)/pcem-fdd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdd.c' object='pcem-fdd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdd.o `test -f 'fdd.c' || echo '$(srcdir)/'`fdd.c
+
+pcem-fdd.obj: fdd.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdd.obj -MD -MP -MF $(DEPDIR)/pcem-fdd.Tpo -c -o pcem-fdd.obj `if test -f 'fdd.c'; then $(CYGPATH_W) 'fdd.c'; else $(CYGPATH_W) '$(srcdir)/fdd.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-fdd.Tpo $(DEPDIR)/pcem-fdd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fdd.c' object='pcem-fdd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdd.obj `if test -f 'fdd.c'; then $(CYGPATH_W) 'fdd.c'; else $(CYGPATH_W) '$(srcdir)/fdd.c'; fi`
 
 pcem-fdi2raw.o: fdi2raw.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdi2raw.o -MD -MP -MF $(DEPDIR)/pcem-fdi2raw.Tpo -c -o pcem-fdi2raw.o `test -f 'fdi2raw.c' || echo '$(srcdir)/'`fdi2raw.c
@@ -1738,6 +1792,20 @@ pcem-sound_pas16.obj: sound_pas16.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_pas16.obj `if test -f 'sound_pas16.c'; then $(CYGPATH_W) 'sound_pas16.c'; else $(CYGPATH_W) '$(srcdir)/sound_pas16.c'; fi`
 
+pcem-sound_pssj.o: sound_pssj.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_pssj.o -MD -MP -MF $(DEPDIR)/pcem-sound_pssj.Tpo -c -o pcem-sound_pssj.o `test -f 'sound_pssj.c' || echo '$(srcdir)/'`sound_pssj.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-sound_pssj.Tpo $(DEPDIR)/pcem-sound_pssj.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sound_pssj.c' object='pcem-sound_pssj.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_pssj.o `test -f 'sound_pssj.c' || echo '$(srcdir)/'`sound_pssj.c
+
+pcem-sound_pssj.obj: sound_pssj.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_pssj.obj -MD -MP -MF $(DEPDIR)/pcem-sound_pssj.Tpo -c -o pcem-sound_pssj.obj `if test -f 'sound_pssj.c'; then $(CYGPATH_W) 'sound_pssj.c'; else $(CYGPATH_W) '$(srcdir)/sound_pssj.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-sound_pssj.Tpo $(DEPDIR)/pcem-sound_pssj.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sound_pssj.c' object='pcem-sound_pssj.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_pssj.obj `if test -f 'sound_pssj.c'; then $(CYGPATH_W) 'sound_pssj.c'; else $(CYGPATH_W) '$(srcdir)/sound_pssj.c'; fi`
+
 pcem-sound_sb.o: sound_sb.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_sb.o -MD -MP -MF $(DEPDIR)/pcem-sound_sb.Tpo -c -o pcem-sound_sb.o `test -f 'sound_sb.c' || echo '$(srcdir)/'`sound_sb.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-sound_sb.Tpo $(DEPDIR)/pcem-sound_sb.Po
@@ -1835,6 +1903,34 @@ pcem-soundopenal.obj: soundopenal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='soundopenal.c' object='pcem-soundopenal.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-soundopenal.obj `if test -f 'soundopenal.c'; then $(CYGPATH_W) 'soundopenal.c'; else $(CYGPATH_W) '$(srcdir)/soundopenal.c'; fi`
+
+pcem-tandy_eeprom.o: tandy_eeprom.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-tandy_eeprom.o -MD -MP -MF $(DEPDIR)/pcem-tandy_eeprom.Tpo -c -o pcem-tandy_eeprom.o `test -f 'tandy_eeprom.c' || echo '$(srcdir)/'`tandy_eeprom.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-tandy_eeprom.Tpo $(DEPDIR)/pcem-tandy_eeprom.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tandy_eeprom.c' object='pcem-tandy_eeprom.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_eeprom.o `test -f 'tandy_eeprom.c' || echo '$(srcdir)/'`tandy_eeprom.c
+
+pcem-tandy_eeprom.obj: tandy_eeprom.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-tandy_eeprom.obj -MD -MP -MF $(DEPDIR)/pcem-tandy_eeprom.Tpo -c -o pcem-tandy_eeprom.obj `if test -f 'tandy_eeprom.c'; then $(CYGPATH_W) 'tandy_eeprom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_eeprom.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-tandy_eeprom.Tpo $(DEPDIR)/pcem-tandy_eeprom.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tandy_eeprom.c' object='pcem-tandy_eeprom.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_eeprom.obj `if test -f 'tandy_eeprom.c'; then $(CYGPATH_W) 'tandy_eeprom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_eeprom.c'; fi`
+
+pcem-tandy_rom.o: tandy_rom.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-tandy_rom.o -MD -MP -MF $(DEPDIR)/pcem-tandy_rom.Tpo -c -o pcem-tandy_rom.o `test -f 'tandy_rom.c' || echo '$(srcdir)/'`tandy_rom.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-tandy_rom.Tpo $(DEPDIR)/pcem-tandy_rom.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tandy_rom.c' object='pcem-tandy_rom.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_rom.o `test -f 'tandy_rom.c' || echo '$(srcdir)/'`tandy_rom.c
+
+pcem-tandy_rom.obj: tandy_rom.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-tandy_rom.obj -MD -MP -MF $(DEPDIR)/pcem-tandy_rom.Tpo -c -o pcem-tandy_rom.obj `if test -f 'tandy_rom.c'; then $(CYGPATH_W) 'tandy_rom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_rom.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-tandy_rom.Tpo $(DEPDIR)/pcem-tandy_rom.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tandy_rom.c' object='pcem-tandy_rom.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_rom.obj `if test -f 'tandy_rom.c'; then $(CYGPATH_W) 'tandy_rom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_rom.c'; fi`
 
 pcem-thread-pthread.o: thread-pthread.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.o -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
@@ -2283,6 +2379,20 @@ pcem-vid_tandy.obj: vid_tandy.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_tandy.c' object='pcem-vid_tandy.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_tandy.obj `if test -f 'vid_tandy.c'; then $(CYGPATH_W) 'vid_tandy.c'; else $(CYGPATH_W) '$(srcdir)/vid_tandy.c'; fi`
+
+pcem-vid_tandysl.o: vid_tandysl.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_tandysl.o -MD -MP -MF $(DEPDIR)/pcem-vid_tandysl.Tpo -c -o pcem-vid_tandysl.o `test -f 'vid_tandysl.c' || echo '$(srcdir)/'`vid_tandysl.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-vid_tandysl.Tpo $(DEPDIR)/pcem-vid_tandysl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_tandysl.c' object='pcem-vid_tandysl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_tandysl.o `test -f 'vid_tandysl.c' || echo '$(srcdir)/'`vid_tandysl.c
+
+pcem-vid_tandysl.obj: vid_tandysl.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_tandysl.obj -MD -MP -MF $(DEPDIR)/pcem-vid_tandysl.Tpo -c -o pcem-vid_tandysl.obj `if test -f 'vid_tandysl.c'; then $(CYGPATH_W) 'vid_tandysl.c'; else $(CYGPATH_W) '$(srcdir)/vid_tandysl.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-vid_tandysl.Tpo $(DEPDIR)/pcem-vid_tandysl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_tandysl.c' object='pcem-vid_tandysl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_tandysl.obj `if test -f 'vid_tandysl.c'; then $(CYGPATH_W) 'vid_tandysl.c'; else $(CYGPATH_W) '$(srcdir)/vid_tandysl.c'; fi`
 
 pcem-vid_tgui9440.o: vid_tgui9440.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_tgui9440.o -MD -MP -MF $(DEPDIR)/pcem-vid_tgui9440.Tpo -c -o pcem-vid_tgui9440.o `test -f 'vid_tgui9440.c' || echo '$(srcdir)/'`vid_tgui9440.c

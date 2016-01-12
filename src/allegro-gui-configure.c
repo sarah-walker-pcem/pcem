@@ -2,6 +2,7 @@
 #include "allegro-main.h"
 #include "allegro-gui.h"
 #include "cpu.h"
+#include "fdd.h"
 #include "model.h"
 #include "sound.h"
 #include "video.h"
@@ -50,7 +51,7 @@ static allegro_list_t sound_list[GFX_MAX+1];
 static allegro_list_t cpumanu_list[4];
 static allegro_list_t cpu_list[32];
 
-static char mem_size_str[10];
+static char mem_size_str[10], mem_size_units[3];
 
 static allegro_list_t cache_list[] =
 {
@@ -72,6 +73,19 @@ static allegro_list_t vidspeed_list[] =
         {"Fast VLB/PCI", 5},
         {"", -1}
 };                
+
+static allegro_list_t fdd_list[] =
+{
+	{"None", 0},
+	{"5.25\" 360k", 1},
+	{"5.25\" 1.2M", 2},
+	{"5.25\" 1.2M Dual RPM", 3},
+	{"3.5\" 720k", 4},
+	{"3.5\" 1.44M", 5},
+	{"3.5\" 1.44M 3-Mode", 6},
+	{"3.5\" 2.88M", 7},
+        {"", -1}
+};
 
 static void reset_list();
 
@@ -187,14 +201,30 @@ static char *list_proc_cpu(int index, int *list_size)
         return cpu_list[index].name;
 }
 
+static char *list_proc_fdd(int index, int *list_size)
+{
+        if (index < 0)
+        {
+                int c = 0;
+                
+                while (fdd_list[c].name[0])
+                        c++;
+
+                *list_size = c;
+                return NULL;
+        }
+        
+        return fdd_list[index].name;
+}
+
 static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 236*2,292,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 236*2,332,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 176,  268, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 246,  268, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 176,  308, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 246,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
@@ -206,15 +236,15 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0},
         {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //9
         
-        {d_edit_proc,    70*2, 176,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 216,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
                         
-        {d_text_proc,    98*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "MB", 0, 0},
+        {d_text_proc,    98*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
         
-        {d_check_proc,   14*2, 192, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
-        {d_check_proc,   14*2, 208, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
-        {d_check_proc,   14*2, 224, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
-        {d_check_proc,   14*2, 240, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
-        {d_check_proc,   14*2, 256, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
+        {d_check_proc,   14*2, 232, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
+        {d_check_proc,   14*2, 248, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
+        {d_check_proc,   14*2, 264, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
+        {d_check_proc,   14*2, 280, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
+        {d_check_proc,   14*2, 296, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
 
         {d_text_proc,    16*2,  16,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Machine :", 0, 0},
         {d_text_proc,    16*2,  36,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video :", 0, 0},
@@ -223,10 +253,15 @@ static DIALOG configure_dialog[] =
         {d_text_proc,    16*2, 116,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Cache :", 0, 0},
         {d_text_proc,    16*2, 136,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video speed :", 0, 0},
         {d_text_proc,    16*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Soundcard :", 0, 0},
-        {d_text_proc,    16*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
+        {d_text_proc,    16*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
 
         {d_check_proc,   14*2,  92, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Dynamic Recompiler", 0, 0},
         
+        {d_text_proc,    16*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive A: :", 0, 0},
+        {d_text_proc,    16*2, 196,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive B: :", 0, 0},
+        {d_list_proc,    70*2, 172, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
+        {d_list_proc,    70*2, 192, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
+
         {0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL}
 };
 
@@ -241,6 +276,7 @@ static int list_proc(int msg, DIALOG *d, int c)
                 int new_cpu_m = configure_dialog[5].d1;
                 int new_cpu = configure_dialog[6].d1;
                 int new_dynarec = configure_dialog[25].flags & D_SELECTED;
+		int new_mem_size;
                 int cpu_flags;
 
                 reset_list();
@@ -254,6 +290,19 @@ static int list_proc(int msg, DIALOG *d, int c)
                 configure_dialog[25].flags = (((cpu_flags & CPU_SUPPORTS_DYNAREC) && new_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC)) ? D_SELECTED : 0;
                 if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
                         configure_dialog[25].flags |= D_DISABLED;
+
+                sscanf(mem_size_str, "%i", &new_mem_size);
+                new_mem_size &= ~(models[new_model].ram_granularity - 1);
+                if (new_mem_size < models[new_model].min_ram)
+                	new_mem_size = models[new_model].min_ram;
+                else if (new_mem_size > models[new_model].max_ram)
+			new_mem_size = models[new_model].max_ram;
+		sprintf(mem_size_str, "%i", new_mem_size);
+
+		if (models[new_model].is_at)
+			sprintf(mem_size_units, "MB");
+		else
+			sprintf(mem_size_units, "kB");
 
                 return D_REDRAW;
         }
@@ -402,20 +451,31 @@ pclog("video_card_available : %i\n", c);
         else
                 configure_dialog[16].flags &= ~D_SELECTED;
 
-        sprintf(mem_size_str, "%i", mem_size);
+	if (models[model].is_at)
+	        sprintf(mem_size_str, "%i", mem_size / 1024);
+	else
+	        sprintf(mem_size_str, "%i", mem_size);
+
+	if (models[model].is_at)
+		sprintf(mem_size_units, "MB");
+	else
+		sprintf(mem_size_units, "kB");
 
         cpu_flags = models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_flags;
         configure_dialog[25].flags = (((cpu_flags & CPU_SUPPORTS_DYNAREC) && cpu_use_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC)) ? D_SELECTED : 0;
         if (!(cpu_flags & CPU_SUPPORTS_DYNAREC) || (cpu_flags & CPU_REQUIRES_DYNAREC))
                 configure_dialog[25].flags |= D_DISABLED;
-        
+
+        configure_dialog[28].d1 = fdd_get_type(0);
+        configure_dialog[29].d1 = fdd_get_type(1);
+
         while (1)
         {
-                position_dialog(configure_dialog, SCREEN_W/2 - 272, SCREEN_H/2 - 256/2);
+                position_dialog(configure_dialog, SCREEN_W/2 - configure_dialog[0].w/2, SCREEN_H/2 - configure_dialog[0].h/2);
         
                 c = popup_dialog(configure_dialog, 1);
 
-                position_dialog(configure_dialog, -(SCREEN_W/2 - 272), -(SCREEN_H/2 - 256/2));
+                position_dialog(configure_dialog, -(SCREEN_W/2 - configure_dialog[0].w/2), -(SCREEN_H/2 - configure_dialog[0].h/2));
                 
                 if (c == 1)
                 {
@@ -431,18 +491,22 @@ pclog("video_card_available : %i\n", c);
                         int new_SSI2001 = (configure_dialog[14].flags & D_SELECTED) ? 1 : 0;
                         int new_voodoo = (configure_dialog[16].flags & D_SELECTED) ? 1 : 0;
                         int new_dynarec = (configure_dialog[25].flags & D_SELECTED) ? 1 : 0;
+			int new_fda = configure_dialog[28].d1;
+			int new_fdb = configure_dialog[29].d1;
                         
                         sscanf(mem_size_str, "%i", &new_mem_size);
-                        if (new_mem_size < 1 || new_mem_size > 256)
-                        {
-                                alert("Invalid memory size", "Memory must be between 1 and 256 MB", NULL, "OK", NULL, 0, 0);
-                                continue;
-                        }
+                        new_mem_size &= ~(models[new_model].ram_granularity - 1);
+                        if (new_mem_size < models[new_model].min_ram)
+                                new_mem_size = models[new_model].min_ram;
+                        else if (new_mem_size > models[new_model].max_ram)
+                                new_mem_size = models[new_model].max_ram;
+			if (models[new_model].is_at)
+				new_mem_size *= 1024;
                         
                         if (new_model != model || new_gfxcard != gfxcard || new_mem_size != mem_size || 
                             new_has_fpu != hasfpu || new_GAMEBLASTER != GAMEBLASTER || new_GUS != GUS ||
                             new_SSI2001 != SSI2001 || new_sndcard != sound_card_current || new_voodoo != voodoo_enabled ||
-                            new_dynarec != cpu_use_dynarec)
+                            new_dynarec != cpu_use_dynarec || new_fda != fdd_get_type(0) || new_fdb != fdd_get_type(1))
                         {
                                 if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
                                         continue;
@@ -463,6 +527,9 @@ pclog("video_card_available : %i\n", c);
                                 mem_resize();
                                 loadbios();
                                 resetpchard();
+
+				fdd_set_type(0, new_fda);
+				fdd_set_type(1, new_fdb);
                         }
 
                         video_speed = configure_dialog[8].d1;
@@ -473,7 +540,7 @@ pclog("video_card_available : %i\n", c);
                         cpu = new_cpu;
                         cpu_set();
                         
-                        cache = configure_dialog[9].d1;
+                        cache = configure_dialog[7].d1;
                         mem_updatecache();
                         
                         saveconfig();
