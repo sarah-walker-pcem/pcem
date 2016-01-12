@@ -42,6 +42,7 @@ resid-fp/wave.cc
 
 if CPU_I386
 pcem_SOURCES += codegen_x86.c
+pcem_CFLAGS += -msse2
 endif
 
 if CPU_X86_64
