@@ -3255,6 +3255,7 @@ static void s3_virge_pci_write(int func, int addr, uint8_t val, void *p)
                 else
                         io_removehandler(0x03c0, 0x0020, s3_virge_in, NULL, NULL, s3_virge_out, NULL, NULL, virge);
                 virge->pci_regs[PCI_REG_COMMAND] = val & 0x27;
+                s3_virge_updatemapping(virge); 
                 return;
                 case 0x07:
                 virge->pci_regs[0x07] = val & 0x3e;
