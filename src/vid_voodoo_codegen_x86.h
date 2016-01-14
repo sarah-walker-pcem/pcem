@@ -493,27 +493,27 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xeb);
                         addbyte(0xd3); /*SAR EAX, CL*/
                         addbyte(0xf8);
-                        addbyte(0x80); /*SUB CL, 4*/
-                        addbyte(0xe9);
-                        addbyte(4);
+                        addbyte(0xd3); /*SAR EBX, CL*/
+                        addbyte(0xfb);
                         addbyte(0x89); /*MOV EBP, EAX*/
                         addbyte(0xc5);
-                        addbyte(0xd3); /*ROR EBX, CL*/
-                        addbyte(0xcb);
+                        addbyte(0x89); /*MOV ECX, EBX*/
+                        addbyte(0xd9);
                         addbyte(0x83); /*AND EBP, 0xf*/
                         addbyte(0xe5);
                         addbyte(0xf);
-                        addbyte(0x89); /*MOV ECX, EBX*/
-                        addbyte(0xd9);
+                        addbyte(0xc1); /*SHL ECX, 4*/
+                        addbyte(0xe1);
+                        addbyte(4);
                         addbyte(0xc1); /*SAR EAX, 4*/
                         addbyte(0xf8);
                         addbyte(4);
                         addbyte(0x81); /*AND ECX, 0xf0*/
                         addbyte(0xe1);
                         addlong(0xf0);
-                        addbyte(0xc1); /*SAR EBX, 8*/
+                        addbyte(0xc1); /*SAR EBX, 4*/
                         addbyte(0xfb);
-                        addbyte(8);
+                        addbyte(4);
                         addbyte(0x09); /*OR EBP, ECX*/
                         addbyte(0xcd);
                         addbyte(0x8b); /*MOV ECX, state->lod[EDI]*/
