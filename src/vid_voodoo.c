@@ -2808,21 +2808,27 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 
                 case SST_fvertexAx: case SST_remap_fvertexAx:
                 voodoo->fvertexAx.i = val;
+                voodoo->params.vertexAx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAx.f * 16.0f) & 0xffff;
                 break;
                 case SST_fvertexAy: case SST_remap_fvertexAy:
                 voodoo->fvertexAy.i = val;
+                voodoo->params.vertexAy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAy.f * 16.0f) & 0xffff;
                 break;
                 case SST_fvertexBx: case SST_remap_fvertexBx:
                 voodoo->fvertexBx.i = val;
+                voodoo->params.vertexBx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBx.f * 16.0f) & 0xffff;
                 break;
                 case SST_fvertexBy: case SST_remap_fvertexBy:
                 voodoo->fvertexBy.i = val;
+                voodoo->params.vertexBy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBy.f * 16.0f) & 0xffff;
                 break;
                 case SST_fvertexCx: case SST_remap_fvertexCx:
                 voodoo->fvertexCx.i = val;
+                voodoo->params.vertexCx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCx.f * 16.0f) & 0xffff;
                 break;
                 case SST_fvertexCy: case SST_remap_fvertexCy:
                 voodoo->fvertexCy.i = val;
+                voodoo->params.vertexCy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCy.f * 16.0f) & 0xffff;
                 break;
 
                 case SST_fstartR: case SST_remap_fstartR:
@@ -2940,13 +2946,6 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case SST_ftriangleCMD:
-                voodoo->params.vertexAx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAx.f * 16.0f) & 0xffff;
-                voodoo->params.vertexAy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAy.f * 16.0f) & 0xffff;
-                voodoo->params.vertexBx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBx.f * 16.0f) & 0xffff;
-                voodoo->params.vertexBy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBy.f * 16.0f) & 0xffff;
-                voodoo->params.vertexCx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCx.f * 16.0f) & 0xffff;
-                voodoo->params.vertexCy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCy.f * 16.0f) & 0xffff;
-
                 voodoo->params.sign = val & (1 << 31);
 
                 if (voodoo->ncc_dirty)
