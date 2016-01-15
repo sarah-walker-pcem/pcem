@@ -438,21 +438,21 @@ void cpu_set()
         else
         {
                 x86_dynarec_opcodes_d8_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_d8_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_d8_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_d9_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_d9_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_d9_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_da_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_da_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_da_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_db_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_db_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_db_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_dc_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_dc_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_dc_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_dd_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_dd_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_dd_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_de_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_de_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_de_a32 = dynarec_ops_nofpu_a32;
                 x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a16;
-                x86_dynarec_opcodes_df_a16 = dynarec_ops_nofpu_a32;
+                x86_dynarec_opcodes_df_a32 = dynarec_ops_nofpu_a32;
         }
         codegen_timing_set(&codegen_timing_486);
 
