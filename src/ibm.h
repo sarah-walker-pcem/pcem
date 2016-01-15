@@ -199,7 +199,7 @@ typedef struct PIT
         uint32_t l[3];
         int c[3];
         uint8_t m[3];
-        uint8_t ctrl,ctrls[2];
+        uint8_t ctrl,ctrls[3];
         int wp,rm[3],wm[3];
         uint16_t rl[3];
         int thit[3];
