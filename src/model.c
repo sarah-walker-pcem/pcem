@@ -160,6 +160,7 @@ void common_init()
 void xt_init()
 {
         common_init();
+        mem_add_bios();
         pit_set_out_func(1, pit_refresh_timer_xt);
         keyboard_xt_init();
         mouse_serial_init();
@@ -169,6 +170,7 @@ void xt_init()
 
 void pcjr_init()
 {
+        mem_add_bios();
         fdc_add_pcjr();
         pic_init();
         pit_init();
@@ -183,6 +185,7 @@ void tandy1k_init()
 {
         TANDY = 1;
         common_init();
+        mem_add_bios();
         keyboard_tandy_init();
         mouse_serial_init();
         if (romset == ROM_TANDY)
@@ -198,6 +201,7 @@ void tandy1ksl2_init()
 {
 //        TANDY = 1;
         common_init();
+        mem_add_bios();
         keyboard_tandy_init();
         mouse_serial_init();
         device_add(&pssj_device);
@@ -211,6 +215,7 @@ void ams_init()
 {
         AMSTRAD = 1;
         common_init();
+        mem_add_bios();
         amstrad_init();
         keyboard_amstrad_init();
         nvr_init();
@@ -222,6 +227,7 @@ void ams_init()
 void europc_init()
 {
         common_init();
+        mem_add_bios();
         jim_init();
         keyboard_xt_init();
         mouse_serial_init();
@@ -232,6 +238,7 @@ void europc_init()
 void olim24_init()
 {
         common_init();
+        mem_add_bios();
         keyboard_olim24_init();
         nvr_init();
         olivetti_m24_init();
@@ -241,7 +248,9 @@ void olim24_init()
 
 void at_init()
 {
+        AT = 1;
         common_init();
+        mem_add_bios();
         pit_set_out_func(1, pit_refresh_timer_at);
         dma16_init();
         ide_init();
@@ -250,7 +259,6 @@ void at_init()
            mouse_serial_init();
         nvr_init();
         pic2_init();
-        AT = 1;
 }
 
 void deskpro386_init()
@@ -264,6 +272,7 @@ void ps1_init()
 {
         AT = 1;
         common_init();
+        mem_add_bios();
         pit_set_out_func(1, pit_refresh_timer_at);
         dma16_init();
         ide_init();

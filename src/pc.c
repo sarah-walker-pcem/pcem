@@ -342,7 +342,6 @@ void resetpchard()
 	disc_reset();
         
         model_init();
-        mem_add_bios();
         video_init();
         speaker_init();        
         sound_card_init(sound_card_current);
