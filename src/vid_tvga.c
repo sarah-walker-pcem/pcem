@@ -42,6 +42,7 @@ static uint8_t crtc_mask[0x40] =
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+static void tvga_recalcbanking(tvga_t *tvga);
 void tvga_out(uint16_t addr, uint8_t val, void *p)
 {
         tvga_t *tvga = (tvga_t *)p;
@@ -79,9 +80,8 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         else 
                         {
                                 svga->seqregs[0xe] = val ^ 2;
-                                svga->write_bank = (svga->seqregs[0xe] & 0xf) * 65536;
-                                if (!(svga->gdcreg[0xf] & 1)) 
-                                        svga->read_bank = svga->write_bank;
+                                tvga->tvga_3d8 = svga->seqregs[0xe] & 0xf;
+                                tvga_recalcbanking(tvga);
                         }
                         return;
                 }
@@ -96,13 +96,12 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 0xE:
                         svga->gdcreg[0xe] = val ^ 2;
-                        if ((svga->gdcreg[0xf] & 1) == 1)
-                           svga->read_bank = (svga->gdcreg[0xe] & 0xf) * 65536;
+                        tvga->tvga_3d9 = svga->gdcreg[0xe] & 0xf;
+                        tvga_recalcbanking(tvga);
                         break;
                         case 0xF:
-                        if (val & 1) svga->read_bank = (svga->gdcreg[0xe]  & 0xf)  *65536;
-                        else         svga->read_bank = (svga->seqregs[0xe] & 0xf)  *65536;
-                        svga->write_bank = (svga->seqregs[0xe] & 0xf) * 65536;
+                        svga->gdcreg[0xf] = val;
+                        tvga_recalcbanking(tvga);
                         break;
                 }
                 break;
@@ -134,24 +133,17 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 }
                 return;
                 case 0x3D8:
-                tvga->tvga_3d8 = val;
                 if (svga->gdcreg[0xf] & 4)
                 {
-                        svga->write_bank = (val & 0x1f) * 65536;
-//                                pclog("SVGAWBANK 3D8 %08X %04X:%04X\n",svgawbank,CS,pc);
-                        if (!(svga->gdcreg[0xf] & 1))
-                        {
-                                svga->read_bank = (val & 0x1f) * 65536;
-//                                        pclog("SVGARBANK 3D8 %08X %04X:%04X\n",svgarbank,CS,pc);
-                        }
+                        tvga->tvga_3d8 = val;
+                        tvga_recalcbanking(tvga);
                 }
                 return;
                 case 0x3D9:
-                tvga->tvga_3d9=val;
-                if ((svga->gdcreg[0xf] & 5) == 5)
+                if (svga->gdcreg[0xf] & 4)
                 {
-                        svga->read_bank = (val & 0x1F) * 65536;
-//                                pclog("SVGARBANK 3D9 %08X %04X:%04X\n",svgarbank,CS,pc);
+                        tvga->tvga_3d9 = val;
+                        tvga_recalcbanking(tvga);
                 }
                 return;
         }
@@ -206,6 +198,20 @@ uint8_t tvga_in(uint16_t addr, void *p)
 		return tvga->tvga_3d9;
         }
         return svga_in(addr, svga);
+}
+
+static void tvga_recalcbanking(tvga_t *tvga)
+{
+        svga_t *svga = &tvga->svga;
+        
+        svga->write_bank = (tvga->tvga_3d8 & 0x1f) * 65536;
+
+        if (svga->gdcreg[0xf] & 1)
+                svga->read_bank = (tvga->tvga_3d9 & 0x1f) * 65536;
+        else
+                svga->read_bank = svga->write_bank;
+        
+//        pclog("recalcbanking: write_bank=%08x read_bank=%08x GDC[E]=%02x GDC[F]=%02x SEQ[E]=%02x 3d8=%02x 3d9=%02x\n", svga->read_bank, svga->write_bank, svga->gdcreg[0xe], svga->gdcreg[0xf], svga->seqregs[0xe], tvga->tvga_3d8, tvga->tvga_3d9);
 }
 
 void tvga_recalctimings(svga_t *svga)
