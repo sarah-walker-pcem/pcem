@@ -118,7 +118,8 @@ void dump_block()
 static void delete_block(codeblock_t *block)
 {
 //        pclog("delete_block: pc=%08x\n", block->pc);
-        codeblock_hash[HASH(block->phys)] = NULL;
+        if (block == codeblock_hash[HASH(block->phys)])
+                codeblock_hash[HASH(block->phys)] = NULL;
 
         if (!block->pc)
                 fatal("Deleting deleted block\n");

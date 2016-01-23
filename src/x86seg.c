@@ -345,8 +345,7 @@ void loadseg(uint16_t seg, x86seg *s)
                                 x86ss(NULL,seg&~3);
                                 return;
                         }
-                        if (segdat[3]&0x40) stack32=1;
-                        else                stack32=0;
+                        stack32 = (segdat[3] & 0x40) ? 1 : 0;
 //                        pclog("Load SS  %04x %04x %04x %04x\n", segdat[0], segdat[1], segdat[2], segdat[3]);
                 }
                 else if (s!=&_cs)
@@ -1106,7 +1105,7 @@ void loadcscall(uint16_t seg)
                                                 }
                                                 if (!stack32) oldsp &= 0xFFFF;
                                                 SS=newss;
-                                                stack32=segdat2[3]&0x40;
+                                                stack32 = (segdat2[3] & 0x40) ? 1 : 0;
                                                 if (stack32) ESP=newsp;
                                                 else         SP=newsp;
                                                 
@@ -1527,7 +1526,7 @@ void pmoderetf(int is32, uint16_t off)
                         return;
                 }
                 SS=newss;
-                stack32=segdat2[3]&0x40;
+                stack32 = (segdat2[3] & 0x40) ? 1 : 0;
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
                 do_seg_load(&_ss, segdat2);
@@ -1778,7 +1777,7 @@ void pmodeint(int num, int soft)
                                                 return;
                                         }
                                         SS=newss;
-                                        stack32=segdat3[3]&0x40;
+                                        stack32 = (segdat3[3] & 0x40) ? 1 : 0;
                                         if (stack32) ESP=newsp;
                                         else         SP=newsp;
                                         do_seg_load(&_ss, segdat3);
@@ -2284,7 +2283,7 @@ void pmodeiret(int is32)
                         return;
                 }
                 SS=newss;
-                stack32=segdat2[3]&0x40;
+                stack32 = (segdat2[3] & 0x40) ? 1 : 0;
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
                 do_seg_load(&_ss, segdat2);
