@@ -1919,3 +1919,5 @@ void mem_a20_recalc()
 //        pclog("rammask now %08X\n", rammask);
         mem_a20_state = state;
 }
+
+uint32_t get_phys_virt,get_phys_phys;
