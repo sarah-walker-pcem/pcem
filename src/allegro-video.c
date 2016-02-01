@@ -82,6 +82,7 @@ static void allegro_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 static void allegro_blit_memtoscreen_8(int x, int y, int w, int h)
 {
 	int xx, yy;
+	int line_double = (winsizey > h) ? 1 : 0;
 
 	if (y < 0)
 	{
@@ -91,19 +92,36 @@ static void allegro_blit_memtoscreen_8(int x, int y, int w, int h)
 
 	for (yy = y; yy < y+h; yy++)
 	{
-		int dy = yy*2;
-		for (xx = x; xx < x+w; xx++)
+		int dy = line_double ? yy*2 : yy;
+		if (dy < buffer->h)
 		{
-			((uint32_t *)buffer32->line[dy])[xx] =
-			((uint32_t *)buffer32->line[dy + 1])[xx] = pal_lookup[buffer->line[yy][xx]];
+			if (line_double)
+			{
+				for (xx = x; xx < x+w; xx++)
+				{
+					((uint32_t *)buffer32->line[dy])[xx] =
+					((uint32_t *)buffer32->line[dy + 1])[xx] = pal_lookup[buffer->line[yy][xx]];
+				}
+			}
+			else
+			{
+				for (xx = x; xx < x+w; xx++)
+					((uint32_t *)buffer32->line[dy])[xx] = pal_lookup[buffer->line[yy][xx]];
+			}
 		}
 	}
 
 	if (readflash)
 	{
-		rectfill(buffer32, x+SCREEN_W-40, y*2+8, SCREEN_W-8, y*2+14, makecol(255, 255, 255));
+		if (line_double)
+			rectfill(buffer32, x+SCREEN_W-40, y*2+8, SCREEN_W-8, y*2+14, makecol(255, 255, 255));
+		else
+			rectfill(buffer32, x+SCREEN_W-40, y+8, SCREEN_W-8, y+14, makecol(255, 255, 255));
 		readflash = 0;
 	}
 
-        blit(buffer32, screen, x, y*2, 0, 0, w, h*2);
+	if (line_double)
+	        blit(buffer32, screen, x, y*2, 0, 0, w, h*2);
+	else
+	        blit(buffer32, screen, x, y, 0, 0, w, h);
 }
