@@ -20,6 +20,7 @@
 #include "vid_et4000.h"
 #include "vid_et4000w32.h"
 #include "vid_hercules.h"
+#include "vid_incolor.h"
 #include "vid_mda.h"
 #include "vid_olivetti_m24.h"
 #include "vid_oti067.h"
@@ -54,6 +55,7 @@ static VIDEO_CARD video_cards[] =
         {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,            GFX_VIRGE},
         {"EGA",                                    &ega_device,                 GFX_EGA},
         {"Hercules",                               &hercules_device,            GFX_HERCULES},
+        {"Hercules InColor",                       &incolor_device,            GFX_INCOLOR},
         {"MDA",                                    &mda_device,                 GFX_MDA},
         {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,              GFX_N9_9FX},
         {"OAK OTI-067",                            &oti067_device,              GFX_OTI067},

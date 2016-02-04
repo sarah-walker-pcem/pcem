@@ -270,8 +270,8 @@ int disctime;
 char discfns[2][256];
 int driveempty[2];
 
-#define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
-#define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200)
+#define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES || gfxcard==GFX_INCOLOR) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
+#define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && gfxcard!=GFX_INCOLOR && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200)
 #define PCJR (romset == ROM_IBMPCJR)
 #define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
 
@@ -351,7 +351,7 @@ enum
         GFX_VIRGEDX,    /*S3 Virge/DX*/
         GFX_PHOENIX_TRIO32, /*S3 732/Trio32 (Phoenix)*/
         GFX_PHOENIX_TRIO64, /*S3 764/Trio64 (Phoenix)*/
-        
+       	GFX_INCOLOR,	/* Hercules InColor */ 
         GFX_MAX
 };
 
