@@ -119,7 +119,7 @@ extern page_t **page_lookup;
 
 uint32_t mmutranslate_noabrt(uint32_t addr, int rw);
 extern uint32_t get_phys_virt,get_phys_phys;
-static inline get_phys(uint32_t addr)
+static inline uint32_t get_phys(uint32_t addr)
 {
         if (!((addr ^ get_phys_virt) & ~0xfff))
                 return get_phys_phys | (addr & 0xfff);
@@ -137,7 +137,7 @@ static inline get_phys(uint32_t addr)
 //        return mmutranslatereal(addr, 0) & rammask;
 }
 
-static inline get_phys_noabrt(uint32_t addr)
+static inline uint32_t get_phys_noabrt(uint32_t addr)
 {
         if (!(cr0 >> 31))
                 return addr & rammask;
