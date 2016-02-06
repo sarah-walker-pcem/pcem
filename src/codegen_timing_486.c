@@ -22,11 +22,11 @@ static int *opcode_timings[256] =
 /*70*/  &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,
 
 /*80*/  &timing_mr,     &timing_mr,     &timing_mr,     &timing_mr,     &timing_rm,     &timing_rm,     CYCLES(5),      CYCLES(5),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),      CYCLES(1),      CYCLES(5),      CYCLES(6),
-/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(18),     CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
+/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(0),      CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
 /*a0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(7),      CYCLES(7),      CYCLES(8),      CYCLES(8),      CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),
 /*b0*/  &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,
 
-/*c0*/  CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(13),     CYCLES(13),     CYCLES(26),     CYCLES(0),      CYCLES(3),      CYCLES(15),
+/*c0*/  CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(0),      CYCLES(0),      &timing_int,    &timing_int,    CYCLES(3),      CYCLES(0),
 /*d0*/  CYCLES(4),      CYCLES(4),      CYCLES(4),      CYCLES(4),      CYCLES(15),     CYCLES(14),     CYCLES(2),      CYCLES(4),      NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*e0*/  CYCLES(6),      CYCLES(6),      CYCLES(6),      CYCLES(5),      CYCLES(14),     CYCLES(14),     CYCLES(16),     CYCLES(16),     CYCLES(3),      CYCLES(3),      CYCLES(17),     CYCLES(3),      CYCLES(14),     CYCLES(14),     CYCLES(14),     CYCLES(14),
 /*f0*/  CYCLES(4),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(4),      CYCLES(2),      NULL,           NULL,           CYCLES(2),      CYCLES(2),      CYCLES(3),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(3),      NULL
@@ -45,11 +45,11 @@ static int *opcode_timings_mod3[256] =
 /*70*/  &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,    &timing_bnt,
 
 /*80*/  &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     CYCLES(5),      CYCLES(5),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(1),      CYCLES(2),      CYCLES(1),
-/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(18),     CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
+/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(0),      CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
 /*a0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(7),      CYCLES(7),      CYCLES(8),      CYCLES(8),      CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),
 /*b0*/  &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,     &timing_rr,
 
-/*c0*/  CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(13),     CYCLES(13),     CYCLES(26),     CYCLES(0),      CYCLES(3),      CYCLES(15),
+/*c0*/  CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(0),      CYCLES(0),      &timing_int,    &timing_int,    CYCLES(3),      CYCLES(0),
 /*d0*/  CYCLES(4),      CYCLES(4),      CYCLES(4),      CYCLES(4),      CYCLES(15),     CYCLES(14),     CYCLES(2),      CYCLES(4),      NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*e0*/  CYCLES(6),      CYCLES(6),      CYCLES(6),      CYCLES(5),      CYCLES(14),     CYCLES(14),     CYCLES(16),     CYCLES(16),     CYCLES(3),      CYCLES(3),      CYCLES(17),     CYCLES(3),      CYCLES(14),     CYCLES(14),     CYCLES(14),     CYCLES(14),
 /*f0*/  CYCLES(4),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(4),      CYCLES(2),      NULL,           NULL,           CYCLES(2),      CYCLES(2),      CYCLES(3),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(3),      NULL
@@ -127,11 +127,11 @@ static int *opcode_timings_f7_mod3[8] =
 };
 static int *opcode_timings_ff[8] =
 {
-        &timing_mm,     &timing_mm,     CYCLES(5),      CYCLES(17),     CYCLES(5),      CYCLES(13),     CYCLES(5),      NULL
+        &timing_mm,     &timing_mm,     CYCLES(5),      CYCLES(0),      CYCLES(5),      CYCLES(0),      CYCLES(5),      NULL
 };
 static int *opcode_timings_ff_mod3[8] =
 {
-        &timing_rr,     &timing_rr,     CYCLES(5),      CYCLES(17),     CYCLES(5),      CYCLES(13),     CYCLES(5),      NULL
+        &timing_rr,     &timing_rr,     CYCLES(5),      CYCLES(0),      CYCLES(5),      CYCLES(0),      CYCLES(5),      NULL
 };
 
 static int *opcode_timings_d8[8] =

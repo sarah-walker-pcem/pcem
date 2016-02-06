@@ -219,7 +219,6 @@ static int opJMP_far_a16(uint32_t fetchdat)
         pc = addr;
         loadcsjmp(seg, oxpc);
         CPU_BLOCK_END();
-        CLOCK_CYCLES((is486) ? 17 : 12);
         return 0;
 }
 static int opJMP_far_a32(uint32_t fetchdat)
@@ -230,7 +229,6 @@ static int opJMP_far_a32(uint32_t fetchdat)
         pc = addr;
         loadcsjmp(seg, oxpc);
         CPU_BLOCK_END();
-        CLOCK_CYCLES((is486) ? 17 : 12);
         return 0;
 }
 

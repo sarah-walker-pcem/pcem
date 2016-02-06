@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "x86.h"
 #include "386.h"
+#include "cpu.h"
 
 /*Controls whether the accessed bit in a descriptor is set when CS is loaded. The
   386 PRM is ambiguous on this subject, but BOCHS doesn't set it and Windows 98
@@ -619,6 +620,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                         do_seg_load(&_cs, segdat);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         use32=(segdat[3]&0x40)?0x300:0;
+                        cycles -= timing_jmp_pm;
                 }
                 else /*System segment*/
                 {
@@ -728,6 +730,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                         x86gpf(NULL,seg2&~3);
                                         return;
                                 }
+                                cycles -= timing_jmp_pm_gate;
                                 break;
 
                                 
@@ -765,6 +768,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                 if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
                 else                _cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
+                cycles -= timing_jmp_rm;
         }
 }
 
@@ -944,6 +948,7 @@ void loadcscall(uint16_t seg)
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         use32=(segdat[3]&0x40)?0x300:0;
                         if (csout) pclog("Complete\n");
+                        cycles -= timing_call_pm;
                 }
                 else
                 {
@@ -1203,6 +1208,7 @@ void loadcscall(uint16_t seg)
 //                                                        PUSHW(oldcs);
 //                                                       PUSHW(oldpc); if (abrt) return;
                                                 }
+                                                cycles -= timing_call_pm_gate_inner;
                                                 break;
                                         }
                                         else if (DPL > CPL)
@@ -1233,6 +1239,7 @@ void loadcscall(uint16_t seg)
                                         writememw(0, addr+4, segdat[2] | 0x100); /*Set accessed bit*/
                                         cpl_override = 0;
 #endif
+                                        cycles -= timing_call_pm_gate;
                                         break;
                                         
                                         default:
@@ -1401,6 +1408,7 @@ void pmoderetf(int is32, uint16_t off)
                 use32=(segdat[3]&0x40)?0x300:0;
                 
 //                pclog("CPL=RPL return to %04X:%08X\n",CS,pc);
+                cycles -= timing_retf_pm;
         }
         else
         {
@@ -1558,6 +1566,7 @@ void pmoderetf(int is32, uint16_t off)
                 check_seg_valid(&_fs);
                 check_seg_valid(&_gs);
 //                pclog("CPL<RPL return to %04X:%08X %04X:%08X\n",CS,pc,SS,ESP);
+                cycles -= timing_retf_pm_outer;
         }
 }
 
@@ -1827,6 +1836,7 @@ void pmodeint(int num, int soft)
                                         }
                                         cpl_override=0;
                                         _cs.access=0;
+                                        cycles -= timing_int_pm_outer - timing_int_pm;
 //                                        pclog("Non-confirming int gate, CS = %04X\n");
                                         break;
                                 }
@@ -1897,6 +1907,7 @@ void pmodeint(int num, int soft)
                 }
                 flags&=~(T_FLAG|NT_FLAG);
 //                if (output) pclog("Final Stack %04X:%08X\n",SS,ESP);
+                cycles -= timing_int_pm;
                 break;
                 
                 case 0x500: /*Task gate*/
@@ -1988,6 +1999,7 @@ void pmodeiret(int is32)
                 _cs.limit_high = 0xffff;
                 CS=seg;
                 flags=(flags&0x3000)|(tempflags&0xCFD5)|2;
+                cycles -= timing_iret_rm;
                 return;
         }
 
@@ -2079,7 +2091,7 @@ void pmodeiret(int is32)
                         do_seg_v86_init(&_ss);
                         use32=0;
                         flags=(tempflags&0xFFD5)|2;
-
+                        cycles -= timing_iret_v86;
 //                        pclog("V86 IRET to %04X:%04X  %04X:%04X  %04X %04X %04X %04X %i\n",CS,pc,SS,SP,DS,ES,FS,GS,abrt);
   //                      if (CS==0xFFFF && pc==0xFFFFFFFF) timetolive=12;
 /*                        {
@@ -2197,6 +2209,7 @@ void pmodeiret(int is32)
                 writememw(0, addr+4, segdat[2] | 0x100); /*Set accessed bit*/
                 cpl_override = 0;
 #endif
+                cycles -= timing_iret_pm;
         }
         else /*Return to outer level*/
         {
@@ -2311,6 +2324,7 @@ void pmodeiret(int is32)
                 check_seg_valid(&_es);
                 check_seg_valid(&_fs);
                 check_seg_valid(&_gs);
+                cycles -= timing_iret_pm_outer;
         }
         pc=newpc;
         flags=(flags&~flagmask)|(tempflags&flagmask&0xFFD5)|2;

@@ -233,6 +233,7 @@ void x86_int_sw(int num)
 //        pclog("x86_int_sw %02x %04x:%04x\n", num, CS,pc);
 //        pclog("x86_int\n");
         flags_rebuild();
+        cycles -= timing_int;
         if (msw&1)
         {
                 pmodeint(num,1);
@@ -260,8 +261,8 @@ void x86_int_sw(int num)
                 oxpc=pc;
                 pc=readmemw(0,addr);
                 loadcs(readmemw(0,addr+2));
+                cycles -= timing_int_rm;
         }
-        cycles-=70;
         trap = 0;
         CPU_BLOCK_END();
 }

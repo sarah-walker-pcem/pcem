@@ -238,7 +238,7 @@ static uint32_t opcode_timings[256] =
 /*      XCHG                                            XCHG                                            XCHG                                            XCHG*/
         PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),
 /*      CBW                                             CWD                                             CALL far                                        WAIT*/
-        PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(1),
+        PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(0),                            PAIR_NP | CYCLES(1),
 /*      PUSHF                                           POPF                                            SAHF                                            LAHF*/
         PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),
 
@@ -262,9 +262,9 @@ static uint32_t opcode_timings[256] =
 /*      LES                                             LDS                                             MOV                                             MOV*/
         PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(4),                            PAIR_UV | CYCLES_REG,                           PAIR_UV | CYCLES_REG,
 /*      ENTER                                           LEAVE                                           RETF                                            RETF*/
-        PAIR_NP | CYCLES(15),                           PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(4),
+        PAIR_NP | CYCLES(15),                           PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(0),                            PAIR_NP | CYCLES(0),
 /*      INT3                                            INT                                             INTO                                            IRET*/
-        PAIR_NP | CYCLES(13),                           PAIR_NP | CYCLES(16),                           PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(10),
+        PAIR_NP | CYCLES(5),                            PAIR_NP | CYCLES(6),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(0),
 
 
 /*d0*/  INVALID,                                        INVALID,                                        INVALID,                                        INVALID,
@@ -277,7 +277,7 @@ static uint32_t opcode_timings[256] =
 /*      IN AL                                           IN AX                                           OUT_AL                                          OUT_AX*/
         PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(12),                           PAIR_NP | CYCLES(12),
 /*      CALL                                            JMP                                             JMP                                             JMP*/
-        PAIR_V | CYCLES_REG,                            PAIR_V | CYCLES_REG,                            PAIR_NP | CYCLES(3),                            PAIR_V | CYCLES_REG,
+        PAIR_V | CYCLES_REG,                            PAIR_V | CYCLES_REG,                            PAIR_NP | CYCLES(0),                            PAIR_V | CYCLES_REG,
 /*      IN AL                                           IN AX                                           OUT_AL                                          OUT_AX*/
         PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(12),                           PAIR_NP | CYCLES(12),
 
@@ -374,7 +374,7 @@ static uint32_t opcode_timings_mod3[256] =
 /*      XCHG                                            XCHG                                            XCHG                                            XCHG*/
         PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),
 /*      CBW                                             CWD                                             CALL far                                        WAIT*/
-        PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(1),
+        PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(0),                            PAIR_NP | CYCLES(1),
 /*      PUSHF                                           POPF                                            SAHF                                            LAHF*/
         PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(2),                            PAIR_NP | CYCLES(2),
 
@@ -398,9 +398,9 @@ static uint32_t opcode_timings_mod3[256] =
 /*      LES                                             LDS                                             MOV                                             MOV*/
         PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(4),                            PAIR_UV | CYCLES_REG,                           PAIR_UV | CYCLES_REG,
 /*      ENTER                                           LEAVE                                           RETF                                            RETF*/
-        PAIR_NP | CYCLES(15),                           PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(4),
+        PAIR_NP | CYCLES(15),                           PAIR_NP | CYCLES(3),                            PAIR_NP | CYCLES(0),                            PAIR_NP | CYCLES(0),
 /*      INT3                                            INT                                             INTO                                            IRET*/
-        PAIR_NP | CYCLES(13),                           PAIR_NP | CYCLES(16),                           PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(10),
+        PAIR_NP | CYCLES(5),                            PAIR_NP | CYCLES(6),                            PAIR_NP | CYCLES(4),                            PAIR_NP | CYCLES(0),
 
 
 /*d0*/  INVALID,                                        INVALID,                                        INVALID,                                        INVALID,
@@ -414,7 +414,7 @@ static uint32_t opcode_timings_mod3[256] =
 /*      IN AL                                           IN AX                                           OUT_AL                                          OUT_AX*/
         PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(12),                           PAIR_NP | CYCLES(12),
 /*      CALL                                            JMP                                             JMP                                             JMP*/
-        PAIR_V | CYCLES_REG,                            PAIR_V | CYCLES_REG,                            PAIR_NP | CYCLES(3),                            PAIR_V | CYCLES_REG,
+        PAIR_V | CYCLES_REG,                            PAIR_V | CYCLES_REG,                            PAIR_NP | CYCLES(0),                            PAIR_V | CYCLES_REG,
 /*      IN AL                                           IN AX                                           OUT_AL                                          OUT_AX*/
         PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(7),                            PAIR_NP | CYCLES(12),                           PAIR_NP | CYCLES(12),
 
@@ -635,16 +635,16 @@ static uint32_t opcode_timings_f7_mod3[8] =
 static uint32_t opcode_timings_ff[8] =
 {
 /*      INC                     DEC                     CALL                    CALL far*/
-        PAIR_UV | CYCLES_RMW,   PAIR_UV | CYCLES_RMW,   PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(4),
+        PAIR_UV | CYCLES_RMW,   PAIR_UV | CYCLES_RMW,   PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(0),
 /*      JMP                     JMP far                 PUSH*/
-        PAIR_NP | CYCLES(2),    PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(2),    INVALID
+        PAIR_NP | CYCLES(2),    PAIR_NP | CYCLES(0),    PAIR_NP | CYCLES(2),    INVALID
 };
 static uint32_t opcode_timings_ff_mod3[8] =
 {
 /*      INC                                             DEC                                             CALL                    CALL far*/
-        PAIR_UV | CYCLES_REG | SRCDEP_RM | DSTDEP_RM,   PAIR_UV | CYCLES_REG | SRCDEP_RM | DSTDEP_RM,   PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(4),
+        PAIR_UV | CYCLES_REG | SRCDEP_RM | DSTDEP_RM,   PAIR_UV | CYCLES_REG | SRCDEP_RM | DSTDEP_RM,   PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(0),
 /*      JMP                     JMP far                 PUSH*/
-        PAIR_NP | CYCLES(2),    PAIR_NP | CYCLES(4),    PAIR_NP | CYCLES(2),    INVALID
+        PAIR_NP | CYCLES(2),    PAIR_NP | CYCLES(0),    PAIR_NP | CYCLES(2),    INVALID
 };
 
 static uint32_t opcode_timings_d8[8] =

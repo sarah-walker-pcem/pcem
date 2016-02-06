@@ -6,7 +6,11 @@
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
         if (msw & 1) loadcscall(new_seg);                                       \
-        else         loadcs(new_seg);                                           \
+        else                                                                    \
+        {                                                                       \
+                loadcs(new_seg);                                                \
+                cycles -= timing_call_rm;                                       \
+        }                                                                       \
         optype = 0;                                                             \
         if (abrt) { cgate16 = cgate32 = 0; return 1; }                          \
         oldss = ss;                                                             \
@@ -31,7 +35,11 @@
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
         if (msw & 1) loadcscall(new_seg);                                       \
-        else         loadcs(new_seg);                                           \
+        else                                                                    \
+        {                                                                       \
+                loadcs(new_seg);                                                \
+                cycles -= timing_call_rm;                                       \
+        }                                                                       \
         optype = 0;                                                             \
         if (abrt) { cgate16 = cgate32 = 0; return 1; }                          \
         oldss = ss;                                                             \
@@ -60,7 +68,6 @@ static int opCALL_far_w(uint32_t fetchdat)
         CALL_FAR_w(new_cs, new_pc);
         CPU_BLOCK_END();
         
-        CLOCK_CYCLES(is486 ? 18 : 17);
         return 0;
 }
 static int opCALL_far_l(uint32_t fetchdat)
@@ -74,7 +81,6 @@ static int opCALL_far_l(uint32_t fetchdat)
         CALL_FAR_l(new_cs, new_pc);
         CPU_BLOCK_END();
         
-        CLOCK_CYCLES(is486 ? 18 : 17);
         return 0;
 }
 
@@ -116,8 +122,6 @@ static int opFF_w_a16(uint32_t fetchdat)
                 
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
-                                
-                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
@@ -133,7 +137,6 @@ static int opFF_w_a16(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
-                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 1;
@@ -184,8 +187,6 @@ static int opFF_w_a32(uint32_t fetchdat)
                 
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
-                
-                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
@@ -201,7 +202,6 @@ static int opFF_w_a32(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
-                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH w*/
                 temp = geteaw();                        if (abrt) return 1;
@@ -253,8 +253,6 @@ static int opFF_l_a16(uint32_t fetchdat)
                 
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
-                                
-                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
@@ -270,7 +268,6 @@ static int opFF_l_a16(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
-                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 1;
@@ -321,8 +318,6 @@ static int opFF_l_a32(uint32_t fetchdat)
                 
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
-                                
-                CLOCK_CYCLES(is486 ? 17 : 22);
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
@@ -338,7 +333,6 @@ static int opFF_l_a32(uint32_t fetchdat)
                 pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
-                CLOCK_CYCLES(is486 ? 13 : 12);
                 break;
                 case 0x30: /*PUSH l*/
                 temp = geteal();                        if (abrt) return 1;

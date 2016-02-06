@@ -38,6 +38,11 @@ extern int timing_rm, timing_rml;
 extern int timing_mm, timing_mml;
 extern int timing_bt, timing_bnt;
 
+extern int timing_int, timing_int_rm, timing_int_v86, timing_int_pm, timing_int_pm_outer;
+extern int timing_iret_rm, timing_iret_v86, timing_iret_pm, timing_iret_pm_outer;
+extern int timing_call_rm, timing_call_pm, timing_call_pm_gate, timing_call_pm_gate_inner;
+extern int timing_retf_rm, timing_retf_pm, timing_retf_pm_outer;
+extern int timing_jmp_rm, timing_jmp_pm, timing_jmp_pm_gate;
 
 
 typedef struct
