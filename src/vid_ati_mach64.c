@@ -231,7 +231,9 @@ void mach64_out(uint16_t addr, uint8_t val, void *p)
                 mach64->index = val;
                 break;
                 case 0x1cf:
-                mach64->regs[mach64->index] = val;
+                mach64->regs[mach64->index & 0x3f] = val;
+                if ((mach64->index & 0x3f) == 0x36)
+                        mach64_recalctimings(svga);
                 break;
                 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
@@ -290,7 +292,7 @@ uint8_t mach64_in(uint16_t addr, void *p)
                 case 0x1ce:
                 return mach64->index;
                 case 0x1cf:
-                return mach64->regs[mach64->index];
+                return mach64->regs[mach64->index & 0x3f];
 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
                 return ati68860_ramdac_in((addr & 3) | ((mach64->dac_cntl & 3) << 2), &mach64->ramdac, svga);
@@ -358,8 +360,13 @@ void mach64_recalctimings(svga_t *svga)
                         svga->rowoffset *= 2;
                         break;
                 }
-                
+
+                svga->vrammask = mach64->vram_mask;
 //                pclog("mach64_recalctimings : frame %i,%i disp %i,%i vsync at %i rowoffset %i pixel clock %f MA %08X\n", svga->htotal, svga->vtotal, svga->hdisp, svga->dispend, svga->vsyncstart, svga->rowoffset, svga->clock, svga->ma);
+        }
+        else
+        {
+                svga->vrammask = (mach64->regs[0x36] & 0x01) ? mach64->vram_mask : 0x3ffff;
         }
 }
 
