@@ -689,7 +689,80 @@ static int opLOADALL(uint32_t fetchdat)
         ds = readmemw(0, 0x848) | (readmemb(0, 0x84A) << 16);
         CLOCK_CYCLES(195);
         return 0;
-}                                
+}      
+
+static int set_segment_limit(x86seg *s, uint8_t segdat3)
+{
+        if ((s->access & 0x18) != 0x10 || !(s->access & (1 << 2))) /*expand-down*/
+        {
+                s->limit_high = s->limit;
+                s->limit_low = 0;
+        }
+        else
+        {
+                s->limit_high = (segdat3 & 0x40) ? 0xffffffff : 0xffff;
+                s->limit_low = s->limit + 1;
+        }
+}
+
+static int loadall_load_segment(uint32_t addr, x86seg *s)
+{
+	uint32_t attrib = readmeml(0, addr);
+	uint32_t segdat3 = (attrib >> 16) & 0xff;
+	s->access = (attrib >> 8) & 0xff;
+	s->base = readmeml(0, addr + 4);
+	s->limit = readmeml(0, addr + 8);
+
+	if (s == &_cs)  use32 = (segdat3 & 0x40) ? 0x300 : 0;
+	if (s == &_ss)  stack32 = (segdat3 & 0x40) ? 1 : 0;
+
+	set_segment_limit(s, segdat3);
+}
+
+static int opLOADALL386(uint32_t fetchdat)
+{
+	uint32_t la_addr = es + EDI;
+
+	cr0 = readmeml(0, la_addr);
+        flags = readmemw(0, la_addr + 4);
+        eflags = readmemw(0, la_addr + 6);
+        flags_extract();
+        pc = readmeml(0, la_addr + 8);
+	EDI = readmeml(0, la_addr + 0xC);
+	ESI = readmeml(0, la_addr + 0x10);
+	EBP = readmeml(0, la_addr + 0x14);
+	ESP = readmeml(0, la_addr + 0x18);
+	EBX = readmeml(0, la_addr + 0x1C);
+	EDX = readmeml(0, la_addr + 0x20);
+	ECX = readmeml(0, la_addr + 0x24);
+	EAX = readmeml(0, la_addr + 0x28);
+	dr[6] = readmeml(0, la_addr + 0x2C);
+	dr[7] = readmeml(0, la_addr + 0x30);
+	tr.seg = readmemw(0, la_addr + 0x34);
+	ldt.seg = readmemw(0, la_addr + 0x38);
+        GS = readmemw(0, la_addr + 0x3C);
+        FS = readmemw(0, la_addr + 0x40);
+        DS = readmemw(0, la_addr + 0x44);
+        SS = readmemw(0, la_addr + 0x48);
+        CS = readmemw(0, la_addr + 0x4C);
+        ES = readmemw(0, la_addr + 0x50);
+
+	loadall_load_segment(la_addr + 0x54, &tr);
+	loadall_load_segment(la_addr + 0x60, &idt);
+	loadall_load_segment(la_addr + 0x6c, &gdt);
+	loadall_load_segment(la_addr + 0x78, &ldt);
+	loadall_load_segment(la_addr + 0x84, &_gs);
+	loadall_load_segment(la_addr + 0x90, &_fs);
+	loadall_load_segment(la_addr + 0x9c, &_ds);
+	loadall_load_segment(la_addr + 0xa8, &_ss);
+	loadall_load_segment(la_addr + 0xb4, &_cs);
+	loadall_load_segment(la_addr + 0xc0, &_es);
+
+	if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
+
+	CLOCK_CYCLES(350);
+        return 0;
+}                          
 
 static int opCPUID(uint32_t fetchdat)
 {
