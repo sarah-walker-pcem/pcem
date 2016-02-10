@@ -118,7 +118,8 @@ void sb_dsp_reset(sb_dsp_t *dsp)
         dsp->sb_command = 0;
         
         dsp->sb_8_length = 0xffff;
-
+        dsp->sb_8_autolen = 0xffff;
+        
         sb_irqc(dsp, 0);
         sb_irqc(dsp, 1);
         dsp->sb_16_pause = 0;
