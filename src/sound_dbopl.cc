@@ -113,9 +113,9 @@ uint8_t opl_read(int nr, uint16_t addr)
 {
         if (!(addr & 1))
         {
-                return (opl[nr].status & opl[nr].status_mask) | 0x06;
+                return (opl[nr].status & opl[nr].status_mask) | (opl[nr].is_opl3 ? 0 : 0x06);
         }
-        return 0xff;
+        return opl[nr].is_opl3 ? 0 : 0xff;
 }
 
 void opl2_update(int nr, int16_t *buffer, int samples)
