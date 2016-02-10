@@ -11,31 +11,42 @@ static int speaker_pos = 0;
 int speaker_gated = 0;
 int speaker_enable = 0, was_speaker_enable = 0;
 
-static void speaker_poll(void *p)
+void speaker_update()
 {
-        if (speaker_pos >= SOUNDBUFLEN) return;
-
+        int16_t val;
+        
 //        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
         if (speaker_gated && was_speaker_enable)
         {
                 if (!pit.m[2] || pit.m[2]==4)
-                        speaker_buffer[speaker_pos] = speakval;
+                        val = speakval;
                 else if (pit.l[2] < 0x40)
-                        speaker_buffer[speaker_pos] = 0xa00;
+                        val = 0xa00;
                 else 
-                        speaker_buffer[speaker_pos] = speakon ? 0x1400 : 0;
+                        val = speakon ? 0x1400 : 0;
         }
         else
-                speaker_buffer[speaker_pos] = was_speaker_enable ? 0x1400 : 0;
-        speaker_pos++;
+                val = was_speaker_enable ? 0x1400 : 0;
+
         if (!speaker_enable)
                 was_speaker_enable = 0;
+
+        if (speaker_pos != sound_pos_global)
+                speaker_buffer[speaker_pos] = val;
+
+        if (!speaker_gated)
+                val = 0;
+                
+        for (; speaker_pos < sound_pos_global; speaker_pos++)
+                speaker_buffer[speaker_pos] = val;
 }
 
 static void speaker_get_buffer(int16_t *buffer, int len, void *p)
 {
         int c;
 
+        speaker_update();
+        
         if (!speaker_mute)
         {
                 for (c = 0; c < len * 2; c++)
@@ -47,6 +58,6 @@ static void speaker_get_buffer(int16_t *buffer, int len, void *p)
 
 void speaker_init()
 {
-        sound_add_handler(speaker_poll, speaker_get_buffer, NULL);
+        sound_add_handler(speaker_get_buffer, NULL);
         speaker_mute = 0;
 }

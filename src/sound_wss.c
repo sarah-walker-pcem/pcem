@@ -35,11 +35,6 @@ typedef struct wss_t
 
         ad1848_t ad1848;        
         opl_t    opl;
-
-        int16_t opl_buffer[SOUNDBUFLEN * 2];
-        int16_t pcm_buffer[2][SOUNDBUFLEN];
-
-        int pos;
 } wss_t;
 
 uint8_t wss_read(uint16_t addr, void *p)
@@ -62,32 +57,22 @@ void wss_write(uint16_t addr, uint8_t val, void *p)
         ad1848_setirq(&wss->ad1848, wss_irq[(val >> 3) & 7]);
 }
 
-static void wss_poll(void *p)
-{
-        wss_t *wss = (wss_t *)p;
-        
-        if (wss->pos >= SOUNDBUFLEN)
-                return;
-
-        opl3_poll(&wss->opl, &wss->opl_buffer[wss->pos * 2], &wss->opl_buffer[(wss->pos * 2) + 1]);
-        ad1848_poll(&wss->ad1848, &wss->pcm_buffer[0][wss->pos], &wss->pcm_buffer[1][wss->pos]);
-
-        wss->pos++;
-}
-
 static void wss_get_buffer(int16_t *buffer, int len, void *p)
 {
         wss_t *wss = (wss_t *)p;
         
         int c;
 
+        opl3_update2(&wss->opl);
+        ad1848_update(&wss->ad1848);
         for (c = 0; c < len * 2; c++)
         {
-                buffer[c] += wss->opl_buffer[c];
-                buffer[c] += (wss->pcm_buffer[c & 1][c >> 1] / 2);
+                buffer[c] += wss->opl.buffer[c];
+                buffer[c] += (wss->ad1848.buffer[c] / 2);
         }
 
-        wss->pos = 0;
+        wss->opl.pos = 0;
+        wss->ad1848.pos = 0;
 }
 
 void *wss_init()
@@ -108,7 +93,7 @@ void *wss_init()
         io_sethandler(0x0530, 0x0004, wss_read,    NULL, NULL, wss_write,    NULL, NULL,  wss);
         io_sethandler(0x0534, 0x0004, ad1848_read, NULL, NULL, ad1848_write, NULL, NULL,  &wss->ad1848);
                 
-        sound_add_handler(wss_poll, wss_get_buffer, wss);
+        sound_add_handler(wss_get_buffer, wss);
         
         return wss;
 }
@@ -120,6 +105,13 @@ void wss_close(void *p)
         free(wss);
 }
 
+void wss_speed_changed(void *p)
+{
+        wss_t *wss = (wss_t *)p;
+        
+        ad1848_speed_changed(&wss->ad1848);
+}
+
 device_t wss_device =
 {
         "Windows Sound System",
@@ -127,7 +119,7 @@ device_t wss_device =
         wss_init,
         wss_close,
         NULL,
-        NULL,
+        wss_speed_changed,
         NULL,
         NULL
 };

@@ -89,7 +89,7 @@ void sid_write(uint16_t addr, uint8_t val, void *p)
         psid->sid->write(addr & 0x1f,val);
 }
 
-#define CLOCK_DELTA (int)((14318180.0 / 16.0) / 48000.0)
+#define CLOCK_DELTA(n) (int)(((14318180.0 * n) / 16.0) / 48000.0)
 
 static void fillbuf2(int& count, int16_t *buf, int len)
 {
@@ -102,7 +102,7 @@ static void fillbuf2(int& count, int16_t *buf, int len)
 void sid_fillbuf(int16_t *buf, int len, void *p)
 {
 //        psid_t *psid = (psid_t *)p;
-        int x = CLOCK_DELTA;
+        int x = CLOCK_DELTA(len);
         
         fillbuf2(x, buf, len);
 }

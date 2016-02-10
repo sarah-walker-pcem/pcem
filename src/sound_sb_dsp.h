@@ -56,6 +56,9 @@ typedef struct sb_dsp_t
         int stereo;
         
         int asp_data_len;
+        
+        int16_t buffer[SOUNDBUFLEN * 2];
+        int pos;
 } sb_dsp_t;
 
 void sb_dsp_init(sb_dsp_t *dsp, int type);
@@ -71,3 +74,5 @@ void sb_dsp_poll(sb_dsp_t *dsp, int16_t *l, int16_t *r);
 void sb_dsp_set_stereo(sb_dsp_t *dsp, int stereo);
 
 void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp);
+
+void sb_dsp_update(sb_dsp_t *dsp);

@@ -6,7 +6,7 @@ extern "C" {
         uint8_t opl_read(int nr, uint16_t addr);
         void opl_timer_over(int nr, int timer);
         void opl2_update(int nr, int16_t *buffer, int samples);
-        void opl3_update(int nr, int16_t *bufferl, int16_t *bufferr, int samples);
+        void opl3_update(int nr, int16_t *buffer, int samples);
 #ifdef __cplusplus
 }
 #endif

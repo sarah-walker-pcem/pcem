@@ -7,6 +7,7 @@
 #include "io.h"
 #include "pic.h"
 #include "pit.h"
+#include "sound.h"
 #include "sound_opl.h"
 #include "sound_pas16.h"
 #include "sound_sb_dsp.h"
@@ -85,10 +86,6 @@
                 3 = PAS16
 */
 
-static uint8_t pas16_pit_in(uint16_t port, void *priv);
-static void pas16_pit_out(uint16_t port, uint8_t val, void *priv);
-//static void pas16_update_irqs();
-
 typedef struct pas16_t
 {
         uint16_t base;
@@ -135,12 +132,14 @@ typedef struct pas16_t
         opl_t    opl;
         sb_dsp_t dsp;
 
-        int16_t opl_buffer[SOUNDBUFLEN * 2];
         int16_t pcm_buffer[2][SOUNDBUFLEN];
-        int16_t dsp_buffer[SOUNDBUFLEN * 2];
 
         int pos;
 } pas16_t;
+
+static uint8_t pas16_pit_in(uint16_t port, void *priv);
+static void pas16_pit_out(uint16_t port, uint8_t val, void *priv);
+static void pas16_update(pas16_t *pas16);
 
 static int pas16_dmas[8] = {4, 1, 2, 3, 0, 5, 6, 7};
 static int pas16_irqs[16] = {0, 2, 3, 4, 5, 6, 7, 10, 11, 12, 14, 15, 0, 0, 0, 0};
@@ -294,6 +293,7 @@ static void pas16_out(uint16_t port, uint8_t val, void *p)
                 break;
 
                 case 0xb8a:
+                pas16_update(pas16);
                 pas16->audiofilt = val;
                 break;
 
@@ -303,9 +303,11 @@ static void pas16_out(uint16_t port, uint8_t val, void *p)
                 break;
 
                 case 0xf88:
+                pas16_update(pas16);
                 pas16->pcm_dat = (pas16->pcm_dat & 0xff00) | val;
                 break;
                 case 0xf89:
+                pas16_update(pas16);
                 pas16->pcm_dat = (pas16->pcm_dat & 0x00ff) | (val << 8);
                 break;               
                 case 0xf8a:
@@ -548,6 +550,8 @@ static uint8_t pas16_readdma(pas16_t *pas16)
 static void pas16_pcm_poll(void *p)
 {
         pas16_t *pas16 = (pas16_t *)p;
+        
+        pas16_update(pas16);
 //        if (pas16->pcm_ctrl & PAS16_PCM_ENA)
 //                pclog("pas16_pcm_poll : poll %i %i ", pas16->pit.c[0], pas16->pit.l[0]);
         if (pas16->pit.m[0] & 2)
@@ -682,27 +686,24 @@ static void pas16_out_base(uint16_t port, uint8_t val, void *p)
 }
 
 
-void pas16_poll(void *p)
+static void pas16_update(pas16_t *pas16)
 {
-        pas16_t *pas16 = (pas16_t *)p;
-
-        if (pas16->pos >= SOUNDBUFLEN)
-                return;
-
-        opl3_poll(&pas16->opl, &pas16->opl_buffer[pas16->pos * 2], &pas16->opl_buffer[(pas16->pos * 2) + 1]);
-        sb_dsp_poll(&pas16->dsp, &pas16->dsp_buffer[pas16->pos * 2], &pas16->dsp_buffer[(pas16->pos * 2) + 1]);
-        
         if (!(pas16->audiofilt & PAS16_FILT_MUTE))
         {
-                pas16->pcm_buffer[0][pas16->pos] = 0;
-                pas16->pcm_buffer[1][pas16->pos] = 0;
+                for (; pas16->pos < sound_pos_global; pas16->pos++)
+                {
+                        pas16->pcm_buffer[0][pas16->pos] = 0;
+                        pas16->pcm_buffer[1][pas16->pos] = 0;
+                }
         }
         else
         {
-                pas16->pcm_buffer[0][pas16->pos] = (int16_t)pas16->pcm_dat_l;
-                pas16->pcm_buffer[1][pas16->pos] = (int16_t)pas16->pcm_dat_r;
+                for (; pas16->pos < sound_pos_global; pas16->pos++)
+                {
+                        pas16->pcm_buffer[0][pas16->pos] = (int16_t)pas16->pcm_dat_l;
+                        pas16->pcm_buffer[1][pas16->pos] = (int16_t)pas16->pcm_dat_r;
+                }
         }
-        pas16->pos++;
 }
 
 void pas16_get_buffer(int16_t *buffer, int len, void *p)
@@ -710,14 +711,19 @@ void pas16_get_buffer(int16_t *buffer, int len, void *p)
         pas16_t *pas16 = (pas16_t *)p;
         int c;
 
+        opl3_update2(&pas16->opl);
+        sb_dsp_update(&pas16->dsp);
+        pas16_update(pas16);
         for (c = 0; c < len * 2; c++)
         {
-                buffer[c] += pas16->opl_buffer[c];
-                buffer[c] += (int16_t)(sb_iir(c & 1, (float)pas16->dsp_buffer[c]) / 1.3) / 2;
+                buffer[c] += pas16->opl.buffer[c];
+                buffer[c] += (int16_t)(sb_iir(c & 1, (float)pas16->dsp.buffer[c]) / 1.3) / 2;
                 buffer[c] += (pas16->pcm_buffer[c & 1][c >> 1] / 2);
         }
 
         pas16->pos = 0;
+        pas16->opl.pos = 0;
+        pas16->dsp.pos = 0;
 }
 
 void *pas16_init()
@@ -732,7 +738,7 @@ void *pas16_init()
         
         timer_add(pas16_pcm_poll, &pas16->pit.c[0], &pas16->pit.enable[0],  pas16);
         
-        sound_add_handler(pas16_poll, pas16_get_buffer, pas16);
+        sound_add_handler(pas16_get_buffer, pas16);
         
         return pas16;
 }

@@ -102,11 +102,18 @@ static uint8_t pssj_read(uint16_t port, void *p)
         }
 }
 
+static void pssj_update(pssj_t *pssj)
+{
+        for (; pssj->pos < sound_pos_global; pssj->pos++)        
+                pssj->buffer[pssj->pos] = (((int8_t)(pssj->dac_val ^ 0x80) * 0x20) * pssj->amplitude) / 15;
+}
+
 static void pssj_callback(void *p)
 {
         pssj_t *pssj = (pssj_t *)p;
         int data;
         
+        pssj_update(pssj);
         if (pssj->ctrl & 2)
         {
                 if ((pssj->ctrl & 3) == 3)
@@ -160,17 +167,12 @@ static void pssj_callback(void *p)
         pssj->timer_count += (int)(TIMER_USEC * (1000000.0 / 3579545.0) * (double)(pssj->freq ? pssj->freq : 0x400));
 }
 
-static void pssj_poll(void *p)
-{
-        pssj_t *pssj = (pssj_t *)p;
-        
-        pssj->buffer[pssj->pos++] = (((int8_t)(pssj->dac_val ^ 0x80) * 0x20) * pssj->amplitude) / 15;
-}
-
 static void pssj_get_buffer(int16_t *buffer, int len, void *p)
 {
         pssj_t *pssj = (pssj_t *)p;
         int c;
+        
+        pssj_update(pssj);
         
         for (c = 0; c < len * 2; c++)
                 buffer[c] += pssj->buffer[c >> 1];
@@ -187,7 +189,7 @@ void *pssj_init()
 
         io_sethandler(0x00C4, 0x0004, pssj_read, NULL, NULL, pssj_write, NULL, NULL, pssj);
         timer_add(pssj_callback, &pssj->timer_count, &pssj->enable, pssj);
-        sound_add_handler(pssj_poll, pssj_get_buffer, pssj);
+        sound_add_handler(pssj_get_buffer, pssj);
         
         return pssj;
 }

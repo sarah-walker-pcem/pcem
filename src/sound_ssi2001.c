@@ -13,14 +13,13 @@ typedef struct ssi2001_t
         int     pos;
 } ssi2001_t;
 
-static void ssi2001_poll(void *p)
+static void ssi2001_update(ssi2001_t *ssi2001)
 {
-        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+        if (ssi2001->pos >= sound_pos_global)
+                return;
         
-        if (ssi2001->pos >= SOUNDBUFLEN) return;
-        
-        sid_fillbuf(&ssi2001->buffer[ssi2001->pos], 1, ssi2001->psid);
-        ssi2001->pos++;
+        sid_fillbuf(&ssi2001->buffer[ssi2001->pos], sound_pos_global - ssi2001->pos, ssi2001->psid);
+        ssi2001->pos = sound_pos_global;
 }
 
 static void ssi2001_get_buffer(int16_t *buffer, int len, void *p)
@@ -28,6 +27,8 @@ static void ssi2001_get_buffer(int16_t *buffer, int len, void *p)
         ssi2001_t *ssi2001 = (ssi2001_t *)p;
         int c;
 
+        ssi2001_update(ssi2001);
+        
         for (c = 0; c < len * 2; c++)
                 buffer[c] += ssi2001->buffer[c >> 1] / 2;
 
@@ -36,12 +37,19 @@ static void ssi2001_get_buffer(int16_t *buffer, int len, void *p)
 
 static uint8_t ssi2001_read(uint16_t addr, void *p)
 {
+        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+        
+        ssi2001_update(ssi2001);
+        
         return sid_read(addr, p);
 }
 
 static void ssi2001_write(uint16_t addr, uint8_t val, void *p)
 {
-        return sid_write(addr, val, p);
+        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+        
+        ssi2001_update(ssi2001);        
+        sid_write(addr, val, p);
 }
 
 void *ssi2001_init()
@@ -52,8 +60,8 @@ void *ssi2001_init()
         pclog("ssi2001_init\n");
         ssi2001->psid = sid_init();
         sid_reset(ssi2001->psid);
-        io_sethandler(0x0280, 0x0020, ssi2001_read, NULL, NULL, ssi2001_write, NULL, NULL, &ssi2001);
-        sound_add_handler(ssi2001_poll, ssi2001_get_buffer, ssi2001);
+        io_sethandler(0x0280, 0x0020, ssi2001_read, NULL, NULL, ssi2001_write, NULL, NULL, ssi2001);
+        sound_add_handler(ssi2001_get_buffer, ssi2001);
         return ssi2001;
 }
 

@@ -258,6 +258,7 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
 {
         emu8k_t *emu8k = (emu8k_t *)p;
 
+        emu8k_update(emu8k);
 /*        pclog("emu8k_outw : addr=%08X reg=%i voice=%i  val=%04X\n", addr, emu8k->cur_reg, emu8k->cur_voice, val);*/
 //emu8k_outw : addr=00000A22 reg=3 voice=21  val=0265
         addr -= 0x220;
@@ -501,160 +502,172 @@ void emu8k_outb(uint32_t addr, uint8_t val, void *p)
                 emu8k_outw(addr, val, p);
 }
 
-void emu8k_poll(void *p)
+void emu8k_update(emu8k_t *emu8k)
 {
-        emu8k_t *emu8k = (emu8k_t *)p;
-        int c;
-        int32_t out_l = 0, out_r = 0;
-        
-        emu8k->timer_count += (int)(TIMER_USEC * (1000000.0 / 44100.0));
-        
-        for (c = 0; c < 32; c++)
+        int new_pos = (sound_pos_global * 44100) / 48000;
+        if (emu8k->pos < new_pos)
         {
-                int32_t voice_l, voice_r;
-                int32_t dat;
-                int lfo1_vibrato, lfo2_vibrato;
-                int tremolo;
+                int32_t *buf;
+                int pos;
+                int c;
+                int32_t out_l = 0, out_r = 0;
+
+                buf = &emu8k->buffer[emu8k->pos*2];
                 
-                tremolo = ((lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_trem) * 4) >> 12;
+                for (pos = emu8k->pos; pos < new_pos; pos++)        
+                        emu8k->buffer[pos*2] = emu8k->buffer[pos*2 + 1] = 0;
 
-                if (freqtable[emu8k->voice[c].pitch] >> 32)
-                        dat = EMU8K_READ(emu8k, emu8k->voice[c].addr >> 32);
-                else
-                        dat = EMU8K_READ_INTERP(emu8k, emu8k->voice[c].addr >> 24);
-
-                dat = (dat * emu8k->voice[c].attenuation) >> 16;
-
-                dat = (dat * envtable[emu8k->voice[c].env_vol >> 9]) >> 16;
-                        
-                if ((emu8k->voice[c].ccca >> 28) || (emu8k->voice[c].cutoff != 0xff))
+                for (c = 0; c < 32; c++)
                 {
-                        int cutoff = emu8k->voice[c].cutoff + ((emu8k->voice[c].menv_vol * emu8k->voice[c].fe_height) >> 20);
-                        if (cutoff < 0)
-                                cutoff = 0;
-                        if (cutoff > 255)
-                                cutoff = 255;
-
-                        emu8k->voice[c].vhp = ((-emu8k->voice[c].vbp * emu8k->voice[c].q) >> 8) - emu8k->voice[c].vlp - dat;
-                        emu8k->voice[c].vlp += (emu8k->voice[c].vbp * filt_w0[cutoff]) >> 8;
-                        emu8k->voice[c].vbp += (emu8k->voice[c].vhp * filt_w0[cutoff]) >> 8;
-                        if (emu8k->voice[c].vlp < -32767)
-                                dat = -32767;
-                        else if (emu8k->voice[c].vlp > 32767)
-                                dat = 32767;
-                        else
-                                dat = (int16_t)emu8k->voice[c].vlp;
-                }
+                        buf = &emu8k->buffer[emu8k->pos*2];
                         
-                voice_l = (dat * emu8k->voice[c].vol_l) >> 7;
-                voice_r = (dat * emu8k->voice[c].vol_r) >> 7;
+                        for (pos = emu8k->pos; pos < new_pos; pos++)
+                        {
+                                int32_t voice_l, voice_r;
+                                int32_t dat;
+                                int lfo1_vibrato, lfo2_vibrato;
+                                int tremolo;
+                
+                                tremolo = ((lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_trem) * 4) >> 12;
+
+                                if (freqtable[emu8k->voice[c].pitch] >> 32)
+                                        dat = EMU8K_READ(emu8k, emu8k->voice[c].addr >> 32);
+                                else
+                                        dat = EMU8K_READ_INTERP(emu8k, emu8k->voice[c].addr >> 24);
+
+                                dat = (dat * emu8k->voice[c].attenuation) >> 16;
+
+                                dat = (dat * envtable[emu8k->voice[c].env_vol >> 9]) >> 16;
                         
-                out_l += voice_l * 8192;
-                out_r += voice_r * 8192;
+                                if ((emu8k->voice[c].ccca >> 28) || (emu8k->voice[c].cutoff != 0xff))
+                                {
+                                        int cutoff = emu8k->voice[c].cutoff + ((emu8k->voice[c].menv_vol * emu8k->voice[c].fe_height) >> 20);
+                                        if (cutoff < 0)
+                                                cutoff = 0;
+                                        if (cutoff > 255)
+                                                cutoff = 255;
 
-                switch (emu8k->voice[c].env_state)
-                {
-                        case ENV_ATTACK:
-                        emu8k->voice[c].env_vol += emu8k->voice[c].env_attack;
-                        emu8k->voice[c].vtft |= 0xffff0000;
-                        if (emu8k->voice[c].env_vol >= (1 << 21))
-                        {
-                                emu8k->voice[c].env_vol = 1 << 21;
-                                emu8k->voice[c].env_state = ENV_DECAY;
-                        }
-                        break;
+                                        emu8k->voice[c].vhp = ((-emu8k->voice[c].vbp * emu8k->voice[c].q) >> 8) - emu8k->voice[c].vlp - dat;
+                                        emu8k->voice[c].vlp += (emu8k->voice[c].vbp * filt_w0[cutoff]) >> 8;
+                                        emu8k->voice[c].vbp += (emu8k->voice[c].vhp * filt_w0[cutoff]) >> 8;
+                                        if (emu8k->voice[c].vlp < -32767)
+                                                dat = -32767;
+                                        else if (emu8k->voice[c].vlp > 32767)
+                                                dat = 32767;
+                                        else
+                                                dat = (int16_t)emu8k->voice[c].vlp;
+                                }
                         
-                        case ENV_DECAY:
-                        emu8k->voice[c].env_vol -= emu8k->voice[c].env_decay;
-                        emu8k->voice[c].vtft = (emu8k->voice[c].vtft & ~0xffff0000) | ((emu8k->voice[c].env_sustain >> 5) << 16);
-                        if (emu8k->voice[c].env_vol <= emu8k->voice[c].env_sustain)
-                        {
-                                emu8k->voice[c].env_vol = emu8k->voice[c].env_sustain;
-                                emu8k->voice[c].env_state = ENV_SUSTAIN;
-                        }
-                        break;
-
-                        case ENV_RELEASE:
-                        emu8k->voice[c].env_vol -= emu8k->voice[c].env_release;
-                        emu8k->voice[c].vtft &= ~0xffff0000;
-                        if (emu8k->voice[c].env_vol <= 0)
-                        {
-                                emu8k->voice[c].env_vol = 0;
-                                emu8k->voice[c].env_state = ENV_STOPPED;
-                        }
-                        break;
-                }
-
-                if (emu8k->voice[c].env_vol >= (1 << 21))
-                        emu8k->voice[c].cvcf &= ~0xffff0000;
-                else
-                        emu8k->voice[c].cvcf = (emu8k->voice[c].cvcf & ~0xffff0000) | ((emu8k->voice[c].env_vol >> 5) << 16);
-
-                switch (emu8k->voice[c].menv_state)
-                {
-                        case ENV_ATTACK:
-                        emu8k->voice[c].menv_vol += emu8k->voice[c].menv_attack;
-                        if (emu8k->voice[c].menv_vol >= (1 << 21))
-                        {
-                                emu8k->voice[c].menv_vol = 1 << 21;
-                                emu8k->voice[c].menv_state = ENV_DECAY;
-                        }
-                        break;
+                                voice_l = (dat * emu8k->voice[c].vol_l) >> 7;
+                                voice_r = (dat * emu8k->voice[c].vol_r) >> 7;
                         
-                        case ENV_DECAY:
-                        emu8k->voice[c].menv_vol -= emu8k->voice[c].menv_decay;
-                        if (emu8k->voice[c].menv_vol <= emu8k->voice[c].menv_sustain)
-                        {
-                                emu8k->voice[c].menv_vol = emu8k->voice[c].menv_sustain;
-                                emu8k->voice[c].menv_state = ENV_SUSTAIN;
-                        }
-                        break;
+                                (*buf++) += voice_l * 8192;
+                                (*buf++) += voice_r * 8192;
 
-                        case ENV_RELEASE:
-                        emu8k->voice[c].menv_vol -= emu8k->voice[c].menv_release;
-                        if (emu8k->voice[c].menv_vol <= 0)
-                        {
-                                emu8k->voice[c].menv_vol = 0;
-                                emu8k->voice[c].menv_state = ENV_STOPPED;
-                        }
-                        break;
-                }
+                                switch (emu8k->voice[c].env_state)
+                                {
+                                        case ENV_ATTACK:
+                                        emu8k->voice[c].env_vol += emu8k->voice[c].env_attack;
+                                        emu8k->voice[c].vtft |= 0xffff0000;
+                                        if (emu8k->voice[c].env_vol >= (1 << 21))
+                                        {
+                                                emu8k->voice[c].env_vol = 1 << 21;
+                                                emu8k->voice[c].env_state = ENV_DECAY;
+                                        }
+                                        break;
+                        
+                                        case ENV_DECAY:
+                                        emu8k->voice[c].env_vol -= emu8k->voice[c].env_decay;
+                                        emu8k->voice[c].vtft = (emu8k->voice[c].vtft & ~0xffff0000) | ((emu8k->voice[c].env_sustain >> 5) << 16);
+                                        if (emu8k->voice[c].env_vol <= emu8k->voice[c].env_sustain)
+                                        {
+                                                emu8k->voice[c].env_vol = emu8k->voice[c].env_sustain;
+                                                emu8k->voice[c].env_state = ENV_SUSTAIN;
+                                        }
+                                        break;
 
-                lfo1_vibrato = (lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_fmmod) >> 9;
-                lfo2_vibrato = (lfotable[(emu8k->voice[c].lfo2_count >> 8) & 4095] * emu8k->voice[c].lfo2_fmmod) >> 9;
+                                        case ENV_RELEASE:
+                                        emu8k->voice[c].env_vol -= emu8k->voice[c].env_release;
+                                        emu8k->voice[c].vtft &= ~0xffff0000;
+                                        if (emu8k->voice[c].env_vol <= 0)
+                                        {
+                                                emu8k->voice[c].env_vol = 0;
+                                                emu8k->voice[c].env_state = ENV_STOPPED;
+                                        }
+                                        break;
+                                }
+
+                                if (emu8k->voice[c].env_vol >= (1 << 21))
+                                        emu8k->voice[c].cvcf &= ~0xffff0000;
+                                else
+                                        emu8k->voice[c].cvcf = (emu8k->voice[c].cvcf & ~0xffff0000) | ((emu8k->voice[c].env_vol >> 5) << 16);
+
+                                switch (emu8k->voice[c].menv_state)
+                                {
+                                        case ENV_ATTACK:
+                                        emu8k->voice[c].menv_vol += emu8k->voice[c].menv_attack;
+                                        if (emu8k->voice[c].menv_vol >= (1 << 21))
+                                        {
+                                                emu8k->voice[c].menv_vol = 1 << 21;
+                                                emu8k->voice[c].menv_state = ENV_DECAY;
+                                        }
+                                        break;
+                        
+                                        case ENV_DECAY:
+                                        emu8k->voice[c].menv_vol -= emu8k->voice[c].menv_decay;
+                                        if (emu8k->voice[c].menv_vol <= emu8k->voice[c].menv_sustain)
+                                        {
+                                                emu8k->voice[c].menv_vol = emu8k->voice[c].menv_sustain;
+                                                emu8k->voice[c].menv_state = ENV_SUSTAIN;
+                                        }
+                                        break;
+
+                                        case ENV_RELEASE:
+                                        emu8k->voice[c].menv_vol -= emu8k->voice[c].menv_release;
+                                        if (emu8k->voice[c].menv_vol <= 0)
+                                        {
+                                                emu8k->voice[c].menv_vol = 0;
+                                                emu8k->voice[c].menv_state = ENV_STOPPED;
+                                        }
+                                        break;
+                                }
+
+                                lfo1_vibrato = (lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_fmmod) >> 9;
+                                lfo2_vibrato = (lfotable[(emu8k->voice[c].lfo2_count >> 8) & 4095] * emu8k->voice[c].lfo2_fmmod) >> 9;
                                 
-                emu8k->voice[c].addr += freqtable[(emu8k->voice[c].pitch + lfo1_vibrato + lfo2_vibrato) & 0xffff];
-                if (emu8k->voice[c].addr >= emu8k->voice[c].loop_end)
-                        emu8k->voice[c].addr -= (emu8k->voice[c].loop_end - emu8k->voice[c].loop_start);
+                                emu8k->voice[c].addr += freqtable[(emu8k->voice[c].pitch + lfo1_vibrato + lfo2_vibrato) & 0xffff];
+                                if (emu8k->voice[c].addr >= emu8k->voice[c].loop_end)
+                                        emu8k->voice[c].addr -= (emu8k->voice[c].loop_end - emu8k->voice[c].loop_start);
 
-                emu8k->voice[c].lfo1_count += (emu8k->voice[c].tremfrq & 0xff);
-                emu8k->voice[c].lfo2_count += (emu8k->voice[c].fm2frq2 & 0xff);
-        }
-        
-        out_l >>= 15;
-        out_r >>= 15;
-        
-        if (out_l < -32768)
-                emu8k->out_l = -32768;
-        else if (out_l > 32767)
-                emu8k->out_l = 32767;
-        else
-                emu8k->out_l = out_l;
+                                emu8k->voice[c].lfo1_count += (emu8k->voice[c].tremfrq & 0xff);
+                                emu8k->voice[c].lfo2_count += (emu8k->voice[c].fm2frq2 & 0xff);
+                        }
+                }
+
+                buf = &emu8k->buffer[emu8k->pos*2];
                 
-        if (out_r < -32768)
-                emu8k->out_r = -32768;
-        else if (out_r > 32767)
-                emu8k->out_r = 32767;
-        else
-                emu8k->out_r = out_r;
+                for (pos = emu8k->pos; pos < new_pos; pos++)        
+                {
+                        buf[0] >>= 15;
+                        buf[1] >>= 15;
         
-        emu8k->wc++;
-}
+                        if (buf[0] < -32768)
+                                buf[0] = -32768;
+                        else if (buf[0] > 32767)
+                                buf[0] = 32767;
+                
+                        if (buf[1] < -32768)
+                                buf[1] = -32768;
+                        else if (buf[1] > 32767)
+                                buf[1] = 32767;
+                                
+                        buf += 2;
+                }
 
-void emu8k_poll_getsamp(emu8k_t *emu8k, int16_t *l, int16_t *r)
-{
-        *l = emu8k->out_l;
-        *r = emu8k->out_r;
+                emu8k->wc += (new_pos - emu8k->pos);
+                
+                emu8k->pos = new_pos;
+        }
 }
 
 void emu8k_init(emu8k_t *emu8k, int onboard_ram)
@@ -689,8 +702,6 @@ void emu8k_init(emu8k_t *emu8k, int onboard_ram)
         io_sethandler(0x0a20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
         io_sethandler(0x0e20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
 
-        timer_add(emu8k_poll, &emu8k->timer_count, TIMER_ALWAYS_ENABLED, emu8k);
-                        
         /*Create frequency table*/
         for (c = 0; c < 0x10000; c++)
         {

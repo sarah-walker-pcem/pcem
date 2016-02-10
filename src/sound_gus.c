@@ -849,6 +849,15 @@ void gus_poll_timer_2(void *p)
         }
 }
 
+static void gus_update(gus_t *gus)
+{
+        for (; gus->pos < sound_pos_global; gus->pos++)
+        {
+                gus->buffer[0][gus->pos] = gus->out_l;
+                gus->buffer[1][gus->pos] = gus->out_r;
+        }
+}
+
 void gus_poll_wave(void *p)
 {
         gus_t *gus = (gus_t *)p;
@@ -857,7 +866,9 @@ void gus_poll_wave(void *p)
         int16_t v;
         int32_t vl;
         int update_irqs = 0;
-                
+        
+        gus_update(gus);
+        
         gus->samp_timer += gus->samp_latch;
         
         gus->out_l = gus->out_r = 0;
@@ -1018,25 +1029,13 @@ void gus_poll_wave(void *p)
                 pollgusirqs(gus);
 }
 
-void gus_poll(void *p)
-{
-        gus_t *gus = (gus_t *)p;
-        
-        if (gus->pos >= SOUNDBUFLEN)
-                return;
-
-        //pclog("gus_poll\n");
-        gus->buffer[0][gus->pos] = gus->out_l;
-        gus->buffer[1][gus->pos] = gus->out_r;
-
-        gus->pos++;
-}
-
 static void gus_get_buffer(int16_t *buffer, int len, void *p)
 {
         gus_t *gus = (gus_t *)p;
         int c;
 
+        gus_update(gus);
+        
         for (c = 0; c < len * 2; c++)
         {
                 buffer[c] += gus->buffer[c & 1][c >> 1];
@@ -1085,7 +1084,7 @@ void *gus_init()
         timer_add(gus_poll_timer_1, &gus->timer_1, TIMER_ALWAYS_ENABLED,  gus);
         timer_add(gus_poll_timer_2, &gus->timer_2, TIMER_ALWAYS_ENABLED,  gus);
 
-        sound_add_handler(gus_poll, gus_get_buffer, gus);
+        sound_add_handler(gus_get_buffer, gus);
         
         return gus;
 }

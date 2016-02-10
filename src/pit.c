@@ -572,7 +572,11 @@ void pit_refresh_timer_at(int new_out, int old_out)
 
 void pit_speaker_timer(int new_out, int old_out)
 {
-        int l = pit.l[2] ? pit.l[2] : 0x10000;
+        int l;
+        
+        speaker_update();
+        
+        l = pit.l[2] ? pit.l[2] : 0x10000;
         if (l < 25)
                 speakon = 0;
         else

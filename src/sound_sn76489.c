@@ -17,48 +17,47 @@ static float volslog[16]=
 
 #define PSGCONST ((3579545.0 / 64.0) / 48000.0)
 
-void sn76489_poll(void *p)
+void sn76489_update(sn76489_t *sn76489)
 {
-        sn76489_t *sn76489 = (sn76489_t *)p;
-        int c;
-        int16_t result = 0;
-        
-        if (sn76489->pos >= SOUNDBUFLEN)
-                return;
-                
-        for (c = 1; c < 4; c++)
+        for (; sn76489->pos < sound_pos_global; sn76489->pos++)
         {
-                if (sn76489->latch[c] > 256) result += (int16_t) (volslog[sn76489->vol[c]] * sn76489->stat[c]);
-                else                         result += (int16_t) (volslog[sn76489->vol[c]] * 127);
+                int c;
+                int16_t result = 0;
+                        
+                for (c = 1; c < 4; c++)
+                {
+                        if (sn76489->latch[c] > 256) result += (int16_t) (volslog[sn76489->vol[c]] * sn76489->stat[c]);
+                        else                         result += (int16_t) (volslog[sn76489->vol[c]] * 127);
 
-                sn76489->count[c] -= (256 * PSGCONST);
-                while ((int)sn76489->count[c] < 0)
-                {
-                        sn76489->count[c] += sn76489->latch[c];
-                        sn76489->stat[c] = -sn76489->stat[c];
+                        sn76489->count[c] -= (256 * PSGCONST);
+                        while ((int)sn76489->count[c] < 0)
+                        {
+                                sn76489->count[c] += sn76489->latch[c];
+                                sn76489->stat[c] = -sn76489->stat[c];
+                        }
                 }
-        }
-        result += (((sn76489->shift & 1) ^ 1) * 127 * volslog[sn76489->vol[0]] * 2);
+                result += (((sn76489->shift & 1) ^ 1) * 127 * volslog[sn76489->vol[0]] * 2);
 
-        sn76489->count[0] -= (512 * PSGCONST);
-        while ((int)sn76489->count[0] < 0 && sn76489->latch[0])
-        {
-                sn76489->count[0] += (sn76489->latch[0] * 4);
-                if (!(sn76489->noise & 4))
+                sn76489->count[0] -= (512 * PSGCONST);
+                while ((int)sn76489->count[0] < 0 && sn76489->latch[0])
                 {
-                        if (sn76489->shift & 1) 
-                                sn76489->shift |= 0x8000;
-                        sn76489->shift >>= 1;
+                        sn76489->count[0] += (sn76489->latch[0] * 4);
+                        if (!(sn76489->noise & 4))
+                        {
+                                if (sn76489->shift & 1) 
+                                        sn76489->shift |= 0x8000;
+                                sn76489->shift >>= 1;
+                        }
+                        else
+                        {
+                                if ((sn76489->shift & 1) ^ ((sn76489->shift >> 1) & 1)) 
+                                        sn76489->shift |= 0x8000;
+                                sn76489->shift >>= 1;
+                        }
                 }
-                else
-                {
-                        if ((sn76489->shift & 1) ^ ((sn76489->shift >> 1) & 1)) 
-                                sn76489->shift |= 0x8000;
-                        sn76489->shift >>= 1;
-                }
-        }
         
-        sn76489->buffer[sn76489->pos++] = result;
+                sn76489->buffer[sn76489->pos] = result;
+        }
 }
 
 void sn76489_get_buffer(int16_t *buffer, int len, void *p)
@@ -66,6 +65,8 @@ void sn76489_get_buffer(int16_t *buffer, int len, void *p)
         sn76489_t *sn76489 = (sn76489_t *)p;
         
         int c;
+        
+        sn76489_update(sn76489);
         
         if (!sn76489_mute)
         {
@@ -81,6 +82,8 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
         sn76489_t *sn76489 = (sn76489_t *)p;
         int freq;
 
+        sn76489_update(sn76489);
+        
         if (data & 0x80)
         {
                 sn76489->firstdat = data;
@@ -176,7 +179,7 @@ void sn74689_set_extra_divide(sn76489_t *sn76489, int enable)
 
 void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type)
 {
-        sound_add_handler(sn76489_poll, sn76489_get_buffer, sn76489);
+        sound_add_handler(sn76489_get_buffer, sn76489);
 
         sn76489->latch[0] = sn76489->latch[1] = sn76489->latch[2] = sn76489->latch[3] = 0x3FF << 6;
         sn76489->vol[0] = 0;

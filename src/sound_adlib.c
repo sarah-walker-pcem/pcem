@@ -9,29 +9,19 @@
 typedef struct adlib_t
 {
         opl_t   opl;
-        int16_t buffer[SOUNDBUFLEN * 2];
-        int     pos;
 } adlib_t;
-
-static void adlib_poll(void *p)
-{
-        adlib_t *adlib = (adlib_t *)p;
-        
-        if (adlib->pos >= SOUNDBUFLEN) return;
-        
-        opl2_poll(&adlib->opl, &adlib->buffer[adlib->pos * 2], &adlib->buffer[(adlib->pos * 2) + 1]);
-        adlib->pos++;
-}
 
 static void adlib_get_buffer(int16_t *buffer, int len, void *p)
 {
         adlib_t *adlib = (adlib_t *)p;
         int c;
 
+        opl2_update2(&adlib->opl);
+        
         for (c = 0; c < len * 2; c++)
-                buffer[c] += adlib->buffer[c];
+                buffer[c] += adlib->opl.buffer[c];
 
-        adlib->pos = 0;
+        adlib->opl.pos = 0;
 }
 
 void *adlib_init()
@@ -42,7 +32,7 @@ void *adlib_init()
         pclog("adlib_init\n");
         opl2_init(&adlib->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &adlib->opl);
-        sound_add_handler(adlib_poll, adlib_get_buffer, adlib);
+        sound_add_handler(adlib_get_buffer, adlib);
         return adlib;
 }
 

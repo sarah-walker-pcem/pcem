@@ -78,14 +78,14 @@ void sound_card_init()
 
 static struct
 {
-        void (*poll)(void *p);
         void (*get_buffer)(int16_t *buffer, int len, void *p);
         void *priv;
 } sound_handlers[8];
 
 static int sound_handlers_num;
 
-static int sound_poll_time = 0, sound_get_buffer_time = 0;
+static int sound_poll_time = 0, sound_get_buffer_time = 0, sound_poll_latch;
+int sound_pos_global = 0;
 
 int soundon = 1;
 
@@ -133,9 +133,8 @@ void sound_init()
         sound_cd_thread_h = thread_create(sound_cd_thread, NULL);
 }
 
-void sound_add_handler(void (*poll)(void *p), void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
+void sound_add_handler(void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
 {
-        sound_handlers[sound_handlers_num].poll = poll;
         sound_handlers[sound_handlers_num].get_buffer = get_buffer;
         sound_handlers[sound_handlers_num].priv = p;
         sound_handlers_num++;
@@ -143,39 +142,37 @@ void sound_add_handler(void (*poll)(void *p), void (*get_buffer)(int16_t *buffer
 
 void sound_poll(void *priv)
 {
-        int c;
+        sound_poll_time += sound_poll_latch;
+        
+        sound_pos_global++;
+        if (sound_pos_global == SOUNDBUFLEN)
+        {
+                int c;
 
-        sound_poll_time += (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
-         
-        for (c = 0; c < sound_handlers_num; c++)
-                sound_handlers[c].poll(sound_handlers[c].priv);
-}
+                memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int16_t));
 
-FILE *soundf;
-
-void sound_get_buffer(void *priv)
-{
-        int c;
-
-        sound_get_buffer_time += (TIMER_USEC * (1000000 / 10));
-
-        memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int16_t));
-
-        for (c = 0; c < sound_handlers_num; c++)
-                sound_handlers[c].get_buffer(outbuffer, SOUNDBUFLEN, sound_handlers[c].priv);
+                for (c = 0; c < sound_handlers_num; c++)
+                        sound_handlers[c].get_buffer(outbuffer, SOUNDBUFLEN, sound_handlers[c].priv);
 
 /*        if (!soundf) soundf=fopen("sound.pcm","wb");
         fwrite(outbuffer,(SOUNDBUFLEN)*2*2,1,soundf);*/
         
-        if (soundon) givealbuffer(outbuffer);
+                if (soundon) givealbuffer(outbuffer);
         
-        thread_set_event(sound_cd_event);
+                thread_set_event(sound_cd_event);
+
+                sound_pos_global = 0;
+        }
+}
+
+void sound_speed_changed()
+{
+        sound_poll_latch = (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
 }
 
 void sound_reset()
 {
         timer_add(sound_poll, &sound_poll_time, TIMER_ALWAYS_ENABLED, NULL);
-	timer_add(sound_get_buffer, &sound_get_buffer_time, TIMER_ALWAYS_ENABLED, NULL);
 
         sound_handlers_num = 0;
         

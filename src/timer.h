@@ -1,3 +1,6 @@
+#ifndef _TIMER_H_
+#define _TIMER_H_
+
 extern int timer_start;
 
 #define timer_start_period(cycles)                      \
@@ -49,3 +52,5 @@ extern int timer_one;
 #define TIMER_SHIFT 6
 
 extern int TIMER_USEC;
+
+#endif /*_TIMER_H_*/

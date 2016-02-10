@@ -8,9 +8,8 @@
 #include "io.h"
 #include "pic.h"
 #include "pit.h"
+#include "sound.h"
 #include "timer.h"
-
-void adgold_timer_poll();
 
 typedef struct adgold_t
 {
@@ -52,6 +51,9 @@ typedef struct adgold_t
 
         int pos;
 } adgold_t;
+
+void adgold_timer_poll();
+void adgold_update(adgold_t *adgold);
 
 void adgold_update_irq_status(adgold_t *adgold)
 {
@@ -280,6 +282,7 @@ void adgold_write(uint16_t addr, uint8_t val, void *p)
                 switch (adgold->adgold_mma_addr)
                 {
                         case 0x9:
+                        adgold_update(adgold);
                         switch (val & 0x18)
                         {
                                 case 0x00: adgold->adgold_mma.voice_latch[1] = 12; break; /*44100 Hz*/
@@ -401,10 +404,30 @@ uint8_t adgold_read(uint16_t addr, void *p)
         return temp;
 }
 
+void adgold_update(adgold_t *adgold)
+{
+        for (; adgold->pos < sound_pos_global; adgold->pos++)
+        {
+                adgold->mma_buffer[0][adgold->pos] = adgold->mma_buffer[1][adgold->pos] = 0;
+        
+                if (adgold->adgold_mma_regs[0][9] & 0x20)
+                        adgold->mma_buffer[0][adgold->pos] += adgold->adgold_mma_out[0] / 2;
+                if (adgold->adgold_mma_regs[0][9] & 0x40)
+                        adgold->mma_buffer[1][adgold->pos] += adgold->adgold_mma_out[0] / 2;
+
+                if (adgold->adgold_mma_regs[1][9] & 0x20)
+                        adgold->mma_buffer[0][adgold->pos] += adgold->adgold_mma_out[1] / 2;
+                if (adgold->adgold_mma_regs[1][9] & 0x40)
+                        adgold->mma_buffer[1][adgold->pos] += adgold->adgold_mma_out[1] / 2;
+        }
+}
+
 void adgold_mma_poll(adgold_t *adgold, int channel)
 {
         int16_t dat;
 
+        adgold_update(adgold);
+        
         if (adgold->adgold_mma_fifo_start[channel] != adgold->adgold_mma_fifo_end[channel])
         {
                 switch (adgold->adgold_mma_regs[channel][0xc] & 0x60)
@@ -514,41 +537,20 @@ void adgold_timer_poll(void *p)
         }
 }
 
-void adgold_poll(void *p)
-{
-        adgold_t *adgold = (adgold_t *)p;
-        
-        if (adgold->pos >= SOUNDBUFLEN)
-                return;
-
-        opl3_poll(&adgold->opl, &adgold->opl_buffer[adgold->pos * 2], &adgold->opl_buffer[(adgold->pos * 2) + 1]);
-        adgold->mma_buffer[0][adgold->pos] = adgold->mma_buffer[1][adgold->pos] = 0;
-        
-        if (adgold->adgold_mma_regs[0][9] & 0x20)
-                adgold->mma_buffer[0][adgold->pos] += adgold->adgold_mma_out[0] / 2;
-        if (adgold->adgold_mma_regs[0][9] & 0x40)
-                adgold->mma_buffer[1][adgold->pos] += adgold->adgold_mma_out[0] / 2;
-
-        if (adgold->adgold_mma_regs[1][9] & 0x20)
-                adgold->mma_buffer[0][adgold->pos] += adgold->adgold_mma_out[1] / 2;
-        if (adgold->adgold_mma_regs[1][9] & 0x40)
-                adgold->mma_buffer[1][adgold->pos] += adgold->adgold_mma_out[1] / 2;
-
-        adgold->pos++;
-}
-
 static void adgold_get_buffer(int16_t *buffer, int len, void *p)
 {
         adgold_t *adgold = (adgold_t *)p;
         
         int c;
 
+        opl3_update2(&adgold->opl);
         for (c = 0; c < len * 2; c++)
         {
-                buffer[c] += adgold->opl_buffer[c];
+                buffer[c] += adgold->opl.buffer[c];
                 buffer[c] += adgold->mma_buffer[c & 1][c >> 1] / 2;
         }
 
+        adgold->opl.pos = 0;
         adgold->pos = 0;
 }
 
@@ -576,7 +578,7 @@ void *adgold_init()
         
         timer_add(adgold_timer_poll, &adgold->adgold_mma_timer_count, TIMER_ALWAYS_ENABLED, adgold);
 
-        sound_add_handler(adgold_poll, adgold_get_buffer, adgold);
+        sound_add_handler(adgold_get_buffer, adgold);
         
         return adgold;
 }

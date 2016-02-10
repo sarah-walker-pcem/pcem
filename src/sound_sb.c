@@ -31,10 +31,6 @@ typedef struct sb_t
         mpu401_uart_t   mpu;
         emu8k_t         emu8k;
 
-        int16_t opl_buffer[SOUNDBUFLEN * 2];
-        int16_t dsp_buffer[SOUNDBUFLEN * 2];
-        int16_t emu8k_buffer[SOUNDBUFLEN * 2];
-
         int pos;
 } sb_t;
 
@@ -45,68 +41,31 @@ static int sb_att[]=
         39036,46395,55140,65535
 };
 
-
-
-static void sb_opl2_poll(void *p)
-{
-        sb_t *sb = (sb_t *)p;
-        
-        if (sb->pos >= SOUNDBUFLEN) return;
-        
-        opl2_poll(&sb->opl, &sb->opl_buffer[sb->pos * 2], &sb->opl_buffer[(sb->pos * 2) + 1]);
-        sb_dsp_poll(&sb->dsp, &sb->dsp_buffer[sb->pos * 2], &sb->dsp_buffer[(sb->pos * 2) + 1]);
-        sb->pos++;
-}
-
-static void sb_opl3_poll(void *p)
-{
-        sb_t *sb = (sb_t *)p;
-        
-        if (sb->pos >= SOUNDBUFLEN) return;
-        
-        opl3_poll(&sb->opl, &sb->opl_buffer[sb->pos * 2], &sb->opl_buffer[(sb->pos * 2) + 1]);
-        sb_dsp_poll(&sb->dsp, &sb->dsp_buffer[sb->pos * 2], &sb->dsp_buffer[(sb->pos * 2) + 1]);
-        sb->pos++;
-}
-
-static void sb_emu8k_poll(void *p)
-{
-        sb_t *sb = (sb_t *)p;
-        
-        if (sb->pos >= SOUNDBUFLEN) return;
-        
-        opl3_poll(&sb->opl, &sb->opl_buffer[sb->pos * 2], &sb->opl_buffer[(sb->pos * 2) + 1]);
-        sb_dsp_poll(&sb->dsp, &sb->dsp_buffer[sb->pos * 2], &sb->dsp_buffer[(sb->pos * 2) + 1]);
-        emu8k_poll_getsamp(&sb->emu8k, &sb->emu8k_buffer[sb->pos * 2], &sb->emu8k_buffer[(sb->pos * 2) + 1]);
-        sb->pos++;
-}
-
-static void sb_get_buffer(int16_t *buffer, int len, void *p)
+static void sb_get_buffer_opl2(int16_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         sb_mixer_t *mixer = &sb->mixer;
                 
         int c;
 
+        opl2_update2(&sb->opl);
+        sb_dsp_update(&sb->dsp);
         for (c = 0; c < len * 2; c += 2)
         {
                 int16_t out_l, out_r;
                 
-                out_l = ((sb->opl_buffer[c]     * mixer->fm_l) >> 16);
-                out_r = ((sb->opl_buffer[c + 1] * mixer->fm_r) >> 16);
-
-                out_l += ((sb->emu8k_buffer[c]     * mixer->fm_l) >> 16);
-                out_r += ((sb->emu8k_buffer[c + 1] * mixer->fm_l) >> 16);
+                out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
+                out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
 
                 if (sb->mixer.filter)
                 {
-                        out_l += (int)(((sb_iir(0, (float)sb->dsp_buffer[c])     / 1.3) * mixer->voice_l) / 3) >> 16;
-                        out_r += (int)(((sb_iir(1, (float)sb->dsp_buffer[c + 1]) / 1.3) * mixer->voice_r) / 3) >> 16;
+                        out_l += (int)(((sb_iir(0, (float)sb->dsp.buffer[c])     / 1.3) * mixer->voice_l) / 3) >> 16;
+                        out_r += (int)(((sb_iir(1, (float)sb->dsp.buffer[c + 1]) / 1.3) * mixer->voice_r) / 3) >> 16;
                 }
                 else
                 {
-                        out_l += ((int32_t)(sb->dsp_buffer[c]     * mixer->voice_l) / 3) >> 16;
-                        out_r += ((int32_t)(sb->dsp_buffer[c + 1] * mixer->voice_r) / 3) >> 16;
+                        out_l += ((int32_t)(sb->dsp.buffer[c]     * mixer->voice_l) / 3) >> 16;
+                        out_r += ((int32_t)(sb->dsp.buffer[c + 1] * mixer->voice_r) / 3) >> 16;
                 }
                 
                 out_l = (out_l * mixer->master_l) >> 16;
@@ -129,8 +88,119 @@ static void sb_get_buffer(int16_t *buffer, int len, void *p)
         }
 
         sb->pos = 0;
+        sb->opl.pos = 0;
+        sb->dsp.pos = 0;
 }
 
+static void sb_get_buffer_opl3(int16_t *buffer, int len, void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        sb_mixer_t *mixer = &sb->mixer;
+                
+        int c;
+
+        opl3_update2(&sb->opl);
+        sb_dsp_update(&sb->dsp);
+        for (c = 0; c < len * 2; c += 2)
+        {
+                int c_emu8k = (((c/2) * 44100) / 48000)*2;
+                int16_t out_l, out_r;
+                
+                out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
+                out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
+
+                if (sb->mixer.filter)
+                {
+                        out_l += (int)(((sb_iir(0, (float)sb->dsp.buffer[c])     / 1.3) * mixer->voice_l) / 3) >> 16;
+                        out_r += (int)(((sb_iir(1, (float)sb->dsp.buffer[c + 1]) / 1.3) * mixer->voice_r) / 3) >> 16;
+                }
+                else
+                {
+                        out_l += ((int32_t)(sb->dsp.buffer[c]     * mixer->voice_l) / 3) >> 16;
+                        out_r += ((int32_t)(sb->dsp.buffer[c + 1] * mixer->voice_r) / 3) >> 16;
+                }
+                
+                out_l = (out_l * mixer->master_l) >> 16;
+                out_r = (out_r * mixer->master_r) >> 16;
+
+                if (mixer->bass_l != 8 || mixer->bass_r != 8 || mixer->treble_l != 8 || mixer->treble_r != 8)
+                {
+                        if (mixer->bass_l>8)   out_l = (out_l + (((int16_t)     low_iir(0, (float)out_l) * (mixer->bass_l   - 8)) >> 1)) * ((15 - mixer->bass_l)   + 16) >> 5;
+                        if (mixer->bass_r>8)   out_r = (out_r + (((int16_t)     low_iir(1, (float)out_r) * (mixer->bass_r   - 8)) >> 1)) * ((15 - mixer->bass_r)   + 16) >> 5;
+                        if (mixer->treble_l>8) out_l = (out_l + (((int16_t)    high_iir(0, (float)out_l) * (mixer->treble_l - 8)) >> 1)) * ((15 - mixer->treble_l) + 16) >> 5;
+                        if (mixer->treble_r>8) out_r = (out_r + (((int16_t)    high_iir(1, (float)out_r) * (mixer->treble_r - 8)) >> 1)) * ((15 - mixer->treble_r) + 16) >> 5;
+                        if (mixer->bass_l<8)   out_l = (out_l + (((int16_t) low_cut_iir(0, (float)out_l) * (8 - mixer->bass_l))   >> 1)) * (mixer->bass_l   + 16)        >> 5;
+                        if (mixer->bass_r<8)   out_r = (out_r + (((int16_t) low_cut_iir(1, (float)out_r) * (8 - mixer->bass_r))   >> 1)) * (mixer->bass_r   + 16)        >> 5;
+                        if (mixer->treble_l<8) out_l = (out_l + (((int16_t)high_cut_iir(0, (float)out_l) * (8 - mixer->treble_l)) >> 1)) * (mixer->treble_l + 16)        >> 5;
+                        if (mixer->treble_r<8) out_r = (out_r + (((int16_t)high_cut_iir(1, (float)out_r) * (8 - mixer->treble_r)) >> 1)) * (mixer->treble_r + 16)        >> 5;
+                }
+                        
+                buffer[c]     += out_l;
+                buffer[c + 1] += out_r;
+        }
+
+        sb->pos = 0;
+        sb->opl.pos = 0;
+        sb->dsp.pos = 0;
+        sb->emu8k.pos = 0;
+}
+
+static void sb_get_buffer_emu8k(int16_t *buffer, int len, void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        sb_mixer_t *mixer = &sb->mixer;
+                
+        int c;
+
+        opl3_update2(&sb->opl);
+        sb_dsp_update(&sb->dsp);
+        emu8k_update(&sb->emu8k);
+        for (c = 0; c < len * 2; c += 2)
+        {
+                int c_emu8k = (((c/2) * 44100) / 48000)*2;
+                int16_t out_l, out_r;
+                
+                out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
+                out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
+
+                out_l += ((sb->emu8k.buffer[c_emu8k]     * mixer->fm_l) >> 16);
+                out_r += ((sb->emu8k.buffer[c_emu8k + 1] * mixer->fm_l) >> 16);
+
+                if (sb->mixer.filter)
+                {
+                        out_l += (int)(((sb_iir(0, (float)sb->dsp.buffer[c])     / 1.3) * mixer->voice_l) / 3) >> 16;
+                        out_r += (int)(((sb_iir(1, (float)sb->dsp.buffer[c + 1]) / 1.3) * mixer->voice_r) / 3) >> 16;
+                }
+                else
+                {
+                        out_l += ((int32_t)(sb->dsp.buffer[c]     * mixer->voice_l) / 3) >> 16;
+                        out_r += ((int32_t)(sb->dsp.buffer[c + 1] * mixer->voice_r) / 3) >> 16;
+                }
+                
+                out_l = (out_l * mixer->master_l) >> 16;
+                out_r = (out_r * mixer->master_r) >> 16;
+
+                if (mixer->bass_l != 8 || mixer->bass_r != 8 || mixer->treble_l != 8 || mixer->treble_r != 8)
+                {
+                        if (mixer->bass_l>8)   out_l = (out_l + (((int16_t)     low_iir(0, (float)out_l) * (mixer->bass_l   - 8)) >> 1)) * ((15 - mixer->bass_l)   + 16) >> 5;
+                        if (mixer->bass_r>8)   out_r = (out_r + (((int16_t)     low_iir(1, (float)out_r) * (mixer->bass_r   - 8)) >> 1)) * ((15 - mixer->bass_r)   + 16) >> 5;
+                        if (mixer->treble_l>8) out_l = (out_l + (((int16_t)    high_iir(0, (float)out_l) * (mixer->treble_l - 8)) >> 1)) * ((15 - mixer->treble_l) + 16) >> 5;
+                        if (mixer->treble_r>8) out_r = (out_r + (((int16_t)    high_iir(1, (float)out_r) * (mixer->treble_r - 8)) >> 1)) * ((15 - mixer->treble_r) + 16) >> 5;
+                        if (mixer->bass_l<8)   out_l = (out_l + (((int16_t) low_cut_iir(0, (float)out_l) * (8 - mixer->bass_l))   >> 1)) * (mixer->bass_l   + 16)        >> 5;
+                        if (mixer->bass_r<8)   out_r = (out_r + (((int16_t) low_cut_iir(1, (float)out_r) * (8 - mixer->bass_r))   >> 1)) * (mixer->bass_r   + 16)        >> 5;
+                        if (mixer->treble_l<8) out_l = (out_l + (((int16_t)high_cut_iir(0, (float)out_l) * (8 - mixer->treble_l)) >> 1)) * (mixer->treble_l + 16)        >> 5;
+                        if (mixer->treble_r<8) out_r = (out_r + (((int16_t)high_cut_iir(1, (float)out_r) * (8 - mixer->treble_r)) >> 1)) * (mixer->treble_r + 16)        >> 5;
+                }
+                        
+                buffer[c]     += out_l;
+                buffer[c + 1] += out_r;
+        }
+
+        sb->pos = 0;
+        sb->opl.pos = 0;
+        sb->dsp.pos = 0;
+        sb->emu8k.pos = 0;
+}
 
 void sb_pro_mixer_write(uint16_t addr, uint8_t val, void *p)
 {
@@ -280,7 +350,7 @@ void *sb_1_init()
         sb_mixer_init(&sb->mixer);
         io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
-        sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl2, sb);
         return sb;
 }
 void *sb_15_init()
@@ -297,7 +367,7 @@ void *sb_15_init()
         sb_mixer_init(&sb->mixer);
         io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
-        sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl2, sb);
         return sb;
 }
 void *sb_2_init()
@@ -314,7 +384,7 @@ void *sb_2_init()
         sb_mixer_init(&sb->mixer);
         io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
-        sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl2, sb);
         return sb;
 }
 
@@ -335,7 +405,7 @@ void *sb_pro_v1_init()
         io_sethandler(addr+8, 0x0002, opl2_read,   NULL, NULL, opl2_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read,   NULL, NULL, opl2_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
-        sound_add_handler(sb_opl2_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl2, sb);
 
         sb->mixer.regs[0x22] = 0xff;
         sb->mixer.regs[0x04] = 0xff;
@@ -361,7 +431,7 @@ void *sb_pro_v2_init()
         io_sethandler(addr+8, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
-        sound_add_handler(sb_opl3_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl3, sb);
 
         sb->mixer.regs[0x22] = 0xff;
         sb->mixer.regs[0x04] = 0xff;
@@ -384,7 +454,7 @@ void *sb_16_init()
         io_sethandler(0x0228, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0224, 0x0002, sb_16_mixer_read, NULL, NULL, sb_16_mixer_write, NULL, NULL, sb);
-        sound_add_handler(sb_opl3_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_opl3, sb);
         mpu401_uart_init(&sb->mpu, 0x330);
 
         sb->mixer.regs[0x30] = 31 << 3;
@@ -423,7 +493,7 @@ void *sb_awe32_init()
         io_sethandler(0x0228, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(0x0224, 0x0002, sb_16_mixer_read, NULL, NULL, sb_16_mixer_write, NULL, NULL, sb);
-        sound_add_handler(sb_emu8k_poll, sb_get_buffer, sb);
+        sound_add_handler(sb_get_buffer_emu8k, sb);
         mpu401_uart_init(&sb->mpu, 0x330);       
         emu8k_init(&sb->emu8k, onboard_ram);
 

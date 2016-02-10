@@ -1,6 +1,7 @@
 #include "ibm.h"
 #include "config.h"
 #include "device.h"
+#include "sound.h"
 
 static void *device_priv[256];
 static device_t *devices[256];
@@ -73,6 +74,8 @@ void device_speed_changed()
                         }
                 }
         }
+        
+        sound_speed_changed();
 }
 
 void device_force_redraw()

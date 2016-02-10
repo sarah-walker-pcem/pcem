@@ -79,9 +79,12 @@ typedef struct emu8k_t
         int timer_count;
         
         int16_t out_l, out_r;
+        
+        int pos;
+        int32_t buffer[SOUNDBUFLEN * 2];
 } emu8k_t;
 
 void emu8k_init(emu8k_t *emu8k, int onboard_ram);
 void emu8k_close(emu8k_t *emu8k);
 
-void emu8k_poll_getsamp(emu8k_t *dsp, int16_t *l, int16_t *r);
+void emu8k_update(emu8k_t *emu8k);

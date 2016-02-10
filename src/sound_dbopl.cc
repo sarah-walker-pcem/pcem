@@ -126,19 +126,16 @@ void opl2_update(int nr, int16_t *buffer, int samples)
         opl[nr].chip.GenerateBlock2(samples, buffer_32);
         
         for (c = 0; c < samples; c++)
-                buffer[c] = (int16_t)buffer_32[c];
+                buffer[c*2] = (int16_t)buffer_32[c];
 }
 
-void opl3_update(int nr, int16_t *bufferl, int16_t *bufferr, int samples)
+void opl3_update(int nr, int16_t *buffer, int samples)
 {
         int c;
         Bit32s buffer_32[samples*2];
         
         opl[nr].chip.GenerateBlock3(samples, buffer_32);
         
-        for (c = 0; c < samples; c++)
-        {
-                bufferl[c] = (int16_t)buffer_32[c*2];
-                bufferr[c] = (int16_t)buffer_32[(c*2)+1];
-        }
+        for (c = 0; c < samples*2; c++)
+                buffer[c] = (int16_t)buffer_32[c];
 }
