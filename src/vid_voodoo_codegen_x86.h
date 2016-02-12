@@ -66,10 +66,8 @@ static __m128i xmm_01_w;// = 0x0001000100010001ull;
 static __m128i xmm_ff_w;// = 0x00ff00ff00ff00ffull;
 static __m128i xmm_ff_b;// = 0x00000000ffffffffull;
 
-static uint32_t ebp_store2;
 static uint32_t zero = 0;
 static double const_1_48 = (double)(1ull << 4);
-static float log_temp;
 
 static __m128i alookup[257], aminuslookup[256];
 static __m128i minus_254;// = 0xff02ff02ff02ff02ull;
@@ -335,15 +333,14 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0xd9); /*FXCH ST(2)*/          /*ST(0)=1/w, ST(1)=s/w, ST(2)=t/w*/
                 addbyte(0xca);
                 addbyte(0xd9); /*FSTPs log_temp*/      /*ST(0)=s/w, ST(1)=t/w*/
-                addbyte(0x1d);
-                addlong(&log_temp);
-//                addbyte(0xdd); /*FSTP ST(0)*/
-//                addbyte(0xd8);
+                addbyte(0x9f);
+                addlong(offsetof(voodoo_state_t, log_temp));
                 addbyte(0xdf); /*FSITPq state->tex_s*/
                 addbyte(0xbf);
                 addlong(offsetof(voodoo_state_t, tex_s));
-                addbyte(0xa1); /*MOV EAX, log_temp*/
-                addlong(&log_temp);
+                addbyte(0x8b); /*MOV EAX, log_temp*/
+                addbyte(0x87);
+                addlong(offsetof(voodoo_state_t, log_temp));
                 addbyte(0xdf); /*FSITPq state->tex_t*/
                 addbyte(0xbf);
                 addlong(offsetof(voodoo_state_t, tex_t));
@@ -526,9 +523,9 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0x8d); /*LEA ESI, [ESI+ECX*4]*/
                         addbyte(0x34);
                         addbyte(0x8e);
-                        addbyte(0x89); /*MOV ebp_store2, EBP*/
-                        addbyte(0x2d);
-                        addlong(&ebp_store2);
+                        addbyte(0x89); /*MOV ebp_store, EBP*/
+                        addbyte(0xaf);
+                        addlong(offsetof(voodoo_state_t, ebp_store));
                         addbyte(0x8b); /*MOV EBP, state->tex[EDI+ECX*4]*/
                         addbyte(0xac);
                         addbyte(0x8f);
@@ -613,8 +610,8 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                                 addbyte(0x85); /*TEST EAX, EAX*/
                                 addbyte(0xc0);
                                 addbyte(0x8b); /*MOV ebp_store2, ESI*/
-                                addbyte(0x35);
-                                addlong(&ebp_store2);
+                                addbyte(0xb7);
+                                addlong(offsetof(voodoo_state_t, ebp_store));
                                 addbyte(0x0f); /*CMOVS EAX, zero*/
                                 addbyte(0x48);
                                 addbyte(0x05);
@@ -635,8 +632,8 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                                 addbyte(0x86);
                                 addlong(offsetof(voodoo_params_t, tex_w_mask));
                                 addbyte(0x8b); /*MOV ebp_store2, ESI*/
-                                addbyte(0x35);
-                                addlong(&ebp_store2);
+                                addbyte(0xb7);
+                                addlong(offsetof(voodoo_state_t, ebp_store));
                                 addbyte(0x74); /*JE +*/
                                 addbyte((state->tformat & 8) ? (3+3+2) : (4+4+2));
                         }

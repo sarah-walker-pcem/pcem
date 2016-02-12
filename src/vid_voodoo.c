@@ -967,6 +967,9 @@ typedef struct voodoo_state_t
         int x, x2;
         
         uint32_t w_depth;
+        
+        float log_temp;
+        uint32_t ebp_store;
 } voodoo_state_t;
 
 static int voodoo_output = 0;
