@@ -160,6 +160,7 @@ extern uint32_t op_old_pc;
 extern int codegen_flags_changed;
 
 extern int codegen_fpu_entered;
+extern int codegen_mmx_entered;
 
 extern int codegen_fpu_loaded_iq[8];
 extern int codegen_reg_loaded[8];

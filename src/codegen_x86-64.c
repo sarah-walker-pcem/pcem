@@ -35,9 +35,10 @@ uint32_t op_old_pc;
 uint32_t recomp_page = -1;
 
 int host_reg_mapping[NR_HOST_REGS];
+int host_reg_xmm_mapping[NR_HOST_XMM_REGS];
 codeblock_t *codeblock;
 codeblock_t **codeblock_hash;
-
+int codegen_mmx_entered = 0;
 
 int block_current = 0;
 static int block_num;
@@ -292,7 +293,8 @@ void codegen_block_init(uint32_t phys_addr)
         
         codegen_flags_changed = 0;
         codegen_fpu_entered = 0;
-
+        codegen_mmx_entered = 0;
+        
         codegen_fpu_loaded_iq[0] = codegen_fpu_loaded_iq[1] = codegen_fpu_loaded_iq[2] = codegen_fpu_loaded_iq[3] =
         codegen_fpu_loaded_iq[4] = codegen_fpu_loaded_iq[5] = codegen_fpu_loaded_iq[6] = codegen_fpu_loaded_iq[7] = 0;
         
@@ -920,6 +922,8 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         
         for (c = 0; c < NR_HOST_REGS; c++)
                 host_reg_mapping[c] = -1;
+        for (c = 0; c < NR_HOST_XMM_REGS; c++)
+                host_reg_xmm_mapping[c] = -1;
         
         codegen_timing_start();
 

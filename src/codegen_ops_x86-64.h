@@ -2,6 +2,21 @@
         R8-R15 - emulated registers
 */
 
+#define HOST_REG_XMM_START 0
+#define HOST_REG_XMM_END 7
+static inline int find_host_xmm_reg()
+{
+        int c;
+        for (c = HOST_REG_XMM_START; c < HOST_REG_XMM_END; c++)
+        {
+                if (host_reg_xmm_mapping[c] == -1)
+                        break;
+        }
+        
+        if (c == HOST_REG_XMM_END)
+                fatal("Out of host XMM regs!\n");
+        return c;
+}
 static void call(codeblock_t *block, uintptr_t func)
 {
 	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
@@ -4346,4 +4361,350 @@ static void CLEAR_BITS(uintptr_t addr, uint32_t val)
                 addlong(addr);
                 addbyte(~val);
         }
+}
+
+#define LOAD_Q_REG_1 REG_EAX
+#define LOAD_Q_REG_2 REG_EDX
+
+static void MMX_ENTER()
+{
+        if (codegen_mmx_entered)
+                return;
+                
+        addbyte(0xf6); /*TEST cr0, 0xc*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uintptr_t)&cr0);
+        addbyte(0xc);
+        addbyte(0x74); /*JZ +*/
+        addbyte(11+5+12+5);
+        addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uintptr_t)&oldpc);
+        addlong(op_old_pc);
+        load_param_1_32(&codeblock[block_current], 7);
+        CALL_FUNC(x86_int);
+        addbyte(0xe9); /*JMP end*/
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+
+ 
+        addbyte(0x31); /*XOR EAX, EAX*/
+        addbyte(0xc0);
+        addbyte(0xc7); /*MOV ISMMX, 1*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uint32_t)&ismmx);
+        addlong(1);
+        addbyte(0x89); /*MOV TOP, EAX*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uint32_t)&TOP);
+        addbyte(0x89); /*MOV tag, EAX*/      
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uint32_t)&tag[0]);
+        addbyte(0x89); /*MOV tag+4, EAX*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uint32_t)&tag[4]);
+
+        codegen_mmx_entered = 1;
+}
+
+extern int mmx_ebx_ecx_loaded;
+
+static int LOAD_MMX_D(int guest_reg)
+{
+        int host_reg = REG_EBX;
+
+        addbyte(0x8b); /*MOV EBX, reg*/
+        addbyte(0x04 | (host_reg << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].l[0]);
+        
+        return host_reg;
+}
+static void LOAD_MMX_Q(int guest_reg, int *host_reg1, int *host_reg2)
+{
+        int host_reg = REG_EBX;
+
+        if (host_reg & 8)
+                addbyte(0x4c);
+        else
+                addbyte(0x48);
+        addbyte(0x8b); /*MOV RBX, reg*/
+        addbyte(0x04 | ((host_reg & 7) << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].q);
+        
+        *host_reg1 = host_reg;
+}
+static int LOAD_MMX_Q_MMX(int guest_reg)
+{
+        int dst_reg = find_host_xmm_reg();
+        host_reg_xmm_mapping[dst_reg] = 100;
+
+        addbyte(0xf3); /*MOV XMMx, reg*/
+        addbyte(0x0f);
+        addbyte(0x7e);
+        addbyte(0x04 | ((dst_reg & 7) << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].q);
+        
+        return dst_reg;
+}
+
+static int LOAD_INT_TO_MMX(int src_reg1, int src_reg2)
+{
+        int dst_reg = find_host_xmm_reg();
+        host_reg_xmm_mapping[dst_reg] = 100;
+        
+        addbyte(0x66); /*MOVQ host_reg, src_reg1*/
+        if (src_reg1 & 8)
+                addbyte(0x49);
+        else
+                addbyte(0x48);
+        addbyte(0x0f);
+        addbyte(0x6e);
+        addbyte(0xc0 | (dst_reg << 3) | (src_reg1 & 7));
+        
+        return dst_reg;
+}
+
+static void STORE_MMX_LQ(int guest_reg, int host_reg1)
+{
+        addbyte(0xC7); /*MOVL [reg],0*/
+        addbyte(0x04);
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].l[1]);
+        addlong(0);
+        if (host_reg1 & 8)
+                addbyte(0x44);
+        addbyte(0x89); /*MOVL [reg],host_reg*/
+        addbyte(0x04 | ((host_reg1 & 7) << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].l[0]);
+}
+static void STORE_MMX_Q(int guest_reg, int host_reg1, int host_reg2)
+{
+        if (host_reg1 & 8)
+                addbyte(0x4c);
+        else
+                addbyte(0x48);
+        addbyte(0x89); /*MOV [reg],host_reg*/
+        addbyte(0x04 | ((host_reg1 & 7) << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].l[0]);
+}
+static void STORE_MMX_Q_MMX(int guest_reg, int host_reg)
+{
+        addbyte(0x66); /*MOVQ [guest_reg],host_reg*/
+        addbyte(0x0f);
+        addbyte(0xd6);
+        addbyte(0x04 | (host_reg << 3));
+        addbyte(0x25);
+        addlong((uint32_t)&MM[guest_reg].q);
+}
+
+#define MMX_x86_OP(name, opcode)                            \
+static void MMX_ ## name(int dst_reg, int src_reg)      \
+{                                                       \
+        addbyte(0x66); /*op dst_reg, src_reg*/          \
+        addbyte(0x0f);                                  \
+        addbyte(opcode);                                \
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);       \
+}
+
+MMX_x86_OP(AND,  0xdb)
+MMX_x86_OP(ANDN, 0xdf)
+MMX_x86_OP(OR,   0xeb)
+MMX_x86_OP(XOR,  0xef)
+
+MMX_x86_OP(ADDB,   0xfc)
+MMX_x86_OP(ADDW,   0xfd)
+MMX_x86_OP(ADDD,   0xfe)
+MMX_x86_OP(ADDSB,  0xec)
+MMX_x86_OP(ADDSW,  0xed)
+MMX_x86_OP(ADDUSB, 0xdc)
+MMX_x86_OP(ADDUSW, 0xdd)
+
+MMX_x86_OP(SUBB,   0xf8)
+MMX_x86_OP(SUBW,   0xf9)
+MMX_x86_OP(SUBD,   0xfa)
+MMX_x86_OP(SUBSB,  0xe8)
+MMX_x86_OP(SUBSW,  0xe9)
+MMX_x86_OP(SUBUSB, 0xd8)
+MMX_x86_OP(SUBUSW, 0xd9)
+
+MMX_x86_OP(PUNPCKLBW, 0x60);
+MMX_x86_OP(PUNPCKLWD, 0x61);
+MMX_x86_OP(PUNPCKLDQ, 0x62);
+MMX_x86_OP(PCMPGTB,   0x64);
+MMX_x86_OP(PCMPGTW,   0x65);
+MMX_x86_OP(PCMPGTD,   0x66);
+
+MMX_x86_OP(PCMPEQB,   0x74);
+MMX_x86_OP(PCMPEQW,   0x75);
+MMX_x86_OP(PCMPEQD,   0x76);
+
+MMX_x86_OP(PSRLW,   0xd1);
+MMX_x86_OP(PSRLD,   0xd2);
+MMX_x86_OP(PSRLQ,   0xd3);
+MMX_x86_OP(PSRAW,   0xe1);
+MMX_x86_OP(PSRAD,   0xe2);
+MMX_x86_OP(PSLLW,   0xf1);
+MMX_x86_OP(PSLLD,   0xf2);
+MMX_x86_OP(PSLLQ,   0xf3);
+
+MMX_x86_OP(PMULLW,  0xd5);
+MMX_x86_OP(PMULHW,  0xe5);
+MMX_x86_OP(PMADDWD, 0xf5);
+
+static void MMX_PACKSSWB(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PACKSSWB dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x63);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x08);
+}
+static void MMX_PACKUSWB(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PACKUSWB dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x67);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x08);
+}
+static void MMX_PACKSSDW(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PACKSSDW dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x6b);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x08);
+}
+static void MMX_PUNPCKHBW(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PUNPCKLBW dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x60);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x0e);
+}
+static void MMX_PUNPCKHWD(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PUNPCKLWD dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x61);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x0e);
+}
+static void MMX_PUNPCKHDQ(int dst_reg, int src_reg)
+{
+        addbyte(0x66); /*PUNPCKLDQ dst_reg, src_reg*/
+        addbyte(0x0f);
+        addbyte(0x62);
+        addbyte(0xc0 | (dst_reg << 3) | src_reg);
+        addbyte(0x66); /*PSHUFD dst_reg, dst_reg*/
+        addbyte(0x0f);
+        addbyte(0x70);
+        addbyte(0xc0 | (dst_reg << 3) | dst_reg);
+        addbyte(0x0e);
+}
+
+static void MMX_PSRLW_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRLW dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x71);
+        addbyte(0xc0 | dst_reg | 0x10);
+        addbyte(amount);
+}
+static void MMX_PSRAW_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRAW dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x71);
+        addbyte(0xc0 | dst_reg | 0x20);
+        addbyte(amount);
+}
+static void MMX_PSLLW_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSLLW dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x71);
+        addbyte(0xc0 | dst_reg | 0x30);
+        addbyte(amount);
+}
+
+static void MMX_PSRLD_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRLD dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x72);
+        addbyte(0xc0 | dst_reg | 0x10);
+        addbyte(amount);
+}
+static void MMX_PSRAD_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRAD dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x72);
+        addbyte(0xc0 | dst_reg | 0x20);
+        addbyte(amount);
+}
+static void MMX_PSLLD_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSLLD dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x72);
+        addbyte(0xc0 | dst_reg | 0x30);
+        addbyte(amount);
+}
+
+static void MMX_PSRLQ_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRLQ dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x73);
+        addbyte(0xc0 | dst_reg | 0x10);
+        addbyte(amount);
+}
+static void MMX_PSRAQ_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSRAQ dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x73);
+        addbyte(0xc0 | dst_reg | 0x20);
+        addbyte(amount);
+}
+static void MMX_PSLLQ_imm(int dst_reg, int amount)
+{
+        addbyte(0x66); /*PSLLQ dst_reg, amount*/
+        addbyte(0x0f);
+        addbyte(0x73);
+        addbyte(0xc0 | dst_reg | 0x30);
+        addbyte(amount);
 }

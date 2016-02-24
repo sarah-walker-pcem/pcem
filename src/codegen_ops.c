@@ -19,6 +19,7 @@
 #include "codegen_ops_jump.h"
 #include "codegen_ops_logic.h"
 #include "codegen_ops_misc.h"
+#include "codegen_ops_mmx.h"
 #include "codegen_ops_mov.h"
 #include "codegen_ops_shift.h"
 #include "codegen_ops_stack.h"
@@ -83,7 +84,7 @@ RecompOpFn recomp_opcodes_0f[512] =
 /*40*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropEMMS,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
 /*80*/  ropJO_w,        ropJNO_w,       ropJB_w,        ropJNB_w,       ropJE_w,        ropJNE_w,       ropJBE_w,       ropJNBE_w,      ropJS_w,        ropJNS_w,       ropJP_w,        ropJNP_w,       ropJL_w,        ropJNL_w,       ropJLE_w,       ropJNLE_w,
 /*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
@@ -104,8 +105,8 @@ RecompOpFn recomp_opcodes_0f[512] =
 
 /*40*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  ropPUNPCKLBW,   ropPUNPCKLWD,   ropPUNPCKLDQ,   ropPACKSSWB,    ropPCMPGTB,     ropPCMPGTW,     ropPCMPGTD,     ropPACKUSWB,    ropPUNPCKHBW,   ropPUNPCKHWD,   ropPUNPCKHDQ,   ropPACKSSDW,    NULL,           NULL,           ropMOVD_mm_l,   ropMOVQ_mm_q,
+/*70*/  NULL,           ropPSxxW_imm,   ropPSxxD_imm,   ropPSxxQ_imm,   ropPCMPEQB,     ropPCMPEQW,     ropPCMPEQD,     ropEMMS,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropMOVD_l_mm,   ropMOVQ_q_mm,
 
 /*80*/  ropJO_l,        ropJNO_l,       ropJB_l,        ropJNB_l,       ropJE_l,        ropJNE_l,       ropJBE_l,       ropJNBE_l,      ropJS_l,        ropJNS_l,       ropJP_l,        ropJNP_l,       ropJL_l,        ropJNL_l,       ropJLE_l,       ropJNLE_l,
 /*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
@@ -113,9 +114,9 @@ RecompOpFn recomp_opcodes_0f[512] =
 /*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropMOVZX_l_b,   ropMOVZX_l_w,   NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropMOVSX_l_b,   ropMOVSX_l_w,
 
 /*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           ropPSRLW,       ropPSRLD,       ropPSRLQ,       NULL,           ropPMULLW,      NULL,           NULL,           ropPSUBUSB,     ropPSUBUSW,     NULL,           ropPAND,        ropPADDUSB,     ropPADDUSW,     NULL,           ropPANDN,
+/*e0*/  NULL,           ropPSRAW,       ropPSRAD,       NULL,           NULL,           ropPMULHW,      NULL,           NULL,           ropPSUBSB,      ropPSUBSW,      NULL,           ropPOR,         ropPADDSB,      ropPADDSW,      NULL,           ropPXOR,
+/*f0*/  NULL,           ropPSLLW,       ropPSLLD,       ropPSLLQ,       NULL,           ropPMADDWD,     NULL,           NULL,           ropPSUBB,       ropPSUBW,       ropPSUBD,       NULL,           ropPADDB,       ropPADDW,       ropPADDD,       NULL,
 };
 
 

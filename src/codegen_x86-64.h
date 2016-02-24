@@ -17,3 +17,5 @@ enum
 
 #define NR_HOST_REGS 3
 extern int host_reg_mapping[NR_HOST_REGS];
+#define NR_HOST_XMM_REGS 7
+extern int host_reg_xmm_mapping[NR_HOST_XMM_REGS];
