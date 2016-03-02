@@ -176,7 +176,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 else
                         SendMessage(h, UDM_SETPOS, 0, mem_size / 1024);
                 accel.nSec = 0;
-                accel.nInc = models[temp_model].ram_granularity;
+                accel.nInc = models[model].ram_granularity;
                 SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
 
                 h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
