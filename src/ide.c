@@ -164,6 +164,8 @@ int idecallback[2] = {0, 0};
 
 int cur_ide[2];
 
+int cdrom_channel = 2;
+
 uint8_t getstat(IDE *ide) { return ide->atastat; }
 
 static inline void ide_irq_raise(IDE *ide)
@@ -564,18 +566,17 @@ void resetide(void)
 	else
            ide_drives[1].type = IDE_CDROM;
 #else
-        loadhd(&ide_drives[0], 0, ide_fn[0]);
-        loadhd(&ide_drives[1], 1, ide_fn[1]);
-        loadhd(&ide_drives[2], 2, ide_fn[2]);
-        if (cdrom_enabled)
-        {
-                if (ide_drives[2].type == IDE_NONE)
-                        ide_drives[2].type = IDE_CDROM;
-                else
-                        ide_drives[3].type = IDE_CDROM;
-        }
-        else
-                loadhd(&ide_drives[3], 3, ide_fn[3]);
+	for (d = 0; d < 4; d++)
+	{
+		if ((cdrom_channel == d) && cdrom_enabled)
+		{
+			ide_drives[d].type = IDE_CDROM;
+		}
+		else
+		{
+			loadhd(&ide_drives[d], d, ide_fn[d]);
+		}
+	}
 #endif
 
         cur_ide[0] = 0;

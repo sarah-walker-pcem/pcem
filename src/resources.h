@@ -72,6 +72,14 @@
 #define IDC_EJECTF 1065
 #define IDC_MEMSPIN 1070
 #define IDC_MEMTEXT 1071
+#define IDC_CHDD   1080
+#define IDC_CCDROM 1081
+#define IDC_DHDD   1082
+#define IDC_DCDROM 1083
+#define IDC_EHDD   1084
+#define IDC_ECDROM 1085
+#define IDC_FHDD   1086
+#define IDC_FCDROM 1087
 #define IDC_STEXT1 1100
 #define IDC_STEXT2 1101
 #define IDC_STEXT3 1102

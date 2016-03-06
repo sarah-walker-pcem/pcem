@@ -45,4 +45,6 @@ extern int idecallback[2];
 
 extern char ide_fn[4][512];
 
+extern int cdrom_channel;
+
 #endif //__IDE__

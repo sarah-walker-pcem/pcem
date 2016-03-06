@@ -12,6 +12,29 @@ static int hd_changed = 0;
 
 static char hd_new_name[512];
 static int hd_new_spt, hd_new_hpc, hd_new_cyl;
+static int new_cdrom_channel;
+
+static void update_hdd_cdrom(HWND hdlg)
+{
+        HWND h;
+        
+        h = GetDlgItem(hdlg, IDC_CHDD);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 0) ? 0 : 1, 0);
+        h = GetDlgItem(hdlg, IDC_CCDROM);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 0) ? 1 : 0, 0);
+        h = GetDlgItem(hdlg, IDC_DHDD);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 1) ? 0 : 1, 0);
+        h = GetDlgItem(hdlg, IDC_DCDROM);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 1) ? 1 : 0, 0);
+        h = GetDlgItem(hdlg, IDC_EHDD);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 2) ? 0 : 1, 0);
+        h = GetDlgItem(hdlg, IDC_ECDROM);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 2) ? 1 : 0, 0);
+        h = GetDlgItem(hdlg, IDC_FHDD);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 3) ? 0 : 1, 0);
+        h = GetDlgItem(hdlg, IDC_FCDROM);
+        SendMessage(h, BM_SETCHECK, (new_cdrom_channel == 3) ? 1 : 0, 0);
+}
 
 static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -149,7 +172,6 @@ BOOL CALLBACK hdsize_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
                 h = GetDlgItem(hdlg, IDC_TEXT1);
                 sprintf(s, "Size : %imb", ((((uint64_t)hd_new_spt*(uint64_t)hd_new_hpc*(uint64_t)hd_new_cyl)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
-
                 return TRUE;
                 case WM_COMMAND:
                 switch (LOWORD(wParam))
@@ -289,13 +311,17 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h = GetDlgItem(hdlg, IDC_TEXT_F_SIZE);
                 sprintf(s, "Size : %imb", (((((uint64_t)hd[3].tracks*(uint64_t)hd[3].hpc)*(uint64_t)hd[3].spt)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
+
+                new_cdrom_channel = cdrom_channel;
+
+                update_hdd_cdrom(hdlg);
                 return TRUE;
                 
                 case WM_COMMAND:
                 switch (LOWORD(wParam))
                 {
                         case IDOK:
-                        if (hd_changed)
+                        if (hd_changed || cdrom_channel != new_cdrom_channel)
                         {                     
                                 if (MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) == IDOK)
                                 {
@@ -352,6 +378,8 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         hdc[2] = hd[2];
                                         hdc[3] = hd[3];
 
+                                        cdrom_channel = new_cdrom_channel;
+                                        
                                         saveconfig();
                                                                                 
                                         resetpchard();
@@ -718,6 +746,44 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         sprintf(s, "Size : %imb", ((((hd[3].tracks*hd[3].hpc)*hd[3].spt)*512)/1024)/1024);
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
                         return TRUE;
+
+                        case IDC_CHDD:
+                        if (new_cdrom_channel == 0)
+                                new_cdrom_channel = -1;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_DHDD:
+                        if (new_cdrom_channel == 1)
+                                new_cdrom_channel = -1;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_EHDD:
+                        if (new_cdrom_channel == 2)
+                                new_cdrom_channel = -1;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_FHDD:
+                        if (new_cdrom_channel == 3)
+                                new_cdrom_channel = -1;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        
+                        case IDC_CCDROM:
+                        new_cdrom_channel = 0;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_DCDROM:
+                        new_cdrom_channel = 1;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_ECDROM:
+                        new_cdrom_channel = 2;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;
+                        case IDC_FCDROM:
+                        new_cdrom_channel = 3;
+                        update_hdd_cdrom(hdlg);
+                        return TRUE;                        
                 }
                 break;
 

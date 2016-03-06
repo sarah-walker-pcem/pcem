@@ -590,7 +590,8 @@ void loadconfig(char *fn)
 
         cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
-
+        cdrom_channel = config_get_int(NULL, "cdrom_channel", 2);
+        
         p = (char *)config_get_string(NULL, "cdrom_path", "");
         if (p) strcpy(iso_path, p);
         else   strcpy(iso_path, "");
@@ -658,6 +659,7 @@ void saveconfig()
         config_set_int(NULL, "mem_size", mem_size);
         config_set_int(NULL, "cdrom_drive", cdrom_drive);
         config_set_int(NULL, "cdrom_enabled", cdrom_enabled);
+        config_set_int(NULL, "cdrom_channel", cdrom_channel);
         config_set_string(NULL, "cdrom_path", iso_path);
         config_set_int(NULL, "vid_resize", vid_resize);
         config_set_int(NULL, "vid_api", vid_api);
