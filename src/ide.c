@@ -675,7 +675,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 //        int c;
 //      rpclog("Write IDE %08X %02X %08X %08X\n",addr,val,PC,armregs[12]);
 
-        if (ide->type == IDE_NONE && addr != 0x1f6 && addr != 0x3f6) return;
+        if (ide->type == IDE_NONE && (addr == 0x1f0 || addr == 0x1f7)) return;
         
         switch (addr)
         {
@@ -926,7 +926,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         ide->atastat = ide_other->atastat = BUSY_STAT;
 //                        pclog("IDE Reset %i\n", ide_board);
                 }
-                ide->fdisk=val;
+                ide->fdisk = ide_other->fdisk = val;
                 ide_irq_update(ide);
                 return;
         }
@@ -951,7 +951,7 @@ uint8_t readide(int ide_board, uint16_t addr)
 //         pclog("ReadIDE %04X  from %04X(%08X):%08X\n", addr, CS, cs, pc);
 //        return 0xFF;
 
-        if (ide->type == IDE_NONE && addr != 0x1f6) return 0;
+        if (ide->type == IDE_NONE && (addr == 0x1f0 || addr == 0x1f7)) return 0;
 //        /*if (addr!=0x1F7 && addr!=0x3F6) */pclog("Read IDEb %04X %02X %02X %i %04X:%04X %i  %04X\n",addr,ide->atastat,(ide->atastat & ~DSC_STAT) | (ide->service ? SERVICE_STAT : 0),cur_ide[ide_board],CS,pc,ide_board, BX);
 //rpclog("Read IDE %08X %08X %02X\n",addr,PC,iomd.irqb.mask);
         switch (addr)
