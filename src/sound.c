@@ -110,10 +110,15 @@ static void sound_cd_thread(void *param)
                 ioctl_audio_callback(cd_buffer, CD_BUFLEN*2);
                 if (soundon)
                 {
+                        int32_t atapi_vol_l = atapi_get_cd_volume(0);
+                        int32_t atapi_vol_r = atapi_get_cd_volume(1);
+                        
                         for (c = 0; c < CD_BUFLEN*2; c += 2)
                         {
                                 cd_buffer[c]   = ((int32_t)cd_buffer[c]   * cd_vol_l) / 65535;
+                                cd_buffer[c]   = ((int32_t)cd_buffer[c]   * atapi_vol_l) / 255;
                                 cd_buffer[c+1] = ((int32_t)cd_buffer[c+1] * cd_vol_r) / 65535;
+                                cd_buffer[c+1] = ((int32_t)cd_buffer[c+1] * atapi_vol_r) / 255;
                         }
                         givealbuffer_cd(cd_buffer);
                 }

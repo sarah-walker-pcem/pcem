@@ -276,7 +276,22 @@ void initpc(int argc, char *argv[])
 	{
 		if (cdrom_drive == CDROM_ISO)
 		{
-			iso_open(iso_path);
+			FILE *ff = fopen(iso_path, "rb");
+			if (ff)
+			{
+				fclose(ff);
+				iso_open(iso_path);
+			}
+			else
+			{
+#if __unix
+				cdrom_drive = -1;
+				cdrom_null_open(cdrom_drive);
+#else
+				cdrom_drive = 0;
+				ioctl_open(cdrom_drive);
+#endif
+			}
 		}
 		else
 		{

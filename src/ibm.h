@@ -452,8 +452,17 @@ int keybsenddelay;
 
 /*CD-ROM*/
 extern int cdrom_drive;
+extern int old_cdrom_drive;
 extern int idecallback[2];
 extern int cdrom_enabled;
+
+#define CD_STATUS_EMPTY		0
+#define CD_STATUS_DATA_ONLY	1
+#define CD_STATUS_PLAYING	2
+#define CD_STATUS_PAUSED	3
+#define CD_STATUS_STOPPED	4
+
+extern uint32_t atapi_get_cd_volume(int channel);
 
 void pclog(const char *format, ...);
 extern int nmi;

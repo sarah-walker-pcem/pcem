@@ -6,5 +6,6 @@
 
 extern int ioctl_open(char d);
 extern void ioctl_reset();
+extern void ioctl_close();
 
 #endif /* ! CDROM_IOCTL_H */

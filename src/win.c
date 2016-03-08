@@ -830,11 +830,25 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 	return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
 
+void atapi_close(void)
+{
+	switch (cdrom_drive)
+	{
+		case CDROM_ISO:
+		iso_close();
+		break;
+		default:
+		ioctl_close();
+		break;
+	}
+}
+
 LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
         HMENU hmenu;
         RECT rect;
         char temp_iso_path[1024];
+        int new_cdrom_drive;
 //        pclog("Message %i %08X\n",message,message);
         switch (message)
         {
@@ -980,12 +994,21 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
                                    break;
-                        }   
-                        atapi->exit();
+                        }
+			if (!cdrom_enabled)
+			{
+				/* Switching from disabled to disabled. Do nothing. */
+				break;
+			} 
+			atapi->exit();
+			atapi_close();
+                        ioctl_open(0);
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_CHECKED);
+			CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+			old_cdrom_drive = cdrom_drive;
+			cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY,              MF_UNCHECKED);
-                        CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
                         if (cdrom_enabled)
                         {
                                 pause = 1;
@@ -1002,12 +1025,24 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
                                    break;
-                        }                        
-                        atapi->exit();
+                        }
+			if ((cdrom_drive == 0) && cdrom_enabled)
+			{
+				/* Switch from empty to empty. Do nothing. */
+				break;
+			}
+			atapi->exit();
+			atapi_close();
                         ioctl_open(0);
+			if (cdrom_enabled)
+			{
+				/* Signal disc change to the emulated machine. */
+				atapi_insert_cdrom();
+			}
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-                        CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
+			CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+			old_cdrom_drive = cdrom_drive;
                         cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY, MF_CHECKED);
                         saveconfig();
@@ -1030,14 +1065,26 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                         if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
                                            break;
                                 }
-				atapi->exit();
+				old_cdrom_drive = cdrom_drive;
 				strcpy(temp_iso_path, openfilestring);
+				if ((strcmp(iso_path, temp_iso_path) == 0) && (cdrom_drive == CDROM_ISO) && cdrom_enabled)
+				{
+					/* Switching from ISO to the same ISO. Do nothing. */
+					break;
+				}
+				atapi->exit();
+				atapi_close();
+				iso_open(temp_iso_path);
+				if (cdrom_enabled)
+				{
+					/* Signal disc change to the emulated machine. */
+					atapi_insert_cdrom();
+				}
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                                 CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_UNCHECKED);
 				cdrom_drive = CDROM_ISO;
-				iso_open(temp_iso_path);
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO, MF_CHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_CHECKED);
                                 saveconfig();
                                 if (!cdrom_enabled)
                                 {
@@ -1058,13 +1105,26 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 {
                                         if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL) != IDOK)
                                            break;
-                                }         
-                                atapi->exit();
-                                ioctl_open(LOWORD(wParam)-IDM_CDROM_REAL);
+                                }
+				new_cdrom_drive = LOWORD(wParam)-IDM_CDROM_REAL;
+				if ((cdrom_drive == new_cdrom_drive) && cdrom_enabled)
+				{
+					/* Switching to the same drive. Do nothing. */
+					break;
+				}
+				old_cdrom_drive = cdrom_drive;
+				atapi->exit();
+				atapi_close();
+                                ioctl_open(new_cdrom_drive);
+				if (cdrom_enabled)
+				{
+					/* Signal disc change to the emulated machine. */
+					atapi_insert_cdrom();
+				}
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                                 CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO,                MF_UNCHECKED);
-                                cdrom_drive = LOWORD(wParam) - IDM_CDROM_REAL;
+                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+                                cdrom_drive = new_cdrom_drive;
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
                                 saveconfig();
                                 if (!cdrom_enabled)

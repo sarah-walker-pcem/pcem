@@ -40,6 +40,12 @@ static int null_ready(void)
         return 0;
 }
 
+/* Always return 0, the contents of a null CD-ROM drive never change. */
+static int null_medium_changed(void)
+{
+        return 0;
+}
+
 static uint8_t null_getcurrentsubchannel(uint8_t *b, int msf)
 {
         return 0x13;
@@ -57,18 +63,33 @@ static void null_readsector(uint8_t *b, int sector)
 {
 }
 
+static void null_readsector_raw(uint8_t *b, int sector)
+{
+}
+
 static int null_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single)
 {
         return 0;
 }
 
-static void null_readtoc_session(unsigned char *b, int msf, int maxlen)
+static int null_readtoc_session(unsigned char *b, int msf, int maxlen)
 {
+        return 0;
+}
+
+static int null_readtoc_raw(unsigned char *b, int maxlen)
+{
+        return 0;
 }
 
 static uint32_t null_size()
 {
         return 0;
+}
+
+static int null_status()
+{
+	return CD_STATUS_EMPTY;
 }
 
 void cdrom_null_reset()
@@ -81,7 +102,7 @@ int cdrom_null_open(char d)
         return 0;
 }
 
-static void null_close(void)
+void null_close(void)
 {
 }
 
@@ -89,13 +110,21 @@ static void null_exit(void)
 {
 }
 
+static int null_is_track_audio(uint32_t pos, int ismsf)
+{
+	return 0;
+}
+
 static ATAPI null_atapi =
 {
         null_ready,
+	null_medium_changed,
         null_readtoc,
         null_readtoc_session,
+	null_readtoc_raw,
         null_getcurrentsubchannel,
         null_readsector,
+	null_readsector_raw,
         null_playaudio,
         null_seek,
         null_load,
@@ -103,6 +132,8 @@ static ATAPI null_atapi =
         null_pause,
         null_resume,
         null_size,
+	null_status,
+	null_is_track_audio,
         null_stop,
         null_exit
 };

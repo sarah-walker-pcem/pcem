@@ -6,5 +6,6 @@
 
 extern int cdrom_null_open(char d);
 extern void cdrom_null_reset();
+extern void null_close();
 
 #endif /* ! CDROM_IOCTL_H */
