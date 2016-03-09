@@ -825,7 +825,7 @@ static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p)
                 break;
                 
                 case 0x8504:
-                if (virge->s3d_busy || virge->virge_busy)
+                if (virge->s3d_busy || virge->virge_busy || !FIFO_EMPTY)
                         ret = (0x10 << 8);
                 else
                         ret = (0x10 << 8) | (1 << 13);
