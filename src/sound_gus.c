@@ -27,6 +27,7 @@ typedef struct gus_t
         uint8_t ctrl[32];
         uint8_t rctrl[32];
         int curvol[32];
+        int pan_l[32], pan_r[32];
         int t1on,t2on;
         uint8_t tctrl;
         uint16_t t1,t2,t1l,t2l;
@@ -36,7 +37,7 @@ typedef struct gus_t
         int voices;
         uint8_t dmactrl;
 
-        int16_t out_l, out_r;
+        int32_t out_l, out_r;
         
         int16_t buffer[2][SOUNDBUFLEN];
         int pos;
@@ -343,6 +344,10 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xF807F00)|((val<<7)<<8);
 gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
 //                      gus->cur[gus->voice]=(gus->cur[gus->voice]&0x0FFF8000)|((val&0x7F)<<8);
 //                        printf("Write %i cur %08X %08X\n",gus->voice,gus->cur[gus->voice],gus->curx[gus->voice]);
+                        break;
+                        case 0xC: /*Pan*/
+                        gus->pan_l[gus->voice] = 15 - (val & 0xf);
+                        gus->pan_r[gus->voice] = (val & 0xf);
                         break;
                         case 0xD: /*Ramp control*/
                         old = gus->rampirqs[gus->voice];
@@ -672,6 +677,9 @@ uint8_t readgus(uint16_t addr, void *p)
                         case 0x8B: /*Current addr low*/
                         return gus->cur[gus->voice]>>8;
 
+                        case 0x8C: /*Pan*/
+                        return gus->pan_r[gus->voice];
+
                         case 0x8D:
 //                        pclog("Read ramp control %02X %04X %08X  %08X %08X\n",gus->rctrl[gus->voice]|(gus->rampirqs[gus->voice]?0x80:0),gus->rcur[gus->voice] >> 14,gus->rfreq[gus->voice],gus->rstart[gus->voice],gus->rend[gus->voice]);
                         return gus->rctrl[gus->voice]|(gus->rampirqs[gus->voice]?0x80:0);
@@ -853,8 +861,18 @@ static void gus_update(gus_t *gus)
 {
         for (; gus->pos < sound_pos_global; gus->pos++)
         {
-                gus->buffer[0][gus->pos] = gus->out_l;
-                gus->buffer[1][gus->pos] = gus->out_r;
+                if (gus->out_l < -32768)
+                        gus->buffer[0][gus->pos] = -32768;
+                else if (gus->out_l > 32767)
+                        gus->buffer[0][gus->pos] = 32767;
+                else
+                        gus->buffer[0][gus->pos] = gus->out_l;
+                if (gus->out_r < -32768)
+                        gus->buffer[1][gus->pos] = -32768;
+                else if (gus->out_r > 32767)
+                        gus->buffer[1][gus->pos] = 32767;
+                else
+                        gus->buffer[1][gus->pos] = gus->out_r;
         }
 }
 
@@ -910,8 +928,8 @@ void gus_poll_wave(void *p)
                         else                            v = (int16_t)(float)(v) * 24.0 * vol16bit[(gus->rcur[d]>>10) & 4095];
 //                        pclog("%f %04X\n", vol16bit[(gus->rcur[d]>>10) & 4095], v);
 
-                        gus->out_l += v;
-                        gus->out_r += v;
+                        gus->out_l += (v * gus->pan_l[d]) / 7;
+                        gus->out_r += (v * gus->pan_r[d]) / 7;
 
                         if (gus->ctrl[d]&0x40)
                         {
