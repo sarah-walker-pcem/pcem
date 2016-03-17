@@ -1040,7 +1040,7 @@ void rep(int fv)
                 else firstrepcycle=1;
                 break;
                 default:
-                        pc=ipc;
+                pc = ipc+1;
                         cycles-=20;
                         FETCHCLEAR();
 //                printf("Bad REP %02X\n",temp);

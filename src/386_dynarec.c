@@ -1092,10 +1092,9 @@ int rep386(int fv)
 
 
                 default:
-                        pc=ipc;
-                        cycles-=20;
-                pclog("Bad REP %02X %i\n", temp, rep32 >> 8);
-                x86illegal();
+                pc = ipc+1;
+                //pclog("Bad REP %02X %i\n", temp, rep32 >> 8);
+                break;
         }
         if (rep32&0x200) ECX=c;
         else             CX=c;
