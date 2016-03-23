@@ -1708,6 +1708,8 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 
 #if (defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32) && !(defined __amd64__)
 #include "vid_voodoo_codegen_x86.h"
+#elif (defined __amd64__)
+#include "vid_voodoo_codegen_x86-64.h"
 #else
 #define NO_CODEGEN
 static int voodoo_recomp = 0;
