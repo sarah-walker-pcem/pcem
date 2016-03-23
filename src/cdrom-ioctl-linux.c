@@ -12,10 +12,11 @@ static ATAPI ioctl_atapi;
 static uint32_t last_block = 0;
 static int ioctl_inited = 0;
 static char ioctl_path[8];
-static void ioctl_close(void);
 static int tocvalid = 0;
 static struct cdrom_tocentry toc[100];
 static int first_track, last_track;
+
+int old_cdrom_drive;
 
 #define MSFtoLBA(m,s,f)  (((((m*60)+s)*75)+f)-150)
 
@@ -505,7 +506,7 @@ static int ioctl_readtoc_session(unsigned char *b, int msf, int maxlen)
 	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
 	if (fd <= 0)
-		return;
+		return 0;
 
 	session.addr_format = CDROM_MSF;
 	err = ioctl(fd, CDROMMULTISESSION, &session);
@@ -513,7 +514,7 @@ static int ioctl_readtoc_session(unsigned char *b, int msf, int maxlen)
 	if (err == -1)
 	{
 		close(fd);
-		return;
+		return 0;
 	}
 
         b[2] = 0;
@@ -547,7 +548,11 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 	struct cdrom_tocentry toc2[100];
 	int track, err;
 	int len = 4;
+	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 //pclog("read_toc\n");
+	if (fd <= 0)
+		return 0;
+
 	err = ioctl(fd, CDROMREADTOCHDR, &toc_hdr);
 	if (err == -1)
 	{
@@ -566,6 +571,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 		if ((len + 11) > maxlen)
 		{
 			pclog("ioctl_readtocraw: This iteration would fill the buffer beyond the bounds, aborting...\n");
+			close(fd);
 			return len;
 		}
 
@@ -575,6 +581,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 		if (err == -1)
 		{
 //			pclog("read_toc: CDROMREADTOCENTRY failed on track %i\n", track);
+			close(fd);
 			return 0;
 		}
 //		pclog("read_toc: Track %02X - number %02X control %02X adr %02X address %02X %02X %02X %02X\n", track, toc[track].cdte_track, toc[track].cdte_ctrl, toc[track].cdte_adr, 0, toc[track].cdte_addr.msf.minute, toc[track].cdte_addr.msf.second, toc[track].cdte_addr.msf.frame);
@@ -591,6 +598,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 		b[len++] = toc2[track].cdte_addr.msf.second;
 		b[len++] = toc2[track].cdte_addr.msf.frame;
 	}
+	close(fd);
 	return len;
 }
 
@@ -637,7 +645,7 @@ int ioctl_open(char d)
         return 0;
 }
 
-static void ioctl_close(void)
+void ioctl_close(void)
 {
 }
 
