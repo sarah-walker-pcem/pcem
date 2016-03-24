@@ -697,7 +697,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 }
                                 if (!(segdat[2]&0x8000))
                                 {
-                                        x86np("Load CS JMP from call gate not present\n", seg & 0xfffc);
+                                        x86np("Load CS JMP from call gate not present\n", seg2 & 0xfffc);
                                         return;
                                 }
 
