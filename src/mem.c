@@ -101,7 +101,7 @@ int loadbios()
         FILE *f=NULL,*ff=NULL;
         int c;
         
-        loadfont("mda.rom", 0);
+        loadfont("roms/mda.rom", 0);
         
         biosmask = 0xffff;
         
