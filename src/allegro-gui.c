@@ -22,10 +22,18 @@ static int file_reset(void)
         return D_CLOSE;
 }
 
+static int file_cad(void)
+{
+        resetpc_cad();
+        return D_CLOSE;
+}
+
+
 static MENU file_menu[]=
 {
 	{"&Return",     file_return, NULL, 0, NULL},
         {"&Hard Reset", file_reset, NULL, 0, NULL},
+        {"&Ctrl+Alt+Del", file_cad, NULL, 0, NULL},
         {"E&xit",       file_exit,  NULL, 0, NULL},
         {NULL,NULL,NULL,0,NULL}
 };
