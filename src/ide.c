@@ -47,6 +47,7 @@
 #define WIN_WRITE			0x30 /* 28-Bit Write */
 #define WIN_WRITE_NORETRY		0x31 /* 28-Bit Write */
 #define WIN_VERIFY			0x40 /* 28-Bit Verify */
+#define WIN_VERIFY_ONCE                 0x41 /* Deprecated command - same as 0x40 */
 #define WIN_FORMAT			0x50
 #define WIN_SEEK			0x70
 #define WIN_DRIVE_DIAGNOSTICS           0x90 /* Execute Drive Diagnostics */
@@ -1007,6 +1008,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         return;
 
                 case WIN_VERIFY:
+                case WIN_VERIFY_ONCE:
 #if 0
                         if (ide->lba) pclog("Read verify %i sectors from LBA addr %07X\n",ide->secount,ide->lba_addr);
                         else          pclog("Read verify %i sectors from sector %i cylinder %i head %i\n",ide->secount,ide->sector,ide->cylinder,ide->head);
@@ -1514,6 +1516,7 @@ void callbackide(int ide_board)
                 return;
 
         case WIN_VERIFY:
+        case WIN_VERIFY_ONCE:
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
