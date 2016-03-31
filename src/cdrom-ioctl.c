@@ -26,6 +26,7 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 static ATAPI ioctl_atapi;
 
 static uint32_t last_block = 0;
+static uint32_t cdrom_capacity = 0;
 static int ioctl_inited = 0;
 static char ioctl_path[8];
 void ioctl_close(void);
@@ -258,6 +259,31 @@ static int ioctl_ready(void)
         return 1;
 }
 
+static int ioctl_get_last_block(unsigned char starttrack, int msf, int maxlen, int single)
+{
+        long size;
+        int c;
+	CDROM_TOC lbtoc;
+	int lb=0;
+
+        if (!cdrom_drive) return 0;
+
+	ioctl_cd_state = CD_STOPPED;
+
+        ioctl_open(0);
+        DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_TOC, NULL,0,&lbtoc,sizeof(lbtoc),&size,NULL);
+        ioctl_close();
+        tocvalid = 1;
+        for (c = 0; c <= lbtoc.LastTrack; c++)
+        {
+                uint32_t address;
+                address = MSFtoLBA(toc.TrackData[c].Address[1], toc.TrackData[c].Address[2], toc.TrackData[c].Address[3]);
+                if (address > lb)
+                        lb = address;
+	}
+	return lb;
+}
+
 static int ioctl_medium_changed(void)
 {
         long size;
@@ -276,6 +302,7 @@ static int ioctl_medium_changed(void)
                 tocvalid = 1;
                 if (cdrom_drive != old_cdrom_drive)
                         old_cdrom_drive = cdrom_drive;
+                cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
                 return 0;
         }
         if ((ltoc.TrackData[ltoc.LastTrack].Address[1] != toc.TrackData[toc.LastTrack].Address[1]) ||
@@ -284,6 +311,7 @@ static int ioctl_medium_changed(void)
 	{
                 ioctl_cd_state = CD_STOPPED;
                 toc = ltoc;
+                cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 		return 1; /* TOC mismatches. */
 	}
         return 0; /* None of the above, return 0. */
@@ -393,6 +421,7 @@ static void ioctl_load(void)
         ioctl_open(0);
         DeviceIoControl(hIOCTL,IOCTL_STORAGE_LOAD_MEDIA,NULL,0,NULL,0,&size,NULL);
         ioctl_close();
+        cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 }
 
 static void ioctl_readsector(uint8_t *b, int sector)
@@ -637,11 +666,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 
 static uint32_t ioctl_size()
 {
-        unsigned char b[4096];
-
-        atapi->readtoc(b, 0, 0, 4096, 0);
-        
-        return last_block;
+        return cdrom_capacity;
 }
 
 static int ioctl_status()
