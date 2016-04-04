@@ -34,7 +34,7 @@ static HANDLE hIOCTL;
 static CDROM_TOC toc;
 static int tocvalid = 0;
 
-#define MSFtoLBA(m,s,f)  (((((m*60)+s)*75)+f)-150)
+#define MSFtoLBA(m,s,f)  ((((m*60)+s)*75)+f)
 
 enum
 {
@@ -65,7 +65,7 @@ void ioctl_audio_callback(int16_t *output, int len)
         {
                 if (ioctl_cd_pos < ioctl_cd_end)
                 {
-		        in.DiskOffset.LowPart  = ioctl_cd_pos * 2048;
+		        in.DiskOffset.LowPart  = (ioctl_cd_pos - 150) * 2048;
         		in.DiskOffset.HighPart = 0;
         		in.SectorCount	       = 1;
         		in.TrackMode	       = CDDA;		
@@ -147,6 +147,8 @@ static void ioctl_playaudio(uint32_t pos, uint32_t len, int ismsf)
         ioctl_cd_pos   = pos;// + 150;
         ioctl_cd_end   = len;// + 150;
         ioctl_cd_state = CD_PLAYING;
+        if (ioctl_cd_pos < 150)
+                ioctl_cd_pos = 150;
         pclog("Audio start %08X %08X %i %i %i\n", ioctl_cd_pos, ioctl_cd_end, ioctl_cd_state, cd_buflen, len);        
 /*        CDROM_PLAY_AUDIO_MSF msf;
         long size;
@@ -493,20 +495,8 @@ static void ioctl_readsector_raw(uint8_t *b, int sector)
         ioctl_cd_state = CD_STOPPED;        
         pos.QuadPart=sector*2048;
         ioctl_open(0);
-        SetFilePointer(hIOCTL,pos.LowPart,&pos.HighPart,FILE_BEGIN);
-        ReadFile(hIOCTL,b+16,2048,&size,NULL);
+        DeviceIoControl(hIOCTL, IOCTL_CDROM_RAW_READ, NULL, 0, b, 1, &size, NULL);
         ioctl_close();
-
-	/* sync bytes */
-	b[0] = 0;
-	memset(b + 1, 0xff, 10);
-	b[11] = 0;
-	b += 12;
-	lba_to_msf(b, sector);
-	b[3] = 1; /* mode 1 data */
-	b += 4;
-	b += 2048;
-	memset(b, 0, 288);
 }
 
 static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single)
