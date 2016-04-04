@@ -112,14 +112,46 @@ static void sound_cd_thread(void *param)
                 {
                         int32_t atapi_vol_l = atapi_get_cd_volume(0);
                         int32_t atapi_vol_r = atapi_get_cd_volume(1);
+                        int channel_select[2];
+                        
+                        channel_select[0] = atapi_get_cd_channel(0);
+                        channel_select[1] = atapi_get_cd_channel(1);
                         
                         for (c = 0; c < CD_BUFLEN*2; c += 2)
                         {
-                                cd_buffer[c]   = ((int32_t)cd_buffer[c]   * cd_vol_l) / 65535;
-                                cd_buffer[c]   = ((int32_t)cd_buffer[c]   * atapi_vol_l) / 255;
-                                cd_buffer[c+1] = ((int32_t)cd_buffer[c+1] * cd_vol_r) / 65535;
+                                int32_t cd_buffer_temp[2] = {0, 0};
+                                
+        			/*First, adjust input from drive according to ATAPI volume.*/
+        			cd_buffer[c]   = ((int32_t)cd_buffer[c]   * atapi_vol_l) / 255;
                                 cd_buffer[c+1] = ((int32_t)cd_buffer[c+1] * atapi_vol_r) / 255;
+
+                                /*Apply ATAPI channel select*/
+                                if (channel_select[0] & 1)
+                                        cd_buffer_temp[0] += cd_buffer[c];
+                                if (channel_select[0] & 2)
+                                        cd_buffer_temp[1] += cd_buffer[c];
+                                if (channel_select[1] & 1)
+                                        cd_buffer_temp[0] += cd_buffer[c+1];
+                                if (channel_select[1] & 2)
+                                        cd_buffer_temp[1] += cd_buffer[c+1];
+                                
+                                /*Apply sound card CD volume*/
+                                cd_buffer_temp[0] = (cd_buffer_temp[0] * (int)cd_vol_l) / 65535;
+                                cd_buffer_temp[1] = (cd_buffer_temp[1] * (int)cd_vol_r) / 65535;
+
+                                if (cd_buffer_temp[0] > 32767)
+                                        cd_buffer_temp[0] = 32767;
+                                if (cd_buffer_temp[0] < -32768)
+                                        cd_buffer_temp[0] = -32768;
+                                if (cd_buffer_temp[1] > 32767)
+                                        cd_buffer_temp[1] = 32767;
+                                if (cd_buffer_temp[1] < -32768)
+                                        cd_buffer_temp[1] = -32768;
+
+                                cd_buffer[c]   = cd_buffer_temp[0];
+                                cd_buffer[c+1] = cd_buffer_temp[1];
                         }
+
                         givealbuffer_cd(cd_buffer);
                 }
         }
