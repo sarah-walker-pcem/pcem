@@ -67,7 +67,10 @@ int thread_wait_event(event_t *handle, int timeout)
 	}
 
 	pthread_mutex_lock(&event->mutex);
-	pthread_cond_timedwait(&event->cond, &event->mutex, &abstime);
+	if (timeout == -1)
+		pthread_cond_wait(&event->cond, &event->mutex);
+	else
+		pthread_cond_timedwait(&event->cond, &event->mutex, &abstime);
 	pthread_mutex_unlock(&event->mutex);
 
         return 0;

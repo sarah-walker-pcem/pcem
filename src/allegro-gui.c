@@ -156,14 +156,14 @@ static int cdrom_dev()
 	if (cdrom_enabled)
 	{
 		atapi->exit();
-		cdrom_drive = 0;
+		cdrom_drive = 1;
 		ioctl_open(cdrom_drive);
 		return D_O_K;
 	}
 
 	if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) == 1)
 	{
-		cdrom_drive = 0;
+		cdrom_drive = 1;
 		cdrom_enabled = 1;
 		ioctl_open(cdrom_drive);
 		saveconfig();

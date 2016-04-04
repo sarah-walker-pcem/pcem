@@ -39,7 +39,8 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = pcem$(EXEEXT)
 @CPU_I386_TRUE@am__append_1 = codegen_x86.c
-@CPU_X86_64_TRUE@am__append_2 = codegen_x86-64.c
+@CPU_I386_TRUE@am__append_2 = -msse2
+@CPU_X86_64_TRUE@am__append_3 = codegen_x86-64.c
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -74,10 +75,10 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
 	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
 	vid_cl5429.c vid_ega.c vid_et4000.c vid_et4000w32.c \
-	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_mda.c \
-	vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
-	vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
-	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
+	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
+	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c \
+	vid_s3_virge.c vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c x86seg.c x87.c xtide.c \
@@ -146,23 +147,24 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-vid_ega.$(OBJEXT) pcem-vid_et4000.$(OBJEXT) \
 	pcem-vid_et4000w32.$(OBJEXT) pcem-vid_hercules.$(OBJEXT) \
 	pcem-vid_icd2061.$(OBJEXT) pcem-vid_ics2595.$(OBJEXT) \
-	pcem-vid_mda.$(OBJEXT) pcem-vid_olivetti_m24.$(OBJEXT) \
-	pcem-vid_oti067.$(OBJEXT) pcem-vid_paradise.$(OBJEXT) \
-	pcem-vid_pc200.$(OBJEXT) pcem-vid_pc1512.$(OBJEXT) \
-	pcem-vid_pc1640.$(OBJEXT) pcem-vid_pcjr.$(OBJEXT) \
-	pcem-vid_s3.$(OBJEXT) pcem-vid_s3_virge.$(OBJEXT) \
-	pcem-vid_sdac_ramdac.$(OBJEXT) pcem-vid_stg_ramdac.$(OBJEXT) \
-	pcem-vid_svga.$(OBJEXT) pcem-vid_svga_render.$(OBJEXT) \
-	pcem-vid_tandy.$(OBJEXT) pcem-vid_tandysl.$(OBJEXT) \
-	pcem-vid_tgui9440.$(OBJEXT) pcem-vid_tkd8001_ramdac.$(OBJEXT) \
-	pcem-vid_tvga.$(OBJEXT) pcem-vid_unk_ramdac.$(OBJEXT) \
-	pcem-vid_vga.$(OBJEXT) pcem-vid_voodoo.$(OBJEXT) \
-	pcem-video.$(OBJEXT) pcem-wd76c10.$(OBJEXT) \
-	pcem-x86seg.$(OBJEXT) pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) \
-	sound_dbopl.$(OBJEXT) sound_resid.$(OBJEXT) dbopl.$(OBJEXT) \
-	convolve.$(OBJEXT) convolve-sse.$(OBJEXT) envelope.$(OBJEXT) \
-	extfilt.$(OBJEXT) filter.$(OBJEXT) pot.$(OBJEXT) sid.$(OBJEXT) \
-	voice.$(OBJEXT) wave6581_PS_.$(OBJEXT) wave6581_PST.$(OBJEXT) \
+	pcem-vid_incolor.$(OBJEXT) pcem-vid_mda.$(OBJEXT) \
+	pcem-vid_olivetti_m24.$(OBJEXT) pcem-vid_oti067.$(OBJEXT) \
+	pcem-vid_paradise.$(OBJEXT) pcem-vid_pc200.$(OBJEXT) \
+	pcem-vid_pc1512.$(OBJEXT) pcem-vid_pc1640.$(OBJEXT) \
+	pcem-vid_pcjr.$(OBJEXT) pcem-vid_s3.$(OBJEXT) \
+	pcem-vid_s3_virge.$(OBJEXT) pcem-vid_sdac_ramdac.$(OBJEXT) \
+	pcem-vid_stg_ramdac.$(OBJEXT) pcem-vid_svga.$(OBJEXT) \
+	pcem-vid_svga_render.$(OBJEXT) pcem-vid_tandy.$(OBJEXT) \
+	pcem-vid_tandysl.$(OBJEXT) pcem-vid_tgui9440.$(OBJEXT) \
+	pcem-vid_tkd8001_ramdac.$(OBJEXT) pcem-vid_tvga.$(OBJEXT) \
+	pcem-vid_unk_ramdac.$(OBJEXT) pcem-vid_vga.$(OBJEXT) \
+	pcem-vid_voodoo.$(OBJEXT) pcem-video.$(OBJEXT) \
+	pcem-wd76c10.$(OBJEXT) pcem-x86seg.$(OBJEXT) \
+	pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) sound_dbopl.$(OBJEXT) \
+	sound_resid.$(OBJEXT) dbopl.$(OBJEXT) convolve.$(OBJEXT) \
+	convolve-sse.$(OBJEXT) envelope.$(OBJEXT) extfilt.$(OBJEXT) \
+	filter.$(OBJEXT) pot.$(OBJEXT) sid.$(OBJEXT) voice.$(OBJEXT) \
+	wave6581_PS_.$(OBJEXT) wave6581_PST.$(OBJEXT) \
 	wave6581_P_T.$(OBJEXT) wave6581__ST.$(OBJEXT) \
 	wave8580_PS_.$(OBJEXT) wave8580_PST.$(OBJEXT) \
 	wave8580_P_T.$(OBJEXT) wave8580__ST.$(OBJEXT) wave.$(OBJEXT) \
@@ -289,7 +291,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_SCRIPTS = ../pcem
 CLEANFILES = $(noinst_SCRIPTS)
-pcem_CFLAGS = $(allegro_CFLAGS)
+pcem_CFLAGS = $(allegro_CFLAGS) $(am__append_2)
 pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
@@ -314,10 +316,10 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
 	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
 	vid_cl5429.c vid_ega.c vid_et4000.c vid_et4000w32.c \
-	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_mda.c \
-	vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
-	vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c vid_s3_virge.c \
-	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
+	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
+	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_s3.c \
+	vid_s3_virge.c vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c x86seg.c x87.c xtide.c \
@@ -329,7 +331,7 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc \
 	resid-fp/wave8580_PS_.cc resid-fp/wave8580_PST.cc \
 	resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
-	resid-fp/wave.cc $(am__append_1) $(am__append_2)
+	resid-fp/wave.cc $(am__append_1) $(am__append_3)
 all: all-am
 
 .SUFFIXES:
@@ -532,6 +534,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_hercules.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_icd2061.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_ics2595.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_incolor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_mda.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_olivetti_m24.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_oti067.Po@am__quote@
@@ -2169,6 +2172,20 @@ pcem-vid_ics2595.obj: vid_ics2595.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_ics2595.c' object='pcem-vid_ics2595.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_ics2595.obj `if test -f 'vid_ics2595.c'; then $(CYGPATH_W) 'vid_ics2595.c'; else $(CYGPATH_W) '$(srcdir)/vid_ics2595.c'; fi`
+
+pcem-vid_incolor.o: vid_incolor.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_incolor.o -MD -MP -MF $(DEPDIR)/pcem-vid_incolor.Tpo -c -o pcem-vid_incolor.o `test -f 'vid_incolor.c' || echo '$(srcdir)/'`vid_incolor.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-vid_incolor.Tpo $(DEPDIR)/pcem-vid_incolor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_incolor.c' object='pcem-vid_incolor.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_incolor.o `test -f 'vid_incolor.c' || echo '$(srcdir)/'`vid_incolor.c
+
+pcem-vid_incolor.obj: vid_incolor.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_incolor.obj -MD -MP -MF $(DEPDIR)/pcem-vid_incolor.Tpo -c -o pcem-vid_incolor.obj `if test -f 'vid_incolor.c'; then $(CYGPATH_W) 'vid_incolor.c'; else $(CYGPATH_W) '$(srcdir)/vid_incolor.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pcem-vid_incolor.Tpo $(DEPDIR)/pcem-vid_incolor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vid_incolor.c' object='pcem-vid_incolor.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_incolor.obj `if test -f 'vid_incolor.c'; then $(CYGPATH_W) 'vid_incolor.c'; else $(CYGPATH_W) '$(srcdir)/vid_incolor.c'; fi`
 
 pcem-vid_mda.o: vid_mda.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_mda.o -MD -MP -MF $(DEPDIR)/pcem-vid_mda.Tpo -c -o pcem-vid_mda.o `test -f 'vid_mda.c' || echo '$(srcdir)/'`vid_mda.c
