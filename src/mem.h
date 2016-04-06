@@ -1,3 +1,6 @@
+#ifndef _MEM_H_
+#define _MEM_H_
+
 typedef struct mem_mapping_t
 {
         struct mem_mapping_t *prev, *next;
@@ -110,6 +113,9 @@ typedef struct page_t
         
         struct codeblock_t *block, *block_2;
         
+        /*Head of codeblock tree associated with this page*/
+        struct codeblock_t *head;
+        
         uint64_t code_present_mask, dirty_mask;
 } page_t;
 
@@ -156,3 +162,5 @@ void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p);
 void mem_reset_page_blocks();
 
 extern mem_mapping_t ram_low_mapping;
+
+#endif

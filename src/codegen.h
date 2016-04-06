@@ -1,3 +1,5 @@
+#include "mem.h"
+
 #ifdef __amd64__
 #include "codegen_x86-64.h"
 #elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
@@ -39,6 +41,10 @@ typedef struct codeblock_t
         struct codeblock_t *prev, *next;
         struct codeblock_t *prev_2, *next_2;
         
+        /*Pointers for codeblock tree, used to search for blocks when hash lookup
+          fails.*/
+        struct codeblock_t *parent, *left, *right;
+        
         uint32_t pc;
         uint32_t _cs;
         uint32_t endpc;
@@ -51,6 +57,138 @@ typedef struct codeblock_t
         
         uint8_t data[2048];
 } codeblock_t;
+
+static inline codeblock_t *codeblock_tree_find(uint32_t phys)
+{
+        codeblock_t *block = pages[phys >> 12].head;
+        
+        while (block)
+        {
+                if (phys == block->phys)
+                        return block;
+                else if (phys < block->phys)
+                        block = block->left;
+                else
+                        block = block->right;
+        }
+}
+
+static inline void codeblock_tree_add(codeblock_t *new_block)
+{
+        codeblock_t *block = pages[new_block->phys >> 12].head;
+        
+        if (!block)
+        {
+                pages[new_block->phys >> 12].head = new_block;
+                new_block->parent = new_block->left = new_block->right = NULL;
+        }
+        else
+        {
+                codeblock_t *old_block = NULL;
+                while (block)
+                {
+                        old_block = block;
+                        
+                        if (new_block->phys < old_block->phys)
+                                block = block->left;
+                        else
+                                block = block->right;
+                }
+                
+                if (new_block->phys < old_block->phys)
+                        old_block->left = new_block;
+                else
+                        old_block->right = new_block;
+                
+                new_block->parent = old_block;
+                new_block->left = new_block->right = NULL;
+        }
+}
+
+static inline void codeblock_tree_delete(codeblock_t *block)
+{
+        while (1)
+        {
+                codeblock_t *parent = block->parent;
+
+                if (!block->left && !block->right)
+                {
+                        /*Easy case - remove from parent*/
+                        if (parent)
+                        {
+                                if (parent->left == block)
+                                        parent->left = NULL;
+                                if (parent->right == block)
+                                        parent->right = NULL;
+                        }
+                        return;
+                }
+                else if (!block->left)
+                {
+                        /*Only left node*/
+                        if (!parent)
+                                pages[block->phys >> 12].head = block->left;
+                        else
+                        {
+                                if (parent->left == block)
+                                        parent->left = block->left;
+                                if (parent->right == block)
+                                        parent->right = block->left;
+                        }
+                        return;
+                }
+                else if (!block->right)
+                {
+                        /*Only right node*/
+                        if (!parent)
+                                pages[block->phys >> 12].head = block->right;
+                        else
+                        {
+                                if (parent->left == block)
+                                        parent->left = block->right;
+                                if (parent->right == block)
+                                        parent->right = block->right;
+                        }
+                        return;
+                }
+                else
+                {
+                        /*Difficult case - node has two children. Walk right child to find lowest node*/
+                        codeblock_t *lowest = block->right;
+                        codeblock_t *old_parent;
+                        
+                        while (lowest->left)
+                                lowest = lowest->left;
+                        old_parent = lowest->parent;
+
+                        /*Replace deleted node with lowest node*/
+                        if (!parent)
+                                pages[block->phys >> 12].head = lowest;
+                        else
+                        {
+                                if (parent->left == block)
+                                        parent->left = lowest;
+                                if (parent->right == block)
+                                        parent->right = lowest;
+                        }
+                        lowest->parent = parent;
+                        
+                        if (old_parent = block)
+                        {
+                                return;
+                        }
+                        else
+                        {
+                                /*Replace old lowest node with deleted node, and loop*/
+                                if (old_parent->left == lowest)
+                                        old_parent->left = block->left;
+                                if (old_parent->right == lowest)
+                                        old_parent->right = block->right;
+                                block->parent = old_parent;
+                        }
+                }
+        }
+}
 
 #define PAGE_MASK_MASK 63
 #define PAGE_MASK_SHIFT 6
