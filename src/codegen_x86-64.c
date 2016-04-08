@@ -126,6 +126,8 @@ static void delete_block(codeblock_t *block)
                 fatal("Deleting deleted block\n");
         block->pc = 0;
 
+        codeblock_tree_delete(block);
+        
         if (block->prev)
         {
                 block->prev->next = block->next;
@@ -464,6 +466,8 @@ void codegen_block_end()
 //        pclog("End block %i\n", block_num);
 
         recomp_page = -1;
+
+        codeblock_tree_add(block);
 }
 
 void codegen_flush()

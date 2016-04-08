@@ -65,12 +65,14 @@ static inline codeblock_t *codeblock_tree_find(uint32_t phys)
         while (block)
         {
                 if (phys == block->phys)
-                        return block;
+                        break;
                 else if (phys < block->phys)
                         block = block->left;
                 else
                         block = block->right;
         }
+        
+        return block;
 }
 
 static inline void codeblock_tree_add(codeblock_t *new_block)
