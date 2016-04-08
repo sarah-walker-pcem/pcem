@@ -212,6 +212,15 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0x47);
                 addbyte(0xc3);
         }
+        
+        if (params->fbzMode & FBZ_DEPTH_BIAS)
+        {
+                addbyte(0x03); /*ADD EAX, params->zaColor[ESI]*/
+                addbyte(0x86);
+                addlong(offsetof(voodoo_params_t, zaColor));                
+                addbyte(0x25); /*AND EAX, 0xffff*/
+                addlong(0xffff);
+        }
 
         addbyte(0x89); /*MOV state->new_depth[EDI], EAX*/
         addbyte(0x87);

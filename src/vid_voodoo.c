@@ -594,7 +594,9 @@ enum
         FBZ_DRAW_FRONT = 0x0000,
         FBZ_DRAW_BACK  = 0x4000,
         FBZ_DRAW_MASK  = 0xc000,
-        
+
+        FBZ_DEPTH_BIAS = (1 << 16),
+                
         FBZ_PARAM_ADJUST = (1 << 26)
 };
 
@@ -1961,6 +1963,9 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         new_depth = w_depth;
                                 else
                                         new_depth = CLAMP16(state->z >> 12);
+                                
+                                if (params->fbzMode & FBZ_DEPTH_BIAS)
+                                        new_depth = (new_depth + params->zaColor) & 0xffff;
                                 
                                 if (params->fbzMode & FBZ_DEPTH_ENABLE)
                                 {
