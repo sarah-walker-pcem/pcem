@@ -1822,7 +1822,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                         x2 = (state->vertexBx << 12) + ((state->dxBC * (real_y - state->vertexBy)) >> 4);
 
                 if (params->fbzMode & (1 << 17))
-                        real_y = voodoo->v_disp - (real_y >> 4);
+                        real_y = (voodoo->v_disp-1) - (real_y >> 4);
                 else
                         real_y >>= 4;
 
