@@ -2504,8 +2504,11 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 }
         }
 
-        addbyte(0x31); /*XOR EAX, EAX*/
-        addbyte(0xc0);
+        if ((params->alphaMode & ((1 << 0) | (1 << 4))))
+        {
+                addbyte(0x31); /*XOR EAX, EAX*/
+                addbyte(0xc0);
+        }
         
         if (!(cc_mselect == 0 && cc_reverse_blend == 0) && cc_mselect == CC_MSELECT_AOTHER)
         {
@@ -2526,26 +2529,28 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0x01); /*ADD EDX, ECX*/
                 addbyte(0xca);
         }
-        
-        addbyte(0x85); /*TEST EDX, EDX*/
-        addbyte(0xd2);
-        addbyte(0x0f); /*CMOVS EDX, EAX*/
-        addbyte(0x48);
-        addbyte(0xd0);
-        addbyte(0xb8); /*MOV EAX, 0xff*/
-        addlong(0xff);
-        addbyte(0x81); /*CMP EDX, 0xff*/
-        addbyte(0xfa);
-        addlong(0xff);
-        addbyte(0x0f); /*CMOVA EDX, EAX*/
-        addbyte(0x47);
-        addbyte(0xd0);
 
-        if (cc_invert_output)
+        if ((params->alphaMode & ((1 << 0) | (1 << 4))))
         {
-                addbyte(0x81); /*XOR EDX, 0xff*/
-                addbyte(0xf2);
+                addbyte(0x85); /*TEST EDX, EDX*/
+                addbyte(0xd2);
+                addbyte(0x0f); /*CMOVS EDX, EAX*/
+                addbyte(0x48);
+                addbyte(0xd0);
+                addbyte(0xb8); /*MOV EAX, 0xff*/
                 addlong(0xff);
+                addbyte(0x81); /*CMP EDX, 0xff*/
+                addbyte(0xfa);
+                addlong(0xff);
+                addbyte(0x0f); /*CMOVA EDX, EAX*/
+                addbyte(0x47);
+                addbyte(0xd0);
+                if (cca_invert_output)
+                {
+                        addbyte(0x81); /*XOR EDX, 0xff*/
+                        addbyte(0xf2);
+                        addlong(0xff);
+                }
         }
 
         if (!(cc_mselect == 0 && cc_reverse_blend == 0))
@@ -2597,24 +2602,13 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0x9f);
                         addlong(offsetof(voodoo_state_t, tex_a));
                         addbyte(2);
-                        addbyte(0x66); /*PSRLD XMM3, 12*/
-                        addbyte(0x0f);
-                        addbyte(0x72);
-                        addbyte(0xd3);
-                        addbyte(12);
-                        addbyte(0x66); /*PACKSSDW XMM3, XMM3*/
-                        addbyte(0x0f);
-                        addbyte(0x6b);
-                        addbyte(0xdb);
-                        addbyte(0x66); /*PACKUSWB XMM3, XMM3*/
-                        addbyte(0x0f);
-                        addbyte(0x67);
-                        addbyte(0xdb);
-                        addbyte(0x66); /*PUNPCKLBW XMM3, XMM2*/
-                        addbyte(0x0f);
-                        addbyte(0x60);
-                        addbyte(0xda);
                         break;
+                        default:
+                        addbyte(0x66); /*PXOR XMM3, XMM3*/
+                        addbyte(0x0f);
+                        addbyte(0xef);
+                        addbyte(0xdb);
+                        break;                                
                 }
                 addbyte(0xf3); /*MOV XMM4, XMM0*/
                 addbyte(0x0f);
