@@ -126,10 +126,10 @@ void ym7128_apply(ym7128_t *ym7128, int16_t *buffer, int len)
                 samp_l = (samp_l * ym7128->vl*2) >> 16;
                 samp_r = (samp_r * ym7128->vr*2) >> 16;
                 
-                buffer[c]   = ((int32_t)samp_l + (int32_t)ym7128->prev_l) / 2;
-                buffer[c+1] = ((int32_t)samp_r + (int32_t)ym7128->prev_r) / 2;
-                buffer[c+2] = samp_l;
-                buffer[c+3] = samp_r;
+                buffer[c]   += ((int32_t)samp_l + (int32_t)ym7128->prev_l) / 2;
+                buffer[c+1] += ((int32_t)samp_r + (int32_t)ym7128->prev_r) / 2;
+                buffer[c+2] += samp_l;
+                buffer[c+3] += samp_r;
                 
                 ym7128->delay_pos++;
                 if (ym7128->delay_pos >= 2400)
