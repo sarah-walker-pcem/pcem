@@ -659,6 +659,8 @@ static void adgold_get_buffer(int16_t *buffer, int len, void *p)
         int c;
 
         opl3_update2(&adgold->opl);
+        adgold_update(adgold);
+        
         for (c = 0; c < len * 2; c += 2)
         {
                 adgold_buffer[c] = ((adgold->opl.buffer[c] * adgold->fm_vol_l) >> 7) / 2;
