@@ -24,7 +24,7 @@ keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c ke
 linux-time.c lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c \
 olivetti_m24.c opti.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c rom.c serial.c sis496.c sound.c \
 sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
-sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
+sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c thread-pthread.c \
 timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
 vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_hercules.c \

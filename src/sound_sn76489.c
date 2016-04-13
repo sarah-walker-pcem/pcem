@@ -15,7 +15,7 @@ static float volslog[16]=
         7.51785f,9.46440f,11.9194f,15.0000f
 };
 
-#define PSGCONST ((3579545.0 / 64.0) / 48000.0)
+//#define PSGCONST ((3579545.0 / 64.0) / 48000.0)
 
 void sn76489_update(sn76489_t *sn76489)
 {
@@ -29,7 +29,7 @@ void sn76489_update(sn76489_t *sn76489)
                         if (sn76489->latch[c] > 256) result += (int16_t) (volslog[sn76489->vol[c]] * sn76489->stat[c]);
                         else                         result += (int16_t) (volslog[sn76489->vol[c]] * 127);
 
-                        sn76489->count[c] -= (256 * PSGCONST);
+                        sn76489->count[c] -= (256 * sn76489->psgconst);
                         while ((int)sn76489->count[c] < 0)
                         {
                                 sn76489->count[c] += sn76489->latch[c];
@@ -38,7 +38,7 @@ void sn76489_update(sn76489_t *sn76489)
                 }
                 result += (((sn76489->shift & 1) ^ 1) * 127 * volslog[sn76489->vol[0]] * 2);
 
-                sn76489->count[0] -= (512 * PSGCONST);
+                sn76489->count[0] -= (512 * sn76489->psgconst);
                 while ((int)sn76489->count[0] < 0 && sn76489->latch[0])
                 {
                         sn76489->count[0] += (sn76489->latch[0] * 4);
@@ -177,7 +177,7 @@ void sn74689_set_extra_divide(sn76489_t *sn76489, int enable)
         sn76489->extra_divide = enable;
 }
 
-void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type)
+void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type, int freq)
 {
         sound_add_handler(sn76489_get_buffer, sn76489);
 
@@ -193,6 +193,7 @@ void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type)
         sn76489->noise = 3;
         sn76489->shift = 0x4000;
         sn76489->type = type;
+        sn76489->psgconst = (((double)freq / 64.0) / 48000.0);
 
         sn76489_mute = 0;
 
@@ -204,7 +205,7 @@ void *sn76489_device_init()
         sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
         memset(sn76489, 0, sizeof(sn76489_t));
 
-        sn76489_init(sn76489, 0x00c0, 0x0008, SN76496);
+        sn76489_init(sn76489, 0x00c0, 0x0008, SN76496, 3579545);
 
         return sn76489;
 }
@@ -213,7 +214,7 @@ void *ncr8496_device_init()
         sn76489_t *sn76489 = malloc(sizeof(sn76489_t));
         memset(sn76489, 0, sizeof(sn76489_t));
 
-        sn76489_init(sn76489, 0x00c0, 0x0008, NCR8496);
+        sn76489_init(sn76489, 0x00c0, 0x0008, NCR8496, 3579545);
 
         return sn76489;
 }

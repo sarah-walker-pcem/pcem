@@ -25,7 +25,9 @@ typedef struct sn76489_t
         
         int16_t buffer[SOUNDBUFLEN];
         int pos;
+        
+        double psgconst;
 } sn76489_t;
 
-void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type);
+void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type, int freq);
 void sn74689_set_extra_divide(sn76489_t *sn76489, int enable);

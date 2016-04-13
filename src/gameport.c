@@ -90,7 +90,7 @@ void gameport_timer_over(void *p)
 //        pclog("gameport_timer_over : axis_nr=%i\n", axis->axis_nr);
 }
 
-void *gameport_init()
+void *gameport_init_common()
 {
         gameport_t *gameport = malloc(sizeof(gameport_t));
         
@@ -110,9 +110,25 @@ void *gameport_init()
         timer_add(gameport_timer_over, &gameport->axis[1].count, &gameport->axis[1].count, &gameport->axis[1]);
         timer_add(gameport_timer_over, &gameport->axis[2].count, &gameport->axis[2].count, &gameport->axis[2]);
         timer_add(gameport_timer_over, &gameport->axis[3].count, &gameport->axis[3].count, &gameport->axis[3]);
-        
+                
+        return gameport;
+}
+
+void *gameport_init()
+{
+        gameport_t *gameport = gameport_init_common();
+
         io_sethandler(0x0200, 0x0008, gameport_read, NULL, NULL, gameport_write, NULL, NULL, gameport);
-        
+
+        return gameport;
+}
+
+void *gameport_201_init()
+{
+        gameport_t *gameport = gameport_init_common();
+
+        io_sethandler(0x0201, 0x0001, gameport_read, NULL, NULL, gameport_write, NULL, NULL, gameport);
+
         return gameport;
 }
 
@@ -128,6 +144,18 @@ device_t gameport_device =
         "Game port",
         0,
         gameport_init,
+        gameport_close,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+device_t gameport_201_device =
+{
+        "Game port (port 201h only)",
+        0,
+        gameport_201_init,
         gameport_close,
         NULL,
         NULL,

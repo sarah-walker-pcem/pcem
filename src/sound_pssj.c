@@ -185,7 +185,7 @@ void *pssj_init()
         pssj_t *pssj = malloc(sizeof(pssj_t));
         memset(pssj, 0, sizeof(pssj_t));
 
-        sn76489_init(&pssj->sn76489, 0x00c0, 0x0004, PSSJ);
+        sn76489_init(&pssj->sn76489, 0x00c0, 0x0004, PSSJ, 3579545);
 
         io_sethandler(0x00C4, 0x0004, pssj_read, NULL, NULL, pssj_write, NULL, NULL, pssj);
         timer_add(pssj_callback, &pssj->timer_count, &pssj->enable, pssj);

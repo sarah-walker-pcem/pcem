@@ -39,6 +39,7 @@
 #include "ps1.h"
 #include "serial.h"
 #include "sis496.h"
+#include "sound_ps1.h"
 #include "sound_pssj.h"
 #include "sound_sn76489.h"
 #include "tandy_eeprom.h"
@@ -154,7 +155,6 @@ void common_init()
         pit_init();
         serial1_init(0x3f8, 4);
         serial2_init(0x2f8, 3);
-        device_add(&gameport_device);
 }
 
 void xt_init()
@@ -166,6 +166,7 @@ void xt_init()
         mouse_serial_init();
         xtide_init();
 	nmi_init();
+        device_add(&gameport_device);
 }
 
 void pcjr_init()
@@ -196,6 +197,7 @@ void tandy1k_init()
 	nmi_init();
 	if (romset != ROM_TANDY)
                 device_add(&tandy_eeprom_device);
+        device_add(&gameport_device);
 }
 void tandy1ksl2_init()
 {
@@ -209,6 +211,7 @@ void tandy1ksl2_init()
 	nmi_init();
         device_add(&tandy_rom_device);
         device_add(&tandy_eeprom_device);
+        device_add(&gameport_device);
 }
 
 void ams_init()
@@ -222,6 +225,7 @@ void ams_init()
         xtide_init();
 	nmi_init();
 	fdc_set_dskchg_activelow();
+        device_add(&gameport_device);
 }
 
 void europc_init()
@@ -233,6 +237,7 @@ void europc_init()
         mouse_serial_init();
         xtide_init();
 	nmi_init();
+        device_add(&gameport_device);
 }
 
 void olim24_init()
@@ -244,6 +249,7 @@ void olim24_init()
         olivetti_m24_init();
         xtide_init();
 	nmi_init();
+        device_add(&gameport_device);
 }
 
 void at_init()
@@ -259,6 +265,7 @@ void at_init()
            mouse_serial_init();
         nvr_init();
         pic2_init();
+        device_add(&gameport_device);
 }
 
 void deskpro386_init()
@@ -282,6 +289,9 @@ void ps1_init()
         pic2_init();
         ps1mb_init();
         fdc_set_dskchg_activelow();
+        device_add(&ps1_audio_device);
+        /*PS/1 audio uses ports 200h and 202-207h, so only initialise gameport on 201h*/
+        device_add(&gameport_201_device);
 }
 
 void at_neat_init()

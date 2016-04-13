@@ -1,3 +1,6 @@
+#ifndef _CPU_H_
+#define _CPU_H_
+
 extern int cpu, cpu_manufacturer;
 
 /*808x class CPUs*/
@@ -111,3 +114,5 @@ void cpu_WRMSR();
 extern int cpu_use_dynarec;
 
 extern int xt_cpu_multi;
+
+#endif
