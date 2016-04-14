@@ -37,6 +37,7 @@
 #include "piix.h"
 #include "pit.h"
 #include "ps1.h"
+#include "scat.h"
 #include "serial.h"
 #include "sis496.h"
 #include "sound_ps1.h"
@@ -60,6 +61,7 @@ void            at_init();
 void    deskpro386_init();
 void           ps1_init();
 void       at_neat_init();
+void       at_scat_init();
 void  at_acer386sx_init();
 void    at_wd76c10_init();
 void    at_ali1429_init();
@@ -99,6 +101,7 @@ MODEL models[] =
         {"IBM AT",              ROM_IBMAT,       { "",      cpus_ibmat,   "",    NULL,         "",      NULL},         0, 1,   1,  16, 1,        at_init},
         {"Commodore PC 30 III", ROM_CMDPC30,     { "",      cpus_286,     "",    NULL,         "",      NULL},         0, 1,   1,  16, 1,        at_init},
         {"AMI 286 clone",       ROM_AMI286,      { "",      cpus_286,     "",    NULL,         "",      NULL},         0, 1,   1,  16, 1,   at_neat_init},        
+        {"Award 286 clone",     ROM_AWARD286,    { "",      cpus_286,     "",    NULL,         "",      NULL},         0, 1,   1,  16, 1,   at_scat_init},
         {"DELL System 200",     ROM_DELL200,     { "",      cpus_286,     "",    NULL,         "",      NULL},         0, 1,   1,  16, 1,        at_init},
         {"IBM PS/1 model 2011", ROM_IBMPS1_2011, { "",      cpus_286,     "",    NULL,         "",      NULL},         1, 1,   1,  16, 1,       ps1_init},
         {"Compaq Deskpro 386",  ROM_DESKPRO_386, { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0, 1,   1,  15, 1,     deskpro386_init},
@@ -299,6 +302,13 @@ void at_neat_init()
         at_init();
         mouse_serial_init();
         neat_init();
+}
+
+void at_scat_init()
+{
+        at_init();
+        mouse_serial_init();
+        scat_init();
 }
 
 void at_acer386sx_init()

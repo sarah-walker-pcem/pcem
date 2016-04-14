@@ -235,6 +235,14 @@ ROM files needed:
 ami286\amic206.bin
 
 
+Award 286 clone (1990)
+This is a generic 286 clone with an Award BIOS.
+
+ROM files needed:
+
+award286\award.bin
+
+
 IBM PS/1 Model 2011 (1990)
 This is a 286 with integrated VGA and a basic GUI and DOS 4.01 in ROM.
 

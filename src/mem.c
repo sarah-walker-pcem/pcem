@@ -364,6 +364,13 @@ int loadbios()
 //                memset(romext,0x63,0x8000);
                 return 1;
 
+                case ROM_AWARD286:
+                f=romfopen("roms/award286/award.bin","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_EUROPC:
 //                return 0;
                 f=romfopen("roms/europc/50145","rb");

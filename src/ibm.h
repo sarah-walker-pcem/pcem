@@ -305,6 +305,7 @@ enum
         ROM_IBMAT,
         ROM_CMDPC30,
         ROM_AMI286,
+        ROM_AWARD286,
         ROM_DELL200,
         ROM_MISC286,
         ROM_IBMAT386,
