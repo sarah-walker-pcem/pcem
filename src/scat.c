@@ -29,7 +29,7 @@ void scat_shadow_state_update()
                 }
                 else
                 {
-                        if ((scat_regs[0x49] >> ((i - 8) >> 1)) & 1)
+                        if ((scat_regs[SCAT_RAM_WRITE_PROTECT] >> ((i - 8) >> 1)) & 1)
                         {
                                 val |= MEM_WRITE_DISABLED;
                         }
@@ -200,7 +200,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 break;
 
                 case 0x92:
-                if ((mem_a20_key ^ val) & 2)
+                if ((mem_a20_alt ^ val) & 2)
                 {
                          mem_a20_alt = val & 2;
                          mem_a20_recalc();
