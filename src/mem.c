@@ -1039,7 +1039,7 @@ uint8_t readmemb386l(uint32_t seg, uint32_t addr)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! rb %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! rb %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
         }
         mem_logical_addr = addr = addr + seg;
@@ -1066,7 +1066,7 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! wb %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! wb %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
         }
         
@@ -1107,7 +1107,7 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! rw %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! rw %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
         }
         if (cr0>>31)
@@ -1155,7 +1155,7 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! ww %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! ww %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
         }
         if (page_lookup[addr2>>12])
@@ -1205,7 +1205,7 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
         }
         
@@ -1245,7 +1245,7 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
         }
         if (page_lookup[addr2>>12])
@@ -1302,7 +1302,7 @@ uint64_t readmemql(uint32_t seg, uint32_t addr)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
         }
         
@@ -1339,7 +1339,7 @@ void writememql(uint32_t seg, uint32_t addr, uint64_t val)
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
-                printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,pc,opcode,addr);
+                printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
         }
         if (page_lookup[addr2>>12])

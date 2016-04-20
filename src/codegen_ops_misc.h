@@ -47,11 +47,11 @@ static uint32_t ropFF_16(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint
                 SP_MODIFY(-2);
 
                 host_reg = LOAD_VAR_W((uintptr_t)&codegen_temp);
-                STORE_HOST_REG_ADDR_W((uintptr_t)&pc, host_reg);                
+                STORE_HOST_REG_ADDR_W((uintptr_t)&cpu_state.pc, host_reg);                
                 return -1;
 
                 case 0x20: /*JMP*/
-                STORE_HOST_REG_ADDR((uintptr_t)&pc, host_reg);
+                STORE_HOST_REG_ADDR((uintptr_t)&cpu_state.pc, host_reg);
                 return -1;
 
                 case 0x30: /*PUSH*/
@@ -96,11 +96,11 @@ static uint32_t ropFF_32(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint
                 SP_MODIFY(-4);
 
                 host_reg = LOAD_VAR_L((uintptr_t)&codegen_temp);
-                STORE_HOST_REG_ADDR((uintptr_t)&pc, host_reg);                
+                STORE_HOST_REG_ADDR((uintptr_t)&cpu_state.pc, host_reg);                
                 return -1;
 
                 case 0x20: /*JMP*/
-                STORE_HOST_REG_ADDR((uintptr_t)&pc, host_reg);
+                STORE_HOST_REG_ADDR((uintptr_t)&cpu_state.pc, host_reg);
                 return -1;
 
                 case 0x30: /*PUSH*/

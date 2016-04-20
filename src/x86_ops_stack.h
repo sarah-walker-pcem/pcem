@@ -295,7 +295,7 @@ static int opPOPL_a32(uint32_t fetchdat)
 static int opENTER_w(uint32_t fetchdat)
 {
         uint16_t offset = getwordf();
-        int count = (fetchdat >> 16) & 0xff; pc++;
+        int count = (fetchdat >> 16) & 0xff; cpu_state.pc++;
         uint32_t tempEBP = EBP, tempESP = ESP, frame_ptr;
         
         PUSH_W(BP); if (abrt) return 1;
@@ -328,7 +328,7 @@ static int opENTER_w(uint32_t fetchdat)
 static int opENTER_l(uint32_t fetchdat)
 {
         uint16_t offset = getwordf();
-        int count = (fetchdat >> 16) & 0xff; pc++;
+        int count = (fetchdat >> 16) & 0xff; cpu_state.pc++;
         uint32_t tempEBP = EBP, tempESP = ESP, frame_ptr;
         
         PUSH_L(EBP); if (abrt) return 1;
@@ -444,12 +444,12 @@ static int opPOP_SS_w(uint32_t fetchdat)
         loadseg(temp_seg, &_ss);                if (abrt) ESP = temp_esp;
         CLOCK_CYCLES(is486 ? 3 : 7);
         
-        oldpc = pc;
+        oldpc = cpu_state.pc;
         op32 = use32;
         ssegs = 0;
         ea_seg = &_ds;
-        fetchdat = fastreadl(cs + pc);
-        pc++;
+        fetchdat = fastreadl(cs + cpu_state.pc);
+        cpu_state.pc++;
         if (abrt) return 1;
         x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
 
@@ -463,12 +463,12 @@ static int opPOP_SS_l(uint32_t fetchdat)
         loadseg(temp_seg & 0xffff, &_ss);       if (abrt) ESP = temp_esp;
         CLOCK_CYCLES(is486 ? 3 : 7);
 
-        oldpc = pc;
+        oldpc = cpu_state.pc;
         op32 = use32;
         ssegs = 0;
         ea_seg = &_ds;
-        fetchdat = fastreadl(cs + pc);
-        pc++;
+        fetchdat = fastreadl(cs + cpu_state.pc);
+        cpu_state.pc++;
         if (abrt) return 1;
         x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
 

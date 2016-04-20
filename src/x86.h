@@ -24,14 +24,14 @@ int timetolive,keyboardtimer;
 
 #define setznp168 setznp16
 
-#define getr8(r)   ((r&4)?regs[r&3].b.h:regs[r&3].b.l)
-#define getr16(r)  regs[r].w
-#define getr32(r)  regs[r].l
+#define getr8(r)   ((r&4)?cpu_state.regs[r&3].b.h:cpu_state.regs[r&3].b.l)
+#define getr16(r)  cpu_state.regs[r].w
+#define getr32(r)  cpu_state.regs[r].l
 
-#define setr8(r,v) if (r&4) regs[r&3].b.h=v; \
-                   else     regs[r&3].b.l=v;
-#define setr16(r,v) regs[r].w=v
-#define setr32(r,v) regs[r].l=v
+#define setr8(r,v) if (r&4) cpu_state.regs[r&3].b.h=v; \
+                   else     cpu_state.regs[r&3].b.l=v;
+#define setr16(r,v) cpu_state.regs[r].w=v
+#define setr32(r,v) cpu_state.regs[r].l=v
 
 uint8_t znptable8[256];
 uint16_t znptable16[65536];

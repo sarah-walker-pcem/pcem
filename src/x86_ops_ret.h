@@ -4,15 +4,15 @@
                         pmoderetf(0, stack_offset);             \
                         return 1;                               \
                 }                                               \
-                oxpc = pc;                                      \
+                oxpc = cpu_state.pc;                            \
                 if (stack32)                                    \
                 {                                               \
-                        pc = readmemw(ss, ESP);                 \
+                        cpu_state.pc = readmemw(ss, ESP);       \
                         loadcs(readmemw(ss, ESP + 2));          \
                 }                                               \
                 else                                            \
                 {                                               \
-                        pc = readmemw(ss, SP);                  \
+                        cpu_state.pc = readmemw(ss, SP);        \
                         loadcs(readmemw(ss, SP + 2));           \
                 }                                               \
                 if (abrt) return 1;                             \
@@ -26,15 +26,15 @@
                         pmoderetf(1, stack_offset);             \
                         return 1;                               \
                 }                                               \
-                oxpc = pc;                                      \
+                oxpc = cpu_state.pc;                            \
                 if (stack32)                                    \
                 {                                               \
-                        pc = readmeml(ss, ESP);                 \
+                        cpu_state.pc = readmeml(ss, ESP);       \
                         loadcs(readmeml(ss, ESP + 4) & 0xffff); \
                 }                                               \
                 else                                            \
                 {                                               \
-                        pc = readmeml(ss, SP);                  \
+                        cpu_state.pc = readmeml(ss, SP);        \
                         loadcs(readmeml(ss, SP + 4) & 0xffff);  \
                 }                                               \
                 if (abrt) return 1;                             \
@@ -86,17 +86,17 @@ static int opIRET_286(uint32_t fetchdat)
         else
         {
                 uint16_t new_cs;
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 if (stack32)
                 {
-                        pc = readmemw(ss, ESP);
+                        cpu_state.pc = readmemw(ss, ESP);
                         new_cs = readmemw(ss, ESP + 2);
                         flags = (flags & 0x7000) | (readmemw(ss, ESP + 4) & 0xffd5) | 2;
                         ESP += 6;
                 }
                 else
                 {
-                        pc = readmemw(ss, SP);
+                        cpu_state.pc = readmemw(ss, SP);
                         new_cs = readmemw(ss, ((SP + 2) & 0xffff));
                         flags = (flags & 0x7000) | (readmemw(ss, ((SP + 4) & 0xffff)) & 0x0fd5) | 2;
                         SP += 6;
@@ -126,17 +126,17 @@ static int opIRET(uint32_t fetchdat)
         else
         {
                 uint16_t new_cs;
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 if (stack32)
                 {
-                        pc = readmemw(ss, ESP);
+                        cpu_state.pc = readmemw(ss, ESP);
                         new_cs = readmemw(ss, ESP + 2);
                         flags = (readmemw(ss, ESP + 4) & 0xffd5) | 2;
                         ESP += 6;
                 }
                 else
                 {
-                        pc = readmemw(ss, SP);
+                        cpu_state.pc = readmemw(ss, SP);
                         new_cs = readmemw(ss, ((SP + 2) & 0xffff));
                         flags = (readmemw(ss, ((SP + 4) & 0xffff)) & 0xffd5) | 2;
                         SP += 6;
@@ -166,10 +166,10 @@ static int opIRETD(uint32_t fetchdat)
         else
         {
                 uint16_t new_cs;
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 if (stack32)
                 {
-                        pc = readmeml(ss, ESP);
+                        cpu_state.pc = readmeml(ss, ESP);
                         new_cs = readmemw(ss, ESP + 4);
                         flags = (readmemw(ss, ESP + 8) & 0xffd5) | 2;
                         eflags = readmemw(ss, ESP + 10);
@@ -177,7 +177,7 @@ static int opIRETD(uint32_t fetchdat)
                 }
                 else
                 {
-                        pc = readmeml(ss, SP);
+                        cpu_state.pc = readmeml(ss, SP);
                         new_cs = readmemw(ss, ((SP + 4) & 0xffff));
                         flags = (readmemw(ss,(SP + 8) & 0xffff) & 0xffd5) | 2;
                         eflags = readmemw(ss, (SP + 10) & 0xffff);

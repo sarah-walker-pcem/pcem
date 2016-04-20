@@ -15,7 +15,7 @@ void resetmcr()
 
 void writemcr(uint16_t addr, uint8_t val)
 {
-        printf("Write MCR %04X %02X %04X:%04X\n",addr,val,CS,pc);
+        printf("Write MCR %04X %02X %04X:%04X\n",addr,val,CS,cpu_state.pc);
         switch (addr)
         {
                 case 0x22:

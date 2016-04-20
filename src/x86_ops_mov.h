@@ -157,7 +157,7 @@ static int opMOV_b_imm_a16(uint32_t fetchdat)
 {
         uint8_t temp;
         fetch_ea_16(fetchdat);
-        temp = readmemb(cs,pc); pc++;               if (abrt) return 1;
+        temp = readmemb(cs,cpu_state.pc); cpu_state.pc++;               if (abrt) return 1;
         CHECK_WRITE(ea_seg, eaaddr, eaaddr);
         seteab(temp);
         CLOCK_CYCLES(timing_rr);
@@ -308,7 +308,7 @@ static int opLEA_w_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
-        regs[reg].w = eaaddr;
+        cpu_state.regs[reg].w = eaaddr;
         CLOCK_CYCLES(timing_rr);
         return 0;
 }
@@ -316,7 +316,7 @@ static int opLEA_w_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
-        regs[reg].w = eaaddr;
+        cpu_state.regs[reg].w = eaaddr;
         CLOCK_CYCLES(timing_rr);
         return 0;
 }
@@ -325,7 +325,7 @@ static int opLEA_l_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(mod == 3);
-        regs[reg].l = eaaddr & 0xffff;
+        cpu_state.regs[reg].l = eaaddr & 0xffff;
         CLOCK_CYCLES(timing_rr);
         return 0;
 }
@@ -333,7 +333,7 @@ static int opLEA_l_a32(uint32_t fetchdat)
 {
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(mod == 3);
-        regs[reg].l = eaaddr;
+        cpu_state.regs[reg].l = eaaddr;
         CLOCK_CYCLES(timing_rr);
         return 0;
 }
@@ -394,13 +394,13 @@ static int opMOV_w_r_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                regs[rm].w = regs[reg].w;
+                cpu_state.regs[rm].w = cpu_state.regs[reg].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         { 
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+1);
-                seteaw(regs[reg].w);
+                seteaw(cpu_state.regs[reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
         }
         return abrt;
@@ -410,13 +410,13 @@ static int opMOV_w_r_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                regs[rm].w = regs[reg].w;
+                cpu_state.regs[rm].w = cpu_state.regs[reg].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         { 
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+1);
-                seteaw(regs[reg].w);
+                seteaw(cpu_state.regs[reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
         }
         return abrt;
@@ -426,13 +426,13 @@ static int opMOV_l_r_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                regs[rm].l = regs[reg].l;
+                cpu_state.regs[rm].l = cpu_state.regs[reg].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+3);
-                seteal(regs[reg].l);
+                seteal(cpu_state.regs[reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
         }
         return abrt;
@@ -442,13 +442,13 @@ static int opMOV_l_r_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                regs[rm].l = regs[reg].l;
+                cpu_state.regs[rm].l = cpu_state.regs[reg].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
         {
                 CHECK_WRITE(ea_seg, eaaddr, eaaddr+3);
-                seteal(regs[reg].l);
+                seteal(cpu_state.regs[reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
         }
         return abrt;
@@ -495,7 +495,7 @@ static int opMOV_r_w_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                regs[reg].w = regs[rm].w;
+                cpu_state.regs[reg].w = cpu_state.regs[rm].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
@@ -503,7 +503,7 @@ static int opMOV_r_w_a16(uint32_t fetchdat)
                 uint16_t temp;
                 CHECK_READ(ea_seg, eaaddr, eaaddr+1);
                 temp = geteaw();                if (abrt) return 1;
-                regs[reg].w = temp;
+                cpu_state.regs[reg].w = temp;
                 CLOCK_CYCLES((is486) ? 1 : 4);
         }
         return 0;
@@ -513,7 +513,7 @@ static int opMOV_r_w_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                regs[reg].w = regs[rm].w;
+                cpu_state.regs[reg].w = cpu_state.regs[rm].w;
                 CLOCK_CYCLES(timing_rr);
         }
         else
@@ -521,7 +521,7 @@ static int opMOV_r_w_a32(uint32_t fetchdat)
                 uint16_t temp;
                 CHECK_READ(ea_seg, eaaddr, eaaddr+1);
                 temp = geteaw();                if (abrt) return 1;
-                regs[reg].w = temp;
+                cpu_state.regs[reg].w = temp;
                 CLOCK_CYCLES((is486) ? 1 : 4);
         }
         return 0;
@@ -531,7 +531,7 @@ static int opMOV_r_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                regs[reg].l = regs[rm].l;
+                cpu_state.regs[reg].l = cpu_state.regs[rm].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
@@ -539,7 +539,7 @@ static int opMOV_r_l_a16(uint32_t fetchdat)
                 uint32_t temp;
                 CHECK_READ(ea_seg, eaaddr, eaaddr+3);
                 temp = geteal();                if (abrt) return 1;
-                regs[reg].l = temp;
+                cpu_state.regs[reg].l = temp;
                 CLOCK_CYCLES(is486 ? 1 : 4);
         }
         return 0;
@@ -549,7 +549,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                regs[reg].l = regs[rm].l;
+                cpu_state.regs[reg].l = cpu_state.regs[rm].l;
                 CLOCK_CYCLES(timing_rr);
         }
         else
@@ -557,7 +557,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
                 uint32_t temp;
                 CHECK_READ(ea_seg, eaaddr, eaaddr+3);
                 temp = geteal();                if (abrt) return 1;
-                regs[reg].l = temp;
+                cpu_state.regs[reg].l = temp;
                 CLOCK_CYCLES(is486 ? 1 : 4);
         }
         return 0;

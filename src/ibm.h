@@ -64,30 +64,30 @@ extern int memwaitstate;
 
 
 /*Processor*/
-#define EAX regs[0].l
-#define ECX regs[1].l
-#define EDX regs[2].l
-#define EBX regs[3].l
-#define ESP regs[4].l
-#define EBP regs[5].l
-#define ESI regs[6].l
-#define EDI regs[7].l
-#define AX regs[0].w
-#define CX regs[1].w
-#define DX regs[2].w
-#define BX regs[3].w
-#define SP regs[4].w
-#define BP regs[5].w
-#define SI regs[6].w
-#define DI regs[7].w
-#define AL regs[0].b.l
-#define AH regs[0].b.h
-#define CL regs[1].b.l
-#define CH regs[1].b.h
-#define DL regs[2].b.l
-#define DH regs[2].b.h
-#define BL regs[3].b.l
-#define BH regs[3].b.h
+#define EAX cpu_state.regs[0].l
+#define ECX cpu_state.regs[1].l
+#define EDX cpu_state.regs[2].l
+#define EBX cpu_state.regs[3].l
+#define ESP cpu_state.regs[4].l
+#define EBP cpu_state.regs[5].l
+#define ESI cpu_state.regs[6].l
+#define EDI cpu_state.regs[7].l
+#define AX cpu_state.regs[0].w
+#define CX cpu_state.regs[1].w
+#define DX cpu_state.regs[2].w
+#define BX cpu_state.regs[3].w
+#define SP cpu_state.regs[4].w
+#define BP cpu_state.regs[5].w
+#define SI cpu_state.regs[6].w
+#define DI cpu_state.regs[7].w
+#define AL cpu_state.regs[0].b.l
+#define AH cpu_state.regs[0].b.h
+#define CL cpu_state.regs[1].b.l
+#define CH cpu_state.regs[1].b.h
+#define DL cpu_state.regs[2].b.l
+#define DH cpu_state.regs[2].b.h
+#define BL cpu_state.regs[3].b.l
+#define BH cpu_state.regs[3].b.h
 
 typedef union
 {
@@ -99,9 +99,21 @@ typedef union
         } b;
 } x86reg;
 
-x86reg regs[8];
+struct
+{
+        x86reg regs[8];
+
+        int flags_op;
+        uint32_t flags_res;
+        uint32_t flags_op1, flags_op2;
+        
+        uint32_t pc;
+} cpu_state;
+
+/*x86reg regs[8];*/
+
 uint16_t flags,eflags;
-uint32_t /*cs,ds,es,ss,*/oldds,oldss,pc,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
+uint32_t /*cs,ds,es,ss,*/oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
 //uint16_t msw;
 
 extern int ins,output;

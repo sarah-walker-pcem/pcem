@@ -81,17 +81,17 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 switch (mod)
                 {
                         case 0: 
-                        eaaddr = regs[sib & 7].l; 
-                        pc++; 
+                        eaaddr = cpu_state.regs[sib & 7].l; 
+                        cpu_state.pc++; 
                         break;
                         case 1: 
-                        pc++;
-                        eaaddr = ((uint32_t)(int8_t)getbyte()) + regs[sib & 7].l; 
-//                        pc++; 
+                        cpu_state.pc++;
+                        eaaddr = ((uint32_t)(int8_t)getbyte()) + cpu_state.regs[sib & 7].l; 
+//                        cpu_state.pc++; 
                         break;
                         case 2: 
-                        eaaddr = (fastreadl(cs + pc + 1)) + regs[sib & 7].l; 
-                        pc += 5; 
+                        eaaddr = (fastreadl(cs + cpu_state.pc + 1)) + cpu_state.regs[sib & 7].l; 
+                        cpu_state.pc += 5; 
                         break;
                 }
                 /*SIB byte present*/
@@ -104,11 +104,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         ea_seg = &_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
-                        eaaddr += regs[(sib >> 3) & 7].l << (sib >> 6);
+                        eaaddr += cpu_state.regs[(sib >> 3) & 7].l << (sib >> 6);
         }
         else
         {
-                eaaddr = regs[rm].l;
+                eaaddr = cpu_state.regs[rm].l;
                 if (mod) 
                 {
                         if (rm == 5 && !ssegs)
@@ -120,7 +120,7 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         if (mod == 1) 
                         { 
                                 eaaddr += ((uint32_t)(int8_t)(rmdat >> 8)); 
-                                pc++; 
+                                cpu_state.pc++; 
                         }
                         else          
                         {
@@ -159,7 +159,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                         eaaddr = 0;
                         break;
                         case 1:
-                        eaaddr = (uint16_t)(int8_t)(rmdat >> 8); pc++;
+                        eaaddr = (uint16_t)(int8_t)(rmdat >> 8); cpu_state.pc++;
                         break;
                         case 2:
                         eaaddr = getword();
@@ -184,8 +184,8 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         }
 }
 
-#define fetch_ea_16(rmdat)              pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_16_long(rmdat); if (abrt) return 1; } 
-#define fetch_ea_32(rmdat)              pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_32_long(rmdat); } if (abrt) return 1
+#define fetch_ea_16(rmdat)              cpu_state.pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_16_long(rmdat); if (abrt) return 1; } 
+#define fetch_ea_32(rmdat)              cpu_state.pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_32_long(rmdat); } if (abrt) return 1
 
 #include "x86_flags.h"
 
@@ -194,7 +194,7 @@ void x86_int(int num)
         uint32_t addr;
 //        pclog("x86_int %02x %04x:%04x\n", num, CS,pc);
         flags_rebuild();
-        pc=oldpc;
+        cpu_state.pc=oldpc;
         if (msw&1)
         {
                 pmodeint(num,0);
@@ -205,22 +205,22 @@ void x86_int(int num)
                 {
                         writememw(ss,ESP-2,flags);
                         writememw(ss,ESP-4,CS);
-                        writememw(ss,ESP-6,pc);
+                        writememw(ss,ESP-6,cpu_state.pc);
                         ESP-=6;
                 }
                 else
                 {
                         writememw(ss,((SP-2)&0xFFFF),flags);
                         writememw(ss,((SP-4)&0xFFFF),CS);
-                        writememw(ss,((SP-6)&0xFFFF),pc);
+                        writememw(ss,((SP-6)&0xFFFF),cpu_state.pc);
                         SP-=6;
                 }
                 addr = (num << 2) + idt.base;
 
                 flags&=~I_FLAG;
                 flags&=~T_FLAG;
-                oxpc=pc;
-                pc=readmemw(0,addr);
+                oxpc=cpu_state.pc;
+                cpu_state.pc=readmemw(0,addr);
                 loadcs(readmemw(0,addr+2));
         }
         cycles-=70;
@@ -244,22 +244,22 @@ void x86_int_sw(int num)
                 {
                         writememw(ss,ESP-2,flags);
                         writememw(ss,ESP-4,CS);
-                        writememw(ss,ESP-6,pc);
+                        writememw(ss,ESP-6,cpu_state.pc);
                         ESP-=6;
                 }
                 else
                 {
                         writememw(ss,((SP-2)&0xFFFF),flags);
                         writememw(ss,((SP-4)&0xFFFF),CS);
-                        writememw(ss,((SP-6)&0xFFFF),pc);
+                        writememw(ss,((SP-6)&0xFFFF),cpu_state.pc);
                         SP-=6;
                 }
                 addr = (num << 2) + idt.base;
 
                 flags&=~I_FLAG;
                 flags&=~T_FLAG;
-                oxpc=pc;
-                pc=readmemw(0,addr);
+                oxpc=cpu_state.pc;
+                cpu_state.pc=readmemw(0,addr);
                 loadcs(readmemw(0,addr+2));
                 cycles -= timing_int_rm;
         }
@@ -300,7 +300,7 @@ int rep386(int fv)
         of = flags;
 //        if (inrecomp) pclog("REP32 %04X %04X  ",use32,rep32);
         startrep:
-        temp=opcode2=readmemb(cs,pc); pc++;
+        temp=opcode2=readmemb(cs,cpu_state.pc); cpu_state.pc++;
 //        if (firstrepcycle && temp==0xA5) pclog("REP MOVSW %06X:%04X %06X:%04X\n",ds,SI,es,DI);
 //        if (inrecomp) pclog("REP %02X %04X\n",temp,ipc);
         c=(rep32&0x200)?ECX:CX;
@@ -311,10 +311,10 @@ int rep386(int fv)
         switch (temp|rep32)
         {
                 case 0xC3: case 0x1C3: case 0x2C3: case 0x3C3:
-                pc--;
+                cpu_state.pc--;
                 break;
                 case 0x08:
-                pc=ipc+1;
+                cpu_state.pc=ipc+1;
                 break;
                 case 0x26: case 0x126: case 0x226: case 0x326: /*ES:*/
                 ea_seg = &_es;
@@ -354,7 +354,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26C: case 0x36C: /*REP INSB*/
@@ -370,7 +370,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6D: /*REP INSW*/
@@ -386,7 +386,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x16D: /*REP INSL*/
@@ -401,7 +401,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26D: /*REP INSW*/
@@ -416,7 +416,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x36D: /*REP INSL*/
@@ -431,7 +431,7 @@ int rep386(int fv)
                         c--;
                         cycles-=15;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6E: case 0x16E: /*REP OUTSB*/
@@ -447,7 +447,7 @@ int rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x26E: case 0x36E: /*REP OUTSB*/
@@ -463,7 +463,7 @@ int rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x6F: /*REP OUTSW*/
@@ -479,7 +479,7 @@ int rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x16F: /*REP OUTSL*/
@@ -494,7 +494,7 @@ int rep386(int fv)
                         c--;
                         cycles -= 14;
                 }
-                if (c > 0) { firstrepcycle = 0; pc = ipc; }
+                if (c > 0) { firstrepcycle = 0; cpu_state.pc = ipc; }
                 else firstrepcycle = 1;
                 break;
                 case 0x26F: /*REP OUTSW*/
@@ -509,7 +509,7 @@ int rep386(int fv)
                         c--;
                         cycles-=14;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x36F: /*REP OUTSL*/
@@ -524,7 +524,7 @@ int rep386(int fv)
                         c--;
                         cycles -= 14;
                 }
-                if (c > 0) { firstrepcycle = 0; pc = ipc; }
+                if (c > 0) { firstrepcycle = 0; cpu_state.pc = ipc; }
                 else firstrepcycle = 1;
                 break;
                 case 0x90: case 0x190: /*REP NOP*/
@@ -547,7 +547,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A4: case 0x3A4: /*REP MOVSB*/
@@ -565,7 +565,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xA5: /*REP MOVSW*/
@@ -583,7 +583,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1A5: /*REP MOVSL*/
@@ -602,7 +602,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A5: /*REP MOVSW*/
@@ -621,7 +621,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3A5: /*REP MOVSL*/
@@ -641,7 +641,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xA6: case 0x1A6: /*REP CMPSB*/
@@ -659,7 +659,7 @@ int rep386(int fv)
                         setsub8(temp,temp2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A6: case 0x3A6: /*REP CMPSB*/
@@ -677,7 +677,7 @@ int rep386(int fv)
                         setsub8(temp,temp2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0xA7: /*REP CMPSW*/
@@ -698,7 +698,7 @@ int rep386(int fv)
                         setsub16(tempw,tempw2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x1A7: /*REP CMPSL*/
@@ -716,7 +716,7 @@ int rep386(int fv)
                         setsub32(templ,templ2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2A7: /*REP CMPSW*/
@@ -734,7 +734,7 @@ int rep386(int fv)
                         setsub16(tempw,tempw2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x3A7: /*REP CMPSL*/
@@ -752,7 +752,7 @@ int rep386(int fv)
                         setsub32(templ,templ2);
                         tempz = (ZF_SET()) ? 1 : 0;
                 }
-                if ((c>0) && (fv==tempz)) { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz)) { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
 
@@ -771,7 +771,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AA: case 0x3AA: /*REP STOSB*/
@@ -789,7 +789,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAB: /*REP STOSW*/
@@ -807,7 +807,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AB: /*REP STOSW*/
@@ -825,7 +825,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AB: /*REP STOSL*/
@@ -843,7 +843,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AB: /*REP STOSL*/
@@ -861,7 +861,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAC: case 0x1AC: /*REP LODSB*/
@@ -876,7 +876,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AC: case 0x3AC: /*REP LODSB*/
@@ -891,7 +891,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAD: /*REP LODSW*/
@@ -906,7 +906,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AD: /*REP LODSL*/
@@ -921,7 +921,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AD: /*REP LODSW*/
@@ -936,7 +936,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AD: /*REP LODSL*/
@@ -951,7 +951,7 @@ int rep386(int fv)
                         c--;
                         cycles-=5;
                 }
-                if (c>0) { firstrepcycle=0; pc=ipc; }
+                if (c>0) { firstrepcycle=0; cpu_state.pc=ipc; }
                 else firstrepcycle=1;
                 break;
                 case 0xAE: case 0x1AE: /*REP SCASB*/
@@ -974,7 +974,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AE: case 0x3AE: /*REP SCASB*/
@@ -998,7 +998,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0xAF: /*REP SCASW*/
@@ -1020,7 +1020,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x1AF: /*REP SCASL*/
@@ -1042,7 +1042,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x2AF: /*REP SCASW*/
@@ -1064,7 +1064,7 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
                 case 0x3AF: /*REP SCASL*/
@@ -1086,13 +1086,13 @@ int rep386(int fv)
                                 break;
                 }
                 ins--;
-                if ((c>0) && (fv==tempz))  { pc=ipc; firstrepcycle=0; }
+                if ((c>0) && (fv==tempz))  { cpu_state.pc=ipc; firstrepcycle=0; }
                 else firstrepcycle=1;
                 break;
 
 
                 default:
-                pc = ipc+1;
+                cpu_state.pc = ipc+1;
                 //pclog("Bad REP %02X %i\n", temp, rep32 >> 8);
                 break;
         }
@@ -1127,7 +1127,7 @@ int xout=0;
 
 
 #define divexcp() { \
-                pclog("Divide exception at %04X(%06X):%04X\n",CS,cs,pc); \
+                pclog("Divide exception at %04X(%06X):%04X\n",CS,cs,cpu_state.pc); \
                 x86_int(0); \
 }
 
@@ -1220,7 +1220,7 @@ void exec386_dynarec(int cycs)
         while (cycles>0)
         {
                 oldcs = CS;
-                oldpc = pc;
+                oldpc = cpu_state.pc;
                 oldcpl = CPL;
                 op32 = use32;
 
@@ -1235,7 +1235,7 @@ void exec386_dynarec(int cycs)
                         while (!cpu_block_end)
                         {
                                 oldcs=CS;
-                                oldpc=pc;
+                                oldpc=cpu_state.pc;
                                 oldcpl=CPL;
                                 op32=use32;
 
@@ -1243,7 +1243,7 @@ void exec386_dynarec(int cycs)
                                 ssegs = 0;
                 
                         opcodestart:
-                                fetchdat = fastreadl(cs + pc);
+                                fetchdat = fastreadl(cs + cpu_state.pc);
 //                                if (!fetchdat)
 //                                        fatal("Dead with cache off\n");
                                 if (!abrt)
@@ -1255,13 +1255,13 @@ void exec386_dynarec(int cycs)
 //                                        if (output == 3)
 //                                                pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
 
-                                        pc++;
+                                        cpu_state.pc++;
                                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
                                 }
 
-                                if (!use32) pc &= 0xffff;
+                                if (!use32) cpu_state.pc &= 0xffff;
 
-                                if (((cs + pc) >> 12) != pccache)
+                                if (((cs + cpu_state.pc) >> 12) != pccache)
                                         CPU_BLOCK_END();
 
 /*                                if (ssegs)
@@ -1286,7 +1286,7 @@ void exec386_dynarec(int cycs)
                 }
                 else
                 {
-                uint32_t phys_addr = get_phys(cs+pc);
+                uint32_t phys_addr = get_phys(cs+cpu_state.pc);
                 int hash = HASH(phys_addr);
                 codeblock_t *block = codeblock_hash[hash];
                 int valid_block = 0;
@@ -1299,7 +1299,7 @@ void exec386_dynarec(int cycs)
                         /*Block must match current CS, PC, code segment size,
                           and physical address. The physical address check will
                           also catch any page faults at this stage*/
-                        valid_block = (block->pc == cs + pc) && (block->_cs == cs) &&
+                        valid_block = (block->pc == cs + cpu_state.pc) && (block->_cs == cs) &&
                                       (block->use32 == use32) && (block->phys == phys_addr) && (block->stack32 == stack32);
                         if (!valid_block)
                         {
@@ -1311,7 +1311,7 @@ void exec386_dynarec(int cycs)
                                         codeblock_t *new_block = codeblock_tree_find(phys_addr);                                        
                                         if (new_block)
                                         {
-                                                valid_block = (new_block->pc == cs + pc) && (new_block->_cs == cs) &&
+                                                valid_block = (new_block->pc == cs + cpu_state.pc) && (new_block->_cs == cs) &&
                                                                 (new_block->use32 == use32) && (new_block->phys == phys_addr) && (new_block->stack32 == stack32);
                                                 if (valid_block)
                                                         block = new_block;
@@ -1359,7 +1359,7 @@ void exec386_dynarec(int cycs)
 inrecomp=1;
                         code();
 inrecomp=0;
-                        if (!use32) pc &= 0xffff;
+                        if (!use32) cpu_state.pc &= 0xffff;
 //                        cpu_recomp_ins += block->ins;
                         cpu_recomp_blocks++;
 /*                        ins += codeblock_ins[index];
@@ -1368,8 +1368,8 @@ inrecomp=0;
                 }
                 else if (!abrt)
                 {
-                        uint32_t start_page = pc >> 12;
-                        uint32_t start_pc = pc;
+                        uint32_t start_page = cpu_state.pc >> 12;
+                        uint32_t start_pc = cpu_state.pc;
                         
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
                         cpu_block_end = 0;
@@ -1384,7 +1384,7 @@ inrecomp=0;
                         while (!cpu_block_end)
                         {
                                 oldcs=CS;
-                                oldpc=pc;
+                                oldpc=cpu_state.pc;
                                 oldcpl=CPL;
                                 op32=use32;
 
@@ -1392,7 +1392,7 @@ inrecomp=0;
                                 ssegs = 0;
                 
                         opcodestart_compile:
-                                fetchdat = fastreadl(cs + pc);
+                                fetchdat = fastreadl(cs + cpu_state.pc);
 //                                if (fetchdat == 0xffffffff)
 //                                        fatal("Dead ffffffff\n");
 //                                if (!fetchdat)
@@ -1406,9 +1406,9 @@ inrecomp=0;
 //                                        if (output == 3)
 //                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
 
-                                        pc++;
+                                        cpu_state.pc++;
                                                 
-                                        codegen_generate_call(opcode, x86_opcodes[(opcode | op32) & 0x3ff], fetchdat, pc, pc-1);
+                                        codegen_generate_call(opcode, x86_opcodes[(opcode | op32) & 0x3ff], fetchdat, cpu_state.pc, cpu_state.pc-1);
 
                                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
 
@@ -1416,13 +1416,13 @@ inrecomp=0;
                                                 break;
                                 }
 
-                                if (!use32) pc &= 0xffff;
+                                if (!use32) cpu_state.pc &= 0xffff;
 
                                 /*Cap source code at 4000 bytes per block; this
                                   will prevent any block from spanning more than
                                   2 pages. In practice this limit will never be
                                   hit, as host block size is only 2kB*/
-                                if ((pc - start_pc) > 4000)
+                                if ((cpu_state.pc - start_pc) > 4000)
                                         CPU_BLOCK_END();
                                         
                                 if (trap)
@@ -1467,7 +1467,7 @@ inrecomp=0;
                         {
                                 abrt = 0;
                                 CS = oldcs;
-                                pc = oldpc;
+                                cpu_state.pc = oldpc;
                                 pclog("Double fault %i\n", ins);
                                 pmodeint(8, 0);
                                 if (abrt)
@@ -1493,12 +1493,12 @@ inrecomp=0;
                         {
                                 writememw(ss,(SP-2)&0xFFFF,flags);
                                 writememw(ss,(SP-4)&0xFFFF,CS);
-                                writememw(ss,(SP-6)&0xFFFF,pc);
+                                writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                 SP-=6;
                                 addr = (1 << 2) + idt.base;
                                 flags&=~I_FLAG;
                                 flags&=~T_FLAG;
-                                pc=readmemw(0,addr);
+                                cpu_state.pc=readmemw(0,addr);
                                 loadcs(readmemw(0,addr+2));
                         }
                 }
@@ -1518,13 +1518,13 @@ inrecomp=0;
                                 {
                                         writememw(ss,(SP-2)&0xFFFF,flags);
                                         writememw(ss,(SP-4)&0xFFFF,CS);
-                                        writememw(ss,(SP-6)&0xFFFF,pc);
+                                        writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                         SP-=6;
                                         addr=temp<<2;
                                         flags&=~I_FLAG;
                                         flags&=~T_FLAG;
-                                        oxpc=pc;
-                                        pc=readmemw(0,addr);
+                                        oxpc=cpu_state.pc;
+                                        cpu_state.pc=readmemw(0,addr);
                                         loadcs(readmemw(0,addr+2));
                                 }
                         }

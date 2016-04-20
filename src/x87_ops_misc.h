@@ -1,7 +1,7 @@
 static int opFSTSW_AX(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSTSW\n");
         AX = npxs;
         CLOCK_CYCLES(3);
@@ -13,7 +13,7 @@ static int opFSTSW_AX(uint32_t fetchdat)
 static int opFNOP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -21,7 +21,7 @@ static int opFNOP(uint32_t fetchdat)
 static int opFCLEX(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         npxs &= 0xff00;
         CLOCK_CYCLES(4);
         return 0;
@@ -30,7 +30,7 @@ static int opFCLEX(uint32_t fetchdat)
 static int opFINIT(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         npxc = 0x37F;
         npxs = 0;
         *(uint64_t *)tag = 0x0303030303030303ll;
@@ -43,7 +43,7 @@ static int opFINIT(uint32_t fetchdat)
 static int opFFREE(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FFREE\n");
         tag[(TOP + fetchdat) & 7] = 3;
         CLOCK_CYCLES(3);
@@ -53,7 +53,7 @@ static int opFFREE(uint32_t fetchdat)
 static int opFST(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FST\n");
         ST(fetchdat & 7) = ST(0);
         tag[(TOP + fetchdat) & 7] = tag[TOP & 7];
@@ -65,7 +65,7 @@ static int opFSTP(uint32_t fetchdat)
 {
         int temp;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSTP\n");
         ST(fetchdat & 7) = ST(0);
         tag[(TOP + fetchdat) & 7] = tag[TOP & 7];
@@ -313,7 +313,7 @@ static int opFLD(uint32_t fetchdat)
         uint64_t old_i64;
         
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLD %f\n", ST(fetchdat & 7));
         old_tag = tag[(TOP + fetchdat) & 7];
         old_i64 = ST_i64[(TOP + fetchdat) & 7];
@@ -330,7 +330,7 @@ static int opFXCH(uint32_t fetchdat)
         uint8_t old_tag;
         uint64_t old_i64;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FXCH\n");
         td = ST(0);
         ST(0) = ST(fetchdat&7);
@@ -349,7 +349,7 @@ static int opFXCH(uint32_t fetchdat)
 static int opFCHS(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FCHS\n");
         ST(0) = -ST(0);
         tag[TOP] &= ~TAG_UINT64;
@@ -360,7 +360,7 @@ static int opFCHS(uint32_t fetchdat)
 static int opFABS(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FABS %f\n", ST(0));
         ST(0) = fabs(ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -371,7 +371,7 @@ static int opFABS(uint32_t fetchdat)
 static int opFTST(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FTST\n");
         npxs &= ~(C0|C2|C3);
         if (ST(0) == 0.0)     npxs |= C3;
@@ -383,7 +383,7 @@ static int opFTST(uint32_t fetchdat)
 static int opFXAM(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FXAM %i %f\n", tag[TOP&7], ST(0));
         npxs &= ~(C0|C1|C2|C3);
         if (tag[TOP&7] == 3)   npxs |= (C0|C3);
@@ -397,7 +397,7 @@ static int opFXAM(uint32_t fetchdat)
 static int opFLD1(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLD1\n");
         x87_push(1.0);
         CLOCK_CYCLES(4);
@@ -407,7 +407,7 @@ static int opFLD1(uint32_t fetchdat)
 static int opFLDL2T(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDL2T\n");
         x87_push(3.3219280948873623);
         CLOCK_CYCLES(8);
@@ -417,7 +417,7 @@ static int opFLDL2T(uint32_t fetchdat)
 static int opFLDL2E(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDL2E\n");
         x87_push(1.4426950408889634);
         CLOCK_CYCLES(8);
@@ -427,7 +427,7 @@ static int opFLDL2E(uint32_t fetchdat)
 static int opFLDPI(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDPI\n");
         x87_push(3.141592653589793);
         CLOCK_CYCLES(8);
@@ -437,7 +437,7 @@ static int opFLDPI(uint32_t fetchdat)
 static int opFLDEG2(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDEG2\n");
         x87_push(0.3010299956639812);
         CLOCK_CYCLES(8);
@@ -447,7 +447,7 @@ static int opFLDEG2(uint32_t fetchdat)
 static int opFLDLN2(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDLN2\n");
         x87_push(0.693147180559945);
         CLOCK_CYCLES(8);
@@ -457,7 +457,7 @@ static int opFLDLN2(uint32_t fetchdat)
 static int opFLDZ(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FLDZ\n");
         x87_push(0.0);
         tag[TOP&7] = 1;
@@ -468,7 +468,7 @@ static int opFLDZ(uint32_t fetchdat)
 static int opF2XM1(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("F2XM1\n");
         ST(0) = pow(2.0, ST(0)) - 1.0;
         tag[TOP] &= ~TAG_UINT64;
@@ -479,7 +479,7 @@ static int opF2XM1(uint32_t fetchdat)
 static int opFYL2X(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FYL2X\n");
         ST(1) = ST(1) * (log(ST(0)) / log(2.0));
         tag[(TOP + 1) & 7] &= ~TAG_UINT64;
@@ -491,7 +491,7 @@ static int opFYL2X(uint32_t fetchdat)
 static int opFYL2XP1(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FYL2XP1\n");
         ST(1) = ST(1) * (log(ST(0)+1.0) / log(2.0));
         tag[(TOP + 1) & 7] &= ~TAG_UINT64;
@@ -503,7 +503,7 @@ static int opFYL2XP1(uint32_t fetchdat)
 static int opFPTAN(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FPTAN\n");
         ST(0) = tan(ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -516,7 +516,7 @@ static int opFPTAN(uint32_t fetchdat)
 static int opFPATAN(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FPATAN\n");
         ST(1) = atan2(ST(1), ST(0));
         tag[(TOP + 1) & 7] &= ~TAG_UINT64;
@@ -528,7 +528,7 @@ static int opFPATAN(uint32_t fetchdat)
 static int opFDECSTP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDECSTP\n");
         TOP = (TOP - 1) & 7;
         CLOCK_CYCLES(4);
@@ -538,7 +538,7 @@ static int opFDECSTP(uint32_t fetchdat)
 static int opFINCSTP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDECSTP\n");
         TOP = (TOP + 1) & 7;
         CLOCK_CYCLES(4);
@@ -549,7 +549,7 @@ static int opFPREM(uint32_t fetchdat)
 {
         int64_t temp64;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FPREM %f %f  ", ST(0), ST(1));
         temp64 = (int64_t)(ST(0) / ST(1));
         ST(0) = ST(0) - (ST(1) * (double)temp64);
@@ -566,7 +566,7 @@ static int opFPREM1(uint32_t fetchdat)
 {
         int64_t temp64;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FPREM1 %f %f  ", ST(0), ST(1));
         temp64 = (int64_t)(ST(0) / ST(1));
         ST(0) = ST(0) - (ST(1) * (double)temp64);
@@ -583,7 +583,7 @@ static int opFPREM1(uint32_t fetchdat)
 static int opFSQRT(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSQRT\n");
         ST(0) = sqrt(ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -595,7 +595,7 @@ static int opFSINCOS(uint32_t fetchdat)
 {
         double td;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSINCOS\n");
         td = ST(0);
         ST(0) = sin(td);
@@ -609,7 +609,7 @@ static int opFSINCOS(uint32_t fetchdat)
 static int opFRNDINT(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FRNDINT %g ", ST(0));
         ST(0) = (double)x87_fround(ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -622,7 +622,7 @@ static int opFSCALE(uint32_t fetchdat)
 {
         int64_t temp64;
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSCALE\n");
         temp64 = (int64_t)ST(1);
         ST(0) = ST(0) * pow(2.0, (double)temp64);
@@ -634,7 +634,7 @@ static int opFSCALE(uint32_t fetchdat)
 static int opFSIN(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSIN\n");
         ST(0) = sin(ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -646,7 +646,7 @@ static int opFSIN(uint32_t fetchdat)
 static int opFCOS(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FCOS\n");
         ST(0) = cos(ST(0));
         tag[TOP] &= ~TAG_UINT64;

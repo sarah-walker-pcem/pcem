@@ -261,7 +261,7 @@ static uint8_t pas16_in(uint16_t port, void *p)
                 temp = 0x20 | 0x10 | 0x01; /*AT bus, XT/AT timing*/
                 break;
         }
-/*        if (port != 0x388 && port != 0x389 && port != 0xb8b) */pclog("pas16_in : port %04X return %02X  %04X:%04X\n", port, temp, CS,pc);
+/*        if (port != 0x388 && port != 0x389 && port != 0xb8b) */pclog("pas16_in : port %04X return %02X  %04X:%04X\n", port, temp, CS,cpu_state.pc);
 /*        if (CS == 0x1FF4 && pc == 0x0585)
         {
                 if (output)
@@ -274,7 +274,7 @@ static uint8_t pas16_in(uint16_t port, void *p)
 static void pas16_out(uint16_t port, uint8_t val, void *p)
 {
         pas16_t *pas16 = (pas16_t *)p;
-/*        if (port != 0x388 && port != 0x389) */pclog("pas16_out : port %04X val %02X  %04X:%04X\n", port, val, CS,pc);
+/*        if (port != 0x388 && port != 0x389) */pclog("pas16_out : port %04X val %02X  %04X:%04X\n", port, val, CS,cpu_state.pc);
 /*        if (CS == 0x369 && pc == 0x2AC5)
                 fatal("here\n");*/
         switch ((port - pas16->base) + 0x388)
@@ -377,7 +377,7 @@ static void pas16_out(uint16_t port, uint8_t val, void *p)
                 default:
                 pclog("pas16_out : unknown %04X\n", port);
         }
-        if (pc == 0x80048CF3)
+        if (cpu_state.pc == 0x80048CF3)
         {
                 if (output)
                         fatal("here\n");

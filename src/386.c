@@ -73,17 +73,17 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 switch (mod)
                 {
                         case 0: 
-                        eaaddr = regs[sib & 7].l; 
-                        pc++; 
+                        eaaddr = cpu_state.regs[sib & 7].l; 
+                        cpu_state.pc++; 
                         break;
                         case 1: 
-                        pc++;
-                        eaaddr = ((uint32_t)(int8_t)getbyte()) + regs[sib & 7].l; 
+                        cpu_state.pc++;
+                        eaaddr = ((uint32_t)(int8_t)getbyte()) + cpu_state.regs[sib & 7].l; 
 //                        pc++; 
                         break;
                         case 2: 
-                        eaaddr = (fastreadl(cs + pc + 1)) + regs[sib & 7].l; 
-                        pc += 5; 
+                        eaaddr = (fastreadl(cs + cpu_state.pc + 1)) + cpu_state.regs[sib & 7].l; 
+                        cpu_state.pc += 5; 
                         break;
                 }
                 /*SIB byte present*/
@@ -96,11 +96,11 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         ea_seg = &_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
-                        eaaddr += regs[(sib >> 3) & 7].l << (sib >> 6);
+                        eaaddr += cpu_state.regs[(sib >> 3) & 7].l << (sib >> 6);
         }
         else
         {
-                eaaddr = regs[rm].l;
+                eaaddr = cpu_state.regs[rm].l;
                 if (mod) 
                 {
                         if (rm == 5 && !ssegs)
@@ -112,7 +112,7 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         if (mod == 1) 
                         { 
                                 eaaddr += ((uint32_t)(int8_t)(rmdat >> 8)); 
-                                pc++; 
+                                cpu_state.pc++; 
                         }
                         else          
                         {
@@ -151,7 +151,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                         eaaddr = 0;
                         break;
                         case 1:
-                        eaaddr = (uint16_t)(int8_t)(rmdat >> 8); pc++;
+                        eaaddr = (uint16_t)(int8_t)(rmdat >> 8); cpu_state.pc++;
                         break;
                         case 2:
                         eaaddr = getword();
@@ -176,15 +176,15 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         }
 }
 
-#define fetch_ea_16(rmdat)              pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_16_long(rmdat); if (abrt) return 0; } 
-#define fetch_ea_32(rmdat)              pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_32_long(rmdat); } if (abrt) return 0
+#define fetch_ea_16(rmdat)              cpu_state.pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_16_long(rmdat); if (abrt) return 0; } 
+#define fetch_ea_32(rmdat)              cpu_state.pc++; mod=(rmdat >> 6) & 3; reg=(rmdat >> 3) & 7; rm = rmdat & 7; if (mod != 3) { fetch_ea_32_long(rmdat); } if (abrt) return 0
 
 #include "x86_flags.h"
 
-#define getbytef() ((uint8_t)(fetchdat)); pc++
-#define getwordf() ((uint16_t)(fetchdat)); pc+=2
-#define getbyte2f() ((uint8_t)(fetchdat>>8)); pc++
-#define getword2f() ((uint16_t)(fetchdat>>8)); pc+=2
+#define getbytef() ((uint8_t)(fetchdat)); cpu_state.pc++
+#define getwordf() ((uint16_t)(fetchdat)); cpu_state.pc+=2
+#define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
+#define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
 extern int xout;
 
 int oldi;
@@ -238,7 +238,7 @@ void exec386(int cycs)
 //                oldpc2=oldpc;
 opcode_realstart:
                 oldcs=CS;
-                oldpc=pc;
+                oldpc=cpu_state.pc;
                 oldcpl=CPL;
                 op32=use32;
                 
@@ -248,7 +248,7 @@ dontprint=0;
                 ssegs = 0;
                 
 opcodestart:
-                fetchdat = fastreadl(cs + pc);
+                fetchdat = fastreadl(cs + cpu_state.pc);
 
                 if (!abrt)
                 {               
@@ -258,13 +258,13 @@ opcodestart:
 
                         if (output == 3)
                         {
-                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X %02X%02X  %02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0xB270+0x3F5], ram[0xB270+0x3F4], ram[0xB270+0x3F7], ram[0xB270+0x3F6], ram[0xB270+0x3F9], ram[0xB270+0x3F8], ram[0x4430+0x0D49]);
+                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X %02X%02X  %02X\n",CS,cs,cpu_state.pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0xB270+0x3F5], ram[0xB270+0x3F4], ram[0xB270+0x3F7], ram[0xB270+0x3F6], ram[0xB270+0x3F9], ram[0xB270+0x3F8], ram[0x4430+0x0D49]);
                         }
-                        pc++;
+                        cpu_state.pc++;
                         x86_opcodes[(opcode | op32) & 0x3ff](fetchdat);
                 }
 
-                if (!use32) pc &= 0xffff;
+                if (!use32) cpu_state.pc &= 0xffff;
 
                 if (abrt)
                 {
@@ -287,7 +287,7 @@ opcodestart:
                         {
                                 abrt = 0;
                                 CS = oldcs;
-                                pc = oldpc;
+                                cpu_state.pc = oldpc;
                                 pclog("Double fault %i\n", ins);
                                 pmodeint(8, 0);
                                 if (abrt)
@@ -313,18 +313,18 @@ opcodestart:
                         {
                                 writememw(ss,(SP-2)&0xFFFF,flags);
                                 writememw(ss,(SP-4)&0xFFFF,CS);
-                                writememw(ss,(SP-6)&0xFFFF,pc);
+                                writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                 SP-=6;
                                 addr = (1 << 2) + idt.base;
                                 flags&=~I_FLAG;
                                 flags&=~T_FLAG;
-                                pc=readmemw(0,addr);
+                                cpu_state.pc=readmemw(0,addr);
                                 loadcs(readmemw(0,addr+2));
                         }
                 }
                 else if (nmi && nmi_enable)
                 {
-                        oldpc = pc;
+                        oldpc = cpu_state.pc;
                         oldcs = CS;
 //                        pclog("NMI\n");
                         x86_int(2);
@@ -348,13 +348,13 @@ opcodestart:
                                 {
                                         writememw(ss,(SP-2)&0xFFFF,flags);
                                         writememw(ss,(SP-4)&0xFFFF,CS);
-                                        writememw(ss,(SP-6)&0xFFFF,pc);
+                                        writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                         SP-=6;
                                         addr = (temp << 2) + idt.base;
                                         flags&=~I_FLAG;
                                         flags&=~T_FLAG;
-                                        oxpc=pc;
-                                        pc=readmemw(0,addr);
+                                        oxpc=cpu_state.pc;
+                                        cpu_state.pc=readmemw(0,addr);
                                         loadcs(readmemw(0,addr+2));
 //                                        if (temp==0x76) pclog("INT to %04X:%04X\n",CS,pc);
                                 }

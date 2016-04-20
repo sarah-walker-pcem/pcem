@@ -110,7 +110,7 @@ opFPU(il, uint32_t, 32, t, geteal, (double)(int32_t)t)
 static int opFADD(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FADD\n");
         ST(0) = ST(0) + ST(fetchdat & 7);
         tag[TOP] &= ~TAG_UINT64;
@@ -120,7 +120,7 @@ static int opFADD(uint32_t fetchdat)
 static int opFADDr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FADD\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -130,7 +130,7 @@ static int opFADDr(uint32_t fetchdat)
 static int opFADDP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FADDP\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -142,7 +142,7 @@ static int opFADDP(uint32_t fetchdat)
 static int opFCOM(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FCOM\n");
         npxs &= ~(C0|C2|C3);
         if (ST(0) == ST(fetchdat & 7))     npxs |= C3;
@@ -154,7 +154,7 @@ static int opFCOM(uint32_t fetchdat)
 static int opFCOMP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FCOMP\n");
         npxs &= ~(C0|C2|C3);
         npxs |= x87_compare(ST(0), ST(fetchdat & 7));
@@ -166,7 +166,7 @@ static int opFCOMP(uint32_t fetchdat)
 static int opFCOMPP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FCOMPP\n");
         npxs &= ~(C0|C2|C3);
         if (*(uint64_t *)&ST(0) == ((uint64_t)1 << 63) && *(uint64_t *)&ST(1) == 0)
@@ -182,7 +182,7 @@ static int opFCOMPP(uint32_t fetchdat)
 static int opFUCOMPP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FUCOMPP\n", easeg, eaaddr);
         npxs &= ~(C0|C2|C3);
         npxs |= x87_ucompare(ST(0), ST(1));
@@ -195,7 +195,7 @@ static int opFUCOMPP(uint32_t fetchdat)
 static int opFDIV(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIV\n");
         x87_div(ST(0), ST(0), ST(fetchdat & 7));
         tag[TOP] &= ~TAG_UINT64;
@@ -205,7 +205,7 @@ static int opFDIV(uint32_t fetchdat)
 static int opFDIVr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIV\n");
         x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -215,7 +215,7 @@ static int opFDIVr(uint32_t fetchdat)
 static int opFDIVP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIVP\n");
         x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -227,7 +227,7 @@ static int opFDIVP(uint32_t fetchdat)
 static int opFDIVR(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(0), ST(fetchdat&7), ST(0));
         tag[TOP] &= ~TAG_UINT64;
@@ -237,7 +237,7 @@ static int opFDIVR(uint32_t fetchdat)
 static int opFDIVRr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -247,7 +247,7 @@ static int opFDIVRr(uint32_t fetchdat)
 static int opFDIVRP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FDIVR\n");
         x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -259,7 +259,7 @@ static int opFDIVRP(uint32_t fetchdat)
 static int opFMUL(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FMUL\n");
         ST(0) = ST(0) * ST(fetchdat & 7);
         tag[TOP] &= ~TAG_UINT64;
@@ -269,7 +269,7 @@ static int opFMUL(uint32_t fetchdat)
 static int opFMULr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FMUL\n");
         ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -279,7 +279,7 @@ static int opFMULr(uint32_t fetchdat)
 static int opFMULP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FMULP\n");
         ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -291,7 +291,7 @@ static int opFMULP(uint32_t fetchdat)
 static int opFSUB(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUB\n");
         ST(0) = ST(0) - ST(fetchdat & 7);
         tag[TOP] &= ~TAG_UINT64;
@@ -301,7 +301,7 @@ static int opFSUB(uint32_t fetchdat)
 static int opFSUBr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUB\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -311,7 +311,7 @@ static int opFSUBr(uint32_t fetchdat)
 static int opFSUBP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUBP\n");
         ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -323,7 +323,7 @@ static int opFSUBP(uint32_t fetchdat)
 static int opFSUBR(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUBR\n");
         ST(0) = ST(fetchdat & 7) - ST(0);
         tag[TOP] &= ~TAG_UINT64;
@@ -333,7 +333,7 @@ static int opFSUBR(uint32_t fetchdat)
 static int opFSUBRr(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUBR\n");
         ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -343,7 +343,7 @@ static int opFSUBRr(uint32_t fetchdat)
 static int opFSUBRP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FSUBRP\n");
         ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
         tag[(TOP + fetchdat) & 7] &= ~TAG_UINT64;
@@ -355,7 +355,7 @@ static int opFSUBRP(uint32_t fetchdat)
 static int opFUCOM(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FUCOM\n");
         npxs &= ~(C0|C2|C3);
         npxs |= x87_ucompare(ST(0), ST(fetchdat & 7));
@@ -366,7 +366,7 @@ static int opFUCOM(uint32_t fetchdat)
 static int opFUCOMP(uint32_t fetchdat)
 {
         FP_ENTER();
-        pc++;
+        cpu_state.pc++;
         if (fplog) pclog("FUCOMP\n");
         npxs &= ~(C0|C2|C3);
         npxs |= x87_ucompare(ST(0), ST(fetchdat & 7));

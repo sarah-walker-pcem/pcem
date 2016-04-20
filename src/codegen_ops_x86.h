@@ -52,10 +52,20 @@ static void STORE_IMM_ADDR_W(uintptr_t addr, uint16_t val)
 }
 static void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
 {
-        addbyte(0xC7); /*MOVL [addr],val*/
-        addbyte(0x05);
-        addlong(addr);
-        addlong(val);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x80)
+        {
+                addbyte(0xC7); /*MOVL [addr],val*/
+                addbyte(0x45);
+                addbyte(addr - (uint32_t)&cpu_state);
+                addlong(val);
+        }
+        else
+        {
+                addbyte(0xC7); /*MOVL [addr],val*/
+                addbyte(0x05);
+                addlong(addr);
+                addlong(val);
+        }
 }
 
 static void STORE_IMM_REG_B(int reg, uint8_t val)
@@ -63,9 +73,9 @@ static void STORE_IMM_REG_B(int reg, uint8_t val)
         addbyte(0xC6); /*MOVB [addr],val*/
         addbyte(0x45);
         if (reg & 4)
-                addbyte((uint32_t)&regs[reg & 3].b.h - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[reg & 3].b.h - (uint32_t)&EAX);
         else
-                addbyte((uint32_t)&regs[reg & 3].b.l - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[reg & 3].b.l - (uint32_t)&EAX);
         addbyte(val);
 }
 static void STORE_IMM_REG_W(int reg, uint16_t val)
@@ -73,14 +83,14 @@ static void STORE_IMM_REG_W(int reg, uint16_t val)
         addbyte(0x66); /*MOVW [addr],val*/
         addbyte(0xC7);
         addbyte(0x45);
-        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[reg & 7].w - (uint32_t)&EAX);
         addword(val);
 }
 static void STORE_IMM_REG_L(int reg, uint32_t val)
 {
         addbyte(0xC7); /*MOVL [addr],val*/
         addbyte(0x45);
-        addbyte((uint32_t)&regs[reg & 7].l - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[reg & 7].l - (uint32_t)&EAX);
         addlong(val);
 }
 
@@ -93,9 +103,9 @@ static int LOAD_REG_B(int reg)
         addbyte(0xb6);
         addbyte(0x45 | (host_reg << 3));
         if (reg & 4)
-                addbyte((uint32_t)&regs[reg & 3].b.h - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[reg & 3].b.h - (uint32_t)&EAX);
         else
-                addbyte((uint32_t)&regs[reg & 3].b.l - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[reg & 3].b.l - (uint32_t)&EAX);
 
         return host_reg;
 }
@@ -107,7 +117,7 @@ static int LOAD_REG_W(int reg)
         addbyte(0x0f); /*MOVZX W[reg],host_reg*/
         addbyte(0xb7);
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[reg & 7].w - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[reg & 7].w - (uint32_t)&EAX);
 
         return host_reg;
 }
@@ -118,7 +128,7 @@ static int LOAD_REG_L(int reg)
 
         addbyte(0x8b); /*MOVL host_reg,[reg]*/
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[reg & 7].l - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[reg & 7].l - (uint32_t)&EAX);
 
         return host_reg;
 }
@@ -175,9 +185,9 @@ static void STORE_REG_B_RELEASE(int host_reg)
         addbyte(0x88); /*MOVB [reg],host_reg*/
         addbyte(0x45 | (host_reg << 3));
         if (host_reg_mapping[host_reg] & 4)
-                addbyte((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.h - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[host_reg_mapping[host_reg] & 3].b.h - (uint32_t)&EAX);
         else
-                addbyte((uint32_t)&regs[host_reg_mapping[host_reg] & 3].b.l - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[host_reg_mapping[host_reg] & 3].b.l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_W_RELEASE(int host_reg)
@@ -185,14 +195,14 @@ static void STORE_REG_W_RELEASE(int host_reg)
         addbyte(0x66); /*MOVW [reg],host_reg*/
         addbyte(0x89);
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[host_reg_mapping[host_reg]].w - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[host_reg_mapping[host_reg]].w - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_L_RELEASE(int host_reg)
 {
         addbyte(0x89); /*MOVL [reg],host_reg*/
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[host_reg_mapping[host_reg]].l - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[host_reg_mapping[host_reg]].l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 
@@ -201,9 +211,9 @@ static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
         addbyte(0x88); /*MOVB [guest_reg],host_reg*/
         addbyte(0x45 | (host_reg << 3));
         if (guest_reg & 4)
-                addbyte((uint32_t)&regs[guest_reg & 3].b.h - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[guest_reg & 3].b.h - (uint32_t)&EAX);
         else
-                addbyte((uint32_t)&regs[guest_reg & 3].b.l - (uint32_t)&EAX);
+                addbyte((uint32_t)&cpu_state.regs[guest_reg & 3].b.l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
@@ -211,14 +221,14 @@ static void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
         addbyte(0x66); /*MOVW [guest_reg],host_reg*/
         addbyte(0x89);
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[guest_reg & 7].w - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[guest_reg & 7].w - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 static void STORE_REG_TARGET_L_RELEASE(int host_reg, int guest_reg)
 {
         addbyte(0x89); /*MOVL [guest_reg],host_reg*/
         addbyte(0x45 | (host_reg << 3));
-        addbyte((uint32_t)&regs[guest_reg & 7].l - (uint32_t)&EAX);
+        addbyte((uint32_t)&cpu_state.regs[guest_reg & 7].l - (uint32_t)&EAX);
         host_reg_mapping[host_reg] = -1;
 }
 
@@ -229,16 +239,35 @@ static void RELEASE_REG(int host_reg)
 
 static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
 {
-        addbyte(0x66); /*MOVL [reg],host_reg*/
-        addbyte(0x89);
-        addbyte(0x05 | (host_reg << 3));
-        addlong(addr);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x80)
+        {
+                addbyte(0x66); /*MOVW [addr],host_reg*/
+                addbyte(0x89);
+                addbyte(0x45 | (host_reg << 3));
+                addbyte((uint32_t)addr - (uint32_t)&cpu_state);
+        }
+        else
+        {
+                addbyte(0x66); /*MOVL [reg],host_reg*/
+                addbyte(0x89);
+                addbyte(0x05 | (host_reg << 3));
+                addlong(addr);
+        }
 }
 static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
 {
-        addbyte(0x89); /*MOVL [reg],host_reg*/
-        addbyte(0x05 | (host_reg << 3));
-        addlong(addr);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x80)
+        {
+                addbyte(0x89); /*MOVL [addr],host_reg*/
+                addbyte(0x45 | (host_reg << 3));
+                addbyte((uint32_t)addr - (uint32_t)&cpu_state);
+        }
+        else
+        {
+                addbyte(0x89); /*MOVL [reg],host_reg*/
+                addbyte(0x05 | (host_reg << 3));
+                addlong(addr);
+        }
 }
 #define STORE_HOST_REG_ADDR_BL STORE_HOST_REG_ADDR
 #define STORE_HOST_REG_ADDR_WL STORE_HOST_REG_ADDR
@@ -1214,13 +1243,13 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         {
                                 addbyte(0x8b); /*MOVL EAX, regs[sib&7].l*/
                                 addbyte(0x45);
-                                addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
+                                addbyte((uint32_t)&cpu_state.regs[sib & 7].l - (uint32_t)&EAX);
                         }
                         break;
                         case 1: 
                         addbyte(0x8b); /*MOVL EAX, regs[sib&7].l*/
                         addbyte(0x45);
-                        addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
+                        addbyte((uint32_t)&cpu_state.regs[sib & 7].l - (uint32_t)&EAX);
                         addbyte(0x83); /*ADDL EAX, imm8*/
                         addbyte(0xc0 | REG_EAX);
                         addbyte((int8_t)(rmdat >> 16));
@@ -1232,7 +1261,7 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                         addlong(new_eaaddr);
                         addbyte(0x03); /*ADDL EAX, regs[sib&7].l*/
                         addbyte(0x45);
-                        addbyte((uint32_t)&regs[sib & 7].l - (uint32_t)&EAX);
+                        addbyte((uint32_t)&cpu_state.regs[sib & 7].l - (uint32_t)&EAX);
                         (*op_pc) += 4;
                         break;
                 }
@@ -1259,20 +1288,20 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                                 case 0:
                                 addbyte(0x03); /*ADDL EAX, regs[sib&7].l*/
                                 addbyte(0x45);
-                                addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX);
+                                addbyte((uint32_t)&cpu_state.regs[(sib >> 3) & 7].l - (uint32_t)&EAX);
                                 break;
                                 case 1:
-                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&cpu_state.regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
                                 case 2:
-                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&cpu_state.regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI, reg*/
                                 addbyte(0xC1); addbyte(0xE0 | REG_EDI); addbyte(2); /*SHL EDI, 2*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
                                 case 3:
-                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI reg*/
+                                addbyte(0x8B); addbyte(0x45 | (REG_EDI << 3)); addbyte((uint32_t)&cpu_state.regs[(sib >> 3) & 7].l - (uint32_t)&EAX); /*MOVL EDI reg*/
                                 addbyte(0xC1); addbyte(0xE0 | REG_EDI); addbyte(3); /*SHL EDI, 3*/
                                 addbyte(0x01); addbyte(0xc0 | REG_EAX | (REG_EDI << 3)); /*ADDL EAX, EDI*/
                                 break;
@@ -1291,8 +1320,8 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
                 }
                 addbyte(0x8b); /*MOVL EAX, regs[rm].l*/
                 addbyte(0x45);
-                addbyte((uint32_t)&regs[rm].l - (uint32_t)&EAX);
-                eaaddr = regs[rm].l;
+                addbyte((uint32_t)&cpu_state.regs[rm].l - (uint32_t)&EAX);
+                eaaddr = cpu_state.regs[rm].l;
                 if (mod) 
                 {
                         if (rm == 5 && !op_ssegs)
@@ -1430,10 +1459,10 @@ static void TEST_ZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(0xc0 | 0x38 | host_reg);
         addbyte(0);
         addbyte(0x75); /*JNZ +*/
-        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(7+5+(taken_cycles ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(new_pc);
         if (taken_cycles)
         {
@@ -1451,10 +1480,10 @@ static void TEST_ZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(0xc0 | 0x38 | host_reg);
         addbyte(0);
         addbyte(0x75); /*JNZ +*/
-        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(7+5+(taken_cycles ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(new_pc);
         if (taken_cycles)
         {
@@ -1474,10 +1503,10 @@ static void TEST_NONZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(0xc0 | 0x38 | host_reg);
         addbyte(0);
         addbyte(0x74); /*JZ +*/
-        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(7+5+(taken_cycles ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(new_pc);
         if (taken_cycles)
         {
@@ -1495,10 +1524,10 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(0xc0 | 0x38 | host_reg);
         addbyte(0);
         addbyte(0x74); /*JZ +*/
-        addbyte(10+5+(taken_cycles ? 7 : 0));
+        addbyte(7+5+(taken_cycles ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(new_pc);
         if (taken_cycles)
         {
@@ -1513,14 +1542,15 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
 
 static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
+        switch (codegen_flags_changed ? cpu_state.flags_op : FLAGS_UNKNOWN)
         {
                 case FLAGS_SUB8:
-                addbyte(0xa0); /*MOV AL, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8a); /*MOV AL, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3a); /*CMP AL, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x76); /*JBE*/
                 else
@@ -1528,23 +1558,25 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 break;
                 case FLAGS_SUB16:
                 addbyte(0x66); /*MOV AX, flags_op1*/
-                addbyte(0xa1);
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x66); /*CMP AX, flags_op2*/
                 addbyte(0x3b);
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x76); /*JBE*/
                 else
                         addbyte(0x77); /*JNBE*/
                 break;
                 case FLAGS_SUB32:
-                addbyte(0xa1); /*MOV EAX, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b); /*MOV EAX, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3b); /*CMP EAX, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x76); /*JBE*/
                 else
@@ -1552,11 +1584,11 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 break;
                 
                 default:
-                if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+                if (codegen_flags_changed && cpu_state.flags_op != FLAGS_UNKNOWN)
                 {
                         addbyte(0x83); /*CMP flags_res, 0*/
-                        addbyte(0x05 | 0x38);
-                        addlong((uintptr_t)&flags_res);
+                        addbyte(0x7d);
+                        addbyte((uintptr_t)&cpu_state.flags_res - (uintptr_t)&cpu_state);
                         addbyte(0);
                         addbyte(0x74); /*JZ +*/
                 }
@@ -1568,7 +1600,7 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                         addbyte(0x75); /*JNZ +*/
                 }
                 if (not)
-                        addbyte(5+2+2+10+5+(timing_bt ? 7 : 0));
+                        addbyte(5+2+2+7+5+(timing_bt ? 7 : 0));
                 else
                         addbyte(5+2+2);
                 CALL_FUNC(CF_SET);
@@ -1580,10 +1612,10 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                         addbyte(0x74); /*JZ +*/
                 break;
         }
-        addbyte(10+5+(timing_bt ? 7 : 0));        
+        addbyte(7+5+(timing_bt ? 7 : 0));        
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {
@@ -1598,14 +1630,15 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
 
 static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
+        switch (codegen_flags_changed ? cpu_state.flags_op : FLAGS_UNKNOWN)
         {
                 case FLAGS_SUB8:
-                addbyte(0xa0); /*MOV AL, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8a); /*MOV AL, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3a); /*CMP AL, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7c); /*JL*/
                 else
@@ -1613,23 +1646,25 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
                 break;
                 case FLAGS_SUB16:
                 addbyte(0x66); /*MOV AX, flags_op1*/
-                addbyte(0xa1);
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x66); /*CMP AX, flags_op2*/
                 addbyte(0x3b);
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7c); /*JL*/
                 else
                         addbyte(0x7d); /*JNL*/
                 break;
                 case FLAGS_SUB32:
-                addbyte(0xa1); /*MOV EAX, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b); /*MOV EAX, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3b); /*CMP EAX, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7c); /*JL*/
                 else
@@ -1657,10 +1692,10 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
                         addbyte(0x74); /*JZ +*/
                 break;
         }
-        addbyte(10+5+(timing_bt ? 7 : 0));
+        addbyte(7+5+(timing_bt ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {
@@ -1675,14 +1710,15 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
 
 static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        switch (codegen_flags_changed ? flags_op : FLAGS_UNKNOWN)
+        switch (codegen_flags_changed ? cpu_state.flags_op : FLAGS_UNKNOWN)
         {
                 case FLAGS_SUB8:
-                addbyte(0xa0); /*MOV AL, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8a); /*MOV AL, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3a); /*CMP AL, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7e); /*JLE*/
                 else
@@ -1690,23 +1726,25 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 break;
                 case FLAGS_SUB16:
                 addbyte(0x66); /*MOV AX, flags_op1*/
-                addbyte(0xa1);
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x66); /*CMP AX, flags_op2*/
                 addbyte(0x3b);
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7e); /*JLE*/
                 else
                         addbyte(0x7f); /*JNLE*/
                 break;
                 case FLAGS_SUB32:
-                addbyte(0xa1); /*MOV EAX, flags_op1*/
-                addlong((uint32_t)&flags_op1);
+                addbyte(0x8b); /*MOV EAX, flags_op1*/
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op1 - (uintptr_t)&cpu_state);
                 addbyte(0x3b); /*CMP EAX, flags_op2*/
-                addbyte(0x05);
-                addlong((uint32_t)&flags_op2);
+                addbyte(0x45);
+                addbyte((uintptr_t)&cpu_state.flags_op2 - (uintptr_t)&cpu_state);
                 if (not)
                         addbyte(0x7e); /*JLE*/
                 else
@@ -1714,11 +1752,11 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 break;
 
                 default:
-                if (codegen_flags_changed && flags_op != FLAGS_UNKNOWN)
+                if (codegen_flags_changed && cpu_state.flags_op != FLAGS_UNKNOWN)
                 {
                         addbyte(0x83); /*CMP flags_res, 0*/
-                        addbyte(0x05 | 0x38);
-                        addlong((uintptr_t)&flags_res);
+                        addbyte(0x7d);
+                        addbyte((uintptr_t)&cpu_state.flags_res - (uintptr_t)&cpu_state);
                         addbyte(0);
                         addbyte(0x74); /*JZ +*/
                 }
@@ -1730,7 +1768,7 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                         addbyte(0x75); /*JNZ +*/
                 }
                 if (not)
-                        addbyte(5+2+3+5+2+3+2+2+10+5+(timing_bt ? 7 : 0));
+                        addbyte(5+2+3+5+2+3+2+2+7+5+(timing_bt ? 7 : 0));
                 else
                         addbyte(5+2+3+5+2+3+2+2);
 
@@ -1754,10 +1792,10 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                         addbyte(0x74); /*JZ +*/
                 break;
         }
-        addbyte(10+5+(timing_bt ? 7 : 0));
+        addbyte(7+5+(timing_bt ? 7 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
-        addbyte(0x05);
-        addlong((uintptr_t)&pc);
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {

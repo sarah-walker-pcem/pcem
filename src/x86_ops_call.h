@@ -1,8 +1,8 @@
 #define CALL_FAR_w(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
-        old_pc = pc;                                                            \
-        oxpc = pc;                                                              \
-        pc = new_pc;                                                            \
+        old_pc = cpu_state.pc;                                                  \
+        oxpc = cpu_state.pc;                                                    \
+        cpu_state.pc = new_pc;                                                  \
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
         if (msw & 1) loadcscall(new_seg);                                       \
@@ -29,9 +29,9 @@
         
 #define CALL_FAR_l(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
-        old_pc = pc;                                                            \
-        oxpc = pc;                                                              \
-        pc = new_pc;                                                            \
+        old_pc = cpu_state.pc;                                                  \
+        oxpc = cpu_state.pc;                                                    \
+        cpu_state.pc = new_pc;                                                  \
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
         if (msw & 1) loadcscall(new_seg);                                       \
@@ -110,8 +110,8 @@ static int opFF_w_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 1;
-                PUSH_W(pc);
-                pc = new_pc;
+                PUSH_W(cpu_state.pc);
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
@@ -125,16 +125,16 @@ static int opFF_w_a16(uint32_t fetchdat)
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 new_pc = readmemw(easeg, eaaddr);
                 new_cs = readmemw(easeg, eaaddr + 2);  if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
                 break;
@@ -175,8 +175,8 @@ static int opFF_w_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteaw();                      if (abrt) return 1;
-                PUSH_W(pc);
-                pc = new_pc;
+                PUSH_W(cpu_state.pc);
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
@@ -190,16 +190,16 @@ static int opFF_w_a32(uint32_t fetchdat)
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteaw();                      if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 new_pc = readmemw(easeg, eaaddr);
                 new_cs = readmemw(easeg, eaaddr + 2);  if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
                 break;
@@ -241,8 +241,8 @@ static int opFF_l_a16(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 1;
-                PUSH_L(pc);
-                pc = new_pc;
+                PUSH_L(cpu_state.pc);
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
@@ -256,16 +256,16 @@ static int opFF_l_a16(uint32_t fetchdat)
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 new_pc = readmeml(easeg, eaaddr);
                 new_cs = readmemw(easeg, eaaddr + 4);   if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
                 break;
@@ -306,8 +306,8 @@ static int opFF_l_a32(uint32_t fetchdat)
                 break;
                 case 0x10: /*CALL*/
                 new_pc = geteal();                      if (abrt) return 1;
-                PUSH_L(pc);                             if (abrt) return 1;
-                pc = new_pc;
+                PUSH_L(cpu_state.pc);                             if (abrt) return 1;
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
@@ -321,16 +321,16 @@ static int opFF_l_a32(uint32_t fetchdat)
                 break;
                 case 0x20: /*JMP*/
                 new_pc = geteal();                      if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 CPU_BLOCK_END();
                 if (is486) CLOCK_CYCLES(5);
                 else       CLOCK_CYCLES((mod == 3) ? 7 : 10);
                 break;
                 case 0x28: /*JMP far*/
-                oxpc = pc;
+                oxpc = cpu_state.pc;
                 new_pc = readmeml(easeg, eaaddr);
                 new_cs = readmemw(easeg, eaaddr + 4);   if (abrt) return 1;
-                pc = new_pc;
+                cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
                 break;

@@ -119,7 +119,7 @@ uint8_t ati18800_in(uint16_t addr, void *p)
                 temp = svga_in(addr, svga);
                 break;
         }
-        if (addr != 0x3da) pclog("%02X  %04X:%04X\n", temp, CS,pc);
+        if (addr != 0x3da) pclog("%02X  %04X:%04X\n", temp, CS,cpu_state.pc);
         return temp;
 }
 

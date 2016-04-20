@@ -127,59 +127,62 @@ static inline uint32_t fastreadl(uint32_t a)
 
 static inline uint8_t getbyte()
 {
-        pc++;
-        return fastreadb(cs + (pc - 1));
+        cpu_state.pc++;
+        return fastreadb(cs + (cpu_state.pc - 1));
 }
 
 static inline uint16_t getword()
 {
-        pc+=2;
-        return fastreadw(cs+(pc-2));
+        cpu_state.pc+=2;
+        return fastreadw(cs+(cpu_state.pc-2));
 }
 
 static inline uint32_t getlong()
 {
-        pc+=4;
-        return fastreadl(cs+(pc-4));
+        cpu_state.pc+=4;
+        return fastreadl(cs+(cpu_state.pc-4));
 }
 
 static inline uint64_t getquad()
 {
-        pc+=8;
-        return fastreadl(cs+(pc-8)) | ((uint64_t)fastreadl(cs+(pc-4)) << 32);
+        cpu_state.pc+=8;
+        return fastreadl(cs+(cpu_state.pc-8)) | ((uint64_t)fastreadl(cs+(cpu_state.pc-4)) << 32);
 }
 
 
 
 static inline uint8_t geteab()
 {
-        if (mod==3)
-           return (rm&4)?regs[rm&3].b.h:regs[rm&3].b.l;
-        if (eal_r) return *(uint8_t *)eal_r;
-        return readmemb(easeg,eaaddr);
+        if (mod == 3)
+                return (rm & 4) ? cpu_state.regs[rm & 3].b.h : cpu_state.regs[rm&3].b.l;
+        if (eal_r)
+                return *(uint8_t *)eal_r;
+        return readmemb(easeg, eaaddr);
 }
 
 static inline uint16_t geteaw()
 {
-        if (mod==3)
-           return regs[rm].w;
+        if (mod == 3)
+                return cpu_state.regs[rm].w;
 //        cycles-=3;
-        if (eal_r) return *(uint16_t *)eal_r;
-        return readmemw(easeg,eaaddr);
+        if (eal_r)
+                return *(uint16_t *)eal_r;
+        return readmemw(easeg, eaaddr);
 }
 
 static inline uint32_t geteal()
 {
-        if (mod==3)
-           return regs[rm].l;
+        if (mod == 3)
+                return cpu_state.regs[rm].l;
 //        cycles-=3;
-        if (eal_r) return *eal_r;
-        return readmeml(easeg,eaaddr);
+        if (eal_r)
+                return *eal_r;
+        return readmeml(easeg, eaaddr);
 }
 
 static inline uint64_t geteaq()
 {
-        return readmemq(easeg,eaaddr);
+        return readmemq(easeg, eaaddr);
 }
 
 static inline uint8_t geteab_mem()
@@ -203,18 +206,18 @@ static inline void seteaq(uint64_t v)
         writememql(easeg, eaaddr, v);
 }
 
-#define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) regs[rm&3].b.h=v; else regs[rm].b.l=v
-#define seteaw(v) if (mod!=3) { if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);    } else regs[rm].w=v
-#define seteal(v) if (mod!=3) { if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);    } else regs[rm].l=v
+#define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) cpu_state.regs[rm&3].b.h=v; else cpu_state.regs[rm].b.l=v
+#define seteaw(v) if (mod!=3) { if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);    } else cpu_state.regs[rm].w=v
+#define seteal(v) if (mod!=3) { if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);    } else cpu_state.regs[rm].l=v
 
 #define seteab_mem(v) if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v);
 #define seteaw_mem(v) if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);
 #define seteal_mem(v) if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);
 
-#define getbytef() ((uint8_t)(fetchdat)); pc++
-#define getwordf() ((uint16_t)(fetchdat)); pc+=2
-#define getbyte2f() ((uint8_t)(fetchdat>>8)); pc++
-#define getword2f() ((uint16_t)(fetchdat>>8)); pc+=2
+#define getbytef() ((uint8_t)(fetchdat)); cpu_state.pc++
+#define getwordf() ((uint16_t)(fetchdat)); cpu_state.pc+=2
+#define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
+#define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
 
 
 #define rmdat rmdat32

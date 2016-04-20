@@ -204,7 +204,7 @@ void codegen_block_init(uint32_t phys_addr)
         page_t *page = &pages[phys_addr >> 12];
         
         if (!page->block)
-                mem_flush_write_page(phys_addr, cs+pc);
+                mem_flush_write_page(phys_addr, cs+cpu_state.pc);
 
         block_current = (block_current + 1) & BLOCK_MASK;
         block = &codeblock[block_current];
@@ -220,7 +220,7 @@ void codegen_block_init(uint32_t phys_addr)
         block_num = HASH(phys_addr);
         codeblock_hash[block_num] = &codeblock[block_current];
         block->ins = 0;
-        block->pc = cs + pc;
+        block->pc = cs + cpu_state.pc;
         block->_cs = cs;
         block->pnt = block_current;
         block->phys = phys_addr;
@@ -570,7 +570,7 @@ void codegen_debug()
 {
         if (output)
         {
-                pclog("At %04x(%08x):%04x  %04x(%08x):%04x  es=%08x EAX=%08x BX=%04x ECX=%08x BP=%04x EDX=%08x EDI=%08x\n", CS, cs, pc, SS, ss, ESP,  es,EAX, BX,ECX,BP,  EDX,EDI);
+                pclog("At %04x(%08x):%04x  %04x(%08x):%04x  es=%08x EAX=%08x BX=%04x ECX=%08x BP=%04x EDX=%08x EDI=%08x\n", CS, cs, cpu_state.pc, SS, ss, ESP,  es,EAX, BX,ECX,BP,  EDX,EDI);
         }
 }
 
@@ -1102,12 +1102,12 @@ generate_call:
                 if (new_pc)
                 {
                         if (new_pc != -1)
-                                STORE_IMM_ADDR_L((uintptr_t)&pc, new_pc);
+                                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.pc, new_pc);
 
                         codegen_block_ins++;
                         block->ins++;
                         codegen_block_full_ins++;
-                        codegen_endpc = (cs + pc) + 8;
+                        codegen_endpc = (cs + cpu_state.pc) + 8;
 
                         return;
                 }
@@ -1188,10 +1188,9 @@ generate_call:
 //        }
 
 
-        addbyte(0xC7); /*MOVL $new_pc,(pc)*/
-        addbyte(0x04);
-        addbyte(0x25);
-        addlong((uint32_t)&pc);
+        addbyte(0xC7); /*MOVL [pc],new_pc*/
+        addbyte(0x45);
+        addbyte((uintptr_t)&cpu_state.pc - (uintptr_t)&cpu_state);
         addlong(op_pc + pc_off);
         addbyte(0xC7); /*MOVL $old_pc,(oldpc)*/
         addbyte(0x04);
@@ -1222,7 +1221,7 @@ generate_call:
 
 //	call(block, codegen_debug);
 
-        codegen_endpc = (cs + pc) + 8;
+        codegen_endpc = (cs + cpu_state.pc) + 8;
 }
 
 void codegen_check_abrt()

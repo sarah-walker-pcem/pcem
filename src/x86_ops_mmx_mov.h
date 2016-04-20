@@ -5,7 +5,7 @@ static int opMOVD_l_mm_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                MM[reg].l[0] = regs[rm].l;
+                MM[reg].l[0] = cpu_state.regs[rm].l;
                 MM[reg].l[1] = 0;
                 CLOCK_CYCLES(1);
         }
@@ -28,7 +28,7 @@ static int opMOVD_l_mm_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                MM[reg].l[0] = regs[rm].l;
+                MM[reg].l[0] = cpu_state.regs[rm].l;
                 MM[reg].l[1] = 0;
                 CLOCK_CYCLES(1);
         }
@@ -52,7 +52,7 @@ static int opMOVD_mm_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (mod == 3)
         {
-                regs[rm].l = MM[reg].l[0];
+                cpu_state.regs[rm].l = MM[reg].l[0];
                 CLOCK_CYCLES(1);
         }
         else
@@ -70,7 +70,7 @@ static int opMOVD_mm_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (mod == 3)
         {
-                regs[rm].l = MM[reg].l[0];
+                cpu_state.regs[rm].l = MM[reg].l[0];
                 CLOCK_CYCLES(1);
         }
         else

@@ -18,7 +18,7 @@
 #define MMX_ENTER()                                                     \
         if (!cpu_hasMMX)                                                \
         {                                                               \
-                pc = oldpc;                                             \
+                cpu_state.pc = oldpc;                                   \
                 x86illegal();                                           \
                 return 1;                                               \
         }                                                               \
@@ -33,7 +33,7 @@ static int opEMMS(uint32_t fetchdat)
 {
         if (!cpu_hasMMX)
         {
-                pc = oldpc;
+                cpu_state.pc = oldpc;
                 x86illegal();
                 return 1;
         }

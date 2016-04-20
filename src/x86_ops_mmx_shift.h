@@ -16,7 +16,7 @@ static int opPSxxW_imm(uint32_t fetchdat)
         int op = fetchdat & 0x38;
         int shift = (fetchdat >> 8) & 0xff;
         
-        pc += 2;
+        cpu_state.pc += 2;
         MMX_ENTER();
 
         switch (op)
@@ -53,7 +53,7 @@ static int opPSxxW_imm(uint32_t fetchdat)
                 break;
                 default:
                 pclog("Bad PSxxW (0F 71) instruction %02X\n", op);
-                pc = oldpc;
+                cpu_state.pc = oldpc;
                 x86illegal();
                 return 0;
         }
@@ -193,7 +193,7 @@ static int opPSxxD_imm(uint32_t fetchdat)
         int op = fetchdat & 0x38;
         int shift = (fetchdat >> 8) & 0xff;
         
-        pc += 2;
+        cpu_state.pc += 2;
         MMX_ENTER();
 
         switch (op)
@@ -224,7 +224,7 @@ static int opPSxxD_imm(uint32_t fetchdat)
                 break;
                 default:
                 pclog("Bad PSxxD (0F 72) instruction %02X\n", op);
-                pc = oldpc;
+                cpu_state.pc = oldpc;
                 x86illegal();
                 return 0;
         }
@@ -352,7 +352,7 @@ static int opPSxxQ_imm(uint32_t fetchdat)
         int op = fetchdat & 0x38;
         int shift = (fetchdat >> 8) & 0xff;
         
-        pc += 2;
+        cpu_state.pc += 2;
         MMX_ENTER();
 
         switch (op)
@@ -376,7 +376,7 @@ static int opPSxxQ_imm(uint32_t fetchdat)
                 break;
                 default:
                 pclog("Bad PSxxQ (0F 73) instruction %02X\n", op);
-                pc = oldpc;
+                cpu_state.pc = oldpc;
                 x86illegal();
                 return 0;
         }

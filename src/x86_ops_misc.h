@@ -50,7 +50,7 @@ static int opF6_a16(uint32_t fetchdat)
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST b,#8*/
-                src = readmemb(cs, pc); pc++;           if (abrt) return 1;
+                src = readmemb(cs, cpu_state.pc); cpu_state.pc++;           if (abrt) return 1;
                 setznp8(src & dst);
                 if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
                 else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
@@ -140,7 +140,7 @@ static int opF6_a32(uint32_t fetchdat)
         switch (rmdat & 0x38)
         {
                 case 0x00: /*TEST b,#8*/
-                src = readmemb(cs, pc); pc++;           if (abrt) return 1;
+                src = readmemb(cs, cpu_state.pc); cpu_state.pc++;           if (abrt) return 1;
                 setznp8(src & dst);
                 if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 2);
                 else       CLOCK_CYCLES((mod == 3) ? 2 : 5);
@@ -530,7 +530,7 @@ static int opHLT(uint32_t fetchdat)
         if (!((flags&I_FLAG) && pic_intpending))
         {
                 CLOCK_CYCLES_ALWAYS(100);
-                pc--;
+                cpu_state.pc--;
         }
         else
                 CLOCK_CYCLES(5);
@@ -543,9 +543,9 @@ static int opHLT(uint32_t fetchdat)
 
 static int opLOCK(uint32_t fetchdat)
 {
-        fetchdat = fastreadl(cs + pc);
+        fetchdat = fastreadl(cs + cpu_state.pc);
         if (abrt) return 0;
-        pc++;
+        cpu_state.pc++;
 
         CLOCK_CYCLES(4);
         return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
@@ -562,7 +562,7 @@ static int opBOUND_w_a16(uint32_t fetchdat)
         low = geteaw();
         high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
         
-        if (((int16_t)regs[reg].w < low) || ((int16_t)regs[reg].w > high))
+        if (((int16_t)cpu_state.regs[reg].w < low) || ((int16_t)cpu_state.regs[reg].w > high))
         {
                 x86_int(5);
                 return 1;
@@ -580,7 +580,7 @@ static int opBOUND_w_a32(uint32_t fetchdat)
         low = geteaw();
         high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
         
-        if (((int16_t)regs[reg].w < low) || ((int16_t)regs[reg].w > high))
+        if (((int16_t)cpu_state.regs[reg].w < low) || ((int16_t)cpu_state.regs[reg].w > high))
         {
                 x86_int(5);
                 return 1;
@@ -599,7 +599,7 @@ static int opBOUND_l_a16(uint32_t fetchdat)
         low = geteal();
         high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
         
-        if (((int32_t)regs[reg].l < low) || ((int32_t)regs[reg].l > high))
+        if (((int32_t)cpu_state.regs[reg].l < low) || ((int32_t)cpu_state.regs[reg].l > high))
         {
                 x86_int(5);
                 return 1;
@@ -617,7 +617,7 @@ static int opBOUND_l_a32(uint32_t fetchdat)
         low = geteal();
         high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
         
-        if (((int32_t)regs[reg].l < low) || ((int32_t)regs[reg].l > high))
+        if (((int32_t)cpu_state.regs[reg].l < low) || ((int32_t)cpu_state.regs[reg].l > high))
         {
                 x86_int(5);
                 return 1;
@@ -670,7 +670,7 @@ static int opLOADALL(uint32_t fetchdat)
 {
         flags = (readmemw(0, 0x818) & 0xffd5) | 2;
         flags_extract();
-        pc = readmemw(0, 0x81A);
+        cpu_state.pc = readmemw(0, 0x81A);
         DS = readmemw(0, 0x81E);
         SS = readmemw(0, 0x820);
         CS = readmemw(0, 0x822);
@@ -727,7 +727,7 @@ static int opLOADALL386(uint32_t fetchdat)
         flags = readmemw(0, la_addr + 4);
         eflags = readmemw(0, la_addr + 6);
         flags_extract();
-        pc = readmeml(0, la_addr + 8);
+        cpu_state.pc = readmeml(0, la_addr + 8);
 	EDI = readmeml(0, la_addr + 0xC);
 	ESI = readmeml(0, la_addr + 0x10);
 	EBP = readmeml(0, la_addr + 0x14);
@@ -772,7 +772,7 @@ static int opCPUID(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        pc = oldpc;
+        cpu_state.pc = oldpc;
         x86illegal();
         return 1;
 }
@@ -785,7 +785,7 @@ static int opRDMSR(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        pc = oldpc;
+        cpu_state.pc = oldpc;
         x86illegal();
         return 1;
 }
@@ -798,7 +798,7 @@ static int opWRMSR(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        pc = oldpc;
+        cpu_state.pc = oldpc;
         x86illegal();
         return 1;
 }

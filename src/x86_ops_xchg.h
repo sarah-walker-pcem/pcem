@@ -24,8 +24,8 @@ static int opXCHG_w_a16(uint32_t fetchdat)
         uint16_t temp;
         fetch_ea_16(fetchdat);
         temp = geteaw();                        if (abrt) return 1;
-        seteaw(regs[reg].w);                    if (abrt) return 1;
-        regs[reg].w = temp;
+        seteaw(cpu_state.regs[reg].w);          if (abrt) return 1;
+        cpu_state.regs[reg].w = temp;
         CLOCK_CYCLES((mod == 3) ? 3 : 5);
         return 0;
 }
@@ -34,8 +34,8 @@ static int opXCHG_w_a32(uint32_t fetchdat)
         uint16_t temp;
         fetch_ea_32(fetchdat);
         temp = geteaw();                        if (abrt) return 1;
-        seteaw(regs[reg].w);                    if (abrt) return 1;
-        regs[reg].w = temp;
+        seteaw(cpu_state.regs[reg].w);          if (abrt) return 1;
+        cpu_state.regs[reg].w = temp;
         CLOCK_CYCLES((mod == 3) ? 3 : 5);
         return 0;
 }
@@ -45,8 +45,8 @@ static int opXCHG_l_a16(uint32_t fetchdat)
         uint32_t temp;
         fetch_ea_16(fetchdat);
         temp = geteal();                        if (abrt) return 1;
-        seteal(regs[reg].l);                    if (abrt) return 1;
-        regs[reg].l = temp;
+        seteal(cpu_state.regs[reg].l);          if (abrt) return 1;
+        cpu_state.regs[reg].l = temp;
         CLOCK_CYCLES((mod == 3) ? 3 : 5);
         return 0;
 }
@@ -55,8 +55,8 @@ static int opXCHG_l_a32(uint32_t fetchdat)
         uint32_t temp;
         fetch_ea_32(fetchdat);
         temp = geteal();                        if (abrt) return 1;
-        seteal(regs[reg].l);                    if (abrt) return 1;
-        regs[reg].l = temp;
+        seteal(cpu_state.regs[reg].l);          if (abrt) return 1;
+        cpu_state.regs[reg].l = temp;
         CLOCK_CYCLES((mod == 3) ? 3 : 5);
         return 0;
 }

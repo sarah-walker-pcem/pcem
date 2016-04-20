@@ -6,7 +6,7 @@
         {                               \
                 if ((cond))             \
                 {                       \
-                        pc = oldpc;     \
+                        cpu_state.pc = oldpc;     \
                         x86illegal();   \
                         return 0;       \
                 }                       \
@@ -142,7 +142,7 @@ static inline uint32_t POP_L_seg(uint32_t seg)
 
 static int ILLEGAL(uint32_t fetchdat)
 {
-        pc = oldpc;
+        cpu_state.pc = oldpc;
 
 //        fatal("Illegal instruction %08X\n", fetchdat);
         x86illegal();
@@ -152,28 +152,28 @@ static int ILLEGAL(uint32_t fetchdat)
 static int op0F_w_a16(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
-        pc++;
+        cpu_state.pc++;
 
         return x86_opcodes_0f[opcode](fetchdat >> 8);
 }
 static int op0F_l_a16(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
-        pc++;
+        cpu_state.pc++;
         
         return x86_opcodes_0f[opcode | 0x100](fetchdat >> 8);
 }
 static int op0F_w_a32(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
-        pc++;
+        cpu_state.pc++;
         
         return x86_opcodes_0f[opcode | 0x200](fetchdat >> 8);
 }
 static int op0F_l_a32(uint32_t fetchdat)
 {
         int opcode = fetchdat & 0xff;
-        pc++;
+        cpu_state.pc++;
         
         return x86_opcodes_0f[opcode | 0x300](fetchdat >> 8);
 }

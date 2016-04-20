@@ -124,7 +124,7 @@ void ega_out(uint16_t addr, uint8_t val, void *p)
                 }
                 break;
                 case 0x3d4:
-                        pclog("Write 3d4 %02X  %04X:%04X\n", val, CS, pc);
+                        pclog("Write 3d4 %02X  %04X:%04X\n", val, CS, cpu_state.pc);
                 ega->crtcreg = val & 31;
                 return;
                 case 0x3d5:

@@ -2,7 +2,7 @@ static int opRDTSC(uint32_t fetchdat)
 {
         if (!cpu_hasrdtsc)
         {
-                pc = oldpc;
+                cpu_state.pc = oldpc;
                 x86illegal();
                 return 1;
         }

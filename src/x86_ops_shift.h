@@ -260,7 +260,7 @@ static int opC0_a16(uint32_t fetchdat)
         uint8_t temp, temp2;
         
         fetch_ea_16(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteab();                if (abrt) return 1;
         OP_SHIFT_b(c);
         return 0;
@@ -272,7 +272,7 @@ static int opC0_a32(uint32_t fetchdat)
         uint8_t temp, temp2;
         
         fetch_ea_32(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteab();                if (abrt) return 1;
         OP_SHIFT_b(c);
         return 0;
@@ -284,7 +284,7 @@ static int opC1_w_a16(uint32_t fetchdat)
         uint16_t temp, temp2;
         
         fetch_ea_16(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteaw();                if (abrt) return 1;
         OP_SHIFT_w(c);
         return 0;
@@ -296,7 +296,7 @@ static int opC1_w_a32(uint32_t fetchdat)
         uint16_t temp, temp2;
         
         fetch_ea_32(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteaw();                if (abrt) return 1;
         OP_SHIFT_w(c);
         return 0;
@@ -308,7 +308,7 @@ static int opC1_l_a16(uint32_t fetchdat)
         uint32_t temp, temp2;
         
         fetch_ea_16(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteal();                if (abrt) return 1;
         OP_SHIFT_l(c);
         return 0;
@@ -320,7 +320,7 @@ static int opC1_l_a32(uint32_t fetchdat)
         uint32_t temp, temp2;
         
         fetch_ea_32(fetchdat);
-        c = readmemb(cs, pc) & 31; pc++;
+        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
         temp = geteal();                if (abrt) return 1;
         OP_SHIFT_l(c);
         return 0;
@@ -472,7 +472,7 @@ static int opD3_l_a32(uint32_t fetchdat)
         {                                                                       \
                 uint16_t tempw = geteaw();      if (abrt) return 1;             \
                 int tempc = ((tempw << (count - 1)) & (1 << 15)) ? 1 : 0;       \
-                uint32_t templ = (tempw << 16) | regs[reg].w;                   \
+                uint32_t templ = (tempw << 16) | cpu_state.regs[reg].w;         \
                 if (count <= 16) tempw =  templ >> (16 - count);                \
                 else             tempw = (templ << count) >> 16;                \
                 seteaw(tempw);                  if (abrt) return 1;             \
@@ -486,7 +486,7 @@ static int opD3_l_a32(uint32_t fetchdat)
         {                                                                       \
                 uint32_t templ = geteal();      if (abrt) return 1;             \
                 int tempc = ((templ << (count - 1)) & (1 << 31)) ? 1 : 0;       \
-                templ = (templ << count) | (regs[reg].l >> (32 - count));       \
+                templ = (templ << count) | (cpu_state.regs[reg].l >> (32 - count)); \
                 seteal(templ);                  if (abrt) return 1;             \
                 setznp32(templ);                                                \
                 flags_rebuild();                                                \
@@ -499,7 +499,7 @@ static int opD3_l_a32(uint32_t fetchdat)
         {                                                                       \
                 uint16_t tempw = geteaw();      if (abrt) return 1;             \
                 int tempc = (tempw >> (count - 1)) & 1;                         \
-                uint32_t templ = tempw | (regs[reg].w << 16);                   \
+                uint32_t templ = tempw | (cpu_state.regs[reg].w << 16);         \
                 tempw = templ >> count;                                         \
                 seteaw(tempw);                  if (abrt) return 1;             \
                 setznp16(tempw);                                                \
@@ -512,7 +512,7 @@ static int opD3_l_a32(uint32_t fetchdat)
         {                                                                       \
                 uint32_t templ = geteal();      if (abrt) return 1;             \
                 int tempc = (templ >> (count - 1)) & 1;                         \
-                templ = (templ >> count) | (regs[reg].l << (32 - count));       \
+                templ = (templ >> count) | (cpu_state.regs[reg].l << (32 - count)); \
                 seteal(templ);                  if (abrt) return 1;             \
                 setznp32(templ);                                                \
                 flags_rebuild();                                                \

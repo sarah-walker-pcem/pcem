@@ -67,7 +67,7 @@ static int opINTO(uint32_t fetchdat)
         }
         if (VF_SET())
         {
-                oldpc = pc;
+                oldpc = cpu_state.pc;
                 x86_int_sw(4);
                 return 1;
         }

@@ -196,7 +196,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                         scat_regs[scat_index] = val;
                 if (scat_shadow_update)
                         scat_shadow_state_update();
-                pclog("Write SCAT Register %02X to %02X at %04X:%04X\n", scat_index, val, CS, pc);
+                pclog("Write SCAT Register %02X to %02X at %04X:%04X\n", scat_index, val, CS, cpu_state.pc);
                 break;
 
                 case 0x92:
@@ -215,7 +215,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x208:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x8 = val;
                 }
@@ -223,7 +223,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x209:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x9 = val;
                         base_addr = (index + 16) << 14;
@@ -252,7 +252,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x20A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         scat_ems_reg_2xA = val;
                 }
                 break;
@@ -260,7 +260,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x218:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x8 = val;
                 }
@@ -268,7 +268,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x219:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x9 = val;
                         base_addr = (index + 16) << 14;
@@ -297,7 +297,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x21A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, pc);
+                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         scat_ems_reg_2xA = val;
                 }
                 break;
@@ -319,7 +319,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                         val = scat_regs[scat_index];
                         break;
                 }
-                pclog("Read SCAT Register %02X at %04X:%04X\n", scat_index, CS, pc);
+                pclog("Read SCAT Register %02X at %04X:%04X\n", scat_index, CS, cpu_state.pc);
                 break;
 
                 case 0x92:
@@ -329,7 +329,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x208:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x8;
                 }
@@ -337,7 +337,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x209:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x9;
                 }
@@ -345,7 +345,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x20A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         val = scat_ems_reg_2xA;
                 }
                 break;
@@ -353,7 +353,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x218:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x8;
                 }
@@ -361,7 +361,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x219:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x9;
                 }
@@ -369,7 +369,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x21A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, pc);
+                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         val = scat_ems_reg_2xA;
                 }
                 break;
