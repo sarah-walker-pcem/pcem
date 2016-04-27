@@ -34,6 +34,7 @@ extern OpFn dynarec_ops_winchip_0f[1024];
 
 extern OpFn dynarec_ops_pentium_0f[1024];
 extern OpFn dynarec_ops_pentiummmx_0f[1024];
+extern OpFn dynarec_ops_c6x86mx_0f[1024];
 
 extern OpFn dynarec_ops_fpu_d8_a16[32];
 extern OpFn dynarec_ops_fpu_d8_a32[32];
@@ -53,6 +54,11 @@ extern OpFn dynarec_ops_fpu_df_a16[256];
 extern OpFn dynarec_ops_fpu_df_a32[256];
 extern OpFn dynarec_ops_nofpu_a16[256];
 extern OpFn dynarec_ops_nofpu_a32[256];
+
+extern OpFn dynarec_ops_fpu_686_db_a16[256];
+extern OpFn dynarec_ops_fpu_686_db_a32[256];
+extern OpFn dynarec_ops_fpu_686_df_a16[256];
+extern OpFn dynarec_ops_fpu_686_df_a32[256];
 
 extern OpFn *x86_opcodes;
 extern OpFn *x86_opcodes_0f;
@@ -84,6 +90,8 @@ extern OpFn ops_winchip_0f[1024];
 extern OpFn ops_pentium_0f[1024];
 extern OpFn ops_pentiummmx_0f[1024];
 
+extern OpFn ops_c6x86mx_0f[1024];
+
 extern OpFn ops_fpu_d8_a16[32];
 extern OpFn ops_fpu_d8_a32[32];
 extern OpFn ops_fpu_d9_a16[256];
@@ -102,5 +110,10 @@ extern OpFn ops_fpu_df_a16[256];
 extern OpFn ops_fpu_df_a32[256];
 extern OpFn ops_nofpu_a16[256];
 extern OpFn ops_nofpu_a32[256];
+
+extern OpFn ops_fpu_686_db_a16[256];
+extern OpFn ops_fpu_686_db_a32[256];
+extern OpFn ops_fpu_686_df_a16[256];
+extern OpFn ops_fpu_686_df_a32[256];
 
 #endif /*_X86_OPS_H*/

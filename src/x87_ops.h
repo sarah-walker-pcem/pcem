@@ -571,6 +571,83 @@ OpFn OP_TABLE(fpu_db_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+OpFn OP_TABLE(fpu_686_db_a16)[256] =
+{
+        opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,
+        opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,
+
+        opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,
+        opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,
+
+        opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,  opFISTil_a16,
+        opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16, opFISTPil_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,    opFLDe_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,   opFSTPe_a16,
+
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       opFNOP,        opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
+        opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,
+        opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+};
+OpFn OP_TABLE(fpu_686_db_a32)[256] =
+{
+        opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,
+        opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,
+
+        opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,
+        opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,
+
+        opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,  opFISTil_a32,
+        opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32, opFISTPil_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,    opFLDe_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,   opFSTPe_a32,
+
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       opFNOP,        opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
+        opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,      opFUCOMI,
+        opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+};
+
 OpFn OP_TABLE(fpu_dc_a16)[32] =
 {
         opFADDd_a16, opFMULd_a16, opFCOMd_a16, opFCOMPd_a16, opFSUBd_a16, opFSUBRd_a16, opFDIVd_a16, opFDIVRd_a16,
@@ -815,6 +892,83 @@ OpFn OP_TABLE(fpu_df_a32)[256] =
         opFSTSW_AX,    ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+};
+
+OpFn OP_TABLE(fpu_686_df_a16)[256] =
+{
+        opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,
+        opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,
+        FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,
+        FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,
+
+        opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,
+        opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,
+        FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,
+        FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,
+
+        opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,  opFISTiw_a16,
+        opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16, opFISTPiw_a16,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,  opFILDiq_a16,
+        FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,     FBSTP_a16,
+        FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,   FISTPiq_a16,
+
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTSW_AX,    ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,
+        opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+};
+OpFn OP_TABLE(fpu_686_df_a32)[256] =
+{
+        opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,
+        opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,
+        FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,
+        FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,
+
+        opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,
+        opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,
+        FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,
+        FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,
+
+        opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,  opFISTiw_a32,
+        opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32, opFISTPiw_a32,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,  opFILDiq_a32,
+        FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,     FBSTP_a32,
+        FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,   FISTPiq_a32,
+
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFSTSW_AX,    ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
+        opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,     opFUCOMIP,
+        opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 

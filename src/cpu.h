@@ -29,6 +29,10 @@ extern int cpu, cpu_manufacturer;
 #define CPU_WINCHIP 14
 #define CPU_PENTIUM 15
 #define CPU_PENTIUMMMX 16
+#define CPU_Cx6x86 	17
+#define CPU_Cx6x86MX 	18
+#define CPU_Cx6x86L 	19
+#define CPU_CxGX1 	20
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -75,6 +79,7 @@ extern CPU cpus_WinChip[];
 extern CPU cpus_Pentium5V[];
 extern CPU cpus_PentiumS5[];
 extern CPU cpus_Pentium[];
+extern CPU cpus_6x86[];
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_pc1512[];

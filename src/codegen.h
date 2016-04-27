@@ -240,6 +240,7 @@ typedef struct codegen_timing_t
 } codegen_timing_t;
 
 extern codegen_timing_t codegen_timing_pentium;
+extern codegen_timing_t codegen_timing_686;
 extern codegen_timing_t codegen_timing_486;
 
 void codegen_timing_set(codegen_timing_t *timing);
