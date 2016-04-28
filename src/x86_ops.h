@@ -55,6 +55,8 @@ extern OpFn dynarec_ops_fpu_df_a32[256];
 extern OpFn dynarec_ops_nofpu_a16[256];
 extern OpFn dynarec_ops_nofpu_a32[256];
 
+extern OpFn dynarec_ops_fpu_686_da_a16[256];
+extern OpFn dynarec_ops_fpu_686_da_a32[256];
 extern OpFn dynarec_ops_fpu_686_db_a16[256];
 extern OpFn dynarec_ops_fpu_686_db_a32[256];
 extern OpFn dynarec_ops_fpu_686_df_a16[256];
@@ -111,6 +113,8 @@ extern OpFn ops_fpu_df_a32[256];
 extern OpFn ops_nofpu_a16[256];
 extern OpFn ops_nofpu_a32[256];
 
+extern OpFn ops_fpu_686_da_a16[256];
+extern OpFn ops_fpu_686_da_a32[256];
 extern OpFn ops_fpu_686_db_a16[256];
 extern OpFn ops_fpu_686_db_a32[256];
 extern OpFn ops_fpu_686_df_a16[256];

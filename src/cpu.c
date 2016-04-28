@@ -1043,10 +1043,14 @@ void cpu_set()
   
                 case CPU_Cx6x86MX:
                 x86_setopcodes(ops_386, ops_c6x86mx_0f, dynarec_ops_386, dynarec_ops_c6x86mx_0f);
+                x86_dynarec_opcodes_da_a16 = dynarec_ops_fpu_686_da_a16;
+                x86_dynarec_opcodes_da_a32 = dynarec_ops_fpu_686_da_a32;
                 x86_dynarec_opcodes_db_a16 = dynarec_ops_fpu_686_db_a16;
                 x86_dynarec_opcodes_db_a32 = dynarec_ops_fpu_686_db_a32;
                 x86_dynarec_opcodes_df_a16 = dynarec_ops_fpu_686_df_a16;
                 x86_dynarec_opcodes_df_a32 = dynarec_ops_fpu_686_df_a32;
+                x86_opcodes_da_a16 = ops_fpu_686_da_a16;
+                x86_opcodes_da_a32 = ops_fpu_686_da_a32;
                 x86_opcodes_db_a16 = ops_fpu_686_db_a16;
                 x86_opcodes_db_a32 = ops_fpu_686_db_a32;
                 x86_opcodes_df_a16 = ops_fpu_686_df_a16;

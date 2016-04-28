@@ -720,7 +720,7 @@ static uint32_t opcode_timings_da[8] =
 };
 static uint32_t opcode_timings_da_mod3[8] =
 {
-        INVALID,                INVALID,                INVALID,                INVALID,
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
         INVALID,                PAIR_X | CYCLES(5),     INVALID,                INVALID
 };
 
@@ -734,17 +734,17 @@ static uint32_t opcode_timings_db[8] =
 };
 static uint32_t opcode_timings_db_mod3[64] =
 {
-        INVALID,                INVALID,                INVALID,                INVALID,
-        INVALID,                INVALID,                INVALID,                INVALID,
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
         
-        INVALID,                INVALID,                INVALID,                INVALID,
-        INVALID,                INVALID,                INVALID,                INVALID,
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
         
-        INVALID,                INVALID,                INVALID,                INVALID,
-        INVALID,                INVALID,                INVALID,                INVALID,
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
         
-        INVALID,                INVALID,                INVALID,                INVALID,
-        INVALID,                INVALID,                INVALID,                INVALID,
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
+        PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),     PAIR_X | CYCLES(4),
         
 /*                              opFNOP                  opFCLEX                 opFINIT*/
         INVALID,                PAIR_X | CYCLES(2),     PAIR_X | CYCLES(5),     PAIR_X | CYCLES(8),

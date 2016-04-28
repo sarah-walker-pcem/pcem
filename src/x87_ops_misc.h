@@ -798,3 +798,31 @@ static int opFSTCW_a32(uint32_t fetchdat)
         CLOCK_CYCLES(3);
         return abrt;
 }
+
+#define opFCMOV(condition)                                                              \
+        static int opFCMOV ## condition(uint32_t fetchdat)                              \
+        {                                                                               \
+                FP_ENTER();                                                             \
+                cpu_state.pc++;                                                         \
+                if (fplog) pclog("FCMOV %f\n", ST(fetchdat & 7));                       \
+                if (cond_ ## condition)                                                 \
+                {                                                                       \
+                        tag[TOP] = tag[(TOP + fetchdat) & 7];                           \
+                        ST_i64[TOP] = ST_i64[(TOP + fetchdat) & 7];                     \
+                        ST(0) = ST(fetchdat & 7);                                       \
+                }                                                                       \
+                CLOCK_CYCLES(4);                                                        \
+                return 0;                                                               \
+        }
+
+#define cond_U   ( PF_SET())
+#define cond_NU  (!PF_SET())
+
+opFCMOV(B)
+opFCMOV(E)
+opFCMOV(BE)
+opFCMOV(U)
+opFCMOV(NB)
+opFCMOV(NE)
+opFCMOV(NBE)
+opFCMOV(NU)
