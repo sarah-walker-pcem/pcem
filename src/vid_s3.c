@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "pci.h"
 #include "rom.h"
+#include "thread.h"
 #include "video.h"
 #include "vid_s3.h"
 #include "vid_svga.h"
@@ -27,6 +28,34 @@ enum
         VRAM_1MB = 6,
         VRAM_512KB = 7
 };
+
+#define FIFO_SIZE 65536
+#define FIFO_MASK (FIFO_SIZE - 1)
+#define FIFO_ENTRY_SIZE (1 << 31)
+
+#define FIFO_ENTRIES (s3->fifo_write_idx - s3->fifo_read_idx)
+#define FIFO_FULL    ((s3->fifo_write_idx - s3->fifo_read_idx) >= FIFO_SIZE)
+#define FIFO_EMPTY   (s3->fifo_read_idx == s3->fifo_write_idx)
+
+#define FIFO_TYPE 0xff000000
+#define FIFO_ADDR 0x00ffffff
+
+enum
+{
+        FIFO_INVALID     = (0x00 << 24),
+        FIFO_WRITE_BYTE  = (0x01 << 24),
+        FIFO_WRITE_WORD  = (0x02 << 24),
+        FIFO_WRITE_DWORD = (0x03 << 24),
+        FIFO_OUT_BYTE    = (0x04 << 24),
+        FIFO_OUT_WORD    = (0x05 << 24),
+        FIFO_OUT_DWORD   = (0x06 << 24)
+};
+
+typedef struct
+{
+        uint32_t addr_type;
+        uint32_t val;
+} fifo_entry_t;
 
 typedef struct s3_t
 {
@@ -91,6 +120,17 @@ typedef struct s3_t
                 uint32_t dat_buf;
                 int dat_count;
         } accel;
+
+        fifo_entry_t fifo[FIFO_SIZE];
+        volatile int fifo_read_idx, fifo_write_idx;
+
+        thread_t *fifo_thread;
+        event_t *wake_fifo_thread;
+        event_t *fifo_not_full_event;
+        
+        int blitter_busy;
+        uint64_t blitter_time;
+        uint64_t status_time;
 } s3_t;
 
 void s3_updatemapping();
@@ -100,6 +140,583 @@ void s3_accel_write_w(uint32_t addr, uint16_t val, void *p);
 void s3_accel_write_l(uint32_t addr, uint32_t val, void *p);
 uint8_t s3_accel_read(uint32_t addr, void *p);
 
+static inline void wake_fifo_thread(s3_t *s3)
+{
+        thread_set_event(s3->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
+}
+
+static void s3_wait_fifo_idle(s3_t *s3)
+{
+        while (!FIFO_EMPTY)
+        {
+                wake_fifo_thread(s3);
+                thread_wait_event(s3->fifo_not_full_event, 1);
+        }
+}
+
+void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, s3_t *s3);
+
+#define WRITE8(addr, var, val)  switch ((addr) & 3)                                             \
+                                {                                                               \
+                                        case 0: var = (var & 0xffffff00) | (val);         break;  \
+                                        case 1: var = (var & 0xffff00ff) | ((val) << 8);  break;  \
+                                        case 2: var = (var & 0xff00ffff) | ((val) << 16); break;  \
+                                        case 3: var = (var & 0x00ffffff) | ((val) << 24); break;  \
+                                }
+
+static void s3_accel_out_fifo(s3_t *s3, uint16_t port, uint8_t val)
+{
+        switch (port)
+        {
+                case 0x82e8:
+                s3->accel.cur_y = (s3->accel.cur_y & 0xf00) | val;
+                break;
+                case 0x82e9:
+                s3->accel.cur_y = (s3->accel.cur_y & 0xff) | ((val & 0x1f) << 8);
+                break;
+                
+                case 0x86e8:
+                s3->accel.cur_x = (s3->accel.cur_x & 0xf00) | val;
+                break;
+                case 0x86e9:
+                s3->accel.cur_x = (s3->accel.cur_x & 0xff) | ((val & 0x1f) << 8);
+                break;
+                
+                case 0x8ae8:
+                s3->accel.desty_axstp = (s3->accel.desty_axstp & 0x3f00) | val;
+                break;
+                case 0x8ae9:
+                s3->accel.desty_axstp = (s3->accel.desty_axstp & 0xff) | ((val & 0x3f) << 8);
+                if (val & 0x20)
+                   s3->accel.desty_axstp |= ~0x3fff;
+                break;
+                
+                case 0x8ee8:
+                s3->accel.destx_distp = (s3->accel.destx_distp & 0x3f00) | val;
+                break;
+                case 0x8ee9:
+                s3->accel.destx_distp = (s3->accel.destx_distp & 0xff) | ((val & 0x3f) << 8);
+                if (val & 0x20)
+                   s3->accel.destx_distp |= ~0x3fff;
+                break;
+                
+                case 0x92e8:
+                s3->accel.err_term = (s3->accel.err_term & 0x3f00) | val;
+                break;
+                case 0x92e9:
+                s3->accel.err_term = (s3->accel.err_term & 0xff) | ((val & 0x3f) << 8);
+                if (val & 0x20)
+                   s3->accel.err_term |= ~0x3fff;
+                break;
+
+                case 0x96e8:
+                s3->accel.maj_axis_pcnt = (s3->accel.maj_axis_pcnt & 0x3f00) | val;
+                break;
+                case 0x96e9:
+                s3->accel.maj_axis_pcnt = (s3->accel.maj_axis_pcnt & 0xff) | ((val & 0x0f) << 8);
+                if (val & 0x08)
+                   s3->accel.maj_axis_pcnt |= ~0x0fff;
+                break;
+
+                case 0x9ae8:
+                s3->accel.cmd = (s3->accel.cmd & 0xff00) | val;
+                break;
+                case 0x9ae9:
+                s3->accel.cmd = (s3->accel.cmd & 0xff) | (val << 8);
+                s3_accel_start(-1, 0, 0xffffffff, 0, s3);
+                s3->accel.pix_trans_count = 0;
+                s3->accel.multifunc[0xe] &= ~0x10; /*hack*/
+                break;
+
+                case 0x9ee8:
+                s3->accel.short_stroke = (s3->accel.short_stroke & 0xff00) | val;
+                break;
+                case 0x9ee9:
+                s3->accel.short_stroke = (s3->accel.short_stroke & 0xff) | (val << 8);
+                break;
+
+                case 0xa2e8:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
+                else
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x000000ff) | val;
+                break;
+                case 0xa2e9:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
+                else
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xa2ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xa2eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
+                break;
+
+                case 0xa6e8:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
+                else
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x000000ff) | val;
+                break;
+                case 0xa6e9:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
+                else
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xa6ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xa6eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
+                break;
+
+                case 0xaae8:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
+                else
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x000000ff) | val;
+                break;
+                case 0xaae9:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
+                else
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xaaea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xaaeb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
+                break;
+
+                case 0xaee8:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
+                else
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x000000ff) | val;
+                break;
+                case 0xaee9:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
+                else
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xaeea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xaeeb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
+                break;
+
+                case 0xb2e8:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
+                else
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x000000ff) | val;
+                break;
+                case 0xb2e9:
+                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
+                else
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x0000ff00) | (val << 8);
+                if (!(s3->accel.multifunc[0xe] & 0x200))
+                        s3->accel.multifunc[0xe] ^= 0x10;
+                break;
+                case 0xb2ea:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
+                break;
+                case 0xb2eb:
+                if (s3->accel.multifunc[0xe] & 0x200)
+                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
+                break;
+
+                case 0xb6e8:
+                s3->accel.bkgd_mix = val;
+                break;
+
+                case 0xbae8:
+                s3->accel.frgd_mix = val;
+                break;
+                
+                case 0xbee8:
+                s3->accel.multifunc_cntl = (s3->accel.multifunc_cntl & 0xff00) | val;
+                break;
+                case 0xbee9:
+                s3->accel.multifunc_cntl = (s3->accel.multifunc_cntl & 0xff) | (val << 8);
+                s3->accel.multifunc[s3->accel.multifunc_cntl >> 12] = s3->accel.multifunc_cntl & 0xfff;
+                break;
+
+                case 0xe2e8:
+                s3->accel.pix_trans[0] = val;
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && !(s3->accel.cmd & 0x600) && (s3->accel.cmd & 0x100))
+                        s3_accel_start(8, 1, s3->accel.pix_trans[0], 0, s3);
+                else if (!(s3->accel.cmd & 0x600) && (s3->accel.cmd & 0x100))
+                        s3_accel_start(1, 1, 0xffffffff, s3->accel.pix_trans[0], s3);
+                break;
+                case 0xe2e9:
+                s3->accel.pix_trans[1] = val;
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x200 && (s3->accel.cmd & 0x100))
+                {
+                        if (s3->accel.cmd & 0x1000) s3_accel_start(16, 1, s3->accel.pix_trans[1] | (s3->accel.pix_trans[0] << 8), 0, s3);
+                        else                        s3_accel_start(16, 1, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8), 0, s3);
+                }
+                else if ((s3->accel.cmd & 0x600) == 0x200 && (s3->accel.cmd & 0x100))
+                {
+                        if (s3->accel.cmd & 0x1000) s3_accel_start(2, 1, 0xffffffff, s3->accel.pix_trans[1] | (s3->accel.pix_trans[0] << 8), s3);
+                        else                        s3_accel_start(2, 1, 0xffffffff, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8), s3);
+                }
+                break;
+                case 0xe2ea:
+                s3->accel.pix_trans[2] = val;
+                break;
+                case 0xe2eb:
+                s3->accel.pix_trans[3] = val;
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
+                        s3_accel_start(32, 1, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), 0, s3);
+                else if ((s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
+                        s3_accel_start(4, 1, 0xffffffff, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), s3);
+                break;
+        }
+}
+
+static void s3_accel_out_fifo_w(s3_t *s3, uint16_t port, uint16_t val)
+{
+//        pclog("Accel out w %04X %04X\n", port, val);
+        if (s3->accel.cmd & 0x100)
+        {
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
+                {
+                        if (s3->accel.cmd & 0x1000)
+                           val = (val >> 8) | (val << 8);
+                        s3_accel_start(16, 1, val | (val << 16), 0, s3);
+                }
+                else
+                   s3_accel_start(2, 1, 0xffffffff, val | (val << 16), s3);
+        }
+}
+
+static void s3_accel_out_fifo_l(s3_t *s3, uint16_t port, uint32_t val)
+{
+//        pclog("Accel out l %04X %08X\n", port, val);
+        if (s3->accel.cmd & 0x100)
+        {
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
+                {
+                        if (s3->accel.cmd & 0x1000)
+                                val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
+                        if ((s3->accel.cmd & 0x600) == 0x400)
+                                s3_accel_start(32, 1, val, 0, s3);
+                        else if ((s3->accel.cmd & 0x600) == 0x200)
+                        {
+                                s3_accel_start(16, 1, val >> 16, 0, s3);
+                                s3_accel_start(16, 1, val, 0, s3);
+                        }
+                        else if (!(s3->accel.cmd & 0x600))
+                        {
+                                s3_accel_start(8, 1, val >> 24, 0, s3);
+                                s3_accel_start(8, 1, val >> 16, 0, s3);
+                                s3_accel_start(8, 1, val >> 8,  0, s3);
+                                s3_accel_start(8, 1, val,       0, s3);
+                        }
+                }
+                else
+                {
+                        if ((s3->accel.cmd & 0x600) == 0x400)
+                                s3_accel_start(4, 1, 0xffffffff, val, s3);
+                        else if ((s3->accel.cmd & 0x600) == 0x200)
+                        {
+                                s3_accel_start(2, 1, 0xffffffff, val >> 16, s3);
+                                s3_accel_start(2, 1, 0xffffffff, val, s3);
+                        }
+                        else if (!(s3->accel.cmd & 0x600))
+                        {
+                                s3_accel_start(1, 1, 0xffffffff, val >> 24, s3);
+                                s3_accel_start(1, 1, 0xffffffff, val >> 16, s3);
+                                s3_accel_start(1, 1, 0xffffffff, val >> 8, s3);
+                                s3_accel_start(1, 1, 0xffffffff, val, s3);
+                        }
+                }
+        }
+}
+
+static void s3_accel_write_fifo(s3_t *s3, uint32_t addr, uint8_t val)
+{
+//        pclog("Write S3 accel %08X %02X\n", addr, val);
+        if (s3->packed_mmio)
+        {
+                int addr_lo = addr & 1;
+                switch (addr & 0xfffe)
+                {
+                        case 0x8100: addr = 0x82e8; break; /*ALT_CURXY*/
+                        case 0x8102: addr = 0x86e8; break;
+                        
+                        case 0x8104: addr = 0x82ea; break; /*ALT_CURXY2*/
+                        case 0x8106: addr = 0x86ea; break;
+                        
+                        case 0x8108: addr = 0x8ae8; break; /*ALT_STEP*/
+                        case 0x810a: addr = 0x8ee8; break;
+                        
+                        case 0x810c: addr = 0x8aea; break; /*ALT_STEP2*/
+                        case 0x810e: addr = 0x8eea; break;
+
+                        case 0x8110: addr = 0x92e8; break; /*ALT_ERR*/
+                        case 0x8112: addr = 0x92ee; break;
+
+                        case 0x8118: addr = 0x9ae8; break; /*ALT_CMD*/
+                        case 0x811a: addr = 0x9aea; break;
+                        
+                        case 0x811c: addr = 0x9ee8; break; /*SHORT_STROKE*/
+                        
+                        case 0x8120: case 0x8122:          /*BKGD_COLOR*/
+                        WRITE8(addr, s3->accel.bkgd_color, val);
+                        return;
+                        
+                        case 0x8124: case 0x8126:          /*FRGD_COLOR*/
+                        WRITE8(addr, s3->accel.frgd_color, val);
+                        return;
+
+                        case 0x8128: case 0x812a:          /*WRT_MASK*/
+                        WRITE8(addr, s3->accel.wrt_mask, val);
+                        return;
+
+                        case 0x812c: case 0x812e:          /*RD_MASK*/
+                        WRITE8(addr, s3->accel.rd_mask, val);
+                        return;
+
+                        case 0x8130: case 0x8132:          /*COLOR_CMP*/
+                        WRITE8(addr, s3->accel.color_cmp, val);
+                        return;
+
+                        case 0x8134: addr = 0xb6e8; break; /*ALT_MIX*/
+                        case 0x8136: addr = 0xbae8; break;
+                        
+                        case 0x8138:                       /*SCISSORS_T*/
+                        WRITE8(addr & 1, s3->accel.multifunc[1], val);
+                        return;
+                        case 0x813a:                       /*SCISSORS_L*/
+                        WRITE8(addr & 1, s3->accel.multifunc[2], val);
+                        return;
+                        case 0x813c:                       /*SCISSORS_B*/
+                        WRITE8(addr & 1, s3->accel.multifunc[3], val);
+                        return;
+                        case 0x813e:                       /*SCISSORS_R*/
+                        WRITE8(addr & 1, s3->accel.multifunc[4], val);
+                        return;
+
+                        case 0x8140:                       /*PIX_CNTL*/
+                        WRITE8(addr & 1, s3->accel.multifunc[0xa], val);
+                        return;
+                        case 0x8142:                       /*MULT_MISC2*/
+                        WRITE8(addr & 1, s3->accel.multifunc[0xd], val);
+                        return;
+                        case 0x8144:                       /*MULT_MISC*/
+                        WRITE8(addr & 1, s3->accel.multifunc[0xe], val);
+                        return;
+                        case 0x8146:                       /*READ_SEL*/
+                        WRITE8(addr & 1, s3->accel.multifunc[0xf], val);
+                        return;
+
+                        case 0x8148:                       /*ALT_PCNT*/
+                        WRITE8(addr & 1, s3->accel.multifunc[0], val);
+                        return;
+                        case 0x814a: addr = 0x96e8; break;
+                        case 0x814c: addr = 0x96ea; break;
+
+                        case 0x8168: addr = 0xeae8; break;
+                        case 0x816a: addr = 0xeaea; break;
+                }
+                addr |= addr_lo;
+        }
+        
+
+        if (addr & 0x8000)
+        {
+                s3_accel_out_fifo(s3, addr & 0xffff, val);
+        }
+        else
+        {
+                if (s3->accel.cmd & 0x100)
+                {
+                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
+                                s3_accel_start(8, 1, val | (val << 8) | (val << 16) | (val << 24), 0, s3);
+                        else
+                                s3_accel_start(1, 1, 0xffffffff, val | (val << 8) | (val << 16) | (val << 24), s3);
+                }
+        }
+}
+
+static void s3_accel_write_fifo_w(s3_t *s3, uint32_t addr, uint16_t val)
+{
+//        pclog("Write S3 accel w %08X %04X\n", addr, val);
+        if (addr & 0x8000)
+        {
+                s3_accel_write_fifo(s3, addr,     val);
+                s3_accel_write_fifo(s3, addr + 1, val >> 8);
+        }
+        else
+        {
+                if (s3->accel.cmd & 0x100)
+                {
+                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
+                        {
+                                if (s3->accel.cmd & 0x1000)
+                                        val = (val >> 8) | (val << 8);
+                                s3_accel_start(16, 1, val | (val << 16), 0, s3);
+                        }
+                        else
+                           s3_accel_start(2, 1, 0xffffffff, val | (val << 16), s3);
+                }
+        }
+}
+
+static void s3_accel_write_fifo_l(s3_t *s3, uint32_t addr, uint32_t val)
+{
+//        pclog("Write S3 accel l %08X %08X\n", addr, val);
+        if (addr & 0x8000)
+        {
+                s3_accel_write_fifo(s3, addr,     val);
+                s3_accel_write_fifo(s3, addr + 1, val >> 8);
+                s3_accel_write_fifo(s3, addr + 2, val >> 16);
+                s3_accel_write_fifo(s3, addr + 3, val >> 24);
+        }
+        else
+        {
+                if (s3->accel.cmd & 0x100)
+                {
+                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
+                        {
+                                if (s3->accel.cmd & 0x1000)
+                                        val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
+                                if ((s3->accel.cmd & 0x600) == 0x400)
+                                        s3_accel_start(32, 1, val, 0, s3);
+                                else if ((s3->accel.cmd & 0x600) == 0x200)
+                                {
+                                        s3_accel_start(16, 1, val >> 16, 0, s3);
+                                        s3_accel_start(16, 1, val, 0,       s3);
+                                }
+                                else if (!(s3->accel.cmd & 0x600))
+                                {
+                                        s3_accel_start(8, 1, val >> 24, 0, s3);
+                                        s3_accel_start(8, 1, val >> 16, 0, s3);
+                                        s3_accel_start(8, 1, val >> 8,  0, s3);
+                                        s3_accel_start(8, 1, val,       0, s3);
+                                }
+                        }
+                        else
+                        {
+                                if ((s3->accel.cmd & 0x600) == 0x400)
+                                        s3_accel_start(4, 1, 0xffffffff, val, s3);
+                                else if ((s3->accel.cmd & 0x600) == 0x200)
+                                {
+                                        s3_accel_start(2, 1, 0xffffffff, val,       s3);
+                                        s3_accel_start(2, 1, 0xffffffff, val >> 16, s3);
+                                }
+                                else if (!(s3->accel.cmd & 0x600))
+                                {
+                                        s3_accel_start(1, 1, 0xffffffff, val,       s3);
+                                        s3_accel_start(1, 1, 0xffffffff, val >> 8,  s3);
+                                        s3_accel_start(1, 1, 0xffffffff, val >> 16, s3);
+                                        s3_accel_start(1, 1, 0xffffffff, val >> 24, s3);
+                                }
+                        }
+                }
+        }
+}
+
+static void fifo_thread(void *param)
+{
+        s3_t *s3 = (s3_t *)param;
+        
+        while (1)
+        {
+                thread_set_event(s3->fifo_not_full_event);
+                thread_wait_event(s3->wake_fifo_thread, -1);
+                thread_reset_event(s3->wake_fifo_thread);
+                s3->blitter_busy = 1;
+                while (!FIFO_EMPTY)
+                {
+                        uint64_t start_time = timer_read();
+                        uint64_t end_time;
+                        fifo_entry_t *fifo = &s3->fifo[s3->fifo_read_idx & FIFO_MASK];
+                        uint32_t val = fifo->val;
+
+                        switch (fifo->addr_type & FIFO_TYPE)
+                        {
+                                case FIFO_WRITE_BYTE:
+                                s3_accel_write_fifo(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_WORD:
+                                s3_accel_write_fifo_w(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_DWORD:
+                                s3_accel_write_fifo_l(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_OUT_BYTE:
+                                s3_accel_out_fifo(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_OUT_WORD:
+                                s3_accel_out_fifo_w(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_OUT_DWORD:
+                                s3_accel_out_fifo_l(s3, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                        }
+                                                
+                        s3->fifo_read_idx++;
+                        fifo->addr_type = FIFO_INVALID;
+
+                        if (FIFO_ENTRIES > 0xe000)
+                                thread_set_event(s3->fifo_not_full_event);
+
+                        end_time = timer_read();
+                        s3->blitter_time += end_time - start_time;
+                }
+                s3->blitter_busy = 0;
+        }
+}
+
+static void s3_queue(s3_t *s3, uint32_t addr, uint32_t val, uint32_t type)
+{
+        fifo_entry_t *fifo = &s3->fifo[s3->fifo_write_idx & FIFO_MASK];
+        int c;
+
+        if (FIFO_FULL)
+        {
+                thread_reset_event(s3->fifo_not_full_event);
+                if (FIFO_FULL)
+                {
+                        thread_wait_event(s3->fifo_not_full_event, -1); /*Wait for room in ringbuffer*/
+                }
+        }
+
+        fifo->val = val;
+        fifo->addr_type = (addr & FIFO_ADDR) | type;
+
+        s3->fifo_write_idx++;
+        
+        if (FIFO_ENTRIES > 0xe000 || FIFO_ENTRIES < 8)
+                wake_fifo_thread(s3);
+}
 
 void s3_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -458,14 +1075,16 @@ static float s3_trio64_getclock(int clock, void *p)
 }
 
 
-void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, s3_t *s3);
-
 void s3_accel_out(uint16_t port, uint8_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
 //        pclog("Accel out %04X %02X\n", port, val);
         
-        switch (port)
+        if (port >= 0x8000)
+        {
+                s3_queue(s3, port, val, FIFO_OUT_BYTE);
+        }
+        else switch (port)
         {
                 case 0x42e8:
                 break;
@@ -478,298 +1097,21 @@ void s3_accel_out(uint16_t port, uint8_t val, void *p)
                 case 0x4ae8:
                 s3->accel.advfunc_cntl = val;
                 break;
-                
-                case 0x82e8:
-                s3->accel.cur_y = (s3->accel.cur_y & 0xf00) | val;
-                break;
-                case 0x82e9:
-                s3->accel.cur_y = (s3->accel.cur_y & 0xff) | ((val & 0x1f) << 8);
-                break;
-                
-                case 0x86e8:
-                s3->accel.cur_x = (s3->accel.cur_x & 0xf00) | val;
-                break;
-                case 0x86e9:
-                s3->accel.cur_x = (s3->accel.cur_x & 0xff) | ((val & 0x1f) << 8);
-                break;
-                
-                case 0x8ae8:
-                s3->accel.desty_axstp = (s3->accel.desty_axstp & 0x3f00) | val;
-                break;
-                case 0x8ae9:
-                s3->accel.desty_axstp = (s3->accel.desty_axstp & 0xff) | ((val & 0x3f) << 8);
-                if (val & 0x20)
-                   s3->accel.desty_axstp |= ~0x3fff;
-                break;
-                
-                case 0x8ee8:
-                s3->accel.destx_distp = (s3->accel.destx_distp & 0x3f00) | val;
-                break;
-                case 0x8ee9:
-                s3->accel.destx_distp = (s3->accel.destx_distp & 0xff) | ((val & 0x3f) << 8);
-                if (val & 0x20)
-                   s3->accel.destx_distp |= ~0x3fff;
-                break;
-                
-                case 0x92e8:
-                s3->accel.err_term = (s3->accel.err_term & 0x3f00) | val;
-                break;
-                case 0x92e9:
-                s3->accel.err_term = (s3->accel.err_term & 0xff) | ((val & 0x3f) << 8);
-                if (val & 0x20)
-                   s3->accel.err_term |= ~0x3fff;
-                break;
-
-                case 0x96e8:
-                s3->accel.maj_axis_pcnt = (s3->accel.maj_axis_pcnt & 0x3f00) | val;
-                break;
-                case 0x96e9:
-                s3->accel.maj_axis_pcnt = (s3->accel.maj_axis_pcnt & 0xff) | ((val & 0x0f) << 8);
-                if (val & 0x08)
-                   s3->accel.maj_axis_pcnt |= ~0x0fff;
-                break;
-
-                case 0x9ae8:
-                s3->accel.cmd = (s3->accel.cmd & 0xff00) | val;
-                break;
-                case 0x9ae9:
-                s3->accel.cmd = (s3->accel.cmd & 0xff) | (val << 8);
-                s3_accel_start(-1, 0, 0xffffffff, 0, s3);
-                s3->accel.pix_trans_count = 0;
-                s3->accel.multifunc[0xe] &= ~0x10; /*hack*/
-                break;
-
-                case 0x9ee8:
-                s3->accel.short_stroke = (s3->accel.short_stroke & 0xff00) | val;
-                break;
-                case 0x9ee9:
-                s3->accel.short_stroke = (s3->accel.short_stroke & 0xff) | (val << 8);
-                break;
-
-                case 0xa2e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
-                else
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x000000ff) | val;
-                break;
-                case 0xa2e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
-                else
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x0000ff00) | (val << 8);
-                if (!(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.multifunc[0xe] ^= 0x10;
-                break;
-                case 0xa2ea:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0x00ff0000) | (val << 16);
-                break;
-                case 0xa2eb:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.bkgd_color = (s3->accel.bkgd_color & ~0xff000000) | (val << 24);
-                break;
-
-                case 0xa6e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
-                else
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x000000ff) | val;
-                break;
-                case 0xa6e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
-                else
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x0000ff00) | (val << 8);
-                if (!(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.multifunc[0xe] ^= 0x10;
-                break;
-                case 0xa6ea:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0x00ff0000) | (val << 16);
-                break;
-                case 0xa6eb:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.frgd_color = (s3->accel.frgd_color & ~0xff000000) | (val << 24);
-                break;
-
-                case 0xaae8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
-                else
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x000000ff) | val;
-                break;
-                case 0xaae9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
-                else
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x0000ff00) | (val << 8);
-                if (!(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.multifunc[0xe] ^= 0x10;
-                break;
-                case 0xaaea:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0x00ff0000) | (val << 16);
-                break;
-                case 0xaaeb:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.wrt_mask = (s3->accel.wrt_mask & ~0xff000000) | (val << 24);
-                break;
-
-                case 0xaee8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
-                else
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x000000ff) | val;
-                break;
-                case 0xaee9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
-                else
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x0000ff00) | (val << 8);
-                if (!(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.multifunc[0xe] ^= 0x10;
-                break;
-                case 0xaeea:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0x00ff0000) | (val << 16);
-                break;
-                case 0xaeeb:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.rd_mask = (s3->accel.rd_mask & ~0xff000000) | (val << 24);
-                break;
-
-                case 0xb2e8:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
-                else
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x000000ff) | val;
-                break;
-                case 0xb2e9:
-                if (s3->bpp == 3 && s3->accel.multifunc[0xe] & 0x10 && !(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
-                else
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x0000ff00) | (val << 8);
-                if (!(s3->accel.multifunc[0xe] & 0x200))
-                        s3->accel.multifunc[0xe] ^= 0x10;
-                break;
-                case 0xb2ea:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0x00ff0000) | (val << 16);
-                break;
-                case 0xb2eb:
-                if (s3->accel.multifunc[0xe] & 0x200)
-                        s3->accel.color_cmp = (s3->accel.color_cmp & ~0xff000000) | (val << 24);
-                break;
-
-                case 0xb6e8:
-                s3->accel.bkgd_mix = val;
-                break;
-
-                case 0xbae8:
-                s3->accel.frgd_mix = val;
-                break;
-                
-                case 0xbee8:
-                s3->accel.multifunc_cntl = (s3->accel.multifunc_cntl & 0xff00) | val;
-                break;
-                case 0xbee9:
-                s3->accel.multifunc_cntl = (s3->accel.multifunc_cntl & 0xff) | (val << 8);
-                s3->accel.multifunc[s3->accel.multifunc_cntl >> 12] = s3->accel.multifunc_cntl & 0xfff;
-                break;
-
-                case 0xe2e8:
-                s3->accel.pix_trans[0] = val;
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && !(s3->accel.cmd & 0x600) && (s3->accel.cmd & 0x100))
-                        s3_accel_start(8, 1, s3->accel.pix_trans[0], 0, s3);
-                else if (!(s3->accel.cmd & 0x600) && (s3->accel.cmd & 0x100))
-                        s3_accel_start(1, 1, 0xffffffff, s3->accel.pix_trans[0], s3);
-                break;
-                case 0xe2e9:
-                s3->accel.pix_trans[1] = val;
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x200 && (s3->accel.cmd & 0x100))
-                {
-                        if (s3->accel.cmd & 0x1000) s3_accel_start(16, 1, s3->accel.pix_trans[1] | (s3->accel.pix_trans[0] << 8), 0, s3);
-                        else                        s3_accel_start(16, 1, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8), 0, s3);
-                }
-                else if ((s3->accel.cmd & 0x600) == 0x200 && (s3->accel.cmd & 0x100))
-                {
-                        if (s3->accel.cmd & 0x1000) s3_accel_start(2, 1, 0xffffffff, s3->accel.pix_trans[1] | (s3->accel.pix_trans[0] << 8), s3);
-                        else                        s3_accel_start(2, 1, 0xffffffff, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8), s3);
-                }
-                break;
-                case 0xe2ea:
-                s3->accel.pix_trans[2] = val;
-                break;
-                case 0xe2eb:
-                s3->accel.pix_trans[3] = val;
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
-                        s3_accel_start(32, 1, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), 0, s3);
-                else if ((s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
-                        s3_accel_start(4, 1, 0xffffffff, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), s3);
-                break;
         }
 }
 
 void s3_accel_out_w(uint16_t port, uint16_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
-//        pclog("Accel out w %04X %04X\n", port, val);
-        if (s3->accel.cmd & 0x100)
-        {
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
-                {
-                        if (s3->accel.cmd & 0x1000)
-                           val = (val >> 8) | (val << 8);
-                        s3_accel_start(16, 1, val | (val << 16), 0, s3);
-                }
-                else
-                   s3_accel_start(2, 1, 0xffffffff, val | (val << 16), s3);
-        }
+//        pclog("Accel out w %04X %04X\n", port, val);        
+        s3_queue(s3, port, val, FIFO_OUT_WORD);
 }
 
 void s3_accel_out_l(uint16_t port, uint32_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
-//        pclog("Accel out l %04X %08X\n", port, val);
-        if (s3->accel.cmd & 0x100)
-        {
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
-                {
-                        if (s3->accel.cmd & 0x1000)
-                                val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
-                        if ((s3->accel.cmd & 0x600) == 0x400)
-                                s3_accel_start(32, 1, val, 0, s3);
-                        else if ((s3->accel.cmd & 0x600) == 0x200)
-                        {
-                                s3_accel_start(16, 1, val >> 16, 0, s3);
-                                s3_accel_start(16, 1, val, 0, s3);
-                        }
-                        else if (!(s3->accel.cmd & 0x600))
-                        {
-                                s3_accel_start(8, 1, val >> 24, 0, s3);
-                                s3_accel_start(8, 1, val >> 16, 0, s3);
-                                s3_accel_start(8, 1, val >> 8,  0, s3);
-                                s3_accel_start(8, 1, val,       0, s3);
-                        }
-                }
-                else
-                {
-                        if ((s3->accel.cmd & 0x600) == 0x400)
-                                s3_accel_start(4, 1, 0xffffffff, val, s3);
-                        else if ((s3->accel.cmd & 0x600) == 0x200)
-                        {
-                                s3_accel_start(2, 1, 0xffffffff, val >> 16, s3);
-                                s3_accel_start(2, 1, 0xffffffff, val, s3);
-                        }
-                        else if (!(s3->accel.cmd & 0x600))
-                        {
-                                s3_accel_start(1, 1, 0xffffffff, val >> 24, s3);
-                                s3_accel_start(1, 1, 0xffffffff, val >> 16, s3);
-                                s3_accel_start(1, 1, 0xffffffff, val >> 8, s3);
-                                s3_accel_start(1, 1, 0xffffffff, val, s3);
-                        }
-                }
-        }
+//        pclog("Accel out l %04X %08X\n", port, val);                
+        s3_queue(s3, port, val, FIFO_OUT_DWORD);
 }
 
 uint8_t s3_accel_in(uint16_t port, void *p)
@@ -785,92 +1127,140 @@ uint8_t s3_accel_in(uint16_t port, void *p)
                 return 0;
 
                 case 0x82e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.cur_y & 0xff;
                 case 0x82e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.cur_y  >> 8;
 
                 case 0x86e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.cur_x & 0xff;
                 case 0x86e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.cur_x  >> 8;
 
                 case 0x8ae8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.desty_axstp & 0xff;
                 case 0x8ae9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.desty_axstp >> 8;
 
                 case 0x8ee8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.destx_distp & 0xff;
                 case 0x8ee9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.destx_distp >> 8;
 
                 case 0x92e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.err_term & 0xff;
                 case 0x92e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.err_term >> 8;
 
                 case 0x96e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.maj_axis_pcnt & 0xff;
                 case 0x96e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.maj_axis_pcnt >> 8;
 
                 case 0x9ae8:
+                if (!s3->blitter_busy)
+                        wake_fifo_thread(s3);
+                if (FIFO_FULL)
+                        return 0xff; /*FIFO full*/
                 return 0;    /*FIFO empty*/
                 case 0x9ae9:
-                return 0x04; /*FIFO empty*/
+                if (!s3->blitter_busy)
+                        wake_fifo_thread(s3);
+                temp = 0;
+                if (!FIFO_EMPTY)
+                        temp |= 0x02; /*Hardware busy*/
+                else
+                        temp |= 0x04; /*FIFO empty*/
+                if (FIFO_FULL)
+                        temp |= 0xf8; /*FIFO full*/
+                return temp;
 
                 case 0xa2e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.bkgd_color & 0xff;
                 case 0xa2e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.bkgd_color >> 8;
                 case 0xa2ea:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.bkgd_color >> 16;
                 case 0xa2eb:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.bkgd_color >> 24;
 
                 case 0xa6e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.frgd_color & 0xff;
                 case 0xa6e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.frgd_color >> 8;
                 case 0xa6ea:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.frgd_color >> 16;
                 case 0xa6eb:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.frgd_color >> 24;
 
                 case 0xaae8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.wrt_mask & 0xff;
                 case 0xaae9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.wrt_mask >> 8;
                 case 0xaaea:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.wrt_mask >> 16;
                 case 0xaaeb:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.wrt_mask >> 24;
 
                 case 0xaee8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.rd_mask & 0xff;
                 case 0xaee9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.rd_mask >> 8;
                 case 0xaeea:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.rd_mask >> 16;
                 case 0xaeeb:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.rd_mask >> 24;
 
                 case 0xb2e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.color_cmp & 0xff;
                 case 0xb2e9:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.color_cmp >> 8;
                 case 0xb2ea:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.color_cmp >> 16;
                 case 0xb2eb:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.color_cmp >> 24;
 
                 case 0xb6e8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.bkgd_mix;
 
                 case 0xbae8:
+                s3_wait_fifo_idle(s3);
                 return s3->accel.frgd_mix;
 
                 case 0xbee8:
+                s3_wait_fifo_idle(s3);
                 temp = s3->accel.multifunc[0xf] & 0xf;
                 switch (temp)
                 {
@@ -888,6 +1278,7 @@ uint8_t s3_accel_in(uint16_t port, void *p)
                 }
                 return 0xff;
                 case 0xbee9:
+                s3_wait_fifo_idle(s3);
                 temp = s3->accel.multifunc[0xf] & 0xf;
                 s3->accel.multifunc[0xf]++;
                 switch (temp)
@@ -912,199 +1303,23 @@ uint8_t s3_accel_in(uint16_t port, void *p)
         return 0;
 }
 
-#define WRITE8(addr, var, val)  switch ((addr) & 3)                                             \
-                                {                                                               \
-                                        case 0: var = (var & 0xffffff00) | (val);         break;  \
-                                        case 1: var = (var & 0xffff00ff) | ((val) << 8);  break;  \
-                                        case 2: var = (var & 0xff00ffff) | ((val) << 16); break;  \
-                                        case 3: var = (var & 0x00ffffff) | ((val) << 24); break;  \
-                                }
-
 void s3_accel_write(uint32_t addr, uint8_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
-//        pclog("Write S3 accel %08X %02X\n", addr, val);
-        if (s3->packed_mmio)
-        {
-                int addr_lo = addr & 1;
-                switch (addr & 0xfffe)
-                {
-                        case 0x8100: addr = 0x82e8; break; /*ALT_CURXY*/
-                        case 0x8102: addr = 0x86e8; break;
-                        
-                        case 0x8104: addr = 0x82ea; break; /*ALT_CURXY2*/
-                        case 0x8106: addr = 0x86ea; break;
-                        
-                        case 0x8108: addr = 0x8ae8; break; /*ALT_STEP*/
-                        case 0x810a: addr = 0x8ee8; break;
-                        
-                        case 0x810c: addr = 0x8aea; break; /*ALT_STEP2*/
-                        case 0x810e: addr = 0x8eea; break;
-
-                        case 0x8110: addr = 0x92e8; break; /*ALT_ERR*/
-                        case 0x8112: addr = 0x92ee; break;
-
-                        case 0x8118: addr = 0x9ae8; break; /*ALT_CMD*/
-                        case 0x811a: addr = 0x9aea; break;
-                        
-                        case 0x811c: addr = 0x9ee8; break; /*SHORT_STROKE*/
-                        
-                        case 0x8120: case 0x8122:          /*BKGD_COLOR*/
-                        WRITE8(addr, s3->accel.bkgd_color, val);
-                        return;
-                        
-                        case 0x8124: case 0x8126:          /*FRGD_COLOR*/
-                        WRITE8(addr, s3->accel.frgd_color, val);
-                        return;
-
-                        case 0x8128: case 0x812a:          /*WRT_MASK*/
-                        WRITE8(addr, s3->accel.wrt_mask, val);
-                        return;
-
-                        case 0x812c: case 0x812e:          /*RD_MASK*/
-                        WRITE8(addr, s3->accel.rd_mask, val);
-                        return;
-
-                        case 0x8130: case 0x8132:          /*COLOR_CMP*/
-                        WRITE8(addr, s3->accel.color_cmp, val);
-                        return;
-
-                        case 0x8134: addr = 0xb6e8; break; /*ALT_MIX*/
-                        case 0x8136: addr = 0xbae8; break;
-                        
-                        case 0x8138:                       /*SCISSORS_T*/
-                        WRITE8(addr & 1, s3->accel.multifunc[1], val);
-                        return;
-                        case 0x813a:                       /*SCISSORS_L*/
-                        WRITE8(addr & 1, s3->accel.multifunc[2], val);
-                        return;
-                        case 0x813c:                       /*SCISSORS_B*/
-                        WRITE8(addr & 1, s3->accel.multifunc[3], val);
-                        return;
-                        case 0x813e:                       /*SCISSORS_R*/
-                        WRITE8(addr & 1, s3->accel.multifunc[4], val);
-                        return;
-
-                        case 0x8140:                       /*PIX_CNTL*/
-                        WRITE8(addr & 1, s3->accel.multifunc[0xa], val);
-                        return;
-                        case 0x8142:                       /*MULT_MISC2*/
-                        WRITE8(addr & 1, s3->accel.multifunc[0xd], val);
-                        return;
-                        case 0x8144:                       /*MULT_MISC*/
-                        WRITE8(addr & 1, s3->accel.multifunc[0xe], val);
-                        return;
-                        case 0x8146:                       /*READ_SEL*/
-                        WRITE8(addr & 1, s3->accel.multifunc[0xf], val);
-                        return;
-
-                        case 0x8148:                       /*ALT_PCNT*/
-                        WRITE8(addr & 1, s3->accel.multifunc[0], val);
-                        return;
-                        case 0x814a: addr = 0x96e8; break;
-                        case 0x814c: addr = 0x96ea; break;
-
-                        case 0x8168: addr = 0xeae8; break;
-                        case 0x816a: addr = 0xeaea; break;
-                }
-                addr |= addr_lo;
-        }
-        
-
-        if (addr & 0x8000)
-        {
-                s3_accel_out(addr & 0xffff, val, p);
-        }
-        else
-        {
-                if (s3->accel.cmd & 0x100)
-                {
-                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
-                                s3_accel_start(8, 1, val | (val << 8) | (val << 16) | (val << 24), 0, s3);
-                        else
-                                s3_accel_start(1, 1, 0xffffffff, val | (val << 8) | (val << 16) | (val << 24), s3);
-                }
-        }
+//        pclog("s3_accel_write %08x %02x\n", addr, val);        
+        s3_queue(s3, addr & 0xffff, val, FIFO_WRITE_BYTE);
 }
-
 void s3_accel_write_w(uint32_t addr, uint16_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
-//        pclog("Write S3 accel w %08X %04X\n", addr, val);
-        if (addr & 0x8000)
-        {
-                s3_accel_write(addr,     val,      p);
-                s3_accel_write(addr + 1, val >> 8, p);
-        }
-        else
-        {
-                if (s3->accel.cmd & 0x100)
-                {
-                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
-                        {
-                                if (s3->accel.cmd & 0x1000)
-                                        val = (val >> 8) | (val << 8);
-                                s3_accel_start(16, 1, val | (val << 16), 0, s3);
-                        }
-                        else
-                           s3_accel_start(2, 1, 0xffffffff, val | (val << 16), s3);
-                }
-        }
+//        pclog("s3_accel_write_w %08x %04x\n", addr, val);        
+        s3_queue(s3, addr & 0xffff, val, FIFO_WRITE_WORD);
 }
-
 void s3_accel_write_l(uint32_t addr, uint32_t val, void *p)
 {
         s3_t *s3 = (s3_t *)p;
-//        pclog("Write S3 accel l %08X %08X\n", addr, val);
-        if (addr & 0x8000)
-        {
-                s3_accel_write(addr,     val,        p);
-                s3_accel_write(addr + 1, val >> 8,   p);
-                s3_accel_write(addr + 2, val >> 16,  p);
-                s3_accel_write(addr + 3, val >> 24,  p);
-        }
-        else
-        {
-                if (s3->accel.cmd & 0x100)
-                {
-                        if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
-                        {
-                                if (s3->accel.cmd & 0x1000)
-                                        val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
-                                if ((s3->accel.cmd & 0x600) == 0x400)
-                                        s3_accel_start(32, 1, val, 0, s3);
-                                else if ((s3->accel.cmd & 0x600) == 0x200)
-                                {
-                                        s3_accel_start(16, 1, val >> 16, 0, s3);
-                                        s3_accel_start(16, 1, val, 0,       s3);
-                                }
-                                else if (!(s3->accel.cmd & 0x600))
-                                {
-                                        s3_accel_start(8, 1, val >> 24, 0, s3);
-                                        s3_accel_start(8, 1, val >> 16, 0, s3);
-                                        s3_accel_start(8, 1, val >> 8,  0, s3);
-                                        s3_accel_start(8, 1, val,       0, s3);
-                                }
-                        }
-                        else
-                        {
-                                if ((s3->accel.cmd & 0x600) == 0x400)
-                                        s3_accel_start(4, 1, 0xffffffff, val, s3);
-                                else if ((s3->accel.cmd & 0x600) == 0x200)
-                                {
-                                        s3_accel_start(2, 1, 0xffffffff, val,       s3);
-                                        s3_accel_start(2, 1, 0xffffffff, val >> 16, s3);
-                                }
-                                else if (!(s3->accel.cmd & 0x600))
-                                {
-                                        s3_accel_start(1, 1, 0xffffffff, val,       s3);
-                                        s3_accel_start(1, 1, 0xffffffff, val >> 8,  s3);
-                                        s3_accel_start(1, 1, 0xffffffff, val >> 16, s3);
-                                        s3_accel_start(1, 1, 0xffffffff, val >> 24, s3);
-                                }
-                        }
-                }
-        }
+//        pclog("s3_accel_write_l %08x %08x\n", addr, val);        
+        s3_queue(s3, addr & 0xffff, val, FIFO_WRITE_DWORD);
 }
 
 uint8_t s3_accel_read(uint32_t addr, void *p)
@@ -1960,6 +2175,10 @@ static void *s3_init(char *bios_fn, int chip)
         s3->pci_regs[0x33] = 0x00;
         
         s3->chip = chip;
+
+        s3->wake_fifo_thread = thread_create_event();
+        s3->fifo_not_full_event = thread_create_event();
+        s3->fifo_thread = thread_create(fifo_thread, s3);
  
         return s3;
 }
@@ -2069,8 +2288,19 @@ void s3_force_redraw(void *p)
 void s3_add_status_info(char *s, int max_len, void *p)
 {
         s3_t *s3 = (s3_t *)p;
+        char temps[256];
+        uint64_t new_time = timer_read();
+        uint64_t status_diff = new_time - s3->status_time;
+        s3->status_time = new_time;
+
+        if (!status_diff)
+                status_diff = 1;
         
         svga_add_status_info(s, max_len, &s3->svga);
+        sprintf(temps, "%f%% CPU\n%f%% CPU (real)\n\n", ((double)s3->blitter_time * 100.0) / timer_freq, ((double)s3->blitter_time * 100.0) / status_diff);
+        strncat(s, temps, max_len);
+
+        s3->blitter_time = 0;
 }
 
 static device_config_t s3_bahamas64_config[] =
