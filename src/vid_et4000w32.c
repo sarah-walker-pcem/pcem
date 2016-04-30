@@ -10,10 +10,35 @@
 #include "mem.h"
 #include "pci.h"
 #include "rom.h"
+#include "thread.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_icd2061.h"
 #include "vid_stg_ramdac.h"
+
+#define FIFO_SIZE 65536
+#define FIFO_MASK (FIFO_SIZE - 1)
+#define FIFO_ENTRY_SIZE (1 << 31)
+
+#define FIFO_ENTRIES (et4000->fifo_write_idx - et4000->fifo_read_idx)
+#define FIFO_FULL    ((et4000->fifo_write_idx - et4000->fifo_read_idx) >= FIFO_SIZE)
+#define FIFO_EMPTY   (et4000->fifo_read_idx == et4000->fifo_write_idx)
+
+#define FIFO_TYPE 0xff000000
+#define FIFO_ADDR 0x00ffffff
+
+enum
+{
+        FIFO_INVALID    = (0x00 << 24),
+        FIFO_WRITE_BYTE = (0x01 << 24),
+        FIFO_WRITE_MMU  = (0x02 << 24)
+};
+
+typedef struct
+{
+        uint32_t addr_type;
+        uint32_t val;
+} fifo_entry_t;
 
 typedef struct et4000w32p_t
 {
@@ -68,12 +93,26 @@ typedef struct et4000w32p_t
                 uint32_t base[3];
                 uint8_t ctrl;
         } mmu;
+
+        fifo_entry_t fifo[FIFO_SIZE];
+        volatile int fifo_read_idx, fifo_write_idx;
+
+        thread_t *fifo_thread;
+        event_t *wake_fifo_thread;
+        event_t *fifo_not_full_event;
+        
+        int blitter_busy;
+        uint64_t blitter_time;
+        uint64_t status_time;
 } et4000w32p_t;
 
 void et4000w32p_recalcmapping(et4000w32p_t *et4000);
 
 uint8_t et4000w32p_mmu_read(uint32_t addr, void *p);
 void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p);
+
+void et4000w32_blit_start(et4000w32p_t *et4000);
+void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et4000w32p_t *et4000);
 
 void et4000w32p_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -345,8 +384,157 @@ void et4000w32p_recalcmapping(et4000w32p_t *et4000)
 #define ACL_XYST 4
 #define ACL_SSO  8
 
-void et4000w32_blit_start(et4000w32p_t *et4000);
-void et4000w32_blit(int count, uint32_t mix, uint32_t sdat, int cpu_input, et4000w32p_t *et4000);
+static void et4000w32p_accel_write_fifo(et4000w32p_t *et4000, uint32_t addr, uint8_t val)
+{
+        switch (addr & 0x7fff)
+        {
+                case 0x7f80: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFFFFFF00) | val;         break;
+                case 0x7f81: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFFFF00FF) | (val << 8);  break;
+                case 0x7f82: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFF00FFFF) | (val << 16); break;
+                case 0x7f83: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0x00FFFFFF) | (val << 24); break;
+                case 0x7f84: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFFFFFF00) | val;         break;
+                case 0x7f85: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFFFF00FF) | (val << 8);  break;
+                case 0x7f86: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFF00FFFF) | (val << 16); break;
+                case 0x7f87: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0x00FFFFFF) | (val << 24); break;
+                case 0x7f88: et4000->acl.queued.pattern_off  = (et4000->acl.queued.pattern_off  & 0xFF00) | val;        break;
+                case 0x7f89: et4000->acl.queued.pattern_off  = (et4000->acl.queued.pattern_off  & 0x00FF) | (val << 8); break;
+                case 0x7f8a: et4000->acl.queued.source_off   = (et4000->acl.queued.source_off   & 0xFF00) | val;        break;
+                case 0x7f8b: et4000->acl.queued.source_off   = (et4000->acl.queued.source_off   & 0x00FF) | (val << 8); break;
+                case 0x7f8c: et4000->acl.queued.dest_off     = (et4000->acl.queued.dest_off     & 0xFF00) | val;        break;
+                case 0x7f8d: et4000->acl.queued.dest_off     = (et4000->acl.queued.dest_off     & 0x00FF) | (val << 8); break;
+                case 0x7f8e: et4000->acl.queued.pixel_depth = val; break;
+                case 0x7f8f: et4000->acl.queued.xy_dir = val; break;
+                case 0x7f90: et4000->acl.queued.pattern_wrap = val; break;
+                case 0x7f92: et4000->acl.queued.source_wrap = val; break;
+                case 0x7f98: et4000->acl.queued.count_x    = (et4000->acl.queued.count_x & 0xFF00) | val;        break;
+                case 0x7f99: et4000->acl.queued.count_x    = (et4000->acl.queued.count_x & 0x00FF) | (val << 8); break;
+                case 0x7f9a: et4000->acl.queued.count_y    = (et4000->acl.queued.count_y & 0xFF00) | val;        break;
+                case 0x7f9b: et4000->acl.queued.count_y    = (et4000->acl.queued.count_y & 0x00FF) | (val << 8); break;
+                case 0x7f9c: et4000->acl.queued.ctrl_routing = val; break;
+                case 0x7f9d: et4000->acl.queued.ctrl_reload  = val; break;
+                case 0x7f9e: et4000->acl.queued.rop_bg       = val; break;
+                case 0x7f9f: et4000->acl.queued.rop_fg       = val; break;
+                case 0x7fa0: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFFFFFF00) | val;         break;
+                case 0x7fa1: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFFFF00FF) | (val << 8);  break;
+                case 0x7fa2: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFF00FFFF) | (val << 16); break;
+                case 0x7fa3: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0x00FFFFFF) | (val << 24);
+                et4000->acl.internal = et4000->acl.queued;
+                et4000w32_blit_start(et4000);
+                if (!(et4000->acl.queued.ctrl_routing & 0x43))
+                {
+                        et4000w32_blit(0xFFFFFF, ~0, 0, 0, et4000);
+                }
+                if ((et4000->acl.queued.ctrl_routing & 0x40) && !(et4000->acl.internal.ctrl_routing & 3))
+                        et4000w32_blit(4, ~0, 0, 0, et4000);
+                break;
+                case 0x7fa4: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFFFFFF00) | val;         break;
+                case 0x7fa5: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFFFF00FF) | (val << 8);  break;
+                case 0x7fa6: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFF00FFFF) | (val << 16); break;
+                case 0x7fa7: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0x00FFFFFF) | (val << 24); break;
+                case 0x7fa8: et4000->acl.queued.mix_off = (et4000->acl.queued.mix_off & 0xFF00) | val;        break;
+                case 0x7fa9: et4000->acl.queued.mix_off = (et4000->acl.queued.mix_off & 0x00FF) | (val << 8); break;
+                case 0x7faa: et4000->acl.queued.error   = (et4000->acl.queued.error   & 0xFF00) | val;        break;
+                case 0x7fab: et4000->acl.queued.error   = (et4000->acl.queued.error   & 0x00FF) | (val << 8); break;
+                case 0x7fac: et4000->acl.queued.dmin    = (et4000->acl.queued.dmin    & 0xFF00) | val;        break;
+                case 0x7fad: et4000->acl.queued.dmin    = (et4000->acl.queued.dmin    & 0x00FF) | (val << 8); break;
+                case 0x7fae: et4000->acl.queued.dmaj    = (et4000->acl.queued.dmaj    & 0xFF00) | val;        break;
+                case 0x7faf: et4000->acl.queued.dmaj    = (et4000->acl.queued.dmaj    & 0x00FF) | (val << 8); break;
+        }
+}
+
+static void et4000w32p_accel_write_mmu(et4000w32p_t *et4000, uint32_t addr, uint8_t val)
+{
+        if (!(et4000->acl.status & ACL_XYST)) return;
+        if (et4000->acl.internal.ctrl_routing & 3)
+        {
+                if ((et4000->acl.internal.ctrl_routing & 3) == 2)
+                {
+                        if (et4000->acl.mix_addr & 7)
+                                et4000w32_blit(8 - (et4000->acl.mix_addr & 7), val >> (et4000->acl.mix_addr & 7), 0, 1, et4000);
+                        else
+                                et4000w32_blit(8, val, 0, 1, et4000);
+                }
+                else if ((et4000->acl.internal.ctrl_routing & 3) == 1)
+                                et4000w32_blit(1, ~0, val, 2, et4000);
+        }
+}
+
+static void fifo_thread(void *param)
+{
+        et4000w32p_t *et4000 = (et4000w32p_t *)param;
+        
+        while (1)
+        {
+                thread_set_event(et4000->fifo_not_full_event);
+                thread_wait_event(et4000->wake_fifo_thread, -1);
+                thread_reset_event(et4000->wake_fifo_thread);
+                et4000->blitter_busy = 1;
+                while (!FIFO_EMPTY)
+                {
+                        uint64_t start_time = timer_read();
+                        uint64_t end_time;
+                        fifo_entry_t *fifo = &et4000->fifo[et4000->fifo_read_idx & FIFO_MASK];
+                        uint32_t val = fifo->val;
+
+                        switch (fifo->addr_type & FIFO_TYPE)
+                        {
+                                case FIFO_WRITE_BYTE:
+                                et4000w32p_accel_write_fifo(et4000, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_MMU:
+                                et4000w32p_accel_write_mmu(et4000, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                        }
+                                                
+                        et4000->fifo_read_idx++;
+                        fifo->addr_type = FIFO_INVALID;
+
+                        if (FIFO_ENTRIES > 0xe000)
+                                thread_set_event(et4000->fifo_not_full_event);
+
+                        end_time = timer_read();
+                        et4000->blitter_time += end_time - start_time;
+                }
+                et4000->blitter_busy = 0;
+        }
+}
+
+static inline void wake_fifo_thread(et4000w32p_t *et4000)
+{
+        thread_set_event(et4000->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
+}
+
+static void et4000w32p_wait_fifo_idle(et4000w32p_t *et4000)
+{
+        while (!FIFO_EMPTY)
+        {
+                wake_fifo_thread(et4000);
+                thread_wait_event(et4000->fifo_not_full_event, 1);
+        }
+}
+
+static void et4000w32p_queue(et4000w32p_t *et4000, uint32_t addr, uint32_t val, uint32_t type)
+{
+        fifo_entry_t *fifo = &et4000->fifo[et4000->fifo_write_idx & FIFO_MASK];
+        int c;
+
+        if (FIFO_FULL)
+        {
+                thread_reset_event(et4000->fifo_not_full_event);
+                if (FIFO_FULL)
+                {
+                        thread_wait_event(et4000->fifo_not_full_event, -1); /*Wait for room in ringbuffer*/
+                }
+        }
+
+        fifo->val = val;
+        fifo->addr_type = (addr & FIFO_ADDR) | type;
+
+        et4000->fifo_write_idx++;
+        
+        if (FIFO_ENTRIES > 0xe000 || FIFO_ENTRIES < 8)
+                wake_fifo_thread(et4000);
+}
 
 void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
 {
@@ -354,7 +542,7 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
         svga_t *svga = &et4000->svga;
         int bank;
 //        pclog("ET4K write %08X %02X %02X %04X(%08X):%08X\n",addr,val,et4000->acl.status,et4000->acl.internal.ctrl_routing,CS,cs,pc);
-        et4000->acl.status |= ACL_RDST;
+//        et4000->acl.status |= ACL_RDST;
         switch (addr & 0x6000)
         {
                 case 0x0000: /*MMU 0*/
@@ -363,19 +551,7 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
                 bank = (addr >> 13) & 3;
                 if (et4000->mmu.ctrl & (1 << bank))
                 {
-                        if (!(et4000->acl.status & ACL_XYST)) return;
-                        if (et4000->acl.internal.ctrl_routing & 3)
-                        {
-                                if ((et4000->acl.internal.ctrl_routing & 3) == 2)
-                                {
-                                        if (et4000->acl.mix_addr & 7)
-                                           et4000w32_blit(8 - (et4000->acl.mix_addr & 7), val >> (et4000->acl.mix_addr & 7), 0, 1, et4000);
-                                        else
-                                           et4000w32_blit(8, val, 0, 1, et4000);
-                                }
-                                else if ((et4000->acl.internal.ctrl_routing & 3) == 1)
-                                   et4000w32_blit(1, ~0, val, 2, et4000);
-                        }
+                        et4000w32p_queue(et4000, addr & 0x7fff, val, FIFO_WRITE_MMU);
                 }
                 else
                 {
@@ -387,7 +563,11 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
                 }
                 break;
                 case 0x6000:
-                switch (addr & 0x7fff)
+                if ((addr & 0x7fff) >= 0x7f80)
+                {
+                        et4000w32p_queue(et4000, addr & 0x7fff, val, FIFO_WRITE_BYTE);
+                }
+                else switch (addr & 0x7fff)
                 {
                         case 0x7f00: et4000->mmu.base[0] = (et4000->mmu.base[0] & 0xFFFFFF00) | val;         break;
                         case 0x7f01: et4000->mmu.base[0] = (et4000->mmu.base[0] & 0xFFFF00FF) | (val << 8);  break;
@@ -402,58 +582,6 @@ void et4000w32p_mmu_write(uint32_t addr, uint8_t val, void *p)
                         case 0x7f0a: et4000->mmu.base[2] = (et4000->mmu.base[2] & 0xFF00FFFF) | (val << 16); break;
                         case 0x7f0d: et4000->mmu.base[2] = (et4000->mmu.base[2] & 0x00FFFFFF) | (val << 24); break;
                         case 0x7f13: et4000->mmu.ctrl=val; break;
-
-                        case 0x7f80: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFFFFFF00) | val;         break;
-                        case 0x7f81: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFFFF00FF) | (val << 8);  break;
-                        case 0x7f82: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0xFF00FFFF) | (val << 16); break;
-                        case 0x7f83: et4000->acl.queued.pattern_addr = (et4000->acl.queued.pattern_addr & 0x00FFFFFF) | (val << 24); break;
-                        case 0x7f84: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFFFFFF00) | val;         break;
-                        case 0x7f85: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFFFF00FF) | (val << 8);  break;
-                        case 0x7f86: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0xFF00FFFF) | (val << 16); break;
-                        case 0x7f87: et4000->acl.queued.source_addr  = (et4000->acl.queued.source_addr  & 0x00FFFFFF) | (val << 24); break;
-                        case 0x7f88: et4000->acl.queued.pattern_off  = (et4000->acl.queued.pattern_off  & 0xFF00) | val;        break;
-                        case 0x7f89: et4000->acl.queued.pattern_off  = (et4000->acl.queued.pattern_off  & 0x00FF) | (val << 8); break;
-                        case 0x7f8a: et4000->acl.queued.source_off   = (et4000->acl.queued.source_off   & 0xFF00) | val;        break;
-                        case 0x7f8b: et4000->acl.queued.source_off   = (et4000->acl.queued.source_off   & 0x00FF) | (val << 8); break;
-                        case 0x7f8c: et4000->acl.queued.dest_off     = (et4000->acl.queued.dest_off     & 0xFF00) | val;        break;
-                        case 0x7f8d: et4000->acl.queued.dest_off     = (et4000->acl.queued.dest_off     & 0x00FF) | (val << 8); break;
-                        case 0x7f8e: et4000->acl.queued.pixel_depth = val; break;
-                        case 0x7f8f: et4000->acl.queued.xy_dir = val; break;
-                        case 0x7f90: et4000->acl.queued.pattern_wrap = val; break;
-                        case 0x7f92: et4000->acl.queued.source_wrap = val; break;
-                        case 0x7f98: et4000->acl.queued.count_x    = (et4000->acl.queued.count_x & 0xFF00) | val;        break;
-                        case 0x7f99: et4000->acl.queued.count_x    = (et4000->acl.queued.count_x & 0x00FF) | (val << 8); break;
-                        case 0x7f9a: et4000->acl.queued.count_y    = (et4000->acl.queued.count_y & 0xFF00) | val;        break;
-                        case 0x7f9b: et4000->acl.queued.count_y    = (et4000->acl.queued.count_y & 0x00FF) | (val << 8); break;
-                        case 0x7f9c: et4000->acl.queued.ctrl_routing = val; break;
-                        case 0x7f9d: et4000->acl.queued.ctrl_reload  = val; break;
-                        case 0x7f9e: et4000->acl.queued.rop_bg       = val; break;
-                        case 0x7f9f: et4000->acl.queued.rop_fg       = val; break;
-                        case 0x7fa0: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFFFFFF00) | val;         break;
-                        case 0x7fa1: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFFFF00FF) | (val << 8);  break;
-                        case 0x7fa2: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0xFF00FFFF) | (val << 16); break;
-                        case 0x7fa3: et4000->acl.queued.dest_addr = (et4000->acl.queued.dest_addr & 0x00FFFFFF) | (val << 24);
-                        et4000->acl.internal = et4000->acl.queued;
-                        et4000w32_blit_start(et4000);
-                        if (!(et4000->acl.queued.ctrl_routing & 0x43))
-                        {
-                                et4000w32_blit(0xFFFFFF, ~0, 0, 0, et4000);
-                        }
-                        if ((et4000->acl.queued.ctrl_routing & 0x40) && !(et4000->acl.internal.ctrl_routing & 3))
-                           et4000w32_blit(4, ~0, 0, 0, et4000);
-                        break;
-                        case 0x7fa4: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFFFFFF00) | val;         break;
-                        case 0x7fa5: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFFFF00FF) | (val << 8);  break;
-                        case 0x7fa6: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0xFF00FFFF) | (val << 16); break;
-                        case 0x7fa7: et4000->acl.queued.mix_addr = (et4000->acl.queued.mix_addr & 0x00FFFFFF) | (val << 24); break;
-                        case 0x7fa8: et4000->acl.queued.mix_off = (et4000->acl.queued.mix_off & 0xFF00) | val;        break;
-                        case 0x7fa9: et4000->acl.queued.mix_off = (et4000->acl.queued.mix_off & 0x00FF) | (val << 8); break;
-                        case 0x7faa: et4000->acl.queued.error   = (et4000->acl.queued.error   & 0xFF00) | val;        break;
-                        case 0x7fab: et4000->acl.queued.error   = (et4000->acl.queued.error   & 0x00FF) | (val << 8); break;
-                        case 0x7fac: et4000->acl.queued.dmin    = (et4000->acl.queued.dmin    & 0xFF00) | val;        break;
-                        case 0x7fad: et4000->acl.queued.dmin    = (et4000->acl.queued.dmin    & 0x00FF) | (val << 8); break;
-                        case 0x7fae: et4000->acl.queued.dmaj    = (et4000->acl.queued.dmaj    & 0xFF00) | val;        break;
-                        case 0x7faf: et4000->acl.queued.dmaj    = (et4000->acl.queued.dmaj    & 0x00FF) | (val << 8); break;
                 }
                 break;
         }
@@ -474,6 +602,7 @@ uint8_t et4000w32p_mmu_read(uint32_t addr, void *p)
                 bank = (addr >> 13) & 3;
                 if (et4000->mmu.ctrl & (1 << bank))
                 {
+                        et4000w32p_wait_fifo_idle(et4000);
                         temp = 0xff;
                         if (et4000->acl.cpu_dat_pos)
                         {
@@ -491,6 +620,8 @@ uint8_t et4000w32p_mmu_read(uint32_t addr, void *p)
                 return svga->vram[(addr&0x1fff) + et4000->mmu.base[bank]];
                 
                 case 0x6000:
+                if ((addr & 0x7fff) >= 0x7f80)
+                        et4000w32p_wait_fifo_idle(et4000);
                 switch (addr&0x7fff)
                 {
                         case 0x7f00: return et4000->mmu.base[0];
@@ -509,7 +640,12 @@ uint8_t et4000w32p_mmu_read(uint32_t addr, void *p)
 
                         case 0x7f36:
                         temp = et4000->acl.status;
-                        et4000->acl.status &= ~ACL_RDST;
+//                        et4000->acl.status &= ~ACL_RDST;
+                        temp &= ~0x03;
+                        if (!FIFO_EMPTY)
+                                temp |= 0x02;
+                        if (FIFO_FULL)
+                                temp |= 0x01;
 //                        if (et4000->acl.internal.pos_x!=et4000->acl.internal.count_x || et4000->acl.internal.pos_y!=et4000->acl.internal.count_y) return et4000->acl.status | ACL_XYST;
                         return temp;
                         case 0x7f80: return et4000->acl.internal.pattern_addr;
@@ -1056,6 +1192,10 @@ void *et4000w32p_init()
         et4000->pci_regs[0x32] = 0x0c;
         et4000->pci_regs[0x33] = 0x00;
         
+        et4000->wake_fifo_thread = thread_create_event();
+        et4000->fifo_not_full_event = thread_create_event();
+        et4000->fifo_thread = thread_create(fifo_thread, et4000);
+
         return et4000;
 }
 
@@ -1089,9 +1229,18 @@ void et4000w32p_force_redraw(void *p)
 
 void et4000w32p_add_status_info(char *s, int max_len, void *p)
 {
-        et4000w32p_t *et4000w32p = (et4000w32p_t *)p;
+        et4000w32p_t *et4000 = (et4000w32p_t *)p;
+        char temps[256];
+        uint64_t new_time = timer_read();
+        uint64_t status_diff = new_time - et4000->status_time;
+        et4000->status_time = new_time;
         
-        svga_add_status_info(s, max_len, &et4000w32p->svga);
+        svga_add_status_info(s, max_len, &et4000->svga);
+
+        sprintf(temps, "%f%% CPU\n%f%% CPU (real)\n\n", ((double)et4000->blitter_time * 100.0) / timer_freq, ((double)et4000->blitter_time * 100.0) / status_diff);
+        strncat(s, temps, max_len);
+
+        et4000->blitter_time = 0;
 }
 
 static device_config_t et4000w32p_config[] =
