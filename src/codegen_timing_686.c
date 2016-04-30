@@ -24,22 +24,12 @@
 /*Instruction lasts given number of cycles. Does not pair*/
 #define CYCLES(c) (c)
 
-
-static int pair_timings[4][4] =
-{
-/*              Reg     RM      RMW     Branch*/
-/*Reg*/         {1,      1,      2,      1},
-/*RM*/          {1,      1,      2,      1},
-/*RMW*/         {2,      2,      3,      2},
-/*Branch*/      {-1,     -1,     -1,     -1}
-};
-
 /*Instruction follows either register timing, read-modify, or read-modify-write.
   May be pairable*/
 #define CYCLES_REG (1 << 0)
 #define CYCLES_RM  (1 << 0)
-#define CYCLES_RMW (2 << 0)
-#define CYCLES_BRANCH (2 << 0)
+#define CYCLES_RMW (1 << 0)
+#define CYCLES_BRANCH (1 << 0)
 
 #define CYCLES_MASK ((1 << 7) - 1)
 
