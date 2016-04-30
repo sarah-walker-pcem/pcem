@@ -153,7 +153,7 @@ typedef struct mach64_t
                 int pattern[8][8];
                 int sc_left, sc_right, sc_top, sc_bottom;
                 int dst_pix_width, src_pix_width, host_pix_width;
-                int dst_size, src_size;
+                int dst_size, src_size, host_size;
 
                 uint32_t dp_bkgd_clr;
                 uint32_t dp_frgd_clr;
@@ -899,6 +899,7 @@ void mach64_start_fill(mach64_t *mach64)
         
         mach64->accel.dst_size = mach64_width[mach64->accel.dst_pix_width];
         mach64->accel.src_size = mach64_width[mach64->accel.src_pix_width];
+        mach64->accel.host_size = mach64_width[mach64->accel.host_pix_width];
 
 /*        mach64->accel.src_x     *= mach64_inc[mach64->accel.src_pix_width];
         mach64->accel.src_pitch *= mach64_inc[mach64->accel.src_pix_width];
@@ -995,7 +996,8 @@ void mach64_start_line(mach64_t *mach64)
         
         mach64->accel.dst_size = mach64_width[mach64->accel.dst_pix_width];
         mach64->accel.src_size = mach64_width[mach64->accel.src_pix_width];
-
+        mach64->accel.host_size = mach64_width[mach64->accel.host_pix_width];
+        
         if (mach64->accel.src_size == WIDTH_1BIT)
                 mach64->accel.src_offset <<= 3;
         else
@@ -1118,7 +1120,7 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         if (mach64->accel.source_host)
                         {
                                 host_dat = cpu_dat;
-                                switch (mach64->accel.src_size)
+                                switch (mach64->accel.host_size)
                                 {
                                         case 0:
                                         cpu_dat >>= 8;
