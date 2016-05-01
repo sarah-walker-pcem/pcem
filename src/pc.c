@@ -645,8 +645,8 @@ void loadconfig(char *fn)
         if (p) strcpy(ide_fn[3], p);
         else   strcpy(ide_fn[3], "");
 
-	fdd_set_type(0, config_get_int(NULL, "drive_a_type", 0));
-        fdd_set_type(1, config_get_int(NULL, "drive_b_type", 0));
+        fdd_set_type(0, config_get_int(NULL, "drive_a_type", 7));
+        fdd_set_type(1, config_get_int(NULL, "drive_b_type", 7));
 }
 
 void saveconfig()
