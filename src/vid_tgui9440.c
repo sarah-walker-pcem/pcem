@@ -5,11 +5,38 @@
 #include "io.h"
 #include "mem.h"
 #include "rom.h"
+#include "thread.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 #include "vid_tkd8001_ramdac.h"
 #include "vid_tgui9440.h"
+
+#define FIFO_SIZE 65536
+#define FIFO_MASK (FIFO_SIZE - 1)
+#define FIFO_ENTRY_SIZE (1 << 31)
+
+#define FIFO_ENTRIES (tgui->fifo_write_idx - tgui->fifo_read_idx)
+#define FIFO_FULL    ((tgui->fifo_write_idx - tgui->fifo_read_idx) >= FIFO_SIZE)
+#define FIFO_EMPTY   (tgui->fifo_read_idx == tgui->fifo_write_idx)
+
+#define FIFO_TYPE 0xff000000
+#define FIFO_ADDR 0x00ffffff
+
+enum
+{
+        FIFO_INVALID       = (0x00 << 24),
+        FIFO_WRITE_BYTE    = (0x01 << 24),
+        FIFO_WRITE_FB_BYTE = (0x04 << 24),
+        FIFO_WRITE_FB_WORD = (0x05 << 24),
+        FIFO_WRITE_FB_LONG = (0x06 << 24)
+};
+
+typedef struct
+{
+        uint32_t addr_type;
+        uint32_t val;
+} fifo_entry_t;
 
 typedef struct tgui_t
 {
@@ -55,10 +82,22 @@ typedef struct tgui_t
         int clock_m, clock_n, clock_k;
         
         uint32_t vram_size, vram_mask;
+
+        fifo_entry_t fifo[FIFO_SIZE];
+        volatile int fifo_read_idx, fifo_write_idx;
+
+        thread_t *fifo_thread;
+        event_t *wake_fifo_thread;
+        event_t *fifo_not_full_event;
+        
+        int blitter_busy;
+        uint64_t blitter_time;
+        uint64_t status_time;
 } tgui_t;
 
 void tgui_recalcmapping(tgui_t *tgui);
 
+static void fifo_thread(void *param);
 
 uint8_t tgui_accel_read(uint32_t addr, void *priv);
 uint16_t tgui_accel_read_w(uint32_t addr, void *priv);
@@ -495,6 +534,10 @@ void *tgui9440_init()
 
         pci_add(tgui_pci_read, tgui_pci_write, tgui);
 
+        tgui->wake_fifo_thread = thread_create_event();
+        tgui->fifo_not_full_event = thread_create_event();
+        tgui->fifo_thread = thread_create(fifo_thread, tgui);
+
         return tgui;
 }
 
@@ -835,12 +878,8 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 	}
 }
 
-void tgui_accel_write(uint32_t addr, uint8_t val, void *p)
+static void tgui_accel_write_fifo(tgui_t *tgui, uint32_t addr, uint8_t val)
 {
-        tgui_t *tgui = (tgui_t *)p;
-//	pclog("tgui_accel_write : %08X %02X  %04X(%08X):%08X %02X\n", addr, val, CS,cs,pc, opcode);
-	if ((addr & ~0xff) != 0xbff00)
-		return;
 	switch (addr & 0xff)
 	{
                 case 0x22:
@@ -962,6 +1001,112 @@ void tgui_accel_write(uint32_t addr, uint8_t val, void *p)
 	}
 }
 
+static void tgui_accel_write_fifo_fb_b(tgui_t *tgui, uint32_t addr, uint8_t val)
+{
+	tgui_accel_command(8, val << 24, tgui);
+}
+static void tgui_accel_write_fifo_fb_w(tgui_t *tgui, uint32_t addr, uint16_t val)
+{
+        tgui_accel_command(16, (((val & 0xff00) >> 8) | ((val & 0x00ff) << 8)) << 16, tgui);
+}
+static void tgui_accel_write_fifo_fb_l(tgui_t *tgui, uint32_t addr, uint32_t val)
+{
+	tgui_accel_command(32, ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), tgui);
+}
+
+static void fifo_thread(void *param)
+{
+        tgui_t *tgui = (tgui_t *)param;
+        
+        while (1)
+        {
+                thread_set_event(tgui->fifo_not_full_event);
+                thread_wait_event(tgui->wake_fifo_thread, -1);
+                thread_reset_event(tgui->wake_fifo_thread);
+                tgui->blitter_busy = 1;
+                while (!FIFO_EMPTY)
+                {
+                        uint64_t start_time = timer_read();
+                        uint64_t end_time;
+                        fifo_entry_t *fifo = &tgui->fifo[tgui->fifo_read_idx & FIFO_MASK];
+                        uint32_t val = fifo->val;
+
+                        switch (fifo->addr_type & FIFO_TYPE)
+                        {
+                                case FIFO_WRITE_BYTE:
+                                tgui_accel_write_fifo(tgui, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_FB_BYTE:
+                                tgui_accel_write_fifo_fb_b(tgui, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_FB_WORD:
+                                tgui_accel_write_fifo_fb_w(tgui, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                                case FIFO_WRITE_FB_LONG:
+                                tgui_accel_write_fifo_fb_l(tgui, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                break;
+                        }
+                                                
+                        tgui->fifo_read_idx++;
+                        fifo->addr_type = FIFO_INVALID;
+
+                        if (FIFO_ENTRIES > 0xe000)
+                                thread_set_event(tgui->fifo_not_full_event);
+
+                        end_time = timer_read();
+                        tgui->blitter_time += end_time - start_time;
+                }
+                tgui->blitter_busy = 0;
+        }
+}
+
+static inline void wake_fifo_thread(tgui_t *tgui)
+{
+        thread_set_event(tgui->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
+}
+
+static void tgui_wait_fifo_idle(tgui_t *tgui)
+{
+        while (!FIFO_EMPTY)
+        {
+                wake_fifo_thread(tgui);
+                thread_wait_event(tgui->fifo_not_full_event, 1);
+        }
+}
+
+static void tgui_queue(tgui_t *tgui, uint32_t addr, uint32_t val, uint32_t type)
+{
+        fifo_entry_t *fifo = &tgui->fifo[tgui->fifo_write_idx & FIFO_MASK];
+        int c;
+
+        if (FIFO_FULL)
+        {
+                thread_reset_event(tgui->fifo_not_full_event);
+                if (FIFO_FULL)
+                {
+                        thread_wait_event(tgui->fifo_not_full_event, -1); /*Wait for room in ringbuffer*/
+                }
+        }
+
+        fifo->val = val;
+        fifo->addr_type = (addr & FIFO_ADDR) | type;
+
+        tgui->fifo_write_idx++;
+        
+        if (FIFO_ENTRIES > 0xe000 || FIFO_ENTRIES < 8)
+                wake_fifo_thread(tgui);
+}
+
+
+void tgui_accel_write(uint32_t addr, uint8_t val, void *p)
+{
+        tgui_t *tgui = (tgui_t *)p;
+//	pclog("tgui_accel_write : %08X %02X  %04X(%08X):%08X %02X\n", addr, val, CS,cs,pc, opcode);
+	if ((addr & ~0xff) != 0xbff00)
+		return;
+	tgui_queue(tgui, addr, val, FIFO_WRITE_BYTE);
+}
+
 void tgui_accel_write_w(uint32_t addr, uint16_t val, void *p)
 {
         tgui_t *tgui = (tgui_t *)p;
@@ -986,9 +1131,13 @@ uint8_t tgui_accel_read(uint32_t addr, void *p)
 //	pclog("tgui_accel_read : %08X\n", addr);
 	if ((addr & ~0xff) != 0xbff00)
 		return 0xff;
+	if ((addr & 0xff) != 0x20)
+	       tgui_wait_fifo_idle(tgui);
 	switch (addr & 0xff)
 	{
 		case 0x20: /*Status*/
+		if (!FIFO_EMPTY)
+		      return 1 << 5;
 		return 0;
 		
 		case 0x27: /*ROP*/
@@ -1095,15 +1244,15 @@ void tgui_accel_write_fb_b(uint32_t addr, uint8_t val, void *p)
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
 //	pclog("tgui_accel_write_fb_b %08X %02X\n", addr, val);
-	tgui_accel_command(8, val << 24, tgui);
+	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_BYTE);
 }
 
 void tgui_accel_write_fb_w(uint32_t addr, uint16_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
-//	pclog("tgui_accel_write_fb_w %08X %04X\n", addr, val);
-	tgui_accel_command(16, (((val & 0xff00) >> 8) | ((val & 0x00ff) << 8)) << 16, tgui);
+//	pclog("tgui_accel_write_fb_w %08X %04X\n", addr, val);	
+	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_WORD);
 }
 
 void tgui_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
@@ -1111,14 +1260,23 @@ void tgui_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
 //	pclog("tgui_accel_write_fb_l %08X %08X\n", addr, val);
-	tgui_accel_command(32, ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24), tgui);
+	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_LONG);
 }
 
 void tgui_add_status_info(char *s, int max_len, void *p)
 {
-        tgui_t *tgui = (tgui_t *)p;
+        tgui_t *tgui = (tgui_t *)p;        
+        char temps[256];
+        uint64_t new_time = timer_read();
+        uint64_t status_diff = new_time - tgui->status_time;
+        tgui->status_time = new_time;
         
         svga_add_status_info(s, max_len, &tgui->svga);
+
+        sprintf(temps, "%f%% CPU\n%f%% CPU (real)\n\n", ((double)tgui->blitter_time * 100.0) / timer_freq, ((double)tgui->blitter_time * 100.0) / status_diff);
+        strncat(s, temps, max_len);
+
+        tgui->blitter_time = 0;
 }
 
 static device_config_t tgui9440_config[] =
