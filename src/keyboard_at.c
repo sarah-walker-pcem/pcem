@@ -449,7 +449,9 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
                 return ppi.pb&~0xe0;
                 
                 case 0x64:
-                temp = keyboard_at.status;
+                temp = keyboard_at.status & ~4;
+                if (keyboard_at.mem[0] & 0x04)
+                        temp |= 0x04;
                 keyboard_at.status &= ~(STAT_RTIMEOUT/* | STAT_TTIMEOUT*/);
                 break;
         }

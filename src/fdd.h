@@ -5,6 +5,8 @@ int fdd_getrpm(int drive);
 void fdd_set_densel(int densel);
 int fdd_can_read_medium(int drive);
 int fdd_doublestep_40(int drive);
+int fdd_is_525(int drive);
+int fdd_is_ed(int drive);
 
 void fdd_set_type(int drive, int type);
 int fdd_get_type(int drive);

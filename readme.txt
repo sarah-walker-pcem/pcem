@@ -261,6 +261,14 @@ deskpro386\109592-005.U11.bin
 deskpro386\109591-005.U13.bin
 
 
+IBM PS/1 Model 2121 (1990)
+This is a 386SX with integrated VGA.
+
+ROM files needed:
+
+ibmps1_2121\fc0000.bin
+
+
 Acermate 386SX/25N (1992?)
 An integrated 386SX clone, with onboard Oak SVGA and IO.
 

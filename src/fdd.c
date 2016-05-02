@@ -181,3 +181,13 @@ int fdd_get_type(int drive)
 {
 	return fdd[drive].type;
 }
+
+int fdd_is_525(int drive)
+{
+        return drive_types[fdd[drive].type].flags & FLAG_525;
+}
+
+int fdd_is_ed(int drive)
+{
+        return drive_types[fdd[drive].type].flags & FLAG_HOLE2;
+}

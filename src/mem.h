@@ -163,4 +163,6 @@ void mem_reset_page_blocks();
 
 extern mem_mapping_t ram_low_mapping;
 
+void mem_remap_top_384k();
+
 #endif

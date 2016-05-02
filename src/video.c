@@ -29,6 +29,7 @@
 #include "vid_pc1640.h"
 #include "vid_pc200.h"
 #include "vid_pcjr.h"
+#include "vid_ps1_svga.h"
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
 #include "vid_tandy.h"
@@ -268,6 +269,10 @@ void video_init()
                 
                 case ROM_IBMPS1_2011:
                 device_add(&ps1vga_device);
+                return;
+
+                case ROM_IBMPS1_2121:
+                device_add(&ps1_m2121_svga_device);
                 return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);

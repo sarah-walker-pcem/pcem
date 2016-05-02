@@ -38,6 +38,7 @@ static mem_mapping_t base_mapping;
 mem_mapping_t ram_low_mapping;
 static mem_mapping_t ram_high_mapping;
 static mem_mapping_t ram_mid_mapping;
+static mem_mapping_t ram_remapped_mapping;
 mem_mapping_t bios_mapping[8];
 static mem_mapping_t bios_high_mapping[8];
 static mem_mapping_t romext_mapping;
@@ -520,6 +521,15 @@ int loadbios()
 //#endif
                 biosmask = 0x1ffff;
                 mem_load_atide115_bios();
+                return 1;
+
+                case ROM_IBMPS1_2121:
+                f = romfopen("roms/ibmps1_2121/fc0000.bin", "rb");
+                if (!f) break;
+                fseek(f, 0x20000, SEEK_SET);
+                fread(rom, 0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
                 return 1;
 
                 case ROM_DESKPRO_386:
@@ -1791,18 +1801,18 @@ void mem_init()
 {
         int c;
 
-        ram = malloc(mem_size * 1024);
+        ram = malloc((mem_size + 384) * 1024);
         rom = malloc(0x20000);
         vram = malloc(0x800000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         cachelookup2 = malloc(1024 * 1024);
         biosmask = 0xffff;
-        pages = malloc(((mem_size * 1024) >> 12) * sizeof(page_t));
+        pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         page_lookup = malloc((1 << 20) * sizeof(page_t *));
 
-        memset(ram, 0, mem_size * 1024);
-        memset(pages, 0, ((mem_size * 1024) >> 12) * sizeof(page_t));
+        memset(ram, 0, (mem_size + 384) * 1024);
+        memset(pages, 0, (((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         
         memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
         
@@ -1850,18 +1860,41 @@ void mem_init()
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
+void mem_remap_top_384k()
+{
+        int c;
+        
+        for (c = ((mem_size * 1024) >> 12); c < (((mem_size + 384) * 1024) >> 12); c++)
+        {
+                pages[c].mem = &ram[c << 12];
+                pages[c].write_b = mem_write_ramb_page;
+                pages[c].write_w = mem_write_ramw_page;
+                pages[c].write_l = mem_write_raml_page;
+        }
+
+        for (c = (mem_size / 256); c < ((mem_size + 384) / 256); c++)
+        {
+                isram[c] = 1;
+                if (c >= 0xa && c <= 0xf) 
+                        isram[c] = 0;
+        }
+
+        mem_set_mem_state(mem_size * 1024, 384 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_mapping_add(&ram_remapped_mapping, mem_size * 1024, 384 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + (mem_size * 1024),  MEM_MAPPING_INTERNAL, NULL);
+}
+
 void mem_resize()
 {
         int c;
         
         free(ram);
-        ram = malloc(mem_size * 1024);
-        memset(ram, 0, mem_size * 1024);
+        ram = malloc((mem_size + 384) * 1024);
+        memset(ram, 0, (mem_size + 384) * 1024);
         
         free(pages);
-        pages = malloc(((mem_size * 1024) >> 12) * sizeof(page_t));
-        memset(pages, 0, ((mem_size * 1024) >> 12) * sizeof(page_t));
-        for (c = 0; c < ((mem_size * 1024) >> 12); c++)
+        pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
+        memset(pages, 0, (((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
+        for (c = 0; c < (((mem_size + 384) * 1024) >> 12); c++)
         {
                 pages[c].mem = &ram[c << 12];
                 pages[c].write_b = mem_write_ramb_page;

@@ -9,6 +9,7 @@ void fdc_abort();
 void fdc_discchange_clear(int drive);
 void fdc_set_dskchg_activelow();
 void fdc_3f1_enable(int enable);
+void fdc_set_ps1();
 int fdc_get_bitcell_period();
 
 /* A few functions to communicate between Super I/O chips and the FDC. */

@@ -34,7 +34,7 @@ typedef struct FDC
         int tc;
         int written;
         
-        int pcjr;
+        int pcjr, ps1;
         
         int watchdog_timer;
         int watchdog_count;
@@ -574,6 +574,14 @@ bad_command:
                                         fdc.inread = 1;
                                         break;
 
+                                        case 3: /*Specify*/
+                                        fdc.stat=0x80;
+                                        fdc.specify[0] = fdc.params[0];
+                                        fdc.specify[1] = fdc.params[1];
+                                        fdc.dma = (fdc.specify[1] & 1) ^ 1;
+                                        disctime = 0;
+                                        break;
+
                                         case 5: /*Write data*/
 					fdc_rate(fdc.drive);
                                         fdc.head=fdc.params[2];
@@ -675,7 +683,21 @@ uint8_t fdc_read(uint16_t addr, void *priv)
                         temp &= ~0x20;
                 break;
                 case 3:
-		if (!fdc.enh_mode)
+                drive = (fdc.dor & 1) ^ fdd_swap;
+                if (fdc.ps1)
+                {
+                        /*PS/1 Model 2121 seems return drive type in port 0x3f3,
+                          despite the 82077AA FDC not implementing this. This is
+                          presumably implemented outside the FDC on one of the
+                          motherboard's support chips.*/
+                        if (fdd_is_525(drive))
+                                temp = 0x20;
+                        else if (fdd_is_ed(drive))
+                                temp = 0x10;
+                        else
+                                temp = 0x00;
+                }
+                else if (!fdc.enh_mode)
 	                temp = 0x20;
 		else
 		{
@@ -799,12 +821,6 @@ void fdc_callback()
                 else
                         disc_readsector(fdc.drive, SECTOR_NEXT, fdc.track[fdc.drive], fdc.head, fdc.rate, fdc.params[4]);
                 fdc.inread = 1;
-                return;
-                case 3: /*Specify*/
-                fdc.stat=0x80;
-                fdc.specify[0] = fdc.params[0];
-                fdc.specify[1] = fdc.params[1];
-		fdc.dma = (fdc.specify[1] & 1) ^ 1;
                 return;
                 case 4: /*Sense drive status*/
                 fdc.res[10] = (fdc.params[0] & 7) | 0x28;
@@ -1330,6 +1346,7 @@ void fdc_add()
         io_sethandler(0x03f0, 0x0006, fdc_read, NULL, NULL, fdc_write, NULL, NULL, NULL);
         io_sethandler(0x03f7, 0x0001, fdc_read, NULL, NULL, fdc_write, NULL, NULL, NULL);
         fdc.pcjr = 0;
+        fdc.ps1 = 0;
 }
 
 void fdc_add_pcjr()
@@ -1337,6 +1354,7 @@ void fdc_add_pcjr()
         io_sethandler(0x00f0, 0x0006, fdc_read, NULL, NULL, fdc_write, NULL, NULL, NULL);
 	timer_add(fdc_watchdog_poll, &fdc.watchdog_timer, &fdc.watchdog_timer, &fdc);
         fdc.pcjr = 1;
+        fdc.ps1 = 0;
 }
 
 void fdc_remove()
@@ -1359,4 +1377,9 @@ void fdc_set_dskchg_activelow()
 void fdc_3f1_enable(int enable)
 {
         fdc.enable_3f1 = enable;
+}
+
+void fdc_set_ps1()
+{
+        fdc.ps1 = 1;
 }
