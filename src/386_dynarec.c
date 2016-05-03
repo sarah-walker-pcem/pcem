@@ -293,6 +293,10 @@ int rep386(int fv)
         uint32_t templ,templ2;
         int tempz;
         int tempi;
+        /*Limit the amount of time the instruction is uninterruptable for, so
+          that high frequency timers still work okay. This amount is different
+          for interpreter and recompiler*/
+        int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);
         
         cpu_reps++;
         
@@ -543,7 +547,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -561,7 +565,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -579,7 +583,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -598,7 +602,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -617,7 +621,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -637,7 +641,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?3:4;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -767,7 +771,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -785,7 +789,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -803,7 +807,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -821,7 +825,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -839,7 +843,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -857,7 +861,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?4:5;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -970,7 +974,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -994,7 +998,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -1016,7 +1020,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -1038,7 +1042,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -1060,7 +1064,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
@@ -1082,7 +1086,7 @@ int rep386(int fv)
                         c--;
                         cycles-=(is486)?5:8;
                         ins++;
-                        if (cycles < 0)
+                        if (cycles < cycles_end)
                                 break;
                 }
                 ins--;
