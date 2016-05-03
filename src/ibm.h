@@ -267,7 +267,7 @@ extern int key_inhibit;
 /*PIC*/
 typedef struct PIC
 {
-        uint8_t icw1,mask,ins,pend,mask2;
+        uint8_t icw1,icw4,mask,ins,pend,mask2;
         int icw;
         uint8_t vector;
         int read;
