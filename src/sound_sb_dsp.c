@@ -531,6 +531,10 @@ void sb_write(uint16_t a, uint8_t v, void *priv)
                 dsp->sbreset = v;
                 return;
                 case 0xC: /*Command/data write*/
+                timer_process();
+                dsp->wb_time = TIMER_USEC * 1;
+                dsp->wb_full = 1;
+                timer_update_outstanding();
                 if (dsp->asp_data_len)
                 {
 //                        pclog("ASP data %i\n", dsp->asp_data_len);
@@ -576,9 +580,11 @@ uint8_t sb_read(uint16_t a, void *priv)
 //                pclog("SB read %02X\n",sbreaddat);
                 return dsp->sbreaddat;
                 case 0xC: /*Write data ready*/
-                cycles -= 100;
-                dsp->writebusy++;
-                if (dsp->writebusy & 8) return 0xff;
+                if (dsp->wb_full)
+                {
+                        dsp->wb_full = dsp->wb_time;
+                        return 0xff;
+                }
                 return 0x7f;
                 case 0xE: /*Read data ready*/
                 picintc(1 << dsp->sb_irqnum);
@@ -592,6 +598,13 @@ uint8_t sb_read(uint16_t a, void *priv)
         return 0;
 }
 
+static void sb_wb_clear(void *p)
+{
+        sb_dsp_t *dsp = (sb_dsp_t *)p;
+        
+        dsp->wb_time = 0;
+}
+
 void sb_dsp_init(sb_dsp_t *dsp, int type)
 {
         dsp->sb_type = type;
@@ -603,6 +616,7 @@ void sb_dsp_init(sb_dsp_t *dsp, int type)
 
         timer_add(pollsb, &dsp->sbcount, &dsp->sbenable, dsp);
         timer_add(sb_poll_i, &dsp->sb_count_i, &dsp->sb_enable_i, dsp);
+        timer_add(sb_wb_clear, &dsp->wb_time, &dsp->wb_time, dsp);
 }
 
 void sb_dsp_setaddr(sb_dsp_t *dsp, uint16_t addr)

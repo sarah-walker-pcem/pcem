@@ -22,8 +22,6 @@ typedef struct sb_dsp_t
 
         int sb_freq;
         
-        int writebusy; /*Needed for Amnesia*/
-
         int16_t sbdat;
         int sbdat2;
         int16_t sbdatl, sbdatr;
@@ -56,6 +54,8 @@ typedef struct sb_dsp_t
         int stereo;
         
         int asp_data_len;
+        
+        int wb_time, wb_full;
         
         int16_t buffer[SOUNDBUFLEN * 2];
         int pos;
