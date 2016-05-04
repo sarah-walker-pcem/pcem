@@ -83,7 +83,7 @@ void fdi_load(int drive, char *fn)
         fdi[drive].h = fdi2raw_header(fdi[drive].f);
 //        if (!fdih[drive]) printf("Failed to load!\n");
         fdi[drive].lasttrack = fdi2raw_get_last_track(fdi[drive].h);
-        fdi[drive].sides = (fdi[drive].lasttrack > 83) ? 2 : 1;
+        fdi[drive].sides = fdi2raw_get_last_head(fdi[drive].h) + 1;
 //        printf("Last track %i\n",fdilasttrack[drive]);
         drives[drive].seek        = fdi_seek;
         drives[drive].readsector  = fdi_readsector;
