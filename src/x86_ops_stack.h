@@ -441,7 +441,7 @@ static int opPOP_SS_w(uint32_t fetchdat)
         uint16_t temp_seg;
         uint32_t temp_esp = ESP;
         temp_seg = POP_W();                     if (abrt) return 1;
-        loadseg(temp_seg, &_ss);                if (abrt) ESP = temp_esp;
+        loadseg(temp_seg, &_ss);                if (abrt) { ESP = temp_esp; return 1; }
         CLOCK_CYCLES(is486 ? 3 : 7);
         
         oldpc = cpu_state.pc;
@@ -460,7 +460,7 @@ static int opPOP_SS_l(uint32_t fetchdat)
         uint32_t temp_seg;
         uint32_t temp_esp = ESP;
         temp_seg = POP_L();                     if (abrt) return 1;
-        loadseg(temp_seg & 0xffff, &_ss);       if (abrt) ESP = temp_esp;
+        loadseg(temp_seg & 0xffff, &_ss);       if (abrt) { ESP = temp_esp; return 1; }
         CLOCK_CYCLES(is486 ? 3 : 7);
 
         oldpc = cpu_state.pc;
