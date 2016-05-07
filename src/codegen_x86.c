@@ -244,11 +244,17 @@ void codegen_block_init(uint32_t phys_addr)
         addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
         addbyte(0x10);
+        addbyte(0x5f); /*POP EDI*/
+        addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/
+        addbyte(0x5b); /*POP EDX*/
         addbyte(0xC3); /*RET*/
         cpu_block_end = 0;
         block_pos = 0; /*Entry code*/
+        addbyte(0x53); /*PUSH EBX*/
         addbyte(0x55); /*PUSH EBP*/
+        addbyte(0x56); /*PUSH ESI*/
+        addbyte(0x57); /*PUSH EDI*/
         addbyte(0x83); /*SUBL $16,%esp*/
         addbyte(0xEC);
         addbyte(0x10);
@@ -419,7 +425,10 @@ void codegen_block_end()
         addbyte(0x83); /*ADDL $16,%esp*/
         addbyte(0xC4);
         addbyte(0x10);
+        addbyte(0x5f); /*POP EDI*/
+        addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/
+        addbyte(0x5b); /*POP EDX*/
         addbyte(0xC3); /*RET*/
         
         if (block_pos > BLOCK_GPF_OFFSET)
