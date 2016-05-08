@@ -1237,17 +1237,20 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                 
                         mach64->accel.src_x += mach64->accel.xinc;
                         mach64->accel.dst_x += mach64->accel.xinc;
-                        mach64->accel.src_x_count--;
-                        if (mach64->accel.src_x_count <= 0)
+                        if (!(mach64->src_cntl & SRC_LINEAR_EN))
                         {
-                                mach64->accel.src_x = 0;
-                                if ((mach64->src_cntl & (SRC_PATT_ROT_EN | SRC_PATT_EN)) == (SRC_PATT_ROT_EN | SRC_PATT_EN))
+                                mach64->accel.src_x_count--;
+                                if (mach64->accel.src_x_count <= 0)
                                 {
-                                        mach64->accel.src_x_start = (mach64->src_y_x_start >> 16) & 0xfff;
-                                        mach64->accel.src_x_count = mach64->accel.src_width2;
+                                        mach64->accel.src_x = 0;
+                                        if ((mach64->src_cntl & (SRC_PATT_ROT_EN | SRC_PATT_EN)) == (SRC_PATT_ROT_EN | SRC_PATT_EN))
+                                        {
+                                                mach64->accel.src_x_start = (mach64->src_y_x_start >> 16) & 0xfff;
+                                                mach64->accel.src_x_count = mach64->accel.src_width2;
+                                        }
+                                        else
+                                                mach64->accel.src_x_count = mach64->accel.src_width1;
                                 }
-                                else
-                                        mach64->accel.src_x_count = mach64->accel.src_width1;
                         }
                         
                         mach64->accel.x_count--;
