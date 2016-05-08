@@ -46,6 +46,37 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                 ramdac->regs[addr & 0xf] = val;
                 switch (addr & 0xf)
                 {
+                        case 0x4:
+                        ramdac->dac_write = val;
+                        ramdac->dac_pos = 0;
+                        break;
+                        case 0x5:
+                        switch (ramdac->dac_pos)
+                        {
+                                case 0: 
+                                ramdac->dac_r = val;
+                                ramdac->dac_pos++; 
+                                break;
+                                case 1: 
+                                ramdac->dac_g = val;
+                                ramdac->dac_pos++; 
+                                break;
+                                case 2: 
+                                if (ramdac->dac_write > 1)
+                                        break;
+                                ramdac->pal[ramdac->dac_write].r = ramdac->dac_r; 
+                                ramdac->pal[ramdac->dac_write].g = ramdac->dac_g;
+                                ramdac->pal[ramdac->dac_write].b = val; 
+                                if (ramdac->ramdac_type == RAMDAC_8BIT)
+                                        ramdac->pallook[ramdac->dac_write] = makecol32(ramdac->pal[ramdac->dac_write].r, ramdac->pal[ramdac->dac_write].g, ramdac->pal[ramdac->dac_write].b);
+                                else
+                                        ramdac->pallook[ramdac->dac_write] = makecol32((ramdac->pal[ramdac->dac_write].r & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].g & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].b & 0x3f) * 4); 
+                                ramdac->dac_pos = 0; 
+                                ramdac->dac_write = (ramdac->dac_write + 1) & 255; 
+                                break;
+                        }
+                        break;
+                        
                         case 0xb:
                         switch (val)
                         {
@@ -67,6 +98,9 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                                 case 0xe2: case 0xf7:
                                 ramdac->render = svga_render_32bpp_highres;
                                 break;
+                                case 0xe3:
+                                ramdac->render = svga_render_ABGR8888_highres;
+                                break;
                                 case 0xf2:
                                 ramdac->render = svga_render_RGBA8888_highres;
                                 break;
@@ -74,6 +108,9 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                                 ramdac->render = svga_render_8bpp_highres;
                                 break;
                         }
+                        break;
+                        case 0xc:
+                        svga_set_ramdac_type(svga, (val & 1) ? RAMDAC_6BIT : RAMDAC_8BIT);
                         break;
                 }
                 break;
@@ -118,4 +155,22 @@ uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svg
 void ati68860_ramdac_init(ati68860_ramdac_t *ramdac)
 {
         ramdac->render = svga_render_8bpp_highres;
+}
+
+void ati68860_set_ramdac_type(ati68860_ramdac_t *ramdac, int type)
+{
+        int c;
+        
+        if (ramdac->ramdac_type != type)
+        {
+                ramdac->ramdac_type = type;
+                        
+                for (c = 0; c < 2; c++)
+                {
+                        if (ramdac->ramdac_type == RAMDAC_8BIT)
+                                ramdac->pallook[c] = makecol32(ramdac->pal[c].r, ramdac->pal[c].g, ramdac->pal[c].b);
+                        else
+                                ramdac->pallook[c] = makecol32((ramdac->pal[c].r & 0x3f) * 4, (ramdac->pal[c].g & 0x3f) * 4, (ramdac->pal[c].b & 0x3f) * 4); 
+                }
+        }
 }

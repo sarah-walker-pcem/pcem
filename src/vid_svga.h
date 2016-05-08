@@ -39,6 +39,8 @@ typedef struct svga_t
         uint8_t egapal[16];
         uint32_t pallook[256];
         PALETTE vgapal;
+        
+        int ramdac_type;
 
         int vtotal, dispend, vsyncstart, split, vblankstart;
         int hdisp,  hdisp_old, htotal,  hdisp_time, rowoffset;
@@ -142,3 +144,7 @@ uint8_t svga_in(uint16_t addr, void *p);
 
 svga_t *svga_get_pri();
 void svga_set_override(svga_t *svga, int val);
+
+#define RAMDAC_6BIT 0
+#define RAMDAC_8BIT 1
+void svga_set_ramdac_type(svga_t *svga, int type);

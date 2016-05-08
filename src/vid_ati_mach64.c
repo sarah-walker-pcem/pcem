@@ -1116,6 +1116,13 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         int mix;
                         int dst_x = (mach64->accel.dst_x + mach64->accel.dst_x_start) & 0xfff;
                         int dst_y = (mach64->accel.dst_y + mach64->accel.dst_y_start) & 0xfff;
+                        int src_x;
+                        int src_y = (mach64->accel.src_y + mach64->accel.src_y_start) & 0xfff;
+                        
+                        if (mach64->src_cntl & SRC_LINEAR_EN)
+                                src_x = mach64->accel.src_x;
+                        else
+                                src_x = (mach64->accel.src_x + mach64->accel.src_x_start) & 0xfff;
 
                         if (mach64->accel.source_host)
                         {
@@ -1156,17 +1163,23 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                                 mix = mach64->accel.pattern[dst_y & 7][dst_x & 7];
                                 break;
                                 case MONO_SRC_1:
-                                default:
                                 mix = 1;
+                                break;
+                                case MONO_SRC_BLITSRC:
+                                if (mach64->src_cntl & SRC_LINEAR_EN)
+                                {
+                                        READ(mach64->accel.src_offset + src_x, mix, WIDTH_1BIT);
+                                }
+                                else
+                                {
+                                        READ(mach64->accel.src_offset + (src_y * mach64->accel.src_pitch) + src_x, mix, WIDTH_1BIT);
+                                }
                                 break;
                         }
 
                         if (dst_x >= mach64->accel.sc_left && dst_x <= mach64->accel.sc_right &&
                             dst_y >= mach64->accel.sc_top  && dst_y <= mach64->accel.sc_bottom)
-                        {
-                                int src_x = (mach64->accel.src_x + mach64->accel.src_x_start) & 0xfff;
-                                int src_y = (mach64->accel.src_y + mach64->accel.src_y_start) & 0xfff;
-                                
+                        {                                
                                 switch (mix ? mach64->accel.source_fg : mach64->accel.source_bg)
                                 {
                                         case SRC_HOST:
@@ -1242,24 +1255,27 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                         if (mach64->accel.x_count <= 0)
                         {
                                 mach64->accel.x_count = mach64->accel.dst_width;
-                                mach64->accel.src_x = 0;
                                 mach64->accel.dst_x = 0;
+                                mach64->accel.dst_y += mach64->accel.yinc;
                                 mach64->accel.src_x_start = (mach64->src_y_x >> 16) & 0xfff;
                                 mach64->accel.src_x_count = mach64->accel.src_width1;
 
-                                mach64->accel.src_y += mach64->accel.yinc;                        
-                                mach64->accel.dst_y += mach64->accel.yinc;
-                                mach64->accel.src_y_count--;
-                                if (mach64->accel.src_y_count <= 0)
+                                if (!(mach64->src_cntl & SRC_LINEAR_EN))
                                 {
-                                        mach64->accel.src_y = 0;
-                                        if ((mach64->src_cntl & (SRC_PATT_ROT_EN | SRC_PATT_EN)) == (SRC_PATT_ROT_EN | SRC_PATT_EN))
+                                        mach64->accel.src_x = 0;
+                                        mach64->accel.src_y += mach64->accel.yinc;                        
+                                        mach64->accel.src_y_count--;
+                                        if (mach64->accel.src_y_count <= 0)
                                         {
-                                                mach64->accel.src_y_start = mach64->src_y_x_start & 0xfff;
-                                                mach64->accel.src_y_count = mach64->accel.src_height2;
+                                                mach64->accel.src_y = 0;
+                                                if ((mach64->src_cntl & (SRC_PATT_ROT_EN | SRC_PATT_EN)) == (SRC_PATT_ROT_EN | SRC_PATT_EN))
+                                                {
+                                                        mach64->accel.src_y_start = mach64->src_y_x_start & 0xfff;
+                                                        mach64->accel.src_y_count = mach64->accel.src_height2;
+                                                }
+                                                else
+                                                        mach64->accel.src_y_count = mach64->accel.src_height1;
                                         }
-                                        else
-                                                mach64->accel.src_y_count = mach64->accel.src_height1;
                                 }
 
                                 mach64->accel.poly_draw = 0;
@@ -1997,6 +2013,8 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0xc4: case 0xc5: case 0xc6: case 0xc7:
                 WRITE8(addr, mach64->dac_cntl, val);
+                svga_set_ramdac_type(svga, (mach64->dac_cntl & 0x100) ? RAMDAC_8BIT : RAMDAC_6BIT);
+                ati68860_set_ramdac_type(&mach64->ramdac, (mach64->dac_cntl & 0x100) ? RAMDAC_8BIT : RAMDAC_6BIT);
                 break;
 
                 case 0xd0: case 0xd1: case 0xd2: case 0xd3:
@@ -2166,6 +2184,9 @@ uint8_t mach64_ext_inb(uint16_t port, void *p)
                         ret = 7 | (3 << 3); /*PCI, 256Kx16 DRAM*/
                 else
                         ret = 6 | (3 << 3); /*VLB, 256Kx16 DRAM*/
+                break;
+                case 0x72ed:
+                ret = 5 << 1; /*ATI-68860*/
                 break;
 
                 default:
@@ -2388,22 +2409,26 @@ uint8_t mach64_read(uint32_t addr, void *p)
 
 void mach64_hwcursor_draw(svga_t *svga, int displine)
 {
+        mach64_t *mach64 = (mach64_t *)svga->p;
         int x, offset;
         uint8_t dat;
+        uint32_t col0 = mach64->ramdac.pallook[0];
+        uint32_t col1 = mach64->ramdac.pallook[1];
+        
         offset = svga->hwcursor_latch.xoff;
         for (x = 0; x < 64 - svga->hwcursor_latch.xoff; x += 4)
         {
                 dat = svga->vram[svga->hwcursor_latch.addr + (offset >> 2)];
-                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 32]  = (dat & 1) ? 0xFFFFFF : 0;
+                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 32]  = (dat & 1) ? col1 : col0;
                 else if ((dat & 3) == 3) ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 32] ^= 0xFFFFFF;
                 dat >>= 2;
-                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 33]  = (dat & 1) ? 0xFFFFFF : 0;
+                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 33]  = (dat & 1) ? col1 : col0;
                 else if ((dat & 3) == 3) ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 33] ^= 0xFFFFFF;
                 dat >>= 2;
-                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 34]  = (dat & 1) ? 0xFFFFFF : 0;
+                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 34]  = (dat & 1) ? col1 : col0;
                 else if ((dat & 3) == 3) ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 34] ^= 0xFFFFFF;
                 dat >>= 2;
-                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 35]  = (dat & 1) ? 0xFFFFFF : 0;
+                if (!(dat & 2))          ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 35]  = (dat & 1) ? col1 : col0;
                 else if ((dat & 3) == 3) ((uint32_t *)buffer32->line[displine])[svga->hwcursor_latch.x + x + 35] ^= 0xFFFFFF;
                 dat >>= 2;
                 offset += 4;

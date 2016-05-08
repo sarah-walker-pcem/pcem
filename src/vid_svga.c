@@ -142,18 +142,21 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                 switch (svga->dac_pos)
                 {
                         case 0: 
-                        svga->dac_r = val & 63;
+                        svga->dac_r = val;
                         svga->dac_pos++; 
                         break;
                         case 1: 
-                        svga->dac_g = val & 63;
+                        svga->dac_g = val;
                         svga->dac_pos++; 
                         break;
                         case 2: 
                         svga->vgapal[svga->dac_write].r = svga->dac_r; 
                         svga->vgapal[svga->dac_write].g = svga->dac_g;
-                        svga->vgapal[svga->dac_write].b = val & 63; 
-                        svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r * 4, svga->vgapal[svga->dac_write].g * 4, svga->vgapal[svga->dac_write].b * 4); 
+                        svga->vgapal[svga->dac_write].b = val; 
+                        if (svga->ramdac_type == RAMDAC_8BIT)
+                                svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r, svga->vgapal[svga->dac_write].g, svga->vgapal[svga->dac_write].b);
+                        else
+                                svga->pallook[svga->dac_write] = makecol32((svga->vgapal[svga->dac_write].r & 0x3f) * 4, (svga->vgapal[svga->dac_write].g & 0x3f) * 4, (svga->vgapal[svga->dac_write].b & 0x3f) * 4); 
                         svga->dac_pos = 0; 
                         svga->dac_write = (svga->dac_write + 1) & 255; 
                         break;
@@ -265,6 +268,24 @@ uint8_t svga_in(uint16_t addr, void *p)
         }
 //        printf("Bad EGA read %04X %04X:%04X\n",addr,cs>>4,pc);
         return 0xFF;
+}
+
+void svga_set_ramdac_type(svga_t *svga, int type)
+{
+        int c;
+        
+        if (svga->ramdac_type != type)
+        {
+                svga->ramdac_type = type;
+                        
+                for (c = 0; c < 256; c++)
+                {
+                        if (svga->ramdac_type == RAMDAC_8BIT)
+                                svga->pallook[c] = makecol32(svga->vgapal[c].r, svga->vgapal[c].g, svga->vgapal[c].b);
+                        else
+                                svga->pallook[c] = makecol32((svga->vgapal[c].r & 0x3f) * 4, (svga->vgapal[c].g & 0x3f) * 4, (svga->vgapal[c].b & 0x3f) * 4); 
+                }
+        }
 }
 
 void svga_recalctimings(svga_t *svga)
@@ -718,6 +739,8 @@ int svga_init(svga_t *svga, void *p, int memsize,
         vramp = svga->vram;
         
         svga_pri = svga;
+        
+        svga->ramdac_type = RAMDAC_6BIT;
         
         return 0;
 }
