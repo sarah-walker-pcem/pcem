@@ -16,29 +16,25 @@ void speaker_update()
         int16_t val;
         
 //        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
-        if (speaker_gated && was_speaker_enable)
-        {
-                if (!pit.m[2] || pit.m[2]==4)
-                        val = speakval;
-                else if (pit.l[2] < 0x40)
-                        val = 0xa00;
-                else 
-                        val = speakon ? 0x1400 : 0;
-        }
-        else
-                val = was_speaker_enable ? 0x1400 : 0;
-
-        if (!speaker_enable)
-                was_speaker_enable = 0;
-
-        if (speaker_pos != sound_pos_global)
-                speaker_buffer[speaker_pos] = val;
-
-        if (!speaker_gated)
-                val = 0;
-                
         for (; speaker_pos < sound_pos_global; speaker_pos++)
+        {
+                if (speaker_gated && was_speaker_enable)
+                {
+                        if (!pit.m[2] || pit.m[2]==4)
+                                val = speakval;
+                        else if (pit.l[2] < 0x40)
+                                val = 0xa00;
+                        else 
+                                val = speakon ? 0x1400 : 0;
+                }
+                else
+                        val = was_speaker_enable ? 0x1400 : 0;
+
+                if (!speaker_enable)
+                        was_speaker_enable = 0;
+
                 speaker_buffer[speaker_pos] = val;
+        }
 }
 
 static void speaker_get_buffer(int16_t *buffer, int len, void *p)
