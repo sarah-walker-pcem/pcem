@@ -718,10 +718,22 @@ static void s3_virge_wait_fifo_idle(virge_t *virge)
 
 static uint8_t s3_virge_mmio_read(uint32_t addr, void *p)
 {
+        virge_t *virge = (virge_t *)p;
+        uint8_t ret;
+
         reg_reads++;
 //        pclog("New MMIO readb %08X\n", addr);
         switch (addr & 0xffff)
         {
+                case 0x8505:
+                if (virge->s3d_busy || virge->virge_busy || !FIFO_EMPTY)
+                        ret = 0x10;
+                else
+                        ret = 0x10 | (1 << 5);
+                if (!virge->virge_busy)
+                        wake_fifo_thread(virge);
+                return ret;
+                
                 case 0x83b0: case 0x83b1: case 0x83b2: case 0x83b3:
                 case 0x83b4: case 0x83b5: case 0x83b6: case 0x83b7:
                 case 0x83b8: case 0x83b9: case 0x83ba: case 0x83bb:
@@ -1271,6 +1283,8 @@ static void s3_virge_queue(virge_t *virge, uint32_t addr, uint32_t val, uint32_t
         virge->fifo_write_idx++;
         
         if (FIFO_ENTRIES > 0xe000)
+                wake_fifo_thread(virge);
+        if (FIFO_ENTRIES > 0xe000 || FIFO_ENTRIES < 8)
                 wake_fifo_thread(virge);
 }
 
@@ -3814,6 +3828,10 @@ static void *s3_virge_init()
         virge->wake_main_thread = thread_create_event();
         virge->not_full_event = thread_create_event();
         virge->render_thread = thread_create(render_thread, virge);
+
+        virge->wake_fifo_thread = thread_create_event();
+        virge->fifo_not_full_event = thread_create_event();
+        virge->fifo_thread = thread_create(fifo_thread, virge);
  
         return virge;
 }
