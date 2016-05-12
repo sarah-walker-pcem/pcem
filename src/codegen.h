@@ -109,85 +109,115 @@ static inline void codeblock_tree_add(codeblock_t *new_block)
 
 static inline void codeblock_tree_delete(codeblock_t *block)
 {
-        while (1)
-        {
-                codeblock_t *parent = block->parent;
+        codeblock_t *parent = block->parent;
 
-                if (!block->left && !block->right)
+        if (!block->left && !block->right)
+        {
+                /*Easy case - remove from parent*/
+                if (!parent)
+                        pages[block->phys >> 12].head = NULL;
+                else
                 {
-                        /*Easy case - remove from parent*/
-                        if (parent)
-                        {
-                                if (parent->left == block)
-                                        parent->left = NULL;
-                                if (parent->right == block)
-                                        parent->right = NULL;
-                        }
-                        return;
+                        if (parent->left == block)
+                                parent->left = NULL;
+                        if (parent->right == block)
+                                parent->right = NULL;
                 }
-                else if (!block->left)
+                return;
+        }
+        else if (!block->left)
+        {
+                /*Only right node*/
+                if (!parent)
                 {
-                        /*Only left node*/
-                        if (!parent)
-                                pages[block->phys >> 12].head = block->left;
-                        else
-                        {
-                                if (parent->left == block)
-                                        parent->left = block->left;
-                                if (parent->right == block)
-                                        parent->right = block->left;
-                        }
-                        return;
-                }
-                else if (!block->right)
-                {
-                        /*Only right node*/
-                        if (!parent)
-                                pages[block->phys >> 12].head = block->right;
-                        else
-                        {
-                                if (parent->left == block)
-                                        parent->left = block->right;
-                                if (parent->right == block)
-                                        parent->right = block->right;
-                        }
-                        return;
+                        pages[block->phys >> 12].head = block->right;
+                        pages[block->phys >> 12].head->parent = NULL;
                 }
                 else
                 {
-                        /*Difficult case - node has two children. Walk right child to find lowest node*/
-                        codeblock_t *lowest = block->right;
-                        codeblock_t *old_parent;
+                        if (parent->left == block)
+                        {
+                                parent->left = block->right;
+                                parent->left->parent = parent;
+                        }
+                        if (parent->right == block)
+                        {
+                                parent->right = block->right;
+                                parent->right->parent = parent;
+                        }
+                }
+                return;
+        }
+        else if (!block->right)
+        {
+                /*Only left node*/
+                if (!parent)
+                {
+                        pages[block->phys >> 12].head = block->left;
+                        pages[block->phys >> 12].head->parent = NULL;
+                }
+                else
+                {
+                        if (parent->left == block)
+                        {
+                                parent->left = block->left;
+                                parent->left->parent = parent;
+                        }
+                        if (parent->right == block)
+                        {
+                                parent->right = block->left;
+                                parent->right->parent = parent;
+                        }
+                }
+                return;
+        }
+        else
+        {
+                /*Difficult case - node has two children. Walk right child to find lowest node*/
+                codeblock_t *lowest = block->right, *highest;
+                codeblock_t *old_parent;
                         
-                        while (lowest->left)
-                                lowest = lowest->left;
-                        old_parent = lowest->parent;
+                while (lowest->left)
+                        lowest = lowest->left;
 
-                        /*Replace deleted node with lowest node*/
-                        if (!parent)
-                                pages[block->phys >> 12].head = lowest;
-                        else
+                old_parent = lowest->parent;
+
+                /*Replace deleted node with lowest node*/
+                if (!parent)
+                        pages[block->phys >> 12].head = lowest;
+                else
+                {
+                        if (parent->left == block)
+                                parent->left = lowest;
+                        if (parent->right == block)
+                                parent->right = lowest;
+                }
+
+                lowest->parent = parent;
+                lowest->left = block->left;
+                if (lowest->left)
+                        lowest->left->parent = lowest;
+
+                old_parent->left = NULL;
+                                
+                highest = lowest->right;
+                if (!highest)
+                {
+                        if (lowest != block->right)
                         {
-                                if (parent->left == block)
-                                        parent->left = lowest;
-                                if (parent->right == block)
-                                        parent->right = lowest;
+                                lowest->right = block->right;
+                                block->right->parent = lowest;
                         }
-                        lowest->parent = parent;
-                        
-                        if (old_parent = block)
-                        {
-                                return;
-                        }
-                        else
-                        {
-                                /*Replace old lowest node with deleted node, and loop*/
-                                if (old_parent->left == lowest)
-                                        old_parent->left = block->left;
-                                if (old_parent->right == lowest)
-                                        old_parent->right = block->right;
-                                block->parent = old_parent;
-                        }
+                        return;
+                }
+
+                while (highest->right)
+                        highest = highest->right;
+
+                if (block->right && block->right != lowest)
+                {
+                        highest->right = block->right;
+                        block->right->parent = highest;
                 }
         }
 }
