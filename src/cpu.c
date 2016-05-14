@@ -839,10 +839,10 @@ void cpu_set()
                 x86_setopcodes(ops_386, ops_winchip_0f, dynarec_ops_386, dynarec_ops_winchip_0f);
                 timing_rr  = 1; /*register dest - register src*/
                 timing_rm  = 2; /*register dest - memory src*/
-                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mr  = 2; /*memory dest   - register src*/
                 timing_mm  = 3;
                 timing_rml = 2; /*register dest - memory src long*/
-                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mrl = 2; /*memory dest   - register src long*/
                 timing_mml = 3;
                 timing_bt  = 3-1; /*branch taken*/
                 timing_bnt = 1; /*branch not taken*/
@@ -870,6 +870,7 @@ void cpu_set()
                 timing_jmp_rm      = 5;
                 timing_jmp_pm      = 7;
                 timing_jmp_pm_gate = 17;
+                codegen_timing_set(&codegen_timing_winchip);
                 break;
 
                 case CPU_PENTIUM:
