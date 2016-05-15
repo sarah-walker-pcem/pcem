@@ -2038,7 +2038,9 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                         }
                 
                         virge->s3d.src_x += x_inc;
+                        virge->s3d.src_x &= 0x7ff;
                         virge->s3d.dest_x += x_inc;
+                        virge->s3d.dest_x &= 0x7ff;
                         if (!virge->s3d.w)
                         {
                                 virge->s3d.src_x = virge->s3d.rsrc_x;
@@ -2110,7 +2112,9 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                         }
 
                         virge->s3d.src_x += x_inc;
+                        virge->s3d.src_x &= 0x7ff;
                         virge->s3d.dest_x += x_inc;
+                        virge->s3d.dest_x &= 0x7ff;
                         if (!virge->s3d.w)
                         {
                                 virge->s3d.src_x = virge->s3d.rsrc_x;
