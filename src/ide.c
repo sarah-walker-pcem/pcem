@@ -78,7 +78,6 @@
 #define GPCMD_READ_TOC_PMA_ATIP		0x43
 #define GPCMD_READ_HEADER		0x44
 #define GPCMD_PLAY_AUDIO_10		0x45
-#define GPCMD_GET_CONFIGURATION		0x46
 #define GPCMD_PLAY_AUDIO_MSF	        0x47
 #define GPCMD_GET_EVENT_STATUS_NOTIFICATION	0x4a
 #define GPCMD_PAUSE_RESUME		0x4b
@@ -170,7 +169,6 @@ uint8_t atapi_cmd_table[0x100] =
 	[GPCMD_READ_TOC_PMA_ATIP]             = CHECK_READY | ALLOW_UA,		/* Read TOC - can get through UNIT_ATTENTION, per VIDE-CDD.SYS */
 	[GPCMD_READ_HEADER]                   = CHECK_READY,
 	[GPCMD_PLAY_AUDIO_10]                 = CHECK_READY,
-	[GPCMD_GET_CONFIGURATION]             = ALLOW_UA,
 	[GPCMD_PLAY_AUDIO_MSF]                = CHECK_READY,
 	[GPCMD_GET_EVENT_STATUS_NOTIFICATION] = ALLOW_UA,
 	[GPCMD_PAUSE_RESUME]                  = CHECK_READY,
@@ -2267,32 +2265,6 @@ static void atapicommand(int ide_board)
                 }
                 return;
 
-		case GPCMD_GET_CONFIGURATION: /*0x46*/
-		if (idebufferb[2] != 0 || idebufferb[3] != 0)
-		{
-			ide->atastat = READY_STAT | ERR_STAT;
-			ide->error = (SENSE_ILLEGAL_REQUEST << 4) | ABRT_ERR;
-			if (atapi_sense.sensekey == SENSE_UNIT_ATTENTION)
-				ide->error |= MCR_ERR;
-			atapi_sense.asc = ASC_INV_FIELD_IN_CMD_PACKET;
-			ide->packetstatus = ATAPI_STATUS_ERROR;
-			idecallback[ide_board]=50*IDE_TIME;
-			break;
-		}
-		/* The number of sectors from the media tells us which profile
-		   to use as current.  0 means there is no media. */
-		pos = (idebufferb[2]<<24)|(idebufferb[3]<<16)|(idebufferb[4]<<8)|idebufferb[5];
-		len = (idebufferb[7]<<8)|idebufferb[8];
-		idebufferb[10] = 0x02 | 0x01;
-		len = 8 + 4;
-		ide->packetstatus = ATAPI_STATUS_DATA;
-		ide->cylinder=len;
-		ide->secount=2;
-		ide->pos=0;
-		idecallback[ide_board]=60*IDE_TIME;
-		ide->packlen=len;
-		break;
-			
                 case GPCMD_GET_EVENT_STATUS_NOTIFICATION: /*0x4a*/
                 temp_command = idebufferb[0];
                 alloc_length = len;
