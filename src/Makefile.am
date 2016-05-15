@@ -15,7 +15,7 @@ pcem_CFLAGS = $(allegro_CFLAGS)
 pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
 
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c allegro-gui.c \
-allegro-gui-configure.c allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
+allegro-gui-configure.c allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
 codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dac.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \

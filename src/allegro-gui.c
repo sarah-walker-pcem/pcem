@@ -1,7 +1,7 @@
 #include "ibm.h"
+#include "device.h"
 #include "allegro-main.h"
 #include "allegro-gui.h"
-#include "device.h"
 #include "disc.h"
 #include "ide.h"
 

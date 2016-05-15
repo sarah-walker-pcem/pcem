@@ -8,3 +8,5 @@ extern int gfx_present[GFX_MAX];
 int disc_hdconf();
 
 int settings_configure();
+
+void deviceconfig_open(device_t *device);

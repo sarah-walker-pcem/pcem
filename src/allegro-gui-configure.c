@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "device.h"
 #include "allegro-main.h"
 #include "allegro-gui.h"
 #include "cpu.h"
@@ -6,38 +7,10 @@
 #include "model.h"
 #include "sound.h"
 #include "video.h"
+#include "vid_voodoo.h"
 
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
-
-#if 0
-    DEFPUSHBUTTON   "OK",IDOK,64,232,50,14, WS_TABSTOP
-    PUSHBUTTON      "Cancel",IDCANCEL,128,232,50,14, WS_TABSTOP
-    COMBOBOX        IDC_COMBO1,62,16,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBOVID,62,36,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Configure", IDC_CONFIGUREVID, 224, 36, 40, 14, WS_TABSTOP
-    COMBOBOX        IDC_COMBOCPUM,62,56,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO3,62,76,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBOCHC,62,96,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBOSPD,62,116,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBOSND,62,136,157,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Configure", IDC_CONFIGURESND, 224, 136, 40, 14, WS_TABSTOP
-    EDITTEXT        IDC_MEMTEXT, 62, 152, 36, 14, ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "", IDC_MEMSPIN, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_SETBUDDYINT, 98, 152, 12, 14
-    LTEXT           "MB", IDC_STATIC, 98, 152, 40, 10
-    CONTROL         "CMS / Game Blaster",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,172,118,10
-    CONTROL         "Gravis Ultrasound",IDC_CHECKGUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,188,118,10    
-    CONTROL         "Innovation SSI-2001",IDC_CHECKSSI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,204,118,10
-    CONTROL         "Composite CGA",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,220,118,10
-    LTEXT           "Machine :",IDC_STATIC,15,16,40,10
-    LTEXT           "Video :",IDC_STATIC,15,36,34,10
-    LTEXT           "CPU type :",IDC_STATIC,15,56,34,10
-    LTEXT           "CPU :",IDC_STATIC,15,76,34,10
-    LTEXT           "Cache :",IDC_STATIC,15,96,40,10
-    LTEXT           "Video speed :",IDC_STATIC,15,116,40,10    
-    LTEXT           "Soundcard :",IDC_STATIC,15,136,40,10
-    LTEXT           "Memory :",IDC_STATIC,15,156,40,10
-#endif
 
 typedef struct allegro_list_t
 {
@@ -217,14 +190,30 @@ static char *list_proc_fdd(int index, int *list_size)
         return fdd_list[index].name;
 }
 
+static int voodoo_config_proc(int msg, DIALOG *d, int c)
+{
+        int ret = d_button_proc(msg, d, c);
+        
+        if (ret == D_CLOSE)
+        {
+                deviceconfig_open(&voodoo_device);
+                return D_O_K;
+        }
+        
+        return ret;
+}
+
+
+static int video_config_proc(int msg, DIALOG *d, int c);
+static int sound_config_proc(int msg, DIALOG *d, int c);
 static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 236*2,332,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 568,332,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 176,  308, 50, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 246,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 226,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 296,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
@@ -262,6 +251,10 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 172, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
         {d_list_proc,    70*2, 192, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
 
+        {video_config_proc, 452,  32+4, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0}, //30
+        {sound_config_proc, 452, 152+4, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
+        {voodoo_config_proc, 452,   296, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
+                
         {0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL}
 };
 
@@ -276,6 +269,7 @@ static int list_proc(int msg, DIALOG *d, int c)
                 int new_cpu_m = configure_dialog[5].d1;
                 int new_cpu = configure_dialog[6].d1;
                 int new_dynarec = configure_dialog[25].flags & D_SELECTED;
+                int new_gfxcard = video_old_to_new(video_list[configure_dialog[4].d1].num);
 		int new_mem_size;
                 int cpu_flags;
 
@@ -304,9 +298,48 @@ static int list_proc(int msg, DIALOG *d, int c)
 		else
 			sprintf(mem_size_units, "kB");
 
+                if (!video_card_has_config(new_gfxcard))
+                        configure_dialog[30].flags |= D_DISABLED;
+                else
+                        configure_dialog[30].flags &= ~D_DISABLED;
+
+                if (!sound_card_has_config(configure_dialog[9].d1))
+                        configure_dialog[31].flags |= D_DISABLED;
+                else
+                        configure_dialog[31].flags &= ~D_DISABLED;
+
                 return D_REDRAW;
         }
 
+        return ret;
+}
+
+static int video_config_proc(int msg, DIALOG *d, int c)
+{
+        int ret = d_button_proc(msg, d, c);
+        
+        if (ret == D_CLOSE)
+        {
+                int new_gfxcard = video_old_to_new(video_list[configure_dialog[4].d1].num);
+                
+                deviceconfig_open(video_card_getdevice(new_gfxcard));
+                return D_O_K;
+        }
+        
+        return ret;
+}
+static int sound_config_proc(int msg, DIALOG *d, int c)
+{
+        int ret = d_button_proc(msg, d, c);
+        
+        if (ret == D_CLOSE)
+        {
+                int new_sndcard = sound_list[configure_dialog[9].d1].num;
+
+                deviceconfig_open(sound_card_getdevice(new_sndcard));
+                return D_O_K;
+        }
+        
         return ret;
 }
 
@@ -394,6 +427,11 @@ pclog("video_card_available : %i\n", c);
                 c++;
         }
 
+        if (!video_card_has_config(video_old_to_new(gfxcard)))
+                configure_dialog[30].flags |= D_DISABLED;
+        else
+                configure_dialog[30].flags &= ~D_DISABLED;
+
         c = d = 0;
         while (1)
         {
@@ -413,6 +451,11 @@ pclog("video_card_available : %i\n", c);
 
                 c++;
         }
+
+        if (!sound_card_has_config(configure_dialog[9].d1))
+                configure_dialog[31].flags |= D_DISABLED;
+        else
+                configure_dialog[31].flags &= ~D_DISABLED;
 
         configure_dialog[5].d1 = cpu_manufacturer;
         configure_dialog[6].d1 = cpu;
