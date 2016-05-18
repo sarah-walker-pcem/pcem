@@ -2379,10 +2379,10 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0x6f);
                         addbyte(0x87);
                         addlong(offsetof(voodoo_state_t, ib));
-                        addbyte(0x66); /*PSRLD XMM0, 12*/
+                        addbyte(0x66); /*PSRAD XMM0, 12*/
                         addbyte(0x0f);
                         addbyte(0x72);
-                        addbyte(0xd0);
+                        addbyte(0xe0);
                         addbyte(12);
                         addbyte(0x66); /*PACKSSDW XMM0, XMM0*/
                         addbyte(0x0f);
