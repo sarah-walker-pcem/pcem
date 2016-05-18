@@ -246,10 +246,10 @@ void codegen_block_init(uint32_t phys_addr)
 	while (block_pos < BLOCK_EXIT_OFFSET)
 	       addbyte(0x90); /*NOP*/
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        addbyte(0x48); /*ADDL $32,%rsp*/
+        addbyte(0x48); /*ADDL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xC4);
-        addbyte(0x20);
+        addbyte(0x28);
         addbyte(0x41); /*POP R15*/
         addbyte(0x5f);
         addbyte(0x41); /*POP R14*/
@@ -258,11 +258,17 @@ void codegen_block_init(uint32_t phys_addr)
         addbyte(0x5d);
         addbyte(0x41); /*POP R12*/
         addbyte(0x5c);
+        addbyte(0x5f); /*POP RDI*/
+        addbyte(0x5e); /*POP RSI*/
         addbyte(0x5d); /*POP RBP*/
+        addbyte(0x5b); /*POP RDX*/
         addbyte(0xC3); /*RET*/
         cpu_block_end = 0;
         block_pos = 0; /*Entry code*/
+        addbyte(0x53); /*PUSH RBX*/
         addbyte(0x55); /*PUSH RBP*/
+        addbyte(0x56); /*PUSH RSI*/
+        addbyte(0x57); /*PUSH RDI*/
         addbyte(0x41); /*PUSH R12*/
         addbyte(0x54);
         addbyte(0x41); /*PUSH R13*/
@@ -271,10 +277,10 @@ void codegen_block_init(uint32_t phys_addr)
         addbyte(0x56);
         addbyte(0x41); /*PUSH R15*/
         addbyte(0x57);
-        addbyte(0x48); /*SUBL $32,%rsp*/
+        addbyte(0x48); /*SUBL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xEC);
-        addbyte(0x20);
+        addbyte(0x28);
         addbyte(0x48); /*MOVL EBP, &EAX*/
         addbyte(0xBD);
         addquad((uint64_t)&EAX);
@@ -446,10 +452,10 @@ void codegen_block_end()
                 addlong(codegen_block_full_ins);
         }
 #endif
-        addbyte(0x48); /*ADDL $32,%rsp*/
+        addbyte(0x48); /*ADDL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xC4);
-        addbyte(0x20);
+        addbyte(0x28);
         addbyte(0x41); /*POP R15*/
         addbyte(0x5f);
         addbyte(0x41); /*POP R14*/
@@ -458,7 +464,10 @@ void codegen_block_end()
         addbyte(0x5d);
         addbyte(0x41); /*POP R12*/
         addbyte(0x5c);
+        addbyte(0x5f); /*POP RDI*/
+        addbyte(0x5e); /*POP RSI*/
         addbyte(0x5d); /*POP RBP*/
+        addbyte(0x5b); /*POP RDX*/
         addbyte(0xC3); /*RET*/
         
         if (block_pos > BLOCK_GPF_OFFSET)
