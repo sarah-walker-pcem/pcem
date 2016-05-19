@@ -1036,7 +1036,7 @@ void Chip::WriteBD( Bit8u val ) {
 	if ( val & 0x20 ) {
 		//Drum was just enabled, make sure channel 6 has the right synth
 		if ( change & 0x20 ) {
-			if ( opl3Active ) {
+			if ( is_opl3 ) {
 				chan[6].synthHandler = &Channel::BlockTemplate< sm3Percussion >; 
 			} else {
 				chan[6].synthHandler = &Channel::BlockTemplate< sm2Percussion >; 
