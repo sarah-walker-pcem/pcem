@@ -1478,7 +1478,7 @@ inrecomp=0;
                                 {
                                         abrt = 0;
                                         softresetx86();
-                                        fatal("Triple fault - reset\n");
+                                        pclog("Triple fault - reset\n");
                                 }
                         }
                 }
