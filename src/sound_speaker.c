@@ -37,7 +37,7 @@ void speaker_update()
         }
 }
 
-static void speaker_get_buffer(int16_t *buffer, int len, void *p)
+static void speaker_get_buffer(int32_t *buffer, int len, void *p)
 {
         int c;
 

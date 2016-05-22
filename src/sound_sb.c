@@ -11,12 +11,12 @@
 
 typedef struct sb_mixer_t
 {
-        unsigned int master_l, master_r;
-        unsigned int voice_l,  voice_r;
-        unsigned int fm_l,     fm_r;
-        unsigned int cd_l,     cd_r;
-        unsigned int bass_l,   bass_r;
-        unsigned int treble_l, treble_r;
+        int master_l, master_r;
+        int voice_l,  voice_r;
+        int fm_l,     fm_r;
+        int cd_l,     cd_r;
+        int bass_l,   bass_r;
+        int treble_l, treble_r;
         int filter;
 
         int index;
@@ -41,7 +41,7 @@ static int sb_att[]=
         39036,46395,55140,65535
 };
 
-static void sb_get_buffer_opl2(int16_t *buffer, int len, void *p)
+static void sb_get_buffer_opl2(int32_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         sb_mixer_t *mixer = &sb->mixer;
@@ -52,7 +52,7 @@ static void sb_get_buffer_opl2(int16_t *buffer, int len, void *p)
         sb_dsp_update(&sb->dsp);
         for (c = 0; c < len * 2; c += 2)
         {
-                int16_t out_l, out_r;
+                int32_t out_l, out_r;
                 
                 out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
                 out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
@@ -92,7 +92,7 @@ static void sb_get_buffer_opl2(int16_t *buffer, int len, void *p)
         sb->dsp.pos = 0;
 }
 
-static void sb_get_buffer_opl3(int16_t *buffer, int len, void *p)
+static void sb_get_buffer_opl3(int32_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         sb_mixer_t *mixer = &sb->mixer;
@@ -104,7 +104,7 @@ static void sb_get_buffer_opl3(int16_t *buffer, int len, void *p)
         for (c = 0; c < len * 2; c += 2)
         {
                 int c_emu8k = (((c/2) * 44100) / 48000)*2;
-                int16_t out_l, out_r;
+                int32_t out_l, out_r;
                 
                 out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
                 out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
@@ -145,7 +145,7 @@ static void sb_get_buffer_opl3(int16_t *buffer, int len, void *p)
         sb->emu8k.pos = 0;
 }
 
-static void sb_get_buffer_emu8k(int16_t *buffer, int len, void *p)
+static void sb_get_buffer_emu8k(int32_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         sb_mixer_t *mixer = &sb->mixer;
@@ -158,10 +158,10 @@ static void sb_get_buffer_emu8k(int16_t *buffer, int len, void *p)
         for (c = 0; c < len * 2; c += 2)
         {
                 int c_emu8k = (((c/2) * 44100) / 48000)*2;
-                int16_t out_l, out_r;
+                int32_t out_l, out_r;
                 
-                out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
-                out_r = ((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16);
+                out_l = (((int32_t)sb->opl.buffer[c]     * (int32_t)mixer->fm_l) >> 16);
+                out_r = (((int32_t)sb->opl.buffer[c + 1] * (int32_t)mixer->fm_r) >> 16);
 
                 out_l += ((sb->emu8k.buffer[c_emu8k]     * mixer->fm_l) >> 16);
                 out_r += ((sb->emu8k.buffer[c_emu8k + 1] * mixer->fm_l) >> 16);

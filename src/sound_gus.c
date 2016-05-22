@@ -1047,7 +1047,7 @@ void gus_poll_wave(void *p)
                 pollgusirqs(gus);
 }
 
-static void gus_get_buffer(int16_t *buffer, int len, void *p)
+static void gus_get_buffer(int32_t *buffer, int len, void *p)
 {
         gus_t *gus = (gus_t *)p;
         int c;
@@ -1056,7 +1056,7 @@ static void gus_get_buffer(int16_t *buffer, int len, void *p)
         
         for (c = 0; c < len * 2; c++)
         {
-                buffer[c] += gus->buffer[c & 1][c >> 1];
+                buffer[c] += (int32_t)gus->buffer[c & 1][c >> 1];
         }
 
         gus->pos = 0;

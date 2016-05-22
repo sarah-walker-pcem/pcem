@@ -706,7 +706,7 @@ static void pas16_update(pas16_t *pas16)
         }
 }
 
-void pas16_get_buffer(int16_t *buffer, int len, void *p)
+void pas16_get_buffer(int32_t *buffer, int len, void *p)
 {
         pas16_t *pas16 = (pas16_t *)p;
         int c;

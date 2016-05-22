@@ -57,7 +57,7 @@ void wss_write(uint16_t addr, uint8_t val, void *p)
         ad1848_setirq(&wss->ad1848, wss_irq[(val >> 3) & 7]);
 }
 
-static void wss_get_buffer(int16_t *buffer, int len, void *p)
+static void wss_get_buffer(int32_t *buffer, int len, void *p)
 {
         wss_t *wss = (wss_t *)p;
         

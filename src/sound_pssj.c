@@ -167,7 +167,7 @@ static void pssj_callback(void *p)
         pssj->timer_count += (int)(TIMER_USEC * (1000000.0 / 3579545.0) * (double)(pssj->freq ? pssj->freq : 0x400));
 }
 
-static void pssj_get_buffer(int16_t *buffer, int len, void *p)
+static void pssj_get_buffer(int32_t *buffer, int len, void *p)
 {
         pssj_t *pssj = (pssj_t *)p;
         int c;

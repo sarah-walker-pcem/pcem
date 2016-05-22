@@ -84,7 +84,7 @@ void cms_update(cms_t *cms)
         }
 }
 
-void cms_get_buffer(int16_t *buffer, int len, void *p)
+void cms_get_buffer(int32_t *buffer, int len, void *p)
 {
         cms_t *cms = (cms_t *)p;
         

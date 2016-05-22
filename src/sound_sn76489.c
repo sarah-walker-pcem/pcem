@@ -60,7 +60,7 @@ void sn76489_update(sn76489_t *sn76489)
         }
 }
 
-void sn76489_get_buffer(int16_t *buffer, int len, void *p)
+void sn76489_get_buffer(int32_t *buffer, int len, void *p)
 {
         sn76489_t *sn76489 = (sn76489_t *)p;
         

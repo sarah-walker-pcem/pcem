@@ -141,9 +141,10 @@ void inital()
 #endif
 }
 
-void givealbuffer(int16_t *buf)
+void givealbuffer(int32_t *buf)
 {
 #ifdef USE_OPENAL
+        int16_t buf16[BUFLEN*2];
         int processed;
         int state;
         
@@ -172,14 +173,24 @@ void givealbuffer(int16_t *buf)
 
         if (processed>=1)
         {
+                int c;
                 ALuint buffer;
 
                 alSourceUnqueueBuffers(source[0], 1, &buffer);
 //                printf("U ");
                 check();
 
+                for (c=0;c<BUFLEN*2;c++)
+                {
+                        if (buf[c] < -32768)
+                                buf16[c] = -32768;
+                        else if (buf[c] > 32767)
+                                buf16[c] = 32767;
+                        else
+                                buf16[c] = buf[c];
+                }
 //                for (c=0;c<BUFLEN*2;c++) buf[c]^=0x8000;
-                alBufferData(buffer, AL_FORMAT_STEREO16, buf, BUFLEN*2*2, FREQ);
+                alBufferData(buffer, AL_FORMAT_STEREO16, buf16, BUFLEN*2*2, FREQ);
 //                printf("B ");
                check();
 

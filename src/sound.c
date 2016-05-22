@@ -78,7 +78,7 @@ void sound_card_init()
 
 static struct
 {
-        void (*get_buffer)(int16_t *buffer, int len, void *p);
+        void (*get_buffer)(int32_t *buffer, int len, void *p);
         void *priv;
 } sound_handlers[8];
 
@@ -157,20 +157,20 @@ static void sound_cd_thread(void *param)
         }
 }
 
-static uint16_t *outbuffer;
+static int32_t *outbuffer;
 
 void sound_init()
 {
         initalmain(0,NULL);
         inital();
 
-        outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int16_t));
+        outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int32_t));
         
         sound_cd_event = thread_create_event();
         sound_cd_thread_h = thread_create(sound_cd_thread, NULL);
 }
 
-void sound_add_handler(void (*get_buffer)(int16_t *buffer, int len, void *p), void *p)
+void sound_add_handler(void (*get_buffer)(int32_t *buffer, int len, void *p), void *p)
 {
         sound_handlers[sound_handlers_num].get_buffer = get_buffer;
         sound_handlers[sound_handlers_num].priv = p;
@@ -185,14 +185,26 @@ void sound_poll(void *priv)
         if (sound_pos_global == SOUNDBUFLEN)
         {
                 int c;
+/*                int16_t buf16[SOUNDBUFLEN * 2 ];*/
 
-                memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int16_t));
+                memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int32_t));
 
                 for (c = 0; c < sound_handlers_num; c++)
                         sound_handlers[c].get_buffer(outbuffer, SOUNDBUFLEN, sound_handlers[c].priv);
 
-/*        if (!soundf) soundf=fopen("sound.pcm","wb");
-        fwrite(outbuffer,(SOUNDBUFLEN)*2*2,1,soundf);*/
+
+/*                for (c=0;c<SOUNDBUFLEN*2;c++)
+                {
+                        if (outbuffer[c] < -32768)
+                                buf16[c] = -32768;
+                        else if (outbuffer[c] > 32767)
+                                buf16[c] = 32767;
+                        else
+                                buf16[c] = outbuffer[c];
+                }
+
+        if (!soundf) soundf=fopen("sound.pcm","wb");
+        fwrite(buf16,(SOUNDBUFLEN)*2*2,1,soundf);*/
         
                 if (soundon) givealbuffer(outbuffer);
         

@@ -651,7 +651,7 @@ void adgold_timer_poll(void *p)
         }
 }
 
-static void adgold_get_buffer(int16_t *buffer, int len, void *p)
+static void adgold_get_buffer(int32_t *buffer, int len, void *p)
 {
         adgold_t *adgold = (adgold_t *)p;
         int16_t adgold_buffer[len*2];

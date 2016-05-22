@@ -126,7 +126,7 @@ static void ps1_audio_callback(void *p)
         ps1->timer_count += ps1->timer_latch * TIMER_USEC;
 }
 
-static void ps1_audio_get_buffer(int16_t *buffer, int len, void *p)
+static void ps1_audio_get_buffer(int32_t *buffer, int len, void *p)
 {
         ps1_audio_t *ps1 = (ps1_audio_t *)p;
         int c;

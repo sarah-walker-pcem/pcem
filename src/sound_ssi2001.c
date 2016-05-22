@@ -22,7 +22,7 @@ static void ssi2001_update(ssi2001_t *ssi2001)
         ssi2001->pos = sound_pos_global;
 }
 
-static void ssi2001_get_buffer(int16_t *buffer, int len, void *p)
+static void ssi2001_get_buffer(int32_t *buffer, int len, void *p)
 {
         ssi2001_t *ssi2001 = (ssi2001_t *)p;
         int c;
