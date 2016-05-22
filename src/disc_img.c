@@ -367,7 +367,7 @@ void img_seek(int drive, int track)
 				img[drive].bitcell_period_300rpm, 
 				&img[drive].track_data[0][current_pos]);
 			current_pos += 512;
-	                for (sector = 0; sector < 7; sector++)
+	                for (sector = 0; sector < 8; sector++)
 			{
 	                        disc_sector_add(drive, 0, track, 0, sector+1, 2,
        		                                img[drive].bitcell_period_300rpm, 
@@ -376,16 +376,21 @@ void img_seek(int drive, int track)
 			}
 			/* Now the "Side 1" buffer, will also contain one sector from side 0. */
 			current_pos = 0;
-	                for (sector = 0; (sector < effective_sectors - 1); sector++)
+			for (sector = 0; sector < 14; sector++)
 			{
 	                        disc_sector_add(drive, 1, track, 1, sector+0x82, 2,
        		                                img[drive].bitcell_period_300rpm, 
                		                        &img[drive].track_data[1][current_pos]);
 				current_pos += 512;
 			}
-                        disc_sector_add(drive, 0, track, 0, 8, 2,
-				img[drive].bitcell_period_300rpm, 
-				&img[drive].track_data[1][current_pos]);
+			current_pos += (5 * 512);
+			for (; sector < effective_sectors-1; sector++)
+			{
+	                        disc_sector_add(drive, 1, track, 1, sector+0x82, 2,
+       		                                img[drive].bitcell_period_300rpm, 
+               		                        &img[drive].track_data[1][current_pos]);
+				current_pos += 512;
+			}
 			current_pos += 512;
 		}
 		else
