@@ -93,8 +93,9 @@ void fdd_seek(int drive, int track_diff)
                 fdd[drive].track = drive_types[fdd[drive].type].max_track;
 
 //        pclog("fdd_seek: drive=%i track_diff=%i old_track=%i track=%i\n", drive, track_diff, old_track, fdd[drive].track);
-        if (fdd[drive].track != old_track)
-                fdc_discchange_clear(drive);
+
+        fdc_discchange_clear(drive);
+        
         disc_seek(drive, fdd[drive].track);
         disctime = 5000;
 }
