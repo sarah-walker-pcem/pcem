@@ -328,7 +328,7 @@ RecompOpFn recomp_opcodes_dc[512] =
 /*b0*/  ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,
 
 /*c0*/  ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,
 /*e0*/  ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,
 /*f0*/  ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,
 
@@ -350,7 +350,7 @@ RecompOpFn recomp_opcodes_dc[512] =
 /*b0*/  ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVd,       ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,      ropFDIVRd,
 
 /*c0*/  ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFADDr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,       ropFMULr,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOM,        ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,       ropFCOMP,
 /*e0*/  ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBRr,      ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,       ropFSUBr,
 /*f0*/  ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,
 };
