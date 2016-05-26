@@ -2681,7 +2681,7 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         {
                                 thread_wait_event(voodoo->wake_fifo_thread, -1);
                                 thread_reset_event(voodoo->wake_fifo_thread);
-                                if (voodoo->swap_pending && voodoo->flush)
+                                if ((voodoo->swap_pending && voodoo->flush) || FIFO_ENTRIES == 65536)
                                 {
                                         /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
                                         memset(voodoo->dirty_line, 1, 1024);
