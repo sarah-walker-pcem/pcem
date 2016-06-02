@@ -294,7 +294,7 @@ void mach64_out(uint16_t addr, uint8_t val, void *p)
                 break;
                 
                 case 0x3D4:
-                svga->crtcreg = val & 0x1f;
+                svga->crtcreg = val & 0x3f;
                 return;
                 case 0x3D5:
                 if ((svga->crtcreg < 7) && (svga->crtc[0x11] & 0x80))
