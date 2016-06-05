@@ -3939,9 +3939,11 @@ static void *s3_virge_375_init()
 static void s3_virge_close(void *p)
 {
         virge_t *virge = (virge_t *)p;
+#ifndef RELEASE_BUILD
         FILE *f = fopen("vram.dmp", "wb");
         fwrite(virge->svga.vram, 4 << 20, 1, f);
         fclose(f);
+#endif
 
         thread_kill(virge->render_thread);
         thread_destroy_event(virge->not_full_event);
