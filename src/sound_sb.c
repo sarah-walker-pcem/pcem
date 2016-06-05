@@ -224,8 +224,8 @@ void sb_pro_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->filter   = !(mixer->regs[0xe] & 0x20);
                 mixer->bass_l   = mixer->bass_r   = 8;
                 mixer->treble_l = mixer->treble_r = 8;
-                sound_set_cd_volume((mixer->master_l * mixer->cd_l) / 65535,
-                                    (mixer->master_r * mixer->cd_r) / 65535);
+                sound_set_cd_volume(((uint32_t)mixer->master_l * (uint32_t)mixer->cd_l) / 65535,
+                                    ((uint32_t)mixer->master_r * (uint32_t)mixer->cd_r) / 65535);
 //                pclog("%02X %02X %02X\n", mixer->regs[0x04], mixer->regs[0x22], mixer->regs[0x26]);
 //                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
                 if (mixer->index == 0xe)
@@ -292,8 +292,8 @@ void sb_16_mixer_write(uint16_t addr, uint8_t val, void *p)
                 mixer->treble_l = mixer->regs[0x44] >> 4;
                 mixer->treble_r = mixer->regs[0x45] >> 4;
                 mixer->filter = 0;
-                sound_set_cd_volume((mixer->master_l * mixer->cd_l) / 65535,
-                                    (mixer->master_r * mixer->cd_r) / 65535);
+                sound_set_cd_volume(((uint32_t)mixer->master_l * (uint32_t)mixer->cd_l) / 65535,
+                                    ((uint32_t)mixer->master_r * (uint32_t)mixer->cd_r) / 65535);
 //                pclog("%02X %02X %02X %02X %02X %02X\n", mixer->regs[0x30], mixer->regs[0x31], mixer->regs[0x32], mixer->regs[0x33], mixer->regs[0x34], mixer->regs[0x35]);
 //                pclog("Mixer - %04X %04X %04X %04X %04X %04X\n", mixer->master_l, mixer->master_r, mixer->voice_l, mixer->voice_r, mixer->fm_l, mixer->fm_r);
         }
