@@ -1,13 +1,26 @@
-PCem v10.1
+PCem v11
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v10:
+Changes since v10.1:
 
-- Fixed buffer overruns in PIIX and ET4000/W32p emulation
-- Add command line options to start in fullscreen and to specify config file
-- Emulator doesn't die when the CPU jumps to an unexecutable address
-- Removed Voodoo memory dump on exit
+- New machines added - Tandy 1000HX, Tandy 1000SL/2, Award 286 clone, IBM PS/1 model 2121
+- New graphics card - Hercules InColor
+- 3DFX recompiler - 2-4x speedup over previous emulation
+- Added Cyrix 6x86 emulation
+- Some optimisations to dynamic recompiler - typically around 10-15% improvement over v10, more when MMX used
+- Fixed broken 8088/8086 timing
+- Fixes to Mach64 and ViRGE 2D blitters
+- XT machines can now have less than 640kb RAM
+- Added IBM PS/1 audio card emulation
+- Added Adlib Gold surround module emulation
+- Fixes to PCjr/Tandy PSG emulation
+- GUS now in stereo
+- Numerous FDC changes - more drive types, FIFO emulation, better support of XDF images, better FDI support
+- CD-ROM changes - CD-ROM IDE channel now configurable, improved disc change handling, better volume control support
+- Now directly supports .ISO format for CD-ROM emulation
+- Fixed crash when using Direct3D output on Intel HD graphics
+- Various other fixes
 
 
 PCem emulates the following machines:
@@ -65,7 +78,7 @@ olivetti_m24\olivetti_m24_version_1.43_low.bin
 olivetti_m24\olivetti_m24_version_1.43_high.bin
 
 
-Tandy 1000 (1985)
+Tandy 1000 (1984)
 This is a clone of the unsuccessful IBM PCjr, which added better graphics and sound to the XT,
 but removed much expandability plus some other hardware (such as the DMA controller). The Tandy
 puts back the DMA controller and ISA slots, making it a much more useful machine. Many games
@@ -74,6 +87,23 @@ from the late 80s support the Tandy.
 ROM files needed:
 
 tandy\tandy1t1.020
+
+
+Tandy 1000HX (1987)
+A Tandy 1000 with a faster 7.16 MHz 8088, and DOS in ROM.
+
+ROM files needed:
+
+tandy1000hx\v020000.u12
+
+
+Tandy 1000SL/2 (1989)
+An enhanced Tandy 1000 with a 9.54 MHz 8086, and enhanced graphics and sound.
+
+ROM files needed:
+
+tandy1000sl2\8079047.hu1
+tandy1000sl2\8079048.hu2
 
 
 DTK Clone XT (1986)
@@ -218,8 +248,6 @@ pc3086\c000.bin
 
 Dell System 200 (1990?)
 This is a pretty generic 286 clone with a Phoenix BIOS.
-
-HIMEM.SYS doesn't appear to work on this one, for some reason.
 
 ROM files needed:
 
@@ -388,8 +416,18 @@ IBM EGA
 The original 1984 IBM EGA card, with 256k VRAM.
 
 ROM files needed:
-
 ibm_6277356_ega_card_u44_27128.bin
+
+
+Hercules InColor
+An enhanced Hercules with a custom 720x350 16 colour mode.
+
+
+IBM VGA
+The original VGA card.
+
+ROM files needed:
+ibm_vga.bin
 
 
 Trident 8900D SVGA
@@ -397,7 +435,6 @@ A low cost SVGA board circa 1992/1993. Not the greatest board in it's day, but
 it has a reasonable VESA driver and (buggy) 15/16/24-bit colour modes.
 
 ROM files needed:
-
 trident.bin
 
 
@@ -406,7 +443,6 @@ A later Trident board with GUI acceleration. Windows 9x doesn't include drivers
 for this, so they have to be downloaded and installed separately.
 
 ROM files needed:
-
 9440.vbi
 
 
@@ -416,7 +452,6 @@ and speed (on the real card, not the emulator) in exchange for being limited to
 8-bit colour.
 
 ROM files needed:
-
 et4000.bin
 
 
@@ -424,7 +459,6 @@ Diamond Stealth 32 SVGA
 An ET4000/W32p based board, has 15/16/24-bit colour modes, plus acceleration.
 
 ROM files needed:
-
 et4000w32.bin
 
 
@@ -432,7 +466,6 @@ Paradise Bahamas 64
 An S3 Vision864 based board.
 
 ROM files needed:
-
 bahamas64.bin
 
 
@@ -440,7 +473,6 @@ Number Nine 9FX
 An S3 Trio64 based board.
 
 ROM files needed:
-
 s3_764.bin
 
 
@@ -448,7 +480,6 @@ ATI VGA Edge-16
 A basic SVGA clone.
 
 ROM files needed:
-
 vgaedge16.vbi
 
 
@@ -456,16 +487,13 @@ ATI VGA Charger
 A basic SVGA clone, similar to the Edge-16.
 
 ROM files needed:
-
 bios.bin
 
 
 ATI Graphics Pro Turbo
-A Mach64GX based board. Probably the best of the emulated boards for use in
-Windows.
+A Mach64GX based board.
 
 ROM files needed:
-
 mach64gx/bios.bin
 
 
@@ -473,7 +501,6 @@ OAK OTI-067
 A basic SVGA clone.
 
 ROM files needed:
-
 oti067/bios.bin
 
 
@@ -487,7 +514,6 @@ as missing triangles), so use of the /DX instead is recommended.
 The streams processor (video overlay) is also emulated, however many features are missing.
 
 ROM files needed:
-
 s3virge.bin
 
 
@@ -497,24 +523,22 @@ An S3 ViRGE/DX based board. The drivers that come with Windows are similar to th
 many early Direct3D games work okay (if slowly).
 
 ROM files needed:
-
 86c375_1.bin
 
 
 3DFX Voodoo Graphics
 3D accelerator. Widely supported in late 90s games.
 
-PCem emulates this in software. The emulation isn't quite as fast as the real thing, but in
-most games the emulated CPU is the bottleneck rather than the 3DFX, unless you insist on
-running in 800x600. PCem can split rendering over two threads - this doesn't double performance,
-but can give a noticeable improvement.
+PCem emulates this in software. The emulation is a lot faster than in v10 (thanks to a new
+dynamic recompiler) and should be capable of hitting Voodoo 1 performance on most machines
+when two render threads are used. As before, the emulated CPU is the bottleneck for most games.
 
 PCem can emulate 6 and 8 MB configurations, but defaults to 4 MB for compatibility. It can also
 emulate the screen filter present on the original card, though this does at present have a
 noticeable performance hit.
 
 Almost everything I've tried works okay, with a very few exceptions - Screamer 2 and Rally have
-serious issues, and Need For Speed II SE and III don't draw the map correctly.
+serious issues.
 
 
 
@@ -531,6 +555,9 @@ as it is 14-line instead of 16-line.
 Tandy 1000
 Clone of PCjr video. Widely supported in 80s games.
 
+Tandy 1000 SL/2
+Improvement of Tandy 1000, with support for 640x200x16.
+
 Amstrad PC1512
 CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
 
@@ -542,6 +569,9 @@ Paradise PVGA1. An early SVGA clone with 256kb VRAM.
 
 IBM PS/1 Model 2011
 Stock VGA with 256kb VRAM.
+
+IBM PS/1 Model 2121
+Basic (and unknown) SVGA with 256kb VRAM.
 
 Amstrad MegaPC
 Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
@@ -559,6 +589,17 @@ The standard beeper on all PCs. Supports samples/RealSound.
 Tandy PSG
 The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus
 noise. I reused the emulator in B-em for this (slightly modified).
+v11 now emulates the differences between the SN76496 (PCjr and Tandy 1000), and the NCR8496
+(currently assigned to the Tandy 1000HX). Maniac Mansion and Zak McKraken will only sound
+correct on the latter.
+
+Tandy PSSJ
+Used on the Tandy 1000SL/2, this clones the NCR8496, adding an addition frequency divider (did any
+software actually use this?) and an 8-bit DAC.
+
+PS/1 audio card
+An SN76496 clone plus an 8-bit DAC. The SN76496 isn't at the same address as PCjr/Tandy, so most
+software doesn't support it.
 
 Gameblaster
 The Creative Labs Gameblaster/Creative Music System, Creative's first sound card
@@ -571,6 +612,7 @@ uses the DOSBox dbopl emulator.
 
 Adlib Gold
 OPL3 with YM318Z 12-bit digital section. Possibly some bugs (not a lot of software to test).
+The surround module is now emulated.
 
 Sound Blaster
 Several Sound Blasters are emulated :
@@ -620,8 +662,7 @@ A PS/2 mouse is emulated on the MegaPC, 386SX/25N and Premiere/PCI models. As wi
 compatible drivers are common.
 
 ATAPI CD-ROM
-Works with OAKCDROM.SYS. It can only work with actual CD-ROM drives at the minute, so to use ISO images
-you need a virtual CD drive.
+Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've tried.
 
 
 XTIDE :
@@ -659,133 +700,205 @@ Notes :
 
 Software tested:
 
-MS-DOS 3.3
+PC-DOS 1.0
+MS-DOS 3.30
+Compaq DOS 3.31
 MS-DOS 6.22
- - Most of the supplied software seems to work, eg Drivespace, Defrag, Scandisk, QBASIC
-   etc
+
+DR-DOS 6.0
 
 Windows 1.03
 Windows 2.03
-Windows/286 2.1
-Windows/386 2.1
 Windows 3.0
 Windows 3.1
-Windows 3.11 for Workgroups
-Windows NT 3.1
-Windows NT 3.51
-Windows NT 4
+Windows for Workgroups 3.11
 Windows 95
 Windows 95 OSR 2
 Windows 98
-Windows 98 SE
 Windows ME
+
+Windows NT 3.1
+Windows NT 3.51
+Windows NT 4
 Windows 2000
 Windows XP
 
 OS/2 1.0  - hard disk must be formatted beforehand
-OS/2 1.21 - hard disk must be formatted beforehand
+OS/2 1.1
+OS/2 1.2
 OS/2 1.3
-OS/2 2.0
-OS/2 Warp 3
-OS/2 Warp 4
+OS/2 2.1
+OS/2 Warp 3 - use unaccelerated graphics card (eg ET4000AX)
+OS/2 Warp 4 - use unaccelerated graphics card (eg ET4000AX)
 
 BeOS 5 Personal Edition (only seems to work correctly on Award SiS 496/497)
 
-Mandrake Linux 7.1
-RedHat Linux 7.1 (Seawolf)
-SUSE Linux 6.3
+Debian 5.0
+SuSE 6.3
+Ubuntu 4.10
+Ubuntu 10.04 (very slow, does not support serial mouse)
 
 NetBSD 6.1.5
 
-Office 97
-Word for Windows 2.0
-Works for Windows 3.0
+GEM/3
 
-Alien vs Predator
-All New World of Lemmings
-Alley Cat
-Breakneck
-Civilization (DOS and Windows versions)
-Colin Mcrae Rally
-Colonization
-Command and Conquer : Red Alert (DOS and Windows versions)
-Croc (demo, ViRGE and 3DFX)
+3DMark 2000
+Ami Pro 3.0
+After Dark 3.0
+CorelDRAW 5.0
+DJGPP v2.02 w/ GCC 2.81
+Fasttracker II
+Lotus SmartSuite 97
+Microsoft Cinemania 94
+Microsoft Dangerous Creatures
+Microsoft Office 95
+Microsoft Office 97
+Microsoft Word 6.1
+Microsoft Works 3.0
+Microsoft Visual Basic 3.0
+Microsoft Visual C++ 1.0
+Microsoft Visual C++ 6.0
+Norton Utilities 8.0
+Photoshop 3.0
+
+Battlezone
+Beyond Castle Wolfenstein
+Centipede
+Commando
+Defender
+Digger
+Frogger
+Galaxian
+Jumpman
+King's Quest (PC, PCjr, Tandy 1000)
+King's Quest 2 (PC, Tandy 1000)
+Microsoft Adventure
+Rollo and the Brush Brothers
+Space Strike
+Spiderbot
+
+Actua Soccer
+Age of Empires
+Alien vs Predator (3DFX)
+Alone in the Dark
+Alone in the Dark 2
+Arkanoid
+Blake Stone
+Breakneck (3DFX)
+Bust-a-Move 2
+Caesar III
+Carmageddon (3DFX)
+Civilization for Windows
+Civilization II
+Colin McRae Rally (3DFX)
+Commander Keen : Invasion of the Vorticons
+Commander Keen : Goodbye Galaxy
+Command & Conquer : Red Alert
+Command & Conquer : Red Alert 2 (slow)
 Curse of Monkey Island
-Dawn Patrol
-Deus Ex (3DFX) (slow)
-Discworld 2
+Day of the Tentacle
+Deus Ex (3DFX, slow!)
+Discworld II
 Doom
-Duke Nukem 3D
-Dune (floppy and CD versions)
+Doom II
+Double Dragon
+Dune
 Ecstatica
 Epic Pinball
-Expendable (3DFX) (slow)
+Expendable (3DFX)
 Final Fantasy VII (3DFX)
 Forsaken (3DFX)
-G-Police (ViRGE and 3DFX)
+G-Police (3DFX)
 Grand Theft Auto (3DFX)
 Grand Theft Auto 2 (3DFX)
-Grim Fandango (ViRGE and 3DFX)
-Half-Life (3DFX)
+Grim Fandango (3DFX)
+Half-Life (3DFX - software may be quicker, at least at 320x240)
+Icon
 Incoming (3DFX)
-Interstate '76
 Jazz Jackrabbit
-Jazz Jackrabbit 2
 Jedi Knight (3DFX)
-Kings Quest (PC booter, PCjr and Tandy 1000)
-Kings Quest II (booter)
+Jungle Strike
+Jurassic Park : Trespasser (3DFX)
 Lemmings
 Lemmings 2 : The Tribes
+Lode Runner : The Legend Returns
 Lotus III
-Mortal Kombat Trilogy (DOS and Windows versions)
+Klotz
+Maniac Mansion
+Megarace
+Microsoft Arcade
+Microsoft Return of Arcade
+Mortal Kombat
+Mortal Kombat Trilogy
 Mystic Towers
-Need for Speed II SE (3DFX)
-Need for Speed III
+Need For Speed II SE (3DFX)
+Need For Speed III (3DFX)
 Network Q RAC Rally
 Oddworld : Abe's Oddysee
-Overlord
-Pinball Fantasies
 Populous : The Beginning (3DFX)
 Power Drive
 Prince of Persia
 Pro Pinball : Big Race USA
-Pro Pinball : The Web
-Psycho Pinball
-Quake (3DFX)
+Pro Pinball : Timeshock!
+Quake
 Quake II (3DFX)
-Rebel Assault
-Return of Arcade
-Rise of the Triad
+Quake III Arena (3DFX)
+Railroad Tycoon II
+Resident Evil 2 (3DFX)
 Rollercoaster Tycoon
-Screamer
-Screamer Rally (not 3DFX)
+Screamer Rally (NOT 3DFX)
 Secret of Monkey Island
 Sensible World of Soccer
-Simcity 2000 (DOS, Windows 3.1, Windows 95 and OS/2 versions)
+Simcity 2000 (DOS, OS/2)
 Simcity 3000
-SiN (3DFX)
-Stargunner
+SiN
+Sonic & Knuckles
+Space Hulk
 System Shock
-Terminal Velocity
-The 7th Guest
-The Humans
-Theme Hospital (DOS and Windows versions)
+System Shock 2 (3DFX, slow)
+Theme Hospital
 Theme Park
-Tomb Raider (ViRGE and 3DFX)
+TOCA 2 (3DFX)
+Tomb Raider (3DFX and ViRGE)
 Tomb Raider II (3DFX)
+Tony Hawk's Pro Skater 2 (3DFX)
 Total Annihilation
 Transport Tycoon
 Turok (3DFX)
-Tyrian
-UFO : Enemy Unknown
-Ultima Underworld II
-Unreal
+Turok 2 (3DFX)
+Unreal (3DFX)
 Unreal Tournament (3DFX)
 Wacky Wheels
-Wing Commander III
 Wolfenstein 3D
+World Cup 98 (3DFX)
 Worms
-X-Com : Apocalypse
+Worms 2
 X-Com : Terror From The Deep
 X-Wing
+Xenon
+Zak McKraken
 
+Complex - Cyboman 2
+EMF - Verses
+Exceed - Heaven 7
+Future Crew - Second Reality
+Gazebo - Cyboman
+KFMF - Dance, Move, Shake
+KFMF - Trip (3DFX)
+Logic Design - Fashion
+Renaissance - Amnesia
+Skull - Putre Faction
+Tran - Ambience
+Tran - Timeless
+Triton - Crystal Dream
+Ultraforce - Coldcut
+Ultraforce - Vectdemo
+
+BeebinC 0.99f
+Fellow 0.33
+Kgen98 v0.4b
+PacifiST v0.48
+Snes9x 0.96
+UltraHLE v1.0.0 (3DFX)
+vMac 0.1.9.1
+ZSNES v0.800c
