@@ -33,8 +33,6 @@ typedef struct voodoo_x86_data_t
         uint32_t trexInit1;        
 } voodoo_x86_data_t;
 
-static voodoo_x86_data_t voodoo_x86_data[2][BLOCK_NUM];
-
 static int last_block[2] = {0, 0};
 static int next_block_to_write[2] = {0, 0};
 
@@ -3630,10 +3628,11 @@ static inline void *voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, 
         int c;
         int b = last_block[odd_even];
         voodoo_x86_data_t *data;
+        voodoo_x86_data_t *codegen_data = voodoo->codegen_data;
         
         for (c = 0; c < 8; c++)
         {
-                data = &voodoo_x86_data[odd_even][b];
+                data = &codegen_data[odd_even + b*2];
                 
                 if (state->xdir == data->xdir &&
                     params->alphaMode == data->alphaMode &&
@@ -3650,7 +3649,7 @@ static inline void *voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, 
                 b = (b + 1) & 7;
         }
 voodoo_recomp++;
-        data = &voodoo_x86_data[odd_even][next_block_to_write[odd_even]];
+        data = &codegen_data[odd_even + next_block_to_write[odd_even]*2];
 //        code_block = data->code_block;
         
         voodoo_generate(data->code_block, voodoo, params, state, depth_op);
@@ -3679,9 +3678,9 @@ static void voodoo_codegen_init(voodoo_t *voodoo)
 #endif
 
 #if defined WIN32 || defined _WIN32 || defined _WIN32
-        voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        voodoo->codegen_data = malloc(sizeof(voodoo_x86_data_t) * BLOCK_NUM);
+        voodoo->codegen_data = malloc(sizeof(voodoo_x86_data_t) * BLOCK_NUM*2);
 #endif
 
 #ifdef __linux__
