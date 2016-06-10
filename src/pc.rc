@@ -33,6 +33,7 @@ BEGIN
                 POPUP "&Video"
                 BEGIN
                         MENUITEM "&Resizeable window",IDM_VID_RESIZE
+                        MENUITEM "Remember size && position",IDM_VID_REMEMBER
                         MENUITEM SEPARATOR
                         MENUITEM "&DirectDraw", IDM_VID_DDRAW
                         MENUITEM "Direct&3D",   IDM_VID_D3D

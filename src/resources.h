@@ -12,6 +12,7 @@
 #define IDM_CONFIG_SAVE    40022
 #define IDM_STATUS         40030
 #define IDM_VID_RESIZE     40050
+#define IDM_VID_REMEMBER   40051
 #define IDM_VID_DDRAW      40060
 #define IDM_VID_D3D        40061
 #define IDM_VID_FULLSCREEN 40070

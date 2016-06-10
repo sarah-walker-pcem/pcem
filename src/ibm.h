@@ -504,3 +504,4 @@ void onesec();
 void resetpc_cad();
 
 extern int start_in_fullscreen;
+extern int window_w, window_h, window_x, window_y, window_remember;

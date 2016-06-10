@@ -41,6 +41,7 @@
 #define MAPVK_VK_TO_VSC 0
 #endif
 
+static int save_window_pos = 0;
 uint64_t timer_freq;
 
 int rawinputkey[272];
@@ -564,6 +565,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
+        CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
@@ -661,6 +663,13 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 endblit();
                 device_force_redraw();
         }
+        if (window_remember)
+        {
+                MoveWindow(hwnd, window_x, window_y,
+                        window_w,
+                        window_h,
+                        TRUE);
+        }
                         
         /* Run the message loop. It will run until GetMessage() returns 0 */
         while (!quited)
@@ -707,6 +716,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         TerminateThread(mainthreadh,0);
 //        pclog("Quited? %i\n",quited);
 //        pclog("Closepc\n");
+        if (save_window_pos && window_remember)
+                saveconfig();
         closepc();
 //        pclog("dumpregs\n");
 
@@ -924,6 +935,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
                         GetWindowRect(hwnd,&rect);
                         SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_FRAMECHANGED);
+                        saveconfig();
+                        break;
+                        case IDM_VID_REMEMBER:
+                        window_remember = !window_remember;
+                        CheckMenuItem(hmenu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
+                        GetWindowRect(hwnd, &rect);
+                        if (window_remember)
+                        {
+                                window_x = rect.left;
+                                window_y = rect.top;
+                                window_w = rect.right - rect.left;
+                                window_h = rect.bottom - rect.top;
+                        }
                         saveconfig();
                         break;
                         
@@ -1259,8 +1283,29 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         pcclip.bottom -= GetSystemMetrics(SM_CXFIXEDFRAME) + 10;
                         ClipCursor(&pcclip);
                 }
+                if (window_remember)
+                {
+                        GetWindowRect(hwnd, &rect);
+                        window_x = rect.left;
+                        window_y = rect.top;
+                        window_w = rect.right - rect.left;
+                        window_h = rect.bottom - rect.top;
+                        save_window_pos = 1;
+                }
                 break;
 
+                case WM_MOVE:
+                if (window_remember)
+                {
+                        GetWindowRect(hwnd, &rect);
+                        window_x = rect.left;
+                        window_y = rect.top;
+                        window_w = rect.right - rect.left;
+                        window_h = rect.bottom - rect.top;
+                        save_window_pos = 1;
+                }
+                break;
+                                        
                 case WM_TIMER:
                 if (wParam == TIMER_1SEC)
                         onesec();

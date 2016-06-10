@@ -38,6 +38,8 @@
 #include "vid_voodoo.h"
 #include "video.h"
 
+int window_w, window_h, window_x, window_y, window_remember;
+
 int start_in_fullscreen = 0;
 int frame = 0;
 
@@ -647,6 +649,12 @@ void loadconfig(char *fn)
 
         fdd_set_type(0, config_get_int(NULL, "drive_a_type", 7));
         fdd_set_type(1, config_get_int(NULL, "drive_b_type", 7));
+
+        window_w = config_get_int(NULL, "window_w", 0);
+        window_h = config_get_int(NULL, "window_h", 0);
+        window_x = config_get_int(NULL, "window_x", 0);
+        window_y = config_get_int(NULL, "window_y", 0);
+        window_remember = config_get_int(NULL, "window_remember", 0);
 }
 
 void saveconfig()
@@ -700,6 +708,12 @@ void saveconfig()
 
         config_set_int(NULL, "drive_a_type", fdd_get_type(0));
         config_set_int(NULL, "drive_b_type", fdd_get_type(1));
+
+        config_set_int(NULL, "window_w", window_w);
+        config_set_int(NULL, "window_h", window_h);
+        config_set_int(NULL, "window_x", window_x);
+        config_set_int(NULL, "window_y", window_y);
+        config_set_int(NULL, "window_remember", window_remember);
         
         config_save(config_file_default);
 }
