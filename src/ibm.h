@@ -227,6 +227,9 @@ typedef struct PIT
         int initial[3];
         int latched[3];
         int disabled[3];
+        
+        uint8_t read_status[3];
+        int do_read_status[3];
 } PIT;
 
 PIT pit;

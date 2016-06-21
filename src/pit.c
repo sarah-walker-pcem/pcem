@@ -336,10 +336,28 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                                 if (val & 8)
                                         pit.rl[2] = pit.using_timer[2] ? ((int)(pit.c[2] / PITCONST) >> TIMER_SHIFT) : pit.count[2];
                         }
+                        if (!(val & 0x10))
+                        {
+                                if (val & 2)
+                                {
+                                        pit.read_status[0] = (pit.ctrls[0] & 0x3f) | 0x40 | (pit.out[0] ? 0x80 : 0);
+                                        pit.do_read_status[0] = 1;
+                                }
+                                if (val & 4)
+                                {
+                                        pit.read_status[1] = (pit.ctrls[1] & 0x3f) | 0x40 | (pit.out[1] ? 0x80 : 0);
+                                        pit.do_read_status[1] = 1;
+                                }
+                                if (val & 8)
+                                {
+                                        pit.read_status[2] = (pit.ctrls[2] & 0x3f) | 0x40 | (pit.out[2] ? 0x80 : 0);
+                                        pit.do_read_status[2] = 1;
+                                }
+                        }
                         return;
                 }
                 t = val >> 6;
-                pit.ctrls[val>>6]=pit.ctrl=val;
+                pit.ctrl=val;
                 if ((val>>7)==3)
                 {
                         printf("Bad PIT reg select\n");
@@ -359,6 +377,7 @@ void pit_write(uint16_t addr, uint8_t val, void *priv)
                 }
                 else
                 {
+                        pit.ctrls[val>>6] = val;
                         pit.rm[val>>6]=pit.wm[val>>6]=(pit.ctrl>>4)&3;
                         pit.m[val>>6]=(val>>1)&7;
                         if (pit.m[val>>6]>5)
@@ -444,6 +463,12 @@ uint8_t pit_read(uint16_t addr, void *priv)
         {
                 case 0: case 1: case 2: /*Timers*/
                 t = addr & 3;
+                if (pit.do_read_status[t])
+                {
+                        pit.do_read_status[t] = 0;
+                        temp = pit.read_status[t];
+                        break;
+                }
                 if (pit.rereadlatch[addr & 3] && !pit.latched[addr & 3])
                 {
                         pit.rereadlatch[addr & 3] = 0;
