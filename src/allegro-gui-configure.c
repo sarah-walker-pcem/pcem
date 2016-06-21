@@ -4,6 +4,7 @@
 #include "allegro-gui.h"
 #include "cpu.h"
 #include "fdd.h"
+#include "gameport.h"
 #include "model.h"
 #include "sound.h"
 #include "video.h"
@@ -23,6 +24,7 @@ static allegro_list_t video_list[GFX_MAX+1];
 static allegro_list_t sound_list[GFX_MAX+1];
 static allegro_list_t cpumanu_list[4];
 static allegro_list_t cpu_list[32];
+static allegro_list_t joystick_list[32];
 
 static char mem_size_str[10], mem_size_units[3];
 
@@ -190,6 +192,22 @@ static char *list_proc_fdd(int index, int *list_size)
         return fdd_list[index].name;
 }
 
+static char *list_proc_joystick(int index, int *list_size)
+{
+        if (index < 0)
+        {
+                int c = 0;
+                
+                while (joystick_list[c].name[0])
+                        c++;
+
+                *list_size = c;
+                return NULL;
+        }
+        
+        return joystick_list[index].name;
+}
+
 static int voodoo_config_proc(int msg, DIALOG *d, int c)
 {
         int ret = d_button_proc(msg, d, c);
@@ -210,10 +228,10 @@ static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 568,332,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 568,352,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 226,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 296,  308, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 226,  328, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 296,  328, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
@@ -225,15 +243,15 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0},
         {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //9
         
-        {d_edit_proc,    70*2, 216,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 236,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
                         
-        {d_text_proc,    98*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
+        {d_text_proc,    98*2, 236,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
         
-        {d_check_proc,   14*2, 232, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
-        {d_check_proc,   14*2, 248, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
-        {d_check_proc,   14*2, 264, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
-        {d_check_proc,   14*2, 280, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
-        {d_check_proc,   14*2, 296, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
+        {d_check_proc,   14*2, 252, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
+        {d_check_proc,   14*2, 268, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
+        {d_check_proc,   14*2, 284, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
+        {d_check_proc,   14*2, 300, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Composite CGA", 0, 0},
+        {d_check_proc,   14*2, 316, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0},
 
         {d_text_proc,    16*2,  16,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Machine :", 0, 0},
         {d_text_proc,    16*2,  36,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video :", 0, 0},
@@ -242,7 +260,7 @@ static DIALOG configure_dialog[] =
         {d_text_proc,    16*2, 116,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Cache :", 0, 0},
         {d_text_proc,    16*2, 136,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video speed :", 0, 0},
         {d_text_proc,    16*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Soundcard :", 0, 0},
-        {d_text_proc,    16*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
+        {d_text_proc,    16*2, 236,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
 
         {d_check_proc,   14*2,  92, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Dynamic Recompiler", 0, 0},
         
@@ -253,7 +271,10 @@ static DIALOG configure_dialog[] =
 
         {video_config_proc, 452,  32+4, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0}, //30
         {sound_config_proc, 452, 152+4, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
-        {voodoo_config_proc, 452,   296, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
+        {voodoo_config_proc, 452,   316, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
+
+        {d_text_proc,    16*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Joystick :", 0, 0},
+        {d_list_proc,    70*2, 212, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_joystick, 0, 0}, //34
                 
         {0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL}
 };
@@ -452,6 +473,16 @@ pclog("video_card_available : %i\n", c);
                 c++;
         }
 
+        c = 0;
+        while (joystick_get_name(c))
+        {
+                strcpy(joystick_list[c].name, joystick_get_name(c));
+                if (c == joystick_type)
+                        configure_dialog[34].d1 = c;
+
+                c++;
+        }
+
         if (!sound_card_has_config(configure_dialog[9].d1))
                 configure_dialog[31].flags |= D_DISABLED;
         else
@@ -585,6 +616,9 @@ pclog("video_card_available : %i\n", c);
                         
                         cache = configure_dialog[7].d1;
                         mem_updatecache();
+                        
+                        joystick_type = configure_dialog[34].d1;
+                        gameport_update_joystick_type();
                         
                         saveconfig();
 

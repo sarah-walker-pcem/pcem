@@ -5,9 +5,11 @@
 #define put_backslash allegro_put_backslash
 #define get_extension allegro_get_extension
 #define GFX_VGA allegro_GFX_VGA
+#define MAX_JOYSTICKS allegro_MAX_JOYSTICKS
 
 #include <allegro.h>
 
+#undef MAX_JOYSTICKS
 #undef GFX_VGA
 #undef getr8
 #undef setr8

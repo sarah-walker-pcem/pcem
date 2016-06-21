@@ -7,6 +7,7 @@
 #include "pci.h"
 #include "codegen.h"
 
+int isa_cycles;
 static uint8_t ccr0, ccr1, ccr2, ccr3, ccr4, ccr5, ccr6;
 
 OpFn *x86_dynarec_opcodes;
@@ -439,6 +440,8 @@ void cpu_set()
         cpu_hasMSR = 0;
         cpu_hasCR4 = 0;
         ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = 0;
+        
+        isa_cycles = (int)(((int64_t)cpu_s->rspeed << ISA_CYCLES_SHIFT) / 8000000ll);
 
         if (cpu_s->pci_speed)
         {

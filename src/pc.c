@@ -18,6 +18,7 @@
 #include "dma.h"
 #include "fdc.h"
 #include "fdd.h"
+#include "gameport.h"
 #include "sound_gus.h"
 #include "ide.h"
 #include "keyboard.h"
@@ -566,6 +567,7 @@ int cga_comp=0;
 
 void loadconfig(char *fn)
 {
+        int c, d;
         char s[512];
         char *p;
         
@@ -655,10 +657,34 @@ void loadconfig(char *fn)
         window_x = config_get_int(NULL, "window_x", 0);
         window_y = config_get_int(NULL, "window_y", 0);
         window_remember = config_get_int(NULL, "window_remember", 0);
+
+        joystick_type = config_get_int(NULL, "joystick_type", 0);
+        
+        for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
+        {
+                sprintf(s, "joystick_%i_nr", c);
+                joystick_state[c].plat_joystick_nr = config_get_int("Joysticks", s, 0);
+                
+                if (joystick_state[c].plat_joystick_nr)
+                {
+                        for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
+                        {                        
+                                sprintf(s, "joystick_%i_axis_%i", c, d);
+                                joystick_state[c].axis_mapping[d] = config_get_int("Joysticks", s, d);
+                        }
+                        for (d = 0; d < joystick_get_button_count(joystick_type); d++)
+                        {                        
+                                sprintf(s, "joystick_%i_button_%i", c, d);
+                                joystick_state[c].button_mapping[d] = config_get_int("Joysticks", s, d);
+                        }
+                }
+        }
 }
 
 void saveconfig()
 {
+        int c, d;
+        
         config_set_int(NULL, "gameblaster", GAMEBLASTER);
         config_set_int(NULL, "gus", GUS);
         config_set_int(NULL, "ssi2001", SSI2001);
@@ -714,6 +740,30 @@ void saveconfig()
         config_set_int(NULL, "window_x", window_x);
         config_set_int(NULL, "window_y", window_y);
         config_set_int(NULL, "window_remember", window_remember);
-        
+
+        config_set_int(NULL, "joystick_type", joystick_type);
+                
+        for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
+        {
+                char s[80];
+
+                sprintf(s, "joystick_%i_nr", c);
+                config_set_int("Joysticks", s, joystick_state[c].plat_joystick_nr);
+                
+                if (joystick_state[c].plat_joystick_nr)
+                {
+                        for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
+                        {                        
+                                sprintf(s, "joystick_%i_axis_%i", c, d);
+                                config_set_int("Joysticks", s, joystick_state[c].axis_mapping[d]);
+                        }
+                        for (d = 0; d < joystick_get_button_count(joystick_type); d++)
+                        {                        
+                                sprintf(s, "joystick_%i_button_%i", c, d);
+                                config_set_int("Joysticks", s, joystick_state[c].button_mapping[d]);
+                        }
+                }
+        }
+
         config_save(config_file_default);
 }

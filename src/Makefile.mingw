@@ -6,7 +6,7 @@ CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-iso.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86.o compaq.o config.o cpu.o dac.o \
 	device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o headland.o i430lx.o i430fx.o \
-	i430vx.o ide.o intel.o intel_flash.o io.o jim.o keyboard.o keyboard_amstrad.o keyboard_at.o \
+	i430vx.o ide.o intel.o intel_flash.o io.o jim.o joystick_standard.o joystick_sw_pad.o keyboard.o keyboard_amstrad.o keyboard_at.o \
 	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o lpt.o mcr.o mem.o model.o mouse.o mouse_ps2.o \
 	mouse_serial.o neat.o nmi.o nvr.o olivetti_m24.o opti.o pc.o pci.o pic.o piix.o pit.o ppi.o ps1.o rom.o \
 	scat.o serial.o sis496.o sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_cms.o sound_dbopl.o \
@@ -19,7 +19,7 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	vid_pcjr.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o \
 	vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
 	vid_vga.o vid_voodoo.o video.o wd76c10.o win.o win-config.o win-d3d.o win-d3d-fs.o win-ddraw.o \
-	win-ddraw-fs.o win-deviceconfig.o win-hdconf.o win-joystick.o win-keyboard.o win-midi.o win-mouse.o \
+	win-ddraw-fs.o win-deviceconfig.o win-hdconf.o win-joystick.o win-joystickconfig.o win-keyboard.o win-midi.o win-mouse.o \
 	win-status.o win-time.o win-video.o x86seg.o x87.o xtide.o pc.res
 FMOBJ = dbopl.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o

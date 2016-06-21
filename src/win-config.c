@@ -9,6 +9,7 @@
 #include "cpu.h"
 #include "device.h"
 #include "fdd.h"
+#include "gameport.h"
 #include "model.h"
 #include "resources.h"
 #include "sound.h"
@@ -31,6 +32,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_dynarec;
         int cpu_flags;
         int temp_fda_type, temp_fdb_type;
+        int temp_joystick_type;
         
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
@@ -217,6 +219,25 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
                 else
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
+
+                h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                c = 0;
+                while (joystick_get_name(c))
+                {
+                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)joystick_get_name(c));
+                        c++;
+                }
+                EnableWindow(h, TRUE);
+                SendMessage(h, CB_SETCURSEL, joystick_type, 0);
+
+                h = GetDlgItem(hdlg, IDC_JOY1);
+                EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 1) ? TRUE : FALSE);
+                h = GetDlgItem(hdlg, IDC_JOY2);
+                EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 2) ? TRUE : FALSE);
+                h = GetDlgItem(hdlg, IDC_JOY3);
+                EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 3) ? TRUE : FALSE);
+                h = GetDlgItem(hdlg, IDC_JOY4);
+                EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 4) ? TRUE : FALSE);
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -269,6 +290,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         temp_fda_type = SendMessage(h, CB_GETCURSEL, 0, 0);
                         h = GetDlgItem(hdlg, IDC_COMBODRB);
                         temp_fdb_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+
+                        h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                        temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
                         
                         if (temp_model != model || gfx != gfxcard || mem != mem_size ||
                             fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
@@ -324,6 +348,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                         speedchanged();
 
+                        joystick_type = temp_joystick_type;
+                        gameport_update_joystick_type();
+                        
                         case IDCANCEL:
                         EndDialog(hdlg, 0);
                         pause=0;
@@ -512,6 +539,44 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                         case IDC_CONFIGUREVOODOO:
                         deviceconfig_open(hdlg, (void *)&voodoo_device);
+                        break;
+                        
+                        case IDC_COMBOJOY:
+                        if (HIWORD(wParam) == CBN_SELCHANGE)
+                        {
+                                h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                                temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+
+                                h = GetDlgItem(hdlg, IDC_JOY1);
+                                EnableWindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 1) ? TRUE : FALSE);
+                                h = GetDlgItem(hdlg, IDC_JOY2);
+                                EnableWindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 2) ? TRUE : FALSE);
+                                h = GetDlgItem(hdlg, IDC_JOY3);
+                                EnableWindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 3) ? TRUE : FALSE);
+                                h = GetDlgItem(hdlg, IDC_JOY4);
+                                EnableWindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 4) ? TRUE : FALSE);
+                        }
+                        break;
+                        
+                        case IDC_JOY1:
+                        h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                        temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        joystickconfig_open(hdlg, 0, temp_joystick_type);
+                        break;
+                        case IDC_JOY2:
+                        h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                        temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        joystickconfig_open(hdlg, 1, temp_joystick_type);
+                        break;
+                        case IDC_JOY3:
+                        h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                        temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        joystickconfig_open(hdlg, 2, temp_joystick_type);
+                        break;
+                        case IDC_JOY4:
+                        h = GetDlgItem(hdlg, IDC_COMBOJOY);
+                        temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        joystickconfig_open(hdlg, 3, temp_joystick_type);
                         break;
                 }
                 break;

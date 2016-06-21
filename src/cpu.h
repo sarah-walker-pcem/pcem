@@ -121,4 +121,8 @@ extern int cpu_use_dynarec;
 
 extern int xt_cpu_multi;
 
+#define ISA_CYCLES_SHIFT 6
+extern int isa_cycles;
+#define ISA_CYCLES(x) ((x * isa_cycles) >> ISA_CYCLES_SHIFT)
+
 #endif
