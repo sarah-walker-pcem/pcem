@@ -27,6 +27,9 @@ typedef struct cga_t
         uint8_t *vram;
         
         uint8_t charbuffer[256];
+
+	int revision;
+	int composite;
 } cga_t;
 
 void    cga_init(cga_t *cga);

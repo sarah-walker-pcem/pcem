@@ -8,8 +8,13 @@
 #include "timer.h"
 #include "video.h"
 #include "vid_cga.h"
+#include "dosbox/vid_cga_comp.h"
 
-static int i_filt[8],q_filt[8];
+#define CGA_RGB 0
+#define CGA_COMPOSITE 1
+
+#define COMPOSITE_OLD 0
+#define COMPOSITE_NEW 1
 
 static uint8_t crtcmask[32] = 
 {
@@ -42,6 +47,11 @@ void cga_out(uint16_t addr, uint8_t val, void *p)
                 }
                 return;
                 case 0x3D8:
+                if (((cga->cgamode ^ val) & 5) != 0)
+                {
+                        cga->cgamode = val;
+                        update_cga16_color(cga);
+                }
                 cga->cgamode = val;
                 return;
                 case 0x3D9:
@@ -112,18 +122,6 @@ void cga_recalctimings(cga_t *cga)
 	cga->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
-static int ntsc_col[8][8]=
-{
-        {0,0,0,0,0,0,0,0}, /*Black*/
-        {0,0,1,1,1,1,0,0}, /*Blue*/
-        {1,0,0,0,0,1,1,1}, /*Green*/
-        {0,0,0,0,1,1,1,1}, /*Cyan*/
-        {1,1,1,1,0,0,0,0}, /*Red*/
-        {0,1,1,1,1,0,0,0}, /*Magenta*/
-        {1,1,0,0,0,0,1,1}, /*Yellow*/
-        {1,1,1,1,1,1,1,1}  /*White*/
-};
-
 void cga_poll(void *p)
 {
         cga_t *cga = (cga_t *)p;
@@ -136,10 +134,7 @@ void cga_poll(void *p)
         int cols[4];
         int col;
         int oldsc;
-        int y_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, y_val, y_tot;
-        int i_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, i_val, i_tot;
-        int q_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, q_val, q_tot;
-        int r, g, b;
+
         if (!cga->linepos)
         {
                 cga->vidtime += cga->dispofftime;
@@ -292,59 +287,13 @@ void cga_poll(void *p)
 
                 if (cga->cgamode & 1) x = (cga->crtc[1] << 3) + 16;
                 else                  x = (cga->crtc[1] << 4) + 16;
-                if (cga_comp)
+
+                if (cga->composite)
                 {
-                        for (c = 0; c < x; c++)
-                        {
-                                y_buf[(c << 1) & 6] = ntsc_col[buffer->line[cga->displine][c] & 7][(c << 1) & 6] ? 0x6000 : 0;
-                                y_buf[(c << 1) & 6] += (buffer->line[cga->displine][c] & 8) ? 0x3000 : 0;
-                                i_buf[(c << 1) & 6] = y_buf[(c << 1) & 6] * i_filt[(c << 1) & 6];
-                                q_buf[(c << 1) & 6] = y_buf[(c << 1) & 6] * q_filt[(c << 1) & 6];
-                                y_tot = y_buf[0] + y_buf[1] + y_buf[2] + y_buf[3] + y_buf[4] + y_buf[5] + y_buf[6] + y_buf[7];
-                                i_tot = i_buf[0] + i_buf[1] + i_buf[2] + i_buf[3] + i_buf[4] + i_buf[5] + i_buf[6] + i_buf[7];
-                                q_tot = q_buf[0] + q_buf[1] + q_buf[2] + q_buf[3] + q_buf[4] + q_buf[5] + q_buf[6] + q_buf[7];
+			for (c = 0; c < x; c++)
+				buffer32->line[cga->displine][c] = buffer->line[cga->displine][c] & 0xf;
 
-                                y_val = y_tot >> 10;
-                                if (y_val > 255) y_val = 255;
-                                y_val <<= 16;
-                                i_val = i_tot >> 12;
-                                if (i_val >  39041) i_val =  39041;
-                                if (i_val < -39041) i_val = -39041;
-                                q_val = q_tot >> 12;
-                                if (q_val >  34249) q_val =  34249;
-                                if (q_val < -34249) q_val = -34249;
-
-                                r = (y_val + 249*i_val + 159*q_val) >> 16;
-                                g = (y_val -  70*i_val - 166*q_val) >> 16;
-                                b = (y_val - 283*i_val + 436*q_val) >> 16;
-
-                                y_buf[((c << 1) & 6) + 1] = ntsc_col[buffer->line[cga->displine][c] & 7][((c << 1) & 6) + 1] ? 0x6000 : 0;
-                                y_buf[((c << 1) & 6) + 1] += (buffer->line[cga->displine][c] & 8) ? 0x3000 : 0;
-                                i_buf[((c << 1) & 6) + 1] = y_buf[((c << 1) & 6) + 1] * i_filt[((c << 1) & 6) + 1];
-                                q_buf[((c << 1) & 6) + 1] = y_buf[((c << 1) & 6) + 1] * q_filt[((c << 1) & 6) + 1];
-                                y_tot = y_buf[0] + y_buf[1] + y_buf[2] + y_buf[3] + y_buf[4] + y_buf[5] + y_buf[6] + y_buf[7];
-                                i_tot = i_buf[0] + i_buf[1] + i_buf[2] + i_buf[3] + i_buf[4] + i_buf[5] + i_buf[6] + i_buf[7];
-                                q_tot = q_buf[0] + q_buf[1] + q_buf[2] + q_buf[3] + q_buf[4] + q_buf[5] + q_buf[6] + q_buf[7];
-
-                                y_val = y_tot >> 10;
-                                if (y_val > 255) y_val = 255;
-                                y_val <<= 16;
-                                i_val = i_tot >> 12;
-                                if (i_val >  39041) i_val =  39041;
-                                if (i_val < -39041) i_val = -39041;
-                                q_val = q_tot >> 12;
-                                if (q_val >  34249) q_val =  34249;
-                                if (q_val < -34249) q_val = -34249;
-
-                                r = (y_val + 249*i_val + 159*q_val) >> 16;
-                                g = (y_val -  70*i_val - 166*q_val) >> 16;
-                                b = (y_val - 283*i_val + 436*q_val) >> 16;
-                                if (r > 511) r = 511;
-                                if (g > 511) g = 511;
-                                if (b > 511) b = 511;
-
-                                ((uint32_t *)buffer32->line[cga->displine])[c] = makecol32(r / 2, g / 2, b / 2);
-                        }
+			Composite_Process(cga, 0, x >> 2, buffer32->line[cga->displine]);
                 }
 
                 cga->sc = oldsc;
@@ -357,7 +306,6 @@ void cga_poll(void *p)
         else
         {
                 cga->vidtime += cga->dispontime;
-                if (cga->cgadispon) cga->cgastat &= ~1;
                 cga->linepos = 0;
                 if (cga->vsynctime)
                 {
@@ -410,7 +358,7 @@ void cga_poll(void *p)
                         {
                                 cga->cgadispon = 0;
                                 cga->displine = 0;
-                                cga->vsynctime = (cga->crtc[3] >> 4) + 1;
+                                cga->vsynctime = 16;
                                 if (cga->crtc[7])
                                 {
                                         if (cga->cgamode & 1) x = (cga->crtc[1] << 3) + 16;
@@ -426,7 +374,7 @@ void cga_poll(void *p)
                                         }
                                         
 startblit();
-                                        if (cga_comp) 
+                                        if (cga->composite) 
                                            video_blit_memtoscreen(0, cga->firstline - 4, 0, (cga->lastline - cga->firstline) + 8, xsize, (cga->lastline - cga->firstline) + 8);
                                         else          
                                            video_blit_memtoscreen_8(0, cga->firstline - 4, xsize, (cga->lastline - cga->firstline) + 8);
@@ -468,6 +416,8 @@ endblit();
                         cga->sc &= 31;
                         cga->ma = cga->maback;
                 }
+                if (cga->cgadispon)
+                        cga->cgastat &= ~1;
                 if ((cga->sc == (cga->crtc[10] & 31) || ((cga->crtc[8] & 3) == 3 && cga->sc == ((cga->crtc[10] & 31) >> 1)))) 
                         cga->con = 1;
                 if (cga->cgadispon && (cga->cgamode & 1))
@@ -480,25 +430,26 @@ endblit();
 
 void cga_init(cga_t *cga)
 {
+        cga->composite = 0;
 }
 
 void *cga_standalone_init()
 {
-        int c;
-        int cga_tint = -2;
+        int display_type;
         cga_t *cga = malloc(sizeof(cga_t));
         memset(cga, 0, sizeof(cga_t));
 
+        display_type = device_get_config_int("display_type");
+        cga->composite = (display_type != CGA_RGB);
+        cga->revision = device_get_config_int("composite_type");
+
         cga->vram = malloc(0x4000);
                 
-        for (c = 0; c < 8; c++)
-        {
-                i_filt[c] = 512.0 * cos((3.14 * (cga_tint + c * 4) / 16.0) - 33.0 / 180.0);
-                q_filt[c] = 512.0 * sin((3.14 * (cga_tint + c * 4) / 16.0) - 33.0 / 180.0);
-        }
+	cga_comp_init(cga);
         timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
         mem_mapping_add(&cga->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, 0, cga);
         io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, cga);
+		
         return cga;
 }
 
@@ -517,6 +468,53 @@ void cga_speed_changed(void *p)
         cga_recalctimings(cga);
 }
 
+static device_config_t cga_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "RGB",
+                                .value = CGA_RGB
+                        },
+                        {
+                                .description = "Composite",
+                                .value = CGA_COMPOSITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = CGA_RGB
+        },
+        {
+                .name = "composite_type",
+                .description = "Composite type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "Old",
+                                .value = COMPOSITE_OLD
+                        },
+                        {
+                                .description = "New",
+                                .value = COMPOSITE_NEW
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = COMPOSITE_OLD
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t cga_device =
 {
         "CGA",
@@ -526,5 +524,6 @@ device_t cga_device =
         NULL,
         cga_speed_changed,
         NULL,
-        NULL
+        NULL,
+        cga_config
 };
