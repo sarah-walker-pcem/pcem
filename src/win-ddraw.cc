@@ -13,6 +13,8 @@ extern "C" void device_force_redraw();
 extern "C" void ddraw_init(HWND h);
 extern "C" void ddraw_close();
 
+extern "C" void video_blit_complete();
+
 static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
 static void ddraw_blit_memtoscreen_8(int x, int y, int w, int h);
 
@@ -109,8 +111,8 @@ void ddraw_init(HWND h)
 
         pclog("DDRAW_INIT complete\n");
         ddraw_hwnd = h;
-        video_blit_memtoscreen   = ddraw_blit_memtoscreen;
-        video_blit_memtoscreen_8 = ddraw_blit_memtoscreen_8;
+        video_blit_memtoscreen_func   = ddraw_blit_memtoscreen;
+        video_blit_memtoscreen_8_func = ddraw_blit_memtoscreen_8;
 }
 
 void ddraw_close()
@@ -150,7 +152,6 @@ static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         POINT po;
         uint32_t *p;
         HRESULT hr;
-        
 //        pclog("Blit memtoscreen %i,%i %i %i %i,%i\n", x, y, y1, y2, w, h);
 
         memset(&ddsd, 0, sizeof(ddsd));
@@ -163,12 +164,17 @@ static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                 lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
                 device_force_redraw();
         }
-        if (!ddsd.lpSurface) return;
+        if (!ddsd.lpSurface)
+        {
+                video_blit_complete();
+                return;
+        }
         for (yy = y1; yy < y2; yy++)
         {
                 if ((y + yy) >= 0 && (y + yy) < buffer->h)
                         memcpy(ddsd.lpSurface + (yy * ddsd.lPitch), &(((uint32_t *)buffer32->line[y + yy])[x]), w * 4);
         }
+        video_blit_complete();
         lpdds_back->Unlock(NULL);
 
         po.x = po.y = 0;
@@ -238,7 +244,11 @@ static void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
                 lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
                 device_force_redraw();
         }
-        if (!ddsd.lpSurface) return;
+        if (!ddsd.lpSurface)
+        {
+                video_blit_complete();
+                return;
+        }
         for (yy = 0; yy < h; yy++)
         {
                 if ((y + yy) >= 0 && (y + yy) < buffer->h)
@@ -250,7 +260,8 @@ static void ddraw_blit_memtoscreen_8(int x, int y, int w, int h)
         }
         p = (uint32_t *)(ddsd.lpSurface + (4 * ddsd.lPitch));
         lpdds_back->Unlock(NULL);
-
+        video_blit_complete();
+        
         po.x = po.y = 0;
         
         ClientToScreen(ddraw_hwnd, &po);

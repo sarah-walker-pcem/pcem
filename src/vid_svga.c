@@ -484,8 +484,11 @@ void svga_poll(void *p)
                         svga->hdisp_on=1;
                         
                         svga->ma &= svga->vrammask;
-                        if (svga->firstline == 2000) 
+                        if (svga->firstline == 2000)
+                        {
                                 svga->firstline = svga->displine;
+                                video_wait_for_buffer();
+                        }
                         
                         if (svga->hwcursor_on || svga->overlay_on)
                                 svga->changedvram[svga->ma >> 12] = svga->changedvram[(svga->ma >> 12) + 1] = 2;
