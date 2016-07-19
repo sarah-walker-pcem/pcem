@@ -11,6 +11,7 @@
 #include "fdd.h"
 #include "gameport.h"
 #include "model.h"
+#include "nvr.h"
 #include "resources.h"
 #include "sound.h"
 #include "video.h"
@@ -141,6 +142,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                 h=GetDlgItem(hdlg, IDC_CHECK4);
                 SendMessage(h, BM_SETCHECK, cga_comp, 0);
+
+                h=GetDlgItem(hdlg, IDC_CHECKSYNC);
+                SendMessage(h, BM_SETCHECK, enable_sync, 0);
 
                 h=GetDlgItem(hdlg, IDC_CHECKVOODOO);
                 SendMessage(h, BM_SETCHECK, voodoo_enabled, 0);
@@ -277,6 +281,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_CHECKSSI);
                         temp_SSI2001 = SendMessage(h, BM_GETCHECK, 0, 0);
 
+                        h = GetDlgItem(hdlg, IDC_CHECKSYNC);
+                        enable_sync = SendMessage(h, BM_GETCHECK, 0, 0);
+
                         h = GetDlgItem(hdlg, IDC_CHECKVOODOO);
                         temp_voodoo = SendMessage(h, BM_GETCHECK, 0, 0);
 
@@ -302,6 +309,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
+					savenvr();
                                         model = temp_model;
                                         romset = model_getromset();
                                         gfxcard = gfx;

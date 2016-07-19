@@ -97,6 +97,7 @@ void fatal(const char *format, ...)
    va_end(ap);
    fputs(buf,pclogf);
    fflush(pclogf);
+   savenvr();
    dumppic();
    dumpregs();
    exit(-1);
@@ -679,6 +680,8 @@ void loadconfig(char *fn)
                         }
                 }
         }
+
+        enable_sync = config_get_int(NULL, "enable_sync", 1);
 }
 
 void saveconfig()
@@ -764,6 +767,8 @@ void saveconfig()
                         }
                 }
         }
+        
+        config_set_int(NULL, "enable_sync", enable_sync);
 
         config_save(config_file_default);
 }
