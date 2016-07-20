@@ -19,7 +19,7 @@ allegro-gui-configure.c allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-
 allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
 codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dac.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
-headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_standard.c joystick_sw_pad.c \
+headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
 keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 lpt.c mcr.c mem.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
 opti.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c rom.c rtc.c scat.c serial.c sis496.c sound.c \
