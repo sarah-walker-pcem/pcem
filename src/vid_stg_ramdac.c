@@ -60,6 +60,7 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t *ramdac, svga_t *sv
                                 default: svga->bpp =  8; break;
                         }
                 }
+                svga_recalctimings(svga);
                 if (didwrite) return;
                 break;
                 case 0x3c7: case 0x3c8: case 0x3c9:

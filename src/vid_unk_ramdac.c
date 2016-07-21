@@ -32,6 +32,7 @@ void unk_ramdac_out(uint16_t addr, uint8_t val, unk_ramdac_t *ramdac, svga_t *sv
                                 svga->bpp = 16;
                                 break;
                         }
+                        svga_recalctimings(svga);
                         return;
                 }
                 ramdac->state = 0;
