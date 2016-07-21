@@ -9,6 +9,7 @@
 #include "joystick_ch_flightstick_pro.h"
 #include "joystick_standard.h"
 #include "joystick_sw_pad.h"
+#include "joystick_tm_fcs.h"
 
 int joystick_type;
 
@@ -20,6 +21,7 @@ static joystick_if_t *joystick_list[] =
         &joystick_standard_8button,
         &joystick_ch_flightstick_pro,
         &joystick_sw_pad,
+        &joystick_tm_fcs,
         NULL
 };
 
