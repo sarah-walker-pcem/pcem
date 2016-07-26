@@ -21,7 +21,7 @@
 #define FIFO_ENTRY_SIZE (1 << 31)
 
 #define FIFO_ENTRIES (et4000->fifo_write_idx - et4000->fifo_read_idx)
-#define FIFO_FULL    ((et4000->fifo_write_idx - et4000->fifo_read_idx) >= FIFO_SIZE)
+#define FIFO_FULL    ((et4000->fifo_write_idx - et4000->fifo_read_idx) >= (FIFO_SIZE-1))
 #define FIFO_EMPTY   (et4000->fifo_read_idx == et4000->fifo_write_idx)
 
 #define FIFO_TYPE 0xff000000
