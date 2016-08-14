@@ -284,7 +284,7 @@ void loadseg(uint16_t seg, x86seg *s)
                 {
                         if (addr>=ldt.limit)
                         {
-                                pclog("Bigger than LDT limit %04X %04X %02X %02X %02X\n",seg,ldt.limit, opcode, opcode2, rmdat);
+                                pclog("Bigger than LDT limit %04X %04X %02X %02X %02X\n",seg,ldt.limit, opcode, opcode2, 0/*rmdat*/);
 //                                dumppic();
 //                                dumpregs();
 //                                exit(-1);
@@ -508,7 +508,7 @@ void loadcs(uint16_t seg)
                         switch (segdat[2]&0xF00)
                         {
                                 default:
-                                pclog("Bad CS %02X %02X %i special descriptor %03X %04X\n",opcode,rmdat,optype,segdat[2]&0xF00,seg);
+                                pclog("Bad CS %02X %02X %i special descriptor %03X %04X\n",opcode,0/*rmdat*/,optype,segdat[2]&0xF00,seg);
                                 x86gpf(NULL,seg&~3);
                                 return;
                         }
@@ -743,7 +743,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 return;
 
                                 default:
-                                pclog("Bad JMP CS %02X %02X %i special descriptor %03X %04X\n",opcode,rmdat,optype,segdat[2]&0xF00,seg);
+                                pclog("Bad JMP CS %02X %02X %i special descriptor %03X %04X\n",opcode,0/*rmdat*/,optype,segdat[2]&0xF00,seg);
                                 x86gpf(NULL,0);
                                 return;
 //                                dumpregs();

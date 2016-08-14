@@ -231,8 +231,8 @@ static int opPOPW_a16(uint32_t fetchdat)
                 else         SP -= 2;
         }
                         
-        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
-        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((cpu_mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((cpu_mod == 3) ? 4 : 5);
         return abrt;
 }
 static int opPOPW_a32(uint32_t fetchdat)
@@ -249,8 +249,8 @@ static int opPOPW_a32(uint32_t fetchdat)
                 else         SP -= 2;
         }
                         
-        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
-        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((cpu_mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((cpu_mod == 3) ? 4 : 5);
         return abrt;
 }
 
@@ -268,8 +268,8 @@ static int opPOPL_a16(uint32_t fetchdat)
                 else         SP -= 4;
         }
                         
-        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
-        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((cpu_mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((cpu_mod == 3) ? 4 : 5);
         return abrt;
 }
 static int opPOPL_a32(uint32_t fetchdat)
@@ -286,8 +286,8 @@ static int opPOPL_a32(uint32_t fetchdat)
                 else         SP -= 4;
         }
 
-        if (is486) CLOCK_CYCLES((mod == 3) ? 1 : 6);
-        else       CLOCK_CYCLES((mod == 3) ? 4 : 5);
+        if (is486) CLOCK_CYCLES((cpu_mod == 3) ? 1 : 6);
+        else       CLOCK_CYCLES((cpu_mod == 3) ? 4 : 5);
         return abrt;
 }
 

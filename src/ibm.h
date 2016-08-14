@@ -108,6 +108,15 @@ struct
         uint32_t flags_op1, flags_op2;
         
         uint32_t pc;
+        
+        union
+        {
+                struct
+                {
+                        int8_t rm, mod, reg;
+                } rm_mod_reg;
+                uint32_t rm_mod_reg_data;
+        } rm_data;
 } cpu_state;
 
 /*x86reg regs[8];*/
@@ -237,6 +246,10 @@ void setpitclock(float clock);
 int pitcount;
 
 float pit_timer0_freq();
+
+#define cpu_rm  cpu_state.rm_data.rm_mod_reg.rm
+#define cpu_mod cpu_state.rm_data.rm_mod_reg.mod
+#define cpu_reg cpu_state.rm_data.rm_mod_reg.reg
 
 
 

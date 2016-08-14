@@ -153,8 +153,8 @@ static inline uint64_t getquad()
 
 static inline uint8_t geteab()
 {
-        if (mod == 3)
-                return (rm & 4) ? cpu_state.regs[rm & 3].b.h : cpu_state.regs[rm&3].b.l;
+        if (cpu_mod == 3)
+                return (cpu_rm & 4) ? cpu_state.regs[cpu_rm & 3].b.h : cpu_state.regs[cpu_rm&3].b.l;
         if (eal_r)
                 return *(uint8_t *)eal_r;
         return readmemb(easeg, eaaddr);
@@ -162,8 +162,8 @@ static inline uint8_t geteab()
 
 static inline uint16_t geteaw()
 {
-        if (mod == 3)
-                return cpu_state.regs[rm].w;
+        if (cpu_mod == 3)
+                return cpu_state.regs[cpu_rm].w;
 //        cycles-=3;
         if (eal_r)
                 return *(uint16_t *)eal_r;
@@ -172,8 +172,8 @@ static inline uint16_t geteaw()
 
 static inline uint32_t geteal()
 {
-        if (mod == 3)
-                return cpu_state.regs[rm].l;
+        if (cpu_mod == 3)
+                return cpu_state.regs[cpu_rm].l;
 //        cycles-=3;
         if (eal_r)
                 return *eal_r;
@@ -206,9 +206,9 @@ static inline void seteaq(uint64_t v)
         writememql(easeg, eaaddr, v);
 }
 
-#define seteab(v) if (mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (rm&4) cpu_state.regs[rm&3].b.h=v; else cpu_state.regs[rm].b.l=v
-#define seteaw(v) if (mod!=3) { if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);    } else cpu_state.regs[rm].w=v
-#define seteal(v) if (mod!=3) { if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);    } else cpu_state.regs[rm].l=v
+#define seteab(v) if (cpu_mod!=3) { if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v); } else if (cpu_rm&4) cpu_state.regs[cpu_rm&3].b.h=v; else cpu_state.regs[cpu_rm].b.l=v
+#define seteaw(v) if (cpu_mod!=3) { if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);    } else cpu_state.regs[cpu_rm].w=v
+#define seteal(v) if (cpu_mod!=3) { if (eal_w) *eal_w=v;             else writememll(easeg,eaaddr,v);    } else cpu_state.regs[cpu_rm].l=v
 
 #define seteab_mem(v) if (eal_w) *(uint8_t *)eal_w=v;  else writememb386l(easeg,eaaddr,v);
 #define seteaw_mem(v) if (eal_w) *(uint16_t *)eal_w=v; else writememwl(easeg,eaaddr,v);
