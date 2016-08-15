@@ -103,12 +103,11 @@ void nvr_onesec(void *p)
                 if (!(nvrram[RTC_REGB] & RTC_SET))
                 {
                         nvr_update_status = RTC_UIP;
-                        /* If sync is disabled, move internal clock ahead by 1 second. */
-                        if (!enable_sync)
-                                rtc_tick();
+                        rtc_tick();
 
                         nvr_update_end_count = (int)((244.0 + 1984.0) * TIMER_USEC);
                 }
+                nvr_onesec_cnt = 0;
         }
         nvr_onesec_time += (int)(10000 * TIMER_USEC);
 }
@@ -241,7 +240,10 @@ void loadnvr()
                 return;
         }
         fread(nvrram,128,1,f);
-        if (!enable_sync)  time_update(nvrram, 0xFF);        /* Update the internal clock state based on the NVR registers. */
+        if (enable_sync)
+                time_internal_sync(nvrram);
+        else
+                time_internal_set_nvrram(nvrram); /* Update the internal clock state based on the NVR registers. */
         fclose(f);
         nvrram[RTC_REGA] = 6;
         nvrram[RTC_REGB] = RTC_2412;
