@@ -183,7 +183,7 @@ static int opFUCOMPP(uint32_t fetchdat)
 {
         FP_ENTER();
         cpu_state.pc++;
-        if (fplog) pclog("FUCOMPP\n", easeg, eaaddr);
+        if (fplog) pclog("FUCOMPP\n", easeg, cpu_state.eaaddr);
         npxs &= ~(C0|C2|C3);
         npxs |= x87_ucompare(ST(0), ST(1));
         x87_pop();

@@ -548,7 +548,7 @@ static int opLOCK(uint32_t fetchdat)
         cpu_state.pc++;
 
         CLOCK_CYCLES(4);
-        return x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 
 
@@ -560,7 +560,7 @@ static int opBOUND_w_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(cpu_mod == 3);
         low = geteaw();
-        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
+        high = readmemw(easeg, cpu_state.eaaddr + 2);     if (abrt) return 1;
         
         if (((int16_t)cpu_state.regs[cpu_reg].w < low) || ((int16_t)cpu_state.regs[cpu_reg].w > high))
         {
@@ -578,7 +578,7 @@ static int opBOUND_w_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(cpu_mod == 3);
         low = geteaw();
-        high = readmemw(easeg, eaaddr + 2);     if (abrt) return 1;
+        high = readmemw(easeg, cpu_state.eaaddr + 2);     if (abrt) return 1;
         
         if (((int16_t)cpu_state.regs[cpu_reg].w < low) || ((int16_t)cpu_state.regs[cpu_reg].w > high))
         {
@@ -597,7 +597,7 @@ static int opBOUND_l_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         ILLEGAL_ON(cpu_mod == 3);
         low = geteal();
-        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
+        high = readmeml(easeg, cpu_state.eaaddr + 4);     if (abrt) return 1;
         
         if (((int32_t)cpu_state.regs[cpu_reg].l < low) || ((int32_t)cpu_state.regs[cpu_reg].l > high))
         {
@@ -615,7 +615,7 @@ static int opBOUND_l_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         ILLEGAL_ON(cpu_mod == 3);
         low = geteal();
-        high = readmeml(easeg, eaaddr + 4);     if (abrt) return 1;
+        high = readmeml(easeg, cpu_state.eaaddr + 4);     if (abrt) return 1;
         
         if (((int32_t)cpu_state.regs[cpu_reg].l < low) || ((int32_t)cpu_state.regs[cpu_reg].l > high))
         {
@@ -772,7 +772,7 @@ static int opCPUID(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        cpu_state.pc = oldpc;
+        cpu_state.pc = cpu_state.oldpc;
         x86illegal();
         return 1;
 }
@@ -785,7 +785,7 @@ static int opRDMSR(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        cpu_state.pc = oldpc;
+        cpu_state.pc = cpu_state.oldpc;
         x86illegal();
         return 1;
 }
@@ -798,7 +798,7 @@ static int opWRMSR(uint32_t fetchdat)
                 CLOCK_CYCLES(9);
                 return 0;
         }
-        cpu_state.pc = oldpc;
+        cpu_state.pc = cpu_state.oldpc;
         x86illegal();
         return 1;
 }

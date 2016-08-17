@@ -444,14 +444,14 @@ static int opPOP_SS_w(uint32_t fetchdat)
         loadseg(temp_seg, &_ss);                if (abrt) { ESP = temp_esp; return 1; }
         CLOCK_CYCLES(is486 ? 3 : 7);
         
-        oldpc = cpu_state.pc;
-        op32 = use32;
-        ssegs = 0;
-        ea_seg = &_ds;
+        cpu_state.oldpc = cpu_state.pc;
+        cpu_state.op32 = use32;
+        cpu_state.ssegs = 0;
+        cpu_state.ea_seg = &_ds;
         fetchdat = fastreadl(cs + cpu_state.pc);
         cpu_state.pc++;
         if (abrt) return 1;
-        x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+        x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 
         return 1;
 }
@@ -463,14 +463,14 @@ static int opPOP_SS_l(uint32_t fetchdat)
         loadseg(temp_seg & 0xffff, &_ss);       if (abrt) { ESP = temp_esp; return 1; }
         CLOCK_CYCLES(is486 ? 3 : 7);
 
-        oldpc = cpu_state.pc;
-        op32 = use32;
-        ssegs = 0;
-        ea_seg = &_ds;
+        cpu_state.oldpc = cpu_state.pc;
+        cpu_state.op32 = use32;
+        cpu_state.ssegs = 0;
+        cpu_state.ea_seg = &_ds;
         fetchdat = fastreadl(cs + cpu_state.pc);
         cpu_state.pc++;
         if (abrt) return 1;
-        x86_opcodes[(fetchdat & 0xff) | op32](fetchdat >> 8);
+        x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 
         return 1;
 }

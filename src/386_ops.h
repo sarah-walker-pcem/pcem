@@ -6,7 +6,7 @@
         {                               \
                 if ((cond))             \
                 {                       \
-                        cpu_state.pc = oldpc;     \
+                        cpu_state.pc = cpu_state.oldpc;     \
                         x86illegal();   \
                         return 0;       \
                 }                       \
@@ -142,7 +142,7 @@ static inline uint32_t POP_L_seg(uint32_t seg)
 
 static int ILLEGAL(uint32_t fetchdat)
 {
-        cpu_state.pc = oldpc;
+        cpu_state.pc = cpu_state.oldpc;
 
 //        fatal("Illegal instruction %08X\n", fetchdat);
         x86illegal();

@@ -117,8 +117,8 @@ static int opFF_w_a16(uint32_t fetchdat)
                 else       CLOCK_CYCLES((cpu_mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
-                new_pc = readmemw(easeg, eaaddr);
-                new_cs = readmemw(easeg, (eaaddr + 2)); if (abrt) return 1;
+                new_pc = readmemw(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, (cpu_state.eaaddr + 2)); if (abrt) return 1;
                 
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
@@ -132,8 +132,8 @@ static int opFF_w_a16(uint32_t fetchdat)
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = cpu_state.pc;
-                new_pc = readmemw(easeg, eaaddr);
-                new_cs = readmemw(easeg, eaaddr + 2);  if (abrt) return 1;
+                new_pc = readmemw(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, cpu_state.eaaddr + 2);  if (abrt) return 1;
                 cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
@@ -182,8 +182,8 @@ static int opFF_w_a32(uint32_t fetchdat)
                 else       CLOCK_CYCLES((cpu_mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
-                new_pc = readmemw(easeg, eaaddr);
-                new_cs = readmemw(easeg, (eaaddr + 2)); if (abrt) return 1;
+                new_pc = readmemw(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, (cpu_state.eaaddr + 2)); if (abrt) return 1;
                 
                 CALL_FAR_w(new_cs, new_pc);
                 CPU_BLOCK_END();
@@ -197,8 +197,8 @@ static int opFF_w_a32(uint32_t fetchdat)
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = cpu_state.pc;
-                new_pc = readmemw(easeg, eaaddr);
-                new_cs = readmemw(easeg, eaaddr + 2);  if (abrt) return 1;
+                new_pc = readmemw(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, cpu_state.eaaddr + 2);  if (abrt) return 1;
                 cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);               if (abrt) return 1;
                 CPU_BLOCK_END();
@@ -248,8 +248,8 @@ static int opFF_l_a16(uint32_t fetchdat)
                 else       CLOCK_CYCLES((cpu_mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
-                new_pc = readmeml(easeg, eaaddr);
-                new_cs = readmemw(easeg, (eaaddr + 4)); if (abrt) return 1;
+                new_pc = readmeml(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, (cpu_state.eaaddr + 4)); if (abrt) return 1;
                 
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
@@ -263,8 +263,8 @@ static int opFF_l_a16(uint32_t fetchdat)
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = cpu_state.pc;
-                new_pc = readmeml(easeg, eaaddr);
-                new_cs = readmemw(easeg, eaaddr + 4);   if (abrt) return 1;
+                new_pc = readmeml(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, cpu_state.eaaddr + 4);   if (abrt) return 1;
                 cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();
@@ -313,8 +313,8 @@ static int opFF_l_a32(uint32_t fetchdat)
                 else       CLOCK_CYCLES((cpu_mod == 3) ? 7 : 10);
                 break;
                 case 0x18: /*CALL far*/
-                new_pc = readmeml(easeg, eaaddr);
-                new_cs = readmemw(easeg, (eaaddr + 4)); if (abrt) return 1;
+                new_pc = readmeml(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, (cpu_state.eaaddr + 4)); if (abrt) return 1;
                 
                 CALL_FAR_l(new_cs, new_pc);
                 CPU_BLOCK_END();
@@ -328,8 +328,8 @@ static int opFF_l_a32(uint32_t fetchdat)
                 break;
                 case 0x28: /*JMP far*/
                 oxpc = cpu_state.pc;
-                new_pc = readmeml(easeg, eaaddr);
-                new_cs = readmemw(easeg, eaaddr + 4);   if (abrt) return 1;
+                new_pc = readmeml(easeg, cpu_state.eaaddr);
+                new_cs = readmemw(easeg, cpu_state.eaaddr + 4);   if (abrt) return 1;
                 cpu_state.pc = new_pc;
                 loadcsjmp(new_cs, oxpc);                if (abrt) return 1;
                 CPU_BLOCK_END();

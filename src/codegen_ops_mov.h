@@ -32,7 +32,7 @@ static uint32_t ropMOV_b_r(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_WRITE(target_seg);
                 CHECK_SEG_LIMITS(target_seg, 0);
@@ -55,7 +55,7 @@ static uint32_t ropMOV_w_r(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_WRITE(target_seg);
                 CHECK_SEG_LIMITS(target_seg, 1);
@@ -81,7 +81,7 @@ static uint32_t ropMOV_l_r(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_WRITE(target_seg);
                 CHECK_SEG_LIMITS(target_seg, 3);
@@ -105,7 +105,7 @@ static uint32_t ropMOV_r_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -126,7 +126,7 @@ static uint32_t ropMOV_r_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
 
                 CHECK_SEG_READ(target_seg);
 
@@ -147,7 +147,7 @@ static uint32_t ropMOV_r_l(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, ui
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
 
                 CHECK_SEG_READ(target_seg);
 
@@ -170,7 +170,7 @@ static uint32_t ropMOV_b_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
                 uint32_t imm = fastreadb(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                 CHECK_SEG_WRITE(target_seg);
 
                 MEM_STORE_ADDR_EA_B(target_seg, host_reg);
@@ -191,7 +191,7 @@ static uint32_t ropMOV_w_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
                 uint32_t imm = fastreadw(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                 CHECK_SEG_WRITE(target_seg);
 
                 MEM_STORE_ADDR_EA_W(target_seg, host_reg);
@@ -214,7 +214,7 @@ static uint32_t ropMOV_l_imm(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
                 uint32_t imm = fastreadl(cs + op_pc + 1);
                 int host_reg = LOAD_REG_IMM(imm);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                 CHECK_SEG_WRITE(target_seg);
 
                 MEM_STORE_ADDR_EA_L(target_seg, host_reg);
@@ -235,7 +235,7 @@ static uint32_t ropMOV_AL_a(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_READ(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
 
         MEM_LOAD_ADDR_IMM_B(op_ea_seg, addr);
         STORE_REG_TARGET_B_RELEASE(0, REG_AL);
@@ -252,7 +252,7 @@ static uint32_t ropMOV_AX_a(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_READ(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
 
         MEM_LOAD_ADDR_IMM_W(op_ea_seg, addr);
         STORE_REG_TARGET_W_RELEASE(0, REG_AX);
@@ -269,7 +269,7 @@ static uint32_t ropMOV_EAX_a(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_READ(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
 
         MEM_LOAD_ADDR_IMM_L(op_ea_seg, addr);
         STORE_REG_TARGET_L_RELEASE(0, REG_EAX);
@@ -288,7 +288,7 @@ static uint32_t ropMOV_a_AL(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_WRITE(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
         
         host_reg = LOAD_REG_B(REG_AL);
 
@@ -308,7 +308,7 @@ static uint32_t ropMOV_a_AX(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_WRITE(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                 
         host_reg = LOAD_REG_W(REG_AX);
 
@@ -328,7 +328,7 @@ static uint32_t ropMOV_a_EAX(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
                 addr = fastreadw(cs + op_pc);
 
         CHECK_SEG_WRITE(op_ea_seg);
-        STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
         
         host_reg = LOAD_REG_L(REG_EAX);
 
@@ -377,7 +377,7 @@ static uint32_t ropMOVZX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -400,7 +400,7 @@ static uint32_t ropMOVZX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -423,7 +423,7 @@ static uint32_t ropMOVZX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -447,7 +447,7 @@ static uint32_t ropMOVSX_w_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -470,7 +470,7 @@ static uint32_t ropMOVSX_l_b(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 
@@ -493,7 +493,7 @@ static uint32_t ropMOVSX_l_w(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, 
         {
                 x86seg *target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
 
-                STORE_IMM_ADDR_L((uintptr_t)&oldpc, op_old_pc);
+                STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);
                         
                 CHECK_SEG_READ(target_seg);
 

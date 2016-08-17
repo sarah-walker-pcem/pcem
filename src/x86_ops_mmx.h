@@ -11,14 +11,14 @@
         }                                                                       \
         else                                                                    \
         {                                                                       \
-                src.q = readmemq(easeg, eaaddr); if (abrt) return 1;            \
+                src.q = readmemq(easeg, cpu_state.eaaddr); if (abrt) return 1;            \
                 CLOCK_CYCLES(2);                                                \
         }
 
 #define MMX_ENTER()                                                     \
         if (!cpu_hasMMX)                                                \
         {                                                               \
-                cpu_state.pc = oldpc;                                   \
+                cpu_state.pc = cpu_state.oldpc;                                   \
                 x86illegal();                                           \
                 return 1;                                               \
         }                                                               \
@@ -33,7 +33,7 @@ static int opEMMS(uint32_t fetchdat)
 {
         if (!cpu_hasMMX)
         {
-                cpu_state.pc = oldpc;
+                cpu_state.pc = cpu_state.oldpc;
                 x86illegal();
                 return 1;
         }
