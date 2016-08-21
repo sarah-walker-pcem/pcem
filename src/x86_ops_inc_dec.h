@@ -49,16 +49,16 @@ static int opINCDEC_b_a16(uint32_t fetchdat)
         uint8_t temp;
         
         fetch_ea_16(fetchdat);       
-        temp=geteab();                  if (abrt) return 1;
+        temp=geteab();                  if (cpu_state.abrt) return 1;
 
         if (rmdat&0x38)
         {
-                seteab(temp - 1);       if (abrt) return 1;
+                seteab(temp - 1);       if (cpu_state.abrt) return 1;
                 setsub8nc(temp, 1);
         }
         else
         {
-                seteab(temp + 1);       if (abrt) return 1;
+                seteab(temp + 1);       if (cpu_state.abrt) return 1;
                 setadd8nc(temp, 1);
         }
         CLOCK_CYCLES((cpu_mod == 3) ? timing_rr : timing_mm);
@@ -69,16 +69,16 @@ static int opINCDEC_b_a32(uint32_t fetchdat)
         uint8_t temp;
         
         fetch_ea_32(fetchdat);       
-        temp=geteab();                  if (abrt) return 1;
+        temp=geteab();                  if (cpu_state.abrt) return 1;
 
         if (rmdat&0x38)
         {
-                seteab(temp - 1);       if (abrt) return 1;
+                seteab(temp - 1);       if (cpu_state.abrt) return 1;
                 setsub8nc(temp, 1);
         }
         else
         {
-                seteab(temp + 1);       if (abrt) return 1;
+                seteab(temp + 1);       if (cpu_state.abrt) return 1;
                 setadd8nc(temp, 1);
         }
         CLOCK_CYCLES((cpu_mod == 3) ? timing_rr : timing_mm);

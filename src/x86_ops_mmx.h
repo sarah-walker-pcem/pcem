@@ -11,7 +11,7 @@
         }                                                                       \
         else                                                                    \
         {                                                                       \
-                src.q = readmemq(easeg, cpu_state.eaaddr); if (abrt) return 1;            \
+                src.q = readmemq(easeg, cpu_state.eaaddr); if (cpu_state.abrt) return 1;            \
                 CLOCK_CYCLES(2);                                                \
         }
 

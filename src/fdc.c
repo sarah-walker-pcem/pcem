@@ -89,7 +89,6 @@ void fdc_reset()
         }
 //        pclog("Reset FDC\n");
 }
-int ins;
 
 void fdc_reset_fifo_buf()
 {

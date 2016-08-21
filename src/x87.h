@@ -1,11 +1,7 @@
 uint32_t x87_pc_off,x87_op_off;
 uint16_t x87_pc_seg,x87_op_seg;
-extern int TOP;
 extern uint16_t npxs, npxc;
-extern uint8_t tag[8];
-extern int ismmx;
 extern double ST[8];
-extern uint64_t ST_i64[8];
 
 typedef union MMX_REG
 {

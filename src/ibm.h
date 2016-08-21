@@ -112,6 +112,8 @@ typedef struct
 struct
 {
         x86reg regs[8];
+        
+        uint8_t tag[8];
 
         x86seg *ea_seg;
         uint32_t eaaddr;
@@ -122,7 +124,9 @@ struct
         
         uint32_t pc;
         uint32_t oldpc;
-        uint32_t op32;        
+        uint32_t op32;
+        
+        int TOP;
         
         union
         {
@@ -134,11 +138,20 @@ struct
         } rm_data;
         
         int8_t ssegs;
+        int8_t ismmx;
+        int8_t abrt;
+        
+        int _cycles;
+        int cpu_recomp_ins;
 } cpu_state;
+
+#define cycles cpu_state._cycles
 
 #define COMPILE_TIME_ASSERT(expr) typedef char COMP_TIME_ASSERT[(expr) ? 1 : 0];
 
 COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
+
+#define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state)
 
 /*x86reg regs[8];*/
 
@@ -210,7 +223,6 @@ uint32_t dr[8];
 //#define IOPLp 1
 
 //#define IOPLV86 ((!(msw&1)) || (CPL<=IOPL))
-extern int cycles;
 extern int cycles_lost;
 extern int is486;
 extern uint8_t opcode;

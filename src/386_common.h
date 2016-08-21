@@ -17,7 +17,7 @@ extern uint16_t ea_rseg;
 #define check_io_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
                         { \
                                 int tempi = checkio(port); \
-                                if (abrt) return 1; \
+                                if (cpu_state.abrt) return 1; \
                                 if (tempi) \
                                 { \
                                         x86gpf(NULL,0); \
@@ -28,7 +28,7 @@ extern uint16_t ea_rseg;
 #define checkio_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
                         { \
                                 tempi = checkio(port); \
-                                if (abrt) break; \
+                                if (cpu_state.abrt) break; \
                                 if (tempi) \
                                 { \
                                         x86gpf(NULL,0); \
@@ -74,7 +74,7 @@ static inline uint8_t fastreadb(uint32_t a)
         if ((a >> 12) == pccache) 
                 return *((uint8_t *)&pccache2[a]);
         t = getpccache(a);
-        if (abrt)
+        if (cpu_state.abrt)
                 return;
         pccache = a >> 12;
         pccache2 = t;
@@ -93,7 +93,7 @@ static inline uint16_t fastreadw(uint32_t a)
         }
         if ((a>>12)==pccache) return *((uint16_t *)&pccache2[a]);
         t = getpccache(a);
-        if (abrt)
+        if (cpu_state.abrt)
                 return;
 
         pccache = a >> 12;
@@ -110,7 +110,7 @@ static inline uint32_t fastreadl(uint32_t a)
                 if ((a>>12)!=pccache)
                 {
                         t = getpccache(a);
-                        if (abrt)
+                        if (cpu_state.abrt)
                                 return 0;
                         pccache2 = t;
                         pccache=a>>12;

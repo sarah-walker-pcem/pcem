@@ -4,7 +4,7 @@
                 fetch_ea_16(fetchdat);                                  \
                 seteab((cond_ ## condition) ? 1 : 0);                   \
                 CLOCK_CYCLES(4);                                        \
-                return abrt;                                            \
+                return cpu_state.abrt;                                            \
         }                                                               \
                                                                         \
         static int opSET ## condition ## _a32(uint32_t fetchdat)        \
@@ -12,7 +12,7 @@
                 fetch_ea_32(fetchdat);                                  \
                 seteab((cond_ ## condition) ? 1 : 0);                   \
                 CLOCK_CYCLES(4);                                        \
-                return abrt;                                            \
+                return cpu_state.abrt;                                            \
         }
 
 opSET(O)

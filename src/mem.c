@@ -617,7 +617,7 @@ int loadbios()
 
 
 
-int abrt=0;
+//int abrt=0;
 
 void resetreadlookup()
 {
@@ -783,7 +783,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
         uint32_t addr2;
         uint32_t temp,temp2,temp3;
         
-                if (abrt) 
+                if (cpu_state.abrt) 
                 {
 //                        pclog("Translate recursive abort\n");
                         return -1;
@@ -803,7 +803,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 temp&=1;
                 if (CPL==3) temp|=4;
                 if (rw) temp|=2;
-                abrt = ABRT_PF;
+                cpu_state.abrt = ABRT_PF;
                 abrt_error = temp;
 /*                if (addr == 0x70046D)
                 {
@@ -833,7 +833,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 temp&=1;
                 if (CPL==3) temp|=4;
                 if (rw) temp|=2;
-                abrt = ABRT_PF;
+                cpu_state.abrt = ABRT_PF;
                 abrt_error = temp;
 //                pclog("%04X\n",abrt);
                 return -1;
@@ -851,7 +851,7 @@ uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
         uint32_t addr2;
         uint32_t temp,temp2,temp3;
         
-        if (abrt) 
+        if (cpu_state.abrt) 
                 return -1;
 
         addr2 = ((cr3 & ~0xfff) + ((addr >> 20) & 0xffc));

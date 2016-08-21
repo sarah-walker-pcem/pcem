@@ -119,7 +119,7 @@ static uint32_t ropFILDq(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint
 
         FP_LOAD_IQ();
 
-        codegen_fpu_loaded_iq[(TOP - 1) & 7] = 1;
+        codegen_fpu_loaded_iq[(cpu_state.TOP - 1) & 7] = 1;
         
         return op_pc + 1;
 }
