@@ -88,7 +88,7 @@ static int opFILDiq_a16(uint32_t fetchdat)
         temp64 = geteaq(); if (cpu_state.abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,cpu_state.eaaddr), readmeml(easeg,cpu_state.eaaddr+4));
         x87_push((double)temp64);
-        MM[cpu_state.TOP].q = temp64;
+        cpu_state.MM[cpu_state.TOP].q = temp64;
         cpu_state.tag[cpu_state.TOP] |= TAG_UINT64;
 
         CLOCK_CYCLES(10);
@@ -103,7 +103,7 @@ static int opFILDiq_a32(uint32_t fetchdat)
         temp64 = geteaq(); if (cpu_state.abrt) return 1;
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,cpu_state.eaaddr), readmeml(easeg,cpu_state.eaaddr+4));
         x87_push((double)temp64);
-        MM[cpu_state.TOP].q = temp64;
+        cpu_state.MM[cpu_state.TOP].q = temp64;
         cpu_state.tag[cpu_state.TOP] |= TAG_UINT64;
 
         CLOCK_CYCLES(10);
@@ -170,7 +170,7 @@ static int FISTPiq_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FISTPl %08X:%08X\n", easeg, cpu_state.eaaddr);
         if (cpu_state.tag[cpu_state.TOP] & TAG_UINT64)
-                temp64 = MM[cpu_state.TOP].q;
+                temp64 = cpu_state.MM[cpu_state.TOP].q;
         else
                 temp64 = x87_fround(ST(0));
         seteaq(temp64); if (cpu_state.abrt) return 1;
@@ -185,7 +185,7 @@ static int FISTPiq_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FISTPl %08X:%08X\n", easeg, cpu_state.eaaddr);
         if (cpu_state.tag[cpu_state.TOP] & TAG_UINT64)
-                temp64 = MM[cpu_state.TOP].q;
+                temp64 = cpu_state.MM[cpu_state.TOP].q;
         else
                 temp64 = x87_fround(ST(0));
         seteaq(temp64); if (cpu_state.abrt) return 1;

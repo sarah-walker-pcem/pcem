@@ -5,7 +5,7 @@
 
 static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZERO};
 
-#define ST(x) ST[((cpu_state.TOP+(x))&7)]
+#define ST(x) cpu_state.ST[((cpu_state.TOP+(x))&7)]
 
 #define C0 (1<<8)
 #define C1 (1<<9)
@@ -52,13 +52,13 @@ static inline void x87_checkexceptions()
 static inline void x87_push(double i)
 {
         cpu_state.TOP=(cpu_state.TOP-1)&7;
-        ST[cpu_state.TOP]=i;
+        cpu_state.ST[cpu_state.TOP] = i;
         cpu_state.tag[cpu_state.TOP&7] = (i == 0.0) ? 1 : 0;
 }
 
 static inline double x87_pop()
 {
-        double t=ST[cpu_state.TOP];
+        double t = cpu_state.ST[cpu_state.TOP];
         cpu_state.tag[cpu_state.TOP&7] = 3;
         cpu_state.TOP=(cpu_state.TOP+1)&7;
         return t;
@@ -167,12 +167,12 @@ static inline void x87_st_fsave(int reg)
         
         if (cpu_state.tag[reg] & TAG_UINT64)
         {
-        	writememl(easeg, cpu_state.eaaddr, MM[reg].q & 0xffffffff);
-        	writememl(easeg, cpu_state.eaaddr + 4, MM[reg].q >> 32);
+        	writememl(easeg, cpu_state.eaaddr, cpu_state.MM[reg].q & 0xffffffff);
+        	writememl(easeg, cpu_state.eaaddr + 4, cpu_state.MM[reg].q >> 32);
         	writememw(easeg, cpu_state.eaaddr + 8, 0x5555);
         }
         else
-                x87_st80(ST[reg]);
+                x87_st80(cpu_state.ST[reg]);
 }
 
 static inline void x87_ld_frstor(int reg)
@@ -186,19 +186,19 @@ static inline void x87_ld_frstor(int reg)
         if (temp == 0x5555 && cpu_state.tag[reg] == 2)
         {
                 cpu_state.tag[reg] = TAG_UINT64;
-                MM[reg].q = readmeml(easeg, cpu_state.eaaddr);
-                MM[reg].q |= ((uint64_t)readmeml(easeg, cpu_state.eaaddr + 4) << 32);
-                ST[reg] = (double)MM[reg].q;
+                cpu_state.MM[reg].q = readmeml(easeg, cpu_state.eaaddr);
+                cpu_state.MM[reg].q |= ((uint64_t)readmeml(easeg, cpu_state.eaaddr + 4) << 32);
+                cpu_state.ST[reg] = (double)cpu_state.MM[reg].q;
         }
         else
-                ST[reg] = x87_ld80();
+                cpu_state.ST[reg] = x87_ld80();
 }
 
-static inline void x87_ldmmx(MMX_REG *r)
+static inline void x87_ldmmx(MMX_REG *r, uint16_t *w4)
 {
         r->l[0] = readmeml(easeg, cpu_state.eaaddr);
         r->l[1] = readmeml(easeg, cpu_state.eaaddr + 4);
-        r->w[4] = readmemw(easeg, cpu_state.eaaddr + 8);
+        *w4 = readmemw(easeg, cpu_state.eaaddr + 8);
 }
 
 static inline void x87_stmmx(MMX_REG r)

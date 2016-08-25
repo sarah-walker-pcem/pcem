@@ -6,7 +6,7 @@
 #define MMX_GETSRC()                                                            \
         if (cpu_mod == 3)                                                           \
         {                                                                       \
-                src = MM[cpu_rm];                                                   \
+                src = cpu_state.MM[cpu_rm];                                                   \
                 CLOCK_CYCLES(1);                                                \
         }                                                                       \
         else                                                                    \

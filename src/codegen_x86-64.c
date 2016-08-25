@@ -356,9 +356,9 @@ void codegen_block_start_recompile(codeblock_t *block)
         addbyte(0x83);
         addbyte(0xEC);
         addbyte(0x28);
-        addbyte(0x48); /*MOVL EBP, &EAX*/
+        addbyte(0x48); /*MOVL RBP, &cpu_state*/
         addbyte(0xBD);
-        addquad((uint64_t)&EAX);
+        addquad(((uintptr_t)&cpu_state) + 128);
 
 //        pclog("New block %i for %08X   %03x\n", block_current, cs+pc, block_num);
 

@@ -109,6 +109,18 @@ typedef struct
         int checked; /*Non-zero if selector is known to be valid*/
 } x86seg;
 
+typedef union MMX_REG
+{
+        uint64_t q;
+        int64_t  sq;
+        uint32_t l[2];
+        int32_t  sl[2];
+        uint16_t w[4];
+        int16_t  sw[4];
+        uint8_t  b[8];
+        int8_t   sb[8];
+} MMX_REG;
+
 struct
 {
         x86reg regs[8];
@@ -143,6 +155,12 @@ struct
         
         int _cycles;
         int cpu_recomp_ins;
+
+        double ST[8];        
+        
+        uint16_t MM_w4[8];
+        
+        MMX_REG MM[8];
 } cpu_state;
 
 #define cycles cpu_state._cycles
@@ -151,7 +169,7 @@ struct
 
 COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
 
-#define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state)
+#define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
 
 /*x86reg regs[8];*/
 

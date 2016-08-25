@@ -333,8 +333,8 @@ void codegen_block_start_recompile(codeblock_t *block)
         addbyte(0x83); /*SUBL $16,%esp*/
         addbyte(0xEC);
         addbyte(0x10);
-        addbyte(0xBD); /*MOVL EBP, &EAX*/
-        addlong((uint32_t)&EAX);
+        addbyte(0xBD); /*MOVL EBP, &cpu_state*/
+        addlong(((uintptr_t)&cpu_state) + 128);
 
 //        pclog("New block %i for %08X   %03x\n", block_current, cs+pc, block_num);
 
