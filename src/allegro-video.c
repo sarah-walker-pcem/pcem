@@ -38,8 +38,8 @@ void allegro_video_init()
 
         set_color_depth(32);
         set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
-        video_blit_memtoscreen = allegro_blit_memtoscreen;
-        video_blit_memtoscreen_8 = allegro_blit_memtoscreen_8;
+        video_blit_memtoscreen_func = allegro_blit_memtoscreen;
+        video_blit_memtoscreen_8_func = allegro_blit_memtoscreen_8;
 
         for (c = 0; c < 256; c++)
         	pal_lookup[c] = makecol(cgapal[c].r << 2, cgapal[c].g << 2, cgapal[c].b << 2);
