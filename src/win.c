@@ -70,8 +70,8 @@ static struct
 
 int winsizex=640,winsizey=480;
 int gfx_present[GFX_MAX];
-#undef cs
-CRITICAL_SECTION cs;
+
+HANDLE ghMutex;
 
 HANDLE mainthreadh;
 
@@ -124,12 +124,12 @@ void releasemouse()
 
 void startblit()
 {
-        EnterCriticalSection(&cs);
+        WaitForSingleObject(ghMutex, INFINITE);
 }
 
 void endblit()
 {
-        LeaveCriticalSection(&cs);
+        ReleaseMutex(ghMutex);
 }
 
 void leave_fullscreen()
@@ -637,7 +637,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 ///        QueryPerformanceCounter(&counter_posold);
 //        counter_posold.QuadPart*=100;
 
-        InitializeCriticalSection(&cs);
+        ghMutex = CreateMutex(NULL, FALSE, NULL);
         mainthreadh=(HANDLE)_beginthread(mainthread,0,NULL);
         SetThreadPriority(mainthreadh, THREAD_PRIORITY_HIGHEST);
         

@@ -561,9 +561,7 @@ void ega_poll(void *p)
                                         updatewindowsize(xsize, ysize);
                         }
                                         
-startblit();
                         video_blit_memtoscreen(32, 0, ega->firstline, ega->lastline, xsize, ega->lastline - ega->firstline);
-endblit();
 
                         frames++;
                         
