@@ -4,6 +4,9 @@
 
 #define HOST_REG_XMM_START 0
 #define HOST_REG_XMM_END 7
+
+#define IS_32_ADDR(x) !(((uintptr_t)x) & 0xffffffff00000000)
+
 static inline int find_host_xmm_reg()
 {
         int c;
@@ -515,7 +518,12 @@ static void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
         }
         else
         {
-                fatal("addr > 32-bit\n");
+                addbyte(0x48); /*MOV ESI, &addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad(addr);
+                addbyte(0xc7); /*MOVL [ESI], val*/
+                addbyte(0x00 | REG_ESI);
+                addlong(val);
         }
 }
 
@@ -859,11 +867,23 @@ static void CHECK_SEG_READ(x86seg *seg)
         if (seg->checked)
                 return;
 
-        addbyte(0x83); /*CMP seg->base, -1*/
-        addbyte(0x3c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
-        addbyte(-1);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x83); /*CMP seg->base, -1*/
+                addbyte(0x3c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+                addbyte(-1);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x83); /*CMP RSI, -1*/
+                addbyte(0xe8 | REG_ESI);
+                addbyte(0xff);
+        }
         addbyte(0x0f); /*JE end*/
         addbyte(0x84);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
@@ -881,11 +901,23 @@ static void CHECK_SEG_WRITE(x86seg *seg)
         if (seg->checked)
                 return;
                 
-        addbyte(0x83); /*CMP seg->base, -1*/
-        addbyte(0x3c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
-        addbyte(-1);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x83); /*CMP seg->base, -1*/
+                addbyte(0x3c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+                addbyte(-1);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x83); /*CMP RSI, -1*/
+                addbyte(0xe8 | REG_ESI);
+                addbyte(0xff);
+        }
         addbyte(0x0f); /*JE end*/
         addbyte(0x84);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
@@ -894,10 +926,20 @@ static void CHECK_SEG_WRITE(x86seg *seg)
 }
 static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
 {
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0xb8 | REG_ESI); /*MOV ESI, &addr*/
+                addlong((uint32_t)seg);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)seg);
+        }
         addbyte(0x3b); /*CMP EAX, seg->limit_low*/
-        addbyte(0x04);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->limit_low);
+        addbyte(0x46);
+        addbyte((uintptr_t)&seg->limit_low - (uintptr_t)seg);
         addbyte(0x0f); /*JB BLOCK_GPF_OFFSET*/
         addbyte(0x82);
         addlong(BLOCK_GPF_OFFSET - (block_pos + 4));
@@ -907,9 +949,8 @@ static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
                 addbyte(0xc0);
                 addbyte(end_offset);
                 addbyte(0x3b); /*CMP EAX, seg->limit_high*/
-                addbyte(0x04);
-                addbyte(0x25);
-                addlong((uint32_t)&seg->limit_high);
+                addbyte(0x46);
+                addbyte((uintptr_t)&seg->limit_high - (uintptr_t)seg);
                 addbyte(0x0f); /*JNBE BLOCK_GPF_OFFSET*/
                 addbyte(0x87);
                 addlong(BLOCK_GPF_OFFSET - (block_pos + 4));
@@ -919,14 +960,23 @@ static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
         }
 }
 
-#define IS_32_ADDR(x) !(((uintptr_t)x) & 0xffffffff00000000)
-
 static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -980,10 +1030,21 @@ static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
 }
 static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1046,10 +1107,21 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
 }
 static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1111,10 +1183,21 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
 }
 static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1219,10 +1302,21 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
                 addbyte(8);
                 host_reg = 8;
         }
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1287,10 +1381,21 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
 }
 static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1366,10 +1471,21 @@ static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
 }
 static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1443,10 +1559,21 @@ static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
 }
 static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
 {
-        addbyte(0x8b); /*MOVL ECX, seg->base*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong((uint32_t)&seg->base);
+        if (IS_32_ADDR(&seg->base))
+        {
+                addbyte(0x8b); /*MOVL ECX, seg->base*/
+                addbyte(0x0c);
+                addbyte(0x25);
+                addlong((uint32_t)&seg->base);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, &seg->base*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)&seg->base);
+                addbyte(0x8b); /*MOV ECX, [RSI]*/
+                addbyte(0x0e);
+        }
         addbyte(0x67); /*LEA ESI, (EAX,ECX)*/
         addbyte(0x8d);
         addbyte(0x34);
@@ -1560,10 +1687,27 @@ static void STORE_HOST_REG_ADDR_BL(uintptr_t addr, int host_reg)
                 addbyte(0xb6);
                 addbyte(0xc0 | (REG_ECX << 3) | (host_reg & 7));
         }
-        addbyte(0x89); /*MOV addr, EBX*/
-        addbyte(0x04 | (REG_ECX << 3));
-        addbyte(0x25);
-        addlong(addr);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
+        {
+                addbyte(0x89); /*MOV addr, ECX*/
+                addbyte(0x45 | (REG_ECX << 3));
+                addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
+        }
+        else if (IS_32_ADDR(addr))
+        {
+                addbyte(0x89); /*MOV addr, ECX*/
+                addbyte(0x04 | (REG_ECX << 3));
+                addbyte(0x25);
+                addlong(addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)addr);
+                addbyte(0x89); /*MOV [RSI], ECX*/
+                addbyte(0x0e);
+        }
 }
 static void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
 {
@@ -1578,12 +1722,20 @@ static void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
                 addbyte(0x45 | (REG_ECX << 3));
                 addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
         }
-        else
+        else if (IS_32_ADDR(addr))
         {
                 addbyte(0x89); /*MOV addr, ECX*/
                 addbyte(0x04 | (REG_ECX << 3));
                 addbyte(0x25);
                 addlong(addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)addr);
+                addbyte(0x89); /*MOV [RSI], ECX*/
+                addbyte(0x0e);
         }
 }
 static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
@@ -1597,15 +1749,27 @@ static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
                 addbyte(0x45 | ((host_reg & 7) << 3));
                 addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
         }
-        else
+        else if (IS_32_ADDR(addr))
         {
                 addbyte(0x66);
                 if (host_reg & 8)
                         addbyte(0x44);
-                addbyte(0x89); /*MOVL addr,host_reg*/
+                addbyte(0x89); /*MOVW addr,host_reg*/
                 addbyte(0x04 | ((host_reg & 7) << 3));
                 addbyte(0x25);
                 addlong(addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)addr);
+
+                addbyte(0x66);
+                if (host_reg & 8)
+                        addbyte(0x44);
+                addbyte(0x89); /*MOVW [RSI],host_reg*/
+                addbyte(0x06 | ((host_reg & 7) << 3));
         }
 }
 static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
@@ -1618,7 +1782,7 @@ static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
                 addbyte(0x45 | ((host_reg & 7) << 3));
                 addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
         }
-        else
+        else if (IS_32_ADDR(addr))
         {
                 if (host_reg & 8)
                         addbyte(0x44);
@@ -1626,6 +1790,17 @@ static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
                 addbyte(0x04 | ((host_reg & 7) << 3));
                 addbyte(0x25);
                 addlong(addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RSI, addr*/
+                addbyte(0xb8 | REG_ESI);
+                addquad((uint64_t)addr);
+
+                if (host_reg & 8)
+                        addbyte(0x44);
+                addbyte(0x89); /*MOVL [RSI],host_reg*/
+                addbyte(0x06 | ((host_reg & 7) << 3));
         }
 }
 
@@ -3008,11 +3183,30 @@ static int LOAD_VAR_W(uintptr_t addr)
 {
         int host_reg = REG_EBX;
 
-        addbyte(0x0f); /*MOVZX host_reg,[reg]*/
-        addbyte(0xb7);
-        addbyte(0x04 | (host_reg << 3));
-        addbyte(0x25);
-        addlong((uint32_t)addr);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
+        {
+                addbyte(0x0f); /*MOVZX host_reg, offset[cpu_state]*/
+                addbyte(0xb7);
+                addbyte(0x45 | (host_reg << 3));
+                addbyte(addr - (uintptr_t)&cpu_state - 128);
+        }
+        else if (IS_32_ADDR(addr))
+        {
+                addbyte(0x0f); /*MOVZX host_reg,[reg]*/
+                addbyte(0xb7);
+                addbyte(0x04 | (host_reg << 3));
+                addbyte(0x25);
+                addlong((uint32_t)addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV host_reg, &addr*/
+                addbyte(0xb8 | host_reg);
+                addquad(addr);
+                addbyte(0x0f); /*MOVZX host_reg, [host_reg]*/
+                addbyte(0xb7);
+                addbyte(host_reg | (host_reg << 3));
+        }
 
         return host_reg;
 }
@@ -3020,10 +3214,27 @@ static int LOAD_VAR_L(uintptr_t addr)
 {
         int host_reg = REG_EBX;
 
-        addbyte(0x8b); /*MOVL host_reg,[reg]*/
-        addbyte(0x04 | (host_reg << 3));
-        addbyte(0x25);
-        addlong((uint32_t)addr);
+        if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
+        {
+                addbyte(0x8b); /*MOVL host_reg, offset[cpu_state]*/
+                addbyte(0x45 | (host_reg << 3));
+                addbyte(addr - (uintptr_t)&cpu_state - 128);
+        }
+        else if (IS_32_ADDR(addr))
+        {
+                addbyte(0x8b); /*MOVL host_reg,[reg]*/
+                addbyte(0x04 | (host_reg << 3));
+                addbyte(0x25);
+                addlong((uint32_t)addr);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV host_reg, &addr*/
+                addbyte(0xb8 | host_reg);
+                addquad(addr);
+                addbyte(0x8b); /*MOVL host_reg, [host_reg]*/
+                addbyte(host_reg | (host_reg << 3));
+        }
 
         return host_reg;
 }
@@ -3323,12 +3534,23 @@ static void FP_ENTER()
 {
         if (codegen_fpu_entered)
                 return;
-                
-        addbyte(0xf6); /*TEST cr0, 0xc*/
-        addbyte(0x04);
-        addbyte(0x25);
-        addlong((uintptr_t)&cr0);
-        addbyte(0xc);
+        if (IS_32_ADDR(&cr0))
+        {
+                addbyte(0xf6); /*TEST cr0, 0xc*/
+                addbyte(0x04);
+                addbyte(0x25);
+                addlong((uintptr_t)&cr0);
+                addbyte(0x0c);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RAX, &cr0*/
+                addbyte(0xb8 | REG_EAX);
+                addquad(&cr0);
+                addbyte(0xf6); /*TEST [RAX], 0xc*/
+                addbyte(0 | (REG_EAX << 3));
+                addbyte(0x0c);
+        }
         addbyte(0x74); /*JZ +*/
         addbyte(7+5+12+5);
         addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/
@@ -3773,7 +3995,7 @@ static int64_t x87_fround(double b)
 {
         int64_t a, c;
         
-        switch ((npxc>>10)&3)
+        switch ((cpu_state.npxc >> 10) & 3)
         {
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);
@@ -4131,7 +4353,7 @@ static void FP_OP_D(int op)
         addbyte(0x0f);
         addbyte(0x6e);
         addbyte(0xc8);
-        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        if (((cpu_state.npxc >> 10) & 3) && op == FPU_ADD)
         {
                 addbyte(0x0f); /*STMXCSR [ESP+8]*/
                 addbyte(0xae);
@@ -4145,7 +4367,7 @@ static void FP_OP_D(int op)
                 addbyte(0x25); /*AND EAX, ~(3 << 13)*/
                 addlong(~(3 << 10));
                 addbyte(0x0d); /*OR EAX, (npxc & (3 << 10)) << 3*/
-                addlong((npxc & (3 << 10)) << 3);
+                addlong((cpu_state.npxc & (3 << 10)) << 3);
                 addbyte(0x89); /*MOV [RSP+12], EAX*/
                 addbyte(0x44);
                 addbyte(0x24);
@@ -4157,7 +4379,7 @@ static void FP_OP_D(int op)
                 addbyte(0x0c);
         }
         FP_OP_MEM(op);
-        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        if (((cpu_state.npxc >> 10) & 3) && op == FPU_ADD)
         {
                 addbyte(0x0f); /*LDMXCSR [RSP+8]*/
                 addbyte(0xae);
@@ -4209,9 +4431,8 @@ static void FP_COMPARE_REG(int dst, int src)
         }
 
         addbyte(0x8a); /*MOV CL, [npxs+1]*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
 //        addbyte(0xdb); /*FCLEX*/
 //        addbyte(0xe2);
         addbyte(0x80); /*AND CL, ~(C0|C2|C3)*/
@@ -4256,9 +4477,8 @@ static void FP_COMPARE_REG(int dst, int src)
         addbyte(0x08); /*OR CL, AH*/
         addbyte(0xe1);
         addbyte(0x88); /*MOV [npxs+1], CL*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 
 static void FP_COMPARE_MEM()
@@ -4268,9 +4488,8 @@ static void FP_COMPARE_MEM()
         addbyte(cpu_state_offset(TOP));
 
         addbyte(0x8a); /*MOV CL, [npxs+1]*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
 //        addbyte(0xdb); /*FCLEX*/
 //        addbyte(0xe2);
         addbyte(0xf3); /*MOVQ XMM0, ST[RAX*8]*/
@@ -4293,9 +4512,8 @@ static void FP_COMPARE_MEM()
         addbyte(0x08); /*OR CL, AH*/
         addbyte(0xe1);
         addbyte(0x88); /*MOV [npxs+1], CL*/
-        addbyte(0x0c);
-        addbyte(0x25);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 static void FP_COMPARE_S()
 {
@@ -4340,40 +4558,83 @@ static void FP_COMPARE_IL()
 
 static void SET_BITS(uintptr_t addr, uint32_t val)
 {
-        if (val & ~0xff)
+        if (IS_32_ADDR(addr))
         {
-                addbyte(0x81);
-                addbyte(0x0c);
-                addbyte(0x25);
-                addlong(addr);
-                addlong(val);
+                if (val & ~0xff)
+                {
+                        addbyte(0x81); /*OR [addr], val*/
+                        addbyte(0x0c);
+                        addbyte(0x25);
+                        addlong(addr);
+                        addlong(val);
+                }
+                else
+                {
+                        addbyte(0x80); /*OR [addr], val*/
+                        addbyte(0x0c);
+                        addbyte(0x25);
+                        addlong(addr);
+                        addbyte(val);
+                }
         }
         else
-       {
-                addbyte(0x80);
-                addbyte(0x0c);
-                addbyte(0x25);
-                addlong(addr);
-                addbyte(val);
+        {
+                addbyte(0x48); /*MOV RAX, &addr*/
+                addbyte(0xb8 | REG_EAX);
+                addquad(addr);
+                if (val & ~0xff)
+                {
+                        addbyte(0x81); /*OR [RAX], val*/
+                        addbyte(0x08);
+                        addlong(val);
+                }
+                else
+                {
+                        addbyte(0x80); /*OR [RAX], val*/
+                        addbyte(0x08);
+                        addbyte(val);
+                }
         }
 }
+
 static void CLEAR_BITS(uintptr_t addr, uint32_t val)
 {
-        if (val & ~0xff)
+        if (IS_32_ADDR(addr))
         {
-                addbyte(0x81);
-                addbyte(0x24);
-                addbyte(0x25);
-                addlong(addr);
-                addlong(~val);
+                if (val & ~0xff)
+                {
+                        addbyte(0x81); /*AND [addr], val*/
+                        addbyte(0x24);
+                        addbyte(0x25);
+                        addlong(addr);
+                        addlong(~val);
+                }
+                else
+                {
+                        addbyte(0x80); /*AND [addr], val*/
+                        addbyte(0x24);
+                        addbyte(0x25);
+                        addlong(addr);
+                        addbyte(~val);
+                }
         }
         else
-       {
-                addbyte(0x80);
-                addbyte(0x24);
-                addbyte(0x25);
-                addlong(addr);
-                addbyte(~val);
+        {
+                addbyte(0x48); /*MOV RAX, &addr*/
+                addbyte(0xb8 | REG_EAX);
+                addquad(addr);
+                if (val & ~0xff)
+                {
+                        addbyte(0x81); /*AND [RAX], val*/
+                        addbyte(0x20);
+                        addlong(~val);
+                }
+                else
+                {
+                        addbyte(0x80); /*AND [RAX], val*/
+                        addbyte(0x20);
+                        addbyte(~val);
+                }
         }
 }
 
@@ -4385,11 +4646,23 @@ static void MMX_ENTER()
         if (codegen_mmx_entered)
                 return;
                 
-        addbyte(0xf6); /*TEST cr0, 0xc*/
-        addbyte(0x04);
-        addbyte(0x25);
-        addlong((uintptr_t)&cr0);
-        addbyte(0xc);
+        if (IS_32_ADDR(&cr0))
+        {
+                addbyte(0xf6); /*TEST cr0, 0xc*/
+                addbyte(0x04);
+                addbyte(0x25);
+                addlong((uintptr_t)&cr0);
+                addbyte(0x0c);
+        }
+        else
+        {
+                addbyte(0x48); /*MOV RAX, &cr0*/
+                addbyte(0xb8 | REG_EAX);
+                addquad(&cr0);
+                addbyte(0xf6); /*TEST [RAX], 0xc*/
+                addbyte(0 | (REG_EAX << 3));
+                addbyte(0x0c);
+        }
         addbyte(0x74); /*JZ +*/
         addbyte(7+5+12+5);
         addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/

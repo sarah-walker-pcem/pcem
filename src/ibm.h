@@ -155,6 +155,8 @@ struct
         
         int _cycles;
         int cpu_recomp_ins;
+        
+        uint16_t npxs, npxc;
 
         double ST[8];        
         

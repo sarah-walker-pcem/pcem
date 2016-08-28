@@ -1,6 +1,5 @@
 uint32_t x87_pc_off,x87_op_off;
 uint16_t x87_pc_seg,x87_op_seg;
-extern uint16_t npxs, npxc;
 
 static inline void x87_set_mmx();
 static inline void x87_emms();

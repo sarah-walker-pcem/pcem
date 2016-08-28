@@ -3,7 +3,7 @@ static int opFSTSW_AX(uint32_t fetchdat)
         FP_ENTER();
         cpu_state.pc++;
         if (fplog) pclog("FSTSW\n");
-        AX = npxs;
+        AX = cpu_state.npxs;
         CLOCK_CYCLES(3);
         return 0;
 }
@@ -22,7 +22,7 @@ static int opFCLEX(uint32_t fetchdat)
 {
         FP_ENTER();
         cpu_state.pc++;
-        npxs &= 0xff00;
+        cpu_state.npxs &= 0xff00;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -31,8 +31,8 @@ static int opFINIT(uint32_t fetchdat)
 {
         FP_ENTER();
         cpu_state.pc++;
-        npxc = 0x37F;
-        npxs = 0;
+        cpu_state.npxc = 0x37F;
+        cpu_state.npxs = 0;
         *(uint64_t *)cpu_state.tag = 0x0303030303030303ll;
         cpu_state.TOP = 0;
         CLOCK_CYCLES(17);
@@ -84,18 +84,18 @@ static int FSTOR()
         {
                 case 0x000: /*16-bit real mode*/
                 case 0x001: /*16-bit protected mode*/
-                npxc = readmemw(easeg, cpu_state.eaaddr);
-                npxs = readmemw(easeg, cpu_state.eaaddr+2);
+                cpu_state.npxc = readmemw(easeg, cpu_state.eaaddr);
+                cpu_state.npxs = readmemw(easeg, cpu_state.eaaddr+2);
                 x87_settag(readmemw(easeg, cpu_state.eaaddr+4));
-                cpu_state.TOP = (npxs >> 11) & 7;
+                cpu_state.TOP = (cpu_state.npxs >> 11) & 7;
                 cpu_state.eaaddr += 14;
                 break;
                 case 0x100: /*32-bit real mode*/
                 case 0x101: /*32-bit protected mode*/
-                npxc = readmemw(easeg, cpu_state.eaaddr);
-                npxs = readmemw(easeg, cpu_state.eaaddr+4);
+                cpu_state.npxc = readmemw(easeg, cpu_state.eaaddr);
+                cpu_state.npxs = readmemw(easeg, cpu_state.eaaddr+4);
                 x87_settag(readmemw(easeg, cpu_state.eaaddr+8));
-                cpu_state.TOP = (npxs >> 11) & 7;
+                cpu_state.TOP = (cpu_state.npxs >> 11) & 7;
                 cpu_state.eaaddr += 28;
                 break;
         }
@@ -139,13 +139,13 @@ static int FSAVE()
 {
         FP_ENTER();
         if (fplog) pclog("FSAVE %08X:%08X %i\n", easeg, cpu_state.eaaddr, cpu_state.ismmx);
-        npxs = (npxs & ~(7 << 11)) | (cpu_state.TOP << 11);
+        cpu_state.npxs = (cpu_state.npxs & ~(7 << 11)) | (cpu_state.TOP << 11);
 
         switch ((cr0 & 1) | (cpu_state.op32 & 0x100))
         {
                 case 0x000: /*16-bit real mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+2,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+2,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+4,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+6,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+10,x87_op_off);
@@ -174,8 +174,8 @@ static int FSAVE()
                 }
                 break;
                 case 0x001: /*16-bit protected mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+2,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+2,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+4,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+6,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+8,x87_pc_seg);
@@ -206,8 +206,8 @@ static int FSAVE()
                 }
                 break;
                 case 0x100: /*32-bit real mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+4,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+4,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+8,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+12,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+20,x87_op_off);
@@ -237,8 +237,8 @@ static int FSAVE()
                 }
                 break;
                 case 0x101: /*32-bit protected mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+4,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+4,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+8,x87_gettag());
                 writememl(easeg,cpu_state.eaaddr+12,x87_pc_off);
                 writememl(easeg,cpu_state.eaaddr+16,x87_pc_seg);
@@ -292,7 +292,7 @@ static int opFSTSW_a16(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw((npxs & 0xC7FF) | (cpu_state.TOP << 11));
+        seteaw((cpu_state.npxs & 0xC7FF) | (cpu_state.TOP << 11));
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }
@@ -301,7 +301,7 @@ static int opFSTSW_a32(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw((npxs & 0xC7FF) | (cpu_state.TOP << 11));
+        seteaw((cpu_state.npxs & 0xC7FF) | (cpu_state.TOP << 11));
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }
@@ -373,9 +373,9 @@ static int opFTST(uint32_t fetchdat)
         FP_ENTER();
         cpu_state.pc++;
         if (fplog) pclog("FTST\n");
-        npxs &= ~(C0|C2|C3);
-        if (ST(0) == 0.0)     npxs |= C3;
-        else if (ST(0) < 0.0) npxs |= C0;
+        cpu_state.npxs &= ~(C0|C2|C3);
+        if (ST(0) == 0.0)     cpu_state.npxs |= C3;
+        else if (ST(0) < 0.0) cpu_state.npxs |= C0;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -385,11 +385,11 @@ static int opFXAM(uint32_t fetchdat)
         FP_ENTER();
         cpu_state.pc++;
         if (fplog) pclog("FXAM %i %f\n", cpu_state.tag[cpu_state.TOP&7], ST(0));
-        npxs &= ~(C0|C1|C2|C3);
-        if (cpu_state.tag[cpu_state.TOP&7] == 3)   npxs |= (C0|C3);
-        else if (ST(0) == 0.0) npxs |= C3;
-        else                   npxs |= C2;
-        if (ST(0) < 0.0)       npxs |= C1;
+        cpu_state.npxs &= ~(C0|C1|C2|C3);
+        if (cpu_state.tag[cpu_state.TOP&7] == 3)   cpu_state.npxs |= (C0|C3);
+        else if (ST(0) == 0.0) cpu_state.npxs |= C3;
+        else                   cpu_state.npxs |= C2;
+        if (ST(0) < 0.0)       cpu_state.npxs |= C1;
         CLOCK_CYCLES(8);
         return 0;
 }
@@ -508,7 +508,7 @@ static int opFPTAN(uint32_t fetchdat)
         ST(0) = tan(ST(0));
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
         x87_push(1.0);
-        npxs &= ~C2;
+        cpu_state.npxs &= ~C2;
         CLOCK_CYCLES(235);
         return 0;
 }
@@ -555,10 +555,10 @@ static int opFPREM(uint32_t fetchdat)
         ST(0) = ST(0) - (ST(1) * (double)temp64);
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
         if (fplog) pclog("%f\n", ST(0));
-        npxs &= ~(C0|C1|C2|C3);
-        if (temp64 & 4) npxs|=C0;
-        if (temp64 & 2) npxs|=C3;
-        if (temp64 & 1) npxs|=C1;
+        cpu_state.npxs &= ~(C0|C1|C2|C3);
+        if (temp64 & 4) cpu_state.npxs|=C0;
+        if (temp64 & 2) cpu_state.npxs|=C3;
+        if (temp64 & 1) cpu_state.npxs|=C1;
         CLOCK_CYCLES(100);
         return 0;
 }
@@ -572,10 +572,10 @@ static int opFPREM1(uint32_t fetchdat)
         ST(0) = ST(0) - (ST(1) * (double)temp64);
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
         if (fplog) pclog("%f\n", ST(0));
-        npxs &= ~(C0|C1|C2|C3);
-        if (temp64 & 4) npxs|=C0;
-        if (temp64 & 2) npxs|=C3;
-        if (temp64 & 1) npxs|=C1;
+        cpu_state.npxs &= ~(C0|C1|C2|C3);
+        if (temp64 & 4) cpu_state.npxs|=C0;
+        if (temp64 & 2) cpu_state.npxs|=C3;
+        if (temp64 & 1) cpu_state.npxs|=C1;
         CLOCK_CYCLES(100);
         return 0;
 }
@@ -601,7 +601,7 @@ static int opFSINCOS(uint32_t fetchdat)
         ST(0) = sin(td);
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
         x87_push(cos(td));
-        npxs &= ~C2;
+        cpu_state.npxs &= ~C2;
         CLOCK_CYCLES(330);
         return 0;
 }
@@ -638,7 +638,7 @@ static int opFSIN(uint32_t fetchdat)
         if (fplog) pclog("FSIN\n");
         ST(0) = sin(ST(0));
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
-        npxs &= ~C2;
+        cpu_state.npxs &= ~C2;
         CLOCK_CYCLES(300);
         return 0;
 }
@@ -650,7 +650,7 @@ static int opFCOS(uint32_t fetchdat)
         if (fplog) pclog("FCOS\n");
         ST(0) = cos(ST(0));
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;
-        npxs &= ~C2;
+        cpu_state.npxs &= ~C2;
         CLOCK_CYCLES(300);
         return 0;
 }
@@ -664,17 +664,17 @@ static int FLDENV()
         {
                 case 0x000: /*16-bit real mode*/
                 case 0x001: /*16-bit protected mode*/
-                npxc = readmemw(easeg, cpu_state.eaaddr);
-                npxs = readmemw(easeg, cpu_state.eaaddr+2);
+                cpu_state.npxc = readmemw(easeg, cpu_state.eaaddr);
+                cpu_state.npxs = readmemw(easeg, cpu_state.eaaddr+2);
                 x87_settag(readmemw(easeg, cpu_state.eaaddr+4));
-                cpu_state.TOP = (npxs >> 11) & 7;
+                cpu_state.TOP = (cpu_state.npxs >> 11) & 7;
                 break;
                 case 0x100: /*32-bit real mode*/
                 case 0x101: /*32-bit protected mode*/
-                npxc = readmemw(easeg, cpu_state.eaaddr);
-                npxs = readmemw(easeg, cpu_state.eaaddr+4);
+                cpu_state.npxc = readmemw(easeg, cpu_state.eaaddr);
+                cpu_state.npxs = readmemw(easeg, cpu_state.eaaddr+4);
                 x87_settag(readmemw(easeg, cpu_state.eaaddr+8));
-                cpu_state.TOP = (npxs >> 11) & 7;
+                cpu_state.TOP = (cpu_state.npxs >> 11) & 7;
                 break;
         }
         CLOCK_CYCLES((cr0 & 1) ? 34 : 44);
@@ -704,7 +704,7 @@ static int opFLDCW_a16(uint32_t fetchdat)
         if (fplog) pclog("FLDCW %08X:%08X\n", easeg, cpu_state.eaaddr);                        
         tempw = geteaw();
         if (cpu_state.abrt) return 1;
-        npxc = tempw;
+        cpu_state.npxc = tempw;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -716,7 +716,7 @@ static int opFLDCW_a32(uint32_t fetchdat)
         if (fplog) pclog("FLDCW %08X:%08X\n", easeg, cpu_state.eaaddr);                        
         tempw = geteaw();
         if (cpu_state.abrt) return 1;
-        npxc = tempw;
+        cpu_state.npxc = tempw;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -728,15 +728,15 @@ static int FSTENV()
         switch ((cr0 & 1) | (cpu_state.op32 & 0x100))
         {
                 case 0x000: /*16-bit real mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+2,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+2,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+4,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+6,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+10,x87_op_off);
                 break;
                 case 0x001: /*16-bit protected mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+2,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+2,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+4,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+6,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+8,x87_pc_seg);
@@ -744,16 +744,16 @@ static int FSTENV()
                 writememw(easeg,cpu_state.eaaddr+12,x87_op_seg);
                 break;
                 case 0x100: /*32-bit real mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+4,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+4,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+8,x87_gettag());
                 writememw(easeg,cpu_state.eaaddr+12,x87_pc_off);
                 writememw(easeg,cpu_state.eaaddr+20,x87_op_off);
                 writememl(easeg,cpu_state.eaaddr+24,(x87_op_off>>16)<<12);
                 break;
                 case 0x101: /*32-bit protected mode*/
-                writememw(easeg,cpu_state.eaaddr,npxc);
-                writememw(easeg,cpu_state.eaaddr+4,npxs);
+                writememw(easeg,cpu_state.eaaddr,cpu_state.npxc);
+                writememw(easeg,cpu_state.eaaddr+4,cpu_state.npxs);
                 writememw(easeg,cpu_state.eaaddr+8,x87_gettag());
                 writememl(easeg,cpu_state.eaaddr+12,x87_pc_off);
                 writememl(easeg,cpu_state.eaaddr+16,x87_pc_seg);
@@ -785,7 +785,7 @@ static int opFSTCW_a16(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_16(fetchdat);
         if (fplog) pclog("FSTCW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw(npxc);
+        seteaw(cpu_state.npxc);
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }
@@ -794,7 +794,7 @@ static int opFSTCW_a32(uint32_t fetchdat)
         FP_ENTER();
         fetch_ea_32(fetchdat);
         if (fplog) pclog("FSTCW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw(npxc);
+        seteaw(cpu_state.npxc);
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }

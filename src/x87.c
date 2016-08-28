@@ -19,8 +19,6 @@
 #include "x87.h"
 #include "386_common.h"
 
-uint16_t npxs,npxc;
-
 uint16_t x87_gettag()
 {
         uint16_t ret = 0;
@@ -61,7 +59,7 @@ void x87_dumpregs()
                 pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",cpu_state.ST[cpu_state.TOP],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
                 pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7]);
         }
-        pclog("Status = %04X  Control = %04X  Tag = %04X\n",npxs,npxc,x87_gettag());
+        pclog("Status = %04X  Control = %04X  Tag = %04X\n", cpu_state.npxs, cpu_state.npxc, x87_gettag());
 }
 
 void x87_print()
@@ -74,7 +72,7 @@ void x87_print()
         else
         {
                 pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t",cpu_state.ST[cpu_state.TOP&7],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
-                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\tTOP=%i CR=%04X SR=%04X TAG=%04X\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7], cpu_state.TOP, npxc, npxs, x87_gettag());
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\tTOP=%i CR=%04X SR=%04X TAG=%04X\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7], cpu_state.TOP, cpu_state.npxc, cpu_state.npxs, x87_gettag());
         }
 }
 

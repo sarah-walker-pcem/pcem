@@ -18,8 +18,8 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
         {                                                       \
                 if (((double)src2) == 0.0)                      \
                 {                                               \
-                        npxs |= STATUS_ZERODIVIDE;              \
-                        if (npxc & STATUS_ZERODIVIDE)           \
+                        cpu_state.npxs |= STATUS_ZERODIVIDE;              \
+                        if (cpu_state.npxc & STATUS_ZERODIVIDE)           \
                                 dst = src1 / (double)src2;      \
                         else                                    \
                         {                                       \
@@ -68,7 +68,7 @@ static inline int64_t x87_fround(double b)
 {
         int64_t a, c;
         
-        switch ((npxc>>10)&3)
+        switch ((cpu_state.npxc >> 10) & 3)
         {
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);

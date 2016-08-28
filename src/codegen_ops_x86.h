@@ -2307,10 +2307,10 @@ static double _fp_half = 0.5;
 
 static void FP_LOAD_ROUNDING()
 {
-        pclog("npxc %04x\n", npxc);
+        pclog("cpu_state.npxc %04x\n", cpu_state.npxc);
         addbyte(0x8b); /*MOV EDX, npxc*/
         addbyte(0x15);
-        addlong((uintptr_t)&npxc);
+        addlong((uintptr_t)&cpu_state.npxc);
         addbyte(0xd9); /*FSTCW [ESP+8]*/
         addbyte(0x7c);
         addbyte(0x24);
@@ -2336,7 +2336,7 @@ static int32_t x87_fround32(double b)
 {
         int64_t a, c;
         
-        switch ((npxc>>10)&3)
+        switch ((cpu_state.npxc >> 10) & 3)
         {
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);
@@ -2359,7 +2359,7 @@ static int64_t x87_fround64(double b)
 {
         int64_t a, c;
         
-        switch ((npxc>>10)&3)
+        switch ((cpu_state.npxc >> 10) & 3)
         {
                 case 0: /*Nearest*/
                 a = (int64_t)floor(b);
@@ -2599,7 +2599,7 @@ static void FP_OP_D(int op)
         addbyte(0x89); /*MOV [ESP], EAX*/
         addbyte(0x04);
         addbyte(0x24);
-        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        if (((cpu_state.npxc >> 10) & 3) && op == FPU_ADD)
         {
                 addbyte(0x9b); /*FSTCW [ESP+8]*/
                 addbyte(0xd9);
@@ -2616,7 +2616,7 @@ static void FP_OP_D(int op)
                 addword(~(3 << 10));
                 addbyte(0x66); /*OR AX, npxc & (3 << 10)*/
                 addbyte(0x0d);
-                addword(npxc & (3 << 10));
+                addword(cpu_state.npxc & (3 << 10));
                 addbyte(0x66); /*MOV [ESP+12], AX*/
                 addbyte(0x89);
                 addbyte(0x44);
@@ -2647,7 +2647,7 @@ static void FP_OP_D(int op)
         addbyte(0x5c);
         addbyte(0xdd);
         addbyte(cpu_state_offset(ST));
-        if (((npxc >> 10) & 3) && op == FPU_ADD)
+        if (((cpu_state.npxc >> 10) & 3) && op == FPU_ADD)
         {
                 addbyte(0xd9); /*FLDCW [ESP+8]*/
                 addbyte(0x6c);
@@ -2753,8 +2753,8 @@ static void FP_COMPARE_S()
         addbyte(0xdd);
         addbyte(cpu_state_offset(ST));
         addbyte(0x8a); /*MOV BL, [npxs+1]*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
         addbyte(0xdb); /*FCLEX*/
         addbyte(0xe2);
         addbyte(0x80); /*AND BL, ~(C0|C2|C3)*/
@@ -2771,8 +2771,8 @@ static void FP_COMPARE_S()
         addbyte(0x08); /*OR BL, AH*/
         addbyte(0xe3);
         addbyte(0x88); /*MOV [npxs+1], BL*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 static void FP_COMPARE_D()
 {
@@ -2791,8 +2791,8 @@ static void FP_COMPARE_D()
         addbyte(0xdd);
         addbyte(cpu_state_offset(ST));
         addbyte(0x8a); /*MOV BL, [npxs+1]*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
         addbyte(0xdb); /*FCLEX*/
         addbyte(0xe2);
         addbyte(0x80); /*AND BL, ~(C0|C2|C3)*/
@@ -2809,8 +2809,8 @@ static void FP_COMPARE_D()
         addbyte(0x08); /*OR BL, AH*/
         addbyte(0xe3);
         addbyte(0x88); /*MOV [npxs+1], BL*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 static void FP_COMPARE_IW()
 {
@@ -2825,8 +2825,8 @@ static void FP_COMPARE_IW()
         addbyte(0xdd);
         addbyte(cpu_state_offset(ST));
         addbyte(0x8a); /*MOV BL, [npxs+1]*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
         addbyte(0xdb); /*FCLEX*/
         addbyte(0xe2);
         addbyte(0x80); /*AND BL, ~(C0|C2|C3)*/
@@ -2843,8 +2843,8 @@ static void FP_COMPARE_IW()
         addbyte(0x08); /*OR BL, AH*/
         addbyte(0xe3);
         addbyte(0x88); /*MOV [npxs+1], BL*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 static void FP_COMPARE_IL()
 {
@@ -2859,8 +2859,8 @@ static void FP_COMPARE_IL()
         addbyte(0xdd);
         addbyte(cpu_state_offset(ST));
         addbyte(0x8a); /*MOV BL, [npxs+1]*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
         addbyte(0xdb); /*FCLEX*/
         addbyte(0xe2);
         addbyte(0x80); /*AND BL, ~(C0|C2|C3)*/
@@ -2877,8 +2877,8 @@ static void FP_COMPARE_IL()
         addbyte(0x08); /*OR BL, AH*/
         addbyte(0xe3);
         addbyte(0x88); /*MOV [npxs+1], BL*/
-        addbyte(0x1d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x5d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 
 static void FP_OP_REG(int op, int dst, int src)
@@ -2962,8 +2962,8 @@ static void FP_COMPARE_REG(int dst, int src)
         }
 
         addbyte(0x8a); /*MOV CL, [npxs+1]*/
-        addbyte(0x0d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
         addbyte(0xdb); /*FCLEX*/
         addbyte(0xe2);
         addbyte(0x80); /*AND CL, ~(C0|C2|C3)*/
@@ -3001,8 +3001,8 @@ static void FP_COMPARE_REG(int dst, int src)
         addbyte(0x08); /*OR CL, AH*/
         addbyte(0xe1);
         addbyte(0x88); /*MOV [npxs+1], CL*/
-        addbyte(0x0d);
-        addlong(((uintptr_t)&npxs) + 1);
+        addbyte(0x4d);
+        addbyte(cpu_state_offset(npxs) + 1);
 }
 
 static int ZERO_EXTEND_W_B(int reg)
