@@ -597,6 +597,8 @@ enum
 
         FBZ_DEPTH_BIAS = (1 << 16),
                 
+        FBZ_DEPTH_SOURCE = (1 << 20),
+        
         FBZ_PARAM_ADJUST = (1 << 26)
 };
 
@@ -608,6 +610,7 @@ enum
         TEX_I8 = 0x3,
         TEX_AI8 = 0x4,
         TEX_PAL8 = 0x5,
+        TEX_A8Y4I2Q2 = 0x9,
         TEX_R5G6B5 = 0xa,
         TEX_ARGB1555 = 0xb,
         TEX_ARGB4444 = 0xc,
@@ -1151,6 +1154,13 @@ static inline void tex_read(voodoo_state_t *state, voodoo_texture_state_t *textu
                 state->tex_a = 0xff;
                 break;
                                                         
+                case TEX_A8Y4I2Q2:
+                state->tex_r = state->palette[dat & 0xff].rgba.r;
+                state->tex_g = state->palette[dat & 0xff].rgba.g;
+                state->tex_b = state->palette[dat & 0xff].rgba.b;
+                state->tex_a = dat >> 8;
+                break;
+                
                 case TEX_R5G6B5:
                 state->tex_r = rgb565[dat].r;
                 state->tex_g = rgb565[dat].g;
@@ -1289,6 +1299,13 @@ static inline void tex_read_4(voodoo_state_t *state, voodoo_texture_state_t *tex
                 state->tex_a = 0xff;
                 break;
                                                         
+                case TEX_A8Y4I2Q2:
+                state->tex_r = (state->palette[dat[0] & 0xff].rgba.r * d[0] + state->palette[dat[1] & 0xff].rgba.r * d[1] + state->palette[dat[2] & 0xff].rgba.r * d[2] + state->palette[dat[3] & 0xff].rgba.r * d[3]) >> 8;
+                state->tex_g = (state->palette[dat[0] & 0xff].rgba.g * d[0] + state->palette[dat[1] & 0xff].rgba.g * d[1] + state->palette[dat[2] & 0xff].rgba.g * d[2] + state->palette[dat[3] & 0xff].rgba.g * d[3]) >> 8;
+                state->tex_b = (state->palette[dat[0] & 0xff].rgba.b * d[0] + state->palette[dat[1] & 0xff].rgba.b * d[1] + state->palette[dat[2] & 0xff].rgba.b * d[2] + state->palette[dat[3] & 0xff].rgba.b * d[3]) >> 8;
+                state->tex_a = ((dat[0] >> 8) * d[0] + (dat[1] >> 8) * d[1] + (dat[2] >> 8) * d[2] + (dat[3] >> 8) * d[3]) >> 8;
+                break;
+
                 case TEX_R5G6B5:
                 state->tex_r = (rgb565[dat[0]].r * d[0] + rgb565[dat[1]].r * d[1] + rgb565[dat[2]].r * d[2] + rgb565[dat[3]].r * d[3]) >> 8;
                 state->tex_g = (rgb565[dat[0]].g * d[0] + rgb565[dat[1]].g * d[1] + rgb565[dat[2]].g * d[2] + rgb565[dat[3]].g * d[3]) >> 8;
@@ -1402,7 +1419,7 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
 }
 
 
-#define DEPTH_TEST()                                    \
+#define DEPTH_TEST(comp_depth)                          \
         do                                              \
         {                                               \
                 switch (depth_op)                       \
@@ -1411,42 +1428,42 @@ static inline void voodoo_get_texture(voodoo_t *voodoo, voodoo_params_t *params,
                         voodoo->fbiZFuncFail++;         \
                         goto skip_pixel;                \
                         case DEPTHOP_LESSTHAN:          \
-                        if (!(new_depth < old_depth))   \
+                        if (!(comp_depth < old_depth))  \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
                         }                               \
                         break;                          \
                         case DEPTHOP_EQUAL:             \
-                        if (!(new_depth == old_depth))  \
+                        if (!(comp_depth == old_depth)) \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
                         }                               \
                         break;                          \
                         case DEPTHOP_LESSTHANEQUAL:     \
-                        if (!(new_depth <= old_depth))  \
+                        if (!(comp_depth <= old_depth)) \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
                         }                               \
                         break;                          \
                         case DEPTHOP_GREATERTHAN:       \
-                        if (!(new_depth > old_depth))   \
+                        if (!(comp_depth > old_depth))  \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
                         }                               \
                         break;                          \
                         case DEPTHOP_NOTEQUAL:          \
-                        if (!(new_depth != old_depth))  \
+                        if (!(comp_depth != old_depth)) \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
                         }                               \
                         break;                          \
                         case DEPTHOP_GREATERTHANEQUAL:  \
-                        if (!(new_depth >= old_depth))  \
+                        if (!(comp_depth >= old_depth)) \
                         {                               \
                                 voodoo->fbiZFuncFail++; \
                                 goto skip_pixel;        \
@@ -1971,7 +1988,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 {
                                         uint16_t old_depth = aux_mem[x];
 
-                                        DEPTH_TEST();
+                                        DEPTH_TEST((params->fbzMode & FBZ_DEPTH_SOURCE) ? (params->zaColor & 0xffff) : new_depth);
                                 }
                                 
                                 dat = fb_mem[x];
@@ -3349,7 +3366,7 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                         {
                                 uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
 
-                                DEPTH_TEST();
+                                DEPTH_TEST(new_depth);
                         }
 
                         if ((params->fbzMode & FBZ_CHROMAKEY) &&
@@ -3490,7 +3507,7 @@ static void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                         {
                                 uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
 
-                                DEPTH_TEST();
+                                DEPTH_TEST(new_depth);
                         }
 
                         if ((params->fbzMode & FBZ_CHROMAKEY) &&
