@@ -1768,7 +1768,7 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                         addbyte(0x75); /*JNZ +*/
                 }
                 if (not)
-                        addbyte(5+2+3+5+2+3+2+2+7+5+(timing_bt ? 7 : 0));
+                        addbyte(5+2+3+5+2+3+2+2+7+5+(timing_bt ? 4 : 0));
                 else
                         addbyte(5+2+3+5+2+3+2+2);
 
