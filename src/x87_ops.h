@@ -287,7 +287,6 @@ typedef union
 
 #define FP_ENTER() do                   \
         {                               \
-                flags_rebuild();        \
                 if (cr0 & 0xc)          \
                 {                       \
                         x86_int(7);     \
