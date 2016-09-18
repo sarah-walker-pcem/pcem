@@ -163,6 +163,8 @@ struct
         uint16_t MM_w4[8];
         
         MMX_REG MM[8];
+        
+        uint16_t old_npxc, new_npxc;
 } cpu_state;
 
 #define cycles cpu_state._cycles
