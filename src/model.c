@@ -377,6 +377,7 @@ void at_batman_init()
         i430lx_init();
         fdc37c665_init();
         intel_batman_init();
+        device_add(&intel_flash_bxt_ami_device);
 }
 void at_endeavor_init()
 {
@@ -387,7 +388,7 @@ void at_endeavor_init()
         piix_init(7);
         um8669f_init();
         intel_endeavor_init();
-        device_add(&intel_flash_device);
+        device_add(&intel_flash_bxt_ami_device);
 }
 
 void at_i430vx_init()
@@ -398,6 +399,7 @@ void at_i430vx_init()
         i430vx_init();
         piix_init(7);
         um8669f_init();
+        device_add(&intel_flash_bxt_device);
 }
 
 void model_init()

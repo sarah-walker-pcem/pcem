@@ -40,7 +40,7 @@ static mem_mapping_t ram_high_mapping;
 static mem_mapping_t ram_mid_mapping;
 static mem_mapping_t ram_remapped_mapping;
 mem_mapping_t bios_mapping[8];
-static mem_mapping_t bios_high_mapping[8];
+mem_mapping_t bios_high_mapping[8];
 static mem_mapping_t romext_mapping;
 
 int shadowbios,shadowbios_write;
