@@ -100,6 +100,14 @@ void fdd_seek(int drive, int track_diff)
         disctime = 5000;
 }
 
+void fdd_disc_changed(int drive)
+{
+        drive ^= fdd_swap;
+        
+        /*Force reload of current track data*/
+        disc_seek(drive, fdd[drive].track);
+}
+
 int fdd_track0(int drive)
 {
         drive ^= fdd_swap;
