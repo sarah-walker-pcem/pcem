@@ -369,6 +369,8 @@ typedef struct voodoo_t
         int fb_write_buffer, fb_draw_buffer;
         int buffer_cutoff;
 
+        int read_time, write_time, burst_time;
+        
         uint16_t thefilter[1024][1024]; // pixel filter, feeding from one or two
         uint16_t thefilterg[1024][1024]; // for green
 
@@ -5467,7 +5469,7 @@ static uint16_t voodoo_readw(uint32_t addr, void *p)
         
         addr &= 0xffffff;
 
-        cycles -= pci_nonburst_time;
+        cycles -= voodoo->read_time;
         
         if ((addr & 0xc00000) == 0x400000) /*Framebuffer*/
         {
@@ -5494,7 +5496,7 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
         voodoo->rd_count++;
         addr &= 0xffffff;
         
-        cycles -= pci_nonburst_time;
+        cycles -= voodoo->read_time;
 
         if (addr & 0x800000) /*Texture*/
         {
@@ -5627,9 +5629,9 @@ static void voodoo_writew(uint32_t addr, uint16_t val, void *p)
         addr &= 0xffffff;
 
         if (addr == voodoo->last_write_addr+4)
-                cycles -= pci_burst_time;
+                cycles -= voodoo->burst_time;
         else
-                cycles -= pci_nonburst_time;
+                cycles -= voodoo->write_time;
         voodoo->last_write_addr = addr;
 
         if ((addr & 0xc00000) == 0x400000) /*Framebuffer*/
@@ -5675,9 +5677,9 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
         addr &= 0xffffff;
         
         if (addr == voodoo->last_write_addr+4)
-                cycles -= pci_burst_time;
+                cycles -= voodoo->burst_time;
         else
-                cycles -= pci_nonburst_time;
+                cycles -= voodoo->write_time;
         voodoo->last_write_addr = addr;
 
         if (addr & 0x800000) /*Texture*/
@@ -5751,7 +5753,11 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                         
                 case SST_fbiInit4:
                 if (voodoo->initEnable & 0x01)
+                {
                         voodoo->fbiInit4 = val;
+                        voodoo->read_time = pci_nonburst_time + pci_burst_time * ((voodoo->fbiInit4 & 1) ? 2 : 1);
+//                        pclog("fbiInit4 write %08x - read_time=%i\n", val, voodoo->read_time);
+                }
                 break;
                 case SST_backPorch:
                 voodoo->backPorch = val;
@@ -5777,7 +5783,12 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_fbiInit1:
                 if (voodoo->initEnable & 0x01)
+                {
                         voodoo->fbiInit1 = val;
+                        voodoo->write_time = pci_nonburst_time + pci_burst_time * ((voodoo->fbiInit1 & 2) ? 1 : 0);
+                        voodoo->burst_time = pci_burst_time * ((voodoo->fbiInit1 & 2) ? 2 : 1);
+//                        pclog("fbiInit1 write %08x - write_time=%i burst_time=%i\n", val, voodoo->write_time, voodoo->burst_time);
+                }
                 break;
                 case SST_fbiInit2:
                 if (voodoo->initEnable & 0x01)
@@ -6540,6 +6551,10 @@ static void voodoo_speed_changed(void *p)
         voodoo_t *voodoo = (voodoo_t *)p;
         
         voodoo_pixelclock_update(voodoo);
+        voodoo->read_time = pci_nonburst_time + pci_burst_time * ((voodoo->fbiInit4 & 1) ? 2 : 1);
+        voodoo->write_time = pci_nonburst_time + pci_burst_time * ((voodoo->fbiInit1 & 2) ? 1 : 0);
+        voodoo->burst_time = pci_burst_time * ((voodoo->fbiInit1 & 2) ? 2 : 1);
+//        pclog("Voodoo read_time=%i write_time=%i burst_time=%i %08x %08x\n", voodoo->read_time, voodoo->write_time, voodoo->burst_time, voodoo->fbiInit1, voodoo->fbiInit4);
 }
 
 void *voodoo_init()
