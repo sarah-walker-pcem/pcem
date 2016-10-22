@@ -4430,6 +4430,19 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->params.fogTable[addr+1].fog  = (val >> 24) & 0xff;
                 break;
 
+                case SST_clutData:
+                voodoo->clutData[(val >> 24) & 0x3f].b = val & 0xff;
+                voodoo->clutData[(val >> 24) & 0x3f].g = (val >> 8) & 0xff;
+                voodoo->clutData[(val >> 24) & 0x3f].r = (val >> 16) & 0xff;
+                if (val & 0x20000000)
+                {
+                        voodoo->clutData[(val >> 24) & 0x3f].b = 255;
+                        voodoo->clutData[(val >> 24) & 0x3f].g = 255;
+                        voodoo->clutData[(val >> 24) & 0x3f].r = 255;
+                }
+                voodoo->clutData_dirty = 1;
+                break;
+
                 case SST_sSetupMode:
                 voodoo->sSetupMode = val;
                 break;
