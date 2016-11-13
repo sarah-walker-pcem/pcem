@@ -10,6 +10,8 @@
 #define BLOCK_EXIT_OFFSET 0x7e0
 #define BLOCK_GPF_OFFSET (BLOCK_EXIT_OFFSET - 20)
 
+#define BLOCK_MAX 1650
+
 enum
 {
         OP_RET = 0xc3

@@ -300,7 +300,7 @@ extern int block_pos;
 static inline void addbyte(uint8_t val)
 {
         codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= 1760)
+        if (block_pos >= BLOCK_MAX)
         {
                 CPU_BLOCK_END();
         }
@@ -310,7 +310,7 @@ static inline void addword(uint16_t val)
 {
         *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 2;
-        if (block_pos >= 1720)
+        if (block_pos >= BLOCK_MAX)
         {
                 CPU_BLOCK_END();
         }
@@ -320,7 +320,7 @@ static inline void addlong(uint32_t val)
 {
         *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 4;
-        if (block_pos >= 1720)
+        if (block_pos >= BLOCK_MAX)
         {
                 CPU_BLOCK_END();
         }
@@ -330,7 +330,7 @@ static inline void addquad(uint64_t val)
 {
         *(uint64_t *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 8;
-        if (block_pos >= 1720)
+        if (block_pos >= BLOCK_MAX)
         {
                 CPU_BLOCK_END();
         }
