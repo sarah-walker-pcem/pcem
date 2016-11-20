@@ -833,7 +833,8 @@ enum
         CC_MSELECT_CLOCAL = 1,
         CC_MSELECT_AOTHER = 2,
         CC_MSELECT_ALOCAL = 3,
-        CC_MSELECT_TEX    = 4
+        CC_MSELECT_TEX    = 4,
+        CC_MSELECT_TEXRGB = 5
 };
 
 enum
@@ -2956,6 +2957,11 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         msel_r = state->tex_a[0];
                                         msel_g = state->tex_a[0];
                                         msel_b = state->tex_a[0];
+                                        break;
+                                        case CC_MSELECT_TEXRGB:
+                                        msel_r = state->tex_r[0];
+                                        msel_g = state->tex_g[0];
+                                        msel_b = state->tex_b[0];
                                         break;
 
                                         default:
