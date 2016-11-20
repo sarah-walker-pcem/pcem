@@ -2447,7 +2447,7 @@ static inline voodoo_tmu_fetch_and_blend(voodoo_t *voodoo, voodoo_params_t *para
                 factor_a = state->lod_frac[0];
                 break;
         }
-        if (!a_reverse)
+        if (a_reverse)
                 a = (a * ((factor_a ^ 0xff) + 1)) >> 8;
         else
                 a = (a * (factor_a + 1)) >> 8;
