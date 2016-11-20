@@ -1542,7 +1542,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xfb);
                         addbyte(0xc1); /*SHR EBX, 24*/
                         addbyte(0xeb);
-                        addbyte(0x24);
+                        addbyte(24);
                         break;
                         case TCA_MSELECT_AOTHER:
                         addbyte(0x66); /*MOV EBX, XMM3*/
@@ -1551,7 +1551,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xdb);
                         addbyte(0xc1); /*SHR EBX, 24*/
                         addbyte(0xeb);
-                        addbyte(0x24);
+                        addbyte(24);
                         break;
                         case TCA_MSELECT_ALOCAL:
                         addbyte(0x66); /*MOV EBX, XMM7*/
@@ -1560,7 +1560,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xfb);
                         addbyte(0xc1); /*SHR EBX, 24*/
                         addbyte(0xeb);
-                        addbyte(0x24);
+                        addbyte(24);
                         break;
                         case TCA_MSELECT_DETAIL:
                         addbyte(0xbb); /*MOV EBX, params->detail_bias[1]*/
