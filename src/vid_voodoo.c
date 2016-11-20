@@ -1843,18 +1843,20 @@ static inline void voodoo_tmu_fetch(voodoo_t *voodoo, voodoo_params_t *params, v
         if (params->textureMode[tmu] & 1)
         {
                 int64_t _w = 0;
-                if (state->tmu1_w)
-                        _w = (int64_t)((1ULL << 48) / state->tmu1_w);
 
                 if (tmu)
                 {
-                        state->tex_s = (int32_t)(((state->tmu1_s >> 14) * _w) >> 30);
-                        state->tex_t = (int32_t)(((state->tmu1_t >> 14)  * _w) >> 30);
+                        if (state->tmu1_w)
+                                _w = (int64_t)((1ULL << 48) / state->tmu1_w);
+                        state->tex_s = (int32_t)(((((state->tmu1_s + (1 << 13)) >> 14) * _w) + (1 << 29))  >> 30);
+                        state->tex_t = (int32_t)(((((state->tmu1_t + (1 << 13))  >> 14)  * _w) + (1 << 29))  >> 30);
                 }
                 else
                 {
-                        state->tex_s = (int32_t)(((state->tmu0_s >> 14) * _w) >> 30);
-                        state->tex_t = (int32_t)(((state->tmu0_t >> 14)  * _w) >> 30);
+                        if (state->tmu0_w)
+                                _w = (int64_t)((1ULL << 48) / state->tmu0_w);
+                        state->tex_s = (int32_t)(((((state->tmu0_s + (1 << 13))  >> 14) * _w) + (1 << 29)) >> 30);
+                        state->tex_t = (int32_t)(((((state->tmu0_t + (1 << 13))  >> 14)  * _w) + (1 << 29))  >> 30);
                 }
 
                 state->lod = state->tmu[tmu].lod + (fastlog(_w) - (19 << 8));
