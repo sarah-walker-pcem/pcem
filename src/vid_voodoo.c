@@ -3443,7 +3443,8 @@ enum
         
         SETUPMODE_STRIP_MODE = (1 << 16),
         SETUPMODE_CULLING_ENABLE = (1 << 17),
-        SETUPMODE_CULLING_SIGN = (1 << 18)
+        SETUPMODE_CULLING_SIGN = (1 << 18),
+        SETUPMODE_DISABLE_PINGPONG = (1 << 19)
 };
 
 static void triangle_setup(voodoo_t *voodoo)
@@ -3521,7 +3522,13 @@ static void triangle_setup(voodoo_t *voodoo)
         area = dxAB * dyBC - dxBC * dyAB;
 
         if (area == 0.0)
+        {
+                if ((voodoo->sSetupMode & SETUPMODE_CULLING_ENABLE) &&
+                    !(voodoo->sSetupMode & SETUPMODE_DISABLE_PINGPONG))
+                        voodoo->sSetupMode ^= SETUPMODE_CULLING_SIGN;
+                
                 return;
+        }
                 
         dxAB /= area;
         dxBC /= area;
@@ -3530,14 +3537,18 @@ static void triangle_setup(voodoo_t *voodoo)
 
         if (voodoo->sSetupMode & SETUPMODE_CULLING_ENABLE)
         {
+                int cull_sign = voodoo->sSetupMode & SETUPMODE_CULLING_SIGN;
                 int sign = (area < 0.0);
                 
+                if (!(voodoo->sSetupMode & SETUPMODE_DISABLE_PINGPONG))
+                        voodoo->sSetupMode ^= SETUPMODE_CULLING_SIGN;
+
                 if (reverse_cull)
                         sign = !sign;
                 
-                if ((voodoo->sSetupMode & SETUPMODE_CULLING_SIGN) && sign)
+                if (cull_sign && sign)
                         return;
-                if (!(voodoo->sSetupMode & SETUPMODE_CULLING_SIGN) && !sign)
+                if (!cull_sign && !sign)
                         return;
         }
         
