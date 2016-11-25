@@ -387,6 +387,8 @@ void resetpchard()
         
         keyboard_at_reset();
         
+        cpu_cache_int_enabled = cpu_cache_ext_enabled = 0;
+        
 //        output=3;
 
 #if __unix
@@ -591,7 +593,8 @@ void loadconfig(char *fn)
         cpu_manufacturer = config_get_int(NULL, "cpu_manufacturer", 0);
         cpu = config_get_int(NULL, "cpu", 0);
         cpu_use_dynarec = config_get_int(NULL, "cpu_use_dynarec", 0);
-        
+        cpu_waitstates = config_get_int(NULL, "cpu_waitstates", 0);
+                
         gfxcard = config_get_int(NULL, "gfxcard", 0);
         video_speed = config_get_int(NULL, "video_speed", 3);
         sound_card_current = config_get_int(NULL, "sndcard", SB2);
@@ -704,6 +707,7 @@ void saveconfig()
         config_set_int(NULL, "cpu_manufacturer", cpu_manufacturer);
         config_set_int(NULL, "cpu", cpu);
         config_set_int(NULL, "cpu_use_dynarec", cpu_use_dynarec);
+        config_set_int(NULL, "cpu_waitstates", cpu_waitstates);
         
         config_set_int(NULL, "gfxcard", gfxcard);
         config_set_int(NULL, "video_speed", video_speed);

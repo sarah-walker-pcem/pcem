@@ -242,6 +242,18 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 3) ? TRUE : FALSE);
                 h = GetDlgItem(hdlg, IDC_JOY4);
                 EnableWindow(h, (joystick_get_max_joysticks(joystick_type) >= 4) ? TRUE : FALSE);
+
+                h = GetDlgItem(hdlg, IDC_COMBOWS);
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"System default");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"0 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"1 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"2 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"3 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"4 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"5 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"6 W/S");
+                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"7 W/S");
+                SendMessage(h, CB_SETCURSEL, cpu_waitstates, 0);
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -351,6 +363,10 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_COMBOCHC);
                         cache=SendMessage(h, CB_GETCURSEL, 0, 0);
                         mem_updatecache();
+
+                        h = GetDlgItem(hdlg, IDC_COMBOWS);
+                        cpu_waitstates = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        cpu_update_waitstates();
 
                         saveconfig();
 

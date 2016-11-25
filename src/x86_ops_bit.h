@@ -11,6 +11,7 @@ static int opBT_w_r_a16(uint32_t fetchdat)
         else                                            flags &= ~C_FLAG;
         
         CLOCK_CYCLES(3);
+        PREFETCH_RUN(3, 2, rmdat, 1,0,0,0, 0);
         return 0;
 }
 static int opBT_w_r_a32(uint32_t fetchdat)
@@ -25,6 +26,7 @@ static int opBT_w_r_a32(uint32_t fetchdat)
         else                                            flags &= ~C_FLAG;
         
         CLOCK_CYCLES(3);
+        PREFETCH_RUN(3, 2, rmdat, 1,0,0,0, 1);
         return 0;
 }
 static int opBT_l_r_a16(uint32_t fetchdat)
@@ -39,6 +41,7 @@ static int opBT_l_r_a16(uint32_t fetchdat)
         else                                            flags &= ~C_FLAG;
         
         CLOCK_CYCLES(3);
+        PREFETCH_RUN(3, 2, rmdat, 0,1,0,0, 0);
         return 0;
 }
 static int opBT_l_r_a32(uint32_t fetchdat)
@@ -53,6 +56,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
         else                                            flags &= ~C_FLAG;
         
         CLOCK_CYCLES(3);
+        PREFETCH_RUN(3, 2, rmdat, 0,1,0,0, 1);
         return 0;
 }
 
@@ -73,6 +77,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
                 CLOCK_CYCLES(6);                                                \
+                PREFETCH_RUN(6, 2, rmdat, 1,0,1,0, 0);                          \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _w_r_a32(uint32_t fetchdat)                  \
@@ -91,6 +96,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
                 CLOCK_CYCLES(6);                                                \
+                PREFETCH_RUN(6, 2, rmdat, 1,0,1,0, 1);                          \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _l_r_a16(uint32_t fetchdat)                  \
@@ -109,6 +115,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
                 CLOCK_CYCLES(6);                                                \
+                PREFETCH_RUN(6, 2, rmdat, 0,1,0,1, 0);                          \
                 return 0;                                                       \
         }                                                                       \
         static int opBT ## name ## _l_r_a32(uint32_t fetchdat)                  \
@@ -127,6 +134,7 @@ static int opBT_l_r_a32(uint32_t fetchdat)
                 else       flags &= ~C_FLAG;                                    \
                                                                                 \
                 CLOCK_CYCLES(6);                                                \
+                PREFETCH_RUN(6, 2, rmdat, 0,1,0,1, 1);                          \
                 return 0;                                                       \
         }
 
@@ -151,6 +159,7 @@ static int opBA_w_a16(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
                 CLOCK_CYCLES(3);
+                PREFETCH_RUN(3, 3, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 0);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -172,6 +181,7 @@ static int opBA_w_a16(uint32_t fetchdat)
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
         CLOCK_CYCLES(6);
+        PREFETCH_RUN(6, 3, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, 0);
         return 0;
 }
 static int opBA_w_a32(uint32_t fetchdat)
@@ -191,6 +201,7 @@ static int opBA_w_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
                 CLOCK_CYCLES(3);
+                PREFETCH_RUN(3, 3, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -212,6 +223,7 @@ static int opBA_w_a32(uint32_t fetchdat)
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
         CLOCK_CYCLES(6);
+        PREFETCH_RUN(6, 3, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, 0);
         return 0;
 }
 
@@ -232,6 +244,7 @@ static int opBA_l_a16(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
                 CLOCK_CYCLES(3);
+                PREFETCH_RUN(3, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,0, 0);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -253,6 +266,7 @@ static int opBA_l_a16(uint32_t fetchdat)
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
         CLOCK_CYCLES(6);
+        PREFETCH_RUN(6, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, 0);
         return 0;
 }
 static int opBA_l_a32(uint32_t fetchdat)
@@ -272,6 +286,7 @@ static int opBA_l_a32(uint32_t fetchdat)
                 if (tempc) flags |=  C_FLAG;
                 else       flags &= ~C_FLAG;
                 CLOCK_CYCLES(3);
+                PREFETCH_RUN(3, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,0, 1);
                 return 0;
                 case 0x28: /*BTS w,imm*/
                 temp |=  (1 << count);
@@ -293,5 +308,6 @@ static int opBA_l_a32(uint32_t fetchdat)
         if (tempc) flags |=  C_FLAG;
         else       flags &= ~C_FLAG;
         CLOCK_CYCLES(6);
+        PREFETCH_RUN(6, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, 1);
         return 0;
 }

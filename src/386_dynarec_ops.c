@@ -49,6 +49,9 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 #define fetch_ea_32(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_32_long(rmdat); 
 
 
+#define PREFETCH_RUN(instr_cycles, bytes, modrm, reads, read_ls, writes, write_ls, ea32)
+#define PREFETCH_PREFIX()
+#define PREFETCH_FLUSH()
 
 #define OP_TABLE(name) dynarec_ops_ ## name
 #define CLOCK_CYCLES(c) 

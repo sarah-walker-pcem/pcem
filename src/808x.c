@@ -635,6 +635,8 @@ void resetx86()
                 cr0 = 1 << 30;
         else
                 cr0 = 0;
+        cpu_cache_int_enabled = 0;
+        cpu_update_waitstates();
         cr4 = 0;
         eflags=0;
         cgate32=0;
