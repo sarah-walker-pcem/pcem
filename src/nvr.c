@@ -214,7 +214,7 @@ void loadnvr()
                 case ROM_DESKPRO_386: f = romfopen("nvr/deskpro386.nvr",  "rb"); break;
                 case ROM_ACER386:     f = romfopen("nvr/acer386.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_MEGAPC:      f = romfopen("nvr/megapc.nvr",      "rb"); nvrmask = 127; break;
-                case ROM_AMI386:      f = romfopen("nvr/ami386.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_AMI386SX:    f = romfopen("nvr/ami386.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AMI486:      f = romfopen("nvr/ami486.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_WIN486:      f = romfopen("nvr/win486.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_PCI486:      f = romfopen("nvr/hot-433.nvr",     "rb"); nvrmask = 127; break;
@@ -224,6 +224,8 @@ void loadnvr()
                 case ROM_ENDEAVOR:    f = romfopen("nvr/endeavor.nvr",    "rb"); nvrmask = 127; break;
                 case ROM_PX386:       f = romfopen("nvr/px386.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_DTK386:      f = romfopen("nvr/dtk386.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_MR386DX_OPTI495:  f = romfopen("nvr/mr386dx_opti495.nvr",  "rb"); nvrmask = 127; break;
+                case ROM_AMI386DX_OPTI495: f = romfopen("nvr/ami386dx_opti495.nvr", "rb"); nvrmask = 127; break;
                 default: return;
         }
         if (!f)
@@ -271,7 +273,7 @@ void savenvr()
                 case ROM_DESKPRO_386: f = romfopen("nvr/deskpro386.nvr",  "wb"); break;
                 case ROM_ACER386:     f = romfopen("nvr/acer386.nvr",     "wb"); break;
                 case ROM_MEGAPC:      f = romfopen("nvr/megapc.nvr",      "wb"); break;
-                case ROM_AMI386:      f = romfopen("nvr/ami386.nvr",      "wb"); break;
+                case ROM_AMI386SX:    f = romfopen("nvr/ami386.nvr",      "wb"); break;
                 case ROM_AMI486:      f = romfopen("nvr/ami486.nvr",      "wb"); break;
                 case ROM_WIN486:      f = romfopen("nvr/win486.nvr",      "wb"); break;
                 case ROM_PCI486:      f = romfopen("nvr/hot-433.nvr",     "wb"); break;
@@ -281,6 +283,8 @@ void savenvr()
                 case ROM_ENDEAVOR:    f = romfopen("nvr/endeavor.nvr",    "wb"); break;
                 case ROM_PX386:       f = romfopen("nvr/px386.nvr",       "wb"); break;
                 case ROM_DTK386:      f = romfopen("nvr/dtk386.nvr",      "wb"); break;
+                case ROM_MR386DX_OPTI495:  f = romfopen("nvr/mr386dx_opti495.nvr",  "wb"); break;
+                case ROM_AMI386DX_OPTI495: f = romfopen("nvr/ami386dx_opti495.nvr", "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);

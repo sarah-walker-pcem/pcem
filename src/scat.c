@@ -208,6 +208,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 if ((~scat_port_92 & val) & 1)
                 {
                          softresetx86();
+                        cpu_set_edx();
                 }
                 scat_port_92 = val;
                 break;

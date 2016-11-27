@@ -336,7 +336,7 @@ int loadbios()
                 fread(rom,65536,1,f);
                 fclose(f);
                 return 1;*/
-                case ROM_AMI386: /*This uses the OPTi 82C495 chipset*/
+                case ROM_AMI386SX:
 //                f=romfopen("roms/at386/at386.bin","rb");
                 f=romfopen("roms/ami386/ami386.bin","rb");
                 if (!f) break;
@@ -344,6 +344,18 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_AMI386DX_OPTI495: /*This uses the OPTi 82C495 chipset*/
+                f=romfopen("roms/ami386dx/OPT495SX.AMI","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+                case ROM_MR386DX_OPTI495: /*This uses the OPTi 82C495 chipset*/
+                f=romfopen("roms/mr386dx/OPT495SX.MR","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
 
                 case ROM_ACER386:
                 f=romfopen("roms/acer386/acer386.bin","rb");

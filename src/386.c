@@ -290,6 +290,7 @@ opcodestart:
                                 {
                                         cpu_state.abrt = 0;
                                         softresetx86();
+                                        cpu_set_edx();
                                         pclog("Triple fault - reset\n");
                                 }
                         }

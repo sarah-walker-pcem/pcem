@@ -344,7 +344,7 @@ int driveempty[2];
 #define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES || gfxcard==GFX_INCOLOR) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
 #define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && gfxcard!=GFX_COLORPLUS && gfxcard!=GFX_INCOLOR && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200)
 #define PCJR (romset == ROM_IBMPCJR)
-#define AMIBIOS (romset==ROM_AMI386 || romset==ROM_AMI486 || romset == ROM_WIN486)
+#define AMIBIOS (romset==ROM_AMI386SX || romset==ROM_AMI486 || romset == ROM_WIN486)
 
 int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
 extern int AMSTRAD, AT, is386, PCI, TANDY;
@@ -382,7 +382,7 @@ enum
         ROM_IBMAT386,
         ROM_ACER386,
         ROM_MEGAPC,
-        ROM_AMI386,
+        ROM_AMI386SX,
         ROM_AMI486,
         ROM_WIN486,
         ROM_PCI486,
@@ -393,7 +393,9 @@ enum
         ROM_IBMPS1_2011,
         ROM_DESKPRO_386,
         ROM_IBMPS1_2121,
-        	
+        ROM_AMI386DX_OPTI495,
+        ROM_MR386DX_OPTI495,
+                	
         ROM_MAX
 };
 

@@ -32,6 +32,7 @@
 #include "nmi.h"
 #include "nvr.h"
 #include "olivetti_m24.h"
+#include "opti495.h"
 #include "pci.h"
 #include "pic.h"
 #include "piix.h"
@@ -67,6 +68,7 @@ void  at_acer386sx_init();
 void    at_wd76c10_init();
 void    at_ali1429_init();
 void   at_headland_init();
+void    at_opti495_init();
 void    at_um8881f_init();
 void     at_sis496_init();
 void     at_i430vx_init();
@@ -111,7 +113,9 @@ MODEL models[] =
         {"DTK 386SX clone",     ROM_DTK386,      { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0, 1,   1,  16, 1,        at_neat_init},
         {"Phoenix 386 clone",   ROM_PX386,       { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0, 1,   1,  16, 1,             at_init},
         {"Amstrad MegaPC",      ROM_MEGAPC,      { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 1, 1,   1,  16, 1,     at_wd76c10_init},
-        {"AMI 386 clone",       ROM_AMI386,      { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0, 1,   1, 256, 1,    at_headland_init},
+        {"AMI 386SX clone",     ROM_AMI386SX,    { "Intel", cpus_i386,    "AMD", cpus_Am386,   "Cyrix", cpus_486SDLC}, 0, 1,   1, 256, 1,    at_headland_init},
+        {"MR 386DX clone",      ROM_MR386DX_OPTI495,  { "Intel", cpus_i386DX,  "AMD", cpus_Am386DX, "Cyrix", cpus_486DLC}, 0, 1,   1, 256, 1,     at_opti495_init},
+        {"AMI 386DX clone",     ROM_AMI386DX_OPTI495, { "Intel", cpus_i386DX,  "AMD", cpus_Am386DX, "Cyrix", cpus_486DLC}, 0, 1,   1, 256, 1,     at_opti495_init},
         {"AMI 486 clone",       ROM_AMI486,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0, 1,   1, 256, 1,     at_ali1429_init},
         {"AMI WinBIOS 486",     ROM_WIN486,      { "Intel", cpus_i486,    "AMD", cpus_Am486,   "Cyrix", cpus_Cx486},   0, 1,   1, 256, 1,     at_ali1429_init},
 /*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0, 1,  1, 256, 1, at_um8881f_init},*/
@@ -343,6 +347,13 @@ void at_headland_init()
 {
         at_init();
         headland_init();
+        mouse_serial_init();
+}
+
+void at_opti495_init()
+{
+        at_init();
+        opti495_init();
         mouse_serial_init();
 }
 

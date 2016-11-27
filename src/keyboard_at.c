@@ -417,6 +417,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         
                         case 0xfe: /*Pulse output port - pin 0 selected - x86 reset*/
                         softresetx86(); /*Pulse reset!*/
+                        cpu_set_edx();
                         break;
                                                 
                         case 0xff: /*Pulse output port - but no pins selected - sent by MegaPC BIOS*/

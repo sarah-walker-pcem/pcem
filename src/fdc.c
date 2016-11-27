@@ -948,10 +948,10 @@ void fdc_callback()
                 else
                         fdc.res[9] = fdc.st0;
                 fdc.res[10] = fdc.track[fdc.drive];
+                if (fdc_reset_stat)
+                        fdc_reset_stat--;
                 if (!fdc_reset_stat)
                         fdc.st0 = 0x80;
-                else
-                        fdc_reset_stat--;
 
                 paramstogo = 2;
                 discint = 0;
