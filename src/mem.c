@@ -55,7 +55,7 @@ uint32_t biosmask;
 int readlnum=0,writelnum=0;
 int cachesize=256;
 
-uint8_t *ram,*rom,*vram;
+uint8_t *ram,*rom;
 uint8_t romext[32768];
 
 static void mem_load_xtide_bios()
@@ -1815,7 +1815,6 @@ void mem_init()
 
         ram = malloc((mem_size + 384) * 1024);
         rom = malloc(0x20000);
-        vram = malloc(0x800000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         cachelookup2 = malloc(1024 * 1024);

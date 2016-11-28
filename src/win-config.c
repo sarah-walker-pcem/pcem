@@ -137,9 +137,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h=GetDlgItem(hdlg, IDC_CHECKSSI);
                 SendMessage(h, BM_SETCHECK, SSI2001, 0);
                 
-                h=GetDlgItem(hdlg, IDC_CHECK2);
-                SendMessage(h, BM_SETCHECK, slowega, 0);
-
                 h=GetDlgItem(hdlg, IDC_CHECK4);
                 SendMessage(h, BM_SETCHECK, cga_comp, 0);
 

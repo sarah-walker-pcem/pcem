@@ -37,7 +37,6 @@ int cpl_override=0;
 
 int has_fpu;
 int fpucount=0;
-int times;
 uint16_t rds;
 uint16_t ea_rseg;
 

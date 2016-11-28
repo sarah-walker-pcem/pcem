@@ -276,7 +276,7 @@ void gd5429_hwcursor_draw(svga_t *svga, int displine)
         int xx;
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
         
-        pclog("HWcursor %i %i  %i %i  %x %02X %02X\n", svga->hwcursor_latch.x, svga->hwcursor_latch.y,  offset, displine, svga->hwcursor_latch.addr, vram[svga->hwcursor_latch.addr], vram[svga->hwcursor_latch.addr + 0x80]);
+        pclog("HWcursor %i %i  %i %i  %x %02X %02X\n", svga->hwcursor_latch.x, svga->hwcursor_latch.y,  offset, displine, svga->hwcursor_latch.addr, svga->vram[svga->hwcursor_latch.addr], svga->vram[svga->hwcursor_latch.addr + 0x80]);
         for (x = 0; x < 32; x += 8)
         {
                 dat[0] = svga->vram[svga->hwcursor_latch.addr];

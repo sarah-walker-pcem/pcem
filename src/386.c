@@ -28,7 +28,6 @@ extern int cpl_override;
 
 int has_fpu;
 extern int fpucount;
-int times;
 uint16_t rds;
 uint16_t ea_rseg;
 

@@ -4,7 +4,7 @@
 #define printf pclog
 
 /*Memory*/
-uint8_t *ram,*vram;
+uint8_t *ram;
 
 uint32_t rammask;
 
@@ -175,11 +175,8 @@ COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
 
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
 
-/*x86reg regs[8];*/
-
 uint16_t flags,eflags;
-uint32_t /*cs,ds,es,ss,*/oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
-//uint16_t msw;
+uint32_t oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
 
 extern int ins,output;
 extern int cycdiff;
@@ -194,7 +191,6 @@ uint8_t *pccache2;
   _cs,_ds,_es,_ss are the segment structures
   CS,DS,ES,SS is the 16-bit data
   cs,ds,es,ss are defines to the bases*/
-//uint16_t CS,DS,ES,SS;
 #define CS _cs.seg
 #define DS _ds.seg
 #define ES _es.seg
@@ -286,7 +282,6 @@ typedef struct PIT
 
 PIT pit;
 void setpitclock(float clock);
-int pitcount;
 
 float pit_timer0_freq();
 
@@ -320,7 +315,6 @@ typedef struct PPI
 } PPI;
 
 PPI ppi;
-extern int key_inhibit;
 
 
 /*PIC*/
@@ -334,7 +328,6 @@ typedef struct PIC
 
 PIC pic,pic2;
 extern int pic_intpending;
-int intcount;
 
 
 int disctime;
@@ -439,44 +432,17 @@ int cpuspeed;
 
 
 /*Video*/
-void (*pollvideo)();
-void pollega();
 int readflash;
-uint8_t hercctrl;
-int slowega,egacycles,egacycles2;
-extern uint8_t gdcreg[16];
 extern int egareads,egawrites;
 extern int cga_comp;
 extern int vid_resize;
 extern int vid_api;
 extern int winsizex,winsizey;
-extern int chain4;
 
-uint8_t readvram(uint16_t addr);
-void writevram(uint16_t addr, uint8_t val);
-void writevramgen(uint16_t addr, uint8_t val);
-
-uint8_t readtandyvram(uint16_t addr);
-void writetandy(uint16_t addr, uint8_t val);
-void writetandyvram(uint16_t addr, uint8_t val);
-
-extern int et4k_b8000;
 extern int changeframecount;
-extern uint8_t changedvram[(8192*1024)/1024];
-
-void writeega_chain4(uint32_t addr, uint8_t val);
-extern uint32_t svgarbank,svgawbank;
-
-/*Serial*/
-extern int mousedelay;
 
 
 /*Sound*/
-uint8_t spkstat;
-
-float spktime;
-int rtctime;
-int soundtime,gustime,gustime2,vidtime;
 int ppispeakon;
 float CGACONST;
 float MDACONST;
@@ -488,10 +454,6 @@ int gated,speakval,speakon;
 
 
 /*Sound Blaster*/
-/*int sbenable,sblatchi,sblatcho,sbcount,sb_enable_i,sb_count_i;
-int16_t sbdat;*/
-void setsbclock(float clock);
-
 #define SADLIB    1     /*No DSP*/
 #define SB1       2     /*DSP v1.05*/
 #define SB15      3     /*DSP v2.00*/
@@ -502,11 +464,6 @@ void setsbclock(float clock);
 #define SADGOLD   8     /*AdLib Gold*/
 #define SND_WSS   9     /*Windows Sound System*/
 #define SND_PAS16 10    /*Pro Audio Spectrum 16*/
-
-int sbtype;
-
-int clocks[3][12][4];
-int at70hz;
 
 char pcempath[512];
 
@@ -544,15 +501,9 @@ void pclog(const char *format, ...);
 void fatal(const char *format, ...);
 extern int nmi;
 
-extern int times;
-
 
 extern float isa_timing, bus_timing;
 
-extern int frame;
-
-
-uint8_t *vramp;
 
 uint64_t timer_read();
 extern uint64_t timer_freq;

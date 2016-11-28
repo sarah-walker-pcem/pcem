@@ -98,7 +98,6 @@ int oldcpl;
 
 int tempc;
 uint8_t opcode;
-int times=0;
 uint16_t pc2,pc3;
 int noint=0;
 

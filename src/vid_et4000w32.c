@@ -156,7 +156,6 @@ void et4000w32p_out(uint16_t addr, uint8_t val, void *p)
                 {
                         case 6:
                         svga->gdcreg[svga->gdcaddr & 15] = val;
-                        //et4k_b8000=((crtc[0x36]&0x38)==0x28) && ((gdcreg[6]&0xC)==4);
                         et4000w32p_recalcmapping(et4000);
                         return;
                 }

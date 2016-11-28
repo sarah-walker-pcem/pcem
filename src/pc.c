@@ -42,7 +42,6 @@
 int window_w, window_h, window_x, window_y, window_remember;
 
 int start_in_fullscreen = 0;
-int frame = 0;
 
 int cdrom_enabled;
 int CPUID;
@@ -58,7 +57,6 @@ extern int readlnum,writelnum;
 void fullspeed();
 
 int framecount,fps;
-int intcount;
 
 int output;
 int atfullspeed;
@@ -495,8 +493,6 @@ void runpc()
                         egareads=egawrites=0;
                         cycles_lost = 0;
                         mmuflush=0;
-                        intcount=0;
-                        intcount=pitcount=0;
                         emu_fps = frames;
                         frames = 0;
                 }
@@ -507,7 +503,6 @@ void runpc()
                         set_window_title(s);
                 }
                 done++;
-                frame++;
 }
 
 void fullspeed()
@@ -619,7 +614,6 @@ void loadconfig(char *fn)
         if (p) strcpy(iso_path, p);
         else   strcpy(iso_path, "");
         
-        slowega = config_get_int(NULL, "slow_video", 1);
         cache = config_get_int(NULL, "cache", 3);
         cga_comp = config_get_int(NULL, "cga_composite", 0);
         
@@ -714,8 +708,6 @@ void saveconfig()
         config_set_int(NULL, "sndcard", sound_card_current);
         config_set_int(NULL, "cpu_speed", cpuspeed);
         config_set_int(NULL, "has_fpu", hasfpu);
-        config_set_int(NULL, "slow_video", slowega);
-        config_set_int(NULL, "cache", cache);
         config_set_int(NULL, "cga_composite", cga_comp);
         config_set_string(NULL, "disc_a", discfns[0]);
         config_set_string(NULL, "disc_b", discfns[1]);
