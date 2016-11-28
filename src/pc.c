@@ -708,6 +708,7 @@ void saveconfig()
         config_set_int(NULL, "sndcard", sound_card_current);
         config_set_int(NULL, "cpu_speed", cpuspeed);
         config_set_int(NULL, "has_fpu", hasfpu);
+        config_set_int(NULL, "cache", cache);
         config_set_int(NULL, "cga_composite", cga_comp);
         config_set_string(NULL, "disc_a", discfns[0]);
         config_set_string(NULL, "disc_b", discfns[1]);
