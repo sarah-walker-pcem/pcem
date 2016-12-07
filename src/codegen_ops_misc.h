@@ -14,6 +14,17 @@ static uint32_t ropSTD(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32
         return op_pc;
 }
 
+static uint32_t ropCLI(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        CLEAR_BITS((uintptr_t)&flags, I_FLAG);
+        return op_pc;
+}
+static uint32_t ropSTI(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
+{
+        SET_BITS((uintptr_t)&flags, I_FLAG);
+        return op_pc;
+}
+
 static uint32_t ropFE(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc, codeblock_t *block)
 {
         x86seg *target_seg;
