@@ -33,8 +33,6 @@ static int opCLI(uint32_t fetchdat)
         else
                 flags &= ~I_FLAG;
          
-        CPU_BLOCK_END();
-                       
         CLOCK_CYCLES(3);
         PREFETCH_RUN(3, 1, -1, 0,0,0,0, 0);
         return 0;
