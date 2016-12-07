@@ -188,7 +188,7 @@ RecompOpFn recomp_opcodes_d9[512] =
 
 /*c0*/  ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  ropFCHS,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFLD1,        ropFLDL2T,      ropFLDL2E,      ropFLDPI,       ropFLDEG2,      ropFLDLN2,      ropFLDZ,        NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
         /*32-bit data*/
@@ -210,7 +210,7 @@ RecompOpFn recomp_opcodes_d9[512] =
 
 /*c0*/  ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  ropFCHS,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFLD1,        ropFLDL2T,      ropFLDL2E,      ropFLDPI,       ropFLDEG2,      ropFLDLN2,      ropFLDZ,        NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
 
@@ -422,7 +422,7 @@ RecompOpFn recomp_opcodes_de[512] =
 /*b0*/  ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,
 
 /*c0*/  ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFCOMPP,      NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*e0*/  ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,
 /*f0*/  ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,
 
@@ -444,7 +444,7 @@ RecompOpFn recomp_opcodes_de[512] =
 /*b0*/  ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIViw,      ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,     ropFDIVRiw,
 
 /*c0*/  ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFADDP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,       ropFMULP,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFCOMPP,      NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*e0*/  ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,
 /*f0*/  ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,
 };
