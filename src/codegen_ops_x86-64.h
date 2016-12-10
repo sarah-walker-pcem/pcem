@@ -3390,9 +3390,9 @@ static int LOAD_HOST_REG(int host_reg)
         if (host_reg & 8)
                 addbyte(0x44);
         addbyte(0x89);
-        addbyte(0xc0 | REG_ECX | ((host_reg & 7) << 3));
+        addbyte(0xc0 | REG_EBX | ((host_reg & 7) << 3));
         
-        return REG_ECX | (host_reg & 0x10);
+        return REG_EBX | (host_reg & 0x10);
 }
 
 static int ZERO_EXTEND_W_B(int reg)
