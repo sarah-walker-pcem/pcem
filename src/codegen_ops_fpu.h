@@ -481,8 +481,7 @@ static uint32_t ropFCOMPP(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uin
 {
         FP_ENTER();
         FP_COMPARE_REG(0, 1);
-        FP_POP();
-        FP_POP();
+        FP_POP2();
        
         return op_pc;
 }

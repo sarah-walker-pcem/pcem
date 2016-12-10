@@ -2503,6 +2503,42 @@ static void FP_POP()
                 addbyte(cpu_state_offset(TOP));
         }
 }
+static void FP_POP2()
+{
+        if (codeblock[block_current].flags & CODEBLOCK_STATIC_TOP)
+        {
+                addbyte(0xc6); /*MOVB tag[0][EBP], 3*/
+                addbyte(0x45);
+                addbyte(cpu_state_offset(tag[cpu_state.TOP]));
+                addbyte(3);
+                addbyte(0xc6); /*MOVB tag[1][EBP], 3*/
+                addbyte(0x45);
+                addbyte(cpu_state_offset(tag[(cpu_state.TOP+1)&7]));
+                addbyte(3);
+                addbyte(0xc6); /*MOVB TOP[EBP], (TOP+2) & 7*/
+                addbyte(0x45);
+                addbyte(cpu_state_offset(TOP));
+                addbyte((cpu_state.TOP + 2) & 7);
+        }
+        else
+        {
+                addbyte(0x8b); /*MOV EAX, TOP*/
+                addbyte(0x45);
+                addbyte(cpu_state_offset(TOP));
+                addbyte(0xc6); /*MOVB tag[EAX], 3*/
+                addbyte(0x44);
+                addbyte(0x05);
+                addbyte(cpu_state_offset(tag[0]));
+                addbyte(3);
+                addbyte(0x04); /*ADD AL, 2*/
+                addbyte(2);
+                addbyte(0x24); /*AND AL, 7*/
+                addbyte(7);
+                addbyte(0x88); /*MOV TOP, AL*/
+                addbyte(0x45);
+                addbyte(cpu_state_offset(TOP));
+        }
+}
 
 #define FPU_ADD  0x00
 #define FPU_DIV  0x30

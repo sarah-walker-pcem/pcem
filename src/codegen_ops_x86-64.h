@@ -3908,6 +3908,26 @@ static void FP_POP()
         addbyte(0x45);
         addbyte(cpu_state_offset(TOP));
 }
+static void FP_POP2()
+{
+        addbyte(0x8b); /*MOV EAX, [TOP]*/
+        addbyte(0x45);
+        addbyte(cpu_state_offset(TOP));
+        addbyte(0xc6); /*MOVB tag[EAX], 3*/
+        addbyte(0x44);
+        addbyte(0x05);
+        addbyte(cpu_state_offset(tag));
+        addbyte(3);
+        addbyte(0x83); /*ADD AL, 2*/
+        addbyte(0xc0);
+        addbyte(2);
+        addbyte(0x83); /*AND AL, 7*/
+        addbyte(0xe0);
+        addbyte(7);
+        addbyte(0x89); /*MOV [TOP], EAX*/
+        addbyte(0x45);
+        addbyte(cpu_state_offset(TOP));
+}
 
 static void FP_LOAD_S()
 {
