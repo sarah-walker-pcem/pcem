@@ -1105,6 +1105,13 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
+static void MEM_LOAD_ADDR_EA_W_OFFSET(x86seg *seg, int offset)
+{
+        addbyte(0x83); /*ADD EAX, offset*/
+        addbyte(0xc0);
+        addbyte(offset);
+        MEM_LOAD_ADDR_EA_W(seg);
+}
 static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
@@ -3345,6 +3352,10 @@ static int LOAD_VAR_W(uintptr_t addr)
         }
 
         return host_reg;
+}
+static int LOAD_VAR_WL(uintptr_t addr)
+{
+        return LOAD_VAR_W(addr);
 }
 static int LOAD_VAR_L(uintptr_t addr)
 {
@@ -5981,4 +5992,18 @@ static void MEM_STORE_ADDR_EA_L_NO_ABRT(x86seg *seg, int host_reg)
         load_param_2_reg_32(REG_EAX);
         call_long(writememll);
         /*done:*/
+}
+
+static void LOAD_SEG(int host_reg, void *seg)
+{
+        load_param_2_64(&codeblock[block_current], (uint64_t)seg);
+        load_param_1_reg_32(host_reg);
+        CALL_FUNC(loadseg);
+        addbyte(0x80); /*CMP abrt, 0*/
+        addbyte(0x7d);
+        addbyte(cpu_state_offset(abrt));
+        addbyte(0);
+        addbyte(0x0f); /*JNE end*/
+        addbyte(0x85);
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }

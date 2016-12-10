@@ -145,6 +145,18 @@ static int LOAD_VAR_W(uintptr_t addr)
 
         return host_reg;
 }
+static int LOAD_VAR_WL(uintptr_t addr)
+{
+        int host_reg = find_host_reg();
+        host_reg_mapping[host_reg] = 0;
+        
+        addbyte(0x0f); /*MOVZX host_reg, [addr]*/
+        addbyte(0xb7);
+        addbyte(0x05 | (host_reg << 3));
+        addlong((uint32_t)addr);
+        
+        return host_reg;
+}
 static int LOAD_VAR_L(uintptr_t addr)
 {
         int host_reg = find_host_reg();
@@ -688,6 +700,19 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         addbyte(0x8b); /*MOVL EDX, seg->base*/
         addbyte(0x05 | (REG_EDX << 3));
         addlong((uint32_t)&seg->base);
+        addbyte(0xe8); /*CALL mem_load_addr_ea_w*/
+        addlong(mem_load_addr_ea_w - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
+
+        host_reg_mapping[0] = 8;
+}
+static void MEM_LOAD_ADDR_EA_W_OFFSET(x86seg *seg, int offset)
+{
+        addbyte(0x8b); /*MOVL EDX, seg->base*/
+        addbyte(0x05 | (REG_EDX << 3));
+        addlong((uint32_t)&seg->base);
+        addbyte(0x83); /*ADD EAX, offset*/
+        addbyte(0xc0);
+        addbyte(offset);
         addbyte(0xe8); /*CALL mem_load_addr_ea_w*/
         addlong(mem_load_addr_ea_w - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
 
@@ -3757,4 +3782,24 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
         addbyte(0xe8); /*CALL mem_check_write_l*/
         addlong(mem_check_write_l - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
         LOAD_EA();
+}
+
+static void LOAD_SEG(int host_reg, void *seg)
+{
+        addbyte(0xc7); /*MOV [ESP+4], seg*/
+        addbyte(0x44);
+        addbyte(0x24);
+        addbyte(4);
+        addlong((uint32_t)seg);
+        addbyte(0x89); /*MOV [ESP], host_reg*/
+        addbyte(0x04 | (host_reg << 3));
+        addbyte(0x24);
+        CALL_FUNC(loadseg);
+        addbyte(0x80); /*CMP abrt, 0*/
+        addbyte(0x7d);
+        addbyte(cpu_state_offset(abrt));
+        addbyte(0);
+        addbyte(0x0f); /*JNE end*/
+        addbyte(0x85);
+        addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
