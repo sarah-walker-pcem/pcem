@@ -643,6 +643,8 @@ static uint32_t ropL ## seg(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
                 STORE_REG_TARGET_W_RELEASE(host_reg, dest_reg);                                                         \
         }                                                                                                               \
                                                                                                                         \
+        if (&rseg == &_ss)                                                                                              \
+                CPU_BLOCK_END(); /*Instruction might change stack size, so end block here*/                             \
         return op_pc + 1;                                                                                               \
 }
 
