@@ -370,7 +370,9 @@ typedef struct voodoo_t
         int buffer_cutoff;
 
         int read_time, write_time, burst_time;
-        
+
+        int wake_timer;
+                
         uint16_t thefilter[1024][1024]; // pixel filter, feeding from one or two
         uint16_t thefilterg[1024][1024]; // for green
 
@@ -5467,8 +5469,32 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
         *(uint32_t *)(&voodoo->tex_mem[tmu][addr & voodoo->texture_mask]) = val;
 }
 
+#define WAKE_DELAY (TIMER_USEC * 100)
 static inline void wake_fifo_thread(voodoo_t *voodoo)
 {
+        if (!voodoo->wake_timer)
+        {
+                /*Don't wake FIFO thread immediately - if we do that it will probably
+                  process one word and go back to sleep, requiring it to be woken on
+                  almost every write. Instead, wait a short while so that the CPU
+                  emulation writes more data so we have more batched-up work.*/
+                timer_process();
+                voodoo->wake_timer = WAKE_DELAY;
+                timer_update_outstanding();
+        }
+}
+
+static inline void wake_fifo_thread_now(voodoo_t *voodoo)
+{
+        thread_set_event(voodoo->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
+}
+
+static void voodoo_wake_timer(void *p)
+{
+        voodoo_t *voodoo = (voodoo_t *)p;
+        
+        voodoo->wake_timer = 0;
+
         thread_set_event(voodoo->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
 }
 
@@ -5508,7 +5534,7 @@ static uint16_t voodoo_readw(uint32_t addr, void *p)
                 voodoo->flush = 1;
                 while (!FIFO_EMPTY)
                 {
-                        wake_fifo_thread(voodoo);
+                        wake_fifo_thread_now(voodoo);
                         thread_wait_event(voodoo->fifo_not_full_event, 1);
                 }
                 wait_for_render_thread_idle(voodoo);
@@ -5538,7 +5564,7 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 voodoo->flush = 1;
                 while (!FIFO_EMPTY)
                 {
-                        wake_fifo_thread(voodoo);
+                        wake_fifo_thread_now(voodoo);
                         thread_wait_event(voodoo->fifo_not_full_event, 1);
                 }
                 wait_for_render_thread_idle(voodoo);
@@ -5568,7 +5594,7 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 voodoo->flush = 1;
                 while (!FIFO_EMPTY)
                 {
-                        wake_fifo_thread(voodoo);
+                        wake_fifo_thread_now(voodoo);
                         thread_wait_event(voodoo->fifo_not_full_event, 1);
                 }
                 wait_for_render_thread_idle(voodoo);
@@ -5729,7 +5755,7 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 *(uint32_t *)&voodoo->fb_mem[(voodoo->cmdfifo_base + (addr & 0x3fffc)) & voodoo->fb_mask] = val;
                 voodoo->cmdfifo_depth_wr++;
                 if ((voodoo->cmdfifo_depth_wr - voodoo->cmdfifo_depth_rd) < 20)
-                        thread_set_event(voodoo->wake_fifo_thread);
+                        wake_fifo_thread(voodoo);
         }
         else switch (addr & 0x3fc)
         {
@@ -6662,6 +6688,8 @@ void *voodoo_init()
         voodoo->render_thread[0] = thread_create(render_thread_1, voodoo);
         if (voodoo->render_threads == 2)
                 voodoo->render_thread[1] = thread_create(render_thread_2, voodoo);
+
+        timer_add(voodoo_wake_timer, &voodoo->wake_timer, &voodoo->wake_timer, (void *)voodoo);
         
         for (c = 0; c < 0x100; c++)
         {
