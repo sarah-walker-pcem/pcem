@@ -5192,6 +5192,10 @@ static void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                 alpha_data = colour_data.a;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
+                case LFB_FORMAT_DEPTH:
+                depth_data = val;
+                write_mask = LFB_WRITE_DEPTH;
+                break;
                 
                 default:
                 fatal("voodoo_fb_writew : bad LFB format %08X\n", voodoo->lfbMode);
