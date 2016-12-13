@@ -34,6 +34,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int cpu_flags;
         int temp_fda_type, temp_fdb_type;
         int temp_joystick_type;
+        int cpu_type;
         
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
@@ -251,6 +252,11 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"6 W/S");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"7 W/S");
                 SendMessage(h, CB_SETCURSEL, cpu_waitstates, 0);
+                cpu_type = models[romstomodel[romset]].cpu[cpu_manufacturer].cpus[cpu].cpu_type;
+                if (cpu_type >= CPU_286 && cpu_type <= CPU_386DX)
+                        EnableWindow(h, TRUE);
+                else
+                        EnableWindow(h, FALSE);
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -463,6 +469,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 accel.nSec = 0;
                                 accel.nInc = models[temp_model].ram_granularity;
                                 SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
+
+                                h = GetDlgItem(hdlg, IDC_COMBOWS);
+                                cpu_type = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type;
+                                if (cpu_type >= CPU_286 && cpu_type <= CPU_386DX)
+                                        EnableWindow(h, TRUE);
+                                else
+                                        EnableWindow(h, FALSE);
                         }
                         break;
                         case IDC_COMBOCPUM:
@@ -496,6 +509,14 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 else
                                         EnableWindow(h, TRUE);
                                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
+
+                                h = GetDlgItem(hdlg, IDC_COMBOWS);
+                                cpu_type = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type;
+                                if (cpu_type >= CPU_286 && cpu_type <= CPU_386DX)
+                                        EnableWindow(h, TRUE);
+                                else
+                                        EnableWindow(h, FALSE);
+
                         }
                         break;
                         case IDC_COMBO3:
@@ -518,6 +539,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 else
                                         EnableWindow(h, TRUE);
                                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
+
+                                h = GetDlgItem(hdlg, IDC_COMBOWS);
+                                cpu_type = models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type;
+                                if (cpu_type >= CPU_286 && cpu_type <= CPU_386DX)
+                                        EnableWindow(h, TRUE);
+                                else
+                                        EnableWindow(h, FALSE);
                         }
                         break;
                         

@@ -1553,7 +1553,7 @@ void cpu_update_waitstates()
                 /* Disable prefetch emulation */
                 cpu_prefetch_cycles = 0;
         }
-        else if (cpu_waitstates)
+        else if (cpu_waitstates && (cpu_s->cpu_type >= CPU_286 && cpu_s->cpu_type <= CPU_386DX))
         {
                 /* Waitstates override */
                 cpu_prefetch_cycles = cpu_waitstates+1;
