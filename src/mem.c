@@ -50,7 +50,6 @@ static unsigned char isram[0x10000];
 static uint8_t ff_array[0x1000];
 
 int mem_size;
-int cache=4;
 uint32_t biosmask;
 int readlnum=0,writelnum=0;
 int cachesize=256;
@@ -887,13 +886,6 @@ void mmu_invalidate(uint32_t addr)
         flushmmucache_cr3();
 }
 
-int memspeed[11]={256,320,384,512,640,768,1024,1152,1280,1536,1920};
-int memwaitstate;
-
-static int cachelookup[256];
-static uint8_t *cachelookup2;
-static int cachelnext;
-
 void addreadlookup(uint32_t virt, uint32_t phys)
 {
 //        return;
@@ -912,17 +904,6 @@ void addreadlookup(uint32_t virt, uint32_t phys)
                 return;
         }
         
-        
-        if (!cachelookup2[phys >> 12])
-        {
-                readlnum++;
-                cycles-=memwaitstate;
-                if (cachelookup[cachelnext] != 0xffffffff)
-                   cachelookup2[cachelookup[cachelnext]] = 0;
-                cachelookup[cachelnext] = phys >> 12;
-                cachelookup2[phys >> 12] = 1;
-                cachelnext = (cachelnext + 1) & (cachesize - 1);
-        }
         
         if (readlookup[readlnext]!=0xFFFFFFFF)
         {
@@ -955,18 +936,6 @@ void addwritelookup(uint32_t virt, uint32_t phys)
                 return;
         }
         
-        if (!cachelookup2[phys >> 12])
-        {
-                writelnum++;
-                cycles-=memwaitstate;
-                if (cachelookup[cachelnext] != 0xffffffff)
-                   cachelookup2[cachelookup[cachelnext]] = 0;
-                cachelookup[cachelnext] = phys >> 12;
-                cachelookup2[phys >> 12] = 1;
-                cachelnext = (cachelnext + 1) & (cachesize - 1);
-        }
-        
-        cycles-=memwaitstate;
         if (writelookup[writelnext] != -1)
         {
                 page_lookup[writelookup[writelnext]] = NULL;
@@ -1540,29 +1509,6 @@ void mem_write_nulll(uint32_t addr, uint32_t val, void *p)
 {
 }
 
-void mem_updatecache()
-{
-        flushmmucache();
-        if (!is386)
-        {
-                cachesize=256;
-                memwaitstate=0;
-                return;
-        }
-        if (cpu_16bitbus)
-           memwaitstate = 512 * cpu_multi;
-        else
-           memwaitstate = 384 * cpu_multi; //memspeed[cpuspeed];        
-        switch (cache)
-        {
-                case 0: cachesize=32; break;
-                case 1: cachesize=64; break;
-                case 2: cachesize=128; break;
-                case 3: cachesize=256; break;
-                case 4: cachesize=256; memwaitstate=0; break;
-        }
-}
-
 void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
 {
         start_addr &= ~PAGE_MASK_MASK;
@@ -1817,7 +1763,6 @@ void mem_init()
         rom = malloc(0x20000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
-        cachelookup2 = malloc(1024 * 1024);
         biosmask = 0xffff;
         pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         page_lookup = malloc((1 << 20) * sizeof(page_t *));

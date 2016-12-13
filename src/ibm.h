@@ -57,10 +57,8 @@ void outl(uint16_t port, uint32_t val);
 
 FILE *romfopen(char *fn, char *mode);
 extern int shadowbios,shadowbios_write;
-extern int cache;
 extern int mem_size;
 extern int readlnum,writelnum;
-extern int memwaitstate;
 
 
 /*Processor*/

@@ -155,14 +155,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         EnableWindow(h, TRUE);
                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && cpu_use_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
 
-                h = GetDlgItem(hdlg, IDC_COMBOCHC);
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A little");
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A bit");
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"Some");
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"A lot");
-                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"Infinite");
-                SendMessage(h, CB_SETCURSEL, cache, 0);
-
                 h = GetDlgItem(hdlg, IDC_COMBOSPD);
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"8-bit");
                 SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)"Slow 16-bit");
@@ -363,10 +355,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         cpu = temp_cpu;
                         cpu_set();
                         
-                        h = GetDlgItem(hdlg, IDC_COMBOCHC);
-                        cache=SendMessage(h, CB_GETCURSEL, 0, 0);
-                        mem_updatecache();
-
                         h = GetDlgItem(hdlg, IDC_COMBOWS);
                         cpu_waitstates = SendMessage(h, CB_GETCURSEL, 0, 0);
                         cpu_update_waitstates();

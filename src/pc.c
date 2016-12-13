@@ -178,7 +178,6 @@ void pc_reset()
 {
         cpu_set();
         resetx86();
-        mem_updatecache();
         //timer_reset();
         dma_reset();
         fdc_reset();
@@ -528,7 +527,6 @@ void speedchanged()
                 setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
         else
                 setpitclock(14318184.0);
-        mem_updatecache();
         nvr_recalc();
 }
 
@@ -614,7 +612,6 @@ void loadconfig(char *fn)
         if (p) strcpy(iso_path, p);
         else   strcpy(iso_path, "");
         
-        cache = config_get_int(NULL, "cache", 3);
         cga_comp = config_get_int(NULL, "cga_composite", 0);
         
         vid_resize = config_get_int(NULL, "vid_resize", 0);
@@ -708,7 +705,6 @@ void saveconfig()
         config_set_int(NULL, "sndcard", sound_card_current);
         config_set_int(NULL, "cpu_speed", cpuspeed);
         config_set_int(NULL, "has_fpu", hasfpu);
-        config_set_int(NULL, "cache", cache);
         config_set_int(NULL, "cga_composite", cga_comp);
         config_set_string(NULL, "disc_a", discfns[0]);
         config_set_string(NULL, "disc_b", discfns[1]);
