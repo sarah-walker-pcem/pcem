@@ -302,7 +302,8 @@ typedef struct voodoo_t
         volatile int params_read_idx[2], params_write_idx;
         
         uint32_t cmdfifo_base, cmdfifo_end;
-        int cmdfifo_rp, cmdfifo_depth_rd, cmdfifo_depth_wr;
+        int cmdfifo_rp;
+        volatile int cmdfifo_depth_rd, cmdfifo_depth_wr;
         uint32_t cmdfifo_amin, cmdfifo_amax;
         
         uint32_t sSetupMode;
