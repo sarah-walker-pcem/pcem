@@ -1657,6 +1657,10 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
 
         if ((params->fbzMode & FBZ_CHROMAKEY))
         {
+                addbyte(0x66); /*MOVD EAX, XMM0*/
+                addbyte(0x0f);
+                addbyte(0x7e);
+                addbyte(0xc0);
                 addbyte(0x8b); /*MOV EBX, params->chromaKey[ESI]*/
                 addbyte(0x9e);
                 addlong(offsetof(voodoo_params_t, chromaKey));
