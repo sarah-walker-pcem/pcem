@@ -503,16 +503,6 @@ static inline int codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, v
                         addbyte(0xd5);
                         addbyte(0x4e);
                         addbyte(0x10);
-                        addbyte(0x66); /*PSRLW XMM0, 8*/
-                        addbyte(0x0f);
-                        addbyte(0x71);
-                        addbyte(0xd0 | 0);
-                        addbyte(8);
-                        addbyte(0x66); /*PSRLW XMM1, 8*/
-                        addbyte(0x0f);
-                        addbyte(0x71);
-                        addbyte(0xd0 | 1);
-                        addbyte(8);
                         addbyte(0x66); /*PADDW XMM0, XMM1*/
                         addbyte(0x0f);
                         addbyte(0xfd);
@@ -530,6 +520,11 @@ static inline int codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, v
                         addbyte(0x0f);
                         addbyte(0xfd);
                         addbyte(0xc0 | 1 | (0 << 3));
+                        addbyte(0x66); /*PSRLW XMM0, 8*/
+                        addbyte(0x0f);
+                        addbyte(0x71);
+                        addbyte(0xd0 | 0);
+                        addbyte(8);
                         addbyte(0x66); /*PACKUSWB XMM0, XMM0*/
                         addbyte(0x0f);
                         addbyte(0x67);
