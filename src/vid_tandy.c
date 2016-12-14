@@ -8,6 +8,9 @@
 #include "video.h"
 #include "vid_tandy.h"
 
+#define TANDY_RGB 0
+#define TANDY_COMPOSITE 1
+
 static int i_filt[8],q_filt[8];
 
 typedef struct tandy_t
@@ -37,6 +40,8 @@ typedef struct tandy_t
         
         int dispontime, dispofftime, vidtime;
         int firstline, lastline;
+        
+        int composite;
 } tandy_t;
 
 static uint8_t crtcmask[32] = 
@@ -467,7 +472,7 @@ void tandy_poll(void *p)
                 }
                 if (tandy->mode & 1) x = (tandy->crtc[1] << 3) + 16;
                 else                 x = (tandy->crtc[1] << 4) + 16;
-                if (cga_comp)
+                if (tandy->composite)
                 {
                         for (c = 0; c < x; c++)
                         {
@@ -615,7 +620,7 @@ void tandy_poll(void *p)
 //                                        printf("Blit %i %i\n",firstline,lastline);
 //printf("Xsize is %i\n",xsize);
 
-                                        if (cga_comp) 
+                                        if (tandy->composite) 
                                            video_blit_memtoscreen(0, tandy->firstline-4, 0, (tandy->lastline - tandy->firstline) + 8, xsize, (tandy->lastline - tandy->firstline) + 8);
                                         else          
                                            video_blit_memtoscreen_8(0, tandy->firstline-4, xsize, (tandy->lastline - tandy->firstline) + 8);
@@ -675,8 +680,13 @@ void *tandy_init()
 {
         int c;
         int tandy_tint = -2;
+        int display_type;
         tandy_t *tandy = malloc(sizeof(tandy_t));
         memset(tandy, 0, sizeof(tandy_t));
+
+        display_type = model_get_config_int("display_type");
+        tandy->composite = (display_type != TANDY_RGB);
+        pclog("display_type = %i\n", display_type);
 
         tandy->memctrl = -1;
         tandy->base = (mem_size - 128) * 1024;
@@ -722,4 +732,58 @@ device_t tandy_device =
         tandy_speed_changed,
         NULL,
         NULL
+};
+
+static device_config_t tandy_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "RGB",
+                                .value = TANDY_RGB
+                        },
+                        {
+                                .description = "Composite",
+                                .value = TANDY_COMPOSITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = TANDY_RGB
+        },
+        {
+                .type = -1
+        }
+};
+
+/*These aren't really devices as such - more of a convenient way to hook in the
+  config information*/
+device_t tandy1000_device =
+{
+        "Tandy 1000",
+        0,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        tandy_config
+};
+device_t tandy1000hx_device =
+{
+        "Tandy 1000HX",
+        0,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        tandy_config
 };

@@ -48,3 +48,6 @@ enum
 {
         DEVICE_NOT_WORKING = 1 /*Device does not currently work correctly and will be disabled in a release build*/
 };
+
+int model_get_config_int(char *s);
+char *model_get_config_string(char *s);

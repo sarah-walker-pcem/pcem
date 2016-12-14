@@ -559,7 +559,6 @@ void closepc()
 
 END_OF_MAIN();*/
 
-int cga_comp=0;
 
 void loadconfig(char *fn)
 {
@@ -611,8 +610,6 @@ void loadconfig(char *fn)
         p = (char *)config_get_string(NULL, "cdrom_path", "");
         if (p) strcpy(iso_path, p);
         else   strcpy(iso_path, "");
-        
-        cga_comp = config_get_int(NULL, "cga_composite", 0);
         
         vid_resize = config_get_int(NULL, "vid_resize", 0);
         vid_api = config_get_int(NULL, "vid_api", 0);
@@ -705,7 +702,6 @@ void saveconfig()
         config_set_int(NULL, "sndcard", sound_card_current);
         config_set_int(NULL, "cpu_speed", cpuspeed);
         config_set_int(NULL, "has_fpu", hasfpu);
-        config_set_int(NULL, "cga_composite", cga_comp);
         config_set_string(NULL, "disc_a", discfns[0]);
         config_set_string(NULL, "disc_b", discfns[1]);
         config_set_int(NULL, "mem_size", mem_size);

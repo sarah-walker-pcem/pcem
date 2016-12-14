@@ -138,9 +138,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h=GetDlgItem(hdlg, IDC_CHECKSSI);
                 SendMessage(h, BM_SETCHECK, SSI2001, 0);
                 
-                h=GetDlgItem(hdlg, IDC_CHECK4);
-                SendMessage(h, BM_SETCHECK, cga_comp, 0);
-
                 h=GetDlgItem(hdlg, IDC_CHECKSYNC);
                 SendMessage(h, BM_SETCHECK, enable_sync, 0);
 
@@ -175,6 +172,12 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 accel.nInc = models[model].ram_granularity;
                 SendMessage(h, UDM_SETACCEL, 1, (LPARAM)&accel);
 
+                h = GetDlgItem(hdlg, IDC_CONFIGUREMOD);
+                if (model_getdevice(model))
+                        EnableWindow(h, TRUE);
+                else
+                        EnableWindow(h, FALSE);
+                
                 h = GetDlgItem(hdlg, IDC_CONFIGUREVID);
                 if (video_card_has_config(video_old_to_new(gfxcard)))
                         EnableWindow(h, TRUE);
@@ -348,9 +351,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         h = GetDlgItem(hdlg, IDC_COMBOSPD);
                         video_speed = SendMessage(h, CB_GETCURSEL, 0, 0);
 
-                        h = GetDlgItem(hdlg, IDC_CHECK4);
-                        cga_comp=SendMessage(h, BM_GETCHECK, 0, 0);
-
                         cpu_manufacturer = temp_cpu_m;
                         cpu = temp_cpu;
                         cpu_set();
@@ -464,6 +464,12 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         EnableWindow(h, TRUE);
                                 else
                                         EnableWindow(h, FALSE);
+
+                                h = GetDlgItem(hdlg, IDC_CONFIGUREMOD);
+                                if (model_getdevice(temp_model))
+                                        EnableWindow(h, TRUE);
+                                else
+                                        EnableWindow(h, FALSE);
                         }
                         break;
                         case IDC_COMBOCPUM:
@@ -537,6 +543,13 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         }
                         break;
                         
+                        case IDC_CONFIGUREMOD:
+                        h = GetDlgItem(hdlg, IDC_COMBO1);
+                        temp_model = listtomodel[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                        
+                        deviceconfig_open(hdlg, (void *)model_getdevice(temp_model));
+                        break;
+
                         case IDC_CONFIGUREVID:
                         h = GetDlgItem(hdlg, IDC_COMBOVID);
                         SendMessage(h, CB_GETLBTEXT, SendMessage(h, CB_GETCURSEL, 0, 0), (LPARAM)temp_str);

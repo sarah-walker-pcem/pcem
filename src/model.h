@@ -12,6 +12,7 @@ typedef struct
         int min_ram, max_ram;
         int ram_granularity;
         void (*init)();
+        struct device_t *device;
 } MODEL;
 
 extern MODEL models[];
@@ -23,3 +24,4 @@ int model_getromset();
 int model_getmodel(int romset);
 char *model_getname();
 void model_init();
+struct device_t *model_getdevice(int model);

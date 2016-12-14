@@ -8,6 +8,9 @@
 #include "video.h"
 #include "vid_pcjr.h"
 
+#define PCJR_RGB 0
+#define PCJR_COMPOSITE 1
+
 static int i_filt[8],q_filt[8];
 
 typedef struct pcjr_t
@@ -35,6 +38,8 @@ typedef struct pcjr_t
         
         int dispontime, dispofftime, vidtime;
         int firstline, lastline;
+        
+        int composite;
 } pcjr_t;
 
 static uint8_t crtcmask[32] = 
@@ -427,7 +432,7 @@ void pcjr_poll(void *p)
                 }
                 if (pcjr->array[0] & 1) x = (pcjr->crtc[1] << 3) + 16;
                 else                    x = (pcjr->crtc[1] << 4) + 16;
-                if (cga_comp)
+                if (pcjr->composite)
                 {
                         for (c = 0; c < x; c++)
                         {
@@ -577,7 +582,7 @@ void pcjr_poll(void *p)
 //                                        printf("Blit %i %i\n",firstline,lastline);
 //printf("Xsize is %i\n",xsize);
 
-                                        if (cga_comp) 
+                                        if (pcjr->composite) 
                                            video_blit_memtoscreen(0, pcjr->firstline-4, 0, (pcjr->lastline - pcjr->firstline) + 8, xsize, (pcjr->lastline - pcjr->firstline) + 8);
                                         else          
                                            video_blit_memtoscreen_8(0, pcjr->firstline-4, xsize, (pcjr->lastline - pcjr->firstline) + 8);
@@ -606,8 +611,13 @@ static void *pcjr_video_init()
 {
         int c;
         int pcjr_tint = -2;
+        int display_type;
         pcjr_t *pcjr = malloc(sizeof(pcjr_t));
         memset(pcjr, 0, sizeof(pcjr_t));
+
+        display_type = model_get_config_int("display_type");
+        pcjr->composite = (display_type != PCJR_RGB);
+        pclog("display_type = %i\n", display_type);
 
         pcjr->memctrl = -1;
         
@@ -646,4 +656,46 @@ device_t pcjr_video_device =
         pcjr_speed_changed,
         NULL,
         NULL
+};
+
+static device_config_t pcjr_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "RGB",
+                                .value = PCJR_RGB
+                        },
+                        {
+                                .description = "Composite",
+                                .value = PCJR_COMPOSITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = PCJR_RGB
+        },
+        {
+                .type = -1
+        }
+};
+
+/*This isn't really a device as such - more of a convenient way to hook in the
+  config information*/
+device_t pcjr_device =
+{
+        "IBM PCjr",
+        0,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        pcjr_config
 };

@@ -432,7 +432,6 @@ int cpuspeed;
 /*Video*/
 int readflash;
 extern int egareads,egawrites;
-extern int cga_comp;
 extern int vid_resize;
 extern int vid_api;
 extern int winsizex,winsizey;
