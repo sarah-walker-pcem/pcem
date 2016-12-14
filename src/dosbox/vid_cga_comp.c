@@ -67,7 +67,7 @@ static Bit8u byte_clamp_other(int v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
 
 FILE *df;
 
-void update_cga16_color(cga_t *cga) {
+void update_cga16_color(uint8_t cgamode) {
 	int x;
 	Bit32u x2;
 
@@ -83,7 +83,7 @@ void update_cga16_color(cga_t *cga) {
         }
         mode_contrast = 256/(max_v - min_v);
         mode_brightness = -min_v*mode_contrast;
-        if ((cga->cgamode & 3) == 1)
+        if ((cgamode & 3) == 1)
                 mode_hue = 14;
         else
                 mode_hue = 4;
@@ -98,7 +98,7 @@ void update_cga16_color(cga_t *cga) {
                 int left = (x >> 6) & 15;
                 int rc = right;
                 int lc = left;
-                if ((cga->cgamode & 4) != 0) {
+                if ((cgamode & 4) != 0) {
                         rc = (right & 8) | ((right & 7) != 0 ? 7 : 0);
                         lc = (left & 8) | ((left & 7) != 0 ? 7 : 0);
                 }
@@ -156,7 +156,7 @@ static int temp[SCALER_MAXWIDTH + 10]={0};
 static int atemp[SCALER_MAXWIDTH + 2]={0};
 static int btemp[SCALER_MAXWIDTH + 2]={0};
 
-Bit8u * Composite_Process(cga_t *cga, Bit8u border, Bit32u blocks/*, bool doublewidth*/, Bit8u *TempLine)
+Bit8u * Composite_Process(uint8_t cgamode, Bit8u border, Bit32u blocks/*, bool doublewidth*/, Bit8u *TempLine)
 {
 	int x;
 	Bit32u x2;
@@ -197,7 +197,7 @@ Bit8u * Composite_Process(cga_t *cga, Bit8u border, Bit32u blocks/*, bool double
         for (x = 0; x < 5; ++x)
                 OUT(b[x&3]);
 
-        if ((cga->cgamode & 4) != 0) {
+        if ((cgamode & 4) != 0) {
                 // Decode
                 int* i = temp + 5;
                 Bit32u* srgb = (Bit32u *)TempLine;
@@ -240,79 +240,79 @@ Bit8u * Composite_Process(cga_t *cga, Bit8u border, Bit32u blocks/*, bool double
         return TempLine;
 }
 
-void IncreaseHue(cga_t *cga)
+void IncreaseHue(uint8_t cgamode)
 {
 	hue_offset += 5.0;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void DecreaseHue(cga_t *cga)
+void DecreaseHue(uint8_t cgamode)
 {
 	hue_offset -= 5.0;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void IncreaseSaturation(cga_t *cga)
+void IncreaseSaturation(uint8_t cgamode)
 {
 	saturation += 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void DecreaseSaturation(cga_t *cga)
+void DecreaseSaturation(uint8_t cgamode)
 {
 	saturation -= 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void IncreaseContrast(cga_t *cga)
+void IncreaseContrast(uint8_t cgamode)
 {
 	contrast += 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void DecreaseContrast(cga_t *cga)
+void DecreaseContrast(uint8_t cgamode)
 {
 	contrast -= 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void IncreaseBrightness(cga_t *cga)
+void IncreaseBrightness(uint8_t cgamode)
 {
 	brightness += 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void DecreaseBrightness(cga_t *cga)
+void DecreaseBrightness(uint8_t cgamode)
 {
 	brightness -= 5;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void IncreaseSharpness(cga_t *cga)
+void IncreaseSharpness(uint8_t cgamode)
 {
 	sharpness += 10;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void DecreaseSharpness(cga_t *cga)
+void DecreaseSharpness(uint8_t cgamode)
 {
 	sharpness -= 10;
 
-	update_cga16_color(cga);
+	update_cga16_color(cgamode);
 }
 
-void cga_comp_init(cga_t *cga)
+void cga_comp_init(int revision)
 {
-	new_cga = cga->revision;
+	new_cga = revision;
 
 	/* Making sure this gets reset after reset. */
 	brightness = 0;
@@ -321,5 +321,5 @@ void cga_comp_init(cga_t *cga)
 	sharpness = 0;
 	hue_offset = 0;
 
-	update_cga16_color(cga);
+	update_cga16_color(0);
 }

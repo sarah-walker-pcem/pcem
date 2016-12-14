@@ -3,6 +3,6 @@
 #define Bitu unsigned int
 #define bool uint8_t
 
-void update_cga16_color(cga_t *cga);
-void cga_comp_init(cga_t *cga);
-Bit8u * Composite_Process(cga_t *cga, Bit8u border, Bit32u blocks/*, bool doublewidth*/, Bit8u *TempLine);
+void update_cga16_color(uint8_t cgamode);
+void cga_comp_init(int revision);
+Bit8u * Composite_Process(uint8_t cgamode, Bit8u border, Bit32u blocks/*, bool doublewidth*/, Bit8u *TempLine);
