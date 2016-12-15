@@ -613,6 +613,7 @@ static uint32_t ropL ## seg(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         if ((fetchdat & 0xc0) == 0xc0)                                                                                  \
                 return 0;                                                                                               \
                                                                                                                         \
+        STORE_IMM_ADDR_L((uintptr_t)&cpu_state.oldpc, op_old_pc);                                                       \
         target_seg = FETCH_EA(op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);                                            \
         SAVE_EA();                                                                                                      \
                                                                                                                         \
