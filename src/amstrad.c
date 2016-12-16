@@ -58,7 +58,7 @@ typedef struct mouse_amstrad_t
         int oldb;
 } mouse_amstrad_t;
 
-static void mouse_amstrad_poll(int x, int y, int b, void *p)
+static void mouse_amstrad_poll(int x, int y, int z, int b, void *p)
 {
         mouse_amstrad_t *mouse = (mouse_amstrad_t *)p;
         

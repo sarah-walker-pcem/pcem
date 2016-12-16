@@ -11,7 +11,7 @@ typedef struct mouse_serial_t
         SERIAL *serial;
 } mouse_serial_t;
 
-void mouse_serial_poll(int x, int y, int b, void *p)
+void mouse_serial_poll(int x, int y, int z, int b, void *p)
 {
         mouse_serial_t *mouse = (mouse_serial_t *)p;
         SERIAL *serial = mouse->serial;        

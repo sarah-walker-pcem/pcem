@@ -106,15 +106,15 @@ uint8_t cgastat;
 int pollmouse_delay = 2;
 void pollmouse()
 {
-        int x,y;
+        int x, y, z;
 //        return;
         pollmouse_delay--;
         if (pollmouse_delay) return;
         pollmouse_delay = 2;
         mouse_poll_host();
-        mouse_get_mickeys(&x,&y);
+        mouse_get_mickeys(&x, &y, &z);
         if (mouse_poll)
-           mouse_poll(x, y, mouse_buttons);
+           mouse_poll(x, y, z, mouse_buttons);
 //        if (mousecapture) position_mouse(64,64);
 }
 
@@ -500,7 +500,7 @@ void runpc()
                 if (win_title_update)
                 {
                         win_title_update=0;
-                        sprintf(s, "PCem v11 - %i%% - %s - %s - %s", fps, model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : "Press CTRL-END or middle button to release mouse");
+                        sprintf(s, "PCem v11 - %i%% - %s - %s - %s", fps, model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : ((mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON) ? "Press CTRL-END to release mouse" : "Press CTRL-END or middle button to release mouse"));
                         set_window_title(s);
                 }
                 done++;

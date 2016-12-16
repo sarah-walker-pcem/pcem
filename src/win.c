@@ -22,6 +22,7 @@
 #include "cpu.h"
 #include "ide.h"
 #include "model.h"
+#include "mouse.h"
 #include "nvr.h"
 #include "sound.h"
 #include "thread.h"
@@ -1261,7 +1262,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 break;
 
                 case WM_MBUTTONUP:
-                releasemouse();
+                if (!(mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON))
+                        releasemouse();
                 break;
 
                 case WM_ENTERMENULOOP:

@@ -221,7 +221,7 @@ typedef struct mouse_olim24_t
         int x, y, b;
 } mouse_olim24_t;
 
-void mouse_olim24_poll(int x, int y, int b, void *p)
+void mouse_olim24_poll(int x, int y, int z, int b, void *p)
 {
         mouse_olim24_t *mouse = (mouse_olim24_t *)p;
         

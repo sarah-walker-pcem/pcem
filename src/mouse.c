@@ -9,6 +9,7 @@ static mouse_t *mouse_list[] =
 {
         &mouse_serial_microsoft,
         &mouse_ps2_2_button,
+        &mouse_intellimouse,
         &mouse_amstrad,
         &mouse_olim24,
         NULL
@@ -31,10 +32,10 @@ void mouse_emu_close()
         cur_mouse = NULL;
 }
 
-void mouse_poll(int x, int y, int b)
+void mouse_poll(int x, int y, int z, int b)
 {
         if (cur_mouse)
-                cur_mouse->poll(x, y, b, mouse_p);
+                cur_mouse->poll(x, y, z, b, mouse_p);
 }
 
 char *mouse_get_name(int mouse)
