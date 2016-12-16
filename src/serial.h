@@ -18,7 +18,8 @@ typedef struct
         
         int irq;
 
-        void (*rcr_callback)(void *p);
+        void (*rcr_callback)(struct SERIAL *serial, void *p);
+        void *rcr_callback_p;
         uint8_t fifo[256];
         int fifo_read, fifo_write;
         

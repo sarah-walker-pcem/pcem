@@ -15,14 +15,11 @@ enum
 
 SERIAL serial1, serial2;
 
-int mousepos=-1;
-int mousedelay;
 
 void serial_reset()
 {
         serial1.iir = serial1.ier = serial1.lcr = 0;
         serial2.iir = serial2.ier = serial2.lcr = 0;
-        mousedelay = 0;
         serial1.fifo_read = serial1.fifo_write = 0;
         serial2.fifo_read = serial2.fifo_write = 0;
 }
@@ -120,7 +117,7 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                 if ((val & 2) && !(serial->mctrl & 2))
                 {
                         if (serial->rcr_callback)
-                                serial->rcr_callback(serial);
+                                serial->rcr_callback(serial, serial->rcr_callback_p);
 //                        pclog("RCR raised! sending M\n");
                 }
                 serial->mctrl = val;

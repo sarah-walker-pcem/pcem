@@ -38,6 +38,9 @@ struct
         int key_wantdata;
         
         int last_irq;
+        
+        void (*mouse_write)(uint8_t val, void *p);
+        void *mouse_p;
 } keyboard_at;
 
 static uint8_t key_ctrl_queue[16];
@@ -199,8 +202,8 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 break;
                                 
                                 case 0xd4: /*Write to mouse*/
-                                if (mouse_write)
-                                   mouse_write(val);
+                                if (keyboard_at.mouse_write)
+                                        keyboard_at.mouse_write(val, keyboard_at.mouse_p);
                                 break;     
                                 
                                 default:
@@ -483,7 +486,14 @@ void keyboard_at_init()
         keyboard_at_reset();
         keyboard_send = keyboard_at_adddata_keyboard;
         keyboard_poll = keyboard_at_poll;
-        mouse_write = NULL;
+        keyboard_at.mouse_write = NULL;
+        keyboard_at.mouse_p = NULL;
         
         timer_add(keyboard_at_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+}
+
+void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p)
+{
+        keyboard_at.mouse_write = mouse_write;
+        keyboard_at.mouse_p = p;
 }

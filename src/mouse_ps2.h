@@ -1,1 +1,1 @@
-void mouse_ps2_init();
+extern mouse_t mouse_ps2_2_button;

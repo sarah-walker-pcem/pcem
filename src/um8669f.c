@@ -41,7 +41,6 @@ COM2 :
 #include "fdc.h"
 #include "io.h"
 #include "lpt.h"
-#include "mouse_serial.h"
 #include "serial.h"
 #include "um8669f.h"
 
@@ -102,8 +101,6 @@ void um8669f_write(uint16_t port, uint8_t val, void *priv)
                                         case 3: serial2_set(0x2e8, 3); break;
                                 }
                         }
-                        
-                        mouse_serial_init();
                         
                         lpt1_remove();
                         lpt2_remove();

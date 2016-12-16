@@ -1,3 +1,8 @@
+#define MODEL_AT      1
+#define MODEL_PS2     2
+#define MODEL_AMSTRAD 4
+#define MODEL_OLIM24  8
+
 typedef struct
 {
         char name[24];
@@ -8,7 +13,7 @@ typedef struct
                 CPU *cpus;
         } cpu[4];
         int fixed_gfxcard;
-        int is_at;
+        int flags;
         int min_ram, max_ram;
         int ram_granularity;
         void (*init)();

@@ -11,6 +11,7 @@
 #include "fdd.h"
 #include "gameport.h"
 #include "model.h"
+#include "mouse.h"
 #include "nvr.h"
 #include "resources.h"
 #include "sound.h"
@@ -21,6 +22,18 @@
 extern int is486;
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
+static int settings_mouse_to_list[20], settings_list_to_mouse[20];
+
+static int mouse_valid(int type, int model)
+{
+        if (type == MOUSE_TYPE_PS2 && !(models[model].flags & MODEL_PS2))
+                return 0;
+        if (type == MOUSE_TYPE_AMSTRAD && !(models[model].flags & MODEL_AMSTRAD))
+                return 0;
+        if (type == MOUSE_TYPE_OLIM24 && !(models[model].flags & MODEL_OLIM24))
+                return 0;
+        return 1;
+}
 
 static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -35,6 +48,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_fda_type, temp_fdb_type;
         int temp_joystick_type;
         int cpu_type;
+        int temp_mouse_type;
         
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
@@ -164,7 +178,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h = GetDlgItem(hdlg, IDC_MEMSPIN);
                 SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
                 SendMessage(h, UDM_SETRANGE, 0, (models[romstomodel[romset]].min_ram << 16) | models[romstomodel[romset]].max_ram);
-                if (!models[model].is_at)
+                if (!models[model].flags & MODEL_AT)
                         SendMessage(h, UDM_SETPOS, 0, mem_size);
                 else
                         SendMessage(h, UDM_SETPOS, 0, mem_size / 1024);
@@ -212,7 +226,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, CB_SETCURSEL, fdd_get_type(1), 0);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_MB);
-                if (models[model].is_at)
+                if (models[model].flags & MODEL_AT)
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
                 else
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
@@ -252,6 +266,30 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         EnableWindow(h, TRUE);
                 else
                         EnableWindow(h, FALSE);
+
+                h = GetDlgItem(hdlg, IDC_COMBOMOUSE);
+                c = d = 0;
+                while (1)
+                {
+                        char *s = mouse_get_name(c);
+                        int type;
+
+                        if (!s)
+                                break;
+
+                        type = mouse_get_type(c);
+                        settings_mouse_to_list[c] = d;
+                        
+                        if (mouse_valid(type, model))
+                        {
+                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+
+                                settings_list_to_mouse[d] = c;
+                                d++;
+                        }
+                        c++;
+                }
+                SendMessage(h, CB_SETCURSEL, settings_mouse_to_list[mouse_type], 0);
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -269,7 +307,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 mem = models[temp_model].min_ram;
                         else if (mem > models[temp_model].max_ram)
                                 mem = models[temp_model].max_ram;
-			if (models[temp_model].is_at)
+			if (models[temp_model].flags & MODEL_AT)
                                 mem *= 1024;			
 			
                         h = GetDlgItem(hdlg, IDC_COMBOVID);
@@ -310,12 +348,15 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                         h = GetDlgItem(hdlg, IDC_COMBOJOY);
                         temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        h = GetDlgItem(hdlg, IDC_COMBOMOUSE);
+                        temp_mouse_type = settings_list_to_mouse[SendMessage(h, CB_GETCURSEL, 0, 0)];
                         
                         if (temp_model != model || gfx != gfxcard || mem != mem_size ||
                             fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
                             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
                             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
-			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1))
+			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
+                            temp_mouse_type != mouse_type)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -332,6 +373,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         sound_card_current = temp_sound_card_current;
                                         voodoo_enabled = temp_voodoo;
                                         cpu_use_dynarec = temp_dynarec;
+                                        mouse_type = temp_mouse_type;
 
 					fdd_set_type(0, temp_fda_type);
 					fdd_set_type(1, temp_fdb_type);
@@ -437,7 +479,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
 
                                 h = GetDlgItem(hdlg, IDC_TEXT_MB);
-                                if (models[temp_model].is_at)
+                                if (models[temp_model].flags & MODEL_AT)
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
                                 else
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
@@ -470,6 +512,36 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         EnableWindow(h, TRUE);
                                 else
                                         EnableWindow(h, FALSE);
+
+                                h = GetDlgItem(hdlg, IDC_COMBOMOUSE);
+                                temp_mouse_type = settings_list_to_mouse[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                                SendMessage(h, CB_RESETCONTENT, 0, 0);
+                                c = d = 0;
+                                while (1)
+                                {
+                                        char *s = mouse_get_name(c);
+                                        int type;
+
+                                        if (!s)
+                                                break;
+
+                                        type = mouse_get_type(c);
+                                        settings_mouse_to_list[c] = d;
+                                                
+                                        if (mouse_valid(type, temp_model))
+                                        {
+                                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+
+                                                settings_list_to_mouse[d] = c;
+                                                d++;
+                                        }
+
+                                        c++;
+                                }
+                                if (mouse_valid(temp_mouse_type, temp_model))
+                                        SendMessage(h, CB_SETCURSEL, settings_mouse_to_list[temp_mouse_type], 0);
+                                else
+                                        SendMessage(h, CB_SETCURSEL, 0, 0);
                         }
                         break;
                         case IDC_COMBOCPUM:

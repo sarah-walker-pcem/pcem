@@ -5,7 +5,6 @@
 #include "device.h"
 
 #include "ali1429.h"
-#include "amstrad.h"
 #include "cdrom-ioctl.h"
 #include "cdrom-iso.h"
 #include "disc.h"
@@ -38,6 +37,7 @@
 #include "timer.h"
 #include "vid_voodoo.h"
 #include "video.h"
+#include "amstrad.h"
 
 int window_w, window_h, window_x, window_y, window_remember;
 
@@ -346,6 +346,7 @@ void resetpc_cad()
 void resetpchard()
 {
         device_close_all();
+        mouse_emu_close();
         device_init();
         
         midi_close();
@@ -358,6 +359,7 @@ void resetpchard()
 	disc_reset();
         
         model_init();
+        mouse_emu_init();
         video_init();
         speaker_init();        
         sound_card_init(sound_card_current);
@@ -542,6 +544,7 @@ void closepc()
         disc_close(1);
         dumpregs();
         closevideo();
+        mouse_emu_close();
         device_close_all();
         midi_close();
 }
@@ -600,8 +603,8 @@ void loadconfig(char *fn)
         else   strcpy(discfns[1], "");
 
         mem_size = config_get_int(NULL, "mem_size", 4096);
-        if (mem_size < (models[model].is_at ? models[model].min_ram*1024 : models[model].min_ram))
-                mem_size = (models[model].is_at ? models[model].min_ram*1024 : models[model].min_ram);
+        if (mem_size < ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram))
+                mem_size = ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram);
 
         cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
@@ -651,6 +654,7 @@ void loadconfig(char *fn)
         window_remember = config_get_int(NULL, "window_remember", 0);
 
         joystick_type = config_get_int(NULL, "joystick_type", 0);
+        mouse_type = config_get_int(NULL, "mouse_type", 0);
         
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
@@ -741,6 +745,7 @@ void saveconfig()
         config_set_int(NULL, "window_remember", window_remember);
 
         config_set_int(NULL, "joystick_type", joystick_type);
+        config_set_int(NULL, "mouse_type", mouse_type);
                 
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
