@@ -38,7 +38,6 @@ int cgate32;
 
 uint8_t romext[32768];
 uint8_t *ram,*rom;
-uint16_t biosmask;
 
 uint32_t rmdat32;
 #define rmdat rmdat32

@@ -34,6 +34,7 @@ extern uint8_t romext[32768];
 extern int readlnum,writelnum;
 extern int memspeed[11];
 extern int nopageerrors;
+extern uint32_t biosmask;
 
 void mem_mapping_add(mem_mapping_t *mapping,
                     uint32_t base, 
