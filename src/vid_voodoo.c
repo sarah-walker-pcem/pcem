@@ -6543,7 +6543,7 @@ void voodoo_callback(void *p)
                 if (voodoo->line == voodoo->v_disp)
                 {
                         if (voodoo->dirty_line_high > voodoo->dirty_line_low)
-                                svga_doblit(0, voodoo->v_disp, voodoo->h_disp, voodoo->v_disp, voodoo->svga);
+                                svga_doblit(0, voodoo->v_disp, voodoo->h_disp, voodoo->v_disp-1, voodoo->svga);
                         if (voodoo->clutData_dirty)
                         {
                                 voodoo->clutData_dirty = 0;
