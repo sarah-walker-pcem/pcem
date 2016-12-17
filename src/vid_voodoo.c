@@ -3988,6 +3988,24 @@ enum
         CHIP_TREX2 = 0x8
 };
 
+static void wait_for_swap_complete(voodoo_t *voodoo)
+{
+        while (voodoo->swap_pending)
+        {
+                thread_wait_event(voodoo->wake_fifo_thread, -1);
+                thread_reset_event(voodoo->wake_fifo_thread);
+                if ((voodoo->swap_pending && voodoo->flush) || FIFO_ENTRIES == 65536)
+                {
+                        /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
+                        memset(voodoo->dirty_line, 1, 1024);
+                        voodoo->front_offset = voodoo->params.front_offset;
+                        voodoo->swap_count--;
+                        voodoo->swap_pending = 0;
+                        break;
+                }
+        }
+}
+
 static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
@@ -4035,26 +4053,22 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->front_offset = voodoo->params.front_offset;
                         voodoo->swap_count--;
                 }
+                else if (TRIPLE_BUFFER)
+                {
+                        if (voodoo->swap_pending)
+                                wait_for_swap_complete(voodoo);
+                                
+                        voodoo->swap_interval = (val >> 1) & 0xff;
+                        voodoo->swap_offset = voodoo->params.front_offset;
+                        voodoo->swap_pending = 1;                        
+                }
                 else
                 {
                         voodoo->swap_interval = (val >> 1) & 0xff;
                         voodoo->swap_offset = voodoo->params.front_offset;
                         voodoo->swap_pending = 1;
 
-                        while (voodoo->swap_pending)
-                        {
-                                thread_wait_event(voodoo->wake_fifo_thread, -1);
-                                thread_reset_event(voodoo->wake_fifo_thread);
-                                if ((voodoo->swap_pending && voodoo->flush) || FIFO_ENTRIES == 65536)
-                                {
-                                        /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
-                                        memset(voodoo->dirty_line, 1, 1024);
-                                        voodoo->front_offset = voodoo->params.front_offset;
-                                        voodoo->swap_count--;
-                                        voodoo->swap_pending = 0;
-                                        break;
-                                }
-                        }
+                        wait_for_swap_complete(voodoo);
                 }
                 voodoo->cmd_read++;
                 break;
