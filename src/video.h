@@ -82,3 +82,4 @@ extern int vid_resize;
 
 void video_wait_for_blit();
 void video_wait_for_buffer();
+void loadfont(char *s, int format);

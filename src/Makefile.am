@@ -31,7 +31,7 @@ vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_ega.c vid_et400
 vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
-vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c \
+vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
 x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc dosbox/dbopl.cpp \
 dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
 resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc resid-fp/sid.cc \

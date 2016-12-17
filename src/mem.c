@@ -100,8 +100,9 @@ int loadbios()
 {
         FILE *f=NULL,*ff=NULL;
         int c;
-        
+       
         loadfont("roms/mda.rom", 0);
+	loadfont("roms/wy700.rom", 3);
         
         biosmask = 0xffff;
         
