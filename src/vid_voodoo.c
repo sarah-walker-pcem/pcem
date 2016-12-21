@@ -321,6 +321,9 @@ typedef struct voodoo_t
         int flush;
 
         int scrfilter;
+	int scrfilterEnabled;
+	int scrfilterThreshold;
+	int scrfilterThresholdOld;
 
         uint32_t last_write_addr;
 
@@ -374,8 +377,9 @@ typedef struct voodoo_t
 
         int wake_timer;
                 
-        uint16_t thefilter[1024][1024]; // pixel filter, feeding from one or two
-        uint16_t thefilterg[1024][1024]; // for green
+        uint8_t thefilter[256][256]; // pixel filter, feeding from one or two
+        uint8_t thefilterg[256][256]; // for green
+        uint8_t thefilterb[256][256]; // for blue
 
         /* the voodoo adds purple lines for some reason */
         uint16_t purpleline[1024];
@@ -552,6 +556,8 @@ enum
         SST_vSync = 0x224,
         SST_clutData = 0x228,
         SST_dacData = 0x22c,
+
+	SST_scrFilter = 0x230,
 
         SST_hvRetrace = 0x240,
         SST_fbiInit5 = 0x244,
@@ -966,6 +972,8 @@ enum
 
 #define TEXTUREMODE_LOCAL_MASK 0x00643000
 #define TEXTUREMODE_LOCAL  0x00241000
+
+static void voodoo_threshold_check(voodoo_t *voodoo);
 
 static void voodoo_update_ncc(voodoo_t *voodoo, int tmu)
 {
@@ -5943,6 +5951,19 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
+		case SST_scrFilter:
+		if (voodoo->initEnable & 0x01)
+		{
+			voodoo->scrfilterEnabled = 1;
+			voodoo->scrfilterThreshold = val; 	/* update the threshold values and generate a new lookup table if necessary */
+		
+			if (val < 1) 
+				voodoo->scrfilterEnabled = 0;
+			voodoo_threshold_check(voodoo);		
+			pclog("Voodoo Filter: %06x\n", val);
+		}
+		break;
+
                 case SST_fbiInit5:
                 if (voodoo->initEnable & 0x01)
                         voodoo->fbiInit5 = val;
@@ -6382,22 +6403,25 @@ static void voodoo_calc_clutData(voodoo_t *voodoo)
         }
 }
 
-#define FILTCAP 64.0f /* Needs tuning to match DAC */
-#define FILTCAPG (FILTCAP / 2)
+
+
+#define FILTDIV 256
+
+static int FILTCAP, FILTCAPG, FILTCAPB = 0;	/* color filter threshold values */
 
 static void voodoo_generate_filter(voodoo_t *voodoo)
 {
-        int g, h, i;
-        float difference, diffg;
-        float color;
-        float thiscol, thiscolg, lined;
+        int g, h;
+        float difference, diffg, diffb;
+        float thiscol, thiscolg, thiscolb, lined;
 
-        for (g=0;g<1024;g++)         // pixel 1
+        for (g=0;g<FILTDIV;g++)         // pixel 1
         {
-                for (h=0;h<1024;h++)      // pixel 2
+                for (h=0;h<FILTDIV;h++)      // pixel 2
                 {
-                        difference = h - g;
-                        diffg = difference / 2;
+                        difference = (float)(h - g);
+                        diffg = difference;
+                        diffb = difference;
 
                         if (difference > FILTCAP)
                                 difference = FILTCAP;
@@ -6409,28 +6433,65 @@ static void voodoo_generate_filter(voodoo_t *voodoo)
                         if (diffg < -FILTCAPG)
                                 diffg = -FILTCAPG;
 
-                        thiscol = g + (difference / 3);
-                        thiscolg = g + (diffg / 3);
+                        if (diffb > FILTCAPB)
+                                diffb = FILTCAPB;
+                        if (diffb < -FILTCAPB)
+                                diffb = -FILTCAPB;
+
+			thiscol =  g + (difference / 2);
+			thiscolg =  g + (diffg / 2);		/* need these divides so we can actually undither! */
+			thiscolb =  g + (diffb / 2);
 
                         if (thiscol < 0)
                                 thiscol = 0;
-                        if (thiscol > 1023)
-                                thiscol = 1023;
+                        if (thiscol > FILTDIV-1)
+                                thiscol = FILTDIV-1;
 
                         if (thiscolg < 0)
                                 thiscolg = 0;
-                        if (thiscolg > 1023)
-                                thiscolg = 1023;
+                        if (thiscolg > FILTDIV-1)
+                                thiscolg = FILTDIV-1;
+
+                        if (thiscolb < 0)
+                                thiscolb = 0;
+                        if (thiscolb > FILTDIV-1)
+                                thiscolb = FILTDIV-1;
 
                         voodoo->thefilter[g][h] = thiscol;
                         voodoo->thefilterg[g][h] = thiscolg;
+                        voodoo->thefilterb[g][h] = thiscolb;
                 }
 
-                lined = g + 4;
-                if (lined > 1023)
-                        lined = 1023;
+                lined = g + 3;
+                if (lined > 255)
+                        lined = 255;
                 voodoo->purpleline[g] = lined;
         }
+}
+
+static void voodoo_threshold_check(voodoo_t *voodoo)
+{
+	int r, g, b;
+
+	if (!voodoo->scrfilterEnabled)
+		return;	/* considered disabled; don't check and generate */
+
+	/* Check for changes, to generate anew table */
+	if (voodoo->scrfilterThreshold != voodoo->scrfilterThresholdOld)
+	{
+		r = (voodoo->scrfilterThreshold >> 16) & 0xFF;
+		g = (voodoo->scrfilterThreshold >> 8 ) & 0xFF;
+		b = voodoo->scrfilterThreshold & 0xFF;
+		
+		FILTCAP = r;
+		FILTCAPG = g;
+		FILTCAPB = b;
+		
+		pclog("Voodoo Filter Threshold Check: %06x - RED %i GREEN %i BLUE %i\n", voodoo->scrfilterThreshold, r, g, b);	
+
+		voodoo->scrfilterThresholdOld = voodoo->scrfilterThreshold;
+		voodoo_generate_filter(voodoo);
+	}
 }
 
 static void voodoo_filterline(voodoo_t *voodoo, uint16_t *fil, int column, uint16_t *src, int line)
@@ -6440,41 +6501,42 @@ static void voodoo_filterline(voodoo_t *voodoo, uint16_t *fil, int column, uint1
 	/* 16 to 32-bit */
         for (x=0; x<column;x++)
         {
-                fil[x*3] = ((src[x] & 31) << 5);
-                fil[x*3+1] = (((src[x] >> 5) & 63) << 4);
-                fil[x*3+2] = (((src[x] >> 11) & 31) << 5);
+                fil[x*3] = ((src[x] & 31) << 3);
+                fil[x*3+1] = (((src[x] >> 5) & 63) << 2);		/* Shift to 32-bit */
+                fil[x*3+2] = (((src[x] >> 11) & 31) << 3);		
         }
+
         fil[x*3] = 0;
-        fil[x*3+1] = 0;
+        fil[x*3+1] = 0;							/* Keep the compiler happy */
         fil[x*3+2] = 0;
 
         /* filtering time */
 
-        for (x=1; x<column-1;x++)
+        for (x=1; x<column;x++)
         {
-                fil[x*3]   = voodoo->thefilter[fil[x*3]][fil[(x-1)*3]];
-                fil[x*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[(x-1)*3+1]];
-                fil[x*3+2] = voodoo->thefilter[fil[x*3+2]][fil[(x-1)*3+2]];
+                fil[(x-1)*3]   = voodoo->thefilterb[fil[x*3]][fil[	(x-1)		*3]];
+                fil[(x-1)*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[	(x-1)		*3+1]];
+                fil[(x-1)*3+2] = voodoo->thefilter[fil[x*3+2]][fil[	(x-1)		*3+2]];
+        }
+        for (x=0; x<column-1;x++)
+        {
+                fil[(x)*3]   = voodoo->thefilterb[fil[x*3]][fil[		(x+1)		*3]];
+                fil[(x)*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[	(x+1)		*3+1]];
+                fil[(x)*3+2] = voodoo->thefilter[fil[x*3+2]][fil[	(x+1)		*3+2]];
         }
         for (x=1; x<column-1;x++)
         {
-                fil[x*3]   = voodoo->thefilter[fil[x*3]][fil[(x-1)*3]];
-                fil[x*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[(x-1)*3+1]];
-                fil[x*3+2] = voodoo->thefilter[fil[x*3+2]][fil[(x-1)*3+2]];
+                fil[(x-1)*3]   = voodoo->thefilterb[fil[x*3]][fil[	(x-1)		*3]];
+                fil[(x-1)*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[	(x-1)		*3+1]];
+                fil[(x-1)*3+2] = voodoo->thefilter[fil[x*3+2]][fil[	(x-1)		*3+2]];
         }
-        for (x=1; x<column-1;x++)
+        for (x=1; x<column;x++)
         {
-                fil[x*3]   = voodoo->thefilter[fil[x*3]][fil[(x-1)*3]];
-                fil[x*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[(x-1)*3+1]];
-                fil[x*3+2] = voodoo->thefilter[fil[x*3+2]][fil[(x-1)*3+2]];
+                fil[(x-1)*3]   = voodoo->thefilterb[fil[x*3]][fil[	(x-1)		*3]];
+                fil[(x-1)*3+1] = voodoo->thefilterg[fil[x*3+1]][fil[	(x-1)		*3+1]]; 
+                fil[(x-1)*3+2] = voodoo->thefilter[fil[x*3+2]][fil[	(x-1)		*3+2]]; 
         }
 
-        for (x=0; x<column;x++)
-        {
-                fil[x*3]   = (voodoo->thefilter[fil[x*3]][fil[(x+1)*3]]) >> 2;
-                fil[x*3+1] = (voodoo->thefilterg[fil[x*3+1]][fil[(x+1)*3+1]]) >> 2;
-                fil[x*3+2] = (voodoo->thefilter[fil[x*3+2]][fil[(x+1)*3+2]]) >> 2;
-        }
 
         /* lines */
 
@@ -6512,7 +6574,7 @@ void voodoo_callback(void *p)
                                 if (voodoo->line > voodoo->dirty_line_high)
                                         voodoo->dirty_line_high = voodoo->line;
                                 
-                                if (voodoo->scrfilter)
+                                if (voodoo->scrfilter && voodoo->scrfilterEnabled)
                                 {
                                         int j, offset;
                                         uint16_t fil[(voodoo->h_disp + 1) * 3];              /* interleaved 24-bit RGB */
