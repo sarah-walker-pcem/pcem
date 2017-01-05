@@ -290,13 +290,13 @@ void initpc(int argc, char *argv[])
 				cdrom_null_open(cdrom_drive);
 #else
 				cdrom_drive = 0;
-				ioctl_open(cdrom_drive);
+				ioctl_set_drive(cdrom_drive);
 #endif
 			}
 		}
 		else
 		{
-			ioctl_open(cdrom_drive);
+			ioctl_set_drive(cdrom_drive);
 		}
 	}
         

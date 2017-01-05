@@ -25,7 +25,7 @@ typedef struct ATAPI
         int (*readtoc_session)(uint8_t *b, int msf, int maxlen);
         int (*readtoc_raw)(uint8_t *b, int maxlen);
         uint8_t (*getcurrentsubchannel)(uint8_t *b, int msf);
-        void (*readsector)(uint8_t *b, int sector);
+        int (*readsector)(uint8_t *b, int sector);
         void (*readsector_raw)(uint8_t *b, int sector);
         void (*playaudio)(uint32_t pos, uint32_t len, int ismsf);
         void (*seek)(uint32_t pos);

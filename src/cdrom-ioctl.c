@@ -4,8 +4,10 @@
 #include <io.h>
 #ifdef __MINGW64__
 #include "ntddcdrm.h"
+#include "ntddscsi.h"
 #else
 #include "ddk/ntddcdrm.h"
+#include "ddk/ntddscsi.h"
 #endif
 #include "ibm.h"
 #include "ide.h"
@@ -426,21 +428,73 @@ static void ioctl_load(void)
         cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 }
 
-static void ioctl_readsector(uint8_t *b, int sector)
+#define IOCTL_DATA_BUFFER 8192
+
+typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
+	SCSI_PASS_THROUGH_DIRECT spt;
+	ULONG Filler;
+	UCHAR SenseBuf[32];
+} SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
+
+static int ioctl_readsector(uint8_t *b, int sector)
 {
         LARGE_INTEGER pos;
+        BOOL status;
         long size;
-        if (!cdrom_drive) return;
+        int c;
+
+        if (!cdrom_drive)
+                return -1;
 
 	if (ioctl_cd_state == CD_PLAYING)
-		return;
+		return -1;
 
         ioctl_cd_state = CD_STOPPED;        
         pos.QuadPart=sector*2048;
         ioctl_open(0);
         SetFilePointer(hIOCTL,pos.LowPart,&pos.HighPart,FILE_BEGIN);
-        ReadFile(hIOCTL,b,2048,&size,NULL);
+        status = ReadFile(hIOCTL,b,2048,&size,NULL);
         ioctl_close();
+
+        /*If the read failed, try again using SPTI*/
+        if (!status || size != 2048)
+        {
+                uint8_t cmd[12] = { 0xbe, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 };
+                SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb;
+                DWORD returned;
+                uint8_t data_buffer[IOCTL_DATA_BUFFER];
+                
+                ioctl_open(0);
+                
+                cmd[9] |= 1 << 4; // userdata
+
+                cmd[3] = (uint8_t)(sector >> 16);
+        	cmd[4] = (uint8_t)(sector >> 8);
+                cmd[5] = (uint8_t)(sector >> 0);
+                
+                memset(&swb, 0, sizeof (swb));
+        	memcpy(swb.spt.Cdb, cmd, 12);
+
+        	swb.spt.Length = sizeof (SCSI_PASS_THROUGH);
+        	swb.spt.CdbLength = 12;
+        	swb.spt.DataIn = SCSI_IOCTL_DATA_IN;
+        	swb.spt.DataTransferLength = IOCTL_DATA_BUFFER;
+        	swb.spt.DataBuffer = data_buffer;
+        	memset(data_buffer, 0, IOCTL_DATA_BUFFER);
+        	swb.spt.TimeOutValue = 80 * 60;
+        	swb.spt.SenseInfoOffset = (uintptr_t)&swb.SenseBuf - (uintptr_t)&swb;//offsetof(swb, SenseBuf);
+        	swb.spt.SenseInfoLength = 32;
+
+        	if (DeviceIoControl(hIOCTL, IOCTL_SCSI_PASS_THROUGH_DIRECT,
+        		&swb, sizeof (SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER),
+        		&swb, sizeof (SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER),
+                        &returned, NULL))
+                        memcpy(b, data_buffer, 2048);
+
+                ioctl_close();
+        }
+
+        return !status;
 }
 
 static void lba_to_msf(uint8_t *buf, int lba)
@@ -695,27 +749,21 @@ void ioctl_reset()
         tocvalid = 1;
 }
 
+void ioctl_set_drive(char d)
+{
+        sprintf(ioctl_path, "\\\\.\\%c:", d);
+        pclog("Path is %s\n", ioctl_path);
+        tocvalid = 0;
+        atapi = &ioctl_atapi;
+}
+
 int ioctl_open(char d)
 {
-//        char s[8];
-        if (!ioctl_inited)
-        {
-                sprintf(ioctl_path,"\\\\.\\%c:",d);
-                pclog("Path is %s\n",ioctl_path);
-                tocvalid=0;
-        }
-//        pclog("Opening %s\n",ioctl_path);
-	hIOCTL	= CreateFile(/*"\\\\.\\g:"*/ioctl_path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL);
+	hIOCTL	= CreateFile(ioctl_path,GENERIC_READ | GENERIC_WRITE,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
 	if (!hIOCTL)
 	{
                 //fatal("IOCTL");
-        }
-        atapi=&ioctl_atapi;
-        if (!ioctl_inited)
-        {
-                ioctl_inited=1;
-                CloseHandle(hIOCTL);
-                hIOCTL = NULL;
         }
         return 0;
 }
@@ -732,7 +780,6 @@ void ioctl_close(void)
 static void ioctl_exit(void)
 {
         ioctl_stop();
-        ioctl_inited=0;
         tocvalid=0;
 }
 

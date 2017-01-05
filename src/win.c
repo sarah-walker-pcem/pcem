@@ -1034,7 +1034,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			} 
 			atapi->exit();
 			atapi_close();
-                        ioctl_open(0);
+                        ioctl_set_drive(0);
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_CHECKED);
 			CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
@@ -1065,7 +1065,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			}
 			atapi->exit();
 			atapi_close();
-                        ioctl_open(0);
+                        ioctl_set_drive(0);
 			if (cdrom_enabled)
 			{
 				/* Signal disc change to the emulated machine. */
@@ -1147,7 +1147,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				old_cdrom_drive = cdrom_drive;
 				atapi->exit();
 				atapi_close();
-                                ioctl_open(new_cdrom_drive);
+                                ioctl_set_drive(new_cdrom_drive);
 				if (cdrom_enabled)
 				{
 					/* Signal disc change to the emulated machine. */

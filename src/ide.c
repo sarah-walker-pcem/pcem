@@ -108,6 +108,7 @@
 /* ATAPI Additional Sense Codes */
 #define ASC_AUDIO_PLAY_OPERATION	0x00
 #define ASC_ILLEGAL_OPCODE		0x20
+#define	ASC_LBA_OUT_OF_RANGE            0x21
 #define	ASC_INV_FIELD_IN_CMD_PACKET	0x24
 #define ASC_MEDIUM_MAY_HAVE_CHANGED	0x28
 #define ASC_MEDIUM_NOT_PRESENT		0x3a
@@ -2131,7 +2132,24 @@ static void atapicommand(int ide_board)
                         break;
                 }
 
-                atapi->readsector(idebufferb,ide->cdpos);
+                if (atapi->readsector(idebufferb,ide->cdpos))
+                {
+//                        pclog("Read sector failed\n");
+        		atapi_sense.sensekey = SENSE_ILLEGAL_REQUEST;
+        		atapi_sense.asc = ASC_LBA_OUT_OF_RANGE;
+        		atapi_sense.ascq = 0;
+
+                        ide->atastat = READY_STAT | ERR_STAT;    /*CHECK CONDITION*/
+                        ide->error = (SENSE_ILLEGAL_REQUEST << 4) | ABRT_ERR;
+                        if (atapi_sense.sensekey == SENSE_UNIT_ATTENTION)
+                        {
+                                ide->error |= MCR_ERR;
+                        }
+                        atapi_sense.asc = ASC_ILLEGAL_OPCODE;
+                        ide->packetstatus = ATAPI_STATUS_ERROR;
+                        idecallback[ide_board]=50*IDE_TIME;
+                        break;
+                }
 #ifndef RPCEMU_IDE
                 readflash=1;
 #endif

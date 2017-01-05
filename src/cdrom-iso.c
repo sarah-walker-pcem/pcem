@@ -99,11 +99,13 @@ static void iso_load(void)
         pclog("iso_load stub\n");
 }
 
-static void iso_readsector(uint8_t *b, int sector)
+static int iso_readsector(uint8_t *b, int sector)
 {
-        if (!cdrom_drive) return;
+        if (!cdrom_drive)
+                return -1;
         fseek(iso_image,sector*2048,SEEK_SET);
         fread(b,2048,1,iso_image);
+        return 0;
 }
 
 static void lba_to_msf(uint8_t *buf, int lba)
