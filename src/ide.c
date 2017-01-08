@@ -2674,6 +2674,7 @@ static void callreadcd(IDE *ide)
 //                pclog("All done - callback set\n");
                 ide->packetstatus = ATAPI_STATUS_COMPLETE;
                 idecallback[ide->board]=20*IDE_TIME;
+                ide->atastat = BUSY_STAT;
                 return;
         }
 //        pclog("Continue readcd! %i blocks left\n",ide->cdlen);
