@@ -2288,7 +2288,7 @@ static void atapicommand(int ide_board)
                 alloc_length = len;
                 
                 {
-                        struct
+                        struct __attribute__((__packed__))
                         {
                                 uint8_t opcode;
                                 uint8_t polled;
@@ -2299,7 +2299,7 @@ static void atapicommand(int ide_board)
                                 uint8_t control;
                         } *gesn_cdb;
             
-                        struct
+                        struct __attribute__((__packed__))
                         {
                                 uint16_t len;
                                 uint8_t notification_class;
@@ -2359,6 +2359,7 @@ static void atapicommand(int ide_board)
                                 gesn_event_header->notification_class = 0x80; /* No event available */
                                 used_len = sizeof(*gesn_event_header);
                         }
+                        len = used_len;
                         gesn_event_header->len = used_len - sizeof(*gesn_event_header);
                 }
 
