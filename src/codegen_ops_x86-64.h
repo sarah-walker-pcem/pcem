@@ -5241,7 +5241,7 @@ static void LOAD_EA()
 
 static void MEM_CHECK_WRITE(x86seg *seg)
 {
-        uint8_t *jump1, *jump2;
+        uint8_t *jump1, *jump2, *jump3;
         
         CHECK_SEG_WRITE(seg);
 
@@ -5264,15 +5264,27 @@ static void MEM_CHECK_WRITE(x86seg *seg)
 
         /*seg = ESI, addr = EAX*/
         
+	if (IS_32_ADDR(&cr0))
+	{
+	        addbyte(0x83); /*CMP cr0, 0*/
+	        addbyte(0x3c);
+	        addbyte(0x25);
+	        addlong((uint32_t)&cr0);
+	        addbyte(0);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RDI, &cr0*/
+		addbyte(0xbf);
+		addquad((uint64_t)&cr0);
+		addbyte(0x83); /*CMPL [RDI], 0*/
+		addbyte(0x3f);
+		addbyte(0);
+	}
         addbyte(0x67); /*LEA EDI, [EAX+ESI]*/
         addbyte(0x8d);
         addbyte(0x3c);
         addbyte(0x30);
-        addbyte(0x83); /*CMP cr0, 0*/
-        addbyte(0x3c);
-        addbyte(0x25);
-        addlong((uint32_t)&cr0);
-        addbyte(0);
         addbyte(0x79); /*JNS +*/
         jump1 = &codeblock[block_current].data[block_pos];
         addbyte(0);
@@ -5284,17 +5296,32 @@ static void MEM_CHECK_WRITE(x86seg *seg)
         addbyte(0xfe);
         addbyte(-1);
         addbyte(0x74); /*JE slowpath*/
-        addbyte(10);
-        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
-        addbyte(0x3c);
-        addbyte(0xfd);
-        addlong((uint32_t)writelookup2);
-        addbyte(-1);
+        jump3 = &codeblock[block_current].data[block_pos];
+        addbyte(0);
+	if (IS_32_ADDR(writelookup2))
+	{
+	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
+        	addbyte(0x3c);
+	        addbyte(0xfd);
+	        addlong((uint32_t)writelookup2);
+	        addbyte(-1);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RCX, writelookup2*/
+		addbyte(0xb9);
+		addquad((uint64_t)writelookup2);
+		addbyte(0x83); /*CMP [RCX+RDI*8], -1*/
+		addbyte(0x3c);
+		addbyte(0xf9);
+		addbyte(-1);
+	}
         addbyte(0x75); /*JNE +*/
         jump2 = &codeblock[block_current].data[block_pos];
         addbyte(0);
 //        addbyte(0xc3); /*RET*/
-        
+
+        *jump3 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump3 - 1;        
         /*slowpath:*/
         addbyte(0x67); /*LEA EDI, [EAX+ESI]*/
         addbyte(0x8d);
@@ -5358,15 +5385,27 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
 
         /*seg = ESI, addr = EAX*/
         
+	if (IS_32_ADDR(&cr0))
+	{
+	        addbyte(0x83); /*CMP cr0, 0*/
+	        addbyte(0x3c);
+	        addbyte(0x25);
+	        addlong((uint32_t)&cr0);
+	        addbyte(0);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RDI, &cr0*/
+		addbyte(0xbf);
+		addquad((uint64_t)&cr0);
+		addbyte(0x83); /*CMPL [RDI], 0*/
+		addbyte(0x3f);
+		addbyte(0);
+	}
         addbyte(0x67); /*LEA EDI, [EAX+ESI]*/
         addbyte(0x8d);
         addbyte(0x3c);
         addbyte(0x30);
-        addbyte(0x83); /*CMP cr0, 0*/
-        addbyte(0x3c);
-        addbyte(0x25);
-        addlong((uint32_t)&cr0);
-        addbyte(0);
         addbyte(0x79); /*JNS +*/
         jump1 = &codeblock[block_current].data[block_pos];
         addbyte(0);
@@ -5387,19 +5426,42 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xee);
         addbyte(12);
-        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
-        addbyte(0x3c);
-        addbyte(0xfd);
-        addlong((uint32_t)writelookup2);
-        addbyte(-1);
+	if (IS_32_ADDR(writelookup2))
+	{
+	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
+        	addbyte(0x3c);
+	        addbyte(0xfd);
+	        addlong((uint32_t)writelookup2);
+	        addbyte(-1);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RAX, writelookup2*/
+		addbyte(0xb8);
+		addquad((uint64_t)writelookup2);
+		addbyte(0x83); /*CMP [RAX+RDI*8], -1*/
+		addbyte(0x3c);
+		addbyte(0xf8);
+		addbyte(-1);
+	}
         addbyte(0x74); /*JE +*/
         jump2 = &codeblock[block_current].data[block_pos];
         addbyte(0);
-        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
-        addbyte(0x3c);
-        addbyte(0xf5);
-        addlong((uint32_t)writelookup2);
-        addbyte(-1);
+	if (IS_32_ADDR(writelookup2))
+	{
+	        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
+        	addbyte(0x3c);
+	        addbyte(0xfd);
+	        addlong((uint32_t)writelookup2);
+	        addbyte(-1);
+	}
+	else
+	{
+		addbyte(0x83); /*CMP [RAX+RSI*8], -1*/
+		addbyte(0x3c);
+		addbyte(0xf0);
+		addbyte(-1);
+	}
         addbyte(0x75); /*JNE +*/
         jump3 = &codeblock[block_current].data[block_pos];
         addbyte(0);
@@ -5460,15 +5522,27 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
 
         /*seg = ESI, addr = EAX*/
         
+	if (IS_32_ADDR(&cr0))
+	{
+	        addbyte(0x83); /*CMP cr0, 0*/
+	        addbyte(0x3c);
+	        addbyte(0x25);
+	        addlong((uint32_t)&cr0);
+	        addbyte(0);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RDI, &cr0*/
+		addbyte(0xbf);
+		addquad((uint64_t)&cr0);
+		addbyte(0x83); /*CMPL [RDI], 0*/
+		addbyte(0x3f);
+		addbyte(0);
+	}
         addbyte(0x67); /*LEA EDI, [EAX+ESI]*/
         addbyte(0x8d);
         addbyte(0x3c);
         addbyte(0x30);
-        addbyte(0x83); /*CMP cr0, 0*/
-        addbyte(0x3c);
-        addbyte(0x25);
-        addlong((uint32_t)&cr0);
-        addbyte(0);
         addbyte(0x79); /*JNS +*/
         jump1 = &codeblock[block_current].data[block_pos];
         addbyte(0);
@@ -5489,19 +5563,42 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xee);
         addbyte(12);
-        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
-        addbyte(0x3c);
-        addbyte(0xfd);
-        addlong((uint32_t)writelookup2);
-        addbyte(-1);
+	if (IS_32_ADDR(writelookup2))
+	{
+	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
+        	addbyte(0x3c);
+	        addbyte(0xfd);
+	        addlong((uint32_t)writelookup2);
+	        addbyte(-1);
+	}
+	else
+	{
+		addbyte(0x48); /*MOV RAX, writelookup2*/
+		addbyte(0xb8);
+		addquad((uint64_t)writelookup2);
+		addbyte(0x83); /*CMP [RAX+RDI*8], -1*/
+		addbyte(0x3c);
+		addbyte(0xf8);
+		addbyte(-1);
+	}
         addbyte(0x74); /*JE slowpath*/
         jump2 = &codeblock[block_current].data[block_pos];
         addbyte(0);
-        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
-        addbyte(0x3c);
-        addbyte(0xf5);
-        addlong((uint32_t)writelookup2);
-        addbyte(-1);
+	if (IS_32_ADDR(writelookup2))
+	{
+	        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
+        	addbyte(0x3c);
+	        addbyte(0xfd);
+	        addlong((uint32_t)writelookup2);
+	        addbyte(-1);
+	}
+	else
+	{
+		addbyte(0x83); /*CMP [RAX+RSI*8], -1*/
+		addbyte(0x3c);
+		addbyte(0xf0);
+		addbyte(-1);
+	}
         addbyte(0x75); /*JNE +*/
         jump3 = &codeblock[block_current].data[block_pos];
         addbyte(0);
