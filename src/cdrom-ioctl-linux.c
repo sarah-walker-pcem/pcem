@@ -417,14 +417,16 @@ static void ioctl_load(void)
 	cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 }
 
-static void ioctl_readsector(uint8_t *b, int sector)
+static int ioctl_readsector(uint8_t *b, int sector)
 {
 	int cdrom = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
         if (cdrom <= 0)
-		return;
+		return -1;
         lseek(cdrom, sector*2048, SEEK_SET);
         read(cdrom, b, 2048);
 	close(cdrom);
+
+	return 0;
 }
 
 union
@@ -681,6 +683,11 @@ void ioctl_reset()
 	tocvalid = read_toc(fd, toc);
 
 	close(fd);
+}
+
+void ioctl_set_drive(char d)
+{
+	atapi=&ioctl_atapi;
 }
 
 int ioctl_open(char d)

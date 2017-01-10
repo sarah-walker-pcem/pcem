@@ -18,14 +18,15 @@ void mouse_poll_host()
 	mouse_buttons = mouse_b;
 }
 
-void mouse_get_mickeys(int *x, int *y)
+void mouse_get_mickeys(int *x, int *y, int *z)
 {
 	if (mousecapture)
 	{
 	        get_mouse_mickeys(x, y);
+		*z = 0;
 //        	position_mouse(64, 64);
 	}
 	else
-	        *x = *y = 0;
+	        *x = *y = *z = 0;
 }
 

@@ -489,13 +489,13 @@ void video_blit_complete()
 void video_wait_for_blit()
 {
         while (blit_data.busy)
-                thread_wait_event(blit_data.blit_complete, -1);
+                thread_wait_event(blit_data.blit_complete, 1);
         thread_reset_event(blit_data.blit_complete);
 }
 void video_wait_for_buffer()
 {
         while (blit_data.buffer_in_use)
-                thread_wait_event(blit_data.buffer_not_in_use, -1);
+                thread_wait_event(blit_data.buffer_not_in_use, 1);
         thread_reset_event(blit_data.buffer_not_in_use);
 }
 

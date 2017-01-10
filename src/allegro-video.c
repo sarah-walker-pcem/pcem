@@ -73,10 +73,14 @@ static void allegro_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 			}
 		}
 
+		video_blit_complete();
 	        blit(buffer32_vscale, screen, x, (y+y1)*2, 0, y1, w, (y2-y1)*2);
 	}
 	else
+	{
 	        blit(buffer32, screen, x, y+y1, 0, y1, w, y2-y1);
+		video_blit_complete();
+	}
 }
 
 static void allegro_blit_memtoscreen_8(int x, int y, int w, int h)
@@ -110,7 +114,7 @@ static void allegro_blit_memtoscreen_8(int x, int y, int w, int h)
 			}
 		}
 	}
-
+	video_blit_complete();
 	if (readflash)
 	{
 		if (line_double)
