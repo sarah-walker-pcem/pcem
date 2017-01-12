@@ -3188,6 +3188,8 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
 
 static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
+        uint8_t *jump1;
+        
         if (codegen_flags_changed && cpu_state.flags_op != FLAGS_UNKNOWN)
         {
                 addbyte(0x83); /*CMP flags_res, 0*/
@@ -3203,10 +3205,8 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 addbyte(0xc0);
                 addbyte(0x75); /*JNZ +*/
         }
-        if (not)
-                addbyte(12+2+2+7+5+(timing_bt ? 8 : 0));
-        else
-                addbyte(12+2+2);
+        jump1 = &codeblock[block_current].data[block_pos];
+        addbyte(0);
         CALL_FUNC(CF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
@@ -3215,6 +3215,9 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
         else
                 addbyte(0x74); /*JZ +*/
         addbyte(7+5+(timing_bt ? 4 : 0));        
+
+        if (!not)
+                *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
         addbyte(cpu_state_offset(pc));
@@ -3228,6 +3231,8 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+        if (not)
+                *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
 }
 
 static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
@@ -3268,6 +3273,7 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
 
 static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
+        uint8_t *jump1;
         if (codegen_flags_changed && cpu_state.flags_op != FLAGS_UNKNOWN)
         {
                 addbyte(0x83); /*CMP flags_res, 0*/
@@ -3283,11 +3289,8 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 addbyte(0xc0);
                 addbyte(0x75); /*JNZ +*/
         }
-        if (not)
-                addbyte(12+2+3+12+2+3+2+2+7+5+(timing_bt ? 8 : 0));
-        else
-                addbyte(12+2+3+12+2+3+2+2);
-
+        jump1 = &codeblock[block_current].data[block_pos];
+        addbyte(0);
         CALL_FUNC(NF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
@@ -3307,6 +3310,8 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
         else
                 addbyte(0x74); /*JZ +*/
         addbyte(7+5+(timing_bt ? 4 : 0));        
+        if (!not)
+                *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
         addbyte(cpu_state_offset(pc));
@@ -3320,6 +3325,8 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
+        if (not)
+                *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
 }
 
 static int LOAD_VAR_W(uintptr_t addr)
