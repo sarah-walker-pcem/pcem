@@ -2187,8 +2187,8 @@ void *s3_bahamas64_init()
 {
         s3_t *s3 = s3_init("roms/bahamas64.BIN", S3_VISION864);
 
-        s3->id = 0xc1; /*Vision864P*/
-        s3->id_ext = s3->id_ext_pci = 0xc1;
+        s3->id = 0xc0; /*Vision864P*/
+        s3->id_ext = s3->id_ext_pci = 0xc0;
         s3->packed_mmio = 0;
         
         s3->getclock = sdac_getclock;
