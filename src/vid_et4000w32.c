@@ -104,6 +104,8 @@ typedef struct et4000w32p_t
         int blitter_busy;
         uint64_t blitter_time;
         uint64_t status_time;
+        
+        int is_pci;
 } et4000w32p_t;
 
 void et4000w32p_recalcmapping(et4000w32p_t *et4000);
@@ -265,8 +267,8 @@ uint8_t et4000w32p_in(uint16_t addr, void *p)
                         return (et4000->regs[0xec] & 0xf) | 0x60; /*ET4000/W32p rev D*/
                 if (et4000->index == 0xef) 
                 {
-                        if (PCI) return et4000->regs[0xef] | 0xe0;       /*PCI*/
-                        else     return et4000->regs[0xef] | 0x60;       /*VESA local bus*/
+                        if (PCI && et4000->is_pci) return et4000->regs[0xef] | 0xe0;       /*PCI*/
+                        else                       return et4000->regs[0xef] | 0x60;       /*VESA local bus*/
                 }
                 return et4000->regs[et4000->index];
         }
@@ -1161,12 +1163,14 @@ void et4000w32p_pci_write(int func, int addr, uint8_t val, void *p)
 void *et4000w32p_init()
 {
         int vram_size;
+        int offset;
         et4000w32p_t *et4000 = malloc(sizeof(et4000w32p_t));
         memset(et4000, 0, sizeof(et4000w32p_t));
 
         vram_size = device_get_config_int("memory");
         
         et4000->interleaved = (vram_size == 2) ? 1 : 0;
+        et4000->is_pci = 1;
         
         svga_init(&et4000->svga, et4000, vram_size << 20,
                    et4000w32p_recalctimings,
@@ -1175,7 +1179,16 @@ void *et4000w32p_init()
                    NULL); 
 
         rom_init(&et4000->bios_rom, "roms/et4000w32.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
-        if (PCI)
+        
+        /*Some BIOSes (eg Diamond Stealth 32 VLB) have a PCI data structure, but
+          with the wrong PCI device ID. The BIOSes on the Intel boards detect this
+          and refuse to use the card. To work around this we check the ID and if
+          it's wrong then disable PCI functionality. */
+        offset = et4000->bios_rom.rom[0x18] | (et4000->bios_rom.rom[0x19] << 8);
+        if (et4000->bios_rom.rom[offset+7] != 0x32)
+                et4000->is_pci = 0;
+        
+        if (PCI && et4000->is_pci)
                 mem_mapping_disable(&et4000->bios_rom.mapping);
 
         mem_mapping_add(&et4000->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &et4000->svga);
@@ -1183,7 +1196,8 @@ void *et4000w32p_init()
 
         et4000w32p_io_set(et4000);
         
-        pci_add(et4000w32p_pci_read, et4000w32p_pci_write, et4000);
+        if (PCI && et4000->is_pci)
+                pci_add(et4000w32p_pci_read, et4000w32p_pci_write, et4000);
 
         et4000->pci_regs[0x04] = 7;
         
