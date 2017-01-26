@@ -5626,6 +5626,8 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp |= (voodoo->swap_count << 28);
                 if (voodoo->cmd_written - voodoo->cmd_read)
                         temp |= 0x380; /*Busy*/
+                if (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr)
+                        temp |= 0x380; /*Busy*/
                 if (!voodoo->v_retrace)
                         temp |= 0x40;
                 if (!voodoo->voodoo_busy)
