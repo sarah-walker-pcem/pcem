@@ -4609,21 +4609,21 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_bltSrcChromaRange:
                 voodoo->bltSrcChromaRange = val;
-                voodoo->bltSrcChromaMinR = val & 0x1f;
+                voodoo->bltSrcChromaMinB = val & 0x1f;
                 voodoo->bltSrcChromaMinG = (val >> 5) & 0x3f;
-                voodoo->bltSrcChromaMinB = (val >> 11) & 0x1f;
-                voodoo->bltSrcChromaMaxR = (val >> 16) & 0x1f;
+                voodoo->bltSrcChromaMinR = (val >> 11) & 0x1f;
+                voodoo->bltSrcChromaMaxB = (val >> 16) & 0x1f;
                 voodoo->bltSrcChromaMaxG = (val >> 21) & 0x3f;
-                voodoo->bltSrcChromaMaxB = (val >> 27) & 0x1f;
+                voodoo->bltSrcChromaMaxR = (val >> 27) & 0x1f;
                 break;
                 case SST_bltDstChromaRange:
                 voodoo->bltDstChromaRange = val;
-                voodoo->bltDstChromaMinR = val & 0x1f;
+                voodoo->bltDstChromaMinB = val & 0x1f;
                 voodoo->bltDstChromaMinG = (val >> 5) & 0x3f;
-                voodoo->bltDstChromaMinB = (val >> 11) & 0x1f;
-                voodoo->bltDstChromaMaxR = (val >> 16) & 0x1f;
+                voodoo->bltDstChromaMinR = (val >> 11) & 0x1f;
+                voodoo->bltDstChromaMaxB = (val >> 16) & 0x1f;
                 voodoo->bltDstChromaMaxG = (val >> 21) & 0x3f;
-                voodoo->bltDstChromaMaxB = (val >> 27) & 0x1f;
+                voodoo->bltDstChromaMaxR = (val >> 27) & 0x1f;
                 break;
                 case SST_bltClipX:
                 voodoo->bltClipRight = val & 0xfff;
