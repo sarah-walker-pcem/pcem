@@ -111,7 +111,10 @@ void i430lx_trc_write(uint16_t port, uint8_t val, void *p)
         if ((val & 4) && !(trc & 4))
         {
                 if (val & 2) /*Hard reset*/
+                {
                         i430lx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
+                        keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
+                }
                 resetx86();
         }
                 

@@ -99,9 +99,6 @@ uint8_t i430fx_read(int func, int addr, void *priv)
         return card_i430fx[addr];
 }
 
-/*The Turbo-Reset Control Register isn't listed in the i430FX datasheet, however
-  the Advanced/EV BIOS seems to assume it exists. It aliases with one of the PCI
-  registers.*/ 
 static uint8_t trc = 0;
 
 void i430fx_trc_write(uint16_t port, uint8_t val, void *p)
@@ -109,7 +106,10 @@ void i430fx_trc_write(uint16_t port, uint8_t val, void *p)
         if ((val & 4) && !(trc & 4))
         {
                 if (val & 2) /*Hard reset*/
+                {
                         i430fx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
+                        keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
+                }
                 resetx86();
         }
                 
