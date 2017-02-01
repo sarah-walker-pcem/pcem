@@ -93,6 +93,7 @@ static int16_t cd_buffer[CD_BUFLEN * 2];
 static thread_t *sound_cd_thread_h;
 static event_t *sound_cd_event;
 static unsigned int cd_vol_l, cd_vol_r;
+static int cd_buf_update = CD_BUFLEN / SOUNDBUFLEN;
 
 void sound_set_cd_volume(unsigned int vol_l, unsigned int vol_r)
 {
@@ -207,8 +208,13 @@ void sound_poll(void *priv)
         fwrite(buf16,(SOUNDBUFLEN)*2*2,1,soundf);*/
         
                 if (soundon) givealbuffer(outbuffer);
-        
-                thread_set_event(sound_cd_event);
+
+                cd_buf_update--;
+                if (!cd_buf_update)
+                {
+                        cd_buf_update = (48000 / SOUNDBUFLEN) / (CD_FREQ / CD_BUFLEN);
+                        thread_set_event(sound_cd_event);
+                }
 
                 sound_pos_global = 0;
         }

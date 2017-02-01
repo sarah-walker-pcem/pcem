@@ -91,7 +91,8 @@ void inital()
 #ifdef USE_OPENAL
         int c;
         int16_t buf[BUFLEN*2];
-
+        int16_t cd_buf[CD_BUFLEN*2];
+        
 //        printf("1\n");
         check();
 
@@ -120,12 +121,13 @@ void inital()
         check();
 
         memset(buf,0,BUFLEN*4);
+        memset(cd_buf, 0, CD_BUFLEN*4);
 
 //        printf("5\n");
         for (c = 0; c < 4; c++)
         {
                 alBufferData(buffers[c], AL_FORMAT_STEREO16, buf, BUFLEN*2*2, FREQ);
-                alBufferData(buffers_cd[c], AL_FORMAT_STEREO16, buf, CD_BUFLEN*2*2, CD_FREQ);
+                alBufferData(buffers_cd[c], AL_FORMAT_STEREO16, cd_buf, CD_BUFLEN*2*2, CD_FREQ);
         }
 
         alSourceQueueBuffers(source[0], 4, buffers);
