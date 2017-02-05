@@ -1086,7 +1086,9 @@ static void voodoo_recalc(voodoo_t *voodoo)
         
         voodoo->block_width = ((voodoo->fbiInit1 >> 4) & 15) * 2;
         if (voodoo->fbiInit6 & (1 << 30))
-                voodoo->fbiInit1 += 1;
+                voodoo->block_width += 1;
+        if (voodoo->fbiInit1 & (1 << 24))
+                voodoo->block_width += 32;
         voodoo->row_width = voodoo->block_width * 32 * 2;
 
 /*        pclog("voodoo_recalc : front_offset %08X  back_offset %08X  aux_offset %08X draw_offset %08x\n", voodoo->params.front_offset, voodoo->back_offset, voodoo->params.aux_offset, voodoo->params.draw_offset);
@@ -3100,7 +3102,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         if (params->fbzMode & FBZ_RGB_WMASK)
                                                 fb_mem[x] = src_b | (src_g << 5) | (src_r << 11);
 
-                                        if (params->fbzMode & FBZ_DEPTH_WMASK)
+                                        if ((params->fbzMode & (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE)) == (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE))
                                                 aux_mem[x] = new_depth;
                                 }
                         }
@@ -4429,12 +4431,28 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case SST_clipLeftRight:
-                voodoo->params.clipRight = val & 0x3ff;
-                voodoo->params.clipLeft = (val >> 16) & 0x3ff;
+                if (voodoo->type >= VOODOO_2)
+                {
+                        voodoo->params.clipRight = val & 0xfff;
+                        voodoo->params.clipLeft = (val >> 16) & 0xfff;
+                }
+                else
+                {
+                        voodoo->params.clipRight = val & 0x3ff;
+                        voodoo->params.clipLeft = (val >> 16) & 0x3ff;
+                }
                 break;
                 case SST_clipLowYHighY:
-                voodoo->params.clipHighY = val & 0x3ff;
-                voodoo->params.clipLowY = (val >> 16) & 0x3ff;
+                if (voodoo->type >= VOODOO_2)
+                {
+                        voodoo->params.clipHighY = val & 0xfff;
+                        voodoo->params.clipLowY = (val >> 16) & 0xfff;
+                }
+                else
+                {
+                        voodoo->params.clipHighY = val & 0x3ff;
+                        voodoo->params.clipLowY = (val >> 16) & 0x3ff;
+                }
                 break;
 
                 case SST_nopCMD:

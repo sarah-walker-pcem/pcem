@@ -2980,7 +2980,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0x56);
         }
 
-        if (params->fbzMode & FBZ_DEPTH_WMASK)
+        if ((params->fbzMode & (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE)) == (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE))
         {
                 addbyte(0x66); /*MOV AX, new_depth*/
                 addbyte(0x8b);
