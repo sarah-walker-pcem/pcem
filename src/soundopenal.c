@@ -4,11 +4,7 @@
 #include <stdlib.h>
 #ifdef USE_OPENAL
 #include <AL/al.h>
-#ifdef __MINGW64__
 #include <AL/alc.h>
-#else
-#include <AL/alut.h>
-#endif
 #endif
 #include "ibm.h"
 #include "sound.h"
@@ -23,7 +19,6 @@ static ALuint source[2];     // audio source
 #define BUFLEN SOUNDBUFLEN
 
 void closeal();
-#ifdef __MINGW64__
 ALvoid  alutInit(ALint *argc,ALbyte **argv) 
 {
 	ALCcontext *Context;
@@ -56,7 +51,6 @@ ALvoid  alutExit(ALvoid)
 	//Close device
 	alcCloseDevice(Device);
 }
-#endif
 void initalmain(int argc, char *argv[])
 {
 #ifdef USE_OPENAL

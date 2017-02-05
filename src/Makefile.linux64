@@ -25,7 +25,7 @@ DBOBJ = dbopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 
-LIBS = -lopenal -lstdc++ -lalleg -lalut -lpthread -lm
+LIBS = -lopenal -lstdc++ -lalleg -lpthread -lm
 
 PCem64: $(OBJ) $(DBOBJ) $(SIDOBJ)
 	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) -o "PCem64" $(LIBS)

@@ -12,7 +12,7 @@ amrefresh:
 
 pcem_CFLAGS = $(allegro_CFLAGS)
 
-pcem_LDADD = $(allegro_LIBS) -lopenal -lalut
+pcem_LDADD = $(allegro_LIBS) -lopenal
 
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c allegro-gui.c \
 allegro-gui-configure.c allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
