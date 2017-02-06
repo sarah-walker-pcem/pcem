@@ -964,8 +964,8 @@ enum
 
 enum
 {
-        BLTCMD_SRC_TILED = (1 << 10),
-        BLTCMD_DST_TILED = (1 << 12)
+        BLTCMD_SRC_TILED = (1 << 14),
+        BLTCMD_DST_TILED = (1 << 15)
 };
 
 #define TEXTUREMODE_MASK 0x3ffff000
@@ -3771,6 +3771,7 @@ static void blit_start(voodoo_t *voodoo)
                         {
                                 uint16_t src_dat = src[src_x];
                                 uint16_t dst_dat = dst[dst_x];
+                                int rop = 0;
 
                                 if (voodoo->bltCommand & BLIT_CLIPPING_ENABLED)
                                 {
@@ -3778,8 +3779,31 @@ static void blit_start(voodoo_t *voodoo)
                                             dst_y < voodoo->bltClipLowY || dst_y > voodoo->bltClipHighY)
                                                 goto skip_pixel_blit;
                                 }
-                                
-                                MIX(src_dat, dst_dat, voodoo->bltRop[3]);
+
+                                if (voodoo->bltCommand & BLIT_SRC_CHROMA)
+                                {
+                                        int r = (src_dat >> 11);
+                                        int g = (src_dat >> 5) & 0x3f;
+                                        int b = src_dat & 0x1f;
+                        
+                                        if (r >= voodoo->bltSrcChromaMinR && r <= voodoo->bltSrcChromaMaxR &&
+                                            g >= voodoo->bltSrcChromaMinG && g <= voodoo->bltSrcChromaMaxG &&
+                                            b >= voodoo->bltSrcChromaMinB && b <= voodoo->bltSrcChromaMaxB)
+                                                rop |= BLIT_ROP_SRC_PASS;
+                                }
+                                if (voodoo->bltCommand & BLIT_DST_CHROMA)
+                                {
+                                        int r = (dst_dat >> 11);
+                                        int g = (dst_dat >> 5) & 0x3f;
+                                        int b = dst_dat & 0x1f;
+                        
+                                        if (r >= voodoo->bltDstChromaMinR && r <= voodoo->bltDstChromaMaxR &&
+                                            g >= voodoo->bltDstChromaMinG && g <= voodoo->bltDstChromaMaxG &&
+                                            b >= voodoo->bltDstChromaMinB && b <= voodoo->bltDstChromaMaxB)
+                                                rop |= BLIT_ROP_DST_PASS;
+                                }
+
+                                MIX(src_dat, dst_dat, voodoo->bltRop[rop]);
                                 
                                 dst[dst_x] = dst_dat;
 skip_pixel_blit:                                
