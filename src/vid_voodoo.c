@@ -3649,9 +3649,9 @@ static void triangle_setup(voodoo_t *voodoo)
         }
         if (voodoo->sSetupMode & SETUPMODE_W1)
         {
-                voodoo->params.tmu[1].startW = (int64_t)(voodoo->verts[va].sW0 * 4294967296.0f);
-                voodoo->params.tmu[1].dWdX = (int64_t)(((voodoo->verts[va].sW0 - voodoo->verts[vb].sW0) * dyBC - (voodoo->verts[vb].sW0 - voodoo->verts[vc].sW0) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[1].dWdY = (int64_t)(((voodoo->verts[vb].sW0 - voodoo->verts[vc].sW0) * dxAB - (voodoo->verts[va].sW0 - voodoo->verts[vb].sW0) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[1].startW = (int64_t)(voodoo->verts[va].sW1 * 4294967296.0f);
+                voodoo->params.tmu[1].dWdX = (int64_t)(((voodoo->verts[va].sW1 - voodoo->verts[vb].sW1) * dyBC - (voodoo->verts[vb].sW1 - voodoo->verts[vc].sW1) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[1].dWdY = (int64_t)(((voodoo->verts[vb].sW1 - voodoo->verts[vc].sW1) * dxAB - (voodoo->verts[va].sW1 - voodoo->verts[vb].sW1) * dxBC) * 4294967296.0f);
         }
         if (voodoo->sSetupMode & SETUPMODE_S1_T1)
         {
