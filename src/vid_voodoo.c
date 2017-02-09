@@ -160,13 +160,13 @@ typedef struct voodoo_params_t
 
         uint32_t texBaseAddr[2], texBaseAddr1[2], texBaseAddr2[2], texBaseAddr38[2];
         
-        uint32_t tex_base[2][LOD_MAX+1];
+        uint32_t tex_base[2][LOD_MAX+2];
         int tex_width[2];
-        int tex_w_mask[2][LOD_MAX+1];
-        int tex_w_nmask[2][LOD_MAX+1];
-        int tex_h_mask[2][LOD_MAX+1];
-        int tex_shift[2][LOD_MAX+1];
-        int tex_lod[2][LOD_MAX+1];
+        int tex_w_mask[2][LOD_MAX+2];
+        int tex_w_nmask[2][LOD_MAX+2];
+        int tex_h_mask[2][LOD_MAX+2];
+        int tex_shift[2][LOD_MAX+2];
+        int tex_lod[2][LOD_MAX+2];
         int tex_entry[2];
         int detail_max[2], detail_bias[2], detail_scale[2];
         
@@ -1122,7 +1122,7 @@ static void voodoo_recalc_tex(voodoo_t *voodoo, int tmu)
                 tex_lod++;
         }
         
-        for (lod = 0; lod <= LOD_MAX; lod++)
+        for (lod = 0; lod <= LOD_MAX+1; lod++)
         {
                 if (!width)
                         width = 1;
