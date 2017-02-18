@@ -112,7 +112,7 @@ MODEL models[] =
         {"Compaq Deskpro 386",  ROM_DESKPRO_386, { "Intel", cpus_i386DX,  "AMD", cpus_Am386DX, "Cyrix", cpus_486DLC},  0, MODEL_AT,   1,  15, 1,     deskpro386_init, NULL},
         {"Acer 386SX25/N",      ROM_ACER386,     { "Intel", cpus_acer,    "",    NULL,         "",      NULL},         1, MODEL_AT|MODEL_PS2,   1,  16, 1,   at_acer386sx_init, NULL},
         {"DTK 386SX clone",     ROM_DTK386,      { "Intel", cpus_i386SX,  "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC},  0, MODEL_AT,   1,  16, 1,        at_neat_init, NULL},
-        {"Phoenix 386 clone",   ROM_PX386,       { "Intel", cpus_i386SX,  "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC},  0, MODEL_AT,   1,  16, 1,             at_init, NULL},
+/*        {"Phoenix 386 clone",   ROM_PX386,       { "Intel", cpus_i386SX,  "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC},  0, MODEL_AT,   1,  16, 1,             at_init, NULL},*/
         {"Amstrad MegaPC",      ROM_MEGAPC,      { "Intel", cpus_i386SX,  "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC},  1, MODEL_AT|MODEL_PS2,   1,  16, 1,     at_wd76c10_init, NULL},
         {"AMI 386SX clone",     ROM_AMI386SX,    { "Intel", cpus_i386SX,  "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC},  0, MODEL_AT,   1, 256, 1,    at_headland_init, NULL},
         {"MR 386DX clone",      ROM_MR386DX_OPTI495,  { "Intel", cpus_i386DX,  "AMD", cpus_Am386DX, "Cyrix", cpus_486DLC}, 0, MODEL_AT,   1, 256, 1,     at_opti495_init, NULL},
