@@ -316,7 +316,6 @@ int loadbios()
                 fclose(ff);
                 fclose(f);
                 biosmask = 0x7fff;
-                mem_load_atide_bios();
                 return 1;
                 case ROM_DELL200:
                 f=romfopen("roms/dells200/dell0.bin","rb");
@@ -594,7 +593,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_atide_bios();
                 return 1;
 
                 case ROM_DTK386: /*Uses NEAT chipset*/
@@ -602,7 +600,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom, 65536, 1, f);
                 fclose(f);
-                mem_load_atide_bios();
                 return 1;
 
                 case ROM_PXXT:
