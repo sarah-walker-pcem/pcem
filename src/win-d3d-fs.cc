@@ -88,7 +88,7 @@ void d3d_fs_init(HWND h)
         d3d_device_window = CreateWindowEx (
                 0,
                 szSubClassName,
-                "PCem v11",
+                "PCem v12",
                 WS_POPUP,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,

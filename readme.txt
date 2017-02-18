@@ -1,26 +1,18 @@
-PCem v11
+PCem v12
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v10.1:
+Changes since v11:
 
-- New machines added - Tandy 1000HX, Tandy 1000SL/2, Award 286 clone, IBM PS/1 model 2121
-- New graphics card - Hercules InColor
-- 3DFX recompiler - 2-4x speedup over previous emulation
-- Added Cyrix 6x86 emulation
-- Some optimisations to dynamic recompiler - typically around 10-15% improvement over v10, more when MMX used
-- Fixed broken 8088/8086 timing
-- Fixes to Mach64 and ViRGE 2D blitters
-- XT machines can now have less than 640kb RAM
-- Added IBM PS/1 audio card emulation
-- Added Adlib Gold surround module emulation
-- Fixes to PCjr/Tandy PSG emulation
-- GUS now in stereo
-- Numerous FDC changes - more drive types, FIFO emulation, better support of XDF images, better FDI support
-- CD-ROM changes - CD-ROM IDE channel now configurable, improved disc change handling, better volume control support
-- Now directly supports .ISO format for CD-ROM emulation
-- Fixed crash when using Direct3D output on Intel HD graphics
-- Various other fixes
+- New machines added - AMI 386DX, MR 386DX
+- New graphics cards - Plantronics ColorPlus, Wyse WY-700, Obsidian SB50, Voodoo 2
+- CPU optimisations - up to 50% speedup seen
+- 3DFX optimisations
+- Improved joystick emulation - analogue joystick up to 8 buttons, CH Flightstick Pro, ThrustMaster FCS, SideWinder pad(s)
+- Mouse can be selected between serial, PS/2, and IntelliMouse
+- Basic 286/386 prefetch emulation - 286 & 386 performance much closer to real systems
+- Improved CGA/PCjr/Tandy composite emulation
+- Various bug fixes
 
 
 PCem emulates the following machines:
@@ -312,14 +304,6 @@ ROM files needed:
 dtk386\3cto001.bin
 
 
-Phoenix 386 clone (1989)
-
-ROM files needed:
-
-px386\3iip001l.bin
-px386\3iip001h.bin
-
-
 Amstrad MegaPC (1992)
 A 386SX clone (otherwise known as the PC7386SX) with a built-in Sega Megadrive. Only the PC section
 is emulated, obv.
@@ -366,8 +350,6 @@ sis496\SIS496-1.AWA
 Intel Premiere/PCI (Batman's Revenge) (1994)
 A Socket 4 based board with 430LX chipset.
 
-Has an odd bug where on soft-reset, the memory count never ends. Hard-reset works okay.
-
 ROM files needed:
 
 revenge\1009AF2_.BI0
@@ -378,8 +360,6 @@ Intel Advanced/EV (Endeavor) (1995)
 A Socket 5/7 based board with 430FX chipset. The real board has a Sound Blaster Vibra 16 on board,
 which is not emulated - use a discrete card instead. Some Advanced/EVs also had a Trio64 on board,
 the emulated board does not have this either.
-
-Has essentially the same BIOS as the Premiere/PCI, and the same soft-reset bug.
 
 ROM files needed:
 
@@ -410,6 +390,14 @@ CGA
 The most common of the original adapters, supporting 40x25 and 80x25 text, and 
 320x200 in 4 colours, 640x200 in 2 colours, and a composite mode giving 160x200
 in 16 colours.
+
+
+Plantronics ColorPlus
+An enhanced CGA board, with support for 320x200x16 and 640x200x4.
+
+
+Wyse WY-700
+A CGA-compatible board, with support for a 1280x800 mode
 
 
 IBM EGA
@@ -541,6 +529,18 @@ Almost everything I've tried works okay, with a very few exceptions - Screamer 2
 serious issues.
 
 
+Obsidian SB50
+Voodoo Graphics with 2 TMUs. Drivers for this are a bit limited - the official drivers don't
+support 2 TMUs in Direct3D.
+
+
+Voodoo 2
+Improved Voodoo Graphics - higher clocks, 2 TMUs, triangle setup etc.
+
+PCem can emulate both 8 and 12 MB configurations. It can also emulate 6 and 10 MB configurations
+(with 2MB framebuffer memory), which were never sold into the PC market but do exist for arcade
+systems.
+
 
 Some models have fixed graphics adapters :
 
@@ -658,8 +658,10 @@ PC1512 mouse
 The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this one.
 
 PS/2 mouse
-A PS/2 mouse is emulated on the MegaPC, 386SX/25N and Premiere/PCI models. As with serial,
-compatible drivers are common.
+A standard 2 button PS/2 mouse. As with serial, compatible drivers are common.
+
+Microsoft PS/2 Intellimouse
+A PS/2 mouse with mouse wheel.
 
 ATAPI CD-ROM
 Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've tried.
@@ -700,205 +702,175 @@ Notes :
 
 Software tested:
 
-PC-DOS 1.0
-MS-DOS 3.30
+MS-DOS 1.25
+MS-DOS 2.11
+MS-DOS 3.31
 Compaq DOS 3.31
+MS-DOS 5.0
 MS-DOS 6.22
 
 DR-DOS 6.0
 
 Windows 1.03
 Windows 2.03
+Windows/386 2.11
 Windows 3.0
 Windows 3.1
 Windows for Workgroups 3.11
 Windows 95
 Windows 95 OSR 2
 Windows 98
+Windows 98 SE
 Windows ME
 
-Windows NT 3.1
 Windows NT 3.51
 Windows NT 4
 Windows 2000
 Windows XP
 
-OS/2 1.0  - hard disk must be formatted beforehand
-OS/2 1.1
-OS/2 1.2
-OS/2 1.3
-OS/2 2.1
-OS/2 Warp 3 - use unaccelerated graphics card (eg ET4000AX)
-OS/2 Warp 4 - use unaccelerated graphics card (eg ET4000AX)
+OS/2 v1.1
+OS/2 v1.2
+OS/2 v1.3
+OS/2 v2.1
+OS/2 Warp 3
+OS/2 Warp 4
 
-BeOS 5 Personal Edition (only seems to work correctly on Award SiS 496/497)
+GEM 3.11
 
-Debian 5.0
-SuSE 6.3
-Ubuntu 4.10
+Corel Linux 1.2
 Ubuntu 10.04 (very slow, does not support serial mouse)
 
-NetBSD 6.1.5
+BeOS 5.0 Professional
 
-GEM/3
-
-3DMark 2000
-Ami Pro 3.0
-After Dark 3.0
-CorelDRAW 5.0
-DJGPP v2.02 w/ GCC 2.81
-Fasttracker II
-Lotus SmartSuite 97
-Microsoft Cinemania 94
-Microsoft Dangerous Creatures
-Microsoft Office 95
-Microsoft Office 97
-Microsoft Word 6.1
-Microsoft Works 3.0
+Adobe Photoshop 3.0.4
+CorelDRAW! 2.5 (OS/2)
+CorelDRAW! 5.0
+FastTracker v2.08
+Lotus 1-2-3 2.1 (OS/2)
+Microsoft Excel 3.0 (OS/2)
+Microsoft Word 1.1 (OS/2)
+Microsoft Word for Windows 6.1
+Microsoft Works for Windows 3.0
 Microsoft Visual Basic 3.0
 Microsoft Visual C++ 1.0
 Microsoft Visual C++ 6.0
-Norton Utilities 8.0
-Photoshop 3.0
+StarOffice 3.1 (OS/2)
 
-Battlezone
-Beyond Castle Wolfenstein
-Centipede
-Commando
-Defender
-Digger
-Frogger
-Galaxian
-Jumpman
-King's Quest (PC, PCjr, Tandy 1000)
-King's Quest 2 (PC, Tandy 1000)
-Microsoft Adventure
-Rollo and the Brush Brothers
-Space Strike
-Spiderbot
-
-Actua Soccer
 Age of Empires
 Alien vs Predator (3DFX)
-Alone in the Dark
-Alone in the Dark 2
-Arkanoid
 Blake Stone
 Breakneck (3DFX)
-Bust-a-Move 2
 Caesar III
-Carmageddon (3DFX)
-Civilization for Windows
+Civilization
 Civilization II
 Colin McRae Rally (3DFX)
-Commander Keen : Invasion of the Vorticons
-Commander Keen : Goodbye Galaxy
+Colonization
 Command & Conquer : Red Alert
-Command & Conquer : Red Alert 2 (slow)
+Command & Conquer : Red Alert 2
+Commander Keen : Goodbye Galaxy
+Commander Keen : Invasion of the Vorticons
+Croc (3DFX)
 Curse of Monkey Island
-Day of the Tentacle
-Deus Ex (3DFX, slow!)
+Dawn Patrol
+Deus Ex (3DFX, slow)
 Discworld II
 Doom
 Doom II
-Double Dragon
+Duke Nukem 3D
 Dune
-Ecstatica
+Dune II
 Epic Pinball
-Expendable (3DFX)
-Final Fantasy VII (3DFX)
-Forsaken (3DFX)
-G-Police (3DFX)
 Grand Theft Auto (3DFX)
-Grand Theft Auto 2 (3DFX)
-Grim Fandango (3DFX)
-Half-Life (3DFX - software may be quicker, at least at 320x240)
+GTA 2 (3DFX)
+Half-Life (3DFX)
+Heretic
+House of the Dead 2 (3DFX)
 Icon
 Incoming (3DFX)
-Jazz Jackrabbit
-Jedi Knight (3DFX)
-Jungle Strike
-Jurassic Park : Trespasser (3DFX)
-Lemmings
-Lemmings 2 : The Tribes
-Lode Runner : The Legend Returns
-Lotus III
+Indiana Jones and the Last Crusade
+Jetpack
+King's Quest (PCjr, Tandy)
+King's Quest II (Tandy)
 Klotz
+Lemmings
+Lemmings 2
+Little Big Adventure 2
+Lotus III
 Maniac Mansion
-Megarace
 Microsoft Arcade
-Microsoft Return of Arcade
-Mortal Kombat
-Mortal Kombat Trilogy
+Monkey Island 2
 Mystic Towers
-Need For Speed II SE (3DFX)
-Need For Speed III (3DFX)
+Need for Speed II SE (3DFX)
+Need for Speed III (3DFX)
 Network Q RAC Rally
 Oddworld : Abe's Oddysee
+Overlord
 Populous : The Beginning (3DFX)
-Power Drive
-Prince of Persia
 Pro Pinball : Big Race USA
-Pro Pinball : Timeshock!
-Quake
-Quake II (3DFX)
-Quake III Arena (3DFX)
-Railroad Tycoon II
+Pro Pinball : The Web
+Psycho Pinball
 Resident Evil 2 (3DFX)
 Rollercoaster Tycoon
-Screamer Rally (NOT 3DFX)
+Quake (3DFX)
+Quake II (3DFX)
+Quake III Arena (3DFX)
+Scorched Earth
+Screamer
+Screamer Rally (not 3DFX)
 Secret of Monkey Island
-Sensible World of Soccer
-Simcity 2000 (DOS, OS/2)
-Simcity 3000
-SiN
-Sonic & Knuckles
-Space Hulk
+SimCity (DOS, OS/2)
+SimCity 2000 (DOs, Windows, OS/2)
+SimCity 3000
+Spear of Destiny
+Star Goose
+Stargunner
+Stunt Island
 System Shock
-System Shock 2 (3DFX, slow)
+System Shock 2 (3DFX)
+Terminal Velocity
+The Humans
 Theme Hospital
-Theme Park
-TOCA 2 (3DFX)
-Tomb Raider (3DFX and ViRGE)
-Tomb Raider II (3DFX)
+Tomb Raider (3DFX)
+Tomb Raider III (3DFX)
 Tony Hawk's Pro Skater 2 (3DFX)
 Total Annihilation
 Transport Tycoon
 Turok (3DFX)
 Turok 2 (3DFX)
+Tyrian
+UFO : Enemy Unknown
 Unreal (3DFX)
 Unreal Tournament (3DFX)
 Wacky Wheels
+Wing Commander
 Wolfenstein 3D
 World Cup 98 (3DFX)
 Worms
 Worms 2
+X-Com : Apocalypse
 X-Com : Terror From The Deep
 X-Wing
-Xenon
-Zak McKraken
+Zone 66
 
 Complex - Cyboman 2
 EMF - Verses
-Exceed - Heaven 7
 Future Crew - Second Reality
-Gazebo - Cyboman
-KFMF - Dance, Move, Shake
+Gazebo - Cyboman!
 KFMF - Trip (3DFX)
 Logic Design - Fashion
+Orange - X14
 Renaissance - Amnesia
-Skull - Putre Faction
-Tran - Ambience
+Skull - Putrefaction
+Tran - Ambience (flickery with a host display at 60 Hz)
 Tran - Timeless
 Triton - Crystal Dream
-Ultraforce - Coldcut
+Triton - Crystal Dream II (visual artifacts in titles)
 Ultraforce - Vectdemo
+Witan - Witan House
 
-BeebinC 0.99f
-Fellow 0.33
+BeebInC v0.99f
+Fellow v0.33
 Kgen98 v0.4b
 PacifiST v0.48
-Snes9x 0.96
-UltraHLE v1.0.0 (3DFX)
-vMac 0.1.9.1
-ZSNES v0.800c
+SNES9x v0.96
+vMac v0.1.9.1
