@@ -313,13 +313,29 @@ megapc\41651-bios lo.u18
 megapc\211253-bios hi.u19
 
 
-AMI 386 clone (1994)
-This is a generic 386 clone with an AMI BIOS. The BIOS came from my 386DX/40, the motherboard is
-dated June 1994.
+AMI 386SX clone (1994)
+This is a generic 386SX clone with an AMI BIOS.
 
 ROM files needed:
 
 ami386\ami386.bin
+
+
+MR 386DX clone (1994)
+This is a generic 386DX clone with an MR BIOS.
+
+ROM files needed:
+
+mr386dx\OPT495SX.MR
+
+
+AMI 386DX clone (1994)
+This is a generic 386DX clone with an AMI BIOS. This is the only currently emulated 386DX system
+to support an external cache.
+
+ROM files needed:
+
+ami386dx\OPT495SX.AMI
 
 
 AMI 486 clone (1993)
