@@ -617,6 +617,15 @@ int loadbios()
                 fclose(f);
                 mem_load_xtide_bios();
                 return 1;
+				
+		case ROM_IBMPS2_M30_286:
+                f = romfopen("roms/ibmps2_m30_286/33f5381a.bin", "rb");
+                fread(rom, 0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                mem_load_atide_bios();
+                return 1;
+				
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

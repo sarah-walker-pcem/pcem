@@ -386,6 +386,7 @@ enum
         ROM_IBMPS1_2121,
         ROM_AMI386DX_OPTI495,
         ROM_MR386DX_OPTI495,
+		ROM_IBMPS2_M30_286,
                 	
         ROM_MAX
 };
