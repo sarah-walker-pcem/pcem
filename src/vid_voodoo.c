@@ -181,6 +181,8 @@ typedef struct voodoo_params_t
         uint32_t front_offset;
         
         uint32_t swapbufferCMD;
+        
+        uint32_t stipple;
 } voodoo_params_t;
 
 typedef struct texture_t
@@ -494,7 +496,7 @@ enum
         SST_chromaKey = 0x134,
 
         SST_userIntrCMD = 0x13c,
-                        
+        SST_stipple = 0x140,                        
         SST_color0 = 0x144,
         SST_color1 = 0x148,
         
@@ -4508,7 +4510,9 @@ static void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->params.chromaKey_b = val & 0xff;
                 voodoo->params.chromaKey = val & 0xffffff;
                 break;
-                
+                case SST_stipple:
+                voodoo->params.stipple = val;
+                break;
                 case SST_color0:
                 voodoo->params.color0 = val;
                 break;
@@ -5630,6 +5634,18 @@ static uint16_t voodoo_readw(uint32_t addr, void *p)
         return 0xffff;
 }
 
+static void voodoo_flush(voodoo_t *voodoo)
+{
+        voodoo->flush = 1;
+        while (!FIFO_EMPTY)
+        {
+                wake_fifo_thread_now(voodoo);
+                thread_wait_event(voodoo->fifo_not_full_event, 1);
+        }
+        wait_for_render_thread_idle(voodoo);
+        voodoo->flush = 0;
+}
+
 static uint32_t voodoo_readl(uint32_t addr, void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
@@ -5675,18 +5691,47 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 if (!voodoo->voodoo_busy)
                         wake_fifo_thread(voodoo);
                 break;
-                
-                case SST_lfbMode:
-                voodoo->flush = 1;
-                while (!FIFO_EMPTY)
-                {
-                        wake_fifo_thread_now(voodoo);
-                        thread_wait_event(voodoo->fifo_not_full_event, 1);
-                }
-                wait_for_render_thread_idle(voodoo);
-                voodoo->flush = 0;
 
+                case SST_fbzColorPath:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.fbzColorPath;
+                break;
+                case SST_fogMode:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.fogMode;
+                break;
+                case SST_alphaMode:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.alphaMode;
+                break;
+                case SST_fbzMode:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.fbzMode;
+                break;                        
+                case SST_lfbMode:
+                voodoo_flush(voodoo);
                 temp = voodoo->lfbMode;
+                break;
+                case SST_clipLeftRight:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.clipRight | (voodoo->params.clipLeft << 16);
+                break;
+                case SST_clipLowYHighY:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.clipHighY | (voodoo->params.clipLowY << 16);
+                break;
+
+                case SST_stipple:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.stipple;
+                break;
+                case SST_color0:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.color0;
+                break;
+                case SST_color1:
+                voodoo_flush(voodoo);
+                temp = voodoo->params.color1;
                 break;
                 
                 case SST_fbiPixelsIn:
