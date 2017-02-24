@@ -44,36 +44,37 @@
 typedef struct
 {
         char name[64];
+        char internal_name[24];
         device_t *device;
         int legacy_id;
 } VIDEO_CARD;
 
 static VIDEO_CARD video_cards[] =
 {
-        {"ATI Graphics Pro Turbo (Mach64 GX)",     &mach64gx_device,            GFX_MACH64GX},
-        {"ATI VGA Charger (ATI-28800)",            &ati28800_device,            GFX_VGACHARGER},
-        {"ATI VGA Edge-16 (ATI-18800)",            &ati18800_device,            GFX_VGAEDGE16},
-        {"CGA",                                    &cga_device,                 GFX_CGA},
-        {"Cirrus Logic CL-GD5429",                 &gd5429_device,              GFX_CL_GD5429},
-        {"Diamond Stealth 32 (Tseng ET4000/w32p)", &et4000w32p_device,          GFX_ET4000W32},
-        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     &s3_virge_device,            GFX_VIRGE},
-        {"EGA",                                    &ega_device,                 GFX_EGA},
-        {"Hercules",                               &hercules_device,            GFX_HERCULES},
-        {"Hercules InColor",                       &incolor_device,            GFX_INCOLOR},
-        {"MDA",                                    &mda_device,                 GFX_MDA},
-        {"Number Nine 9FX (S3 Trio64)",            &s3_9fx_device,              GFX_N9_9FX},
-        {"OAK OTI-067",                            &oti067_device,              GFX_OTI067},
-        {"Paradise Bahamas 64 (S3 Vision864)",     &s3_bahamas64_device,        GFX_BAHAMAS64},
-        {"Phoenix S3 Trio32",                      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
-        {"Phoenix S3 Trio64",                      &s3_phoenix_trio64_device,   GFX_PHOENIX_TRIO64},
-        {"Plantronics ColorPlus",                  &colorplus_device,           GFX_COLORPLUS},
-        {"S3 ViRGE/DX",                            &s3_virge_375_device,        GFX_VIRGEDX},
-        {"Trident TVGA8900D",                      &tvga8900d_device,           GFX_TVGA},
-        {"Tseng ET4000AX",                         &et4000_device,              GFX_ET4000},
-        {"Trident TGUI9440",                       &tgui9440_device,            GFX_TGUI9440},
-        {"VGA",                                    &vga_device,                 GFX_VGA},
-        {"Wyse 700",                               &wy700_device,               GFX_WY700},
-        {"",                                       NULL,                        0}
+        {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,            GFX_MACH64GX},
+        {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,            GFX_VGACHARGER},
+        {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,            GFX_VGAEDGE16},
+        {"CGA",                                    "cga",            &cga_device,                 GFX_CGA},
+        {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,              GFX_CL_GD5429},
+        {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,          GFX_ET4000W32},
+        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,            GFX_VIRGE},
+        {"EGA",                                    "ega",            &ega_device,                 GFX_EGA},
+        {"Hercules",                               "hercules",       &hercules_device,            GFX_HERCULES},
+        {"Hercules InColor",                       "incolor",        &incolor_device,            GFX_INCOLOR},
+        {"MDA",                                    "mda",            &mda_device,                 GFX_MDA},
+        {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,              GFX_N9_9FX},
+        {"OAK OTI-067",                            "oti067",         &oti067_device,              GFX_OTI067},
+        {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,        GFX_BAHAMAS64},
+        {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
+        {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,   GFX_PHOENIX_TRIO64},
+        {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,           GFX_COLORPLUS},
+        {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,        GFX_VIRGEDX},
+        {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,           GFX_TVGA},
+        {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,              GFX_ET4000},
+        {"Trident TGUI9440",                       "tgui9440",       &tgui9440_device,            GFX_TGUI9440},
+        {"VGA",                                    "vga",            &vga_device,                 GFX_VGA},
+        {"Wyse 700",                               "wy700",          &wy700_device,               GFX_WY700},
+        {"",                                       "",               NULL,                        0}
 };
 
 int video_card_available(int card)
@@ -130,6 +131,25 @@ int video_old_to_new(int card)
 int video_new_to_old(int card)
 {
         return video_cards[card].legacy_id;
+}
+
+char *video_get_internal_name(int card)
+{
+        return video_cards[card].internal_name;
+}
+
+int video_get_video_from_internal_name(char *s)
+{
+	int c = 0;
+	
+	while (video_cards[c].legacy_id != -1)
+	{
+		if (!strcmp(video_cards[c].internal_name, s))
+			return video_cards[c].legacy_id;
+		c++;
+	}
+	
+	return 0;
 }
 
 int video_fullscreen = 0, video_fullscreen_scale, video_fullscreen_first;
