@@ -579,7 +579,11 @@ void loadconfig(char *fn)
         SSI2001 = config_get_int(NULL, "ssi2001", 0);
         voodoo_enabled = config_get_int(NULL, "voodoo", 0);
         
-        model = config_get_int(NULL, "model", 14);
+        p = (char *)config_get_string(NULL, "model", "");
+        if (p)
+                model = model_get_model_from_internal_name(p);
+        else
+                model = 0;
 
         if (model >= model_count())
                 model = model_count() - 1;
@@ -695,7 +699,7 @@ void saveconfig()
         config_set_int(NULL, "ssi2001", SSI2001);
         config_set_int(NULL, "voodoo", voodoo_enabled);
         
-        config_set_int(NULL, "model", model);
+        config_set_string(NULL, "model", model_get_internal_name());
         config_set_int(NULL, "cpu_manufacturer", cpu_manufacturer);
         config_set_int(NULL, "cpu", cpu);
         config_set_int(NULL, "cpu_use_dynarec", cpu_use_dynarec);
