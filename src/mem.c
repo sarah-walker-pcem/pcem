@@ -620,6 +620,7 @@ int loadbios()
 				
 		case ROM_IBMPS2_M30_286:
                 f = romfopen("roms/ibmps2_m30_286/33f5381a.bin", "rb");
+                if (!f) break;
                 fread(rom, 0x20000, 1, f);                
                 fclose(f);
                 biosmask = 0x1ffff;
