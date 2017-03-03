@@ -54,6 +54,7 @@ AM_CONDITIONAL(OS_LINUX, test "$OS" = "linux")
 #       allegro.m4 from the DOS/Windows Allegro sources (the file is contained
 #       in `misc') and copy it to this directory or MSYS's `/share/aclocal'.
 if test "$OS" != "win"; then
+   AC_CONFIG_MACRO_DIR([./])
    AM_PATH_ALLEGRO(, , AC_MSG_ERROR(building PCem requires Allegro to be installed))
 fi
 
