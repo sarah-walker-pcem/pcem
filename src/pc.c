@@ -600,7 +600,11 @@ void loadconfig(char *fn)
         else
                 gfxcard = 0;
         video_speed = config_get_int(NULL, "video_speed", 3);
-        sound_card_current = config_get_int(NULL, "sndcard", SB2);
+        p = (char *)config_get_string(NULL, "sndcard", "");
+        if (p)
+                sound_card_current = sound_card_get_from_internal_name(p);
+        else
+                sound_card_current = 0;
 
         p = (char *)config_get_string(NULL, "disc_a", "");
         if (p) strcpy(discfns[0], p);
@@ -711,7 +715,7 @@ void saveconfig()
         
         config_set_string(NULL, "gfxcard", video_get_internal_name(video_old_to_new(gfxcard)));
         config_set_int(NULL, "video_speed", video_speed);
-        config_set_int(NULL, "sndcard", sound_card_current);
+        config_set_string(NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
         config_set_int(NULL, "cpu_speed", cpuspeed);
         config_set_int(NULL, "has_fpu", hasfpu);
         config_set_string(NULL, "disc_a", discfns[0]);
