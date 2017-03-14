@@ -2,6 +2,7 @@
 #define MODEL_PS2     2
 #define MODEL_AMSTRAD 4
 #define MODEL_OLIM24  8
+#define MODEL_HAS_IDE 0x10
 
 typedef struct
 {

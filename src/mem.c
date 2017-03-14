@@ -57,32 +57,6 @@ int cachesize=256;
 uint8_t *ram,*rom;
 uint8_t romext[32768];
 
-static void mem_load_xtide_bios()
-{
-        FILE *f;
-        f=romfopen("roms/ide_xt.bin","rb");
-
-//        is486=0;
-        if (f)
-        {
-                fread(romext,16384,1,f);
-                fclose(f);
-        }
-}
-        
-static void mem_load_atide_bios()
-{
-        FILE *f;
-        f=romfopen("roms/ide_at.bin","rb");
-
-//        is486=0;
-        if (f)
-        {
-                fread(romext,16384,1,f);
-                fclose(f);
-        }
-}
-
 static void mem_load_atide115_bios()
 {
         FILE *f;
@@ -124,7 +98,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_xtide_bios();
                 loadfont("roms/pc1512/40078.ic127", 2);
                 return 1;
                 case ROM_PC1640:
@@ -141,7 +114,6 @@ int loadbios()
                 f=romfopen("roms/pc1640/40100","rb");
                 if (!f) break;
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                 case ROM_PC200:
                 f=romfopen("roms/pc200/pc20v2.1","rb");
@@ -154,7 +126,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_xtide_bios();
                 loadfont("roms/pc200/40109.bin", 1);
                 return 1;
                 case ROM_TANDY:
@@ -162,7 +133,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom,65536,1,f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                 case ROM_TANDY1000HX:
                 f = romfopen("roms/tandy1000hx/v020000.u12", "rb");
@@ -170,7 +140,6 @@ int loadbios()
                 fread(rom, 0x20000, 1, f);
                 fclose(f);
                 biosmask = 0x1ffff;
-                mem_load_xtide_bios();
                 return 1;
                 case ROM_TANDY1000SL2:
                 f  = romfopen("roms/tandy1000sl2/8079047.hu1" ,"rb");
@@ -185,7 +154,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 /*                case ROM_IBMPCJR:
                 f=fopen("pcjr/bios.rom","rb");
@@ -206,14 +174,12 @@ int loadbios()
                         fread(rom + 0x8000, 0x8000, 1, ff);
                         fclose(ff);
                         fclose(f);
-                        mem_load_xtide_bios();
                         return 1;
                 }
                 else
                 {
                         fread(rom,65536,1,f);
                         fclose(f);
-                        mem_load_xtide_bios();
                         return 1;
                 }
                 break;
@@ -230,14 +196,12 @@ int loadbios()
                 if (!f) break;
                 fread(rom+0xE000,8192,1,f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                 case ROM_DTKXT:
                 f=romfopen("roms/dtk/DTK_ERSO_2.42_2764.bin","rb");
                 if (!f) break;
                 fread(rom+0xE000,8192,1,f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                 case ROM_OLIM24:
                 f  = romfopen("roms/olivetti_m24/olivetti_m24_version_1.43_low.bin" ,"rb");
@@ -250,7 +214,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                         
                 case ROM_PC2086:
@@ -269,7 +232,6 @@ int loadbios()
                 f = romfopen("roms/pc2086/40186.ic171", "rb");
                 if (!f) break;
                 fclose(f);
-                mem_load_xtide_bios();
                 biosmask = 0x3fff;
                 return 1;
 
@@ -281,7 +243,6 @@ int loadbios()
                 f = romfopen("roms/pc3086/c000.bin", "rb");
                 if (!f) break;
                 fclose(f);
-                mem_load_xtide_bios();
                 biosmask = 0x3fff;                
                 return 1;
 
@@ -302,7 +263,6 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                mem_load_atide_bios();
                 return 1;
                 case ROM_CMDPC30:
                 f  = romfopen("roms/cmdpc30/commodore pc 30 iii even.bin", "rb");
@@ -414,7 +374,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom+0xC000,8192,1,f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 
                 case ROM_MEGAPC:
@@ -555,7 +514,6 @@ int loadbios()
                 fclose(ff);
                 fclose(f);
                 biosmask = 0x7fff;
-                mem_load_atide_bios();
                 return 1;
 
                 case ROM_AMIXT:
@@ -563,7 +521,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
                 
                 case ROM_LTXT:
@@ -571,7 +528,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 
                 case ROM_LXT3:
@@ -579,7 +535,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 
                 case ROM_PX386: /*Phoenix 80386 BIOS*/
@@ -607,7 +562,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 
                 case ROM_JUKOPC:
@@ -615,7 +569,6 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
-                mem_load_xtide_bios();
                 return 1;
 				
 		case ROM_IBMPS2_M30_286:
@@ -624,7 +577,6 @@ int loadbios()
                 fread(rom, 0x20000, 1, f);                
                 fclose(f);
                 biosmask = 0x1ffff;
-                mem_load_atide_bios();
                 return 1;
 				
         }

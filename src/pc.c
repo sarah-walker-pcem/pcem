@@ -38,6 +38,7 @@
 #include "vid_voodoo.h"
 #include "video.h"
 #include "amstrad.h"
+#include "hdd.h"
 
 int window_w, window_h, window_x, window_y, window_remember;
 
@@ -370,7 +371,8 @@ void resetpchard()
         if (SSI2001)
                 device_add(&ssi2001_device);
         if (voodoo_enabled)
-                device_add(&voodoo_device);        
+                device_add(&voodoo_device);
+        hdd_controller_init(hdd_controller_name);
         pc_reset();
         
         resetide();
@@ -614,6 +616,12 @@ void loadconfig(char *fn)
         if (p) strcpy(discfns[1], p);
         else   strcpy(discfns[1], "");
 
+        p = (char *)config_get_string(NULL, "hdd_controller", "");
+        if (p)
+                strncpy(hdd_controller_name, p, sizeof(hdd_controller_name)-1);
+        else
+                strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);        
+
         mem_size = config_get_int(NULL, "mem_size", 4096);
         if (mem_size < ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram))
                 mem_size = ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram);
@@ -720,6 +728,8 @@ void saveconfig()
         config_set_int(NULL, "has_fpu", hasfpu);
         config_set_string(NULL, "disc_a", discfns[0]);
         config_set_string(NULL, "disc_b", discfns[1]);
+        config_set_string(NULL, "hdd_controller", hdd_controller_name);
+
         config_set_int(NULL, "mem_size", mem_size);
         config_set_int(NULL, "cdrom_drive", cdrom_drive);
         config_set_int(NULL, "cdrom_enabled", cdrom_enabled);
