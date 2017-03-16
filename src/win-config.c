@@ -99,6 +99,8 @@ static void recalc_hdd_list(HWND hdlg, int model, int use_selected_hdd)
 
                 if (!valid)
                         SendMessage(h, CB_SETCURSEL, 0, 0);
+                
+                EnableWindow(h, TRUE);
         }
 }
 
