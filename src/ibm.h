@@ -498,6 +498,7 @@ extern uint32_t atapi_get_cd_volume(int channel);
 
 void pclog(const char *format, ...);
 void fatal(const char *format, ...);
+void warning(const char *format, ...);
 extern int nmi;
 
 

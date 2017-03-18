@@ -3,6 +3,7 @@
 #include "hdd.h"
 
 #include "mfm_at.h"
+#include "mfm_xebec.h"
 #include "xtide.h"
 
 char hdd_controller_name[16];
@@ -19,10 +20,11 @@ static struct
         int is_mfm;
 } hdd_controllers[] = 
 {
-        {"None",                  "none",     &null_hdd_device, 0},
-        {"AT Fixed Disk Adapter", "mfm_at",   &mfm_at_device,   1},
-        {"XTIDE",                 "xtide",    &xtide_device,    0},
-        {"XTIDE (AT)",            "xtide_at", &xtide_at_device, 0},
+        {"None",                       "none",      &null_hdd_device,  0},
+        {"AT Fixed Disk Adapter",      "mfm_at",    &mfm_at_device,    1},
+        {"Fixed Disk Adapter (Xebec)", "mfm_xebec", &mfm_xebec_device, 1},
+        {"XTIDE",                      "xtide",     &xtide_device,     0},
+        {"XTIDE (AT)",                 "xtide_at",  &xtide_at_device,  0},
         {"", "", NULL, 0}
 };
 

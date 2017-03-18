@@ -6,6 +6,19 @@
 #include "ide.h"
 #include "cdrom-iso.h"
 
+void warning(const char *format, ...)
+{
+        char buf[1024];
+        va_list ap;
+
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        
+        alert("Warning:", buf, NULL, "OK", NULL, 0, 0);
+}
+
+
 static int file_return(void)
 {
         return D_CLOSE;

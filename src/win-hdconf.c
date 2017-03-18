@@ -54,6 +54,9 @@ static void check_hd_type(off64_t sz)
                                 return;
                         }                
                 }
+                hd_new_spt = 63;
+                hd_new_hpc = 16;
+                hd_new_cyl = ((sz / 512) / 16) / 63;
         }
         else
         {

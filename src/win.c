@@ -104,6 +104,18 @@ static int win_doresize = 0;
 
 static int leave_fullscreen_flag = 0;
 
+void warning(const char *format, ...)
+{
+        char buf[1024];
+        va_list ap;
+
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        
+        MessageBox(ghwnd, buf, "PCem", MB_OK);
+}
+
 void updatewindowsize(int x, int y)
 {
         RECT r;
