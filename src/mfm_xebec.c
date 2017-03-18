@@ -709,7 +709,7 @@ device_t mfm_xebec_device =
         0,
         xebec_init,
         xebec_close,
-        NULL,
+        xebec_available,
         NULL,
         NULL,
         NULL,
