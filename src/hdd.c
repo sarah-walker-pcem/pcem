@@ -20,11 +20,12 @@ static struct
         int is_mfm;
 } hdd_controllers[] = 
 {
-        {"None",                       "none",      &null_hdd_device,  0},
-        {"AT Fixed Disk Adapter",      "mfm_at",    &mfm_at_device,    1},
-        {"Fixed Disk Adapter (Xebec)", "mfm_xebec", &mfm_xebec_device, 1},
-        {"XTIDE",                      "xtide",     &xtide_device,     0},
-        {"XTIDE (AT)",                 "xtide_at",  &xtide_at_device,  0},
+        {"None",                        "none",      &null_hdd_device,  0},
+        {"AT Fixed Disk Adapter",       "mfm_at",    &mfm_at_device,    1},
+        {"DTC 5150X",                   "dtc5150x",  &dtc_5150x_device, 1},
+        {"Fixed Disk Adapter (Xebec)",  "mfm_xebec", &mfm_xebec_device, 1},
+        {"XTIDE",                       "xtide",     &xtide_device,     0},
+        {"XTIDE (AT)",                  "xtide_at",  &xtide_at_device,  0},
         {"", "", NULL, 0}
 };
 
