@@ -19,6 +19,9 @@ BEGIN
                 MENUITEM "Change drive &B:...", IDM_DISC_B
                 MENUITEM "&Eject drive A:",     IDM_EJECT_A
                 MENUITEM "Eject drive B:",      IDM_EJECT_B
+                MENUITEM SEPARATOR
+                MENUITEM "Disable BPB checking", IDM_BPB_DISABLE
+                MENUITEM SEPARATOR                
                 MENUITEM "&Configure hard discs...",IDM_HDCONF
         END
         POPUP "&Settings"

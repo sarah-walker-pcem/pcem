@@ -27,6 +27,7 @@
 #include "sound.h"
 #include "thread.h"
 #include "disc.h"
+#include "disc_img.h"
 
 #include "plat-midi.h"
 #include "plat-keyboard.h"
@@ -580,6 +581,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
+        CheckMenuItem(menu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
 //        set_display_switch_mode(SWITCH_BACKGROUND);
         
         d=romset;
@@ -934,6 +936,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         break;
                         case IDM_EJECT_B:
                         disc_close(1);
+                        saveconfig();
+                        break;
+                        case IDM_BPB_DISABLE:
+                        bpb_disable = !bpb_disable;
+                        CheckMenuItem(hmenu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
                         saveconfig();
                         break;
                         case IDM_HDCONF:

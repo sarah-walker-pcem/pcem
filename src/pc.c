@@ -8,6 +8,7 @@
 #include "cdrom-ioctl.h"
 #include "cdrom-iso.h"
 #include "disc.h"
+#include "disc_img.h"
 #include "mem.h"
 #include "x86_ops.h"
 #include "codegen.h"
@@ -666,6 +667,7 @@ void loadconfig(char *fn)
 
         fdd_set_type(0, config_get_int(NULL, "drive_a_type", 7));
         fdd_set_type(1, config_get_int(NULL, "drive_b_type", 7));
+        bpb_disable = config_get_int(NULL, "bpb_disable", 0);
 
         window_w = config_get_int(NULL, "window_w", 0);
         window_h = config_get_int(NULL, "window_h", 0);
@@ -759,6 +761,7 @@ void saveconfig()
 
         config_set_int(NULL, "drive_a_type", fdd_get_type(0));
         config_set_int(NULL, "drive_b_type", fdd_get_type(1));
+        config_set_int(NULL, "bpb_disable", bpb_disable);
 
         config_set_int(NULL, "window_w", window_w);
         config_set_int(NULL, "window_h", window_h);

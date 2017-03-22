@@ -20,6 +20,8 @@ static uint8_t xdf_track0[5][3];
 static uint8_t xdf_spt[5];
 static uint8_t xdf_map[5][24][3];
 
+int bpb_disable;
+
 void img_writeback(int drive, int track);
 
 static int img_sector_size_code(int drive)
@@ -163,7 +165,7 @@ void img_load(int drive, char *fn)
 
 	pclog("BPB reports %i sides and %i bytes per sector\n", bpb_sides, bpb_bps);
 
-	if ((bpb_sides < 1) || (bpb_sides > 2) || (bpb_bps < 128) || (bpb_bps > 2048))
+	if (bpb_disable || (bpb_sides < 1) || (bpb_sides > 2) || (bpb_bps < 128) || (bpb_bps > 2048))
 	{
 		/* The BPB is giving us a wacky number of sides and/or bytes per sector, therefore it is most probably
 		   not a BPB at all, so we have to guess the parameters from file size. */

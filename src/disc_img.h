@@ -9,3 +9,5 @@ void img_format(int drive, int sector, int side, int density);
 int img_hole(int drive);
 void img_stop();
 void img_poll();
+
+extern int bpb_disable;
