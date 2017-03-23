@@ -20,6 +20,7 @@
 #include "vid_ega.h"
 #include "vid_et4000.h"
 #include "vid_et4000w32.h"
+#include "vid_genius.h"
 #include "vid_hercules.h"
 #include "vid_incolor.h"
 #include "vid_colorplus.h"
@@ -62,6 +63,7 @@ static VIDEO_CARD video_cards[] =
         {"Hercules",                               "hercules",       &hercules_device,            GFX_HERCULES},
         {"Hercules InColor",                       "incolor",        &incolor_device,            GFX_INCOLOR},
         {"MDA",                                    "mda",            &mda_device,                 GFX_MDA},
+        {"MDSI Genius",                            "genius",         &genius_device,              GFX_GENIUS},
         {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,              GFX_N9_9FX},
         {"OAK OTI-067",                            "oti067",         &oti067_device,              GFX_OTI067},
         {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,        GFX_BAHAMAS64},
@@ -310,6 +312,7 @@ BITMAP *buffer, *buffer32;
 uint8_t fontdat[256][8];
 uint8_t fontdatm[256][16];
 uint8_t fontdatw[512][32];	/* Wyse700 font */
+uint8_t fontdat8x12[256][16];	/* MDSI Genius font */
 
 int xsize=1,ysize=1;
 
@@ -393,6 +396,16 @@ void loadfont(char *s, int format)
                         }
                 }
 		break;
+		case 4: /* MDSI Genius */
+                for (c=0;c<256;c++)
+                {
+                        for (d=0;d<16;d++)
+                        {
+                                fontdat8x12[c][d]=getc(f);
+                        }
+                }
+		break;
+
         }
         fclose(f);
 }
