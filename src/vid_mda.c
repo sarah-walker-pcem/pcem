@@ -131,8 +131,8 @@ void mda_poll(void *p)
                         cols[1] = 7;
                         for (x = 0; x < mda->crtc[1]; x++)
                         {
-                                chr  = mda->vram[(mda->ma << 1) & 0x3fff];
-                                attr = mda->vram[((mda->ma << 1) + 1) & 0x3fff];
+                                chr  = mda->vram[(mda->ma << 1) & 0xfff];
+                                attr = mda->vram[((mda->ma << 1) + 1) & 0xfff];
                                 drawcursor = ((mda->ma == ca) && mda->con && mda->cursoron);
                                 blink = ((mda->blink & 16) && (mda->ctrl & 0x20) && (attr & 0x80) && !drawcursor);
                                 if (mda->sc == 12 && ((attr & 7) == 1))

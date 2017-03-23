@@ -162,8 +162,8 @@ void hercules_poll(void *p)
                         {
                                 for (x = 0; x < hercules->crtc[1]; x++)
                                 {
-                                        chr  = hercules->vram[(hercules->ma << 1) & 0x3fff];
-                                        attr = hercules->vram[((hercules->ma << 1) + 1) & 0x3fff];
+                                        chr  = hercules->vram[(hercules->ma << 1) & 0xfff];
+                                        attr = hercules->vram[((hercules->ma << 1) + 1) & 0xfff];
                                         drawcursor = ((hercules->ma == ca) && hercules->con && hercules->cursoron);
                                         blink = ((hercules->blink & 16) && (hercules->ctrl & 0x20) && (attr & 0x80) && !drawcursor);
                                         if (hercules->sc == 12 && ((attr & 7) == 1))
