@@ -320,6 +320,21 @@ static int op_nofpu_a32(uint32_t fetchdat)
                 fetch_ea_32(fetchdat);
 }
 
+static int FPU_ILLEGAL_a16(uint32_t fetchdat)
+{
+        fetch_ea_16(fetchdat);
+        CLOCK_CYCLES(timing_rr);
+        PREFETCH_RUN(timing_rr, 2, rmdat, 0,0,0,0, 0);
+        return 0;
+}
+static int FPU_ILLEGAL_a32(uint32_t fetchdat)
+{
+        fetch_ea_32(fetchdat);
+        CLOCK_CYCLES(timing_rr);
+        PREFETCH_RUN(timing_rr, 2, rmdat, 0,0,0,0, 0);
+        return 0;
+}
+
 OpFn OP_TABLE(fpu_d8_a16)[32] =
 {
         opFADDs_a16, opFMULs_a16, opFCOMs_a16, opFCOMPs_a16, opFSUBs_a16, opFSUBRs_a16, opFDIVs_a16, opFDIVRs_a16,
@@ -335,6 +350,7 @@ OpFn OP_TABLE(fpu_d8_a32)[32] =
         opFADD,      opFMUL,      opFCOM,      opFCOMP,      opFSUB,      opFSUBR,      opFDIV,      opFDIVR
 };
 
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_d9_a16)[256] =
 {
         opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,
@@ -373,7 +389,8 @@ OpFn OP_TABLE(fpu_d9_a16)[256] =
         opF2XM1, opFYL2X,  opFPTAN,  opFPATAN,  ILLEGAL,   opFPREM1, opFDECSTP, opFINCSTP,
         opFPREM, opFYL2XP1,opFSQRT,  opFSINCOS, opFRNDINT, opFSCALE, opFSIN,    opFCOS
 };
-
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_d9_a32)[256] =
 {
         opFLDs_a32,   opFLDs_a32,   opFLDs_a32,   opFLDs_a32,   opFLDs_a32,   opFLDs_a32,   opFLDs_a32,   opFLDs_a32,
@@ -413,6 +430,8 @@ OpFn OP_TABLE(fpu_d9_a32)[256] =
         opFPREM, opFYL2XP1,opFSQRT,  opFSINCOS, opFRNDINT, opFSCALE, opFSIN,    opFCOS
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_da_a16)[256] =
 {
         opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,
@@ -451,6 +470,8 @@ OpFn OP_TABLE(fpu_da_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_da_a32)[256] =
 {
         opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,
@@ -490,6 +511,8 @@ OpFn OP_TABLE(fpu_da_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_686_da_a16)[256] =
 {
         opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,
@@ -528,6 +551,8 @@ OpFn OP_TABLE(fpu_686_da_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_686_da_a32)[256] =
 {
         opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,  opFADDil_a32,
@@ -567,6 +592,8 @@ OpFn OP_TABLE(fpu_686_da_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_db_a16)[256] =
 {
         opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
@@ -605,6 +632,8 @@ OpFn OP_TABLE(fpu_db_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_db_a32)[256] =
 {
         opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,
@@ -644,6 +673,8 @@ OpFn OP_TABLE(fpu_db_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_686_db_a16)[256] =
 {
         opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
@@ -682,6 +713,8 @@ OpFn OP_TABLE(fpu_686_db_a16)[256] =
         opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_686_db_a32)[256] =
 {
         opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,  opFILDil_a32,
@@ -720,6 +753,7 @@ OpFn OP_TABLE(fpu_686_db_a32)[256] =
         opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,       opFCOMI,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
 
 OpFn OP_TABLE(fpu_dc_a16)[32] =
 {
@@ -736,6 +770,7 @@ OpFn OP_TABLE(fpu_dc_a32)[32] =
         opFADDr,     opFMULr,     opFCOM,      opFCOMP,      opFSUBRr,    opFSUBr,      opFDIVRr,    opFDIVr
 };
 
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_dd_a16)[256] =
 {
         opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,
@@ -774,6 +809,8 @@ OpFn OP_TABLE(fpu_dd_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_dd_a32)[256] =
 {
         opFLDd_a32,    opFLDd_a32,    opFLDd_a32,    opFLDd_a32,    opFLDd_a32,    opFLDd_a32,    opFLDd_a32,    opFLDd_a32,
@@ -813,6 +850,8 @@ OpFn OP_TABLE(fpu_dd_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_de_a16)[256] =
 {
         opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,
@@ -851,7 +890,8 @@ OpFn OP_TABLE(fpu_de_a16)[256] =
         opFDIVRP,      opFDIVRP,      opFDIVRP,      opFDIVRP,      opFDIVRP,      opFDIVRP,      opFDIVRP,      opFDIVRP,
         opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,
 };
-
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_de_a32)[256] =
 {
         opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,  opFADDiw_a32,
@@ -891,6 +931,8 @@ OpFn OP_TABLE(fpu_de_a32)[256] =
         opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,       opFDIVP,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_df_a16)[256] =
 {
         opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
@@ -929,6 +971,8 @@ OpFn OP_TABLE(fpu_df_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_df_a32)[256] =
 {
         opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,
@@ -968,6 +1012,8 @@ OpFn OP_TABLE(fpu_df_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
 
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a16
 OpFn OP_TABLE(fpu_686_df_a16)[256] =
 {
         opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
@@ -1006,6 +1052,8 @@ OpFn OP_TABLE(fpu_686_df_a16)[256] =
         opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
+#define ILLEGAL FPU_ILLEGAL_a32
 OpFn OP_TABLE(fpu_686_df_a32)[256] =
 {
         opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,  opFILDiw_a32,
@@ -1044,6 +1092,7 @@ OpFn OP_TABLE(fpu_686_df_a32)[256] =
         opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,      opFCOMIP,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
 };
+#undef ILLEGAL
 
 OpFn OP_TABLE(nofpu_a16)[256] =
 {
