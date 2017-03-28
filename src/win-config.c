@@ -118,6 +118,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_joystick_type;
         int cpu_type;
         int temp_mouse_type;
+        int hdd_changed;
         
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
@@ -425,14 +426,15 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                         h = GetDlgItem(hdlg, IDC_COMBOHDD);
                         c = SendMessage(h, CB_GETCURSEL, 0, 0);
+                        if (hdd_names[c])
+                                hdd_changed = strncmp(hdd_names[c], hdd_controller_name, sizeof(hdd_controller_name)-1);
                         
                         if (temp_model != model || gfx != gfxcard || mem != mem_size ||
                             fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
                             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
                             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
 			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
-                            temp_mouse_type != mouse_type ||
-                            strncmp(hdd_names[c], hdd_controller_name, sizeof(hdd_controller_name)-1))
+                            temp_mouse_type != mouse_type || hdd_changed)
                         {
                                 if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
