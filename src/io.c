@@ -91,6 +91,7 @@ void io_removehandler(uint16_t base, int size,
                            port_outw[ base + c][0] = NULL;
                         if (port_outl[ base + c][0] == outl)
                            port_outl[ base + c][0] = NULL;
+                        port_priv[base + c][0] = NULL;
                 }
                 if (port_priv[base + c][1] == priv)
                 {
@@ -106,6 +107,7 @@ void io_removehandler(uint16_t base, int size,
                            port_outw[ base + c][1] = NULL;
                         if (port_outl[ base + c][1] == outl)
                            port_outl[ base + c][1] = NULL;
+                        port_priv[base + c][1] = NULL;
                 }
         }
 }
