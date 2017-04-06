@@ -252,6 +252,12 @@ extern int CPUID;
 extern int cpl_override;
 
 /*Timer*/
+typedef struct PIT_nr
+{
+        int nr;
+        struct PIT *pit;
+} PIT_nr;
+
 typedef struct PIT
 {
         uint32_t l[3];
@@ -276,6 +282,10 @@ typedef struct PIT
         
         uint8_t read_status[3];
         int do_read_status[3];
+        
+        PIT_nr pit_nr[3];
+        
+        void (*set_out_funcs[3])(int new_out, int old_out);
 } PIT;
 
 PIT pit;

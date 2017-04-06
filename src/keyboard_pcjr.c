@@ -133,7 +133,7 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 speaker_enable = val & 2;
                 if (speaker_enable) 
                         was_speaker_enable = 1;
-                pit_set_gate(2, val & 1);
+                pit_set_gate(&pit, 2, val & 1);
                 sn76489_mute = speaker_mute = 1;
                 switch (val & 0x60)
                 {
@@ -148,7 +148,7 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 
                 case 0xa0:
                 nmi_mask = val & 0x80;
-                pit_set_using_timer(1, !(val & 0x20));
+                pit_set_using_timer(&pit, 1, !(val & 0x20));
                 break;
         }
 }

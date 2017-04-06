@@ -84,7 +84,7 @@ void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
                 speaker_enable = val & 2;
                 if (speaker_enable) 
                         was_speaker_enable = 1;
-                pit_set_gate(2, val & 1);
+                pit_set_gate(&pit, 2, val & 1);
                 
                 if (val & 0x80)
                         keyboard_amstrad.pa = 0;
