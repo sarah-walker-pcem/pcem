@@ -5,6 +5,7 @@
 #include "cpu.h"
 #include "fdd.h"
 #include "gameport.h"
+#include "hdd.h"
 #include "model.h"
 #include "mouse.h"
 #include "sound.h"
@@ -21,6 +22,12 @@ typedef struct allegro_list_t
         int num;
 } allegro_list_t;
 
+typedef struct allegro_list_str_t
+{
+        char name[256];
+        char *internal_name;
+} allegro_list_str_t;
+
 static allegro_list_t model_list[ROM_MAX+1];
 static allegro_list_t video_list[GFX_MAX+1];
 static allegro_list_t sound_list[GFX_MAX+1];
@@ -28,6 +35,7 @@ static allegro_list_t cpumanu_list[4];
 static allegro_list_t cpu_list[32];
 static allegro_list_t joystick_list[32];
 static allegro_list_t mouse_list[32];
+static allegro_list_str_t hdd_list[32];
 
 static char mem_size_str[10], mem_size_units[3];
 
@@ -168,6 +176,22 @@ static char *list_proc_cpu(int index, int *list_size)
         return cpu_list[index].name;
 }
 
+static char *list_proc_hdd(int index, int *list_size)
+{
+        if (index < 0)
+        {
+                int c = 0;
+                
+                while (hdd_list[c].internal_name)
+                        c++;
+
+                *list_size = c;
+                return NULL;
+        }
+        
+        return hdd_list[index].name;
+}
+
 static char *list_proc_fdd(int index, int *list_size)
 {
         if (index < 0)
@@ -252,10 +276,10 @@ static int list_proc(int msg, DIALOG *d, int c);
 
 static DIALOG configure_dialog[] =
 {
-        {d_shadow_box_proc, 0, 0, 568,352,0,0xffffff,0,0,     0,0,0,0,0}, // 0
+        {d_shadow_box_proc, 0, 0, 568,372,0,0xffffff,0,0,     0,0,0,0,0}, // 0
 
-        {d_button_proc, 226,  328, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
-        {d_button_proc, 296,  328, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
+        {d_button_proc, 226,  348, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "OK",     0, 0}, // 1
+        {d_button_proc, 296,  348, 50, 16, 0, 0xffffff, 0, D_EXIT, 0, 0, "Cancel", 0, 0}, // 2
 
         {list_proc,      70*2, 12,  152*2, 20, 0, 0xffffff, 0, 0,      0, 0, list_proc_model, 0, 0},
 
@@ -266,14 +290,14 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0}, //7
         {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //8
         
-        {d_edit_proc,    70*2, 256,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 276,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
                         
-        {d_text_proc,    98*2, 256,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
+        {d_text_proc,    98*2, 276,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
         
-        {d_check_proc,   14*2, 272, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
-        {d_check_proc,   14*2, 288, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
-        {d_check_proc,   14*2, 304, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
-        {d_check_proc,   14*2, 316, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0}, //14
+        {d_check_proc,   14*2, 292, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "CMS / Game Blaster", 0, 0},
+        {d_check_proc,   14*2, 308, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Gravis Ultrasound", 0, 0},
+        {d_check_proc,   14*2, 324, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Innovation SSI-2001", 0, 0},
+        {d_check_proc,   14*2, 336, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Voodoo Graphics", 0, 0}, //14
 
         {d_text_proc,    16*2,  16,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Machine :", 0, 0},
         {d_text_proc,    16*2,  36,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video :", 0, 0},
@@ -281,32 +305,97 @@ static DIALOG configure_dialog[] =
         {d_text_proc,    16*2,  76,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "CPU :", 0, 0},
         {d_text_proc,    16*2, 136,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Video speed :", 0, 0},
         {d_text_proc,    16*2, 156,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Soundcard :", 0, 0},
-        {d_text_proc,    16*2, 256,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
+        {d_text_proc,    16*2, 276,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Memory :", 0, 0},
 
         {d_check_proc,   14*2,  92, 118*2, 10, 0, 0xffffff, 0, 0, 0, 0, "Dynamic Recompiler", 0, 0},
         
-        {d_text_proc,    16*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive A: :", 0, 0},
-        {d_text_proc,    16*2, 196,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive B: :", 0, 0},
-        {d_list_proc,    70*2, 172, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0}, //25
-        {d_list_proc,    70*2, 192, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
+        {d_text_proc,    16*2, 196,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive A: :", 0, 0},
+        {d_text_proc,    16*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Drive B: :", 0, 0},
+        {d_list_proc,    70*2, 192, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0}, //25
+        {d_list_proc,    70*2, 212, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_fdd, 0, 0},
 
         {video_config_proc, 452,   36, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0}, //27
         {sound_config_proc, 452,  156, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
-        {voodoo_config_proc, 452, 316, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
+        {voodoo_config_proc, 452, 336, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
 
-        {d_text_proc,    16*2, 216,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Joystick :", 0, 0},
-        {d_list_proc,    70*2, 212, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_joystick, 0, 0}, //31
+        {d_text_proc,    16*2, 236,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Joystick :", 0, 0},
+        {d_list_proc,    70*2, 232, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_joystick, 0, 0}, //31
 
-        {d_text_proc,    16*2, 236,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Mouse :", 0, 0},
-        {d_list_proc,    70*2, 232, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_mouse, 0, 0}, //33
+        {d_text_proc,    16*2, 256,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Mouse :", 0, 0},
+        {d_list_proc,    70*2, 252, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_mouse, 0, 0}, //33
 
         {model_config_proc, 452, 12, 100, 14, 0, 0xffffff, 0, D_EXIT, 0, 0, "Configure...",     0, 0},
 
         {d_text_proc,    16*2, 116,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "Waitstates :", 0, 0},
         {d_list_proc,    70*2, 112, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_ws, 0, 0}, //36
+
+        {d_text_proc,    16*2, 176,  40, 10, 0, 0xffffff, 0, 0, 0, 0, "HDD :", 0, 0},
+        {d_list_proc,    70*2, 172, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_hdd, 0, 0}, //38
                 
         {0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL}
 };
+
+static void update_hdd_list(int model, int use_selected_hdd)
+{
+        memset(hdd_list, 0, sizeof(hdd_list));
+        
+        if (models[model].flags & MODEL_HAS_IDE)
+        {
+                strcpy(hdd_list[0].name, "Internal IDE");
+                strcpy(hdd_list[0].internal_name, "internal_ide");
+        }
+        else
+        {
+                int c = 0, d = 0;
+                char old_name[16];
+
+                if (use_selected_hdd)
+                {
+                        c = configure_dialog[38].d1;
+
+                        if (c != -1 && hdd_list[c].internal_name)
+                                strncpy(old_name, hdd_list[c].internal_name, sizeof(old_name)-1);
+                        else
+                                strcpy(old_name, "none");
+                }
+                else
+                        strncpy(old_name, hdd_controller_name, sizeof(old_name)-1);
+                
+                configure_dialog[38].d1 = 0;
+                pclog("HDD list %i\n", model);
+                c = 0;
+                while (1)
+                {
+                        char *s = hdd_controller_get_name(c);
+                        
+                        if (s[0] == 0)
+                                break;
+                        
+                        if ((((hdd_controller_get_flags(c) & DEVICE_AT) && !(models[model].flags & MODEL_AT)) ||
+                             (hdd_controller_get_flags(c) & DEVICE_MCA) != (models[model].flags & MODEL_MCA)) && c)
+                        {
+                                pclog("Skip %i 1 %s\n", c, s);
+                                c++;
+                                continue;
+                        }
+                        if (!hdd_controller_available(c))
+                        {
+                                pclog("Skip %i 2 %s\n", c, s);
+                                c++;
+                                continue;
+                        }
+
+                        strcpy(hdd_list[d].name, s);
+                        hdd_list[d].internal_name = hdd_controller_get_internal_name(c);
+                        
+                        if (!strcmp(old_name, hdd_list[d].internal_name))
+                                configure_dialog[38].d1 = d;
+
+                        c++;
+                        d++;
+                }
+        }
+}
 
 static int mouse_valid(int type, int model)
 {
@@ -411,6 +500,8 @@ static int list_proc(int msg, DIALOG *d, int c)
                 else
                         configure_dialog[36].flags &= ~D_DISABLED;
 
+                update_hdd_list(new_model, 1);
+                
                 return D_REDRAW;
         }
 
@@ -583,6 +674,8 @@ pclog("video_card_available : %i\n", c);
 	configure_dialog[33].d1 = 0;
 	update_mouse_list();
 	configure_dialog[33].d1 = settings_mouse_to_list[mouse_type];
+	
+	update_hdd_list(model, 0);
 
         if (!sound_card_has_config(configure_dialog[8].d1))
                 configure_dialog[28].flags |= D_DISABLED;
@@ -669,6 +762,7 @@ pclog("video_card_available : %i\n", c);
 			int new_fda = configure_dialog[25].d1;
 			int new_fdb = configure_dialog[26].d1;
 			int new_mouse = settings_list_to_mouse[configure_dialog[33].d1];
+			int new_hdd = configure_dialog[38].d1;
                         
                         sscanf(mem_size_str, "%i", &new_mem_size);
                         new_mem_size &= ~(models[new_model].ram_granularity - 1);
@@ -683,7 +777,7 @@ pclog("video_card_available : %i\n", c);
                             new_has_fpu != hasfpu || new_GAMEBLASTER != GAMEBLASTER || new_GUS != GUS ||
                             new_SSI2001 != SSI2001 || new_sndcard != sound_card_current || new_voodoo != voodoo_enabled ||
                             new_dynarec != cpu_use_dynarec || new_fda != fdd_get_type(0) || new_fdb != fdd_get_type(1) ||
-			    new_mouse != mouse_type)
+			    new_mouse != mouse_type || strncmp(hdd_list[new_hdd].internal_name, hdd_controller_name, sizeof(hdd_controller_name)-1))
                         {
                                 if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
                                         continue;
@@ -702,6 +796,11 @@ pclog("video_card_available : %i\n", c);
 				cpu_use_dynarec = new_dynarec;
 				mouse_type = new_mouse;
                                         
+                                if (hdd_list[new_hdd].internal_name)
+        				strncpy(hdd_controller_name, hdd_list[new_hdd].internal_name, sizeof(hdd_controller_name)-1);
+        			else
+                                        strcpy(hdd_controller_name, "none");
+
                                 mem_resize();
                                 loadbios();
                                 resetpchard();

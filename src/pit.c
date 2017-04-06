@@ -573,6 +573,20 @@ void pit_irq0_timer_pcjr(int new_out, int old_out)
                 picintc(1);
 }
 
+void pit_irq0_ps2(int new_out, int old_out)
+{
+        //pclog("pit_irq0_ps2 %i %i\n", new_out, old_out);
+        if (new_out && !old_out)
+        {
+                picint(1);
+                pit_set_gate_no_timer(&pit2, 0, 1);
+        }
+        if (!new_out)
+                picintc(1);
+        if (!new_out && old_out)
+                pit_clock(&pit2, 0);
+}
+
 void pit_refresh_timer_xt(int new_out, int old_out)
 {
         if (new_out && !old_out)
@@ -599,6 +613,12 @@ void pit_speaker_timer(int new_out, int old_out)
         ppispeakon = new_out;
 }
 
+void pit_nmi_ps2(int new_out, int old_out)
+{
+        nmi = new_out;
+        if (nmi)
+                nmi_auto_clear = 1;
+}
 
 void pit_init()
 {
@@ -622,3 +642,24 @@ void pit_init()
         pit_set_out_func(&pit, 1, pit_null_timer);
         pit_set_out_func(&pit, 2, pit_speaker_timer);
 }
+
+void pit_ps2_init()
+{
+        pit_reset(&pit2);
+
+        io_sethandler(0x0044, 0x0001, pit_read, NULL, NULL, pit_write, NULL, NULL, &pit2);
+        io_sethandler(0x0047, 0x0001, pit_read, NULL, NULL, pit_write, NULL, NULL, &pit2);
+
+        pit2.gate[0] = 0;
+        pit2.using_timer[0] = 0;
+        pit2.disabled[0] = 1;
+                
+        pit2.pit_nr[0].nr = 0;
+        pit2.pit_nr[0].pit = &pit2;
+
+        timer_add(pit_timer_over, &pit2.c[0], &pit2.running[0], (void *)&pit2.pit_nr[0]);
+
+        pit_set_out_func(&pit, 0, pit_irq0_ps2);
+        pit_set_out_func(&pit2, 0, pit_nmi_ps2);
+}
+

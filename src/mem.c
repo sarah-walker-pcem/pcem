@@ -579,7 +579,30 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
-				
+
+                case ROM_IBMPS2_M50:
+                f=romfopen("roms/i8550021/90x7423.zm14","rb");
+                ff=romfopen("roms/i8550021/90x7426.zm16","rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x10000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                f=romfopen("roms/i8550021/90x7420.zm13","rb");
+                ff=romfopen("roms/i8550021/90x7429.zm18","rb");
+                if (!f || !ff) break;
+                for (c = 0x10000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

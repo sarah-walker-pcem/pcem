@@ -288,7 +288,7 @@ typedef struct PIT
         void (*set_out_funcs[3])(int new_out, int old_out);
 } PIT;
 
-PIT pit;
+PIT pit, pit2;
 void setpitclock(float clock);
 
 float pit_timer0_freq();
@@ -302,7 +302,7 @@ float pit_timer0_freq();
 /*DMA*/
 typedef struct DMA
 {
-        uint16_t ab[4],ac[4];
+        uint32_t ab[4],ac[4];
         uint16_t cb[4];
         int cc[4];
         int wp;
@@ -310,6 +310,11 @@ typedef struct DMA
         uint8_t page[4];
         uint8_t stat;
         uint8_t command;
+        
+        int xfr_command, xfr_channel;
+        int byte_ptr;
+        
+        int is_ps2;
 } DMA;
 
 DMA dma,dma16;
@@ -396,7 +401,8 @@ enum
         ROM_IBMPS1_2121,
         ROM_AMI386DX_OPTI495,
         ROM_MR386DX_OPTI495,
-		ROM_IBMPS2_M30_286,
+	ROM_IBMPS2_M30_286,
+	ROM_IBMPS2_M50,
                 	
         ROM_MAX
 };
@@ -511,6 +517,7 @@ void pclog(const char *format, ...);
 void fatal(const char *format, ...);
 void warning(const char *format, ...);
 extern int nmi;
+extern int nmi_auto_clear;
 
 
 extern float isa_timing, bus_timing;

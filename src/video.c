@@ -296,6 +296,7 @@ void video_init()
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
+                case ROM_IBMPS2_M50:
                 device_add(&ps1vga_device);
                 return;
 

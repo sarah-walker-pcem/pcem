@@ -7,9 +7,7 @@
 #include "video.h"
 
 static uint8_t dmaregs[16];
-static int dmaon[4];
 static uint8_t dma16regs[16];
-static int dma16on[4];
 static uint8_t dmapages[16];
 
 void dma_reset()
@@ -52,7 +50,7 @@ uint8_t dma_read(uint16_t addr, void *priv)
                 dma.wp ^= 1;
                 if (dma.wp) 
                         return dma.ac[(addr >> 1) & 3] & 0xff;
-                return dma.ac[(addr >> 1) & 3] >> 8;
+                return (dma.ac[(addr >> 1) & 3] >> 8) & 0xff;
                 
                 case 1: case 3: case 5: case 7: /*Count registers*/
                 dma.wp ^= 1;
@@ -80,10 +78,10 @@ void dma_write(uint16_t addr, uint8_t val, void *priv)
         {
                 case 0: case 2: case 4: case 6: /*Address registers*/
                 dma.wp ^= 1;
-                if (dma.wp) dma.ab[(addr >> 1) & 3] = (dma.ab[(addr >> 1) & 3] & 0xff00) | val;
-                else        dma.ab[(addr >> 1) & 3] = (dma.ab[(addr >> 1) & 3] & 0x00ff) | (val << 8);
+                if (dma.wp) dma.ab[(addr >> 1) & 3] = (dma.ab[(addr >> 1) & 3] & 0xffff00) | val;
+                else        dma.ab[(addr >> 1) & 3] = (dma.ab[(addr >> 1) & 3] & 0xff00ff) | (val << 8);
                 dma.ac[(addr >> 1) & 3] = dma.ab[(addr >> 1) & 3];
-                dmaon[(addr >> 1) & 3] = 1;
+//                pclog("Addr = %04x\n", dma.ab[(addr >> 1) & 3]);
                 return;
                 
                 case 1: case 3: case 5: case 7: /*Count registers*/
@@ -91,7 +89,6 @@ void dma_write(uint16_t addr, uint8_t val, void *priv)
                 if (dma.wp) dma.cb[(addr >> 1) & 3] = (dma.cb[(addr >> 1) & 3] & 0xff00) | val;
                 else        dma.cb[(addr >> 1) & 3] = (dma.cb[(addr >> 1) & 3] & 0x00ff) | (val << 8);
                 dma.cc[(addr >> 1) & 3] = dma.cb[(addr >> 1) & 3];
-                dmaon[(addr >> 1) & 3] = 1;
                 return;
                 
                 case 8: /*Control register*/
@@ -122,6 +119,155 @@ void dma_write(uint16_t addr, uint8_t val, void *priv)
         }
 }
 
+static uint8_t dma_ps2_read(uint16_t addr, void *priv)
+{
+        uint8_t temp;
+        
+        switch (addr)
+        {
+                case 0x1a:
+                switch (dma.xfr_command)
+                {
+                        case 2: /*Address*/
+                        switch (dma.byte_ptr)
+                        {
+                                case 0:
+                                temp = (dma.xfr_channel & 4) ? (dma16.ac[dma.xfr_channel & 3] & 0xff) : (dma.ac[dma.xfr_channel] & 0xff);
+                                dma.byte_ptr = 1;
+                                break;
+                                case 1:
+                                temp = (dma.xfr_channel & 4) ? (dma16.ac[dma.xfr_channel & 3] >> 8) : (dma.ac[dma.xfr_channel] >> 8);
+                                dma.byte_ptr = 2;
+                                break;
+                                case 2:
+                                temp = (dma.xfr_channel & 4) ? (dma16.ac[dma.xfr_channel & 3] >> 16) : (dma.ac[dma.xfr_channel] >> 16);
+                                dma.byte_ptr = 0;
+                                break;
+                        }
+                        break;
+                        case 4: /*Count*/
+                        if (dma.byte_ptr)
+                                temp = (dma.xfr_channel & 4) ? (dma16.cc[dma.xfr_channel & 3] >> 8) : (dma.cc[dma.xfr_channel] >> 8);
+                        else
+                                temp = (dma.xfr_channel & 4) ? (dma16.cc[dma.xfr_channel & 3] & 0xff) : (dma.cc[dma.xfr_channel] & 0xff);
+                        dma.byte_ptr = (dma.byte_ptr + 1) & 1;
+                        break;
+                        case 7: /*Mode*/
+                        temp = (dma.xfr_channel & 4) ? dma16.mode[dma.xfr_channel & 3] : dma.mode[dma.xfr_channel];
+                        break;
+                        
+                        default:
+                        fatal("Bad XFR Read command %i channel %i\n", dma.xfr_command, dma.xfr_channel);
+                }
+                break;
+        }
+
+//        pclog("Read DMA %04X %04X:%04X %02X\n",addr,CS,pc, temp);
+        
+        return temp;
+}
+
+static void dma_ps2_write(uint16_t addr, uint8_t val, void *priv)
+{
+        uint8_t mode;
+        
+//        pclog("Write PS2 DMA %04X %02X %04X:%04X\n",addr,val,CS,cpu_state.pc);
+        
+        switch (addr)
+        {
+                case 0x18:
+                dma.xfr_channel = val & 0x7;
+                dma.xfr_command = val >> 4;
+                dma.byte_ptr = 0;
+                switch (dma.xfr_command)
+                {
+                        case 9: /*Set DMA mask*/
+                        if (dma.xfr_channel & 4)
+                                dma16.m |= (1 << (dma.xfr_channel & 3));
+                        else
+                                dma.m |= (1 << dma.xfr_channel);
+                        break;
+                        case 0xa: /*Reset DMA mask*/
+                        if (dma.xfr_channel & 4)
+                                dma16.m &= ~(1 << (dma.xfr_channel & 3));
+                        else
+                                dma.m &= ~(1 << dma.xfr_channel);
+                        break;
+                }                        
+                break;
+                case 0x1a:
+                switch (dma.xfr_command)
+                {
+                        case 2: /*Address*/
+                        switch (dma.byte_ptr)
+                        {
+                                case 0:
+                                if (dma.xfr_channel & 4)
+                                        dma16.ac[dma.xfr_channel & 3] = (dma16.ac[dma.xfr_channel & 3] & 0xffff00) | val;
+                                else
+                                        dma.ac[dma.xfr_channel] = (dma.ac[dma.xfr_channel] & 0xffff00) | val;
+                                dma.byte_ptr = 1;
+                                break;
+                                case 1:
+                                if (dma.xfr_channel & 4)
+                                        dma16.ac[dma.xfr_channel & 3] = (dma16.ac[dma.xfr_channel & 3] & 0xff00ff) | (val << 8);
+                                else
+                                        dma.ac[dma.xfr_channel] = (dma.ac[dma.xfr_channel] & 0xff00ff) | (val << 8);
+                                dma.byte_ptr = 2;
+                                break;
+                                case 2:
+                                if (dma.xfr_channel & 4)
+                                        dma16.ac[dma.xfr_channel & 3] = (dma16.ac[dma.xfr_channel & 3] & 0x00ffff) | (val << 16);
+                                else
+                                        dma.ac[dma.xfr_channel] = (dma.ac[dma.xfr_channel] & 0x00ffff) | (val << 16);
+                                dma.byte_ptr = 0;
+                                break;
+                        }
+                        break;
+
+                        case 4: /*Count*/
+                        if (dma.byte_ptr)
+                        {
+                                if (dma.xfr_channel & 4)
+                                        dma16.cc[dma.xfr_channel & 3] = (dma16.cc[dma.xfr_channel & 3] & 0xff) | (val << 8);
+                                else
+                                        dma.cc[dma.xfr_channel] = (dma.cc[dma.xfr_channel] & 0xff) | (val << 8);
+                        }
+                        else
+                        {
+                                if (dma.xfr_channel & 4)
+                                        dma16.cc[dma.xfr_channel & 3] = (dma16.cc[dma.xfr_channel & 3] & 0xff00) | val;
+                                else
+                                        dma.cc[dma.xfr_channel] = (dma.cc[dma.xfr_channel] & 0xff00) | val;
+                        }
+                        dma.byte_ptr = (dma.byte_ptr + 1) & 1;
+                        break;
+
+                        case 7: /*Mode register*/
+                        mode = 0;
+                        if (val & 0x10)
+                                mode |= 0x20;
+                        if ((val & 0xc) == 4)
+                                mode |= 8;
+                        else if ((val & 0xc) == 0xc)
+                                mode |= 4;
+                        if ((val & 0x40) && !(dma.xfr_channel & 4))
+                                fatal("16-bit DMA on 8-bit channel\n");
+                        if (!(val & 0x40) && (dma.xfr_channel & 4))
+                                fatal("8-bit DMA on 16-bit channel\n");
+                        if (dma.xfr_channel & 4)
+                                dma16.mode[dma.xfr_channel & 3] = mode;
+                        else
+                                dma.mode[dma.xfr_channel] = mode;
+                        break;
+
+                        default:
+                        fatal("Bad XFR command %i channel %i val %02x\n", dma.xfr_command, dma.xfr_channel, val);
+                }
+                break;
+        }
+}
+
 uint8_t dma16_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
@@ -131,9 +277,15 @@ uint8_t dma16_read(uint16_t addr, void *priv)
         {
                 case 0: case 2: case 4: case 6: /*Address registers*/
                 dma16.wp ^= 1;
+                if (dma.is_ps2)
+                {
+                        if (dma16.wp) 
+                                return dma16.ac[(addr >> 1) & 3] & 0xff;
+                        return (dma16.ac[(addr >> 1) & 3] >> 8) & 0xff;
+                }
                 if (dma16.wp) 
-                        return dma16.ac[(addr >> 1) & 3] & 0xff;
-                return dma16.ac[(addr >> 1) & 3] >> 8;
+                        return (dma16.ac[(addr >> 1) & 3] >> 1) & 0xff;
+                return (dma16.ac[(addr >> 1) & 3] >> 9) & 0xff;
                 
                 case 1: case 3: case 5: case 7: /*Count registers*/
                 dma16.wp ^= 1;
@@ -158,10 +310,17 @@ void dma16_write(uint16_t addr, uint8_t val, void *priv)
         {
                 case 0: case 2: case 4: case 6: /*Address registers*/
                 dma16.wp ^= 1;
-                if (dma16.wp) dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0xff00) | val;
-                else          dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0x00ff) | (val << 8);
+                if (dma.is_ps2)
+                {
+                        if (dma16.wp) dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0xffff00) | val;
+                        else          dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0xff00ff) | (val << 8);
+                }
+                else
+                {
+                        if (dma16.wp) dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0xfffe00) | (val << 1);
+                        else          dma16.ab[(addr >> 1) & 3] = (dma16.ab[(addr >> 1) & 3] & 0xfe01ff) | (val << 9);
+                }
                 dma16.ac[(addr >> 1) & 3] = dma16.ab[(addr >> 1) & 3];
-                dma16on[(addr >> 1) & 3] = 1;
                 return;
                 
                 case 1: case 3: case 5: case 7: /*Count registers*/
@@ -169,7 +328,6 @@ void dma16_write(uint16_t addr, uint8_t val, void *priv)
                 if (dma16.wp) dma16.cb[(addr >> 1) & 3] = (dma16.cb[(addr >> 1) & 3] & 0xff00) | val;
                 else          dma16.cb[(addr >> 1) & 3] = (dma16.cb[(addr >> 1) & 3] & 0x00ff) | (val << 8);
                 dma16.cc[(addr >> 1) & 3] = dma16.cb[(addr >> 1) & 3];
-                dma16on[(addr >> 1) & 3] = 1;
                 return;
                 
                 case 8: /*Control register*/
@@ -207,15 +365,38 @@ void dma_page_write(uint16_t addr, uint8_t val, void *priv)
         {
                 case 1:
                 dma.page[2] = (AT) ? val : val & 0xf;
+                dma.ab[2] = (dma.ab[2] & 0xffff) | (dma.page[2] << 16);
+                dma.ac[2] = (dma.ac[2] & 0xffff) | (dma.page[2] << 16);
                 break;
                 case 2:
                 dma.page[3] = (AT) ? val : val & 0xf;
+                dma.ab[3] = (dma.ab[3] & 0xffff) | (dma.page[3] << 16);
+                dma.ac[3] = (dma.ac[3] & 0xffff) | (dma.page[3] << 16);
                 break;
                 case 3:
                 dma.page[1] = (AT) ? val : val & 0xf;
+                dma.ab[1] = (dma.ab[1] & 0xffff) | (dma.page[1] << 16);
+                dma.ac[1] = (dma.ac[1] & 0xffff) | (dma.page[1] << 16);
+                break;
+                case 7:
+                dma.page[0] = (AT) ? val : val & 0xf;
+                dma.ab[0] = (dma.ab[0] & 0xffff) | (dma.page[0] << 16);
+                dma.ac[0] = (dma.ac[0] & 0xffff) | (dma.page[0] << 16);
+                break;
+                case 0x9:
+                dma16.page[2] = val & 0xfe;
+                dma16.ab[2] = (dma16.ab[2] & 0x1ffff) | (dma16.page[2] << 16);
+                dma16.ac[2] = (dma16.ac[2] & 0x1ffff) | (dma16.page[2] << 16);
+                break;
+                case 0xa:
+                dma16.page[3] = val & 0xfe;
+                dma16.ab[3] = (dma16.ab[3] & 0x1ffff) | (dma16.page[3] << 16);
+                dma16.ac[3] = (dma16.ac[3] & 0x1ffff) | (dma16.page[3] << 16);
                 break;
                 case 0xb:
-                dma16.page[1] = val;
+                dma16.page[1] = val & 0xfe;
+                dma16.ab[1] = (dma16.ab[1] & 0x1ffff) | (dma16.page[1] << 16);
+                dma16.ac[1] = (dma16.ac[1] & 0x1ffff) | (dma16.page[1] << 16);
                 break;
         }
 }
@@ -229,6 +410,7 @@ void dma_init()
 {
         io_sethandler(0x0000, 0x0010, dma_read,      NULL, NULL, dma_write,      NULL, NULL,  NULL);
         io_sethandler(0x0080, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL,  NULL);
+        dma.is_ps2 = 0;
 }
 
 void dma16_init()
@@ -237,10 +419,18 @@ void dma16_init()
         io_sethandler(0x0088, 0x0008, dma_page_read, NULL, NULL, dma_page_write, NULL, NULL,  NULL);
 }
 
+void ps2_dma_init()
+{
+        io_sethandler(0x0018, 0x0001, dma_ps2_read,  NULL, NULL, dma_ps2_write,  NULL, NULL,  NULL);
+        io_sethandler(0x001a, 0x0001, dma_ps2_read,  NULL, NULL, dma_ps2_write,  NULL, NULL,  NULL);
+        dma.is_ps2 = 1;
+}
+
 
 uint8_t _dma_read(uint32_t addr)
 {
-        return mem_readb_phys(addr);
+        uint8_t temp = mem_readb_phys(addr);
+        return temp;
 }
 
 void _dma_write(uint32_t addr, uint8_t val)
@@ -267,10 +457,22 @@ int dma_channel_read(int channel)
                 if ((dma.mode[channel] & 0xC) != 8)
                         return DMA_NODATA;
 
-                temp = _dma_read(dma.ac[channel] + (dma.page[channel] << 16)); //ram[(dma.ac[2]+(dma.page[2]<<16))&rammask];
+                temp = _dma_read(dma.ac[channel]);
 
-                if (dma.mode[channel] & 0x20) dma.ac[channel]--;
-                else                          dma.ac[channel]++;
+                if (dma.mode[channel] & 0x20)
+                {
+                        if (dma.is_ps2)
+                                dma.ac[channel]--;
+                        else
+                                dma.ac[channel] = (dma.ac[channel] & 0xff0000) | ((dma.ac[channel] - 1) & 0xffff);
+                }
+                else
+                {
+                        if (dma.is_ps2)
+                                dma.ac[channel]++;
+                        else
+                                dma.ac[channel] = (dma.ac[channel] & 0xff0000) | ((dma.ac[channel] + 1) & 0xffff);
+                }
                 dma.cc[channel]--;
                 if (dma.cc[channel] < 0)
                 {
@@ -297,11 +499,24 @@ int dma_channel_read(int channel)
                 if ((dma16.mode[channel] & 0xC) != 8)
                         return DMA_NODATA;
 
-                temp =  _dma_read((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16)) |
-                       (_dma_read((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16) + 1) << 8);
+                temp =  _dma_read(dma16.ac[channel]) |
+                       (_dma_read(dma16.ac[channel] + 1) << 8);
 
-                if (dma16.mode[channel] & 0x20) dma16.ac[channel]--;
-                else                            dma16.ac[channel]++;
+                if (dma16.mode[channel] & 0x20)
+                {
+                        if (dma.is_ps2)
+                                dma16.ac[channel] -= 2;
+                        else
+                                dma16.ac[channel] = (dma16.ac[channel] & 0xfe0000) | ((dma16.ac[channel] - 2) & 0x1ffff);
+                }
+                else
+                {
+                        if (dma.is_ps2)
+                                dma16.ac[channel] += 2;
+                        else
+                                dma16.ac[channel] = (dma16.ac[channel] & 0xfe0000) | ((dma16.ac[channel] + 2) & 0x1ffff);
+                }
+
                 dma16.cc[channel]--;
                 if (dma16.cc[channel] < 0)
                 {
@@ -337,10 +552,23 @@ int dma_channel_write(int channel, uint16_t val)
                 if ((dma.mode[channel] & 0xC) != 4)
                         return DMA_NODATA;
 
-                _dma_write(dma.ac[channel] + (dma.page[channel] << 16), val);
+                _dma_write(dma.ac[channel], val);
 
-                if (dma.mode[channel]&0x20) dma.ac[channel]--;
-                else                        dma.ac[channel]++;
+                if (dma.mode[channel] & 0x20)
+                {
+                        if (dma.is_ps2)
+                                dma.ac[channel]--;
+                        else
+                                dma.ac[channel] = (dma.ac[channel] & 0xff0000) | ((dma.ac[channel] - 1) & 0xffff);
+                }
+                else
+                {
+                        if (dma.is_ps2)
+                                dma.ac[channel]++;
+                        else
+                                dma.ac[channel] = (dma.ac[channel] & 0xff0000) | ((dma.ac[channel] + 1) & 0xffff);
+                }
+
                 dma.cc[channel]--;
                 if (dma.cc[channel] < 0)
                 {
@@ -365,11 +593,24 @@ int dma_channel_write(int channel, uint16_t val)
                 if ((dma16.mode[channel] & 0xC) != 4)
                         return DMA_NODATA;
 
-                _dma_write((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16),     val);
-                _dma_write((dma16.ac[channel] << 1) + ((dma16.page[channel] & ~1) << 16) + 1, val >> 8);                
+                _dma_write(dma16.ac[channel],     val);
+                _dma_write(dma16.ac[channel] + 1, val >> 8);                
 
-                if (dma16.mode[channel]&0x20) dma16.ac[channel]--;
-                else                          dma16.ac[channel]++;
+                if (dma16.mode[channel] & 0x20)
+                {
+                        if (dma.is_ps2)
+                                dma16.ac[channel] -= 2;
+                        else
+                                dma16.ac[channel] = (dma16.ac[channel] & 0xfe0000) | ((dma16.ac[channel] - 2) & 0x1ffff);
+                }
+                else
+                {
+                        if (dma.is_ps2)
+                                dma16.ac[channel] += 2;
+                        else
+                                dma16.ac[channel] = (dma16.ac[channel] & 0xfe0000) | ((dma16.ac[channel] + 2) & 0x1ffff);
+                }
+
                 dma16.cc[channel]--;
                 if (dma16.cc[channel] < 0)
                 {

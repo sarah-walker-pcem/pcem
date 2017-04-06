@@ -686,6 +686,11 @@ uint8_t fdc_read(uint16_t addr, void *priv)
                         temp &= ~0x40;
                 else
                         temp &= ~0x20;
+                        
+                if (fdc.dor & 0x10)
+                        temp |= 1;
+                if (fdc.dor & 0x20)
+                        temp |= 2;
                 break;
                 case 3:
                 drive = (fdc.dor & 1) ^ fdd_swap;
@@ -765,6 +770,7 @@ uint8_t fdc_read(uint16_t addr, void *priv)
                 if (fdc.dskchg_activelow)  /*PC2086/3086 seem to reverse this bit*/
                    temp ^= 0x80;
 //                printf("- DC %i %02X %02X %i %i - ",fdc.dor & 1, fdc.dor, 0x10 << (fdc.dor & 1), discchanged[fdc.dor & 1], driveempty[fdc.dor & 1]);
+                temp |= 1;
 //                discchanged[fdc.dor&1]=0;
                 break;
                 default:

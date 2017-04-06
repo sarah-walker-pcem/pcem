@@ -22,6 +22,7 @@
 
 int xt_cpu_multi;
 int nmi = 0;
+int nmi_auto_clear = 0;
 
 int nextcyc=0;
 int cycdiff;

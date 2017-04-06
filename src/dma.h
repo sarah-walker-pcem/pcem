@@ -1,5 +1,6 @@
 void dma_init();
 void dma16_init();
+void ps2_dma_init();
 void dma_reset();
 
 #define DMA_NODATA -1

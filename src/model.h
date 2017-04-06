@@ -3,6 +3,7 @@
 #define MODEL_AMSTRAD 4
 #define MODEL_OLIM24  8
 #define MODEL_HAS_IDE 0x10
+#define MODEL_MCA     0x20
 
 typedef struct
 {

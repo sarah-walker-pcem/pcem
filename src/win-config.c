@@ -37,6 +37,39 @@ static int mouse_valid(int type, int model)
         return 1;
 }
 
+static void recalc_snd_list(HWND hdlg, int model)
+{
+        HWND h = GetDlgItem(hdlg, IDC_COMBOSND);
+        int c = 0, d = 0;
+
+        SendMessage(h, CB_RESETCONTENT, 0, 0);
+
+        while (1)
+        {
+                char *s = sound_card_getname(c);
+
+                if (!s[0])
+                        break;
+
+                settings_sound_to_list[c] = d;
+                        
+                if (sound_card_available(c))
+                {
+                        device_t *sound_dev = sound_card_getdevice(c);
+
+                        if (!sound_dev || (sound_dev->flags & DEVICE_MCA) == (models[model].flags & MODEL_MCA))
+                        {
+                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                settings_list_to_sound[d] = c;
+                                d++;
+                        }
+                }
+
+                c++;
+        }
+        SendMessage(h, CB_SETCURSEL, settings_sound_to_list[sound_card_current], 0);
+}
+
 static void recalc_hdd_list(HWND hdlg, int model, int use_selected_hdd)
 {
         HWND h;
@@ -76,7 +109,8 @@ static void recalc_hdd_list(HWND hdlg, int model, int use_selected_hdd)
                         s = hdd_controller_get_name(c);
                         if (s[0] == 0)
                                 break;
-                        if ((hdd_controller_get_flags(c) & DEVICE_AT) && !(models[model].flags & MODEL_AT))
+                        if ((((hdd_controller_get_flags(c) & DEVICE_AT) && !(models[model].flags & MODEL_AT)) ||
+                             (hdd_controller_get_flags(c) & DEVICE_MCA) != (models[model].flags & MODEL_MCA)) && c)
                         {
                                 c++;
                                 continue;
@@ -191,27 +225,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 EnableWindow(h, TRUE);
                 SendMessage(h, CB_SETCURSEL, cpu, 0);
 
-                h = GetDlgItem(hdlg, IDC_COMBOSND);
-                c = d = 0;
-                while (1)
-                {
-                        char *s = sound_card_getname(c);
-
-                        if (!s[0])
-                                break;
-
-                        settings_sound_to_list[c] = d;
-                        
-                        if (sound_card_available(c))
-                        {
-                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
-                                settings_list_to_sound[d] = c;
-                                d++;
-                        }
-
-                        c++;
-                }
-                SendMessage(h, CB_SETCURSEL, settings_sound_to_list[sound_card_current], 0);
+                recalc_snd_list(hdlg, romstomodel[romset]);
 
                 h=GetDlgItem(hdlg, IDC_CHECK3);
                 SendMessage(h, BM_SETCHECK, GAMEBLASTER, 0);
@@ -629,6 +643,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                                 recalc_hdd_list(hdlg, temp_model, 1);
 
+                                recalc_snd_list(hdlg, temp_model);
                         }
                         break;
                         case IDC_COMBOCPUM:

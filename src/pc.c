@@ -184,7 +184,6 @@ void pc_reset()
         dma_reset();
         fdc_reset();
         pic_reset();
-        pit_reset();
         serial_reset();
 
         if (AT)
@@ -302,7 +301,6 @@ void initpc(int argc, char *argv[])
 		}
 	}
         
-        pit_reset();        
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
         ali1429_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));

@@ -325,6 +325,11 @@ opcodestart:
 //                        pclog("NMI\n");
                         x86_int(2);
                         nmi_enable = 0;
+                        if (nmi_auto_clear)
+                        {
+                                nmi_auto_clear = 0;
+                                nmi = 0;
+                        }
                 }
                 else if ((flags&I_FLAG) && pic_intpending)
                 {

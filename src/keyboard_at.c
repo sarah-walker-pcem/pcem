@@ -20,6 +20,8 @@
 #define STAT_IFULL      0x02
 #define STAT_OFULL      0x01
 
+#define PS2_REFRESH_TIME (16 * TIMER_USEC)
+
 struct
 {
         int initialised;
@@ -41,6 +43,11 @@ struct
         
         void (*mouse_write)(uint8_t val, void *p);
         void *mouse_p;
+        
+        int refresh_time;
+        int refresh;
+        
+        int is_ps2;
 } keyboard_at;
 
 static uint8_t key_ctrl_queue[16];
@@ -448,9 +455,18 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
                 keyboard_at.last_irq = 0;
                 break;
 
-                case 0x61:                
-                if (ppispeakon) return (ppi.pb&~0xC0)|0x20;
-                return ppi.pb&~0xe0;
+                case 0x61:
+                temp = ppi.pb & ~0xe0;
+                if (ppispeakon)
+                        temp |= 0x20;
+                if (keyboard_at.is_ps2)
+                {
+                        if (keyboard_at.refresh)
+                                temp |= 0x10;
+                        else
+                                temp &= ~0x10;
+                }
+                break;
                 
                 case 0x64:
                 temp = keyboard_at.status & ~4;
@@ -479,6 +495,12 @@ void keyboard_at_reset()
         keyboard_scan = 1;
 }
 
+static void at_refresh(void *p)
+{
+        keyboard_at.refresh = !keyboard_at.refresh;
+        keyboard_at.refresh_time += PS2_REFRESH_TIME;
+}
+
 void keyboard_at_init()
 {
         //return;
@@ -488,6 +510,7 @@ void keyboard_at_init()
         keyboard_poll = keyboard_at_poll;
         keyboard_at.mouse_write = NULL;
         keyboard_at.mouse_p = NULL;
+        keyboard_at.is_ps2 = 0;
         
         timer_add(keyboard_at_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }
@@ -496,4 +519,10 @@ void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p)
 {
         keyboard_at.mouse_write = mouse_write;
         keyboard_at.mouse_p = p;
+}
+
+void keyboard_at_init_ps2()
+{
+        timer_add(at_refresh, &keyboard_at.refresh_time, TIMER_ALWAYS_ENABLED,  NULL);
+        keyboard_at.is_ps2 = 1;
 }

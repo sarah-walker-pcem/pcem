@@ -38,6 +38,7 @@
 #include "pit.h"
 #include "ps1.h"
 #include "ps2.h"
+#include "ps2_mca.h"
 #include "scat.h"
 #include "serial.h"
 #include "sis496.h"
@@ -65,6 +66,7 @@ void    deskpro386_init();
 void     ps1_m2011_init();
 void     ps1_m2121_init();
 void   ps2_m30_286_init();
+void           ps2_init();
 void       at_neat_init();
 void       at_scat_init();
 void  at_acer386sx_init();
@@ -111,6 +113,7 @@ MODEL models[] =
         {"DELL System 200",       ROM_DELL200,          "dells200",       { "",      cpus_286,         "",    NULL,         "",      NULL},        0, MODEL_AT,             1,  16,   1,           at_init, NULL},
         {"IBM PS/1 model 2011",   ROM_IBMPS1_2011,      "ibmps1es",       { "",      cpus_ps1_m2011,   "",    NULL,         "",      NULL},        1, MODEL_AT|MODEL_PS2,   1,  16,   1,    ps1_m2011_init, NULL},
         {"IBM PS/2 Model 30-286", ROM_IBMPS2_M30_286,   "ibmps2_m30_286", { "",      cpus_ps2_m30_286, "",    NULL,         "",      NULL},        1, MODEL_AT|MODEL_PS2,   1,  16,   1,  ps2_m30_286_init, NULL},
+        {"IBM PS/2 Model 50",     ROM_IBMPS2_M50,       "ibmps2_m50",     { "",      cpus_ps2_m30_286, "",    NULL,         "",      NULL},        1, MODEL_AT|MODEL_PS2|MODEL_MCA,   1,  16,   1,          ps2_init, NULL},
         {"IBM PS/1 model 2121",   ROM_IBMPS1_2121,      "ibmps1_2121",    { "Intel", cpus_i386SX,      "AMD", cpus_Am386SX, "Cyrix", cpus_486SLC}, 1, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1,    ps1_m2121_init, NULL},
         {"Compaq Deskpro 386",    ROM_DESKPRO_386,      "deskpro386",     { "Intel", cpus_i386DX,      "AMD", cpus_Am386DX, "Cyrix", cpus_486DLC}, 0, MODEL_AT,             1,  15,   1,   deskpro386_init, NULL},
         {"Acer 386SX25/N",        ROM_ACER386,          "acer386",        { "Intel", cpus_acer,        "",    NULL,         "",      NULL},        1, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1, at_acer386sx_init, NULL},
@@ -348,6 +351,23 @@ void ps2_m30_286_init()
         pic2_init();
         ps2board_init();
         fdc_set_dskchg_activelow();
+}
+
+void ps2_init()
+{
+        AT = 1;
+        common_init();
+        mem_add_bios();
+        dma16_init();
+        ps2_dma_init();
+        ide_init();
+        keyboard_at_init();
+        keyboard_at_init_ps2();
+        mouse_ps2_init();
+        nvr_init();
+        pic2_init();
+        ps2_mca_board_init();
+        pit_ps2_init();
 }
 
 void at_neat_init()

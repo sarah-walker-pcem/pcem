@@ -365,7 +365,10 @@ uint8_t picinterrupt()
                         pic.pend &= ~(1 << c);
                         pic.ins |= (1 << c);
                         pic_update_mask(&pic.mask2, pic.ins);                      
+                   
                         pic_updatepending();
+                        if (!c)
+                                pit_set_gate(&pit2, 0, 0);
                         
                         if (pic.icw4 & 0x02)
                                 pic_autoeoi();
