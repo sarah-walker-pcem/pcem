@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "io.h"
+#include "mca.h"
 #include "sound_emu8k.h"
 #include "sound_mpu401_uart.h"
 #include "sound_opl.h"
@@ -32,6 +34,8 @@ typedef struct sb_t
         emu8k_t         emu8k;
 
         int pos;
+        
+        uint8_t pos_regs[8];
 } sb_t;
 
 static int sb_att[]=
@@ -335,6 +339,89 @@ void sb_mixer_init(sb_mixer_t *mixer)
         mixer->treble_l = mixer->treble_r = 8;
         mixer->filter = 1;
 }
+
+static uint16_t sb_mcv_addr[8] = {0x200, 0x210, 0x220, 0x230, 0x240, 0x250, 0x260, 0x270};
+
+uint8_t sb_mcv_read(int port, void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        
+        pclog("sb_mcv_read: port=%04x\n", port);
+        
+        return sb->pos_regs[port & 7];
+}
+
+void sb_mcv_write(int port, uint8_t val, void *p)
+{
+        uint16_t addr;
+        sb_t *sb = (sb_t *)p;
+
+        if (port < 0x102)
+                return;
+        
+        pclog("sb_mcv_write: port=%04x val=%02x\n", port, val);
+
+        addr = sb_mcv_addr[sb->pos_regs[4] & 7];
+        io_removehandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+        io_removehandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+        sb_dsp_setaddr(&sb->dsp, 0);
+
+        sb->pos_regs[port & 7] = val;
+
+        if (sb->pos_regs[2] & 1)
+        {
+                addr = sb_mcv_addr[sb->pos_regs[4] & 7];
+                
+                io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+                io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
+                sb_dsp_setaddr(&sb->dsp, addr);
+        }
+}
+
+static int sb_pro_mcv_irqs[4] = {7, 5, 3, 3};
+
+uint8_t sb_pro_mcv_read(int port, void *p)
+{
+        sb_t *sb = (sb_t *)p;
+        
+        pclog("sb_pro_mcv_read: port=%04x\n", port);
+        
+        return sb->pos_regs[port & 7];
+}
+
+void sb_pro_mcv_write(int port, uint8_t val, void *p)
+{
+        uint16_t addr;
+        sb_t *sb = (sb_t *)p;
+
+        if (port < 0x102)
+                return;
+        
+        pclog("sb_pro_mcv_write: port=%04x val=%02x\n", port, val);
+
+        addr = (sb->pos_regs[2] & 0x20) ? 0x220 : 0x240;
+        io_removehandler(addr+0, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_removehandler(addr+8, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_removehandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        io_removehandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
+        sb_dsp_setaddr(&sb->dsp, 0);
+
+        sb->pos_regs[port & 7] = val;
+
+        if (sb->pos_regs[2] & 1)
+        {
+                addr = (sb->pos_regs[2] & 0x20) ? 0x220 : 0x240;
+
+                io_sethandler(addr+0, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+                io_sethandler(addr+8, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+                io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+                io_sethandler(addr+4, 0x0002, sb_pro_mixer_read, NULL, NULL, sb_pro_mixer_write, NULL, NULL, sb);
+                
+                sb_dsp_setaddr(&sb->dsp, addr);
+        }
+        sb_dsp_setirq(&sb->dsp, sb_pro_mcv_irqs[(sb->pos_regs[5] >> 4) & 3]);
+        sb_dsp_setdma8(&sb->dsp, sb->pos_regs[4] & 3);
+}
         
 void *sb_1_init()
 {
@@ -368,6 +455,25 @@ void *sb_15_init()
         io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         sound_add_handler(sb_get_buffer_opl2, sb);
+        return sb;
+}
+
+void *sb_mcv_init()
+{
+        sb_t *sb = malloc(sizeof(sb_t));
+        uint16_t addr = device_get_config_int("addr");
+        memset(sb, 0, sizeof(sb_t));
+
+        opl2_init(&sb->opl);
+        sb_dsp_init(&sb->dsp, SB15);
+        sb_dsp_setaddr(&sb->dsp, 0);//addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
+        sb_mixer_init(&sb->mixer);
+        sound_add_handler(sb_get_buffer_opl2, sb);
+        mca_add(sb_mcv_read, sb_mcv_write, sb);
+        sb->pos_regs[0] = 0x84;
+        sb->pos_regs[1] = 0x50;
         return sb;
 }
 void *sb_2_init()
@@ -437,6 +543,33 @@ void *sb_pro_v2_init()
         sb->mixer.regs[0x04] = 0xff;
         sb->mixer.regs[0x26] = 0xff;
         sb->mixer.regs[0xe]  = 0;
+
+        return sb;
+}
+
+void *sb_pro_mcv_init()
+{
+        sb_t *sb = malloc(sizeof(sb_t));
+        //uint16_t addr = device_get_config_int("addr");
+        memset(sb, 0, sizeof(sb_t));
+
+        opl3_init(&sb->opl);
+        sb_dsp_init(&sb->dsp, SBPRO2);
+        /*sb_dsp_setaddr(&sb->dsp, addr);
+        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
+        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));*/
+        sb_mixer_init(&sb->mixer);
+        io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
+        sound_add_handler(sb_get_buffer_opl3, sb);
+
+        sb->mixer.regs[0x22] = 0xff;
+        sb->mixer.regs[0x04] = 0xff;
+        sb->mixer.regs[0x26] = 0xff;
+        sb->mixer.regs[0xe]  = 0;
+
+        mca_add(sb_pro_mcv_read, sb_pro_mcv_write, sb);
+        sb->pos_regs[0] = 0x03;
+        sb->pos_regs[1] = 0x51;
 
         return sb;
 }
@@ -577,6 +710,57 @@ static device_config_t sb_config[] =
                                 .description = "IRQ 2",
                                 .value = 2
                         },
+                        {
+                                .description = "IRQ 3",
+                                .value = 3
+                        },
+                        {
+                                .description = "IRQ 5",
+                                .value = 5
+                        },
+                        {
+                                .description = "IRQ 7",
+                                .value = 7
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 7
+        },
+        {
+                .name = "dma",
+                .description = "DMA",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DMA 1",
+                                .value = 1
+                        },
+                        {
+                                .description = "DMA 3",
+                                .value = 3
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 1
+        },
+        {
+                .type = -1
+        }
+};
+
+static device_config_t sb_mcv_config[] =
+{
+        {
+                .name = "irq",
+                .description = "IRQ",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
                         {
                                 .description = "IRQ 3",
                                 .value = 3
@@ -778,6 +962,18 @@ device_t sb_15_device =
         sb_add_status_info,
         sb_config
 };
+device_t sb_mcv_device =
+{
+        "Sound Blaster MCV",
+        DEVICE_MCA,
+        sb_mcv_init,
+        sb_close,
+        NULL,
+        sb_speed_changed,
+        NULL,
+        sb_add_status_info,
+        sb_mcv_config
+};
 device_t sb_2_device =
 {
         "Sound Blaster v2.0",
@@ -813,6 +1009,18 @@ device_t sb_pro_v2_device =
         NULL,
         sb_add_status_info,
         sb_pro_config
+};
+device_t sb_pro_mcv_device =
+{
+        "Sound Blaster Pro MCV",
+        DEVICE_MCA,
+        sb_pro_mcv_init,
+        sb_close,
+        NULL,
+        sb_speed_changed,
+        NULL,
+        sb_add_status_info,
+        NULL
 };
 device_t sb_16_device =
 {
