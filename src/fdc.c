@@ -781,6 +781,7 @@ void fdc_callback()
 {
         int temp;
         int doseek = 0;
+        int drive;
         
         disctime = 0;
 //        pclog("fdc_callback %i %i\n", discint, disctime);
@@ -830,11 +831,19 @@ void fdc_callback()
                 fdc.inread = 1;
                 return;
                 case 4: /*Sense drive status*/
-                fdc.res[10] = (fdc.params[0] & 7) | 0x28;
-                if (fdd_track0(fdc.drive))
+                drive = fdc.params[0] & 1;
+                if (fdd_get_type(drive))
+                {
+                        fdc.res[10] = (fdc.params[0] & 7) | 0x28;
+                        if (fdd_track0(drive))
                         fdc.res[10] |= 0x10;
-                if (writeprot[fdc.drive])
-                        fdc.res[10] |= 0x40;
+                        if (writeprot[drive])
+                                fdc.res[10] |= 0x40;
+                }
+                else
+                {
+                        fdc.res[10] = 0x80 | (fdc.params[0] & 3);
+                }
 
                 fdc.stat = (fdc.stat & 0xf) | 0xd0;
                 paramstogo = 1;
@@ -943,9 +952,10 @@ void fdc_callback()
                 return;
 
                 case 7: /*Recalibrate*/
+                drive = fdc.params[0] & 1;
                 fdc.track[fdc.drive]=0;
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
-                if (fdc.drive <= 1)
+                if (fdc.drive <= 1 && fdd_get_type(drive))
                         fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 else
                         fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
@@ -1027,10 +1037,11 @@ void fdc_callback()
                 return;
                 
                 case 15: /*Seek*/
+                drive = fdc.params[0] & 1;
                 fdc.track[fdc.drive]=fdc.params[1];
 //                if (!driveempty[fdc.dor & 1]) discchanged[fdc.dor & 1] = 0;
 //                printf("Seeked to track %i %i\n",fdc.track[fdc.drive], fdc.drive);
-                if (fdc.drive <= 1)
+                if (fdc.drive <= 1 && fdd_get_type(drive))
                         fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 else
                         fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
