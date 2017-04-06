@@ -427,7 +427,7 @@ void img_seek(int drive, int track)
 	                for (sector = 0; sector < img[drive].sectors; sector++)
         	                disc_sector_add(drive, side, track, side, sector+1, img_sector_size_code(drive),
        	        	                        img[drive].bitcell_period_300rpm, 
-               	        	                &img[drive].track_data[side][sector * img->sector_size]);
+               	        	                &img[drive].track_data[side][sector * img[drive].sector_size]);
 		}
 	}
 }
