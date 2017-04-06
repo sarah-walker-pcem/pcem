@@ -15,6 +15,7 @@ typedef struct
         uint8_t dat;
         uint8_t int_status;
         uint8_t scratch;
+        uint8_t fcr;
         
         int irq;
 

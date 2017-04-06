@@ -110,6 +110,9 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                 serial->ier = val & 0xf;
                 serial_update_ints(serial);
                 break;
+                case 2:
+                serial->fcr = val;
+                break;
                 case 3:
                 serial->lcr = val;
                 break;
@@ -197,6 +200,8 @@ uint8_t serial_read(uint16_t addr, void *p)
                         serial->int_status &= ~SERIAL_INT_TRANSMIT;
                         serial_update_ints(serial);
                 }
+                if (serial->fcr & 1)
+                        temp |= 0xc0;
                 break;
                 case 3:
                 temp = serial->lcr;
