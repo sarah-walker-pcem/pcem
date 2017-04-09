@@ -882,6 +882,10 @@ static void *esdi_init()
         
         esdi->pos_regs[0] = 0xff;
         esdi->pos_regs[1] = 0xdd;
+
+        esdi->in_reset = 1;
+        esdi->callback = ESDI_TIME * 50;
+        esdi->status = STATUS_BUSY;
         
         return esdi;
 }
