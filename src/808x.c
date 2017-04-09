@@ -651,6 +651,7 @@ void resetx86()
         FETCHCLEAR();
         x87_reset();
         cpu_set_edx();
+        EAX = 0;
         ESP=0;
         mmu_perm=4;
         memset(inscounts, 0, sizeof(inscounts));
