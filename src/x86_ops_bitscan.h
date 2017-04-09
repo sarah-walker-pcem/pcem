@@ -1,5 +1,6 @@
 #define BS_common(start, end, dir, dest, time)                                  \
         flags_rebuild();                                                        \
+        instr_cycles = 0;                                                       \
         if (temp)                                                               \
         {                                                                       \
                 int c;                                                          \
