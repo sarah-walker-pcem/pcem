@@ -210,6 +210,7 @@ void loadnvr()
                 case ROM_IBMPS1_2121: f = romfopen("nvr/ibmps1_2121.nvr", "rb"); nvrmask = 127; break;
                 case ROM_IBMPS2_M30_286:   f = romfopen("nvr/ibmps2_m30_286.nvr",   "rb"); /*nvrmask = 127; */break;
                 case ROM_IBMPS2_M50:  f = romfopen("nvr/ibmps2_m50.nvr",  "rb"); break;
+                case ROM_IBMPS2_M55SX: f = romfopen("nvr/ibmps2_m55sx.nvr",  "rb"); break;
                 case ROM_CMDPC30:     f = romfopen("nvr/cmdpc30.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_AMI286:      f = romfopen("nvr/ami286.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AWARD286:    f = romfopen("nvr/award286.nvr",    "rb"); nvrmask = 127; break;
@@ -271,6 +272,7 @@ void savenvr()
                 case ROM_IBMPS1_2121: f = romfopen("nvr/ibmps1_2121.nvr", "wb"); break;
                 case ROM_IBMPS2_M30_286:   f = romfopen("nvr/ibmps2_m30_286.nvr",   "wb"); break;
                 case ROM_IBMPS2_M50:  f = romfopen("nvr/ibmps2_m50.nvr",  "wb"); break;
+                case ROM_IBMPS2_M55SX: f = romfopen("nvr/ibmps2_m55sx.nvr",  "wb"); break;
                 case ROM_CMDPC30:     f = romfopen("nvr/cmdpc30.nvr",     "wb"); break;                
                 case ROM_AMI286:      f = romfopen("nvr/ami286.nvr",      "wb"); break;
                 case ROM_AWARD286:    f = romfopen("nvr/award286.nvr",    "wb"); break;

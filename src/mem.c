@@ -603,6 +603,20 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+
+                case ROM_IBMPS2_M55SX:
+                f=romfopen("roms/i8555081/33f8146.zm41","rb");
+                ff=romfopen("roms/i8555081/33f8145.zm40","rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
@@ -1800,6 +1814,28 @@ void mem_init()
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
+void mem_remap_top_256k()
+{
+        int c;
+        
+        for (c = ((mem_size * 1024) >> 12); c < (((mem_size + 256) * 1024) >> 12); c++)
+        {
+                pages[c].mem = &ram[c << 12];
+                pages[c].write_b = mem_write_ramb_page;
+                pages[c].write_w = mem_write_ramw_page;
+                pages[c].write_l = mem_write_raml_page;
+        }
+
+        for (c = (mem_size / 256); c < ((mem_size + 256) / 256); c++)
+        {
+                isram[c] = 1;
+                if (c >= 0xa && c <= 0xd) 
+                        isram[c] = 0;
+        }
+
+        mem_set_mem_state(mem_size * 1024, 256 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_mapping_add(&ram_remapped_mapping, mem_size * 1024, 256 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + (mem_size * 1024),  MEM_MAPPING_INTERNAL, NULL);
+}
 void mem_remap_top_384k()
 {
         int c;

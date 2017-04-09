@@ -315,6 +315,7 @@ typedef struct DMA
         int byte_ptr;
         
         int is_ps2;
+        uint8_t arb_level[4];
 } DMA;
 
 DMA dma,dma16;
@@ -403,6 +404,7 @@ enum
         ROM_MR386DX_OPTI495,
 	ROM_IBMPS2_M30_286,
 	ROM_IBMPS2_M50,
+	ROM_IBMPS2_M55SX,
                 	
         ROM_MAX
 };

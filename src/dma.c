@@ -129,6 +129,7 @@ static uint8_t dma_ps2_read(uint16_t addr, void *priv)
                 switch (dma.xfr_command)
                 {
                         case 2: /*Address*/
+                        case 3:
                         switch (dma.byte_ptr)
                         {
                                 case 0:
@@ -146,6 +147,7 @@ static uint8_t dma_ps2_read(uint16_t addr, void *priv)
                         }
                         break;
                         case 4: /*Count*/
+                        case 5:
                         if (dma.byte_ptr)
                                 temp = (dma.xfr_channel & 4) ? (dma16.cc[dma.xfr_channel & 3] >> 8) : (dma.cc[dma.xfr_channel] >> 8);
                         else
@@ -154,6 +156,9 @@ static uint8_t dma_ps2_read(uint16_t addr, void *priv)
                         break;
                         case 7: /*Mode*/
                         temp = (dma.xfr_channel & 4) ? dma16.mode[dma.xfr_channel & 3] : dma.mode[dma.xfr_channel];
+                        break;
+                        case 8: /*Arbitration Level*/
+                        temp = (dma.xfr_channel & 4) ? dma16.arb_level[dma.xfr_channel & 3] : dma.arb_level[dma.xfr_channel];
                         break;
                         
                         default:
@@ -259,6 +264,13 @@ static void dma_ps2_write(uint16_t addr, uint8_t val, void *priv)
                                 dma16.mode[dma.xfr_channel & 3] = mode;
                         else
                                 dma.mode[dma.xfr_channel] = mode;
+                        break;
+
+                        case 8: /*Arbitration Level*/
+                        if (dma.xfr_channel & 4)
+                                dma16.arb_level[dma.xfr_channel & 3] = val;
+                        else
+                                dma.arb_level[dma.xfr_channel] = val;
                         break;
 
                         default:
