@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "io.h"
 #include "nmi.h"
 
 int nmi_mask;

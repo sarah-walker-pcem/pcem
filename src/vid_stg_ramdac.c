@@ -72,7 +72,7 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t *ramdac, svga_t *sv
 
 uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t *ramdac, svga_t *svga)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
         //if (CS!=0xC000) pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
         switch (addr)
         {

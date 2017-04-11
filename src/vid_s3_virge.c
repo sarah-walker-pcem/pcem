@@ -18,10 +18,10 @@ static int reg_writes = 0, reg_reads = 0;
 
 static int dither[4][4] =
 {
-        0,  4,  1,  5,
-        6,  2,  7,  3,
-        1,  5,  0,  4,
-        7,  3,  6,  2,
+        {0,  4,  1,  5},
+        {6,  2,  7,  3},
+        {1,  5,  0,  4},
+        {7,  3,  6,  2},
 };
 
 #define RB_SIZE 256
@@ -1266,7 +1266,6 @@ static void fifo_thread(void *param)
 static void s3_virge_queue(virge_t *virge, uint32_t addr, uint32_t val, uint32_t type)
 {
         fifo_entry_t *fifo = &virge->fifo[virge->fifo_write_idx & FIFO_MASK];
-        int c;
 
         if (FIFO_FULL)
         {
@@ -1291,7 +1290,6 @@ static void s3_virge_queue(virge_t *virge, uint32_t addr, uint32_t val, uint32_t
 static void s3_virge_mmio_write(uint32_t addr, uint8_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
-        svga_t *svga = &virge->svga;
         
 //        pclog("New MMIO writeb %08X %02X %04x(%08x):%08x\n", addr, val, CS, cs, pc);
         reg_writes++;       
@@ -1870,7 +1868,6 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
 
 static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
 {
-        int cpu_input = (count != -1);
         uint8_t *vram = virge->svga.vram;
         uint32_t mono_pattern[64];
         int count_mask;
@@ -1974,7 +1971,7 @@ static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
                 {
                         uint32_t src_addr = virge->s3d.src_base + (virge->s3d.src_x * x_mul) + (virge->s3d.src_y * virge->s3d.src_str);
                         uint32_t dest_addr = virge->s3d.dest_base + (virge->s3d.dest_x * x_mul) + (virge->s3d.dest_y * virge->s3d.dest_str);
-                        uint32_t source, dest, pattern;
+                        uint32_t source = 0, dest, pattern;
                         uint32_t out = 0;
                         int update = 1;
 
@@ -2890,6 +2887,9 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
         
         uint32_t dest_offset, z_offset;
 
+        dest_offset = s3d_tri->dest_base + (state->y * s3d_tri->dest_str);
+        z_offset = s3d_tri->z_base + (state->y * s3d_tri->z_str);
+
         if (s3d_tri->cmd_set & CMD_SET_HC)
         {
                 if (state->y < s3d_tri->clip_t)
@@ -2920,9 +2920,6 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                 if ((state->y - y_count) < s3d_tri->clip_t)
                         y_count = state->y - s3d_tri->clip_t;
         }
-
-        dest_offset = s3d_tri->dest_base + (state->y * s3d_tri->dest_str);
-        z_offset = s3d_tri->z_base + (state->y * s3d_tri->z_str);
         
         for (; y_count > 0; y_count--)
         {
@@ -2935,7 +2932,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                         xe--;
                 }
 
-                if (x != xe && (x_dir > 0 && x < xe) || (x_dir < 0 && x > xe))
+                if (x != xe && ((x_dir > 0 && x < xe) || (x_dir < 0 && x > xe)))
                 {
                         uint32_t dest_addr, z_addr;
                         int dx = (x_dir > 0) ? ((31 - ((state->x1-1) >> 15)) & 0x1f) : (((state->x1-1) >> 15) & 0x1f);
@@ -3017,7 +3014,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                         for (; x != xe; x = (x + x_dir) & 0xfff)
                         {
                                 int update = 1;
-                                uint16_t src_z;
+                                uint16_t src_z = 0;
                                 _x = x; _y = state->y;
 
                                 if (use_z)
@@ -3035,7 +3032,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                                         if (s3d_tri->cmd_set & CMD_SET_ABC_ENABLE)
                                         {
                                                 uint32_t src_col;
-                                                int src_r, src_g, src_b;
+                                                int src_r = 0, src_g = 0, src_b = 0;
                                                 
                                                 switch (bpp)
                                                 {
@@ -3302,7 +3299,6 @@ static void render_thread(void *param)
 
 static void queue_triangle(virge_t *virge)
 {
-        int c;
 //        pclog("queue_triangle: read=%i write=%i RB_ENTRIES=%i RB_FULL=%i\n", virge->s3d_read_idx, virge->s3d_write_idx, RB_ENTRIES, RB_FULL);
         if (RB_FULL)
         {
@@ -3442,18 +3438,18 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
                 b[x_write+1] = y2 + dB;                         \
                 CLAMP(b[x_write+1]);                            \
                                                                 \
-                r[x_write+2] = y2 + dR;                         \
+                r[x_write+2] = y3 + dR;                         \
                 CLAMP(r[x_write+2]);                            \
-                g[x_write+2] = y2 - dG;                         \
+                g[x_write+2] = y3 - dG;                         \
                 CLAMP(g[x_write+2]);                            \
-                b[x_write+2] = y2 + dB;                         \
+                b[x_write+2] = y3 + dB;                         \
                 CLAMP(b[x_write+2]);                            \
                                                                 \
-                r[x_write+3] = y2 + dR;                         \
+                r[x_write+3] = y4 + dR;                         \
                 CLAMP(r[x_write+3]);                            \
-                g[x_write+3] = y2 - dG;                         \
+                g[x_write+3] = y4 - dG;                         \
                 CLAMP(g[x_write+3]);                            \
-                b[x_write+3] = y2 + dB;                         \
+                b[x_write+3] = y4 + dB;                         \
                 CLAMP(b[x_write+3]);                            \
                                                                 \
                 x_write = (x_write + 4) & 7;                    \
@@ -3602,9 +3598,6 @@ static void s3_virge_overlay_draw(svga_t *svga, int displine)
         int offset = (virge->streams.sec_x - virge->streams.pri_x) + 1;
         int h_acc = virge->streams.dda_horiz_accumulator;
         int r[8], g[8], b[8];
-        int r_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-        int g_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-        int b_samp[8] = {0, 0, 0, 0, 0, 0, 0, 0};
         int x_size, x_read = 4, x_write = 4;
         int x;
         uint32_t *p;

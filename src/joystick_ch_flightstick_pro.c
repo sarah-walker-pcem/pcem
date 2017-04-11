@@ -8,6 +8,7 @@
 
 static void *ch_flightstick_pro_init()
 {
+        return NULL;
 }
 
 static void ch_flightstick_pro_close(void *p)
@@ -64,6 +65,7 @@ static int ch_flightstick_pro_read_axis(void *p, int axis)
                 case 3:
                 return joystick_state[0].axis[2];
         }
+        return 0;
 }
 
 static void ch_flightstick_pro_a0_over(void *p)

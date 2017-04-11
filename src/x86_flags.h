@@ -68,6 +68,7 @@ static inline int ZF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & Z_FLAG;
         }
+        return 0;
 }
 
 static inline int NF_SET()
@@ -107,6 +108,7 @@ static inline int NF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & N_FLAG;
         }
+        return 0;
 }
 
 static inline int PF_SET()
@@ -142,6 +144,7 @@ static inline int PF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & P_FLAG;
         }
+        return 0;
 }
 
 static inline int VF_SET()
@@ -193,6 +196,7 @@ static inline int VF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & V_FLAG;
         }
+        return 0;
 }
 
 static inline int AF_SET()
@@ -232,6 +236,7 @@ static inline int AF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & A_FLAG;
         }
+        return 0;
 }
 
 static inline int CF_SET()
@@ -283,6 +288,7 @@ static inline int CF_SET()
                 case FLAGS_UNKNOWN:
                 return flags & C_FLAG;
         }
+        return 0;
 }
 
 //#define ZF_SET() (flags & Z_FLAG)

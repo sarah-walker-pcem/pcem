@@ -475,7 +475,6 @@ static void fifo_thread(void *param)
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
                         fifo_entry_t *fifo = &et4000->fifo[et4000->fifo_read_idx & FIFO_MASK];
-                        uint32_t val = fifo->val;
 
                         switch (fifo->addr_type & FIFO_TYPE)
                         {
@@ -517,7 +516,6 @@ static void et4000w32p_wait_fifo_idle(et4000w32p_t *et4000)
 static void et4000w32p_queue(et4000w32p_t *et4000, uint32_t addr, uint32_t val, uint32_t type)
 {
         fifo_entry_t *fifo = &et4000->fifo[et4000->fifo_write_idx & FIFO_MASK];
-        int c;
 
         if (FIFO_FULL)
         {

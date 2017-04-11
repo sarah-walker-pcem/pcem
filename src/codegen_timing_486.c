@@ -254,7 +254,7 @@ static uint8_t last_prefix;
 static inline int COUNT(int *c, int op_32)
 {
         if ((uintptr_t)c <= 10000)
-                return (int)c;
+                return (int)(uintptr_t)c;
         if (((uintptr_t)c & ~0xffff) == (-1 & ~0xffff))
         {
                 if (op_32 & 0x100)

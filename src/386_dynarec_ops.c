@@ -1,10 +1,12 @@
 #include "ibm.h"
 #include "cpu.h"
+#include "386.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
 #include "x86_flags.h"
 #include "mem.h"
+#include "pic.h"
 #include "codegen.h"
 
 #define CPU_BLOCK_END() cpu_block_end = 1

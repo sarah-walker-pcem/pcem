@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "x86.h"
 #include "386.h"
+#include "386_common.h"
 #include "cpu.h"
 
 /*Controls whether the accessed bit in a descriptor is set when CS is loaded.*/
@@ -30,7 +31,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32);
 void taskswitch386(uint16_t seg, uint16_t *segdat);
 
 int output;
-void pmodeint(int num, int soft);
+
 /*NOT PRESENT is INT 0B
   GPF is INT 0D*/
 
@@ -534,7 +535,6 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
 {
         uint16_t segdat[4];
         uint32_t addr;
-        int count;
         uint16_t type,seg2;
         uint32_t newpc;
 //        pclog("Load CS JMP %04X\n",seg);
@@ -638,7 +638,6 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 cgate16=!cgate32;
                                 oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
-                                count=segdat[2]&31;
                                 if ((DPL < CPL) || (DPL < (seg&3)))
                                 {
                                         x86gpf(NULL,seg&~3);
@@ -843,8 +842,7 @@ void loadcscall(uint16_t seg)
         uint32_t addr,oldssbase=ss, oaddr;
         uint32_t newpc;
         int count;
-        uint16_t oldcs=CPL;
-        uint32_t oldss,oldsp,newsp,oldpc, oldsp2;
+        uint32_t oldss,oldsp,newsp,oldsp2;
         int type;
         uint16_t tempw;
         
@@ -957,8 +955,6 @@ void loadcscall(uint16_t seg)
                                 if (output) pclog("Callgate %08X\n", cpu_state.pc);
                                 cgate32=(type&0x800);
                                 cgate16=!cgate32;
-                                oldcs=CS;
-                                oldpc=cpu_state.pc;
                                 count=segdat[2]&31;
                                 if ((DPL < CPL) || (DPL < (seg&3)))
                                 {
@@ -1579,8 +1575,7 @@ void pmodeint(int num, int soft)
         uint32_t oldss,oldsp;
         int type;
         uint32_t newsp;
-        uint16_t seg;
-        int stack_changed=0;
+        uint16_t seg=0;
         int new_cpl;
         
 //        if (!num) pclog("Pmode int 0 at %04X(%06X):%08X\n",CS,cs,pc);
@@ -1702,7 +1697,6 @@ void pmodeint(int num, int soft)
                                 case 0x1800: case 0x1900: case 0x1A00: case 0x1B00: /*Non-conforming*/
                                 if (DPL2<CPL)
                                 {
-                                        stack_changed=1;
                                         if (!(segdat2[2]&0x8000))
                                         {
                                                 pclog("Int gate CS not present\n");
@@ -1964,7 +1958,7 @@ void pmodeiret(int is32)
         uint32_t newpc;
         uint16_t segdat[4],segdat2[4];
         uint16_t segs[4];
-        uint16_t seg;
+        uint16_t seg = 0;
         uint32_t addr, oaddr;
         uint32_t oldsp=ESP;
         if (is386 && (eflags&VM_FLAG))
@@ -2447,12 +2441,12 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 templ=(ldt.seg&~7)+gdt.base;
 //                if (output) pclog("Load from %08X %08X\n",templ,gdt.base);
                 ldt.limit=readmemw(0,templ);
-                if (readmemb(templ+6)&0x80)
+                if (readmemb(0,templ+6)&0x80)
                 {
                         ldt.limit<<=12;
                         ldt.limit|=0xFFF;
                 }
-                ldt.base=(readmemw(0,templ+2))|(readmemb(templ+4)<<16)|(readmemb(templ+7)<<24);
+                ldt.base=(readmemw(0,templ+2))|(readmemb(0,templ+4)<<16)|(readmemb(0,templ+7)<<24);
 //                if (output) pclog("Limit %04X Base %08X\n",ldt.limit,ldt.base);
 
 

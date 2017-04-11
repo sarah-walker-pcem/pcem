@@ -58,18 +58,11 @@ int video_sharpness;
 int tandy_mode_control = 0;
 
 static bool new_cga = 0;
-static bool is_bw = 0;
-static bool is_bpp1 = 0;
-
-static uint8_t comp_pal[256][3];
-
-static Bit8u byte_clamp_other(int v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
 
 FILE *df;
 
 void update_cga16_color(uint8_t cgamode) {
 	int x;
-	Bit32u x2;
 
         if (!new_cga) {
                 min_v = chroma_multiplexer[0] + intensity[0];

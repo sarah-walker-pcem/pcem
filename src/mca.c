@@ -15,7 +15,11 @@ void mca_init(int nr_cards)
         int c;
         
         for (c = 0; c < 8; c++)
-                mca_card_read[c] = mca_card_write[c] = mca_priv[c] = NULL;
+        {
+                mca_card_read[c] = NULL;
+                mca_card_write[c] = NULL;
+                mca_priv[c] = NULL;
+        }
         
         mca_index = 0;
         mca_nr_cards = nr_cards;

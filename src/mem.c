@@ -1534,6 +1534,7 @@ static inline int mem_mapping_read_allowed(uint32_t flags, int state)
                 default:
                 fatal("mem_mapping_read_allowed : bad state %x\n", state);
         }
+        return 0;
 }
 
 static inline int mem_mapping_write_allowed(uint32_t flags, int state)
@@ -1551,6 +1552,7 @@ static inline int mem_mapping_write_allowed(uint32_t flags, int state)
                 default:
                 fatal("mem_mapping_write_allowed : bad state %x\n", state);
         }
+        return 0;
 }
 
 static void mem_mapping_recalc(uint64_t base, uint64_t size)

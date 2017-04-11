@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ibm.h"
 #include "keyboard_at.h"
 #include "mouse.h"

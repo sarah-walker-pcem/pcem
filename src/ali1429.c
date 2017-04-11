@@ -42,9 +42,7 @@ static void ali1429_recalc()
 }
 
 void ali1429_write(uint16_t port, uint8_t val, void *priv)
-{
-        int c;
-        
+{       
         if (!(port & 1)) 
                 ali1429_index = val;
         else

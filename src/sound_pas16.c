@@ -172,7 +172,7 @@ enum
 static uint8_t pas16_in(uint16_t port, void *p)
 {
         pas16_t *pas16 = (pas16_t *)p;
-        uint8_t temp;
+        uint8_t temp = 0xff;
 /*        if (CS == 0xCA53 && pc == 0x3AFC)
                 fatal("here");*/
         switch ((port - pas16->base) + 0x388)
@@ -490,7 +490,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
 static uint8_t pas16_pit_in(uint16_t port, void *p)
 {
         pas16_t *pas16 = (pas16_t *)p;
-        uint8_t temp;
+        uint8_t temp = 0xff;
         int t = port & 3;
 //        printf("Read PIT %04X ",addr);
         switch (port & 3)

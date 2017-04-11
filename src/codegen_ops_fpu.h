@@ -491,7 +491,7 @@ static uint32_t ropFSTSW_AX(uint8_t opcode, uint32_t fetchdat, uint32_t op_32, u
         int host_reg;
         
         FP_ENTER();
-        host_reg = LOAD_VAR_W(&cpu_state.npxs);
+        host_reg = LOAD_VAR_W((uintptr_t)&cpu_state.npxs);
         STORE_REG_TARGET_W_RELEASE(host_reg, REG_AX);
         
         return op_pc;

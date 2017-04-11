@@ -163,7 +163,6 @@ static void pc1512_poll(void *p)
         uint16_t ca = (pc1512->crtc[15] | (pc1512->crtc[14] << 8)) & 0x3fff;
         int drawcursor;
         int x, c;
-        int oldvc;
         uint8_t chr, attr;
         uint16_t dat, dat2, dat3, dat4;
         int cols[4];
@@ -372,7 +371,6 @@ static void pc1512_poll(void *p)
                 {
                         pc1512->maback = pc1512->ma;
                         pc1512->sc = 0;
-                        oldvc = pc1512->vc;
                         pc1512->vc++;
                         pc1512->vc &= 127;
 
@@ -453,7 +451,6 @@ static void pc1512_poll(void *p)
 
 static void *pc1512_init()
 {
-        int c;
         pc1512_t *pc1512 = malloc(sizeof(pc1512_t));
         memset(pc1512, 0, sizeof(pc1512_t));
 

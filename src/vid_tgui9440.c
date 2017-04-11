@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "pci.h"
 #include "rom.h"
 #include "thread.h"
 #include "video.h"
@@ -450,7 +451,6 @@ void tgui_hwcursor_draw(svga_t *svga, int displine)
 uint8_t tgui_pci_read(int func, int addr, void *p)
 {
         tgui_t *tgui = (tgui_t *)p;
-        svga_t *svga = &tgui->svga;
 
 //        pclog("Trident PCI read %08X\n", addr);
 
@@ -1029,7 +1029,6 @@ static void fifo_thread(void *param)
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
                         fifo_entry_t *fifo = &tgui->fifo[tgui->fifo_read_idx & FIFO_MASK];
-                        uint32_t val = fifo->val;
 
                         switch (fifo->addr_type & FIFO_TYPE)
                         {
@@ -1077,7 +1076,6 @@ static void tgui_wait_fifo_idle(tgui_t *tgui)
 static void tgui_queue(tgui_t *tgui, uint32_t addr, uint32_t val, uint32_t type)
 {
         fifo_entry_t *fifo = &tgui->fifo[tgui->fifo_write_idx & FIFO_MASK];
-        int c;
 
         if (FIFO_FULL)
         {

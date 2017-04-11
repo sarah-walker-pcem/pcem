@@ -3,6 +3,9 @@
 #include "device.h"
 #include "io.h"
 #include "mca.h"
+#include "mem.h"
+#include "rom.h"
+#include "sound.h"
 #include "sound_emu8k.h"
 #include "sound_mpu401_uart.h"
 #include "sound_opl.h"
@@ -107,7 +110,6 @@ static void sb_get_buffer_opl3(int32_t *buffer, int len, void *p)
         sb_dsp_update(&sb->dsp);
         for (c = 0; c < len * 2; c += 2)
         {
-                int c_emu8k = (((c/2) * 44100) / 48000)*2;
                 int32_t out_l, out_r;
                 
                 out_l = ((sb->opl.buffer[c]     * mixer->fm_l) >> 16);
@@ -461,7 +463,6 @@ void *sb_15_init()
 void *sb_mcv_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
-        uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);

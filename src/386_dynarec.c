@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "ibm.h"
+#include "386.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
@@ -9,6 +10,7 @@
 #include "codegen.h"
 #include "cpu.h"
 #include "fdc.h"
+#include "pic.h"
 #include "timer.h"
 
 #include "386_common.h"
@@ -261,7 +263,6 @@ void x86_int_sw(int num)
 
 void x86illegal()
 {
-        uint16_t addr;
 //        pclog("x86 illegal %04X %08X %04X:%08X %02X\n",msw,cr0,CS,pc,opcode);
         
 //        if (output)
@@ -363,7 +364,6 @@ int rep386(int fv)
         uint8_t temp2;
         uint16_t tempw,tempw2,of;
         uint32_t ipc = cpu_state.oldpc;//pc-1;
-        uint32_t oldds;
         uint32_t rep32 = cpu_state.op32;
         uint32_t templ,templ2;
         int tempz;
@@ -1376,7 +1376,6 @@ void exec386_dynarec(int cycs)
                                 cpu_state.ea_seg = &_ds;
                                 cpu_state.ssegs = 0;
                 
-                        opcodestart:
                                 fetchdat = fastreadl(cs + cpu_state.pc);
 //                                if (!fetchdat)
 //                                        fatal("Dead with cache off\n");
@@ -1509,7 +1508,6 @@ inrecomp=0;
                 }
                 else if (valid_block && !cpu_state.abrt)
                 {
-                        uint32_t start_page = cpu_state.pc >> 12;
                         uint32_t start_pc = cpu_state.pc;
                         
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
@@ -1532,7 +1530,6 @@ inrecomp=0;
                                 cpu_state.ea_seg = &_ds;
                                 cpu_state.ssegs = 0;
                 
-                        opcodestart_compile:
                                 fetchdat = fastreadl(cs + cpu_state.pc);
 //                                if (fetchdat == 0xffffffff)
 //                                        fatal("Dead ffffffff\n");
@@ -1592,7 +1589,6 @@ inrecomp=0;
                 else if (!cpu_state.abrt)
                 {
                         /*Mark block but do not recompile*/
-                        uint32_t start_page = cpu_state.pc >> 12;
                         uint32_t start_pc = cpu_state.pc;
 
 //                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);

@@ -65,7 +65,6 @@ static int opFST(uint32_t fetchdat)
 
 static int opFSTP(uint32_t fetchdat)
 {
-        int temp;
         FP_ENTER();
         cpu_state.pc++;
         if (fplog) pclog("FSTP\n");

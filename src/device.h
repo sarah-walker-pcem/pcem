@@ -39,7 +39,7 @@ void device_close_all();
 int device_available(device_t *d);
 void device_speed_changed();
 void device_force_redraw();
-char *device_add_status_info(char *s, int max_len);
+void device_add_status_info(char *s, int max_len);
 
 int device_get_config_int(char *name);
 char *device_get_config_string(char *name);

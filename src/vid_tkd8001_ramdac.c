@@ -5,9 +5,6 @@
 #include "vid_svga.h"
 #include "vid_tkd8001_ramdac.h"
 
-static int tkd8001_state=0;
-static uint8_t tkd8001_ctrl;
-
 void tkd8001_ramdac_out(uint16_t addr, uint8_t val, tkd8001_ramdac_t *ramdac, svga_t *svga)
 {
 //        pclog("OUT RAMDAC %04X %02X %04X:%04X\n",addr,val,CS,pc);

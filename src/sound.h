@@ -18,3 +18,12 @@ void sound_set_cd_volume(unsigned int vol_l, unsigned int vol_r);
 
 extern int sound_pos_global;
 void sound_speed_changed();
+
+void sound_init();
+void sound_reset();
+
+void initalmain(int argc, char *argv[]);
+void inital();
+
+void givealbuffer(int32_t *buf);
+void givealbuffer_cd(int16_t *buf);

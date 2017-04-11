@@ -110,7 +110,7 @@ void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
 
 uint8_t keyboard_amstrad_read(uint16_t port, void *priv)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
 //        pclog("keyboard_amstrad : read %04X ", port);
         switch (port)
         {

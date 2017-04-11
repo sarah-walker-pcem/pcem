@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <sys/types.h>
 
@@ -380,7 +381,7 @@ void mfm_writew(uint16_t port, uint16_t val, void *p)
 uint8_t mfm_read(uint16_t port, void *p)
 {
         mfm_t *mfm = (mfm_t *)p;
-        uint8_t temp;
+        uint8_t temp = 0xff;
 
         switch (port)
         {

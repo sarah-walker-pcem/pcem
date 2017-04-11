@@ -1,8 +1,10 @@
 /*This is the chipset used in the Award 286 clone model*/
 #include "ibm.h"
+#include "cpu.h"
 #include "io.h"
-#include "scat.h"
 #include "mem.h"
+#include "scat.h"
+#include "x86.h"
 
 static uint8_t scat_regs[256];
 static int scat_index;
@@ -17,7 +19,7 @@ static mem_mapping_t scat_512k_clip_mapping;
 
 void scat_shadow_state_update()
 {
-        int i, val, val2;
+        int i, val;
 
         // TODO - Segment A000 to BFFF shadow ram enable features and ROM enable features should be implemented later.
         for (i = 8; i < 24; i++)

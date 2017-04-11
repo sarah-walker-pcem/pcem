@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "ibm.h"
 #include "config.h"
 
 char config_file_default[256];
@@ -278,7 +279,6 @@ char *config_get_string(char *head, char *name, char *def)
 {
         section_t *section;
         entry_t *entry;
-        int value;
 
         section = find_section(head);
         

@@ -539,3 +539,23 @@ void resetpc_cad();
 
 extern int start_in_fullscreen;
 extern int window_w, window_h, window_x, window_y, window_remember;
+
+void get_executable_name(char *s, int size);
+
+void startblit();
+void endblit();
+
+void set_window_title(char *s);
+
+void updatewindowsize(int x, int y);
+
+void initpc(int argc, char *argv[]);
+void runpc();
+void closepc();
+void resetpc();
+void resetpchard();
+void speedchanged();
+
+void saveconfig();
+
+#define UNUSED(x) (void)x

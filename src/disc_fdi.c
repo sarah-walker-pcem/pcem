@@ -107,7 +107,6 @@ void fdi_close(int drive)
 
 void fdi_seek(int drive, int track)
 {
-        int c;
         int density;
         
         if (!fdi[drive].f)
@@ -141,7 +140,7 @@ void fdi_seek(int drive, int track)
                 else
                 {
                         memset(fdi[drive].track_data[1][density], 0, 65536);
-                        fdi[drive].tracklen[1][density] = fdi[drive].tracklen[1][density] = 10000;
+                        fdi[drive].tracklen[1][density] = fdi[drive].trackindex[1][density] = 10000;
                 }
         }
 }
@@ -332,11 +331,6 @@ void fdi_poll()
                         if (readidpoll)
                         {
                                 fdi_sectordat[5 - pollbytesleft] = decodefm(fdi_buffer);
-                                if (fdi_inreadaddr && !fdc_sectorid)// && pollbytesleft > 1) 
-                                {
-//                                        rpclog("inreadaddr - %02X\n", fdi_sectordat[5 - pollbytesleft]);
-                                        fdc_data(fdi_sectordat[5 - pollbytesleft]);
-                                }
                                 if (!pollbytesleft)
                                 {
 //                                        pclog("Header over %i,%i %i,%i\n", fdi_sectordat[0], fdi_sectordat[2], fdi_track, fdi_sector);
@@ -354,15 +348,9 @@ void fdi_poll()
 //                                                        exit(-1);
                                                         inreadop = 0;
                                                         if (fdi_inreadaddr)
-                                                        {
-//                                                                rpclog("inreadaddr - %02X\n", fdi_sector);
-//                                                                fdc_data(fdi_sector);
-                                                                if (fdc_sectorid)
-                                                                   fdc_sectorid(fdi_sectordat[0], fdi_sectordat[1], fdi_sectordat[2], fdi_sectordat[3], fdi_sectordat[4], fdi_sectordat[5]);
-                                                                else
-                                                                   fdc_finishread();
-                                                        }
-                                                        else             fdc_headercrcerror();
+                                                                fdc_sectorid(fdi_sectordat[0], fdi_sectordat[1], fdi_sectordat[2], fdi_sectordat[3], fdi_sectordat[4], fdi_sectordat[5]);
+                                                        else
+                                                                fdc_headercrcerror();
                                                         return;
                                                 }
 //                                                pclog("Sector %i,%i %i,%i\n", fdi_sectordat[0], fdi_sectordat[2], fdi_track, fdi_sector);
@@ -375,10 +363,7 @@ void fdi_poll()
                                                 }
                                                 if (fdi_inreadaddr)
                                                 {
-                                                        if (fdc_sectorid)
-                                                           fdc_sectorid(fdi_sectordat[0], fdi_sectordat[1], fdi_sectordat[2], fdi_sectordat[3], fdi_sectordat[4], fdi_sectordat[5]);
-                                                        else
-                                                           fdc_finishread();
+                                                        fdc_sectorid(fdi_sectordat[0], fdi_sectordat[1], fdi_sectordat[2], fdi_sectordat[3], fdi_sectordat[4], fdi_sectordat[5]);
                                                         fdi_inreadaddr = 0;
                                                 }
                                         }

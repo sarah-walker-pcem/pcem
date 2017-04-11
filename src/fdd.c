@@ -78,11 +78,7 @@ int fdd_swap = 0;
 
 void fdd_seek(int drive, int track_diff)
 {
-        int old_track;
-
         drive ^= fdd_swap;
-
-        old_track = fdd[drive].track;
 
         fdd[drive].track += track_diff;
         

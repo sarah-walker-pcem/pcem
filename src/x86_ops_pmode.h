@@ -49,7 +49,7 @@ static int opARPL_a32(uint32_t fetchdat)
         static int opLAR_ ## name(uint32_t fetchdat)                                                            \
         {                                                                                                       \
                 int valid;                                                                                      \
-                uint16_t sel, desc;                                                                             \
+                uint16_t sel, desc = 0;                                                                         \
                                                                                                                 \
                 NOTRM                                                                                           \
                 fetch_ea(fetchdat);                                                                             \
@@ -99,7 +99,7 @@ opLAR(l_a32, fetch_ea_32, 1, 1)
         static int opLSL_ ## name(uint32_t fetchdat)                                                            \
         {                                                                                                       \
                 int valid;                                                                                      \
-                uint16_t sel, desc;                                                                             \
+                uint16_t sel, desc = 0;                                                                         \
                                                                                                                 \
                 NOTRM                                                                                           \
                 fetch_ea(fetchdat);                                                                             \

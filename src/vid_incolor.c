@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "io.h"
 #include "mem.h"
 #include "timer.h"
 #include "video.h"
@@ -237,7 +238,7 @@ void incolor_write(uint32_t addr, uint8_t val, void *p)
 	unsigned char wmode = incolor->crtc[INCOLOR_CRTC_RWCTRL] & INCOLOR_RWCTRL_WRMODE;
 	unsigned char fg    = incolor->crtc[INCOLOR_CRTC_RWCOL] & 0x0F;
 	unsigned char bg    = (incolor->crtc[INCOLOR_CRTC_RWCOL] >> 4)&0x0F;
-	unsigned char w;
+	unsigned char w = 0;
 	unsigned char vmask;	/* Mask of bit within byte */
 	unsigned char pmask;	/* Mask of plane within colour value */
 	unsigned char latch;
@@ -579,9 +580,9 @@ static void incolor_draw_char_ram48(incolor_t *incolor, int x, uint8_t chr, uint
 {
 	unsigned            i;
 	int                 elg, blk, ul, ol, bld;
-	unsigned            ull, oll, ulc, olc;
+	unsigned            ull, oll, ulc = 0, olc = 0;
 	unsigned            val[4];
-	unsigned	    ifg, ibg, cfg, pmask, plane;
+	unsigned	    ifg = 0, ibg, cfg, pmask, plane;
 	const unsigned char *fnt;
 	uint32_t	    fg;
 	int		    cw = INCOLOR_CW;

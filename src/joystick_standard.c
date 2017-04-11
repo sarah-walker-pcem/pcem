@@ -8,6 +8,7 @@
 
 static void *joystick_standard_init()
 {
+        return NULL;
 }
 
 static void joystick_standard_close(void *p)
@@ -80,6 +81,7 @@ static int joystick_standard_read_axis(void *p, int axis)
                         return AXIS_NOT_PRESENT;
                 return joystick_state[1].axis[1];
         }
+        return 0;
 }
 
 static int joystick_standard_read_axis_4button(void *p, int axis)
@@ -98,6 +100,7 @@ static int joystick_standard_read_axis_4button(void *p, int axis)
                 case 3:
                 return 0;
         }
+        return 0;
 }
 static int joystick_standard_read_axis_6button(void *p, int axis)
 {
@@ -115,6 +118,7 @@ static int joystick_standard_read_axis_6button(void *p, int axis)
                 case 3:
                 return joystick_state[0].button[5] ? -32767 : 32768;
         }
+        return 0;
 }
 static int joystick_standard_read_axis_8button(void *p, int axis)
 {
@@ -140,6 +144,7 @@ static int joystick_standard_read_axis_8button(void *p, int axis)
                         return 32768;
                 return 0;
         }
+        return 0;
 }
 
 static void joystick_standard_a0_over(void *p)

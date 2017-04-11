@@ -1111,7 +1111,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 uint8_t readide(int ide_board, uint16_t addr)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
-        uint8_t temp;
+        uint8_t temp = 0xff;
         uint16_t tempw;
 
         addr|=0x80;
@@ -1784,8 +1784,6 @@ static uint32_t atapi_event_status(IDE *ide, uint8_t *buffer)
 	return 8;
 }
 
-static int changed_status = 0;
-
 void atapi_cmd_error(IDE *ide, uint8_t sensekey, uint8_t asc)
 {
 	ide->error = (sensekey << 4);
@@ -1994,9 +1992,9 @@ static void atapicommand(int ide_board)
                 break;
 
 		case GPCMD_MECHANISM_STATUS: /*0xbd*/
-		len=(idebufferb[7]<<16)|(idebufferb[8]<<8)|idebufferb[9];
+		alloc_length = (idebufferb[7]<<16)|(idebufferb[8]<<8)|idebufferb[9];
 
-		if (len == 0)
+		if (alloc_length == 0)
 			fatal("Zero allocation length to MECHANISM STATUS not impl.\n");
 
 		atapi_command_send_init(ide, idebufferb[0], 8, alloc_length);
@@ -2293,7 +2291,7 @@ static void atapicommand(int ide_board)
 
                 case GPCMD_GET_EVENT_STATUS_NOTIFICATION: /*0x4a*/
                 temp_command = idebufferb[0];
-                alloc_length = len;
+                alloc_length = (idebufferb[7]<<16)|(idebufferb[8]<<8)|idebufferb[9];
                 
                 {
                         struct __attribute__((__packed__))
@@ -2613,7 +2611,7 @@ atapi_out:
                 break;
 
                 case GPCMD_READ_CDROM_CAPACITY:
-		atapi_command_send_init(ide, temp_command, 8, 8);
+		atapi_command_send_init(ide, 0, 8, 8);
                 size = atapi->size();
                 idebufferb[0] = (size >> 24) & 0xff;
                 idebufferb[1] = (size >> 16) & 0xff;
@@ -2629,7 +2627,6 @@ atapi_out:
                 
                 case GPCMD_SEND_DVD_STRUCTURE:
                 default:
-bad_atapi_command:
 		ide->atastat = READY_STAT | ERR_STAT;    /*CHECK CONDITION*/
                 ide->error = (SENSE_ILLEGAL_REQUEST << 4) | ABRT_ERR;
                 if (atapi_sense.sensekey == SENSE_UNIT_ATTENTION)

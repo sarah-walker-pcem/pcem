@@ -15,6 +15,7 @@
 #include "cdrom-null.h"
 #include "config.h"
 #include "cpu.h"
+#include "disc_fdi.h"
 #include "dma.h"
 #include "fdc.h"
 #include "fdd.h"
@@ -22,24 +23,29 @@
 #include "sound_gus.h"
 #include "ide.h"
 #include "keyboard.h"
+#include "keyboard_at.h"
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
 #include "pic.h"
 #include "pit.h"
 #include "plat-joystick.h"
+#include "plat-keyboard.h"
+#include "plat-midi.h"
 #include "plat-mouse.h"
 #include "serial.h"
 #include "sound.h"
 #include "sound_cms.h"
 #include "sound_opl.h"
 #include "sound_sb.h"
+#include "sound_speaker.h"
 #include "sound_ssi2001.h"
 #include "timer.h"
 #include "vid_voodoo.h"
 #include "video.h"
 #include "amstrad.h"
 #include "hdd.h"
+#include "x86.h"
 
 int window_w, window_h, window_x, window_y, window_remember;
 
@@ -115,8 +121,7 @@ void pollmouse()
         pollmouse_delay = 2;
         mouse_poll_host();
         mouse_get_mickeys(&x, &y, &z);
-        if (mouse_poll)
-           mouse_poll(x, y, z, mouse_buttons);
+        mouse_poll(x, y, z, mouse_buttons);
 //        if (mousecapture) position_mouse(64,64);
 }
 

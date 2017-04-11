@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ibm.h"
+#include "io.h"
 #include "device.h"
 #include "sound.h"
 #include "sound_emu8k.h"
@@ -68,10 +69,10 @@ static inline void EMU8K_WRITE(emu8k_t *emu8k, uint32_t addr, uint16_t val)
 static int ff = 0;
 static int voice_count = 0;
 
-uint16_t emu8k_inw(uint32_t addr, void *p)
+uint16_t emu8k_inw(uint16_t addr, void *p)
 {
         emu8k_t *emu8k = (emu8k_t *)p;
-        uint16_t ret;
+        uint16_t ret = 0xffff;
 /*        pclog("emu8k_inw %04X  reg=%i voice=%i\n", addr, emu8k->cur_reg, emu8k->cur_voice);*/
 
         addr -= 0x220;
@@ -114,7 +115,7 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                 {
                         case 0:
                         {
-                                uint32_t val = (emu8k->voice[emu8k->cur_voice].ccca & 0xff000000) | (emu8k->voice[emu8k->cur_voice].addr >> 8);
+//                                uint32_t val = (emu8k->voice[emu8k->cur_voice].ccca & 0xff000000) | (emu8k->voice[emu8k->cur_voice].addr >> 8);
                                 READ16(addr, emu8k->voice[emu8k->cur_voice].ccca);
                                 return ret;
                         }
@@ -170,7 +171,7 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
                 {
                         case 0:
                         {
-                                uint32_t val = (emu8k->voice[emu8k->cur_voice].ccca & 0xff000000) | (emu8k->voice[emu8k->cur_voice].addr >> 8);
+//                                uint32_t val = (emu8k->voice[emu8k->cur_voice].ccca & 0xff000000) | (emu8k->voice[emu8k->cur_voice].addr >> 8);
                                 READ16(addr, emu8k->voice[emu8k->cur_voice].ccca);
                                 return ret;
                         }
@@ -254,7 +255,7 @@ uint16_t emu8k_inw(uint32_t addr, void *p)
         return 0xffff;
 }
 
-void emu8k_outw(uint32_t addr, uint16_t val, void *p)
+void emu8k_outw(uint16_t addr, uint16_t val, void *p)
 {
         emu8k_t *emu8k = (emu8k_t *)p;
 
@@ -487,14 +488,14 @@ void emu8k_outw(uint32_t addr, uint16_t val, void *p)
         }
 }
 
-uint8_t emu8k_inb(uint32_t addr, void *p)
+uint8_t emu8k_inb(uint16_t addr, void *p)
 {
         if (addr & 1)
                 return emu8k_inw(addr & ~1, p) >> 1;
         return emu8k_inw(addr, p) & 0xff;
 }
 
-void emu8k_outb(uint32_t addr, uint8_t val, void *p)
+void emu8k_outb(uint16_t addr, uint8_t val, void *p)
 {
         if (addr & 1)
                 emu8k_outw(addr & ~1, val << 8, p);
@@ -510,7 +511,6 @@ void emu8k_update(emu8k_t *emu8k)
                 int32_t *buf;
                 int pos;
                 int c;
-                int32_t out_l = 0, out_r = 0;
 
                 buf = &emu8k->buffer[emu8k->pos*2];
                 
@@ -526,9 +526,9 @@ void emu8k_update(emu8k_t *emu8k)
                                 int32_t voice_l, voice_r;
                                 int32_t dat;
                                 int lfo1_vibrato, lfo2_vibrato;
-                                int tremolo;
+//                                int tremolo;
                 
-                                tremolo = ((lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_trem) * 4) >> 12;
+//                                tremolo = ((lfotable[(emu8k->voice[c].lfo1_count >> 8) & 4095] * emu8k->voice[c].lfo1_trem) * 4) >> 12;
 
                                 if (freqtable[emu8k->voice[c].pitch] >> 32)
                                         dat = EMU8K_READ(emu8k, emu8k->voice[c].addr >> 32);

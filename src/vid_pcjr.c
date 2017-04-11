@@ -4,8 +4,10 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "pic.h"
 #include "timer.h"
 #include "video.h"
+#include "dosbox/vid_cga_comp.h"
 #include "vid_pcjr.h"
 
 #define PCJR_RGB 0
@@ -170,25 +172,6 @@ void pcjr_recalctimings(pcjr_t *pcjr)
 	pcjr->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
 }
 
-
-static int ntsc_col[8][8]=
-{
-        {0,0,0,0,0,0,0,0}, /*Black*/
-        {0,0,1,1,1,1,0,0}, /*Blue*/
-        {1,0,0,0,0,1,1,1}, /*Green*/
-        {0,0,0,0,1,1,1,1}, /*Cyan*/
-        {1,1,1,1,0,0,0,0}, /*Red*/
-        {0,1,1,1,1,0,0,0}, /*Magenta*/
-        {1,1,0,0,0,0,1,1}, /*Yellow*/
-        {1,1,1,1,1,1,1,1}  /*White*/
-};
-
-/*static int cga4pal[8][4]=
-{
-        {0,2,4,6},{0,3,5,7},{0,3,4,7},{0,3,4,7},
-        {0,10,12,14},{0,11,13,15},{0,11,12,15},{0,11,12,15}
-};*/
-
 void pcjr_poll(void *p)
 {
 //        int *cgapal=cga4pal[((pcjr->col&0x10)>>2)|((cgamode&4)>>1)|((cgacol&0x20)>>5)];
@@ -200,12 +183,8 @@ void pcjr_poll(void *p)
         uint8_t chr, attr;
         uint16_t dat;
         int cols[4];
-        int col;
         int oldsc;
-        int y_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, y_val, y_tot;
-        int i_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, i_val, i_tot;
-        int q_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, q_val, q_tot;
-        int r, g, b;
+
         if (!pcjr->linepos)
         {
 //                cgapal[0]=pcjr->col&15;

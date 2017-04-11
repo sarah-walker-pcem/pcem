@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "dac.h"
 
 uint8_t dac,dac2;
 uint8_t dacctrl;

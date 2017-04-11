@@ -59,6 +59,7 @@ uint8_t pci_read(uint16_t port, void *priv)
 
                 return 0xff;
         }
+        return 0xff;
 }
 
 void pci_type2_write(uint16_t port, uint8_t val, void *priv);
@@ -134,7 +135,11 @@ void pci_init(int type, int min_card, int max_card)
         }
         
         for (c = 0; c < 32; c++)
-            pci_card_read[c] = pci_card_write[c] = pci_priv[c] = NULL;
+        {
+                pci_card_read[c] = NULL;
+                pci_card_write[c] = NULL;
+                pci_priv[c] = NULL;
+        }
         
         pci_min_card = min_card;
         pci_max_card = max_card;

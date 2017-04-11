@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "nmi.h"
 #include "pic.h"
+#include "pit.h"
 #include "sound.h"
 #include "sound_sn76489.h"
 #include "sound_speaker.h"
@@ -155,7 +156,7 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
 
 uint8_t keyboard_pcjr_read(uint16_t port, void *priv)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
 //        pclog("keyboard_pcjr : read %04X ", port);
         switch (port)
         {

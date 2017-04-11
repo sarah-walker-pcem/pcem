@@ -4,6 +4,7 @@
 #undef BITMAP
 
 #include "ibm.h"
+#include "hdd.h"
 #include "ide.h"
 #include "resources.h"
 #include "win.h"
@@ -208,7 +209,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                         sscanf(s, "%i", &hd[0].tracks);
 
                         h = GetDlgItem(hdlg, IDC_TEXT1);
-                        sprintf(s, "Size : %imb", (((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
+                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
                         
                         hd_type = 0;
@@ -243,7 +244,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)"17");
 
                                         h = GetDlgItem(hdlg, IDC_TEXT1);
-                                        sprintf(s, "Size : %imb", (((uint64_t)hd_types[hd_type-1].cylinders*hd_types[hd_type-1].heads*17*512)/1024)/1024);
+                                        sprintf(s, "Size : %imb", (int)(((uint64_t)hd_types[hd_type-1].cylinders*hd_types[hd_type-1].heads*17*512)/1024)/1024);
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
                                 }
                         }
@@ -285,7 +286,7 @@ BOOL CALLBACK hdsize_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 h = GetDlgItem(hdlg, IDC_TEXT1);
-                sprintf(s, "Size : %imb", ((((uint64_t)hd_new_spt*(uint64_t)hd_new_hpc*(uint64_t)hd_new_cyl)*512)/1024)/1024);
+                sprintf(s, "Size : %imb", (int)((((uint64_t)hd_new_spt*(uint64_t)hd_new_hpc*(uint64_t)hd_new_cyl)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 return TRUE;
@@ -337,7 +338,7 @@ BOOL CALLBACK hdsize_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
                         sscanf(s, "%i", &hd[0].tracks);
 
                         h = GetDlgItem(hdlg, IDC_TEXT1);
-                        sprintf(s, "Size : %imb", (((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
+                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
                         return TRUE;
                 }
@@ -413,19 +414,19 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)ide_fn[3]);
                 
                 h = GetDlgItem(hdlg, IDC_TEXT_C_SIZE);
-                sprintf(s, "Size : %imb", (((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
+                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_D_SIZE);
-                sprintf(s, "Size : %imb", (((((uint64_t)hd[1].tracks*(uint64_t)hd[1].hpc)*(uint64_t)hd[1].spt)*512)/1024)/1024);
+                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[1].tracks*(uint64_t)hd[1].hpc)*(uint64_t)hd[1].spt)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_E_SIZE);
-                sprintf(s, "Size : %imb", (((((uint64_t)hd[2].tracks*(uint64_t)hd[2].hpc)*(uint64_t)hd[2].spt)*512)/1024)/1024);
+                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[2].tracks*(uint64_t)hd[2].hpc)*(uint64_t)hd[2].spt)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_F_SIZE);
-                sprintf(s, "Size : %imb", (((((uint64_t)hd[3].tracks*(uint64_t)hd[3].hpc)*(uint64_t)hd[3].spt)*512)/1024)/1024);
+                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd[3].tracks*(uint64_t)hd[3].hpc)*(uint64_t)hd[3].spt)*512)/1024)/1024);
                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                 new_cdrom_channel = cdrom_channel;
@@ -552,7 +553,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         return TRUE;
                         
                         case IDC_CNEW:
-                        if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdNewDlgMfm") : TEXT("HdNewDlg"), hdlg, hdnew_dlgproc) == 1)
+                        if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdNewDlgMfm") : TEXT("HdNewDlg"), hdlg, (DLGPROC)hdnew_dlgproc) == 1)
                         {
                                 h = GetDlgItem(hdlg, IDC_EDIT_C_SPT);
                                 sprintf(s, "%i", hd_new_spt);
@@ -567,7 +568,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)hd_new_name);
 
                                 h = GetDlgItem(hdlg, IDC_TEXT_C_SIZE);
-                                sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                                 hd_changed = 1;
@@ -588,7 +589,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 fclose(f);
                                 check_hd_type(sz);
                                 
-                                if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdSizeDlgMfm") : TEXT("HdSizeDlg"), hdlg, hdsize_dlgproc) == 1)
+                                if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdSizeDlgMfm") : TEXT("HdSizeDlg"), hdlg, (DLGPROC)hdsize_dlgproc) == 1)
                                 {
                                         h = GetDlgItem(hdlg, IDC_EDIT_C_SPT);
                                         sprintf(s, "%i", hd_new_spt);
@@ -603,7 +604,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
 
                                         h=  GetDlgItem(hdlg, IDC_TEXT_C_SIZE);
-                                        sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
         
                                         hd_changed = 1;
@@ -612,7 +613,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         return TRUE;
                                 
                         case IDC_DNEW:
-                        if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdNewDlgMfm") : TEXT("HdNewDlg"), hdlg, hdnew_dlgproc) == 1)
+                        if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdNewDlgMfm") : TEXT("HdNewDlg"), hdlg, (DLGPROC)hdnew_dlgproc) == 1)
                         {
                                 h = GetDlgItem(hdlg, IDC_EDIT_D_SPT);
                                 sprintf(s, "%i", hd_new_spt);
@@ -627,7 +628,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)hd_new_name);
 
                                 h=  GetDlgItem(hdlg, IDC_TEXT_D_SIZE);
-                                sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                                 hd_changed = 1;
@@ -648,7 +649,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 fclose(f);
                                 check_hd_type(sz);
                                 
-                                if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdSizeDlgMfm") : TEXT("HdSizeDlg"), hdlg, hdsize_dlgproc) == 1)
+                                if (DialogBox(hinstance, hdd_controller_current_is_mfm() ? TEXT("HdSizeDlgMfm") : TEXT("HdSizeDlg"), hdlg, (DLGPROC)hdsize_dlgproc) == 1)
                                 {
                                         h = GetDlgItem(hdlg, IDC_EDIT_D_SPT);
                                         sprintf(s, "%i", hd_new_spt);
@@ -663,7 +664,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
 
                                         h = GetDlgItem(hdlg, IDC_TEXT_D_SIZE);
-                                        sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
         
                                         hd_changed = 1;
@@ -672,7 +673,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         return TRUE;
 
                         case IDC_ENEW:
-                        if (DialogBox(hinstance, TEXT("HdNewDlg"), hdlg, hdnew_dlgproc) == 1)
+                        if (DialogBox(hinstance, TEXT("HdNewDlg"), hdlg, (DLGPROC)hdnew_dlgproc) == 1)
                         {
                                 h = GetDlgItem(hdlg, IDC_EDIT_E_SPT);
                                 sprintf(s, "%i", hd_new_spt);
@@ -687,7 +688,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)hd_new_name);
 
                                 h=  GetDlgItem(hdlg, IDC_TEXT_E_SIZE);
-                                sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                                 hd_changed = 1;
@@ -708,7 +709,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 fclose(f);
                                 check_hd_type(sz);
                                 
-                                if (DialogBox(hinstance, TEXT("HdSizeDlg"), hdlg, hdsize_dlgproc) == 1)
+                                if (DialogBox(hinstance, TEXT("HdSizeDlg"), hdlg, (DLGPROC)hdsize_dlgproc) == 1)
                                 {
                                         h = GetDlgItem(hdlg, IDC_EDIT_E_SPT);
                                         sprintf(s, "%i", hd_new_spt);
@@ -723,7 +724,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
 
                                         h = GetDlgItem(hdlg, IDC_TEXT_E_SIZE);
-                                        sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
         
                                         hd_changed = 1;
@@ -732,7 +733,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         return TRUE;
 
                         case IDC_FNEW:
-                        if (DialogBox(hinstance, TEXT("HdNewDlg"), hdlg, hdnew_dlgproc) == 1)
+                        if (DialogBox(hinstance, TEXT("HdNewDlg"), hdlg, (DLGPROC)hdnew_dlgproc) == 1)
                         {
                                 h = GetDlgItem(hdlg, IDC_EDIT_F_SPT);
                                 sprintf(s, "%i", hd_new_spt);
@@ -747,7 +748,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)hd_new_name);
 
                                 h=  GetDlgItem(hdlg, IDC_TEXT_F_SIZE);
-                                sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
 
                                 hd_changed = 1;
@@ -768,7 +769,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 fclose(f);
                                 check_hd_type(sz);
                                 
-                                if (DialogBox(hinstance, TEXT("HdSizeDlg"), hdlg, hdsize_dlgproc) == 1)
+                                if (DialogBox(hinstance, TEXT("HdSizeDlg"), hdlg, (DLGPROC)hdsize_dlgproc) == 1)
                                 {
                                         h = GetDlgItem(hdlg, IDC_EDIT_F_SPT);
                                         sprintf(s, "%i", hd_new_spt);
@@ -783,7 +784,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
 
                                         h = GetDlgItem(hdlg, IDC_TEXT_F_SIZE);
-                                        sprintf(s, "Size : %imb", (((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                                        sprintf(s, "Size : %imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)s);
         
                                         hd_changed = 1;
@@ -902,7 +903,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 void hdconf_open(HWND hwnd)
 {
         if (hdd_controller_current_is_mfm())
-                DialogBox(hinstance, TEXT("HdConfDlgMfm"), hwnd, hdconf_dlgproc);
+                DialogBox(hinstance, TEXT("HdConfDlgMfm"), hwnd, (DLGPROC)hdconf_dlgproc);
         else
-                DialogBox(hinstance, TEXT("HdConfDlg"), hwnd, hdconf_dlgproc);
+                DialogBox(hinstance, TEXT("HdConfDlg"), hwnd, (DLGPROC)hdconf_dlgproc);
 }        

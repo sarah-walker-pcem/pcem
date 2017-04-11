@@ -30,7 +30,6 @@ int timer_start = 0;
 void timer_process()
 {
 	int c;
-	int retry;
 	int process = 0;
 	/*Get actual elapsed time*/
 	int diff = timer_latch - timer_count;

@@ -191,24 +191,6 @@ void tandy_recalctimings(tandy_t *tandy)
 }
 
 
-static int ntsc_col[8][8]=
-{
-        {0,0,0,0,0,0,0,0}, /*Black*/
-        {0,0,1,1,1,1,0,0}, /*Blue*/
-        {1,0,0,0,0,1,1,1}, /*Green*/
-        {0,0,0,0,1,1,1,1}, /*Cyan*/
-        {1,1,1,1,0,0,0,0}, /*Red*/
-        {0,1,1,1,1,0,0,0}, /*Magenta*/
-        {1,1,0,0,0,0,1,1}, /*Yellow*/
-        {1,1,1,1,1,1,1,1}  /*White*/
-};
-
-/*static int cga4pal[8][4]=
-{
-        {0,2,4,6},{0,3,5,7},{0,3,4,7},{0,3,4,7},
-        {0,10,12,14},{0,11,13,15},{0,11,12,15},{0,11,12,15}
-};*/
-
 void tandy_poll(void *p)
 {
 //        int *cgapal=cga4pal[((tandy->col&0x10)>>2)|((cgamode&4)>>1)|((cgacol&0x20)>>5)];
@@ -222,10 +204,6 @@ void tandy_poll(void *p)
         int cols[4];
         int col;
         int oldsc;
-        int y_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, y_val, y_tot;
-        int i_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, i_val, i_tot;
-        int q_buf[8] = {0, 0, 0, 0, 0, 0, 0, 0}, q_val, q_tot;
-        int r, g, b;
         if (!tandy->linepos)
         {
 //                cgapal[0]=tandy->col&15;

@@ -152,7 +152,7 @@ void disc_poll()
 
 int disc_get_bitcell_period(int rate)
 {
-        int bit_rate;
+        int bit_rate = 0;
         
         switch (rate)
         {

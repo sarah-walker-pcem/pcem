@@ -888,7 +888,7 @@ void codegen_timing_pentium_prefix(uint8_t prefix, uint32_t fetchdat)
 
 void codegen_timing_pentium_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
 {
-        int *timings;
+        uint32_t *timings;
         int mod3 = ((fetchdat & 0xc0) == 0xc0);
         int bit8 = !(opcode & 1);
 

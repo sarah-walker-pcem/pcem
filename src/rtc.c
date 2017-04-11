@@ -26,9 +26,6 @@ struct
         int year;
 } internal_clock;
 
-/* When the RTC was last updated */
-static time_t rtc_set_time = 0;
-
 /* Table for days in each month */
 static int rtc_days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -88,7 +85,7 @@ void rtc_tick()
 }
 
 /* Called when modifying the NVR registers */
-void time_update(char *nvrram, int reg)
+void time_update(uint8_t *nvrram, int reg)
 {
         int temp;
 
@@ -162,10 +159,8 @@ static void time_internal_set(struct tm *time_var)
         internal_clock.year = time_var->tm_year + 1900;
 }
 
-static void time_set_nvrram(char *nvrram, struct tm *cur_time_tm)
+static void time_set_nvrram(uint8_t *nvrram, struct tm *cur_time_tm)
 {
-        int dow, mon, year;
-
         if (nvrram[RTC_REGB] & RTC_DM)
         {
                 nvrram[RTC_SECONDS] = cur_time_tm->tm_sec;
@@ -208,7 +203,7 @@ static void time_set_nvrram(char *nvrram, struct tm *cur_time_tm)
         }
 }
 
-void time_internal_set_nvrram(char *nvrram)
+void time_internal_set_nvrram(uint8_t *nvrram)
 {
         int temp;
 
@@ -229,7 +224,7 @@ void time_internal_set_nvrram(char *nvrram)
         internal_clock.year += (nvrram[RTC_REGB] & RTC_DM) ? 1900 : (DCB(nvrram[RTC_CENTURY]) * 100);
 }
 
-void time_internal_sync(char *nvrram)
+void time_internal_sync(uint8_t *nvrram)
 {
         struct tm *cur_time_tm;
         time_t cur_time;
@@ -242,7 +237,7 @@ void time_internal_sync(char *nvrram)
         time_set_nvrram(nvrram, cur_time_tm);
 }
 
-void time_get(char *nvrram)
+void time_get(uint8_t *nvrram)
 {
         struct tm cur_time_tm;
 

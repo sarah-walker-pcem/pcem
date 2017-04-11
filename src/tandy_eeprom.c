@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "ibm.h"
+#include "io.h"
 #include "device.h"
 #include "tandy_eeprom.h"
 
@@ -117,7 +118,7 @@ int tandy_eeprom_read()
 void *tandy_eeprom_init()
 {
         tandy_eeprom_t *eeprom = malloc(sizeof(tandy_eeprom_t));
-        FILE *f;
+        FILE *f = NULL;
 
         memset(eeprom, 0, sizeof(tandy_eeprom_t));
         
@@ -147,7 +148,7 @@ void *tandy_eeprom_init()
 void tandy_eeprom_close(void *p)
 {
         tandy_eeprom_t *eeprom = (tandy_eeprom_t *)p;
-        FILE *f;
+        FILE *f = NULL;
                 
         switch (eeprom->romset)
         {

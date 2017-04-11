@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "io.h"
 #include "mem.h"
 #include "timer.h"
 #include "video.h"
@@ -122,7 +123,6 @@ void hercules_poll(void *p)
         int oldvc;
         uint8_t chr, attr;
         uint16_t dat;
-        int cols[4];
         int oldsc;
         int blink;
         if (!hercules->linepos)
@@ -142,8 +142,6 @@ void hercules_poll(void *p)
                                 video_wait_for_buffer();
                         }
                         hercules->lastline = hercules->displine;
-                        cols[0] = 0;
-                        cols[1] = 7;
                         if ((hercules->ctrl & 2) && (hercules->ctrl2 & 1))
                         {
                                 ca = (hercules->sc & 3) * 0x2000;

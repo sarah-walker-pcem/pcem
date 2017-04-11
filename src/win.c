@@ -17,19 +17,22 @@
 #include "cdrom-ioctl.h"
 #include "cdrom-iso.h"
 #include "config.h"
-#include "video.h"
-#include "resources.h"
 #include "cpu.h"
+#include "device.h"
+#include "disc.h"
+#include "disc_img.h"
 #include "ide.h"
+#include "mem.h"
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
+#include "resources.h"
 #include "sound.h"
 #include "thread.h"
-#include "disc.h"
-#include "disc_img.h"
+#include "video.h"
 
 #include "plat-midi.h"
+#include "plat-mouse.h"
 #include "plat-keyboard.h"
 
 #include "win.h"
@@ -59,12 +62,12 @@ static struct
 } vid_apis[2][2] =
 {
         {
-                ddraw_init, ddraw_close, NULL,
-                d3d_init, d3d_close, d3d_resize
+                {ddraw_init, ddraw_close, NULL},
+                {d3d_init, d3d_close, d3d_resize}
         },
         {
-                ddraw_fs_init, ddraw_fs_close, NULL,
-                d3d_fs_init, d3d_fs_close, NULL
+                {ddraw_fs_init, ddraw_fs_close, NULL},
+                {d3d_fs_init, d3d_fs_close, NULL}
         },
 };
 
@@ -119,7 +122,6 @@ void warning(const char *format, ...)
 
 void updatewindowsize(int x, int y)
 {
-        RECT r;
         if (vid_resize) return;
 
         winsizex=x; winsizey=y;
@@ -155,7 +157,6 @@ uint64_t main_time;
 
 void mainthread(LPVOID param)
 {
-        int t = 0;
         int frames = 0;
         DWORD old_time, new_time;
 
@@ -380,7 +381,7 @@ void get_registry_key_map()
  	   HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout */
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, 1, &hKey) == ERROR_SUCCESS)
         {
-		if(RegQueryValueEx(hKey, valueName, NULL, NULL, buf, &bufSize) == ERROR_SUCCESS)
+		if(RegQueryValueEx(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
                 {
 			UINT32 *bufEx2 = (UINT32 *) buf;
 			int scMapCount = bufEx2[2];

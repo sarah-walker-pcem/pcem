@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "timer.h"
 #include "video.h"
 #include "vid_genius.h"
@@ -253,7 +255,7 @@ void genius_textline(genius_t *genius, uint8_t background)
 	int x;
 	int w  = 80;	/* 80 characters across */
 	int cw = 9;	/* Each character is 9 pixels wide */
-	uint8_t chr, attr, fg, bg;
+	uint8_t chr, attr;
 	uint8_t bitmap[2];
         int blink, c, row;
         int drawcursor, cursorline;
@@ -376,7 +378,7 @@ void genius_cgaline(genius_t *genius)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t bitmap, ink;
+	uint8_t ink;
 	uint32_t addr;
 
 	ink = (genius->genius_control & 0x20) ? 16 : 16+15;
@@ -415,7 +417,7 @@ void genius_hiresline(genius_t *genius)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t bitmap, ink;
+	uint8_t ink;
 	uint32_t addr;
         
 	ink = (genius->genius_control & 0x20) ? 16 : 16+15;
@@ -451,11 +453,8 @@ void genius_hiresline(genius_t *genius)
 void genius_poll(void *p)
 {
         genius_t *genius = (genius_t *)p;
-        int x, c;
-        int oldvc;
+        int x;
         uint8_t background;
-        uint16_t dat;
-	int mode;
 
         if (!genius->linepos)
         {

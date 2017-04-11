@@ -540,7 +540,7 @@ void ega_poll(void *p)
                 }
                 if (ega->vc == ega->vsyncstart)
                 {
-                        int wx, wy;
+                        int wx = 0, wy = 0;
                         ega->dispon = 0;
 //                        printf("Vsync on at line %i %i\n",displine,vc);
                         ega->stat |= 8;
@@ -833,7 +833,6 @@ void ega_init(ega_t *ega)
 
 void *ega_standalone_init()
 {
-        int c, d, e;
         ega_t *ega = malloc(sizeof(ega_t));
         memset(ega, 0, sizeof(ega_t));
         

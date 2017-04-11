@@ -2,11 +2,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "ibm.h"
+#include "386.h"
 #include "x86.h"
 #include "x87.h"
 #include "mem.h"
 #include "cpu.h"
 #include "fdc.h"
+#include "pic.h"
 #include "timer.h"
 
 #include "386_common.h"
@@ -231,7 +233,7 @@ void exec386(int cycs)
 /*                        testr[8]=flags;*/
 //                oldcs2=oldcs;
 //                oldpc2=oldpc;
-opcode_realstart:
+
                 oldcs=CS;
                 cpu_state.oldpc = cpu_state.pc;
                 oldcpl=CPL;
@@ -242,7 +244,6 @@ dontprint=0;
                 cpu_state.ea_seg = &_ds;
                 cpu_state.ssegs = 0;
                 
-opcodestart:
                 fetchdat = fastreadl(cs + cpu_state.pc);
 
                 if (!cpu_state.abrt)

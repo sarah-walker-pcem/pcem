@@ -27,4 +27,6 @@ typedef struct
         int recieve_delay;
 } SERIAL;
 
+void serial_write_fifo(SERIAL *serial, uint8_t dat);
+
 extern SERIAL serial1, serial2;

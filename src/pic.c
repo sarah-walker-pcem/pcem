@@ -1,6 +1,8 @@
 #include "ibm.h"
 #include "io.h"
 #include "pic.h"
+#include "pit.h"
+#include "video.h"
 
 int output;
 int intclear;

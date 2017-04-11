@@ -7,10 +7,12 @@
 #include "ibm.h"
 
 #include "cpu.h"
+#include "device.h"
 #include "dma.h"
 #include "io.h"
 #include "pic.h"
 #include "pit.h"
+#include "sound_speaker.h"
 #include "timer.h"
 #include "video.h"
 #include "model.h"
@@ -455,7 +457,7 @@ uint8_t pit_read(uint16_t addr, void *p)
 {
         PIT *pit = (PIT *)p;
         int t;
-        uint8_t temp;
+        uint8_t temp = 0xff;
         cycles -= (int)PITCONST;        
 //        printf("Read PIT %04X ",addr);
         switch (addr&3)

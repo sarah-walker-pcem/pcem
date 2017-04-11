@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "dac.h"
 #include "io.h"
 
 #include "lpt.h"
@@ -11,11 +12,11 @@ void lpt1_write(uint16_t port, uint8_t val, void *priv)
         switch (port & 3)
         {
                 case 0:
-                writedac(val);
+                writedac(0,val);
                 lpt1_dat = val;
                 break;
                 case 2:
-                writedacctrl(val);
+                writedacctrl(0,val);
                 lpt1_ctrl = val;
                 break;
         }
@@ -39,11 +40,11 @@ void lpt2_write(uint16_t port, uint8_t val, void *priv)
         switch (port & 3)
         {
                 case 0:
-                writedac(val);
+                writedac(0,val);
                 lpt2_dat = val;
                 break;
                 case 2:
-                writedacctrl(val);
+                writedacctrl(0,val);
                 lpt2_ctrl = val;
                 break;
         }

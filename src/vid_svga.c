@@ -293,7 +293,6 @@ void svga_recalctimings(svga_t *svga)
 {
         double crtcconst;
         double _dispontime, _dispofftime, disptime;
-        int hdisp_old;
 
         svga->vtotal = svga->crtc[6];
         svga->dispend = svga->crtc[0x12];

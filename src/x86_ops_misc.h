@@ -748,7 +748,7 @@ static int opLOADALL(uint32_t fetchdat)
         return 0;
 }      
 
-static int set_segment_limit(x86seg *s, uint8_t segdat3)
+static void set_segment_limit(x86seg *s, uint8_t segdat3)
 {
         if ((s->access & 0x18) != 0x10 || !(s->access & (1 << 2))) /*expand-down*/
         {
@@ -762,7 +762,7 @@ static int set_segment_limit(x86seg *s, uint8_t segdat3)
         }
 }
 
-static int loadall_load_segment(uint32_t addr, x86seg *s)
+static void loadall_load_segment(uint32_t addr, x86seg *s)
 {
 	uint32_t attrib = readmeml(0, addr);
 	uint32_t segdat3 = (attrib >> 16) & 0xff;

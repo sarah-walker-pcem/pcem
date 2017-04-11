@@ -185,7 +185,6 @@ void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type, in
         sn76489->vol[0] = 0;
         sn76489->vol[1] = sn76489->vol[2] = sn76489->vol[3] = 8;
         sn76489->stat[0] = sn76489->stat[1] = sn76489->stat[2] = sn76489->stat[3] = 127;
-        srand(time(NULL));
         sn76489->count[0] = 0;
         sn76489->count[1] = (rand()&0x3FF)<<6;
         sn76489->count[2] = (rand()&0x3FF)<<6;

@@ -100,6 +100,8 @@ static uint8_t pssj_read(uint16_t port, void *p)
                 case 3:
                 return (pssj->freq >> 8) | (pssj->amplitude << 4);
         }
+        
+        return 0xff;
 }
 
 static void pssj_update(pssj_t *pssj)

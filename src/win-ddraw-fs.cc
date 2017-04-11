@@ -215,7 +215,7 @@ static void ddraw_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h
                 return;
         }
         for (yy = y1; yy < y2; yy++)
-            memcpy(ddsd.lpSurface + (yy * ddsd.lPitch), &(((uint32_t *)buffer32->line[y + yy])[x]), w * 4);
+                memcpy((void *)((uintptr_t)ddsd.lpSurface + (yy * ddsd.lPitch)), &(((uint32_t *)buffer32->line[y + yy])[x]), w * 4);
         video_blit_complete();
         lpdds_back->Unlock(NULL);
         
@@ -290,7 +290,7 @@ static void ddraw_fs_blit_memtoscreen_8(int x, int y, int w, int h)
         {
                 if ((y + yy) >= 0 && (y + yy) < buffer->h)
                 {
-                        uint32_t *p = (uint32_t *)(ddsd.lpSurface + (yy * ddsd.lPitch));
+                        uint32_t *p = (uint32_t *)((uintptr_t)ddsd.lpSurface + (yy * ddsd.lPitch));
                         for (xx = 0; xx < w; xx++)
                             p[xx] = pal_lookup[buffer->line[y + yy][x + xx]];
                 }

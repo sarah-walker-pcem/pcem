@@ -32,19 +32,6 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
                         dst = src1 / (double)src2;              \
         } while (0)
         
-static inline void x87_set_mmx()
-{
-        cpu_state.TOP = 0;
-        *(uint64_t *)cpu_state.tag = 0;
-        cpu_state.ismmx = 1;
-}
-
-static inline void x87_emms()
-{
-        *(uint64_t *)cpu_state.tag = 0x0303030303030303ll;
-        cpu_state.ismmx = 0;
-}
-
 static inline void x87_checkexceptions()
 {
 }
@@ -86,6 +73,8 @@ static inline int64_t x87_fround(double b)
                 case 3: /*Chop*/
                 return (int64_t)b;
         }
+        
+        return 0;
 }
 #define BIAS80 16383
 #define BIAS64 1023
@@ -307,7 +296,10 @@ static int op_nofpu_a16(uint32_t fetchdat)
                 return 1;
         }
         else
+        {
                 fetch_ea_16(fetchdat);
+                return 0;
+        }
 }
 static int op_nofpu_a32(uint32_t fetchdat)
 {
@@ -317,7 +309,10 @@ static int op_nofpu_a32(uint32_t fetchdat)
                 return 1;
         }
         else
+        {
                 fetch_ea_32(fetchdat);
+                return 0;
+        }
 }
 
 static int FPU_ILLEGAL_a16(uint32_t fetchdat)

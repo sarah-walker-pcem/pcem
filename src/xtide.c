@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ibm.h"
 
 #include "device.h"
@@ -60,6 +61,8 @@ static uint8_t xtide_read(uint16_t port, void *p)
                 case 0xe:
                 return readide(0, 0x3f6);
         }
+        
+        return 0xff;
 }
 
 static void *xtide_init()

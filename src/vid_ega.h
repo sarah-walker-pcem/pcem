@@ -71,5 +71,6 @@ void    ega_poll(void *p);
 void    ega_recalctimings(struct ega_t *ega);
 void    ega_write(uint32_t addr, uint8_t val, void *p);
 uint8_t ega_read(uint32_t addr, void *p);
+void    ega_init(ega_t *ega);
 
 extern device_t ega_device;

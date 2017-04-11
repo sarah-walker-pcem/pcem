@@ -108,7 +108,6 @@ void mda_poll(void *p)
         int x, c;
         int oldvc;
         uint8_t chr, attr;
-        int cols[4];
         int oldsc;
         int blink;
         if (!mda->linepos)
@@ -127,8 +126,6 @@ void mda_poll(void *p)
                                 video_wait_for_buffer();
                         }
                         mda->lastline = mda->displine;
-                        cols[0] = 0;
-                        cols[1] = 7;
                         for (x = 0; x < mda->crtc[1]; x++)
                         {
                                 chr  = mda->vram[(mda->ma << 1) & 0xfff];

@@ -2,7 +2,7 @@ VPATH = . dosbox resid-fp
 CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
-CFLAGS = -O3 -fomit-frame-pointer -msse2
+CFLAGS = -O3 -fomit-frame-pointer -msse2 -Wall -Werror -fno-strict-aliasing
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-iso.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86-64.o compaq.o config.o cpu.o dac.o \
 	device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o headland.o i430lx.o i430fx.o \

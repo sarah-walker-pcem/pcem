@@ -120,7 +120,7 @@ void serial_write(uint16_t addr, uint8_t val, void *p)
                 if ((val & 2) && !(serial->mctrl & 2))
                 {
                         if (serial->rcr_callback)
-                                serial->rcr_callback(serial, serial->rcr_callback_p);
+                                serial->rcr_callback((struct SERIAL *)serial, serial->rcr_callback_p);
 //                        pclog("RCR raised! sending M\n");
                 }
                 serial->mctrl = val;

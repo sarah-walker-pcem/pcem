@@ -1,6 +1,7 @@
 /*Register allocation :
         R8-R15 - emulated registers
 */
+#include <math.h>
 
 #define HOST_REG_XMM_START 0
 #define HOST_REG_XMM_END 7
@@ -20,7 +21,7 @@ static inline int find_host_xmm_reg()
                 fatal("Out of host XMM regs!\n");
         return c;
 }
-static void call(codeblock_t *block, uintptr_t func)
+static inline void call(codeblock_t *block, uintptr_t func)
 {
 	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
 
@@ -42,7 +43,7 @@ static void call(codeblock_t *block, uintptr_t func)
 	}
 }
 
-static void call_long(uintptr_t func)
+static inline void call_long(uintptr_t func)
 {
         codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] = 0;
         codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
@@ -54,7 +55,7 @@ static void call_long(uintptr_t func)
 	addbyte(0xd0);
 }
 
-static void load_param_1_32(codeblock_t *block, uint32_t param)
+static inline void load_param_1_32(codeblock_t *block, uint32_t param)
 {
 #if WIN64
         addbyte(0xb9); /*MOVL $fetchdat,%ecx*/
@@ -63,7 +64,7 @@ static void load_param_1_32(codeblock_t *block, uint32_t param)
 #endif
         addlong(param);
 }
-static void load_param_1_reg_32(int reg)
+static inline void load_param_1_reg_32(int reg)
 {
 #if WIN64
         if (reg & 8)
@@ -77,7 +78,8 @@ static void load_param_1_reg_32(int reg)
         addbyte(0xc0 | REG_EDI | (reg << 3));
 #endif
 }
-static void load_param_1_64(codeblock_t *block, uint64_t param)
+#if 0
+static inline void load_param_1_64(codeblock_t *block, uint64_t param)
 {
 	addbyte(0x48);
 #if WIN64
@@ -87,8 +89,9 @@ static void load_param_1_64(codeblock_t *block, uint64_t param)
 #endif
         addquad(param);
 }
+#endif
 
-static void load_param_2_32(codeblock_t *block, uint32_t param)
+static inline void load_param_2_32(codeblock_t *block, uint32_t param)
 {
 #if WIN64
         addbyte(0xba); /*MOVL $fetchdat,%edx*/
@@ -97,7 +100,7 @@ static void load_param_2_32(codeblock_t *block, uint32_t param)
 #endif
         addlong(param);
 }
-static void load_param_2_reg_32(int reg)
+static inline void load_param_2_reg_32(int reg)
 {
 #if WIN64
         if (reg & 8)
@@ -111,7 +114,7 @@ static void load_param_2_reg_32(int reg)
         addbyte(0xc0 | REG_ESI | (reg << 3));
 #endif
 }
-static void load_param_2_64(codeblock_t *block, uint64_t param)
+static inline void load_param_2_64(codeblock_t *block, uint64_t param)
 {
 	addbyte(0x48);
 #if WIN64
@@ -122,7 +125,7 @@ static void load_param_2_64(codeblock_t *block, uint64_t param)
         addquad(param);
 }
 
-static void load_param_3_reg_32(int reg)
+static inline void load_param_3_reg_32(int reg)
 {
         if (reg & 8)
         {
@@ -149,7 +152,7 @@ static void load_param_3_reg_32(int reg)
 #endif
         }
 }
-static void load_param_3_reg_64(int reg)
+static inline void load_param_3_reg_64(int reg)
 {
         if (reg & 8)
         {
@@ -177,7 +180,7 @@ static void load_param_3_reg_64(int reg)
         }
 }
 
-static void CALL_FUNC(uintptr_t func)
+static inline void CALL_FUNC(uintptr_t func)
 {
         codegen_reg_loaded[0] = codegen_reg_loaded[1] = codegen_reg_loaded[2] = codegen_reg_loaded[3] = 0;
         codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
@@ -189,11 +192,11 @@ static void CALL_FUNC(uintptr_t func)
 	addbyte(0xd0);
 }
 
-static void RELEASE_REG(int host_reg)
+static inline void RELEASE_REG(int host_reg)
 {
 }
 
-static int LOAD_REG_B(int reg)
+static inline int LOAD_REG_B(int reg)
 {
         int host_reg = reg & 3;
 //        host_reg_mapping[host_reg] = reg;
@@ -213,7 +216,7 @@ static int LOAD_REG_B(int reg)
                 
         return host_reg | 8;
 }
-static int LOAD_REG_W(int reg)
+static inline int LOAD_REG_W(int reg)
 {
         int host_reg = reg;
 //        host_reg_mapping[host_reg] = reg;
@@ -230,7 +233,7 @@ static int LOAD_REG_W(int reg)
         
         return host_reg | 8;
 }
-static int LOAD_REG_L(int reg)
+static inline int LOAD_REG_L(int reg)
 {
         int host_reg = reg;
 //        host_reg_mapping[host_reg] = reg;
@@ -248,7 +251,7 @@ static int LOAD_REG_L(int reg)
         return host_reg | 8;
 }
 
-static int LOAD_REG_IMM(uint32_t imm)
+static inline int LOAD_REG_IMM(uint32_t imm)
 {
         int host_reg = REG_EBX;
 
@@ -258,7 +261,7 @@ static int LOAD_REG_IMM(uint32_t imm)
         return host_reg;
 }
 
-static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
+static inline void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
 {
         int dest_reg = LOAD_REG_L(guest_reg & 3) & 7;
         
@@ -359,7 +362,7 @@ static void STORE_REG_TARGET_B_RELEASE(int host_reg, int guest_reg)
                 }
         }
 }
-static void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
+static inline void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
 {
         int dest_reg = LOAD_REG_L(guest_reg & 7) & 7;
         
@@ -387,7 +390,7 @@ static void STORE_REG_TARGET_W_RELEASE(int host_reg, int guest_reg)
                 addbyte(cpu_state_offset(regs[guest_reg & 7].w));
         }
 }
-static void STORE_REG_TARGET_L_RELEASE(int host_reg, int guest_reg)
+static inline void STORE_REG_TARGET_L_RELEASE(int host_reg, int guest_reg)
 {
         if (host_reg & 8)
         {
@@ -410,7 +413,7 @@ static void STORE_REG_TARGET_L_RELEASE(int host_reg, int guest_reg)
         }
 }
 
-static void STORE_REG_B_RELEASE(int host_reg)
+static inline void STORE_REG_B_RELEASE(int host_reg)
 {
         if (host_reg & 0x10)
         {
@@ -428,7 +431,7 @@ static void STORE_REG_B_RELEASE(int host_reg)
                 addbyte(cpu_state_offset(regs[host_reg & 7].b));
         }
 }
-static void STORE_REG_W_RELEASE(int host_reg)
+static inline void STORE_REG_W_RELEASE(int host_reg)
 {
         addbyte(0x66); /*MOVW [reg],host_reg*/
         addbyte(0x44);
@@ -436,7 +439,7 @@ static void STORE_REG_W_RELEASE(int host_reg)
         addbyte(0x45 | ((host_reg & 7) << 3));
         addbyte(cpu_state_offset(regs[host_reg & 7].w));
 }
-static void STORE_REG_L_RELEASE(int host_reg)
+static inline void STORE_REG_L_RELEASE(int host_reg)
 {
         addbyte(0x44); /*MOVL [reg],host_reg*/
         addbyte(0x89);
@@ -444,7 +447,7 @@ static void STORE_REG_L_RELEASE(int host_reg)
         addbyte(cpu_state_offset(regs[host_reg & 7].l));
 }
 
-static void STORE_IMM_REG_B(int reg, uint8_t val)
+static inline void STORE_IMM_REG_B(int reg, uint8_t val)
 {
         if (reg & 4)
         {
@@ -476,7 +479,7 @@ static void STORE_IMM_REG_B(int reg, uint8_t val)
                 addbyte(cpu_state_offset(regs[reg & 7].b));
         }
 }
-static void STORE_IMM_REG_W(int reg, uint16_t val)
+static inline void STORE_IMM_REG_W(int reg, uint16_t val)
 {
         addbyte(0x66); /*MOVW reg, imm*/
         addbyte(0x41);
@@ -488,7 +491,7 @@ static void STORE_IMM_REG_W(int reg, uint16_t val)
         addbyte(0x45 | (reg << 3));
         addbyte(cpu_state_offset(regs[reg & 7].w));
 }
-static void STORE_IMM_REG_L(int reg, uint32_t val)
+static inline void STORE_IMM_REG_L(int reg, uint32_t val)
 {
         addbyte(0x41); /*MOVL reg, imm*/
         addbyte(0xb8 | reg);
@@ -499,7 +502,7 @@ static void STORE_IMM_REG_L(int reg, uint32_t val)
         addbyte(cpu_state_offset(regs[reg & 7].l));
 }
 
-static void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
+static inline void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
 {
         if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
         {
@@ -533,7 +536,7 @@ static void STORE_IMM_ADDR_L(uintptr_t addr, uint32_t val)
 static x86seg *FETCH_EA_16(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
 {
         int mod = (fetchdat >> 6) & 3;
-        int reg = (fetchdat >> 3) & 7;
+//        int reg = (fetchdat >> 3) & 7;
         int rm = fetchdat & 7;
 
         if (!mod && rm == 6) 
@@ -655,7 +658,7 @@ static x86seg *FETCH_EA_16(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
 static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, int stack_offset)
 {
         int mod = (fetchdat >> 6) & 3;
-        int reg = (fetchdat >> 3) & 7;
+//        int reg = (fetchdat >> 3) & 7;
         int rm = fetchdat & 7;
         uint32_t new_eaaddr;
 
@@ -847,7 +850,7 @@ static x86seg *FETCH_EA_32(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, u
         return op_ea_seg;
 }
 
-static x86seg *FETCH_EA(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32)
+static inline x86seg *FETCH_EA(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32)
 {
         if (op_32 & 0x200)
                 return FETCH_EA_32(op_ea_seg, fetchdat, op_ssegs, op_pc, 0);
@@ -856,7 +859,7 @@ static x86seg *FETCH_EA(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint
 
 
 
-static void CHECK_SEG_READ(x86seg *seg)
+static inline void CHECK_SEG_READ(x86seg *seg)
 {
         /*Segments always valid in real/V86 mode*/
         if (!(cr0 & 1) || (eflags & VM_FLAG))
@@ -872,7 +875,7 @@ static void CHECK_SEG_READ(x86seg *seg)
                 addbyte(0x83); /*CMP seg->base, -1*/
                 addbyte(0x3c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
                 addbyte(-1);
         }
         else
@@ -890,7 +893,7 @@ static void CHECK_SEG_READ(x86seg *seg)
         
         seg->checked = 1;
 }
-static void CHECK_SEG_WRITE(x86seg *seg)
+static inline void CHECK_SEG_WRITE(x86seg *seg)
 {
         /*Segments always valid in real/V86 mode*/
         if (!(cr0 & 1) || (eflags & VM_FLAG))
@@ -906,7 +909,7 @@ static void CHECK_SEG_WRITE(x86seg *seg)
                 addbyte(0x83); /*CMP seg->base, -1*/
                 addbyte(0x3c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
                 addbyte(-1);
         }
         else
@@ -924,12 +927,12 @@ static void CHECK_SEG_WRITE(x86seg *seg)
 
         seg->checked = 1;
 }
-static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
+static inline void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0xb8 | REG_ESI); /*MOV ESI, &addr*/
-                addlong((uint32_t)seg);
+                addlong((uint32_t)(uintptr_t)seg);
         }
         else
         {
@@ -960,14 +963,14 @@ static void CHECK_SEG_LIMITS(x86seg *seg, int end_offset)
         }
 }
 
-static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
+static inline void MEM_LOAD_ADDR_EA_B(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -993,7 +996,7 @@ static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -1018,24 +1021,24 @@ static void MEM_LOAD_ADDR_EA_B(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemb386l);
+        call_long((uintptr_t)readmemb386l);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
+static inline void MEM_LOAD_ADDR_EA_W(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1066,7 +1069,7 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -1095,31 +1098,31 @@ static void MEM_LOAD_ADDR_EA_W(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemwl);
+        call_long((uintptr_t)readmemwl);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_LOAD_ADDR_EA_W_OFFSET(x86seg *seg, int offset)
+static inline void MEM_LOAD_ADDR_EA_W_OFFSET(x86seg *seg, int offset)
 {
         addbyte(0x83); /*ADD EAX, offset*/
         addbyte(0xc0);
         addbyte(offset);
         MEM_LOAD_ADDR_EA_W(seg);
 }
-static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
+static inline void MEM_LOAD_ADDR_EA_L(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1150,7 +1153,7 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -1178,24 +1181,24 @@ static void MEM_LOAD_ADDR_EA_L(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemll);
+        call_long((uintptr_t)readmemll);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
+static inline void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1226,7 +1229,7 @@ static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -1255,10 +1258,10 @@ static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemql);
+        call_long((uintptr_t)readmemql);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
@@ -1266,26 +1269,26 @@ static void MEM_LOAD_ADDR_EA_Q(x86seg *seg)
         /*done:*/
 }
 
-static void MEM_LOAD_ADDR_IMM_B(x86seg *seg, uint32_t addr)
+static inline void MEM_LOAD_ADDR_IMM_B(x86seg *seg, uint32_t addr)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_LOAD_ADDR_EA_B(seg);
 }
-static void MEM_LOAD_ADDR_IMM_W(x86seg *seg, uint32_t addr)
+static inline void MEM_LOAD_ADDR_IMM_W(x86seg *seg, uint32_t addr)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_LOAD_ADDR_EA_W(seg);
 }
-static void MEM_LOAD_ADDR_IMM_L(x86seg *seg, uint32_t addr)
+static inline void MEM_LOAD_ADDR_IMM_L(x86seg *seg, uint32_t addr)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_LOAD_ADDR_EA_L(seg);
 }
 
-static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
 {
         if (host_reg & 0x10)
         {
@@ -1314,7 +1317,7 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1340,7 +1343,7 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -1376,24 +1379,24 @@ static void MEM_STORE_ADDR_EA_B(x86seg *seg, int host_reg)
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
         load_param_3_reg_32(host_reg);
-        call_long(writememb386l);
+        call_long((uintptr_t)writememb386l);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1424,7 +1427,7 @@ static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -1466,24 +1469,24 @@ static void MEM_STORE_ADDR_EA_W(x86seg *seg, int host_reg)
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
         load_param_3_reg_32(host_reg);
-        call_long(writememwl);
+        call_long((uintptr_t)writememwl);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1514,7 +1517,7 @@ static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -1554,24 +1557,24 @@ static void MEM_STORE_ADDR_EA_L(x86seg *seg, int host_reg)
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
         load_param_3_reg_32(host_reg);
-        call_long(writememll);
+        call_long((uintptr_t)writememll);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         /*done:*/
 }
-static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
+static inline void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -1602,7 +1605,7 @@ static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -1643,10 +1646,10 @@ static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
         load_param_3_reg_64(host_reg);
-        call_long(writememql);
+        call_long((uintptr_t)writememql);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);
@@ -1654,26 +1657,26 @@ static void MEM_STORE_ADDR_EA_Q(x86seg *seg, int host_reg, int host_reg2)
         /*done:*/
 }
 
-static void MEM_STORE_ADDR_IMM_B(x86seg *seg, uint32_t addr, int host_reg)
+static inline void MEM_STORE_ADDR_IMM_B(x86seg *seg, uint32_t addr, int host_reg)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_STORE_ADDR_EA_B(seg, host_reg);
 }
-static void MEM_STORE_ADDR_IMM_W(x86seg *seg, uint32_t addr, int host_reg)
+static inline void MEM_STORE_ADDR_IMM_W(x86seg *seg, uint32_t addr, int host_reg)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_STORE_ADDR_EA_W(seg, host_reg);
 }
-static void MEM_STORE_ADDR_IMM_L(x86seg *seg, uint32_t addr, int host_reg)
+static inline void MEM_STORE_ADDR_IMM_L(x86seg *seg, uint32_t addr, int host_reg)
 {
         addbyte(0xb8); /*MOV EAX, addr*/
         addlong(addr);
         MEM_STORE_ADDR_EA_L(seg, host_reg);
 }
 
-static void STORE_HOST_REG_ADDR_BL(uintptr_t addr, int host_reg)
+static inline void STORE_HOST_REG_ADDR_BL(uintptr_t addr, int host_reg)
 {
         int temp_reg = REG_ECX;
         
@@ -1703,7 +1706,7 @@ static void STORE_HOST_REG_ADDR_BL(uintptr_t addr, int host_reg)
         {
                 addbyte(0x89); /*MOV addr, temp_reg*/
                 addbyte(0x45 | (temp_reg << 3));
-                addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
+                addbyte((uint32_t)addr - (uint32_t)(uintptr_t)&cpu_state - 128);
         }
         else if (IS_32_ADDR(addr))
         {
@@ -1721,7 +1724,7 @@ static void STORE_HOST_REG_ADDR_BL(uintptr_t addr, int host_reg)
                 addbyte(0x06 | (temp_reg << 3));
         }
 }
-static void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
+static inline void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
 {
         int temp_reg = REG_ECX;
         
@@ -1737,7 +1740,7 @@ static void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
         {
                 addbyte(0x89); /*MOV addr, temp_reg*/
                 addbyte(0x45 | (temp_reg << 3));
-                addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
+                addbyte((uint32_t)addr - (uint32_t)(uintptr_t)&cpu_state - 128);
         }
         else if (IS_32_ADDR(addr))
         {
@@ -1755,7 +1758,7 @@ static void STORE_HOST_REG_ADDR_WL(uintptr_t addr, int host_reg)
                 addbyte(0x06 | (temp_reg << 3));
         }
 }
-static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
+static inline void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
 {
         if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
         {
@@ -1764,7 +1767,7 @@ static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
                         addbyte(0x44);
                 addbyte(0x89);
                 addbyte(0x45 | ((host_reg & 7) << 3));
-                addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
+                addbyte((uint32_t)addr - (uint32_t)(uintptr_t)&cpu_state - 128);
         }
         else if (IS_32_ADDR(addr))
         {
@@ -1789,7 +1792,7 @@ static void STORE_HOST_REG_ADDR_W(uintptr_t addr, int host_reg)
                 addbyte(0x06 | ((host_reg & 7) << 3));
         }
 }
-static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
+static inline void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
 {
         if (addr >= (uintptr_t)&cpu_state && addr < ((uintptr_t)&cpu_state)+0x100)
         {
@@ -1797,7 +1800,7 @@ static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
                         addbyte(0x44);
                 addbyte(0x89); /*MOVL [addr],host_reg*/
                 addbyte(0x45 | ((host_reg & 7) << 3));
-                addbyte((uint32_t)addr - (uint32_t)&cpu_state - 128);
+                addbyte((uint32_t)addr - (uint32_t)(uintptr_t)&cpu_state - 128);
         }
         else if (IS_32_ADDR(addr))
         {
@@ -1821,7 +1824,7 @@ static void STORE_HOST_REG_ADDR(uintptr_t addr, int host_reg)
         }
 }
 
-static void AND_HOST_REG_B(int dst_reg, int src_reg)
+static inline void AND_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -1944,7 +1947,7 @@ static void AND_HOST_REG_B(int dst_reg, int src_reg)
                 }                
         }
 }
-static void AND_HOST_REG_W(int dst_reg, int src_reg)
+static inline void AND_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -1974,7 +1977,7 @@ static void AND_HOST_REG_W(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void AND_HOST_REG_L(int dst_reg, int src_reg)
+static inline void AND_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2000,7 +2003,7 @@ static void AND_HOST_REG_L(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void AND_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline void AND_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 0x10)
         {
@@ -2021,7 +2024,7 @@ static void AND_HOST_REG_IMM(int host_reg, uint32_t imm)
         }
 }
 
-static int TEST_HOST_REG_B(int dst_reg, int src_reg)
+static inline int TEST_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2036,7 +2039,7 @@ static int TEST_HOST_REG_B(int dst_reg, int src_reg)
         
         return dst_reg & ~0x10;
 }
-static int TEST_HOST_REG_W(int dst_reg, int src_reg)
+static inline int TEST_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2051,7 +2054,7 @@ static int TEST_HOST_REG_W(int dst_reg, int src_reg)
         
         return dst_reg;
 }
-static int TEST_HOST_REG_L(int dst_reg, int src_reg)
+static inline int TEST_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2066,7 +2069,7 @@ static int TEST_HOST_REG_L(int dst_reg, int src_reg)
         
         return dst_reg;
 }
-static int TEST_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline int TEST_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 8)
         {
@@ -2092,7 +2095,7 @@ static int TEST_HOST_REG_IMM(int host_reg, uint32_t imm)
         return host_reg;
 }
 
-static void OR_HOST_REG_B(int dst_reg, int src_reg)
+static inline void OR_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2214,7 +2217,7 @@ static void OR_HOST_REG_B(int dst_reg, int src_reg)
                 }                
         }
 }
-static void OR_HOST_REG_W(int dst_reg, int src_reg)
+static inline void OR_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2244,7 +2247,7 @@ static void OR_HOST_REG_W(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void OR_HOST_REG_L(int dst_reg, int src_reg)
+static inline void OR_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2270,7 +2273,7 @@ static void OR_HOST_REG_L(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void OR_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline void OR_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 0x10)
         {
@@ -2296,7 +2299,7 @@ static void OR_HOST_REG_IMM(int host_reg, uint32_t imm)
 //                fatal("OR to bad register\n");
 }
 
-static void XOR_HOST_REG_B(int dst_reg, int src_reg)
+static inline void XOR_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2418,7 +2421,7 @@ static void XOR_HOST_REG_B(int dst_reg, int src_reg)
                 }                
         }
 }
-static void XOR_HOST_REG_W(int dst_reg, int src_reg)
+static inline void XOR_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2448,7 +2451,7 @@ static void XOR_HOST_REG_W(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void XOR_HOST_REG_L(int dst_reg, int src_reg)
+static inline void XOR_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2474,7 +2477,7 @@ static void XOR_HOST_REG_L(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void XOR_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline void XOR_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 0x10)
         {
@@ -2500,7 +2503,7 @@ static void XOR_HOST_REG_IMM(int host_reg, uint32_t imm)
 //                fatal("XOR to bad register\n");
 }
 
-static void ADD_HOST_REG_B(int dst_reg, int src_reg)
+static inline void ADD_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2594,7 +2597,7 @@ static void ADD_HOST_REG_B(int dst_reg, int src_reg)
         else
                 fatal("!(dst_reg & src_reg & 8)\n");
 }
-static void ADD_HOST_REG_W(int dst_reg, int src_reg)
+static inline void ADD_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2620,7 +2623,7 @@ static void ADD_HOST_REG_W(int dst_reg, int src_reg)
         else
                 fatal("!(dst_reg & src_reg & 8)\n");
 }
-static void ADD_HOST_REG_L(int dst_reg, int src_reg)
+static inline void ADD_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2644,7 +2647,7 @@ static void ADD_HOST_REG_L(int dst_reg, int src_reg)
                 fatal("!(dst_reg & src_reg & 8)\n");
 }
 
-static void SUB_HOST_REG_B(int dst_reg, int src_reg)
+static inline void SUB_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2768,7 +2771,7 @@ static void SUB_HOST_REG_B(int dst_reg, int src_reg)
         
 //                fatal("!(dst_reg & src_reg & 8) subb %i %i\n", dst_reg, src_reg);
 }
-static void SUB_HOST_REG_W(int dst_reg, int src_reg)
+static inline void SUB_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2798,7 +2801,7 @@ static void SUB_HOST_REG_W(int dst_reg, int src_reg)
                 addbyte(0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3));
         }
 }
-static void SUB_HOST_REG_L(int dst_reg, int src_reg)
+static inline void SUB_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & src_reg & 8)
         {
@@ -2825,7 +2828,7 @@ static void SUB_HOST_REG_L(int dst_reg, int src_reg)
         }
 }
 
-static int CMP_HOST_REG_B(int dst_reg, int src_reg)
+static inline int CMP_HOST_REG_B(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2840,7 +2843,7 @@ static int CMP_HOST_REG_B(int dst_reg, int src_reg)
         
         return dst_reg & ~0x10;
 }
-static int CMP_HOST_REG_W(int dst_reg, int src_reg)
+static inline int CMP_HOST_REG_W(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2855,7 +2858,7 @@ static int CMP_HOST_REG_W(int dst_reg, int src_reg)
         
         return dst_reg;
 }
-static int CMP_HOST_REG_L(int dst_reg, int src_reg)
+static inline int CMP_HOST_REG_L(int dst_reg, int src_reg)
 {
         if (dst_reg & 8)
         {
@@ -2871,7 +2874,7 @@ static int CMP_HOST_REG_L(int dst_reg, int src_reg)
         return dst_reg;
 }
 
-static void ADD_HOST_REG_IMM_B(int host_reg, uint8_t imm)
+static inline void ADD_HOST_REG_IMM_B(int host_reg, uint8_t imm)
 {
         if (host_reg & 0x10)
         {
@@ -2891,7 +2894,7 @@ static void ADD_HOST_REG_IMM_B(int host_reg, uint8_t imm)
                 addbyte(imm);
         }
 }
-static void ADD_HOST_REG_IMM_W(int host_reg, uint16_t imm)
+static inline void ADD_HOST_REG_IMM_W(int host_reg, uint16_t imm)
 {
         addbyte(0x66); /*ADDW host_reg, imm*/
         if (host_reg & 8)
@@ -2900,7 +2903,7 @@ static void ADD_HOST_REG_IMM_W(int host_reg, uint16_t imm)
         addbyte(0xC0 | (host_reg & 7));
         addword(imm);
 }
-static void ADD_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline void ADD_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 8)
                 addbyte(0x41);
@@ -2909,7 +2912,7 @@ static void ADD_HOST_REG_IMM(int host_reg, uint32_t imm)
         addlong(imm);
 }
 
-static void SUB_HOST_REG_IMM_B(int host_reg, uint8_t imm)
+static inline void SUB_HOST_REG_IMM_B(int host_reg, uint8_t imm)
 {
         if (host_reg & 0x10)
         {
@@ -2929,7 +2932,7 @@ static void SUB_HOST_REG_IMM_B(int host_reg, uint8_t imm)
                 addbyte(imm);
         }
 }
-static void SUB_HOST_REG_IMM_W(int host_reg, uint16_t imm)
+static inline void SUB_HOST_REG_IMM_W(int host_reg, uint16_t imm)
 {
         addbyte(0x66); /*SUBW host_reg, imm*/
         if (host_reg & 8)
@@ -2938,7 +2941,7 @@ static void SUB_HOST_REG_IMM_W(int host_reg, uint16_t imm)
         addbyte(0xE8 | (host_reg & 7));
         addword(imm);
 }
-static void SUB_HOST_REG_IMM(int host_reg, uint32_t imm)
+static inline void SUB_HOST_REG_IMM(int host_reg, uint32_t imm)
 {
         if (host_reg & 8)
                 addbyte(0x41);
@@ -2947,7 +2950,7 @@ static void SUB_HOST_REG_IMM(int host_reg, uint32_t imm)
         addlong(imm);
 }
 
-static int CMP_HOST_REG_IMM_B(int host_reg, uint8_t imm)
+static inline int CMP_HOST_REG_IMM_B(int host_reg, uint8_t imm)
 {
         if (host_reg & 8)
         {
@@ -2962,7 +2965,7 @@ static int CMP_HOST_REG_IMM_B(int host_reg, uint8_t imm)
         
         return host_reg;// & ~0x10;
 }
-static int CMP_HOST_REG_IMM_W(int host_reg, uint16_t imm)
+static inline int CMP_HOST_REG_IMM_W(int host_reg, uint16_t imm)
 {
         if (host_reg & 8)
         {
@@ -2977,7 +2980,7 @@ static int CMP_HOST_REG_IMM_W(int host_reg, uint16_t imm)
         
         return host_reg;
 }
-static int CMP_HOST_REG_IMM_L(int host_reg, uint32_t imm)
+static inline int CMP_HOST_REG_IMM_L(int host_reg, uint32_t imm)
 {
         if (host_reg & 8)
         {
@@ -2993,13 +2996,13 @@ static int CMP_HOST_REG_IMM_L(int host_reg, uint32_t imm)
         return host_reg;
 }
 
-static void LOAD_STACK_TO_EA(int off)
+static inline void LOAD_STACK_TO_EA(int off)
 {
         if (stack32)
         {
                 addbyte(0x8b); /*MOVL EAX,[ESP]*/
                 addbyte(0x45 | (REG_EAX << 3));
-                addbyte(cpu_state_offset(regs[REG_ESP].l));
+                addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].l));
                 if (off)
                 {
                         addbyte(0x83); /*ADD EAX, off*/
@@ -3012,7 +3015,7 @@ static void LOAD_STACK_TO_EA(int off)
                 addbyte(0x0f); /*MOVZX EAX,W[ESP]*/
                 addbyte(0xb7);
                 addbyte(0x45 | (REG_EAX << 3));
-                addbyte(cpu_state_offset(regs[REG_ESP].w));
+                addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].w));
                 if (off)
                 {
                         addbyte(0x66); /*ADD AX, off*/
@@ -3021,13 +3024,13 @@ static void LOAD_STACK_TO_EA(int off)
                 }
         }
 }
-static void LOAD_EBP_TO_EA(int off)
+static inline void LOAD_EBP_TO_EA(int off)
 {
         if (stack32)
         {
                 addbyte(0x8b); /*MOVL EAX,[EBP]*/
                 addbyte(0x45 | (REG_EAX << 3));
-                addbyte(cpu_state_offset(regs[REG_EBP].l));
+                addbyte((uint8_t)cpu_state_offset(regs[REG_EBP].l));
                 if (off)
                 {
                         addbyte(0x83); /*ADD EAX, off*/
@@ -3040,7 +3043,7 @@ static void LOAD_EBP_TO_EA(int off)
                 addbyte(0x0f); /*MOVZX EAX,W[EBP]*/
                 addbyte(0xb7);
                 addbyte(0x45 | (REG_EAX << 3));
-                addbyte(cpu_state_offset(regs[REG_BP].l));
+                addbyte((uint8_t)cpu_state_offset(regs[REG_BP].l));
                 if (off)
                 {
                         addbyte(0x66); /*ADD AX, off*/
@@ -3050,7 +3053,7 @@ static void LOAD_EBP_TO_EA(int off)
         }
 }
 
-static void SP_MODIFY(int off)
+static inline void SP_MODIFY(int off)
 {
         if (stack32)
         {
@@ -3058,14 +3061,14 @@ static void SP_MODIFY(int off)
                 {
                         addbyte(0x83); /*ADD [ESP], off*/
                         addbyte(0x45);
-                        addbyte(cpu_state_offset(regs[REG_ESP].l));
+                        addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].l));
                         addbyte(off);
                 }
                 else
                 {
                         addbyte(0x81); /*ADD [ESP], off*/
                         addbyte(0x45);
-                        addbyte(cpu_state_offset(regs[REG_ESP].l));
+                        addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].l));
                         addlong(off);
                 }
         }
@@ -3076,7 +3079,7 @@ static void SP_MODIFY(int off)
                         addbyte(0x66); /*ADD [SP], off*/
                         addbyte(0x83);
                         addbyte(0x45);
-                        addbyte(cpu_state_offset(regs[REG_ESP].w));
+                        addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].w));
                         addbyte(off);
                 }
                 else
@@ -3084,13 +3087,13 @@ static void SP_MODIFY(int off)
                         addbyte(0x66); /*ADD [SP], off*/
                         addbyte(0x81);
                         addbyte(0x45);
-                        addbyte(cpu_state_offset(regs[REG_ESP].w));
+                        addbyte((uint8_t)cpu_state_offset(regs[REG_ESP].w));
                         addword(off);
                 }
         }
 }
 
-static void TEST_ZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
+static inline void TEST_ZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
 {
         addbyte(0x66); /*CMPW host_reg, 0*/
         if (host_reg & 8)
@@ -3102,19 +3105,19 @@ static void TEST_ZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(7+5+(taken_cycles ? 4 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(new_pc);
         if (taken_cycles)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(taken_cycles);
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
-static void TEST_ZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
+static inline void TEST_ZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
 {
         if (host_reg & 8)
                 addbyte(0x41);
@@ -3125,20 +3128,20 @@ static void TEST_ZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(7+5+(taken_cycles ? 4 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(new_pc);
         if (taken_cycles)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(taken_cycles);
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
 
-static void TEST_NONZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
+static inline void TEST_NONZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
 {
         addbyte(0x66); /*CMPW host_reg, 0*/
         if (host_reg & 8)
@@ -3150,19 +3153,19 @@ static void TEST_NONZERO_JUMP_W(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(7+5+(taken_cycles ? 4 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(new_pc);
         if (taken_cycles)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(taken_cycles);
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
-static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
+static inline void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
 {
         if (host_reg & 8)
                 addbyte(0x41);
@@ -3173,20 +3176,20 @@ static void TEST_NONZERO_JUMP_L(int host_reg, uint32_t new_pc, int taken_cycles)
         addbyte(7+5+(taken_cycles ? 4 : 0));
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(new_pc);
         if (taken_cycles)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(taken_cycles);
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
 
-static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+static inline void BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
         uint8_t *jump1;
         
@@ -3194,20 +3197,20 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
         {
                 addbyte(0x83); /*CMP flags_res, 0*/
                 addbyte(0x7d);
-                addbyte(cpu_state_offset(flags_res));
+                addbyte((uint8_t)cpu_state_offset(flags_res));
                 addbyte(0);
                 addbyte(0x74); /*JZ +*/
         }
         else
         {
-                CALL_FUNC(ZF_SET);
+                CALL_FUNC((uintptr_t)ZF_SET);
                 addbyte(0x85); /*TEST EAX,EAX*/
                 addbyte(0xc0);
                 addbyte(0x75); /*JNZ +*/
         }
         jump1 = &codeblock[block_current].data[block_pos];
         addbyte(0);
-        CALL_FUNC(CF_SET);
+        CALL_FUNC((uintptr_t)CF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
         if (not)
@@ -3220,13 +3223,13 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(timing_bt);
         }
         addbyte(0xe9); /*JMP end*/
@@ -3235,15 +3238,15 @@ static int BRANCH_COND_BE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
 }
 
-static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+static inline void BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
-        CALL_FUNC(NF_SET);
+        CALL_FUNC((uintptr_t)NF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
         addbyte(0x0f); /*SETNE BL*/
         addbyte(0x95);
         addbyte(0xc3);
-        CALL_FUNC(VF_SET);
+        CALL_FUNC((uintptr_t)VF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
         addbyte(0x0f); /*SETNE AL*/
@@ -3258,46 +3261,46 @@ static int BRANCH_COND_L(int pc_offset, uint32_t op_pc, uint32_t offset, int not
         addbyte(7+5+(timing_bt ? 4 : 0));        
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(timing_bt);
         }
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 }
 
-static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
+static inline void BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int not)
 {
         uint8_t *jump1;
         if (codegen_flags_changed && cpu_state.flags_op != FLAGS_UNKNOWN)
         {
                 addbyte(0x83); /*CMP flags_res, 0*/
                 addbyte(0x7d);
-                addbyte(cpu_state_offset(flags_res));
+                addbyte((uint8_t)cpu_state_offset(flags_res));
                 addbyte(0);
                 addbyte(0x74); /*JZ +*/
         }
         else
         {
-                CALL_FUNC(ZF_SET);
+                CALL_FUNC((uintptr_t)ZF_SET);
                 addbyte(0x85); /*TEST EAX,EAX*/
                 addbyte(0xc0);
                 addbyte(0x75); /*JNZ +*/
         }
         jump1 = &codeblock[block_current].data[block_pos];
         addbyte(0);
-        CALL_FUNC(NF_SET);
+        CALL_FUNC((uintptr_t)NF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
         addbyte(0x0f); /*SETNE BL*/
         addbyte(0x95);
         addbyte(0xc3);
-        CALL_FUNC(VF_SET);
+        CALL_FUNC((uintptr_t)VF_SET);
         addbyte(0x85); /*TEST EAX,EAX*/
         addbyte(0xc0);
         addbyte(0x0f); /*SETNE AL*/
@@ -3314,13 +3317,13 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
         addbyte(0xC7); /*MOVL [pc], new_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(pc));
+        addbyte((uint8_t)cpu_state_offset(pc));
         addlong(op_pc+pc_offset+offset);
         if (timing_bt)
         {
                 addbyte(0x83); /*SUB $codegen_block_cycles, cyclcs*/
                 addbyte(0x6d);
-                addbyte(cpu_state_offset(_cycles));
+                addbyte((uint8_t)cpu_state_offset(_cycles));
                 addbyte(timing_bt);
         }
         addbyte(0xe9); /*JMP end*/
@@ -3329,7 +3332,7 @@ static int BRANCH_COND_LE(int pc_offset, uint32_t op_pc, uint32_t offset, int no
                 *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
 }
 
-static int LOAD_VAR_W(uintptr_t addr)
+static inline int LOAD_VAR_W(uintptr_t addr)
 {
         int host_reg = REG_EBX;
 
@@ -3360,11 +3363,11 @@ static int LOAD_VAR_W(uintptr_t addr)
 
         return host_reg;
 }
-static int LOAD_VAR_WL(uintptr_t addr)
+static inline int LOAD_VAR_WL(uintptr_t addr)
 {
         return LOAD_VAR_W(addr);
 }
-static int LOAD_VAR_L(uintptr_t addr)
+static inline int LOAD_VAR_L(uintptr_t addr)
 {
         int host_reg = REG_EBX;
 
@@ -3393,7 +3396,7 @@ static int LOAD_VAR_L(uintptr_t addr)
         return host_reg;
 }
 
-static int COPY_REG(int src_reg)
+static inline int COPY_REG(int src_reg)
 {
         if (src_reg & 8)
                 addbyte(0x44);
@@ -3403,7 +3406,7 @@ static int COPY_REG(int src_reg)
         return REG_ECX | (src_reg & 0x10);
 }
 
-static int LOAD_HOST_REG(int host_reg)
+static inline int LOAD_HOST_REG(int host_reg)
 {
         if (host_reg & 8)
                 addbyte(0x44);
@@ -3413,7 +3416,7 @@ static int LOAD_HOST_REG(int host_reg)
         return REG_EBX | (host_reg & 0x10);
 }
 
-static int ZERO_EXTEND_W_B(int reg)
+static inline int ZERO_EXTEND_W_B(int reg)
 {
         if (reg & 0x10)
         {
@@ -3435,7 +3438,7 @@ static int ZERO_EXTEND_W_B(int reg)
         
         return REG_EAX;
 }
-static int ZERO_EXTEND_L_B(int reg)
+static inline int ZERO_EXTEND_L_B(int reg)
 {
         if (reg & 0x10)
         {
@@ -3457,7 +3460,7 @@ static int ZERO_EXTEND_L_B(int reg)
         
         return REG_EAX;
 }
-static int ZERO_EXTEND_L_W(int reg)
+static inline int ZERO_EXTEND_L_W(int reg)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3468,7 +3471,7 @@ static int ZERO_EXTEND_L_W(int reg)
         return REG_EAX;
 }
 
-static int SIGN_EXTEND_W_B(int reg)
+static inline int SIGN_EXTEND_W_B(int reg)
 {
         if (reg & 0x10)
         {
@@ -3490,7 +3493,7 @@ static int SIGN_EXTEND_W_B(int reg)
         
         return REG_EAX;
 }
-static int SIGN_EXTEND_L_B(int reg)
+static inline int SIGN_EXTEND_L_B(int reg)
 {
         if (reg & 0x10)
         {
@@ -3512,7 +3515,7 @@ static int SIGN_EXTEND_L_B(int reg)
         
         return REG_EAX;
 }
-static int SIGN_EXTEND_L_W(int reg)
+static inline int SIGN_EXTEND_L_W(int reg)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3523,7 +3526,7 @@ static int SIGN_EXTEND_L_W(int reg)
         return REG_EAX;
 }
 
-static void SHL_B_IMM(int reg, int count)
+static inline void SHL_B_IMM(int reg, int count)
 {
         if (reg & 0x10)
         {
@@ -3546,7 +3549,7 @@ static void SHL_B_IMM(int reg, int count)
                 addbyte(count);
         }
 }
-static void SHL_W_IMM(int reg, int count)
+static inline void SHL_W_IMM(int reg, int count)
 {
         addbyte(0x66); /*SHL reg, count*/
         if (reg & 8)
@@ -3555,7 +3558,7 @@ static void SHL_W_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x20);
         addbyte(count);
 }
-static void SHL_L_IMM(int reg, int count)
+static inline void SHL_L_IMM(int reg, int count)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3563,7 +3566,7 @@ static void SHL_L_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x20);
         addbyte(count);
 }
-static void SHR_B_IMM(int reg, int count)
+static inline void SHR_B_IMM(int reg, int count)
 {
         if (reg & 0x10)
         {
@@ -3586,7 +3589,7 @@ static void SHR_B_IMM(int reg, int count)
                 addbyte(count);
         }
 }
-static void SHR_W_IMM(int reg, int count)
+static inline void SHR_W_IMM(int reg, int count)
 {
         addbyte(0x66); /*SHR reg, count*/
         if (reg & 8)
@@ -3595,7 +3598,7 @@ static void SHR_W_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x28);
         addbyte(count);
 }
-static void SHR_L_IMM(int reg, int count)
+static inline void SHR_L_IMM(int reg, int count)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3603,7 +3606,7 @@ static void SHR_L_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x28);
         addbyte(count);
 }
-static void SAR_B_IMM(int reg, int count)
+static inline void SAR_B_IMM(int reg, int count)
 {
         if (reg & 0x10)
         {
@@ -3626,7 +3629,7 @@ static void SAR_B_IMM(int reg, int count)
                 addbyte(count);
         }
 }
-static void SAR_W_IMM(int reg, int count)
+static inline void SAR_W_IMM(int reg, int count)
 {
         addbyte(0x66); /*SAR reg, count*/
         if (reg & 8)
@@ -3635,7 +3638,7 @@ static void SAR_W_IMM(int reg, int count)
         addbyte(0xc0 | (reg & 7) | 0x38);
         addbyte(count);
 }
-static void SAR_L_IMM(int reg, int count)
+static inline void SAR_L_IMM(int reg, int count)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3644,7 +3647,7 @@ static void SAR_L_IMM(int reg, int count)
         addbyte(count);
 }
 
-static void NEG_HOST_REG_B(int reg)
+static inline void NEG_HOST_REG_B(int reg)
 {
         if (reg & 0x10)
         {
@@ -3667,7 +3670,7 @@ static void NEG_HOST_REG_B(int reg)
                 addbyte(0xd8 | (reg & 7));
         }
 }
-static void NEG_HOST_REG_W(int reg)
+static inline void NEG_HOST_REG_W(int reg)
 {
         addbyte(0x66);
         if (reg & 8)
@@ -3675,7 +3678,7 @@ static void NEG_HOST_REG_W(int reg)
         addbyte(0xf7);
         addbyte(0xd8 | (reg & 7));
 }
-static void NEG_HOST_REG_L(int reg)
+static inline void NEG_HOST_REG_L(int reg)
 {
         if (reg & 8)
                 addbyte(0x41);
@@ -3684,7 +3687,7 @@ static void NEG_HOST_REG_L(int reg)
 }
         
 
-static void FP_ENTER()
+static inline void FP_ENTER()
 {
         if (codegen_fpu_entered)
                 return;
@@ -3700,7 +3703,7 @@ static void FP_ENTER()
         {
                 addbyte(0x48); /*MOV RAX, &cr0*/
                 addbyte(0xb8 | REG_EAX);
-                addquad(&cr0);
+                addquad((uint64_t)&cr0);
                 addbyte(0xf6); /*TEST [RAX], 0xc*/
                 addbyte(0 | (REG_EAX << 3));
                 addbyte(0x0c);
@@ -3709,21 +3712,21 @@ static void FP_ENTER()
         addbyte(7+5+12+5);
         addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(oldpc));
+        addbyte((uint8_t)cpu_state_offset(oldpc));
         addlong(op_old_pc);
         load_param_1_32(&codeblock[block_current], 7);
-        CALL_FUNC(x86_int);
+        CALL_FUNC((uintptr_t)x86_int);
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
         
         codegen_fpu_entered = 1;
 }
 
-static void FP_FXCH(int reg)
+static inline void FP_FXCH(int reg)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
         addbyte(0x83); /*ADD EAX, reg*/
@@ -3734,7 +3737,7 @@ static void FP_FXCH(int reg)
         addbyte(0x8b);
         addbyte(0x54);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x83); /*AND EAX, 7*/
         addbyte(0xe0);
         addbyte(0x07);
@@ -3742,65 +3745,65 @@ static void FP_FXCH(int reg)
         addbyte(0x8b);
         addbyte(0x4c);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x48); /*MOV ST[RAX*8], RDX*/
         addbyte(0x89);
         addbyte(0x54);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x48); /*MOV ST[RBX*8], RCX*/
         addbyte(0x89);
         addbyte(0x4c);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
                 
         addbyte(0x8a); /*MOV CL, tag[EAX]*/
         addbyte(0x4c);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(0x8a); /*MOV DL, tag[EBX]*/
         addbyte(0x54);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(0x88); /*MOV tag[EBX], CL*/
         addbyte(0x4c);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(0x88); /*MOV tag[EAX], DL*/
         addbyte(0x54);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 
         addbyte(0x48); /*MOV RDX, MM[RBX*8]*/
         addbyte(0x8b);
         addbyte(0x54);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x48); /*MOV RCX, MM[RAX*8]*/
         addbyte(0x8b);
         addbyte(0x4c);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x48); /*MOV MM[RAX*8], RDX*/
         addbyte(0x89);
         addbyte(0x54);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x48); /*MOV MM[RBX*8], RCX*/
         addbyte(0x89);
         addbyte(0x4c);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         reg = reg;
 }
 
 
 
-static void FP_FLD(int reg)
+static inline void FP_FLD(int reg)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
         if (reg)
@@ -3826,7 +3829,7 @@ static void FP_FLD(int reg)
         addbyte(0x8b);
         addbyte(0x4c);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x83); /*AND EBX, 7*/
         addbyte(0xe3);
         addbyte(0x07);
@@ -3834,45 +3837,45 @@ static void FP_FLD(int reg)
         addbyte(0x8b);
         addbyte(0x54);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x8a); /*MOV AL, [tag+EAX]*/
         addbyte(0x44);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(0x48); /*MOV ST[EBX*8], RCX*/
         addbyte(0x89);
         addbyte(0x4c);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x48); /*MOV ST_i64[EBX*8], RDX*/
         addbyte(0x89);
         addbyte(0x54);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x88); /*MOV [tag+EBX], AL*/
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 
         addbyte(0x89); /*MOV [TOP], EBX*/
         addbyte(0x5d);
-	addbyte(cpu_state_offset(TOP));
+	addbyte((uint8_t)cpu_state_offset(TOP));
 }
 
-static void FP_FST(int reg)
+static inline void FP_FST(int reg)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x48); /*MOV RCX, ST[EAX*8]*/
         addbyte(0x8b);
         addbyte(0x4c);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x8a); /*MOV BL, [tag+EAX]*/
         addbyte(0x5c);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 
         if (reg)
         {
@@ -3888,22 +3891,22 @@ static void FP_FST(int reg)
         addbyte(0x89);
         addbyte(0x4c);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x88); /*MOV [tag+EAX], BL*/
         addbyte(0x5c);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
 
-static void FP_POP()
+static inline void FP_POP()
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0xc6); /*MOVB tag[EAX], 3*/
         addbyte(0x44);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(3);
         addbyte(0x83); /*ADD AL, 1*/
         addbyte(0xc0);
@@ -3913,17 +3916,17 @@ static void FP_POP()
         addbyte(7);
         addbyte(0x89); /*MOV [TOP], EAX*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
 }
-static void FP_POP2()
+static inline void FP_POP2()
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0xc6); /*MOVB tag[EAX], 3*/
         addbyte(0x44);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(3);
         addbyte(0x83); /*ADD AL, 2*/
         addbyte(0xc0);
@@ -3933,14 +3936,14 @@ static void FP_POP2()
         addbyte(7);
         addbyte(0x89); /*MOV [TOP], EAX*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
 }
 
-static void FP_LOAD_S()
+static inline void FP_LOAD_S()
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x66); /*MOVD XMM0, EAX*/
         addbyte(0x0f);
         addbyte(0x6e);
@@ -3959,24 +3962,24 @@ static void FP_LOAD_S()
         addbyte(0xc0);
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x66); /*MOVQ [ST+EBX*8], XMM0*/
         addbyte(0x0f);
         addbyte(0xd6);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x0f); /*SETE [tag+EBX]*/
         addbyte(0x94);
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
-static void FP_LOAD_D()
+static inline void FP_LOAD_D()
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x83); /*SUB EBX, 1*/
         addbyte(0xeb);
         addbyte(0x01);
@@ -3988,24 +3991,24 @@ static void FP_LOAD_D()
         addbyte(0xc0);
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x48); /*MOVQ [ST+EBX*8], RAX*/
         addbyte(0x89);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x0f); /*SETE [tag+EBX]*/
         addbyte(0x94);
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
 
-static void FP_LOAD_IW()
+static inline void FP_LOAD_IW()
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x0f); /*MOVSX EAX, AX*/
         addbyte(0xbf);
         addbyte(0xc0);
@@ -4023,24 +4026,24 @@ static void FP_LOAD_IW()
         addbyte(0xc0);
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x66); /*MOVQ [ST+EBX*8], XMM0*/
         addbyte(0x0f);
         addbyte(0xd6);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x0f); /*SETE [tag+EBX]*/
         addbyte(0x94);
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
-static void FP_LOAD_IL()
+static inline void FP_LOAD_IL()
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x83); /*SUB EBX, 1*/
         addbyte(0xeb);
         addbyte(0x01);
@@ -4055,24 +4058,24 @@ static void FP_LOAD_IL()
         addbyte(0xc0);
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x66); /*MOVQ [ST+EBX*8], XMM0*/
         addbyte(0x0f);
         addbyte(0xd6);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x0f); /*SETE [tag+EBX]*/
         addbyte(0x94);
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
-static void FP_LOAD_IQ()
+static inline void FP_LOAD_IQ()
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x83); /*SUB EBX, 1*/
         addbyte(0xeb);
         addbyte(0x01);
@@ -4091,10 +4094,10 @@ static void FP_LOAD_IQ()
         addbyte(0x89);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x0f); /*SETE AL*/
         addbyte(0x94);
         addbyte(0xc0);
@@ -4103,20 +4106,20 @@ static void FP_LOAD_IQ()
         addbyte(0xd6);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x0c); /*OR AL, TAG_UINT64*/
         addbyte(TAG_UINT64);
         addbyte(0x88); /*MOV [tag+EBX], AL*/
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
 }
 
-static void FP_LOAD_IMM_Q(uint64_t v)
+static inline void FP_LOAD_IMM_Q(uint64_t v)
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x83); /*SUB EBX, 1*/
         addbyte(0xeb);
         addbyte(0x01);
@@ -4126,28 +4129,28 @@ static void FP_LOAD_IMM_Q(uint64_t v)
         addbyte(0xc7); /*MOV ST[EBP+EBX*8], v*/
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addlong(v & 0xffffffff);
         addbyte(0xc7); /*MOV ST[EBP+EBX*8]+4, v*/
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST) + 4);
+        addbyte((uint8_t)cpu_state_offset(ST) + 4);
         addlong(v >> 32);
         addbyte(0x89); /*MOV TOP, EBX*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0xc6); /*MOV [tag+EBX], (v ? 0 : 1)*/
         addbyte(0x44);
         addbyte(0x1d);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(v ? 0 : 1);
 }
 
-static void FP_FCHS()
+static inline void FP_FCHS()
 {
         addbyte(0x8b); /*MOV EAX, TOP*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0xf2); /*SUBSD XMM0, XMM0*/
         addbyte(0x0f);
         addbyte(0x5c);
@@ -4157,25 +4160,25 @@ static void FP_FCHS()
         addbyte(0x5c);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x80); /*AND tag[EAX], ~TAG_UINT64*/
         addbyte(0x64);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag[0]));
+        addbyte((uint8_t)cpu_state_offset(tag[0]));
         addbyte(~TAG_UINT64);
         addbyte(0xf2); /*MOVSD ST[EAX*8], XMM0*/
         addbyte(0x0f);
         addbyte(0x11);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
 }
 
-static int FP_LOAD_REG(int reg)
+static inline int FP_LOAD_REG(int reg)
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         if (reg)
         {
                 addbyte(0x83); /*ADD EBX, reg*/
@@ -4190,7 +4193,7 @@ static int FP_LOAD_REG(int reg)
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0xf2); /*CVTSD2SS XMM0, XMM0*/
         addbyte(0x0f);
         addbyte(0x5a);
@@ -4202,11 +4205,11 @@ static int FP_LOAD_REG(int reg)
         
         return REG_EBX;
 }
-static void FP_LOAD_REG_D(int reg, int *host_reg1, int *host_reg2)
+static inline void FP_LOAD_REG_D(int reg, int *host_reg1, int *host_reg2)
 {
         addbyte(0x8b); /*MOV EBX, TOP*/
         addbyte(0x5d);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         if (reg)
         {
                 addbyte(0x83); /*ADD EBX, reg*/
@@ -4220,11 +4223,11 @@ static void FP_LOAD_REG_D(int reg, int *host_reg1, int *host_reg2)
         addbyte(0x8b);
         addbyte(0x5c);
         addbyte(0xdd);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         
         *host_reg1 = REG_EBX;
 }
-static int64_t x87_fround(double b)
+static inline int64_t x87_fround(double b)
 {
         int64_t a, c;
         
@@ -4246,15 +4249,17 @@ static int64_t x87_fround(double b)
                 case 3: /*Chop*/
                 return (int64_t)b;
         }
+        
+        return 0;
 }
-static int FP_LOAD_REG_INT_W(int reg)
+static inline int FP_LOAD_REG_INT_W(int reg)
 {
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
 
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         if (reg)
         {
                 addbyte(0x83); /*ADD EAX, reg*/
@@ -4269,22 +4274,22 @@ static int FP_LOAD_REG_INT_W(int reg)
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
 
-        CALL_FUNC(x87_fround);
+        CALL_FUNC((uintptr_t)x87_fround);
         
         addbyte(0x93); /*XCHG EBX, EAX*/
         
         return REG_EBX;
 }
-static int FP_LOAD_REG_INT(int reg)
+static inline int FP_LOAD_REG_INT(int reg)
 {
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
 
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         if (reg)
         {
                 addbyte(0x83); /*ADD EAX, reg*/
@@ -4299,22 +4304,22 @@ static int FP_LOAD_REG_INT(int reg)
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
 
-        CALL_FUNC(x87_fround);
+        CALL_FUNC((uintptr_t)x87_fround);
         
         addbyte(0x93); /*XCHG EBX, EAX*/
         
         return REG_EBX;
 }
-static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
+static inline void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
 {
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
 
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         if (reg)
         {
                 addbyte(0x83); /*ADD EAX, reg*/
@@ -4334,7 +4339,7 @@ static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
                 addbyte(0x8b);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(MM));
+                addbyte((uint8_t)cpu_state_offset(MM));
 
                 addbyte(0x48); /*XCHG RBX, RAX*/
                 addbyte(0x93);
@@ -4347,7 +4352,7 @@ static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
         addbyte(0xf6); /*TEST TAG[EAX], TAG_UINT64*/
         addbyte(0x44);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(TAG_UINT64);
         
         addbyte(0x74); /*JZ +*/
@@ -4357,7 +4362,7 @@ static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
         addbyte(0x8b);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(MM));
+        addbyte((uint8_t)cpu_state_offset(MM));
         
         addbyte(0xeb); /*JMP done*/
         addbyte(6+12);
@@ -4367,9 +4372,9 @@ static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
 
-        CALL_FUNC(x87_fround);
+        CALL_FUNC((uintptr_t)x87_fround);
         
         addbyte(0x48); /*XCHG RBX, RAX*/
         addbyte(0x93);
@@ -4384,11 +4389,11 @@ static void FP_LOAD_REG_INT_Q(int reg, int *host_reg1, int *host_reg2)
 #define FPU_SUB  2
 #define FPU_SUBR 3
 
-static void FP_OP_REG(int op, int dst, int src)
+static inline void FP_OP_REG(int op, int dst, int src)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
         if (dst)
@@ -4412,7 +4417,7 @@ static void FP_OP_REG(int op, int dst, int src)
         addbyte(0x80); /*AND tag[EAX], ~TAG_UINT64*/
         addbyte(0x64);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(~TAG_UINT64);
         if (op == FPU_DIVR || op == FPU_SUBR)
         {
@@ -4421,7 +4426,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x7e);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
         else
         {
@@ -4430,7 +4435,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x7e);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
         switch (op)
         {
@@ -4440,7 +4445,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x58);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
                 case FPU_DIV:
                 addbyte(0xf2); /*DIVSD XMM0, ST[RBX*8]*/
@@ -4448,7 +4453,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x5e);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
                 case FPU_DIVR:
                 addbyte(0xf2); /*DIVSD XMM0, ST[RAX*8]*/
@@ -4456,7 +4461,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x5e);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
                 case FPU_MUL:
                 addbyte(0xf2); /*MULSD XMM0, ST[RBX*8]*/
@@ -4464,7 +4469,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x59);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
                 case FPU_SUB:
                 addbyte(0xf2); /*SUBSD XMM0, ST[RBX*8]*/
@@ -4472,7 +4477,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x5c);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
                 case FPU_SUBR:
                 addbyte(0xf2); /*SUBSD XMM0, ST[RAX*8]*/
@@ -4480,7 +4485,7 @@ static void FP_OP_REG(int op, int dst, int src)
                 addbyte(0x5c);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 break;
         }
         addbyte(0x66); /*MOVQ [RSI+RAX*8], XMM0*/
@@ -4488,24 +4493,24 @@ static void FP_OP_REG(int op, int dst, int src)
         addbyte(0xd6);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
 }
 
-static void FP_OP_MEM(int op)
+static inline void FP_OP_MEM(int op)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0xf3); /*MOVQ XMM0, ST[RAX*8]*/
         addbyte(0x0f);
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x80); /*AND tag[EAX], ~TAG_UINT64*/
         addbyte(0x64);
         addbyte(0x05);
-        addbyte(cpu_state_offset(tag));
+        addbyte((uint8_t)cpu_state_offset(tag));
         addbyte(~TAG_UINT64);
 
         switch (op)
@@ -4554,7 +4559,7 @@ static void FP_OP_MEM(int op)
                 addbyte(0xd6);
                 addbyte(0x4c);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
         else
         {
@@ -4563,11 +4568,11 @@ static void FP_OP_MEM(int op)
                 addbyte(0xd6);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
 }
 
-static void FP_OP_S(int op)
+static inline void FP_OP_S(int op)
 {
         addbyte(0x66); /*MOVD XMM1, EAX*/
         addbyte(0x0f);
@@ -4579,7 +4584,7 @@ static void FP_OP_S(int op)
         addbyte(0xc9);
         FP_OP_MEM(op);
 }
-static void FP_OP_D(int op)
+static inline void FP_OP_D(int op)
 {
         addbyte(0x66); /*MOVQ XMM1, RAX*/
         addbyte(0x48);
@@ -4621,7 +4626,7 @@ static void FP_OP_D(int op)
                 addbyte(0x08);
         }
 }
-static void FP_OP_IW(int op)
+static inline void FP_OP_IW(int op)
 {
         addbyte(0x0f); /*MOVSX EAX, AX*/
         addbyte(0xbf);
@@ -4632,7 +4637,7 @@ static void FP_OP_IW(int op)
         addbyte(0xc8);
         FP_OP_MEM(op);
 }
-static void FP_OP_IL(int op)
+static inline void FP_OP_IL(int op)
 {
         addbyte(0xf2); /*CVTSI2SD XMM1, EAX*/
         addbyte(0x0f);
@@ -4646,11 +4651,11 @@ static void FP_OP_IL(int op)
 #define C2 (1<<10)
 #define C3 (1<<14)
 
-static void FP_COMPARE_REG(int dst, int src)
+static inline void FP_COMPARE_REG(int dst, int src)
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x89); /*MOV EBX, EAX*/
         addbyte(0xc3);
         if (src || dst)
@@ -4665,7 +4670,7 @@ static void FP_COMPARE_REG(int dst, int src)
 
         addbyte(0x8a); /*MOV CL, [npxs+1]*/
         addbyte(0x4d);
-        addbyte(cpu_state_offset(npxs) + 1);
+        addbyte((uint8_t)cpu_state_offset(npxs) + 1);
 //        addbyte(0xdb); /*FCLEX*/
 //        addbyte(0xe2);
         addbyte(0x80); /*AND CL, ~(C0|C2|C3)*/
@@ -4679,13 +4684,13 @@ static void FP_COMPARE_REG(int dst, int src)
                 addbyte(0x7e);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 addbyte(0x66); /*COMISD XMM0, ST[RAX*8]*/
                 addbyte(0x0f);
                 addbyte(0x2f);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
         else
         {
@@ -4694,13 +4699,13 @@ static void FP_COMPARE_REG(int dst, int src)
                 addbyte(0x7e);
                 addbyte(0x44);
                 addbyte(0xc5);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
                 addbyte(0x66); /*COMISD XMM0, ST[RBX*8]*/
                 addbyte(0x0f);
                 addbyte(0x2f);
                 addbyte(0x44);
                 addbyte(0xdd);
-                addbyte(cpu_state_offset(ST));
+                addbyte((uint8_t)cpu_state_offset(ST));
         }
 
         addbyte(0x9f); /*LAHF*/
@@ -4711,18 +4716,18 @@ static void FP_COMPARE_REG(int dst, int src)
         addbyte(0xe1);
         addbyte(0x88); /*MOV [npxs+1], CL*/
         addbyte(0x4d);
-        addbyte(cpu_state_offset(npxs) + 1);
+        addbyte((uint8_t)cpu_state_offset(npxs) + 1);
 }
 
-static void FP_COMPARE_MEM()
+static inline void FP_COMPARE_MEM()
 {
         addbyte(0x8b); /*MOV EAX, [TOP]*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
 
         addbyte(0x8a); /*MOV CL, [npxs+1]*/
         addbyte(0x4d);
-        addbyte(cpu_state_offset(npxs) + 1);
+        addbyte((uint8_t)cpu_state_offset(npxs) + 1);
 //        addbyte(0xdb); /*FCLEX*/
 //        addbyte(0xe2);
         addbyte(0xf3); /*MOVQ XMM0, ST[RAX*8]*/
@@ -4730,7 +4735,7 @@ static void FP_COMPARE_MEM()
         addbyte(0x7e);
         addbyte(0x44);
         addbyte(0xc5);
-        addbyte(cpu_state_offset(ST));
+        addbyte((uint8_t)cpu_state_offset(ST));
         addbyte(0x80); /*AND CL, ~(C0|C2|C3)*/
         addbyte(0xe1);
         addbyte((~(C0|C2|C3)) >> 8);
@@ -4746,9 +4751,9 @@ static void FP_COMPARE_MEM()
         addbyte(0xe1);
         addbyte(0x88); /*MOV [npxs+1], CL*/
         addbyte(0x4d);
-        addbyte(cpu_state_offset(npxs) + 1);
+        addbyte((uint8_t)cpu_state_offset(npxs) + 1);
 }
-static void FP_COMPARE_S()
+static inline void FP_COMPARE_S()
 {
         addbyte(0x66); /*MOVD XMM1, EAX*/
         addbyte(0x0f);
@@ -4760,7 +4765,7 @@ static void FP_COMPARE_S()
         addbyte(0xc9);
         FP_COMPARE_MEM();
 }
-static void FP_COMPARE_D()
+static inline void FP_COMPARE_D()
 {
         addbyte(0x66); /*MOVQ XMM1, RAX*/
         addbyte(0x48);
@@ -4769,7 +4774,7 @@ static void FP_COMPARE_D()
         addbyte(0xc8);
         FP_COMPARE_MEM();
 }
-static void FP_COMPARE_IW()
+static inline void FP_COMPARE_IW()
 {
         addbyte(0x0f); /*MOVSX EAX, AX*/
         addbyte(0xbf);
@@ -4780,7 +4785,7 @@ static void FP_COMPARE_IW()
         addbyte(0xc8);
         FP_COMPARE_MEM();
 }
-static void FP_COMPARE_IL()
+static inline void FP_COMPARE_IL()
 {
         addbyte(0xf2); /*CVTSI2SD XMM1, EAX*/
         addbyte(0x0f);
@@ -4789,11 +4794,11 @@ static void FP_COMPARE_IL()
         FP_COMPARE_MEM();
 }
 
-static void UPDATE_NPXC(int reg)
+static inline void UPDATE_NPXC(int reg)
 {
 }
 
-static void SET_BITS(uintptr_t addr, uint32_t val)
+static inline void SET_BITS(uintptr_t addr, uint32_t val)
 {
         if (IS_32_ADDR(addr))
         {
@@ -4834,7 +4839,7 @@ static void SET_BITS(uintptr_t addr, uint32_t val)
         }
 }
 
-static void CLEAR_BITS(uintptr_t addr, uint32_t val)
+static inline void CLEAR_BITS(uintptr_t addr, uint32_t val)
 {
         if (IS_32_ADDR(addr))
         {
@@ -4878,7 +4883,7 @@ static void CLEAR_BITS(uintptr_t addr, uint32_t val)
 #define LOAD_Q_REG_1 REG_EAX
 #define LOAD_Q_REG_2 REG_EDX
 
-static void MMX_ENTER()
+static inline void MMX_ENTER()
 {
         if (codegen_mmx_entered)
                 return;
@@ -4895,7 +4900,7 @@ static void MMX_ENTER()
         {
                 addbyte(0x48); /*MOV RAX, &cr0*/
                 addbyte(0xb8 | REG_EAX);
-                addquad(&cr0);
+                addquad((uint64_t)&cr0);
                 addbyte(0xf6); /*TEST [RAX], 0xc*/
                 addbyte(0 | (REG_EAX << 3));
                 addbyte(0x0c);
@@ -4904,10 +4909,10 @@ static void MMX_ENTER()
         addbyte(7+5+12+5);
         addbyte(0xC7); /*MOVL [oldpc],op_old_pc*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(oldpc));
+        addbyte((uint8_t)cpu_state_offset(oldpc));
         addlong(op_old_pc);
         load_param_1_32(&codeblock[block_current], 7);
-        CALL_FUNC(x86_int);
+        CALL_FUNC((uintptr_t)x86_int);
         addbyte(0xe9); /*JMP end*/
         addlong(BLOCK_EXIT_OFFSET - (block_pos + 4));
 
@@ -4916,35 +4921,35 @@ static void MMX_ENTER()
         addbyte(0xc0);
         addbyte(0xc6); /*MOV ISMMX, 1*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(ismmx));
+        addbyte((uint8_t)cpu_state_offset(ismmx));
         addbyte(1);
         addbyte(0x89); /*MOV TOP, EAX*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(TOP));
+        addbyte((uint8_t)cpu_state_offset(TOP));
         addbyte(0x89); /*MOV tag, EAX*/      
         addbyte(0x45);
-        addbyte(cpu_state_offset(tag[0]));
+        addbyte((uint8_t)cpu_state_offset(tag[0]));
         addbyte(0x89); /*MOV tag+4, EAX*/
         addbyte(0x45);
-        addbyte(cpu_state_offset(tag[4]));
+        addbyte((uint8_t)cpu_state_offset(tag[4]));
 
         codegen_mmx_entered = 1;
 }
 
 extern int mmx_ebx_ecx_loaded;
 
-static int LOAD_MMX_D(int guest_reg)
+static inline int LOAD_MMX_D(int guest_reg)
 {
         int host_reg = REG_EBX;
 
         addbyte(0x8b); /*MOV EBX, reg*/
         addbyte(0x44 | (host_reg << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].l[0]));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].l[0]));
         
         return host_reg;
 }
-static void LOAD_MMX_Q(int guest_reg, int *host_reg1, int *host_reg2)
+static inline void LOAD_MMX_Q(int guest_reg, int *host_reg1, int *host_reg2)
 {
         int host_reg = REG_EBX;
 
@@ -4955,11 +4960,11 @@ static void LOAD_MMX_Q(int guest_reg, int *host_reg1, int *host_reg2)
         addbyte(0x8b); /*MOV RBX, reg*/
         addbyte(0x44 | ((host_reg & 7) << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].q));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].q));
         
         *host_reg1 = host_reg;
 }
-static int LOAD_MMX_Q_MMX(int guest_reg)
+static inline int LOAD_MMX_Q_MMX(int guest_reg)
 {
         int dst_reg = find_host_xmm_reg();
         host_reg_xmm_mapping[dst_reg] = 100;
@@ -4969,12 +4974,12 @@ static int LOAD_MMX_Q_MMX(int guest_reg)
         addbyte(0x7e);
         addbyte(0x44 | ((dst_reg & 7) << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].q));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].q));
         
         return dst_reg;
 }
 
-static int LOAD_INT_TO_MMX(int src_reg1, int src_reg2)
+static inline int LOAD_INT_TO_MMX(int src_reg1, int src_reg2)
 {
         int dst_reg = find_host_xmm_reg();
         host_reg_xmm_mapping[dst_reg] = 100;
@@ -4991,21 +4996,21 @@ static int LOAD_INT_TO_MMX(int src_reg1, int src_reg2)
         return dst_reg;
 }
 
-static void STORE_MMX_LQ(int guest_reg, int host_reg1)
+static inline void STORE_MMX_LQ(int guest_reg, int host_reg1)
 {
         addbyte(0xC7); /*MOVL [reg],0*/
         addbyte(0x44);
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].l[1]));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].l[1]));
         addlong(0);
         if (host_reg1 & 8)
                 addbyte(0x44);
         addbyte(0x89); /*MOVL [reg],host_reg*/
         addbyte(0x44 | ((host_reg1 & 7) << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].l[0]));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].l[0]));
 }
-static void STORE_MMX_Q(int guest_reg, int host_reg1, int host_reg2)
+static inline void STORE_MMX_Q(int guest_reg, int host_reg1, int host_reg2)
 {
         if (host_reg1 & 8)
                 addbyte(0x4c);
@@ -5014,20 +5019,20 @@ static void STORE_MMX_Q(int guest_reg, int host_reg1, int host_reg2)
         addbyte(0x89); /*MOV [reg],host_reg*/
         addbyte(0x44 | ((host_reg1 & 7) << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].l[0]));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].l[0]));
 }
-static void STORE_MMX_Q_MMX(int guest_reg, int host_reg)
+static inline void STORE_MMX_Q_MMX(int guest_reg, int host_reg)
 {
         addbyte(0x66); /*MOVQ [guest_reg],host_reg*/
         addbyte(0x0f);
         addbyte(0xd6);
         addbyte(0x44 | (host_reg << 3));
         addbyte(0x25);
-        addbyte(cpu_state_offset(MM[guest_reg].q));
+        addbyte((uint8_t)cpu_state_offset(MM[guest_reg].q));
 }
 
 #define MMX_x86_OP(name, opcode)                            \
-static void MMX_ ## name(int dst_reg, int src_reg)      \
+static inline void MMX_ ## name(int dst_reg, int src_reg)      \
 {                                                       \
         addbyte(0x66); /*op dst_reg, src_reg*/          \
         addbyte(0x0f);                                  \
@@ -5080,7 +5085,7 @@ MMX_x86_OP(PMULLW,  0xd5);
 MMX_x86_OP(PMULHW,  0xe5);
 MMX_x86_OP(PMADDWD, 0xf5);
 
-static void MMX_PACKSSWB(int dst_reg, int src_reg)
+static inline void MMX_PACKSSWB(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PACKSSWB dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5092,7 +5097,7 @@ static void MMX_PACKSSWB(int dst_reg, int src_reg)
         addbyte(0xc0 | (dst_reg << 3) | dst_reg);
         addbyte(0x08);
 }
-static void MMX_PACKUSWB(int dst_reg, int src_reg)
+static inline void MMX_PACKUSWB(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PACKUSWB dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5104,7 +5109,7 @@ static void MMX_PACKUSWB(int dst_reg, int src_reg)
         addbyte(0xc0 | (dst_reg << 3) | dst_reg);
         addbyte(0x08);
 }
-static void MMX_PACKSSDW(int dst_reg, int src_reg)
+static inline void MMX_PACKSSDW(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PACKSSDW dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5116,7 +5121,7 @@ static void MMX_PACKSSDW(int dst_reg, int src_reg)
         addbyte(0xc0 | (dst_reg << 3) | dst_reg);
         addbyte(0x08);
 }
-static void MMX_PUNPCKHBW(int dst_reg, int src_reg)
+static inline void MMX_PUNPCKHBW(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PUNPCKLBW dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5128,7 +5133,7 @@ static void MMX_PUNPCKHBW(int dst_reg, int src_reg)
         addbyte(0xc0 | (dst_reg << 3) | dst_reg);
         addbyte(0x0e);
 }
-static void MMX_PUNPCKHWD(int dst_reg, int src_reg)
+static inline void MMX_PUNPCKHWD(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PUNPCKLWD dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5140,7 +5145,7 @@ static void MMX_PUNPCKHWD(int dst_reg, int src_reg)
         addbyte(0xc0 | (dst_reg << 3) | dst_reg);
         addbyte(0x0e);
 }
-static void MMX_PUNPCKHDQ(int dst_reg, int src_reg)
+static inline void MMX_PUNPCKHDQ(int dst_reg, int src_reg)
 {
         addbyte(0x66); /*PUNPCKLDQ dst_reg, src_reg*/
         addbyte(0x0f);
@@ -5153,7 +5158,7 @@ static void MMX_PUNPCKHDQ(int dst_reg, int src_reg)
         addbyte(0x0e);
 }
 
-static void MMX_PSRLW_imm(int dst_reg, int amount)
+static inline void MMX_PSRLW_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRLW dst_reg, amount*/
         addbyte(0x0f);
@@ -5161,7 +5166,7 @@ static void MMX_PSRLW_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x10);
         addbyte(amount);
 }
-static void MMX_PSRAW_imm(int dst_reg, int amount)
+static inline void MMX_PSRAW_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRAW dst_reg, amount*/
         addbyte(0x0f);
@@ -5169,7 +5174,7 @@ static void MMX_PSRAW_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x20);
         addbyte(amount);
 }
-static void MMX_PSLLW_imm(int dst_reg, int amount)
+static inline void MMX_PSLLW_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSLLW dst_reg, amount*/
         addbyte(0x0f);
@@ -5178,7 +5183,7 @@ static void MMX_PSLLW_imm(int dst_reg, int amount)
         addbyte(amount);
 }
 
-static void MMX_PSRLD_imm(int dst_reg, int amount)
+static inline void MMX_PSRLD_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRLD dst_reg, amount*/
         addbyte(0x0f);
@@ -5186,7 +5191,7 @@ static void MMX_PSRLD_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x10);
         addbyte(amount);
 }
-static void MMX_PSRAD_imm(int dst_reg, int amount)
+static inline void MMX_PSRAD_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRAD dst_reg, amount*/
         addbyte(0x0f);
@@ -5194,7 +5199,7 @@ static void MMX_PSRAD_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x20);
         addbyte(amount);
 }
-static void MMX_PSLLD_imm(int dst_reg, int amount)
+static inline void MMX_PSLLD_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSLLD dst_reg, amount*/
         addbyte(0x0f);
@@ -5203,7 +5208,7 @@ static void MMX_PSLLD_imm(int dst_reg, int amount)
         addbyte(amount);
 }
 
-static void MMX_PSRLQ_imm(int dst_reg, int amount)
+static inline void MMX_PSRLQ_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRLQ dst_reg, amount*/
         addbyte(0x0f);
@@ -5211,7 +5216,7 @@ static void MMX_PSRLQ_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x10);
         addbyte(amount);
 }
-static void MMX_PSRAQ_imm(int dst_reg, int amount)
+static inline void MMX_PSRAQ_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSRAQ dst_reg, amount*/
         addbyte(0x0f);
@@ -5219,7 +5224,7 @@ static void MMX_PSRAQ_imm(int dst_reg, int amount)
         addbyte(0xc0 | dst_reg | 0x20);
         addbyte(amount);
 }
-static void MMX_PSLLQ_imm(int dst_reg, int amount)
+static inline void MMX_PSLLQ_imm(int dst_reg, int amount)
 {
         addbyte(0x66); /*PSLLQ dst_reg, amount*/
         addbyte(0x0f);
@@ -5229,14 +5234,14 @@ static void MMX_PSLLQ_imm(int dst_reg, int amount)
 }
 
 
-static void SAVE_EA()
+static inline void SAVE_EA()
 {
         addbyte(0x89); /*MOV [ESP+0x24], EAX*/
         addbyte(0x44);
         addbyte(0x24);
         addbyte(0x24);
 }
-static void LOAD_EA()
+static inline void LOAD_EA()
 {
         addbyte(0x8b); /*MOV EAX, [ESP+0x24]*/
         addbyte(0x44);
@@ -5246,7 +5251,7 @@ static void LOAD_EA()
 
 #define MEM_CHECK_WRITE_B MEM_CHECK_WRITE
 
-static void MEM_CHECK_WRITE(x86seg *seg)
+static inline void MEM_CHECK_WRITE(x86seg *seg)
 {
         uint8_t *jump1, *jump2, *jump3;
         
@@ -5257,7 +5262,7 @@ static void MEM_CHECK_WRITE(x86seg *seg)
                 addbyte(0x8b); /*MOV ESI, seg->base*/
                 addbyte(0x34);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5276,7 +5281,7 @@ static void MEM_CHECK_WRITE(x86seg *seg)
 	        addbyte(0x83); /*CMP cr0, 0*/
 	        addbyte(0x3c);
 	        addbyte(0x25);
-	        addlong((uint32_t)&cr0);
+	        addlong((uint32_t)(uintptr_t)&cr0);
 	        addbyte(0);
 	}
 	else
@@ -5310,7 +5315,7 @@ static void MEM_CHECK_WRITE(x86seg *seg)
 	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
         	addbyte(0x3c);
 	        addbyte(0xfd);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	        addbyte(-1);
 	}
 	else
@@ -5343,18 +5348,18 @@ static void MEM_CHECK_WRITE(x86seg *seg)
 //        addbyte(0x6a); /*PUSH 1*/
 //        addbyte(1);
 //        addbyte(0x57); /*PUSH EDI*/
-        call(&codeblock[block_current], mmutranslatereal);
+        call(&codeblock[block_current], (uintptr_t)mmutranslatereal);
 //        addbyte(0x48); /*ADD ESP, 8*/
 //        addbyte(0x83);
 //        addbyte(0xc4);
 //        addbyte(8);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE mem_abrt_rout*/
         addbyte(0x85);
-        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uint32_t)(&codeblock[block_current].data[block_pos]) + 4));
+        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uintptr_t)(&codeblock[block_current].data[block_pos]) + 4));
 //        addbyte(0xc3); /*RET*/
         *jump1 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump1 - 1;
         *jump2 = (uintptr_t)&codeblock[block_current].data[block_pos] - (uintptr_t)jump2 - 1;
@@ -5366,7 +5371,7 @@ static void MEM_CHECK_WRITE(x86seg *seg)
         LOAD_EA();
 }
 
-static void MEM_CHECK_WRITE_W(x86seg *seg)
+static inline void MEM_CHECK_WRITE_W(x86seg *seg)
 {
         uint8_t *jump1, *jump2, *jump3, *jump4;
         int jump_pos;
@@ -5378,7 +5383,7 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
                 addbyte(0x8b); /*MOV ESI, seg->base*/
                 addbyte(0x34);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5397,7 +5402,7 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
 	        addbyte(0x83); /*CMP cr0, 0*/
 	        addbyte(0x3c);
 	        addbyte(0x25);
-	        addlong((uint32_t)&cr0);
+	        addlong((uint32_t)(uintptr_t)&cr0);
 	        addbyte(0);
 	}
 	else
@@ -5438,7 +5443,7 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
 	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
         	addbyte(0x3c);
 	        addbyte(0xfd);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	        addbyte(-1);
 	}
 	else
@@ -5459,7 +5464,7 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
 	        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
         	addbyte(0x3c);
 	        addbyte(0xfd);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	        addbyte(-1);
 	}
 	else
@@ -5479,17 +5484,17 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
         jump_pos = block_pos;
         load_param_1_reg_32(REG_EBX);
         load_param_2_32(&codeblock[block_current], 1);
-        call(&codeblock[block_current], mmutranslatereal);
+        call(&codeblock[block_current], (uintptr_t)mmutranslatereal);
         addbyte(0x83); /*ADD EBX, 1*/
         addbyte(0xc3);
         addbyte(1);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE mem_abrt_rout*/
         addbyte(0x85);
-        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uint32_t)(&codeblock[block_current].data[block_pos]) + 4));
+        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uintptr_t)(&codeblock[block_current].data[block_pos]) + 4));
         /*If bits 0-11 of the address are now 0 then this crosses a page, so loop back*/
         addbyte(0xf7); /*TEST $fff, EBX*/
         addbyte(0xc3);
@@ -5503,7 +5508,7 @@ static void MEM_CHECK_WRITE_W(x86seg *seg)
         LOAD_EA();
 }
 
-static void MEM_CHECK_WRITE_L(x86seg *seg)
+static inline void MEM_CHECK_WRITE_L(x86seg *seg)
 {
         uint8_t *jump1, *jump2, *jump3, *jump4;
         int jump_pos;
@@ -5515,7 +5520,7 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
                 addbyte(0x8b); /*MOV ESI, seg->base*/
                 addbyte(0x34);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5534,7 +5539,7 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
 	        addbyte(0x83); /*CMP cr0, 0*/
 	        addbyte(0x3c);
 	        addbyte(0x25);
-	        addlong((uint32_t)&cr0);
+	        addlong((uint32_t)(uintptr_t)&cr0);
 	        addbyte(0);
 	}
 	else
@@ -5575,7 +5580,7 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
 	        addbyte(0x83); /*CMP writelookup2[RDI*8],-1*/
         	addbyte(0x3c);
 	        addbyte(0xfd);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	        addbyte(-1);
 	}
 	else
@@ -5596,7 +5601,7 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
 	        addbyte(0x83); /*CMP writelookup2[RSI*8],-1*/
         	addbyte(0x3c);
 	        addbyte(0xfd);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	        addbyte(-1);
 	}
 	else
@@ -5616,17 +5621,17 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
         jump_pos = block_pos;
         load_param_1_reg_32(REG_EBX);
         load_param_2_32(&codeblock[block_current], 1);
-        call(&codeblock[block_current], mmutranslatereal);
+        call(&codeblock[block_current], (uintptr_t)mmutranslatereal);
         addbyte(0x83); /*ADD EBX, 3*/
         addbyte(0xc3);
         addbyte(3);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE mem_abrt_rout*/
         addbyte(0x85);
-        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uint32_t)(&codeblock[block_current].data[block_pos]) + 4));
+        addlong((uintptr_t)&codeblock[block_current].data[BLOCK_EXIT_OFFSET] - ((uintptr_t)(&codeblock[block_current].data[block_pos]) + 4));
         /*If bits 0-11 of the address are now 0 then this crosses a page, so loop back*/
         addbyte(0xf7); /*TEST $ffc, EBX*/
         addbyte(0xc3);
@@ -5640,14 +5645,14 @@ static void MEM_CHECK_WRITE_L(x86seg *seg)
         LOAD_EA();
 }
 
-static int MEM_LOAD_ADDR_EA_B_NO_ABRT(x86seg *seg)
+static inline int MEM_LOAD_ADDR_EA_B_NO_ABRT(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5673,7 +5678,7 @@ static int MEM_LOAD_ADDR_EA_B_NO_ABRT(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -5698,7 +5703,7 @@ static int MEM_LOAD_ADDR_EA_B_NO_ABRT(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemb386l);
+        call_long((uintptr_t)readmemb386l);
         addbyte(0x89); /*MOV ECX, EAX*/
         addbyte(0xc1);
         /*done:*/
@@ -5707,14 +5712,14 @@ static int MEM_LOAD_ADDR_EA_B_NO_ABRT(x86seg *seg)
         
         return REG_ECX;
 }
-static int MEM_LOAD_ADDR_EA_W_NO_ABRT(x86seg *seg)
+static inline int MEM_LOAD_ADDR_EA_W_NO_ABRT(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5745,7 +5750,7 @@ static int MEM_LOAD_ADDR_EA_W_NO_ABRT(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -5774,7 +5779,7 @@ static int MEM_LOAD_ADDR_EA_W_NO_ABRT(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemwl);
+        call_long((uintptr_t)readmemwl);
         addbyte(0x89); /*MOV ECX, EAX*/
         addbyte(0xc1);
         /*done:*/
@@ -5783,14 +5788,14 @@ static int MEM_LOAD_ADDR_EA_W_NO_ABRT(x86seg *seg)
         
         return REG_ECX;
 }
-static int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
+static inline int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL ECX, seg->base*/
                 addbyte(0x0c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5821,7 +5826,7 @@ static int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)readlookup2);
+	        addlong((uint32_t)(uintptr_t)readlookup2);
 	}
 	else
 	{
@@ -5849,7 +5854,7 @@ static int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
         /*slowpath:*/
         load_param_1_reg_32(REG_ECX);
         load_param_2_reg_32(REG_EAX);
-        call_long(readmemll);
+        call_long((uintptr_t)readmemll);
         addbyte(0x89); /*MOV ECX, EAX*/
         addbyte(0xc1);
         /*done:*/
@@ -5859,7 +5864,7 @@ static int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
         return REG_ECX;
 }
 
-static void MEM_STORE_ADDR_EA_B_NO_ABRT(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_B_NO_ABRT(x86seg *seg, int host_reg)
 {
         if (host_reg & 0x10)
         {
@@ -5888,7 +5893,7 @@ static void MEM_STORE_ADDR_EA_B_NO_ABRT(x86seg *seg, int host_reg)
                 addbyte(0x8b); /*MOVL EBX, seg->base*/
                 addbyte(0x1c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5914,7 +5919,7 @@ static void MEM_STORE_ADDR_EA_B_NO_ABRT(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -5950,17 +5955,17 @@ static void MEM_STORE_ADDR_EA_B_NO_ABRT(x86seg *seg, int host_reg)
         load_param_3_reg_32(host_reg);
         load_param_1_reg_32(REG_EBX);
         load_param_2_reg_32(REG_EAX);
-        call_long(writememb386l);
+        call_long((uintptr_t)writememb386l);
         /*done:*/
 }
-static void MEM_STORE_ADDR_EA_W_NO_ABRT(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_W_NO_ABRT(x86seg *seg, int host_reg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL EBX, seg->base*/
                 addbyte(0x1c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -5991,7 +5996,7 @@ static void MEM_STORE_ADDR_EA_W_NO_ABRT(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -6033,17 +6038,17 @@ static void MEM_STORE_ADDR_EA_W_NO_ABRT(x86seg *seg, int host_reg)
         load_param_3_reg_32(host_reg);
         load_param_1_reg_32(REG_EBX);
         load_param_2_reg_32(REG_EAX);
-        call_long(writememwl);
+        call_long((uintptr_t)writememwl);
         /*done:*/
 }
-static void MEM_STORE_ADDR_EA_L_NO_ABRT(x86seg *seg, int host_reg)
+static inline void MEM_STORE_ADDR_EA_L_NO_ABRT(x86seg *seg, int host_reg)
 {
         if (IS_32_ADDR(&seg->base))
         {
                 addbyte(0x8b); /*MOVL EBX, seg->base*/
                 addbyte(0x1c);
                 addbyte(0x25);
-                addlong((uint32_t)&seg->base);
+                addlong((uint32_t)(uintptr_t)&seg->base);
         }
         else
         {
@@ -6074,7 +6079,7 @@ static void MEM_STORE_ADDR_EA_L_NO_ABRT(x86seg *seg, int host_reg)
 	        addbyte(0x8b);
 	        addbyte(0x34);
 	        addbyte(0xf5);
-	        addlong((uint32_t)writelookup2);
+	        addlong((uint32_t)(uintptr_t)writelookup2);
 	}
 	else
 	{
@@ -6114,18 +6119,18 @@ static void MEM_STORE_ADDR_EA_L_NO_ABRT(x86seg *seg, int host_reg)
         load_param_3_reg_32(host_reg);
         load_param_1_reg_32(REG_EBX);
         load_param_2_reg_32(REG_EAX);
-        call_long(writememll);
+        call_long((uintptr_t)writememll);
         /*done:*/
 }
 
-static void LOAD_SEG(int host_reg, void *seg)
+static inline void LOAD_SEG(int host_reg, void *seg)
 {
         load_param_2_64(&codeblock[block_current], (uint64_t)seg);
         load_param_1_reg_32(host_reg);
-        CALL_FUNC(loadseg);
+        CALL_FUNC((uintptr_t)loadseg);
         addbyte(0x80); /*CMP abrt, 0*/
         addbyte(0x7d);
-        addbyte(cpu_state_offset(abrt));
+        addbyte((uint8_t)cpu_state_offset(abrt));
         addbyte(0);
         addbyte(0x0f); /*JNE end*/
         addbyte(0x85);

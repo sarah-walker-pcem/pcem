@@ -7,7 +7,7 @@
 
 void icd2061_write(icd2061_t *icd2061, int val)
 {
-        int q, p, m, i, a;
+        int q, p, m, a;
         if ((val & 1) && !(icd2061->state & 1))
         {
                 pclog("ICD2061 write %02X %i %08X %i\n", val, icd2061->unlock, icd2061->data, icd2061->pos);
@@ -39,7 +39,6 @@ void icd2061_write(icd2061_t *icd2061, int val)
                                         q = (icd2061->data & 0x7f) - 2;
                                         m = 1 << ((icd2061->data >> 7) & 0x7);
                                         p = ((icd2061->data >> 10) & 0x7f) - 3;
-                                        i = (icd2061->data >> 17) & 0xf;
                                         pclog("p %i q %i m %i\n", p, q, m);
                                         if (icd2061->ctrl & (1 << a))
                                            p <<= 1;

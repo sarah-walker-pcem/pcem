@@ -15,8 +15,6 @@ void iso_close(void);
 static FILE *iso_image = NULL;
 static int iso_changed = 0;
 
-static uint32_t iso_cd_pos = 0, iso_cd_end = 0;
-
 void iso_audio_callback(int16_t *output, int len)
 {
         memset(output, 0, len * 2);
@@ -26,12 +24,6 @@ void iso_audio_callback(int16_t *output, int len)
 void iso_audio_stop()
 {
         pclog("iso_audio_stop stub\n");
-}
-
-static int get_track_nr(uint32_t pos)
-{
-        pclog("get_track_nr stub\n");
-        return 0;
 }
 
 static void iso_playaudio(uint32_t pos, uint32_t len, int ismsf)
@@ -118,7 +110,6 @@ static void lba_to_msf(uint8_t *buf, int lba)
 
 static void iso_readsector_raw(uint8_t *b, int sector)
 {
-        uint32_t temp;
         if (!cdrom_drive) return;
         fseek(iso_image, sector*2048, SEEK_SET);
         fread(b+16, 2048, 1, iso_image);

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
+#include "io.h"
 #include "mem.h"
 #include "tandy_rom.h"
 
@@ -25,7 +26,7 @@ uint32_t tandy_read_roml(uint32_t addr, void *p)
 {
         uint32_t addr2 = (addr & 0xffff) + tandy_rom_offset;
 //        if (!nopageerrors) pclog("tandy_read_roml: %05x %05x %08x\n", addr, addr2, *(uint32_t *)&tandy_rom[addr2]);
-        return *(uint32_t *)&tandy_rom[addr];
+        return *(uint32_t *)&tandy_rom[addr2];
 }
 
 uint8_t tandy_rom_bank_read(uint16_t port, void *p)

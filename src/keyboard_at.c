@@ -6,6 +6,7 @@
 #include "sound.h"
 #include "sound_speaker.h"
 #include "timer.h"
+#include "x86.h"
 
 #include "keyboard.h"
 #include "keyboard_at.h"

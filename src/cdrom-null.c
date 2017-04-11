@@ -59,8 +59,9 @@ static void null_load(void)
 {
 }
 
-static void null_readsector(uint8_t *b, int sector)
+static int null_readsector(uint8_t *b, int sector)
 {
+        return 0;
 }
 
 static void null_readsector_raw(uint8_t *b, int sector)

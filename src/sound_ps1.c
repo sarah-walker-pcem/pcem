@@ -2,6 +2,7 @@
 #include "ibm.h"
 #include "device.h"
 #include "io.h"
+#include "pic.h"
 #include "sound.h"
 #include "sound_ps1.h"
 #include "sound_sn76489.h"

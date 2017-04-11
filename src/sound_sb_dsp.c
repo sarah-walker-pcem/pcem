@@ -950,7 +950,6 @@ void sb_dsp_update(sb_dsp_t *dsp)
 void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
 {
         char temps[128];
-        int len;
         int freq;
 
         if (dsp->sb_timeo < 256)

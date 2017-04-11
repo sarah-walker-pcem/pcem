@@ -5,6 +5,7 @@
 #include "io.h"
 #include "mem.h"
 #include "video.h"
+#include "x86.h"
 
 static uint8_t dmaregs[16];
 static uint8_t dma16regs[16];
@@ -121,7 +122,7 @@ void dma_write(uint16_t addr, uint8_t val, void *priv)
 
 static uint8_t dma_ps2_read(uint16_t addr, void *priv)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
         
         switch (addr)
         {

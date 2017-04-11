@@ -449,7 +449,6 @@ void m24_poll(void *p)
 
 void *m24_init()
 {
-        int c;
         m24_t *m24 = malloc(sizeof(m24_t));
         memset(m24, 0, sizeof(m24_t));
 

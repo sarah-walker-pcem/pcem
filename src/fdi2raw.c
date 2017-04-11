@@ -1813,16 +1813,16 @@ static void fdi2_celltiming (FDI *fdi, uint32_t totalavg, int bitoffset, uae_u16
 
 static int decode_lowlevel_track (FDI *fdi, int track, struct fdi_cache *cache)
 {
-	uae_u8 *p1, *d;
+	uae_u8 *p1;
 	uae_u32 *p2;
 	uae_u32 *avgp, *minp = 0, *maxp = 0;
 	uae_u8 *idxp = 0;
 	uae_u32 maxidx, totalavg, weakbits;
 	int i, j, len, pulses, indexoffset;
 	int avg_free, min_free = 0, max_free = 0, idx_free;
-	int idx_off1, idx_off2, idx_off3;
+	int idx_off1 = 0, idx_off2 = 0, idx_off3 = 0;
 
-	d = fdi->track_dst;
+//	d = fdi->track_dst;
 	p1 = fdi->track_src;
 	pulses = get_u32 (p1);
 	if (!pulses)

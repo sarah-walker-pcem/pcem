@@ -36,7 +36,7 @@ void fdc37c665_write(uint16_t port, uint8_t val, void *priv)
                 }
                 else
                 {
-                        uint16_t com3_addr, com4_addr;
+                        uint16_t com3_addr = 0, com4_addr = 0;
                         fdc37c665_regs[fdc37c665_curreg] = val;
 //                        pclog("Write superIO %02x %02x %04x(%08x):%08x\n", fdc37c665_curreg, val, CS, cs, pc);
                         

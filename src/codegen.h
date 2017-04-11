@@ -249,6 +249,7 @@ void codegen_block_init(uint32_t phys_addr);
 void codegen_block_remove();
 void codegen_block_start_recompile(codeblock_t *block);
 void codegen_block_end_recompile(codeblock_t *block);
+void codegen_block_end();
 void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_pc, uint32_t old_pc);
 void codegen_generate_seg_restore();
 void codegen_set_op32();
@@ -308,7 +309,7 @@ static inline void addbyte(uint8_t val)
 
 static inline void addword(uint16_t val)
 {
-        *(uint16_t *)&codeblock[block_current].data[block_pos] = val;
+        *(uint16_t *)(void *)&codeblock[block_current].data[block_pos] = val;
         block_pos += 2;
         if (block_pos >= BLOCK_MAX)
         {

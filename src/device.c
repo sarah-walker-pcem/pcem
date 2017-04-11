@@ -100,7 +100,7 @@ void device_force_redraw()
         }
 }
 
-char *device_add_status_info(char *s, int max_len)
+void device_add_status_info(char *s, int max_len)
 {
         int c;
         

@@ -8,6 +8,7 @@
 
 static void *tm_fcs_init()
 {
+        return NULL;
 }
 
 static void tm_fcs_close(void *p)
@@ -63,6 +64,7 @@ static int tm_fcs_read_axis(void *p, int axis)
                         return 16384;
                 return 0;
         }
+        return 0;
 }
 
 static void tm_fcs_a0_over(void *p)

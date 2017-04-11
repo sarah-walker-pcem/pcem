@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include "ibm.h"
+#include "config.h"
 #include "plat-midi.h"
 
 static int midi_id;
@@ -10,9 +11,6 @@ void midi_close();
 
 void midi_init()
 {
-        int c;
-        int n;
-        MIDIOUTCAPS ocaps;
         MMRESULT hr;
         
         midi_id = config_get_int(NULL, "midi", 0);
@@ -64,9 +62,8 @@ static uint8_t midi_sysex_data[1024+2];
 static void midi_send_sysex()
 {
         MIDIHDR hdr;
-        int c;
         
-        hdr.lpData = midi_sysex_data;
+        hdr.lpData = (LPSTR)midi_sysex_data;
         hdr.dwBufferLength = midi_pos;
         hdr.dwFlags = 0;
         

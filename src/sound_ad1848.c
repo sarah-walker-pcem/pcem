@@ -1,8 +1,7 @@
-/*PCem v0.8 by Tom Walker
-
-  AD1848 CODEC emulation (Windows Sound System compatible)*/
-
+#include <math.h>
 #include "ibm.h"
+#include "dma.h"
+#include "pic.h"
 #include "sound.h"
 #include "sound_ad1848.h"
 

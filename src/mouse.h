@@ -19,7 +19,7 @@ typedef struct
         char name[80];
         void *(*init)();
         void (*close)(void *p);
-        uint8_t (*poll)(int x, int y, int z, int b, void *p);
+        void (*poll)(int x, int y, int z, int b, void *p);
         int type;
 } mouse_t;
 

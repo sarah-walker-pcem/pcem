@@ -1,8 +1,12 @@
 #include "ibm.h"
+#include "cpu.h"
+#include "io.h"
 #include "mem.h"
 #include "ps1.h"
 #include "rom.h"
 #include "lpt.h"
+#include "serial.h"
+#include "x86.h"
 
 static rom_t ps1_high_rom;
 static uint8_t ps1_92, ps1_94, ps1_102, ps1_103, ps1_104, ps1_105, ps1_190;

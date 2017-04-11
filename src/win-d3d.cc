@@ -70,7 +70,6 @@ static CUSTOMVERTEX d3d_verts[] =
 void d3d_init(HWND h)
 {
         int c;
-        HRESULT hr;
         
         for (c = 0; c < 256; c++)
             pal_lookup[c] = makecol(cgapal[c].r << 2, cgapal[c].g << 2, cgapal[c].b << 2);
@@ -95,7 +94,7 @@ void d3d_init(HWND h)
         d3dpp.BackBufferWidth        = 0;
         d3dpp.BackBufferHeight       = 0;
 
-        hr = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
+        d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
         
         d3d_init_objects();
         
@@ -119,12 +118,11 @@ void d3d_close_objects()
 
 void d3d_init_objects()
 {
-        HRESULT hr;
         D3DLOCKED_RECT dr;
         int y;
         RECT r;
 
-        hr = d3ddev->CreateVertexBuffer(6*sizeof(CUSTOMVERTEX),
+        d3ddev->CreateVertexBuffer(6*sizeof(CUSTOMVERTEX),
                                    0,
                                    D3DFVF_XYZRHW | D3DFVF_TEX1,
                                    D3DPOOL_MANAGED,
@@ -141,7 +139,7 @@ void d3d_init_objects()
         
         for (y = 0; y < 2048; y++)
         {
-                uint32_t *p = (uint32_t *)(dr.pBits + (y * dr.Pitch));
+                uint32_t *p = (uint32_t *)((uintptr_t)dr.pBits + (y * dr.Pitch));
                 memset(p, 0, 2048 * 4);
         }
 
@@ -157,8 +155,6 @@ void d3d_init_objects()
 
 void d3d_resize(int x, int y)
 {
-        HRESULT hr;
-
         d3dpp.BackBufferWidth  = x;
         d3dpp.BackBufferHeight = y;
 
@@ -230,7 +226,6 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         VOID* pVoid;
         D3DLOCKED_RECT dr;
         RECT r;
-        uint32_t *p, *src;
         int yy;
 
         if (y1 == y2)
@@ -250,7 +245,7 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                    fatal("LockRect failed\n");
         
                 for (yy = y1; yy < y2; yy++)
-                        memcpy(dr.pBits + ((yy - y1) * dr.Pitch), &(((uint32_t *)buffer32->line[yy + y])[x]), w * 4);
+                        memcpy((void *)((uintptr_t)dr.pBits + ((yy - y1) * dr.Pitch)), &(((uint32_t *)buffer32->line[yy + y])[x]), w * 4);
 
                 video_blit_complete();
                 d3dTexture->UnlockRect(0);
@@ -312,7 +307,6 @@ void d3d_blit_memtoscreen_8(int x, int y, int w, int h)
         VOID* pVoid;
         D3DLOCKED_RECT dr;
         RECT r;
-        uint32_t *p, *src;
         int yy, xx;
         HRESULT hr = D3D_OK;
 
@@ -334,7 +328,7 @@ void d3d_blit_memtoscreen_8(int x, int y, int w, int h)
         
                 for (yy = 0; yy < h; yy++)
                 {
-                        uint32_t *p = (uint32_t *)(dr.pBits + (yy * dr.Pitch));
+                        uint32_t *p = (uint32_t *)((uintptr_t)dr.pBits + (yy * dr.Pitch));
                         if ((y + yy) >= 0 && (y + yy) < buffer->h)
                         {
                                 for (xx = 0; xx < w; xx++)

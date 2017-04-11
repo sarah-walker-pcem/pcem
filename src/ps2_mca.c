@@ -1,9 +1,13 @@
 #include "ibm.h"
+#include "cpu.h"
+#include "io.h"
+#include "lpt.h"
+#include "mca.h"
 #include "mem.h"
 #include "ps2_mca.h"
 #include "rom.h"
-#include "lpt.h"
-#include "mca.h"
+#include "serial.h"
+#include "x86.h"
 
 //static uint8_t ps2_92, ps2_94, ps2_102, ps2_103, ps2_104, ps2_105, ps2_190;
 
@@ -92,6 +96,7 @@ static uint8_t model_50_read(uint16_t port)
                 case 0x107:
                 return ps2.subaddr_hi;
         }
+        return 0xff;
 }
 
 static uint8_t model_55sx_read(uint16_t port)
@@ -115,6 +120,7 @@ static uint8_t model_55sx_read(uint16_t port)
                 case 0x107:
                 return ps2.subaddr_hi;
         }
+        return 0xff;
 }
 
 static void model_50_write(uint16_t port, uint8_t val)

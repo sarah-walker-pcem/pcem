@@ -540,8 +540,8 @@ static void mach64_accel_write_fifo(mach64_t *mach64, uint32_t addr, uint8_t val
                 case 0x11e: case 0x11f:
                 WRITE8(addr, mach64->dst_height_width, val);
                 case 0x113:
-                if ((addr & 0x3ff) == 0x11b || (addr & 0x3ff) == 0x11f ||
-                    ((addr & 0x3ff) == 0x113) && !(val & 0x80))
+                if (((addr & 0x3ff) == 0x11b || (addr & 0x3ff) == 0x11f ||
+                     (addr & 0x3ff) == 0x113) && !(val & 0x80))
                 {
                         mach64_start_fill(mach64);
 #ifdef MACH64_DEBUG
@@ -797,7 +797,6 @@ static void fifo_thread(void *param)
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
                         fifo_entry_t *fifo = &mach64->fifo[mach64->fifo_read_idx & FIFO_MASK];
-                        uint32_t val = fifo->val;
 
                         switch (fifo->addr_type & FIFO_TYPE)
                         {
@@ -828,7 +827,6 @@ static void fifo_thread(void *param)
 static void mach64_queue(mach64_t *mach64, uint32_t addr, uint32_t val, uint32_t type)
 {
         fifo_entry_t *fifo = &mach64->fifo[mach64->fifo_write_idx & FIFO_MASK];
-        int c;
 
         if (FIFO_FULL)
         {
@@ -850,7 +848,6 @@ static void mach64_queue(mach64_t *mach64, uint32_t addr, uint32_t val, uint32_t
 
 void mach64_cursor_dump(mach64_t *mach64)
 {
-        svga_t *svga = &mach64->svga;
 /*        pclog("Mach64 cursor :\n");
         pclog("Ena = %i X = %i Y = %i Addr = %05X Xoff = %i Yoff = %i\n", svga->hwcursor.ena, svga->hwcursor.x, svga->hwcursor.y, svga->hwcursor.addr, svga->hwcursor.xoff, svga->hwcursor.yoff);*/
 }
@@ -1127,8 +1124,8 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                 while (count)
                 {
                         uint32_t src_dat, dest_dat;
-                        uint32_t host_dat;
-                        int mix;
+                        uint32_t host_dat = 0;
+                        int mix = 0;
                         int dst_x = (mach64->accel.dst_x + mach64->accel.dst_x_start) & 0xfff;
                         int dst_y = (mach64->accel.dst_y + mach64->accel.dst_y_start) & 0xfff;
                         int src_x;
@@ -1331,9 +1328,9 @@ void mach64_blit(uint32_t cpu_dat, int count, mach64_t *mach64)
                 case OP_LINE:
                 while (count)
                 {
-                        uint32_t src_dat, dest_dat;
-                        uint32_t host_dat;
-                        int mix;
+                        uint32_t src_dat = 0, dest_dat;
+                        uint32_t host_dat = 0;
+                        int mix = 0;
                         int draw_pixel = !(mach64->dst_cntl & DST_POLYGON_EN);
                 
                         if (mach64->accel.source_host)
@@ -1869,7 +1866,6 @@ uint8_t mach64_ext_readb(uint32_t addr, void *p)
 }
 uint16_t mach64_ext_readw(uint32_t addr, void *p)
 {
-        mach64_t *mach64 = (mach64_t *)p;
         uint16_t ret;
         switch (addr & 0x3ff)
         {
@@ -2232,7 +2228,6 @@ uint8_t mach64_ext_inb(uint16_t port, void *p)
 }
 uint16_t mach64_ext_inw(uint16_t port, void *p)
 {
-        mach64_t *mach64 = (mach64_t *)p;        
         uint16_t ret;
         switch (port)
         {
@@ -2254,7 +2249,6 @@ uint16_t mach64_ext_inw(uint16_t port, void *p)
 }
 uint32_t mach64_ext_inl(uint16_t port, void *p)
 {
-        mach64_t *mach64 = (mach64_t *)p;
         uint32_t ret;
         switch (port)
         {
@@ -2380,7 +2374,6 @@ void mach64_ext_outb(uint16_t port, uint8_t val, void *p)
 }
 void mach64_ext_outw(uint16_t port, uint16_t val, void *p)
 {
-        mach64_t *mach64 = (mach64_t *)p;
 #ifdef MACH64_DEBUG
         pclog("mach64_ext_outw : port %04X val %04X\n", port, val);
 #endif
@@ -2400,7 +2393,6 @@ void mach64_ext_outw(uint16_t port, uint16_t val, void *p)
 }
 void mach64_ext_outl(uint16_t port, uint32_t val, void *p)
 {
-        mach64_t *mach64 = (mach64_t *)p;
         pclog("mach64_ext_outl : port %04X val %08X\n", port, val);
         switch (port)
         {
@@ -2507,7 +2499,6 @@ static void mach64_io_set(mach64_t *mach64)
 uint8_t mach64_pci_read(int func, int addr, void *p)
 {
         mach64_t *mach64 = (mach64_t *)p;
-        svga_t *svga = &mach64->svga;
 
 //        pclog("Mach64 PCI read %08X\n", addr);
 
@@ -2588,7 +2579,6 @@ void mach64_pci_write(int func, int addr, uint8_t val, void *p)
 
 void *mach64gx_init()
 {
-        int c;
         mach64_t *mach64 = malloc(sizeof(mach64_t));
         memset(mach64, 0, sizeof(mach64_t));
         

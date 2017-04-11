@@ -1,9 +1,12 @@
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "mem.h"
 #include "pic.h"
+#include "pit.h"
 #include "sound.h"
 #include "sound_speaker.h"
+#include "tandy_eeprom.h"
 #include "timer.h"
 
 #include "keyboard.h"
@@ -99,7 +102,7 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
 
 uint8_t keyboard_xt_read(uint16_t port, void *priv)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
 //        pclog("keyboard_xt : read %04X ", port);
         switch (port)
         {

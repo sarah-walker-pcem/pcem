@@ -5,7 +5,7 @@ typedef struct
         void (*writesector)(int drive, int sector, int track, int side, int density, int sector_size);
         void (*readaddress)(int drive, int track, int side, int density);
         void (*format)(int drive, int track, int side, int density, uint8_t fill);
-        uint8_t (*hole)(int drive);
+        int (*hole)(int drive);
         void (*stop)();
         void (*poll)();
 } DRIVE;

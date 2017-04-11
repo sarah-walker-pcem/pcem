@@ -258,7 +258,7 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
         
 void gd5429_recalctimings(svga_t *svga)
 {
-        gd5429_t *gd5429 = (gd5429_t *)svga->p;
+//        gd5429_t *gd5429 = (gd5429_t *)svga->p;
         
         if (svga->seqregs[7] & 0x01)
         {
@@ -570,8 +570,8 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
         
         while (count)
         {
-                uint8_t src, dst;
-                int mask;
+                uint8_t src = 0, dst;
+                int mask = 0;
                 
                 if (gd5429->blt.mode & 0x04)
                 {
@@ -783,7 +783,7 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
 
 uint8_t gd5429_mmio_read(uint32_t addr, void *p)
 {
-        gd5429_t *gd5429 = (gd5429_t *)p;
+//        gd5429_t *gd5429 = (gd5429_t *)p;
 
         pclog("MMIO read %08X\n", addr);
         switch (addr & 0xff)

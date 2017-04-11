@@ -3,6 +3,7 @@
 #include "ibm.h"
 
 #include "disc.h"
+#include "disc_sector.h"
 #include "dma.h"
 #include "fdd.h"
 #include "io.h"
@@ -94,7 +95,6 @@ void fdc_reset()
 
 void fdc_reset_fifo_buf()
 {
-	int i = 0;
 	memset(fdc.fifobuf, 0, 16);
 	fdc.fifobufpos = 0;
 }
@@ -304,6 +304,8 @@ static int fdc_get_densel(int drive)
 		case 2:
 			return fdc.densel_polarity ? 0 : 1;
 	}
+	
+	return 0;
 }
 
 static void fdc_rate(int drive)

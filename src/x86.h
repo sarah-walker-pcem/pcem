@@ -102,3 +102,12 @@ void x86gpf(char *s, uint16_t error);
 extern uint16_t zero;
 
 extern int x86_was_reset;
+
+void resetx86();
+void softresetx86();
+void refreshread();
+void dumpregs();
+
+void execx86(int cycs);
+void exec386(int cycs);
+void exec386_dynarec(int cycs);

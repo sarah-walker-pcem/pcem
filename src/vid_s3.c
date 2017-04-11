@@ -658,7 +658,6 @@ static void fifo_thread(void *param)
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
                         fifo_entry_t *fifo = &s3->fifo[s3->fifo_read_idx & FIFO_MASK];
-                        uint32_t val = fifo->val;
 
                         switch (fifo->addr_type & FIFO_TYPE)
                         {
@@ -698,7 +697,6 @@ static void fifo_thread(void *param)
 static void s3_queue(s3_t *s3, uint32_t addr, uint32_t val, uint32_t type)
 {
         fifo_entry_t *fifo = &s3->fifo[s3->fifo_write_idx & FIFO_MASK];
-        int c;
 
         if (FIFO_FULL)
         {
@@ -1380,7 +1378,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
         int clip_b = s3->accel.multifunc[3] & 0xfff;
         int clip_r = s3->accel.multifunc[4] & 0xfff;
         int vram_mask = (s3->accel.multifunc[0xa] & 0xc0) == 0xc0;
-        uint32_t mix_mask;
+        uint32_t mix_mask = 0;
         uint16_t *vram_w = (uint16_t *)svga->vram;
         uint32_t *vram_l = (uint32_t *)svga->vram;
         uint32_t compare = s3->accel.color_cmp;
@@ -2224,7 +2222,6 @@ int s3_9fx_available()
 void *s3_phoenix_trio32_init()
 {
         s3_t *s3 = s3_init("roms/86C732P.bin", S3_TRIO32);
-        svga_t *svga = &s3->svga;
 
         s3->id = 0xe1; /*Trio32*/
         s3->id_ext = 0x10;
@@ -2245,7 +2242,6 @@ int s3_phoenix_trio32_available()
 void *s3_phoenix_trio64_init()
 {
         s3_t *s3 = s3_init("roms/86c764x1.bin", S3_TRIO64);
-        svga_t *svga = &s3->svga;
 
         s3->id = 0xe1; /*Trio64*/
         s3->id_ext = s3->id_ext_pci = 0x11;

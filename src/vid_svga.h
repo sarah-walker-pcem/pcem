@@ -119,6 +119,7 @@ extern int svga_init(svga_t *svga, void *p, int memsize,
                void    (*video_out)(uint16_t addr, uint8_t val, void *p),
                void (*hwcursor_draw)(struct svga_t *svga, int displine),
                void (*overlay_draw)(struct svga_t *svga, int displine));
+void svga_close(svga_t *svga);
 extern void svga_recalctimings(svga_t *svga);
 
 
@@ -148,3 +149,5 @@ void svga_set_override(svga_t *svga, int val);
 #define RAMDAC_6BIT 0
 #define RAMDAC_8BIT 1
 void svga_set_ramdac_type(svga_t *svga, int type);
+
+void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga);

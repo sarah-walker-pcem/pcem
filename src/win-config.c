@@ -11,6 +11,7 @@
 #include "fdd.h"
 #include "gameport.h"
 #include "hdd.h"
+#include "mem.h"
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
@@ -143,7 +144,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         char temp_str[256];
         HWND h;
         int c, d;
-        int rom, gfx, mem, fpu;
+        int gfx, mem, fpu;
         int temp_cpu, temp_cpu_m, temp_model;
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
         int temp_dynarec;
@@ -152,7 +153,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int temp_joystick_type;
         int cpu_type;
         int temp_mouse_type;
-        int hdd_changed;
+        int hdd_changed = 0;
         
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
@@ -810,5 +811,5 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
 void config_open(HWND hwnd)
 {
-        DialogBox(hinstance, TEXT("ConfigureDlg"), hwnd, config_dlgproc);
+        DialogBox(hinstance, TEXT("ConfigureDlg"), hwnd, (DLGPROC)config_dlgproc);
 }

@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include "ibm.h"
+#include "dac.h"
 #include "io.h"
 #include "keyboard.h"
 #include "lpt.h"

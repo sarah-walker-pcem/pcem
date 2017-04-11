@@ -20,11 +20,20 @@ void io_init()
         pclog("io_init\n");
         for (c = 0; c < 0x10000; c++)
         {
-                port_inb[c][0]  = port_inw[c][0]  = port_inl[c][0]  = NULL;
-                port_outb[c][0] = port_outw[c][0] = port_outl[c][0] = NULL;
-                port_inb[c][1]  = port_inw[c][1]  = port_inl[c][1]  = NULL;
-                port_outb[c][1] = port_outw[c][1] = port_outl[c][1] = NULL;
-                port_priv[c][0] = port_priv[c][1] = NULL;
+                port_inb[c][0]  = NULL;
+                port_inw[c][0]  = NULL;
+                port_inl[c][0]  = NULL;
+                port_outb[c][0] = NULL;
+                port_outw[c][0] = NULL;
+                port_outl[c][0] = NULL;
+                port_inb[c][1]  = NULL;
+                port_inw[c][1]  = NULL;
+                port_inl[c][1]  = NULL;
+                port_outb[c][1] = NULL;
+                port_outw[c][1] = NULL;
+                port_outl[c][1] = NULL;
+                port_priv[c][0] = NULL;
+                port_priv[c][1] = NULL;
         }
 }
 

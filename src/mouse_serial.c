@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ibm.h"
 #include "mouse.h"
 #include "pic.h"
@@ -46,7 +47,7 @@ void mouse_serial_poll(int x, int y, int z, int b, void *p)
         }
 }
 
-void mouse_serial_rcr(SERIAL *serial, void *p)
+void mouse_serial_rcr(struct SERIAL *serial, void *p)
 {
         mouse_serial_t *mouse = (mouse_serial_t *)p;
         
@@ -68,7 +69,7 @@ void mousecallback(void *p)
 
 void *mouse_serial_init()
 {
-        mouse_serial_t *mouse = (mouse_t *)malloc(sizeof(mouse_serial_t));
+        mouse_serial_t *mouse = (mouse_serial_t *)malloc(sizeof(mouse_serial_t));
         memset(mouse, 0, sizeof(mouse_serial_t));
 
         mouse->serial = &serial1;

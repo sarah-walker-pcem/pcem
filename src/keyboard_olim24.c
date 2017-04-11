@@ -1,8 +1,10 @@
+#include <stdlib.h>
 #include "ibm.h"
 #include "io.h"
 #include "mem.h"
 #include "mouse.h"
 #include "pic.h"
+#include "pit.h"
 #include "sound.h"
 #include "sound_speaker.h"
 #include "timer.h"
@@ -159,7 +161,7 @@ void keyboard_olim24_write(uint16_t port, uint8_t val, void *priv)
 
 uint8_t keyboard_olim24_read(uint16_t port, void *priv)
 {
-        uint8_t temp;
+        uint8_t temp = 0xff;
 //        pclog("keyboard_olim24 : read %04X ", port);
         switch (port)
         {

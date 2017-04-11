@@ -1,8 +1,11 @@
 #include <string.h>
 
 #include "ibm.h"
+#include "io.h"
+#include "keyboard_at.h"
 #include "mem.h"
 #include "pci.h"
+#include "x86.h"
 
 #include "i430lx.h"
 

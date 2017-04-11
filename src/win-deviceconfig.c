@@ -6,6 +6,7 @@
 #include "ibm.h"
 #include "config.h"
 #include "device.h"
+#include "plat-midi.h"
 #include "resources.h"
 #include "win.h"
 
@@ -26,7 +27,6 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                 device_config_selection_t *selection = config->selection;
                                 HWND h = GetDlgItem(hdlg, id);
                                 int val_int;
-                                char *val_string;
                                 int num;
                                 char s[80];
                                 
@@ -91,7 +91,6 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         device_config_selection_t *selection = config->selection;
                                         HWND h = GetDlgItem(hdlg, id);
                                         int val_int;
-                                        char *val_string;
                                 
                                         switch (config->type)
                                         {
@@ -151,8 +150,6 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                 {
                                         device_config_selection_t *selection = config->selection;
                                         HWND h = GetDlgItem(hdlg, id);
-                                        int val_int;
-                                        char *val_string;
                                 
                                         switch (config->type)
                                         {
@@ -224,7 +221,7 @@ void deviceconfig_open(HWND hwnd, device_t *device)
         *data++ = 8; /*Point*/
         data += MultiByteToWideChar(CP_ACP, 0, "MS Sans Serif", -1, data, 50);
         
-        if (((unsigned long)data) & 2)
+        if (((uintptr_t)data) & 2)
                 data++;
 
         while (config->type != -1)
@@ -272,7 +269,7 @@ void deviceconfig_open(HWND hwnd, device_t *device)
                         data += MultiByteToWideChar(CP_ACP, 0, config->description, -1, data, 256);
                         *data++ = 0;              // no creation data
                         
-                        if (((unsigned long)data) & 2)
+                        if (((uintptr_t)data) & 2)
                                 data++;
 
                         /*Static text*/
@@ -293,14 +290,14 @@ void deviceconfig_open(HWND hwnd, device_t *device)
                         data += MultiByteToWideChar(CP_ACP, 0, config->description, -1, data, 256);
                         *data++ = 0;              // no creation data
                         
-                        if (((unsigned long)data) & 2)
+                        if (((uintptr_t)data) & 2)
                                 data++;
 
                         y += 20;
                         break;
                 }
 
-                if (((unsigned long)data) & 2)
+                if (((uintptr_t)data) & 2)
                         data++;
 
                 config++;
@@ -326,7 +323,7 @@ void deviceconfig_open(HWND hwnd, device_t *device)
         data += MultiByteToWideChar(CP_ACP, 0, "OK", -1, data, 50);
         *data++ = 0;              // no creation data
 
-        if (((unsigned long)data) & 2)
+        if (((uintptr_t)data) & 2)
                 data++;
                 
         item = (DLGITEMTEMPLATE *)data;
@@ -348,7 +345,7 @@ void deviceconfig_open(HWND hwnd, device_t *device)
         
         config_device = device;
         
-        DialogBoxIndirect(hinstance, dlg, hwnd, deviceconfig_dlgproc);
+        DialogBoxIndirect(hinstance, dlg, hwnd, (DLGPROC)deviceconfig_dlgproc);
 
         free(data_block);
 }

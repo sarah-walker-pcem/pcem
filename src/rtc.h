@@ -168,7 +168,7 @@ enum RTC_RD_BITS
 };
 
 void rtc_tick();
-void time_update(char *nvrram, int reg);
-void time_get(char *nvrram);
-void time_internal_set_nvrram(char *nvrram);
-void time_internal_sync(char *nvrram);
+void time_update(uint8_t *nvrram, int reg);
+void time_get(uint8_t *nvrram);
+void time_internal_set_nvrram(uint8_t *nvrram);
+void time_internal_sync(uint8_t *nvrram);
