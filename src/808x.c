@@ -822,7 +822,7 @@ void rep(int fv)
         uint16_t tempw,tempw2;
         uint16_t ipc = cpu_state.oldpc;//pc-1;
         int changeds=0;
-        uint32_t oldds;
+        uint32_t oldds = ds;
         startrep:
         temp=FETCH();
 
