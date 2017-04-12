@@ -45,7 +45,7 @@ static mem_mapping_t romext_mapping;
 
 int shadowbios,shadowbios_write;
 
-static unsigned char isram[0x10000];
+unsigned char isram[0x10000];
 
 static uint8_t ff_array[0x1000];
 
