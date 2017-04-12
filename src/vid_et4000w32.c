@@ -1221,6 +1221,10 @@ void et4000w32p_close(void *p)
 
         svga_close(&et4000->svga);
         
+        thread_kill(et4000->fifo_thread);
+        thread_destroy_event(et4000->wake_fifo_thread);
+        thread_destroy_event(et4000->fifo_not_full_event);
+
         free(et4000);
 }
 

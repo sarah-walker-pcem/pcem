@@ -552,6 +552,10 @@ void tgui_close(void *p)
         
         svga_close(&tgui->svga);
         
+        thread_kill(tgui->fifo_thread);
+        thread_destroy_event(tgui->wake_fifo_thread);
+        thread_destroy_event(tgui->fifo_not_full_event);
+
         free(tgui);
 }
 

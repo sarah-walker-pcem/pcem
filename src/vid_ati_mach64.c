@@ -2635,6 +2635,10 @@ void mach64_close(void *p)
 
         svga_close(&mach64->svga);
         
+        thread_kill(mach64->fifo_thread);
+        thread_destroy_event(mach64->wake_fifo_thread);
+        thread_destroy_event(mach64->fifo_not_full_event);
+
         free(mach64);
 }
 

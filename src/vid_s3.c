@@ -2264,6 +2264,10 @@ void s3_close(void *p)
 
         svga_close(&s3->svga);
         
+        thread_kill(s3->fifo_thread);
+        thread_destroy_event(s3->wake_fifo_thread);
+        thread_destroy_event(s3->fifo_not_full_event);
+
         free(s3);
 }
 

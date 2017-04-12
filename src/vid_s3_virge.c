@@ -3943,6 +3943,10 @@ static void s3_virge_close(void *p)
         thread_destroy_event(virge->wake_main_thread);
         thread_destroy_event(virge->wake_render_thread);
         
+        thread_kill(virge->fifo_thread);
+        thread_destroy_event(virge->wake_fifo_thread);
+        thread_destroy_event(virge->fifo_not_full_event);
+
         svga_close(&virge->svga);
         
         free(virge);
