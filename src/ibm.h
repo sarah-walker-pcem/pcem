@@ -405,6 +405,7 @@ enum
 	ROM_IBMPS2_M30_286,
 	ROM_IBMPS2_M50,
 	ROM_IBMPS2_M55SX,
+	ROM_IBMPS2_M80,
                 	
         ROM_MAX
 };

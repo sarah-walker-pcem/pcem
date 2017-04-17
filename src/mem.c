@@ -617,6 +617,20 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+
+                case ROM_IBMPS2_M80:
+                f=romfopen("roms/i8580111/15f6637.bin","rb");
+                ff=romfopen("roms/i8580111/15f6639.bin","rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

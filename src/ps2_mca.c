@@ -1,10 +1,12 @@
 #include "ibm.h"
 #include "cpu.h"
+#include "device.h"
 #include "io.h"
 #include "lpt.h"
 #include "mca.h"
 #include "mem.h"
 #include "ps2_mca.h"
+#include "ps2_nvr.h"
 #include "rom.h"
 #include "serial.h"
 #include "x86.h"
@@ -34,6 +36,10 @@ static struct
         
         uint8_t (*planar_read)(uint16_t port);
         void (*planar_write)(uint16_t port, uint8_t val);
+        
+        uint8_t mem_regs[3];
+        
+        uint32_t split_addr;
 } ps2;
 
 
@@ -113,6 +119,30 @@ static uint8_t model_55sx_read(uint16_t port)
                 return ps2.option[1];
                 case 0x104:
                 return ps2.memory_bank[ps2.option[3] & 7];//ps2.option[2];
+                case 0x105:
+                return ps2.option[3];
+                case 0x106:
+                return ps2.subaddr_lo;
+                case 0x107:
+                return ps2.subaddr_hi;
+        }
+        return 0xff;
+}
+
+static uint8_t model_80_read(uint16_t port)
+{
+        switch (port)
+        {
+                case 0x100:
+                return 0xff;
+                case 0x101:
+                return 0xfd;
+                case 0x102:
+                return ps2.option[0];
+                case 0x103:
+                return ps2.option[1];
+                case 0x104:
+                return ps2.option[2];
                 case 0x105:
                 return ps2.option[3];
                 case 0x106:
@@ -246,6 +276,61 @@ static void model_55sx_write(uint16_t port, uint8_t val)
                         mem_set_mem_state(mem_size * 1024, 256 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
                 else
                         mem_set_mem_state(mem_size * 1024, 256 * 1024, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                break;
+                case 0x106:
+                ps2.subaddr_lo = val;
+                break;
+                case 0x107:
+                ps2.subaddr_hi = val;
+                break;
+        }
+}
+
+static void model_80_write(uint16_t port, uint8_t val)
+{
+        switch (port)
+        {
+                case 0x100:
+                break;
+                case 0x101:
+                break;
+                case 0x102:
+                lpt1_remove();
+                serial1_remove();
+                if (val & 0x04)
+                {
+                        if (val & 0x08)
+                                serial1_init(0x3f8, 4);
+                        else
+                                serial1_init(0x2f8, 3);
+                }
+                else
+                        serial1_remove();
+                if (val & 0x10)
+                {
+                        switch ((val >> 5) & 3)
+                        {
+                                case 0:
+                                lpt1_init(0x3bc);
+                                break;
+                                case 1:
+                                lpt1_init(0x378);
+                                break;
+                                case 2:
+                                lpt1_init(0x278);
+                                break;
+                        }
+                }
+                ps2.option[0] = val;
+                break;
+                case 0x103:
+                ps2.option[1] = (ps2.option[1] & 0x0f) | (val & 0xf0);
+                break;
+                case 0x104:
+                ps2.option[2] = val;
+                break;
+                case 0x105:
+                ps2.option[3] = val;
                 break;
                 case 0x106:
                 ps2.subaddr_lo = val;
@@ -519,4 +604,71 @@ void ps2_mca_board_model_55sx_init()
         
         ps2.planar_read = model_55sx_read;
         ps2.planar_write = model_55sx_write;
+}
+
+static void mem_encoding_update()
+{
+        if (ps2.split_addr >= mem_size*1024)
+                mem_set_mem_state(ps2.split_addr, 256 * 1024, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                
+        ps2.split_addr = (ps2.mem_regs[0] & 0xf) << 20;
+        
+        if (ps2.mem_regs[1] & 2)
+                mem_set_mem_state(0xe0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
+        else
+                mem_set_mem_state(0xe0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
+
+        if (!(ps2.mem_regs[1] & 8))
+        {
+                if (ps2.split_addr >= mem_size*1024)
+                        mem_set_mem_state(ps2.split_addr, 256 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        }
+}
+
+static uint8_t mem_encoding_read(uint16_t addr, void *p)
+{
+        switch (addr)
+        {
+                case 0xe0:
+                return ps2.mem_regs[0];
+                case 0xe1:
+                return ps2.mem_regs[1];
+        }
+        return 0xff;
+}
+static void mem_encoding_write(uint16_t addr, uint8_t val, void *p)
+{
+        switch (addr)
+        {
+                case 0xe0:
+                ps2.mem_regs[0] = val;
+                break;
+                case 0xe1:
+                ps2.mem_regs[1] = val;
+                break;
+        }
+        mem_encoding_update();
+}
+
+void ps2_mca_board_model_80_type2_init()
+{        
+        ps2_mca_board_common_init();
+
+        mem_remap_top_256k();
+        ps2.split_addr = mem_size * 1024;
+        mca_init(8);
+        
+        ps2.planar_read = model_80_read;
+        ps2.planar_write = model_80_write;
+        
+        device_add(&ps2_nvr_device);
+        
+        io_sethandler(0x00e0, 0x0002, mem_encoding_read, NULL, NULL, mem_encoding_write, NULL, NULL, NULL);
+        
+        ps2.mem_regs[1] = 2;
+        
+        if (mem_size == 2*1024)
+                ps2.option[1] = 0x0e;
+        else
+                ps2.option[1] = 0x0a;
 }
