@@ -316,6 +316,7 @@ typedef struct DMA
         
         int is_ps2;
         uint8_t arb_level[4];
+        uint8_t ps2_mode[4];
 } DMA;
 
 DMA dma,dma16;

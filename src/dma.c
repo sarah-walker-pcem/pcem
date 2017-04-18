@@ -103,6 +103,16 @@ void dma_write(uint16_t addr, uint8_t val, void *priv)
                 
                 case 0xb: /*Mode*/
                 dma.mode[val & 3] = val;
+                if (dma.is_ps2)
+                {
+                        dma.ps2_mode[val & 3] &= ~0x1c;
+                        if (val & 0x20)
+                                dma.ps2_mode[val & 3] |= 0x10;
+                        if ((val & 0xc) == 8)
+                                dma.ps2_mode[val & 3] |= 4;
+                        else if ((val & 0xc) == 4)
+                                dma.ps2_mode[val & 3] |= 0xc;
+                }
                 return;
                 
                 case 0xc: /*Clear FF*/
@@ -156,7 +166,7 @@ static uint8_t dma_ps2_read(uint16_t addr, void *priv)
                         dma.byte_ptr = (dma.byte_ptr + 1) & 1;
                         break;
                         case 7: /*Mode*/
-                        temp = (dma.xfr_channel & 4) ? dma16.mode[dma.xfr_channel & 3] : dma.mode[dma.xfr_channel];
+                        temp = (dma.xfr_channel & 4) ? dma16.ps2_mode[dma.xfr_channel & 3] : dma.ps2_mode[dma.xfr_channel];
                         break;
                         case 8: /*Arbitration Level*/
                         temp = (dma.xfr_channel & 4) ? dma16.arb_level[dma.xfr_channel & 3] : dma.arb_level[dma.xfr_channel];
@@ -229,6 +239,10 @@ static void dma_ps2_write(uint16_t addr, uint8_t val, void *priv)
                                 dma.byte_ptr = 0;
                                 break;
                         }
+                        if (dma.xfr_channel & 4)
+                                dma16.ab[dma.xfr_channel & 3] = dma16.ac[dma.xfr_channel & 3];
+                        else
+                                dma.ab[dma.xfr_channel] = dma.ac[dma.xfr_channel];
                         break;
 
                         case 4: /*Count*/
@@ -247,6 +261,10 @@ static void dma_ps2_write(uint16_t addr, uint8_t val, void *priv)
                                         dma.cc[dma.xfr_channel] = (dma.cc[dma.xfr_channel] & 0xff00) | val;
                         }
                         dma.byte_ptr = (dma.byte_ptr + 1) & 1;
+                        if (dma.xfr_channel & 4)
+                                dma16.cb[dma.xfr_channel & 3] = dma16.cc[dma.xfr_channel & 3];
+                        else
+                                dma.cb[dma.xfr_channel] = dma.cc[dma.xfr_channel];
                         break;
 
                         case 7: /*Mode register*/
@@ -262,9 +280,15 @@ static void dma_ps2_write(uint16_t addr, uint8_t val, void *priv)
                         if (!(val & 0x40) && (dma.xfr_channel & 4))
                                 fatal("8-bit DMA on 16-bit channel\n");
                         if (dma.xfr_channel & 4)
-                                dma16.mode[dma.xfr_channel & 3] = mode;
+                        {
+                                dma16.mode[dma.xfr_channel & 3] = (dma16.mode[dma.xfr_channel & 3] & ~0x2c) | mode;
+                                dma16.ps2_mode[dma.xfr_channel & 3] = val;
+                        }
                         else
-                                dma.mode[dma.xfr_channel] = mode;
+                        {
+                                dma.mode[dma.xfr_channel] = (dma.mode[dma.xfr_channel] & ~0x2c) | mode;
+                                dma.ps2_mode[dma.xfr_channel] = val;
+                        }
                         break;
 
                         case 8: /*Arbitration Level*/
@@ -353,6 +377,16 @@ void dma16_write(uint16_t addr, uint8_t val, void *priv)
                 
                 case 0xb: /*Mode*/
                 dma16.mode[val & 3] = val;
+                if (dma.is_ps2)
+                {
+                        dma16.ps2_mode[val & 3] &= ~0x1c;
+                        if (val & 0x20)
+                                dma16.ps2_mode[val & 3] |= 0x10;
+                        if ((val & 0xc) == 8)
+                                dma16.ps2_mode[val & 3] |= 4;
+                        else if ((val & 0xc) == 4)
+                                dma16.ps2_mode[val & 3] |= 0xc;
+                }
                 return;
                 
                 case 0xc: /*Clear FF*/
