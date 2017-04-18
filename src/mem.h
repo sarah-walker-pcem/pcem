@@ -102,6 +102,7 @@ FILE *romfopen(char *fn, char *mode);
 mem_mapping_t bios_mapping[8];
 mem_mapping_t bios_high_mapping[8];
 
+extern mem_mapping_t ram_high_mapping;
 
 typedef struct page_t
 {
