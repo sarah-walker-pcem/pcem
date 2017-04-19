@@ -93,7 +93,13 @@ void keyboard_at_poll()
                 }
         }
 
-        if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 && /*!(keyboard_at.mem[0] & 0x20) &&*/
+        if (keyboard_at.out_new == -1 && !(keyboard_at.status & STAT_OFULL) && 
+            key_ctrl_queue_start != key_ctrl_queue_end)
+        {
+                keyboard_at.out_new = key_ctrl_queue[key_ctrl_queue_start];
+                key_ctrl_queue_start = (key_ctrl_queue_start + 1) & 0xf;
+        }                
+        else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 && /*!(keyboard_at.mem[0] & 0x20) &&*/
             mouse_queue_start != mouse_queue_end)
         {
                 keyboard_at.out_new = mouse_queue[mouse_queue_start] | 0x100;
@@ -104,12 +110,6 @@ void keyboard_at_poll()
         {
                 keyboard_at.out_new = key_queue[key_queue_start];
                 key_queue_start = (key_queue_start + 1) & 0xf;
-        }                
-        else if (keyboard_at.out_new == -1 && !(keyboard_at.status & STAT_OFULL) && 
-            key_ctrl_queue_start != key_ctrl_queue_end)
-        {
-                keyboard_at.out_new = key_ctrl_queue[key_ctrl_queue_start];
-                key_ctrl_queue_start = (key_ctrl_queue_start + 1) & 0xf;
         }                
 }
 
@@ -487,7 +487,7 @@ void keyboard_at_reset()
         keyboard_at.mem[0] = 0x11;
         keyboard_at.wantirq = 0;
         keyboard_at.output_port = 0xcf;
-        keyboard_at.input_port = 0xb0;
+        keyboard_at.input_port = (MDA) ? 0xf0 : 0xb0;
         keyboard_at.out_new = -1;
         keyboard_at.last_irq = 0;
         
