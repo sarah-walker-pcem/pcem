@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "scat.h"
 #include "x86.h"
+#include "cpu.h"
 
 static uint8_t scat_regs[256];
 static int scat_index;
@@ -17,13 +18,13 @@ static uint32_t scat_xms_bound;
 static mem_mapping_t scat_shadowram_mapping;
 static mem_mapping_t scat_512k_clip_mapping;
 static mem_mapping_t scat_4000_9FFF_mapping[24];
+static mem_mapping_t scat_A000_BFFF_mapping;
 
 void scat_shadow_state_update()
 {
         int i, val;
 
-        // TODO - Segment A000 to BFFF shadow ram enable features and ROM enable features should be implemented later.
-        for (i = 8; i < 24; i++)
+        for (i = 0; i < 24; i++)
         {
                 val = ((scat_regs[SCAT_SHADOW_RAM_ENABLE_1 + (i >> 3)] >> (i & 7)) & 1) ? MEM_READ_INTERNAL : MEM_READ_EXTERNAL;
                 if (i < 8)
@@ -176,6 +177,10 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                                 }
                         }
                         flushmmucache();
+
+                        cpu_waitstates = (val & 0x70) == 0 ? 1 : 2;
+                        cpu_update_waitstates();
+
                         scat_reg_valid = 1;
                         break;
                         case SCAT_EXTENDED_BOUNDARY:
@@ -337,6 +342,9 @@ uint8_t scat_read(uint16_t port, void *priv)
                         case SCAT_MISCELLANEOUS_STATUS:
                         val = (scat_regs[scat_index] & 0xbf) | ((scat_port_92 & 2) << 5);
                         break;
+                        case SCAT_DRAM_CONFIGURATION:
+                        val = (scat_regs[scat_index] & 0x8f) | (cpu_waitstates == 1 ? 0 : 0x10);
+                        break;
                         default:
                         val = scat_regs[scat_index];
                         break;
@@ -445,7 +453,7 @@ void scat_init()
         scat_regs[SCAT_SHADOW_RAM_ENABLE_1] = 0;
         scat_regs[SCAT_SHADOW_RAM_ENABLE_2] = 0;
         scat_regs[SCAT_SHADOW_RAM_ENABLE_3] = 0;
-        scat_regs[SCAT_DRAM_CONFIGURATION] = 2;
+        scat_regs[SCAT_DRAM_CONFIGURATION] = cpu_waitstates == 1 ? 2 : 0x12;
         scat_regs[SCAT_EXTENDED_BOUNDARY] = 0;
         scat_regs[SCAT_EMS_CONTROL] = 0;
 
@@ -459,6 +467,9 @@ void scat_init()
                         mem_mapping_enable(&scat_4000_9FFF_mapping[i]);
                 }
         }
+
+        mem_mapping_add(&scat_A000_BFFF_mapping, 0xA0000, 0x20000, mem_read_ram, mem_read_ramw, mem_read_raml, mem_write_ram, mem_write_ramw, mem_write_raml, ram + 0xA0000, MEM_MAPPING_INTERNAL, NULL);
+        mem_mapping_enable(&scat_A000_BFFF_mapping);
 
         for (i = 0; i < 32; i++)
         {
