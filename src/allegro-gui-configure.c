@@ -342,7 +342,7 @@ static void update_hdd_list(int model, int use_selected_hdd)
         if (models[model].flags & MODEL_HAS_IDE)
         {
                 strcpy(hdd_list[0].name, "Internal IDE");
-                strcpy(hdd_list[0].internal_name, "internal_ide");
+                hdd_list[0].internal_name = "internal_ide";
         }
         else
         {
