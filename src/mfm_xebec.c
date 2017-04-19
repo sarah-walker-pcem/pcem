@@ -870,7 +870,7 @@ static void *xebec_init()
 	loadhd(xebec, 1, ide_fn[1]);
 	xebec_set_switches(xebec);
 
-        rom_init(&xebec->bios_rom, "roms/IBM_XEBEC_62X0822_1985.BIN", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&xebec->bios_rom, "roms/ibm_xebec_62x0822_1985.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
                 
         io_sethandler(0x0320, 0x0004, xebec_read, NULL, NULL, xebec_write, NULL, NULL, xebec);
 
@@ -897,7 +897,7 @@ static void xebec_close(void *p)
 
 static int xebec_available()
 {
-        return rom_present("roms/IBM_XEBEC_62X0822_1985.BIN");
+        return rom_present("roms/ibm_xebec_62x0822_1985.bin");
 }
 
 device_t mfm_xebec_device =

@@ -148,7 +148,7 @@ void *et4000_init()
         et4000_t *et4000 = malloc(sizeof(et4000_t));
         memset(et4000, 0, sizeof(et4000_t));
 
-        rom_init(&et4000->bios_rom, "roms/et4000.BIN", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&et4000->bios_rom, "roms/et4000.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
                 
         io_sethandler(0x03c0, 0x0020, et4000_in, NULL, NULL, et4000_out, NULL, NULL, et4000);
 
@@ -163,7 +163,7 @@ void *et4000_init()
 
 static int et4000_available()
 {
-        return rom_present("roms/et4000.BIN");
+        return rom_present("roms/et4000.bin");
 }
 
 void et4000_close(void *p)

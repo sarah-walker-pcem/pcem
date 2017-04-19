@@ -103,7 +103,7 @@ A generic clone XT board.
 
 ROM files needed:
 
-dtk\DTK_ERSO_2.42_2764.bin
+dtk\dtk_erso_2.42_2764.bin
 
 
 Amstrad PC1512 (1986)
@@ -172,28 +172,28 @@ AMI XT clone (1989)
 
 ROM files needed:
 
-amixt\AMI_8088_BIOS_31JAN89.BIN
+amixt\ami_8088_bios_31jan89.bin
 
 
 DTK XT clone (1988)
 
 ROM files needed:
 
-dtk\DTK_ERSO_2.42_2764.bin
+dtk\dtk_erso_2.42_2764.bin
 
 
 VTech Laser Turbo XT (1987)
 
 ROM files needed:
 
-ltxt\27C64.bin
+ltxt\27c64.bin
 
 
 VTech Laser XT3 (1989)
 
 ROM files needed:
 
-lxt3\27C64D.bin
+lxt3\27c64d.bin
 
 
 Phoenix XT clone (1986)
@@ -277,8 +277,8 @@ An early 386 system. I don't think this BIOS is from the original 1986 version
 
 ROM files needed:
 
-deskpro386\109592-005.U11.bin
-deskpro386\109591-005.U13.bin
+deskpro386\109592-005.u11.bin
+deskpro386\109591-005.u13.bin
 
 
 IBM PS/1 Model 2121 (1990)
@@ -293,6 +293,7 @@ Acermate 386SX/25N (1992?)
 An integrated 386SX clone, with onboard Oak SVGA and IO.
 
 ROM files needed:
+
 acer386\acer386.bin
 acer386\oti067.bin
 
@@ -309,6 +310,7 @@ A 386SX clone (otherwise known as the PC7386SX) with a built-in Sega Megadrive. 
 is emulated, obv.
 
 ROM files needed:
+
 megapc\41651-bios lo.u18
 megapc\211253-bios hi.u19
 
@@ -326,7 +328,7 @@ This is a generic 386DX clone with an MR BIOS.
 
 ROM files needed:
 
-mr386dx\OPT495SX.MR
+mr386dx\opt495sx.mr
 
 
 AMI 386DX clone (1994)
@@ -335,7 +337,7 @@ to support an external cache.
 
 ROM files needed:
 
-ami386dx\OPT495SX.AMI
+ami386dx\opt495sx.ami
 
 
 AMI 486 clone (1993)
@@ -360,7 +362,7 @@ A 486 clone using the SiS 496/497 chipset, with PCI bus and Award BIOS.
 
 ROM files needed:
 
-sis496\SIS496-1.AWA
+sis496\sis496-1.awa
 
 
 Intel Premiere/PCI (Batman's Revenge) (1994)
@@ -368,8 +370,8 @@ A Socket 4 based board with 430LX chipset.
 
 ROM files needed:
 
-revenge\1009AF2_.BI0
-revenge\1009AF2_.BI1
+revenge\1009af2_.bi0
+revenge\1009af2_.bi1
 
 
 Intel Advanced/EV (Endeavor) (1995)
@@ -379,8 +381,8 @@ the emulated board does not have this either.
 
 ROM files needed:
 
-endeavor\1006CB0_.BI0
-endeavor\1006CB0_.BI1
+endeavor\1006cb0_.bi0
+endeavor\1006cb0_.bi1
 
 
 Award 430VX PCI (1996)
@@ -388,7 +390,7 @@ A generic Socket 5/7 board with 430VX chipset.
 
 ROM files needed:
 
-430vx\55XWUQ0E.BIN
+430vx\55xwuq0e.bin
 
 
 
