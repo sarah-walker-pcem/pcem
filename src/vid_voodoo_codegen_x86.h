@@ -3300,7 +3300,7 @@ static void voodoo_codegen_init(voodoo_t *voodoo)
 
 #ifdef __linux__
 	start = (void *)((long)voodoo->codegen_data & pagemask);
-	len = ((sizeof(voodoo_x86_data_t) * BLOCK_NUM) + pagesize) & pagemask;
+	len = ((sizeof(voodoo_x86_data_t) * BLOCK_NUM*2) + pagesize) & pagemask;
 	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
 	{
 		perror("mprotect");
