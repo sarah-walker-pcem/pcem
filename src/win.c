@@ -307,7 +307,7 @@ void get_executable_name(char *s, int size)
         GetModuleFileName(hinstance, s, size);
 }
 
-void set_window_title(char *s)
+void set_window_title(const char *s)
 {
         if (video_fullscreen)
                 return;

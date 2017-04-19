@@ -5,7 +5,7 @@
 
 BITMAP *screen;
 
-void hline(BITMAP *b, int x1, int y, int x2, uint32_t col)
+void hline(BITMAP *b, int x1, int y, int x2, int col)
 {
         if (y < 0 || y >= buffer->h)
            return;

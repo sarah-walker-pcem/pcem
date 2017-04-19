@@ -92,6 +92,6 @@ void closevideo();
 
 void video_updatetiming();
 
-void hline(BITMAP *b, int x1, int y, int x2, uint32_t col);
+void hline(BITMAP *b, int x1, int y, int x2, int col);
 
 void destroy_bitmap(BITMAP *b);

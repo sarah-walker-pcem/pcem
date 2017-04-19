@@ -547,7 +547,7 @@ void get_executable_name(char *s, int size);
 void startblit();
 void endblit();
 
-void set_window_title(char *s);
+void set_window_title(const char *s);
 
 void updatewindowsize(int x, int y);
 
