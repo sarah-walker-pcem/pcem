@@ -12,6 +12,20 @@ static int opINT3(uint32_t fetchdat)
         return 1;
 }
 
+static int opINT1(uint32_t fetchdat)
+{
+        int cycles_old = cycles; UNUSED(cycles_old);
+        if ((cr0 & 1) && (eflags & VM_FLAG) && (IOPL != 3))
+        {
+                x86gpf(NULL,0);
+                return 1;
+        }
+        x86_int_sw(1);
+        CLOCK_CYCLES((is486) ? 44 : 59);
+        PREFETCH_RUN(cycles_old-cycles, 1, -1, 0,0,0,0, 0);
+        return 1;
+}
+
 static int opINT(uint32_t fetchdat)
 {
         int cycles_old = cycles; UNUSED(cycles_old);

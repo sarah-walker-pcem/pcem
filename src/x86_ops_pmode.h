@@ -350,8 +350,9 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 break;
 
                 case 0x20: /*SMSW*/
-                if (is486) seteaw(msw);
-                else       seteaw(msw | 0xFF00);
+                if (is486)      seteaw(msw);
+                else if (is386) seteaw(msw | 0xFF00);
+                else            seteaw(msw | 0xFFF0);
                 CLOCK_CYCLES(2);
                 PREFETCH_RUN(2, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
                 break;
@@ -364,6 +365,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 }
                 tempw = geteaw();                                       if (cpu_state.abrt) return 1;
                 if (msw & 1) tempw |= 1;
+                if (!is386) tempw &= 0xF;
                 msw = tempw;
                 PREFETCH_RUN(2, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
                 break;

@@ -3025,6 +3025,7 @@ void execx86(int cycs)
                         switch (rmdat&0x38)
                         {
                                 case 0x00: /*TEST b,#8*/
+                                case 0x08:
                                 temp2=FETCH();
                                 temp&=temp2;
                                 setznp8(temp);
@@ -3163,6 +3164,7 @@ void execx86(int cycs)
                         switch (rmdat&0x38)
                         {
                                 case 0x00: /*TEST w*/
+                                case 0x08:
                                 tempw2=getword();
                                 setznp16(tempw&tempw2);
                                 flags&=~(C_FLAG|V_FLAG|A_FLAG);
