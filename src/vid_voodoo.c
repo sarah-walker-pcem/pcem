@@ -548,7 +548,7 @@ enum
         SST_cmdFifoHoles = 0x1f8,
         
         SST_fbiInit4 = 0x200,
-
+        SST_vRetrace = 0x204,
         SST_backPorch = 0x208,
         SST_videoDimensions = 0x20c,
         SST_fbiInit0 = 0x210,
@@ -5761,6 +5761,10 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp = voodoo->fbiInit3;
                 break;
 
+                case SST_vRetrace:
+                timer_clock();
+                temp = voodoo->line & 0x1fff;
+                break;
                 case SST_hvRetrace:
                 timer_clock();
                 temp = voodoo->line & 0x1fff;
