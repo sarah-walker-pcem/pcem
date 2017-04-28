@@ -41,8 +41,8 @@ void scat_shadow_state_update()
                         {
                                 val |= ((scat_regs[SCAT_SHADOW_RAM_ENABLE_1 + (i >> 3)] >> (i & 7)) & 1) ? MEM_WRITE_INTERNAL : MEM_WRITE_EXTERNAL;
                         }
-                        mem_set_mem_state((i + 40) << 14, 0x4000, val);
                 }
+                mem_set_mem_state((i + 40) << 14, 0x4000, val);
         }
 
         flushmmucache();
@@ -340,7 +340,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 switch (scat_index)
                 {
                         case SCAT_MISCELLANEOUS_STATUS:
-                        val = (scat_regs[scat_index] & 0xbf) | ((scat_port_92 & 2) << 5);
+                        val = (scat_regs[scat_index] & 0xbf) | ((mem_a20_key & 2) << 5);
                         break;
                         case SCAT_DRAM_CONFIGURATION:
                         val = (scat_regs[scat_index] & 0x8f) | (cpu_waitstates == 1 ? 0 : 0x10);
