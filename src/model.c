@@ -63,6 +63,7 @@ void            ams_init();
 void         europc_init();
 void         olim24_init();
 void             at_init();
+void         ibm_at_init();
 void         at_ide_init();
 void     deskpro386_init();
 void      ps1_m2011_init();
@@ -110,7 +111,7 @@ MODEL models[] =
         {"Amstrad PC1640",        ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      640, 640,   0,          ams_init, NULL},
         {"Amstrad PC2086",        ROM_PC2086,           "pc2086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      640, 640,   0,          ams_init, NULL},
         {"Amstrad PC3086",        ROM_PC3086,           "pc3086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      640, 640,   0,          ams_init, NULL},
-        {"IBM AT",                ROM_IBMAT,            "ibmat",          { {"",      cpus_ibmat},       {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           1,  16,   1,             at_init, NULL},
+        {"IBM AT",                ROM_IBMAT,            "ibmat",          { {"",      cpus_ibmat},       {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           1,  16,   1,         ibm_at_init, NULL},
         {"Commodore PC 30 III",   ROM_CMDPC30,          "cmdpc30",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,         at_ide_init, NULL},
         {"AMI 286 clone",         ROM_AMI286,           "ami286",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,        at_neat_init, NULL},
         {"Award 286 clone",       ROM_AWARD286,         "award286",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,        at_scat_init, NULL},
@@ -299,6 +300,12 @@ void at_init()
         nvr_init();
         pic2_init();
         device_add(&gameport_device);
+}
+
+void ibm_at_init()
+{
+        at_init();
+        mem_remap_top_384k();
 }
 
 void at_ide_init()
