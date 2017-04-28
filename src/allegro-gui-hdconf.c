@@ -68,9 +68,36 @@ static int hdconf_open(int msg, DIALOG *d, int c)
                         fseeko64(f, -1, SEEK_END);
                         sz = ftello64(f) + 1;
                         fclose(f);
-                        sprintf(hd_sectors_new, "63");
-                        sprintf(hd_heads_new, "16");
-                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 16) / 63);
+                        if ((sz % 17) == 0 && sz <= 133693440)
+                        {
+                                sprintf(hd_sectors_new, "17");
+                                if (sz <= 26738688)
+                                {
+                                        sprintf(hd_heads_new, "4");
+                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 4) / 17);
+                                }
+                                else if (sz <= 53477376)
+                                {
+                                        sprintf(hd_heads_new, "6");
+                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 6) / 17);
+                                }
+                                else if (sz <= 71303168)
+                                {
+                                        sprintf(hd_heads_new, "8");
+                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 8) / 17);
+                                }
+                                else
+                                {
+                                        sprintf(hd_heads_new, "15");
+                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 15) / 17);
+                                }
+                        }
+                        else
+                        {
+                                sprintf(hd_sectors_new, "63");
+                                sprintf(hd_heads_new, "16");
+                                sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 16) / 63);
+                        }
 
                         while (1)
                         {
