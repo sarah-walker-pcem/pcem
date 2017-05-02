@@ -157,6 +157,8 @@ int video_get_video_from_internal_name(char *s)
 
 int video_fullscreen = 0, video_fullscreen_scale, video_fullscreen_first;
 int video_force_aspect_ration = 0;
+int vid_disc_indicator = 0;
+
 uint32_t *video_15to32, *video_16to32;
 
 int egareads=0,egawrites=0;

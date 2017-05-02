@@ -50,6 +50,8 @@ BEGIN
                                 MENUITEM "&Square pixels", IDM_VID_FS_SQ
                                 MENUITEM "&Integer scale", IDM_VID_FS_INT
                         END
+                        MENUITEM SEPARATOR
+                        MENUITEM "Disc activity indicator", IDM_VID_DISC
                 END
                 MENUITEM SEPARATOR
                 MENUITEM "&Load configuration...", IDM_CONFIG_LOAD

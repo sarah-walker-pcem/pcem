@@ -41,6 +41,7 @@ int video_get_video_from_internal_name(char *s);
 
 extern int video_fullscreen, video_fullscreen_scale, video_fullscreen_first;
 extern int video_force_aspect_ration;
+extern int vid_disc_indicator;
 
 enum
 {

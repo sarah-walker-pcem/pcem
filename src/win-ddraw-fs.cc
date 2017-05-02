@@ -242,7 +242,7 @@ static void ddraw_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h
                 lpdds_back2->Blt(&r_dest, lpdds_back, &r_src, DDBLT_WAIT, NULL);
         }
         
-        if (readflash)
+        if (readflash && vid_disc_indicator)
         {
                 RECT r;
                 r.left   = window_rect.right - 40;
@@ -321,7 +321,7 @@ static void ddraw_fs_blit_memtoscreen_8(int x, int y, int w, int h)
                 lpdds_back2->Blt(&r_dest, lpdds_back, &r_src, DDBLT_WAIT, NULL);
         }
         
-        if (readflash)
+        if (readflash && vid_disc_indicator)
         {
                 RECT r;
                 r.left   = window_rect.right - 40;
