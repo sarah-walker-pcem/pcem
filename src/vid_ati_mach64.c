@@ -416,6 +416,7 @@ void mach64_recalctimings(svga_t *svga)
                 svga->linedbl = svga->rowcount = 0;
                 svga->split = 0xffffff;
                 svga->vblankstart = svga->dispend;
+                svga->rowcount = mach64->crtc_gen_cntl & 1;
 //                svga_htotal <<= 1;
 //                svga_hdisp <<= 1;
                 svga->rowoffset <<= 1;
