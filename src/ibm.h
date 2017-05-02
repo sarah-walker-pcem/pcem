@@ -442,6 +442,7 @@ enum
 	GFX_COLORPLUS,	/* Plantronics ColorPlus */
 	GFX_WY700,	/* Wyse 700 */
 	GFX_GENIUS,	/* MDSI Genius */
+        GFX_MACH64VT2,  /*ATI Mach64 VT2*/
         GFX_MAX
 };
 

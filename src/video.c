@@ -53,6 +53,7 @@ typedef struct
 static VIDEO_CARD video_cards[] =
 {
         {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,            GFX_MACH64GX},
+        {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,           GFX_MACH64VT2},
         {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,            GFX_VGACHARGER},
         {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,            GFX_VGAEDGE16},
         {"CGA",                                    "cga",            &cga_device,                 GFX_CGA},

@@ -584,6 +584,8 @@ void svga_poll(void *p)
                 }
                 if (svga->vc == svga->dispend)
                 {
+                        if (svga->vblank_start)
+                                svga->vblank_start(svga);
 //                        pclog("VC dispend\n");
                         svga->dispon=0;
                         if (svga->crtc[10] & 0x20) svga->cursoron = 0;

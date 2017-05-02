@@ -86,8 +86,9 @@ typedef struct svga_t
                 int ena;
                 int x, y;
                 int xoff, yoff;
-                int ysize;
+                int xsize, ysize;
                 uint32_t addr;
+                uint32_t pitch;
                 int v_acc, h_acc;
         } hwcursor, hwcursor_latch, overlay, overlay_latch;
         
@@ -106,6 +107,8 @@ typedef struct svga_t
         void (*hwcursor_draw)(struct svga_t *svga, int displine);
 
         void (*overlay_draw)(struct svga_t *svga, int displine);
+        
+        void (*vblank_start)(struct svga_t *svga);
         
         /*If set then another device is driving the monitor output and the SVGA
           card should not attempt to display anything */
