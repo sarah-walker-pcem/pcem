@@ -28,6 +28,7 @@ static HWND d3d_hwnd;
 struct CUSTOMVERTEX
 {
      FLOAT x, y, z, rhw;    // from the D3DFVF_XYZRHW flag
+     DWORD color;
      FLOAT tu, tv;
 };
 
@@ -58,13 +59,21 @@ static uint32_t pal_lookup[256];
 
 static CUSTOMVERTEX d3d_verts[] =
 {
-     {   0.0f,    0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-     {2048.0f, 2048.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-     {   0.0f, 2048.0f, 1.0f, 1.0f, 0.0f, 1.0f},
+     {   0.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 0.0f},
+     {2048.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 1.0f},
+     {   0.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 1.0f},
 
-     {   0.0f,    0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-     {2048.0f,    0.0f, 1.0f, 1.0f, 1.0f, 0.0f},
-     {2048.0f, 2048.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+     {   0.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 0.0f},
+     {2048.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 0.0f},
+     {2048.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 1.0f},
+
+     {   0.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 0.0f},
+     {2048.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 1.0f},
+     {   0.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 1.0f},
+
+     {   0.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 0.0f, 0.0f},
+     {2048.0f,    0.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 0.0f},
+     {2048.0f, 2048.0f, 1.0f, 1.0f, 0xffffff, 1.0f, 1.0f}
 };
   
 void d3d_init(HWND h)
@@ -122,9 +131,9 @@ void d3d_init_objects()
         int y;
         RECT r;
 
-        d3ddev->CreateVertexBuffer(6*sizeof(CUSTOMVERTEX),
+        d3ddev->CreateVertexBuffer(12*sizeof(CUSTOMVERTEX),
                                    0,
-                                   D3DFVF_XYZRHW | D3DFVF_TEX1,
+                                   D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1,
                                    D3DPOOL_MANAGED,
                                    &v_buffer,
                                    NULL);
@@ -257,12 +266,20 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         d3d_verts[0].tv = d3d_verts[3].tv = d3d_verts[4].tv = 0;//0.5 / 2048.0;
         d3d_verts[1].tu = d3d_verts[4].tu = d3d_verts[5].tu = (float)w / 2048.0;
         d3d_verts[1].tv = d3d_verts[2].tv = d3d_verts[5].tv = (float)h / 2048.0;
+        d3d_verts[0].color = d3d_verts[1].color = d3d_verts[2].color =
+        d3d_verts[3].color = d3d_verts[4].color = d3d_verts[5].color =
+        d3d_verts[6].color = d3d_verts[7].color = d3d_verts[8].color =
+        d3d_verts[9].color = d3d_verts[10].color = d3d_verts[11].color = 0xffffff;
 
         GetClientRect(d3d_hwnd, &r);
         d3d_verts[0].x = d3d_verts[2].x = d3d_verts[3].x = -0.5;
         d3d_verts[0].y = d3d_verts[3].y = d3d_verts[4].y = -0.5;
         d3d_verts[1].x = d3d_verts[4].x = d3d_verts[5].x = (r.right  - r.left) - 0.5;
         d3d_verts[1].y = d3d_verts[2].y = d3d_verts[5].y = (r.bottom - r.top) - 0.5;
+        d3d_verts[6].x = d3d_verts[8].x = d3d_verts[9].x = (r.right  - r.left) - 40.5;
+        d3d_verts[6].y = d3d_verts[9].y = d3d_verts[10].y = 8.5;
+        d3d_verts[7].x = d3d_verts[10].x = d3d_verts[11].x = (r.right  - r.left) - 8.5;
+        d3d_verts[7].y = d3d_verts[8].y = d3d_verts[11].y = 14.5;
 
         if (hr == D3D_OK)
                 hr = v_buffer->Lock(0, 0, (void**)&pVoid, 0);    // lock the vertex buffer
@@ -280,7 +297,7 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                         hr = d3ddev->SetTexture(0, d3dTexture);
 
                 if (hr == D3D_OK)
-                        hr = d3ddev->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+                        hr = d3ddev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
 
                 if (hr == D3D_OK)
                         hr = d3ddev->SetStreamSource(0, v_buffer, 0, sizeof(CUSTOMVERTEX));
@@ -290,6 +307,9 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 
                 if (hr == D3D_OK)
                         hr = d3ddev->SetTexture(0, NULL);
+
+                if (hr == D3D_OK && readflash && vid_disc_indicator)
+                        hr = d3ddev->DrawPrimitive(D3DPT_TRIANGLELIST, 6, 2);
 
                 if (hr == D3D_OK)
                         hr = d3ddev->EndScene();
@@ -346,12 +366,20 @@ void d3d_blit_memtoscreen_8(int x, int y, int w, int h)
         d3d_verts[0].tv = d3d_verts[3].tv = d3d_verts[4].tv = 0;//0.5 / 2048.0;
         d3d_verts[1].tu = d3d_verts[4].tu = d3d_verts[5].tu = (float)w / 2048.0;
         d3d_verts[1].tv = d3d_verts[2].tv = d3d_verts[5].tv = (float)h / 2048.0;
+        d3d_verts[0].color = d3d_verts[1].color = d3d_verts[2].color =
+        d3d_verts[3].color = d3d_verts[4].color = d3d_verts[5].color =
+        d3d_verts[6].color = d3d_verts[7].color = d3d_verts[8].color =
+        d3d_verts[9].color = d3d_verts[10].color = d3d_verts[11].color = 0xffffff;
 
         GetClientRect(d3d_hwnd, &r);
         d3d_verts[0].x = d3d_verts[2].x = d3d_verts[3].x = -0.5;
         d3d_verts[0].y = d3d_verts[3].y = d3d_verts[4].y = -0.5;
         d3d_verts[1].x = d3d_verts[4].x = d3d_verts[5].x = (r.right  - r.left) - 0.5;
         d3d_verts[1].y = d3d_verts[2].y = d3d_verts[5].y = (r.bottom - r.top) - 0.5;
+        d3d_verts[6].x = d3d_verts[8].x = d3d_verts[9].x = (r.right  - r.left) - 40.5;
+        d3d_verts[6].y = d3d_verts[9].y = d3d_verts[10].y = 8.5;
+        d3d_verts[7].x = d3d_verts[10].x = d3d_verts[11].x = (r.right  - r.left) - 8.5;
+        d3d_verts[7].y = d3d_verts[8].y = d3d_verts[11].y = 14.5;
 
         if (hr == D3D_OK)
                 hr = v_buffer->Lock(0, 0, (void**)&pVoid, 0);    // lock the vertex buffer
@@ -369,7 +397,7 @@ void d3d_blit_memtoscreen_8(int x, int y, int w, int h)
                         hr = d3ddev->SetTexture(0, d3dTexture);
 
                 if (hr == D3D_OK)
-                        hr = d3ddev->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+                        hr = d3ddev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
 
                 if (hr == D3D_OK)
                         hr = d3ddev->SetStreamSource(0, v_buffer, 0, sizeof(CUSTOMVERTEX));
@@ -379,6 +407,9 @@ void d3d_blit_memtoscreen_8(int x, int y, int w, int h)
 
                 if (hr == D3D_OK)
                         hr = d3ddev->SetTexture(0, NULL);
+
+                if (hr == D3D_OK && readflash && vid_disc_indicator)
+                        hr = d3ddev->DrawPrimitive(D3DPT_TRIANGLELIST, 6, 2);
 
                 if (hr == D3D_OK)
                         hr = d3ddev->EndScene();
