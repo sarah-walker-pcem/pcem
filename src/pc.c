@@ -639,6 +639,7 @@ void loadconfig(char *fn)
         else   strcpy(iso_path, "");
         
         vid_resize = config_get_int(NULL, "vid_resize", 0);
+        video_force_aspect_ration = config_get_int(NULL, "vid_force_aspect_ratio", 0);
         vid_api = config_get_int(NULL, "vid_api", 0);
         video_fullscreen_scale = config_get_int(NULL, "video_fullscreen_scale", 0);
         video_fullscreen_first = config_get_int(NULL, "video_fullscreen_first", 1);
@@ -741,6 +742,7 @@ void saveconfig()
         config_set_int(NULL, "cdrom_channel", cdrom_channel);
         config_set_string(NULL, "cdrom_path", iso_path);
         config_set_int(NULL, "vid_resize", vid_resize);
+        config_set_int(NULL, "vid_force_aspect_ratio", video_force_aspect_ration);
         config_set_int(NULL, "vid_api", vid_api);
         config_set_int(NULL, "video_fullscreen_scale", video_fullscreen_scale);
         config_set_int(NULL, "video_fullscreen_first", video_fullscreen_first);

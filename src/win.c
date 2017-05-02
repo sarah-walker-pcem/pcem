@@ -124,6 +124,16 @@ void updatewindowsize(int x, int y)
 {
         if (vid_resize) return;
 
+        if (video_force_aspect_ration)
+        {
+                float aspect = (float)x / (float)y;
+                
+                if (aspect > 1.33)
+                        y = (x * 3) / 4;
+                else
+                        x = (y * 4) / 3;
+        }
+        
         winsizex=x; winsizey=y;
         win_doresize = 1;
 }
@@ -579,6 +589,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 			CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
 	}  
         if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
+        if (video_force_aspect_ration)
+                CheckMenuItem(menu, IDM_VID_ASPECT, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
         CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
@@ -963,6 +975,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_FRAMECHANGED);
                         saveconfig();
                         break;
+                        case IDM_VID_ASPECT:
+                        video_force_aspect_ration = !video_force_aspect_ration;
+                        CheckMenuItem(hmenu, IDM_VID_ASPECT, video_force_aspect_ration ? MF_CHECKED : MF_UNCHECKED);
+                        saveconfig();
+                        break;
                         case IDM_VID_REMEMBER:
                         window_remember = !window_remember;
                         CheckMenuItem(hmenu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
@@ -1288,6 +1305,55 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
                 case WM_ENTERMENULOOP:
 //                if (key[KEY_ALT] || key[KEY_ALTGR]) return 0;
+                break;
+
+                case WM_SIZING:
+                if (video_force_aspect_ration && vid_resize)
+                {
+                        RECT *r = (RECT *)lParam;                        
+                        int x = r->right - r->left;
+                        int y = r->bottom - r->top;
+                        float aspect = (float)x / (float)y;
+
+                        switch (wParam)
+                        {
+                                case WMSZ_LEFT:
+                                case WMSZ_RIGHT:
+                                r->bottom = r->top + ((x * 3) / 4);
+                                break;
+                                case WMSZ_TOP:
+                                case WMSZ_BOTTOM:
+                                r->right = r->left + ((y * 4) / 3);
+                                break;
+                                
+                                case WMSZ_TOPLEFT:
+                                if (aspect > 1.33)
+                                        r->top = r->bottom - ((x * 3) / 4);
+                                else
+                                        r->left = r->right - ((y * 4) / 3);
+                                break;
+                                case WMSZ_TOPRIGHT:
+                                if (aspect > 1.33)
+                                        r->top = r->bottom - ((x * 3) / 4);
+                                else
+                                        r->right = r->left + ((y * 4) / 3);
+                                break;
+                                case WMSZ_BOTTOMLEFT:
+                                if (aspect > 1.33)
+                                        r->bottom = r->top + ((x * 3) / 4);
+                                else
+                                        r->left = r->right - ((y * 4) / 3);
+                                break;
+                                case WMSZ_BOTTOMRIGHT:
+                                if (aspect > 1.33)
+                                        r->bottom = r->top + ((x * 3) / 4);
+                                else
+                                        r->right = r->left + ((y * 4) / 3);
+                                break;
+                        }
+                        
+                        return TRUE;
+                }
                 break;
 
                 case WM_SIZE:
