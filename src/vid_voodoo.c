@@ -7290,7 +7290,7 @@ static device_config_t voodoo_config[] =
 device_t voodoo_device =
 {
         "3DFX Voodoo Graphics",
-        0,
+        DEVICE_PCI,
         voodoo_init,
         voodoo_close,
         NULL,

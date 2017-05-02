@@ -49,6 +49,7 @@ enum
         DEVICE_NOT_WORKING = 1, /*Device does not currently work correctly and will be disabled in a release build*/
         DEVICE_AT = 2,          /*Device requires an AT-compatible system*/
         DEVICE_MCA = 0x20,      /*Device requires an MCA system*/
+        DEVICE_PCI = 0x40       /*Device requires a PCI system*/
 };
 
 int model_get_config_int(char *s);

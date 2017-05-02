@@ -3517,7 +3517,7 @@ device_t mach64gx_device =
 device_t mach64vt2_device =
 {
         "ATI Mach64VT2",
-        0,
+        DEVICE_PCI,
         mach64vt2_init,
         mach64_close,
         mach64vt2_available,

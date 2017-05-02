@@ -38,6 +38,47 @@ static int mouse_valid(int type, int model)
         return 1;
 }
 
+static void recalc_vid_list(HWND hdlg, int model)
+{
+        HWND h = GetDlgItem(hdlg, IDC_COMBOVID);
+        int c = 0, d = 0;
+        int found_card = 0;
+        
+        SendMessage(h, CB_RESETCONTENT, 0, 0);
+        SendMessage(h, CB_SETCURSEL, 0, 0);
+        
+        while (1)
+        {
+                char *s = video_card_getname(c);
+
+                if (!s[0])
+                        break;
+
+                if (video_card_available(c) && gfx_present[video_new_to_old(c)] &&
+                    ((models[model].flags & MODEL_PCI) || !(video_card_getdevice(c)->flags & DEVICE_PCI)))
+                {
+                        SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                        if (video_new_to_old(c) == gfxcard)
+                        {
+                                SendMessage(h, CB_SETCURSEL, d, 0);
+                                found_card = 1;
+                        }
+
+                        d++;
+                }
+
+                c++;
+        }
+        if (!found_card)
+                SendMessage(h, CB_SETCURSEL, 0, 0);
+        EnableWindow(h, models[model].fixed_gfxcard ? FALSE : TRUE);
+
+        h = GetDlgItem(hdlg, IDC_CHECKVOODOO);
+        EnableWindow(h, (models[model].flags & MODEL_PCI) ? TRUE : FALSE);
+        h = GetDlgItem(hdlg, IDC_CONFIGUREVOODOO);
+        EnableWindow(h, (models[model].flags & MODEL_PCI) ? TRUE : FALSE);
+}
+
 static void recalc_snd_list(HWND hdlg, int model)
 {
         HWND h = GetDlgItem(hdlg, IDC_COMBOSND);
@@ -181,28 +222,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 }
                 SendMessage(h, CB_SETCURSEL, modeltolist[model], 0);
 
-                h = GetDlgItem(hdlg, IDC_COMBOVID);
-                c = d = 0;
-                while (1)
-                {
-                        char *s = video_card_getname(c);
-
-                        if (!s[0])
-                                break;
-
-                        if (video_card_available(c) && gfx_present[video_new_to_old(c)])
-                        {
-                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
-                                if (video_new_to_old(c) == gfxcard)
-                                        SendMessage(h, CB_SETCURSEL, d, 0);                                
-
-                                d++;
-                        }
-
-                        c++;
-                }
-                if (models[model].fixed_gfxcard)
-                        EnableWindow(h, FALSE);
+                recalc_vid_list(hdlg, romstomodel[romset]);
 
                 h = GetDlgItem(hdlg, IDC_COMBOCPUM);
                 c = 0;
@@ -517,27 +537,6 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 h = GetDlgItem(hdlg,IDC_COMBO1);
                                 temp_model = listtomodel[SendMessage(h,CB_GETCURSEL,0,0)];
                                 
-                                /*Enable/disable gfxcard list*/
-                                h = GetDlgItem(hdlg, IDC_COMBOVID);
-                                if (!models[temp_model].fixed_gfxcard)
-                                {
-                                        char *s = video_card_getname(video_old_to_new(gfxcard));
-                                        
-                                        EnableWindow(h, TRUE);
-                                        
-                                        c = 0;
-                                        while (1)
-                                        {
-                                                SendMessage(h, CB_GETLBTEXT, c, (LPARAM)temp_str);
-                                                if (!strcmp(temp_str, s))
-                                                        break;
-                                                c++;
-                                        }
-                                        SendMessage(h, CB_SETCURSEL, c, 0);
-                                }
-                                else
-                                        EnableWindow(h, FALSE);
-                                
                                 /*Rebuild manufacturer list*/
                                 h = GetDlgItem(hdlg, IDC_COMBOCPUM);
                                 temp_cpu_m = SendMessage(h, CB_GETCURSEL, 0, 0);
@@ -642,6 +641,8 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 else
                                         SendMessage(h, CB_SETCURSEL, 0, 0);
 
+                                recalc_vid_list(hdlg, temp_model);
+                                
                                 recalc_hdd_list(hdlg, temp_model, 1);
 
                                 recalc_snd_list(hdlg, temp_model);

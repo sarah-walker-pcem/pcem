@@ -133,10 +133,10 @@ MODEL models[] =
         {"AMI 486 clone",         ROM_AMI486,           "ami486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
         {"AMI WinBIOS 486",       ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
 /*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0, 1,  1, 256, 1, at_um8881f_init},*/
-        {"Award SiS 496/497",     ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,      at_sis496_init, NULL},
-        {"Intel Premiere/PCI",    ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
-        {"Intel Advanced/EV",     ROM_ENDEAVOR,         "endeavor",       { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
-        {"Award 430VX PCI",       ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1, 256,   1,      at_i430vx_init, NULL},
+        {"Award SiS 496/497",     ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,             1, 256,   1,      at_sis496_init, NULL},
+        {"Intel Premiere/PCI",    ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
+        {"Intel Advanced/EV",     ROM_ENDEAVOR,         "endeavor",       { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
+        {"Award 430VX PCI",       ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 256,   1,      at_i430vx_init, NULL},
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };
 
