@@ -9,8 +9,7 @@
 #define IDM_HDCONF         40014
 #define IDM_BPB_DISABLE    40015
 #define IDM_CONFIG         40020
-#define IDM_CONFIG_LOAD    40021
-#define IDM_CONFIG_SAVE    40022
+#define IDM_CONFIG_SELECT  40021
 #define IDM_STATUS         40030
 #define IDM_VID_RESIZE     40050
 #define IDM_VID_REMEMBER   40051
@@ -134,3 +133,6 @@
 
 #define WM_RESETD3D WM_USER
 #define WM_LEAVEFULLSCREEN WM_USER + 1
+
+#define IDC_NEW 1200
+#define IDC_LIST 1201

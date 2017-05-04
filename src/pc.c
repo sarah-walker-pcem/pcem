@@ -69,7 +69,7 @@ int framecount,fps;
 int output;
 int atfullspeed;
 
-void saveconfig();
+void saveconfig(char *fn);
 int infocus;
 int mousecapture;
 FILE *pclogf;
@@ -202,17 +202,23 @@ void pc_reset()
 //        video_init();
 }
 #undef printf
-void initpc(int argc, char *argv[])
+void getpath()
 {
         char *p;
-        char *config_file = NULL;
-        int c;
-//        allegro_init();
+        
         get_executable_name(pcempath,511);
         pclog("executable_name = %s\n", pcempath);
         p=get_filename(pcempath);
         *p=0;
         pclog("path = %s\n", pcempath);        
+}
+
+void initpc(int argc, char *argv[])
+{
+        //char *p;
+        char *config_file = NULL;
+        int c;
+//        allegro_init();
 
         for (c = 1; c < argc; c++)
         {
@@ -241,12 +247,12 @@ void initpc(int argc, char *argv[])
         joystick_init();
         midi_init();
 
-        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
+//        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
         
         loadconfig(config_file);
         pclog("Config loaded\n");
-        if (config_file)
-                saveconfig();
+//        if (config_file)
+//                saveconfig();
 
         cpuspeed2=(AT)?2:1;
 //        cpuspeed2=cpuspeed;
@@ -713,7 +719,7 @@ void loadconfig(char *fn)
         enable_sync = config_get_int(NULL, "enable_sync", 1);
 }
 
-void saveconfig()
+void saveconfig(char *fn)
 {
         int c, d;
         
@@ -810,5 +816,9 @@ void saveconfig()
         
         config_set_int(NULL, "enable_sync", enable_sync);
 
-        config_save(config_file_default);
+        pclog("config_save(%s)\n", config_file_default);
+        if (fn)
+                config_save(fn);
+        else
+                config_save(config_file_default);
 }

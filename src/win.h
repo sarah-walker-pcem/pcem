@@ -22,7 +22,9 @@ extern int status_is_open;
 
 void hdconf_open(HWND hwnd);
 
-void config_open(HWND hwnd);
+void config_open(HWND hwnd, int inited);
+
+int config_selection_open(HWND hwnd, int inited);
 
 struct device_t;
 
@@ -32,6 +34,6 @@ void joystickconfig_open(HWND hwnd, int joy_nr, int type);
 extern char openfilestring[260];
 
 int getfile(HWND hwnd, char *f, char *fn);
-int getsfile(HWND hwnd, char *f, char *fn);
+int getsfile(HWND hwnd, char *f, char *fn, char *dir);
 
 extern int pause;

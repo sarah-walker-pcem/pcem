@@ -173,6 +173,7 @@ void mainthread(LPVOID param)
 //        Sleep(500);
         drawits=0;
         old_time = GetTickCount();
+
         while (!quited)
         {
                 if (updatestatus)
@@ -555,6 +556,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         /* Make the window visible on the screen */
         ShowWindow (hwnd, nFunsterStil);
 
+        ghMutex = CreateMutex(NULL, FALSE, NULL);
 //        win_set_window(hwnd);
         
         memset(rawinputkey, 0, sizeof(rawinputkey));
@@ -571,11 +573,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 	get_registry_key_map();
 
         ghwnd=hwnd;
-                
-        initpc(argc, argv);
-        
-        vid_apis[0][vid_api].init(ghwnd);
 
+        getpath();
+        
         if (vid_resize) SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
         else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
 
@@ -618,9 +618,18 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         }
 
         romset=d;
-        c=loadbios();
+        
+        for (c = 0; c < GFX_MAX; c++)
+                gfx_present[c] = video_card_available(video_old_to_new(c));
 
-        if (!c)
+        loadconfig(NULL);
+
+        if (!config_selection_open(ghwnd, 0))
+                return 0;
+                
+        initpc(argc, argv);
+
+        if (!loadbios())
         {
                 if (romset!=-1) MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCem error",MB_OK);
                 for (c=0;c<ROM_MAX;c++)
@@ -629,16 +638,12 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         {
                                 romset = c;
                                 model = model_getmodel(romset);
-                                saveconfig();
-                                resetpchard();
+//                                saveconfig();
+//                                resetpchard();
                                 break;
                         }
                 }
         }
-        
-
-        for (c = 0; c < GFX_MAX; c++)
-                gfx_present[c] = video_card_available(video_old_to_new(c));
 
         if (!video_card_available(video_old_to_new(gfxcard)))
         {
@@ -648,8 +653,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         if (gfx_present[c])
                         {
                                 gfxcard = c;
-                                saveconfig();
-                                resetpchard();
+//                                saveconfig();
+//                                resetpchard();
                                 break;
                         }
                 }
@@ -662,11 +667,12 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         
         atexit(releasemouse);
 
+        vid_apis[0][vid_api].init(ghwnd);
+
 //        QueryPerformanceFrequency(&counter_base);
 ///        QueryPerformanceCounter(&counter_posold);
 //        counter_posold.QuadPart*=100;
 
-        ghMutex = CreateMutex(NULL, FALSE, NULL);
         mainthreadh=(HANDLE)_beginthread(mainthread,0,NULL);
         SetThreadPriority(mainthreadh, THREAD_PRIORITY_HIGHEST);
         
@@ -681,6 +687,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 //        ShowCursor(TRUE);
 
+//        return 0;
+        
         if (start_in_fullscreen)
         {
                 startblit();
@@ -748,7 +756,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 //        pclog("Closepc\n");
         savenvr();
         if (save_window_pos && window_remember)
-                saveconfig();
+                saveconfig(NULL);
         closepc();
 //        pclog("dumpregs\n");
 
@@ -810,7 +818,7 @@ int getfile(HWND hwnd, char *f, char *fn)
         return 1;
 }
 
-int getsfile(HWND hwnd, char *f, char *fn)
+int getsfile(HWND hwnd, char *f, char *fn, char *dir)
 {
         OPENFILENAME ofn;       // common dialog box structure
         BOOL r;
@@ -832,7 +840,7 @@ int getsfile(HWND hwnd, char *f, char *fn)
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = NULL;
         ofn.nMaxFileTitle = 0;
-        ofn.lpstrInitialDir = NULL;
+        ofn.lpstrInitialDir = dir;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
         // Display the Open dialog box.
@@ -933,7 +941,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         {
                                 disc_close(0);
                                 disc_load(0, openfilestring);
-                                saveconfig();
+                                saveconfig(NULL);
                         }
                         break;
                         case IDM_DISC_B:
@@ -941,27 +949,27 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         {
                                 disc_close(1);
                                 disc_load(1, openfilestring);
-                                saveconfig();
+                                saveconfig(NULL);
                         }
                         break;
                         case IDM_EJECT_A:
                         disc_close(0);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         case IDM_EJECT_B:
                         disc_close(1);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         case IDM_BPB_DISABLE:
                         bpb_disable = !bpb_disable;
                         CheckMenuItem(hmenu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         case IDM_HDCONF:
                         hdconf_open(hwnd);
                         break;
                         case IDM_CONFIG:
-                        config_open(hwnd);
+                        config_open(hwnd, 1);
                         break;
                         case IDM_STATUS:
                         status_open(hwnd);
@@ -974,12 +982,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
                         GetWindowRect(hwnd,&rect);
                         SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_FRAMECHANGED);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         case IDM_VID_ASPECT:
                         video_force_aspect_ration = !video_force_aspect_ration;
                         CheckMenuItem(hmenu, IDM_VID_ASPECT, video_force_aspect_ration ? MF_CHECKED : MF_UNCHECKED);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         case IDM_VID_REMEMBER:
                         window_remember = !window_remember;
@@ -992,7 +1000,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 window_w = rect.right - rect.left;
                                 window_h = rect.bottom - rect.top;
                         }
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
                         
                         case IDM_VID_DDRAW: case IDM_VID_D3D:
@@ -1004,7 +1012,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hmenu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
                         vid_apis[0][vid_api].init(ghwnd);
                         endblit();
-                        saveconfig();
+                        saveconfig(NULL);
                         device_force_redraw();
                         break;
 
@@ -1033,16 +1041,28 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hmenu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_UNCHECKED);
                         video_fullscreen_scale = LOWORD(wParam) - IDM_VID_FS_FULL;
                         CheckMenuItem(hmenu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
-                        saveconfig();
+                        saveconfig(NULL);
                         break;
 
                         case IDM_VID_DISC:
                         vid_disc_indicator = !vid_disc_indicator;
                         CheckMenuItem(hmenu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
-                        saveconfig();
+                        saveconfig(NULL);
+                        break;
+                        
+                        case IDM_CONFIG_SELECT:
+                        pause = 1;
+                        if (config_selection_open(ghwnd, 1))
+                        {
+                                loadconfig(NULL);
+                                mem_resize();
+                                loadbios();
+                                resetpchard();
+                        }
+                        pause = 0;
                         break;
 
-                        case IDM_CONFIG_LOAD:
+/*                        case IDM_CONFIG_LOAD:
                         pause = 1;
                         if (!getfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", ""))
                         {
@@ -1060,10 +1080,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         
                         case IDM_CONFIG_SAVE:
                         pause = 1;
-                        if (!getsfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", ""))
+                        if (!getsfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", NULL))
                                 config_save(openfilestring);
                         pause = 0;
-                        break;
+                        break;*/
                         
                         case IDM_CDROM_DISABLED:
                         if (cdrom_enabled)
@@ -1090,7 +1110,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 pause = 1;
                                 Sleep(100);
                                 cdrom_enabled = 0;                                             
-                                saveconfig();
+                                saveconfig(NULL);
                                 resetpchard();
                                 pause = 0;
                         }
@@ -1121,13 +1141,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			old_cdrom_drive = cdrom_drive;
                         cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY, MF_CHECKED);
-                        saveconfig();
+                        saveconfig(NULL);
                         if (!cdrom_enabled)
                         {
                                 pause = 1;
                                 Sleep(100);
                                 cdrom_enabled = 1;
-                                saveconfig();
+                                saveconfig(NULL);
                                 resetpchard();
                                 pause = 0;
                         }
@@ -1161,13 +1181,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_UNCHECKED);
 				cdrom_drive = CDROM_ISO;
                                 CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_CHECKED);
-                                saveconfig();
+                                saveconfig(NULL);
                                 if (!cdrom_enabled)
                                 {
                                         pause = 1;
                                         Sleep(100);
                                         cdrom_enabled = 1;
-                                        saveconfig();
+                                        saveconfig(NULL);
                                         resetpchard();
                                         pause = 0;
                                 }
@@ -1202,13 +1222,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                 CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
                                 cdrom_drive = new_cdrom_drive;
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
-                                saveconfig();
+                                saveconfig(NULL);
                                 if (!cdrom_enabled)
                                 {
                                         pause = 1;
                                         Sleep(100);
                                         cdrom_enabled = 1;
-                                        saveconfig();
+                                        saveconfig(NULL);
                                         resetpchard();
                                         pause = 0;
                                 }

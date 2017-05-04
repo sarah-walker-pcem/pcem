@@ -559,6 +559,7 @@ void resetpc();
 void resetpchard();
 void speedchanged();
 
-void saveconfig();
+void saveconfig(char *fn);
+void getpath();
 
 #define UNUSED(x) (void)x

@@ -54,7 +54,7 @@ uint32_t biosmask;
 int readlnum=0,writelnum=0;
 int cachesize=256;
 
-uint8_t *ram,*rom;
+uint8_t *ram, *rom = NULL;
 uint8_t romext[32768];
 
 static void mem_load_atide115_bios()
@@ -81,6 +81,8 @@ int loadbios()
         
         biosmask = 0xffff;
         
+        if (!rom)
+                rom = malloc(0x20000);
         memset(romext,0x63,0x4000);
         memset(rom, 0xff, 0x20000);
         
@@ -1774,7 +1776,7 @@ void mem_init()
         int c;
 
         ram = malloc((mem_size + 384) * 1024);
-        rom = malloc(0x20000);
+//        rom = malloc(0x20000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
         biosmask = 0xffff;

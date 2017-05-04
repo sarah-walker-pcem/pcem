@@ -205,7 +205,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                         return TRUE;
 
                         case IDC_CFILE:
-                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", ""))
+                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", "", NULL))
                         {
                                 h = GetDlgItem(hdlg, IDC_EDITC);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
@@ -515,7 +515,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                                         cdrom_channel = new_cdrom_channel;
                                         
-                                        saveconfig();
+                                        saveconfig(NULL);
                                                                                 
                                         resetpchard();
                                 }                                
