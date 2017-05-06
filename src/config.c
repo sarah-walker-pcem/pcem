@@ -13,7 +13,8 @@ typedef struct list_t
         struct list_t *next;
 } list_t;
 
-static list_t config_head;
+static list_t global_config_head;
+static list_t machine_config_head;
 
 typedef struct section_t
 {
@@ -43,13 +44,14 @@ typedef struct entry_t
                 (new)->next = NULL;                     \
         }
 
-void config_dump()
+void config_dump(int is_global)
 {
         section_t *current_section;
-        
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+                
         pclog("Config data :\n");
         
-        current_section = (section_t *)config_head.next;
+        current_section = (section_t *)head->next;
         
         while (current_section)
         {
@@ -70,10 +72,11 @@ void config_dump()
         }
 }
 
-void config_free()
+void config_free(int is_global)
 {
         section_t *current_section;
-        current_section = (section_t *)config_head.next;
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+        current_section = (section_t *)head->next;
         
         while (current_section)
         {
@@ -95,16 +98,17 @@ void config_free()
         }
 }
 
-void config_load(char *fn)
+void config_load(int is_global, char *fn)
 {
         FILE *f = fopen(fn, "rt");
         section_t *current_section;
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
         
-        memset(&config_head, 0, sizeof(list_t));
+        memset(head, 0, sizeof(list_t));
 
         current_section = malloc(sizeof(section_t));
         memset(current_section, 0, sizeof(section_t));
-        list_add(&current_section->list, &config_head);
+        list_add(&current_section->list, head);
 
         if (!f)
                 return;
@@ -144,7 +148,7 @@ void config_load(char *fn)
                         new_section = malloc(sizeof(section_t));
                         memset(new_section, 0, sizeof(section_t));
                         strncpy(new_section->name, name, 256);
-                        list_add(&new_section->list, &config_head);
+                        list_add(&new_section->list, head);
                         
                         current_section = new_section;
                         
@@ -187,7 +191,7 @@ void config_load(char *fn)
         
         fclose(f);
         
-        config_dump();
+        config_dump(is_global);
 }
 
 
@@ -198,12 +202,13 @@ void config_new()
         fclose(f);
 }
 
-static section_t *find_section(char *name)
+static section_t *find_section(char *name, int is_global)
 {
         section_t *current_section;
         char blank[] = "";
-        
-        current_section = (section_t *)config_head.next;
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+                
+        current_section = (section_t *)head->next;
         if (!name)
                 name = blank;
 
@@ -233,13 +238,14 @@ static entry_t *find_entry(section_t *section, char *name)
         return NULL;
 }
 
-static section_t *create_section(char *name)
+static section_t *create_section(char *name, int is_global)
 {
         section_t *new_section = malloc(sizeof(section_t));
-
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+        
         memset(new_section, 0, sizeof(section_t));
         strncpy(new_section->name, name, 256);
-        list_add(&new_section->list, &config_head);
+        list_add(&new_section->list, head);
         
         return new_section;
 }
@@ -254,13 +260,13 @@ static entry_t *create_entry(section_t *section, char *name)
         return new_entry;
 }
         
-int config_get_int(char *head, char *name, int def)
+int config_get_int(int is_global, char *head, char *name, int def)
 {
         section_t *section;
         entry_t *entry;
         int value;
 
-        section = find_section(head);
+        section = find_section(head, is_global);
         
         if (!section)
                 return def;
@@ -275,12 +281,12 @@ int config_get_int(char *head, char *name, int def)
         return value;
 }
 
-char *config_get_string(char *head, char *name, char *def)
+char *config_get_string(int is_global, char *head, char *name, char *def)
 {
         section_t *section;
         entry_t *entry;
 
-        section = find_section(head);
+        section = find_section(head, is_global);
         
         if (!section)
                 return def;
@@ -293,15 +299,15 @@ char *config_get_string(char *head, char *name, char *def)
         return entry->data; 
 }
 
-void config_set_int(char *head, char *name, int val)
+void config_set_int(int is_global, char *head, char *name, int val)
 {
         section_t *section;
         entry_t *entry;
 
-        section = find_section(head);
+        section = find_section(head, is_global);
         
         if (!section)
-                section = create_section(head);
+                section = create_section(head, is_global);
                 
         entry = find_entry(section, name);
 
@@ -311,15 +317,15 @@ void config_set_int(char *head, char *name, int val)
         sprintf(entry->data, "%i", val);
 }
 
-void config_set_string(char *head, char *name, char *val)
+void config_set_string(int is_global, char *head, char *name, char *val)
 {
         section_t *section;
         entry_t *entry;
 
-        section = find_section(head);
+        section = find_section(head, is_global);
         
         if (!section)
-                section = create_section(head);
+                section = create_section(head, is_global);
                 
         entry = find_entry(section, name);
 
@@ -370,12 +376,13 @@ char *get_extension(char *s)
         return &s[c+1];
 }               
 
-void config_save(char *fn)
+void config_save(int is_global, char *fn)
 {
         FILE *f = fopen(fn, "wt");
         section_t *current_section;
-        
-        current_section = (section_t *)config_head.next;
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+                
+        current_section = (section_t *)head->next;
         
         while (current_section)
         {

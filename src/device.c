@@ -121,7 +121,7 @@ int device_get_config_int(char *s)
         while (config->type != -1)
         {
                 if (!strcmp(s, config->name))
-                        return config_get_int(current_device->name, s, config->default_int);
+                        return config_get_int(CFG_MACHINE, current_device->name, s, config->default_int);
 
                 config++;
         }
@@ -135,7 +135,7 @@ char *device_get_config_string(char *s)
         while (config->type != -1)
         {
                 if (!strcmp(s, config->name))
-                        return config_get_string(current_device->name, s, config->default_string);
+                        return config_get_string(CFG_MACHINE, current_device->name, s, config->default_string);
 
                 config++;
         }
@@ -155,7 +155,7 @@ int model_get_config_int(char *s)
         while (config->type != -1)
         {
                 if (!strcmp(s, config->name))
-                        return config_get_int(device->name, s, config->default_int);
+                        return config_get_int(CFG_MACHINE, device->name, s, config->default_int);
 
                 config++;
         }
@@ -175,7 +175,7 @@ char *model_get_config_string(char *s)
         while (config->type != -1)
         {
                 if (!strcmp(s, config->name))
-                        return config_get_string(device->name, s, config->default_string);
+                        return config_get_string(CFG_MACHINE, device->name, s, config->default_string);
 
                 config++;
         }

@@ -10,8 +10,6 @@
 #include "resources.h"
 #include "win.h"
 
-static int has_been_inited = 0;
-
 static void config_list_update(HWND hdlg)
 {
         char s[512];
@@ -106,7 +104,7 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
 
                                 if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", s))
                                 {
-                                        config_open(hdlg, has_been_inited);
+                                        config_open(hdlg);
                                         
                                         saveconfig(openfilestring);
                                 }

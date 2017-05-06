@@ -22,7 +22,7 @@ extern int status_is_open;
 
 void hdconf_open(HWND hwnd);
 
-void config_open(HWND hwnd, int inited);
+void config_open(HWND hwnd);
 
 int config_selection_open(HWND hwnd, int inited);
 
@@ -37,3 +37,5 @@ int getfile(HWND hwnd, char *f, char *fn);
 int getsfile(HWND hwnd, char *f, char *fn, char *dir);
 
 extern int pause;
+
+extern int has_been_inited;

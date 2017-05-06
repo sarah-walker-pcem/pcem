@@ -27,7 +27,7 @@ static int settings_sound_to_list[20], settings_list_to_sound[20];
 static int settings_mouse_to_list[20], settings_list_to_mouse[20];
 static char *hdd_names[16];
 
-static int has_been_inited = 0;
+int has_been_inited = 0;
 
 static int mouse_valid(int type, int model)
 {
@@ -815,9 +815,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         return FALSE;
 }
 
-void config_open(HWND hwnd, int inited)
+void config_open(HWND hwnd)
 {
-        has_been_inited = inited;
-        
         DialogBox(hinstance, TEXT("ConfigureDlg"), hwnd, (DLGPROC)config_dlgproc);
 }

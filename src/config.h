@@ -1,16 +1,19 @@
-int config_get_int(char *head, char *name, int def);
-char *config_get_string(char *head, char *name, char *def);
-void config_set_int(char *head, char *name, int val);
-void config_set_string(char *head, char *name, char *val);
+int config_get_int(int is_global, char *head, char *name, int def);
+char *config_get_string(int is_global, char *head, char *name, char *def);
+void config_set_int(int is_global, char *head, char *name, int val);
+void config_set_string(int is_global, char *head, char *name, char *val);
 
 char *get_filename(char *s);
 void append_filename(char *dest, char *s1, char *s2, int size);
 void put_backslash(char *s);
 char *get_extension(char *s);
 
-void config_load(char *fn);
-void config_save(char *fn);
-void config_dump();
-void config_free();
+void config_load(int is_global, char *fn);
+void config_save(int is_global, char *fn);
+void config_dump(int is_global);
+void config_free(int is_global);
 
 extern char config_file_default[256];
+
+#define CFG_MACHINE 0
+#define CFG_GLOBAL  1

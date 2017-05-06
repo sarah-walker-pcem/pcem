@@ -969,7 +969,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         hdconf_open(hwnd);
                         break;
                         case IDM_CONFIG:
-                        config_open(hwnd, 1);
+                        config_open(hwnd);
                         break;
                         case IDM_STATUS:
                         status_open(hwnd);
