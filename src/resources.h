@@ -136,3 +136,5 @@
 
 #define IDC_NEW 1200
 #define IDC_LIST 1201
+#define IDC_CONFIG 1202
+#define IDC_HDCONF 1203

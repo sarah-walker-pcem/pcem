@@ -113,6 +113,58 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 
                                 return TRUE;
                         }
+
+                        case IDC_CONFIG:
+                        {
+                                char s[512];
+                                
+                                int ret = DlgDirSelectEx(hdlg, s, 512, IDC_LIST);
+                                
+                                pclog("DlgDirSelectEx returned %i %s\n", ret, s);
+                                if (s[0])
+                                {
+                                        char cfg[512];
+                                        
+                                        strcpy(cfg, pcempath);
+                                        put_backslash(cfg);
+                                        strcat(cfg, "configs\\");
+                                        strcat(cfg, s);
+                                        strcat(cfg, "cfg");
+                                        pclog("Config name %s\n", cfg);
+                                                                                
+                                        loadconfig(cfg);
+                                        config_open(hdlg);                                        
+                                        saveconfig(cfg);
+                                }
+                                
+                                return TRUE;
+                        }
+
+                        case IDC_HDCONF:
+                        {
+                                char s[512];
+                                
+                                int ret = DlgDirSelectEx(hdlg, s, 512, IDC_LIST);
+                                
+                                pclog("DlgDirSelectEx returned %i %s\n", ret, s);
+                                if (s[0])
+                                {
+                                        char cfg[512];
+                                        
+                                        strcpy(cfg, pcempath);
+                                        put_backslash(cfg);
+                                        strcat(cfg, "configs\\");
+                                        strcat(cfg, s);
+                                        strcat(cfg, "cfg");
+                                        pclog("Config name %s\n", cfg);
+                                                                                
+                                        loadconfig(cfg);
+                                        hdconf_open(hdlg);                                        
+                                        saveconfig(cfg);
+                                }
+                                
+                                return TRUE;
+                        }
                 }
                 break;
         }
@@ -121,7 +173,13 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
 
 int config_selection_open(HWND hwnd, int inited)
 {
+        int ret;
+        
         has_been_inited = inited;
         
-        return DialogBox(hinstance, TEXT("ConfigureSelectionDlg"), hwnd, (DLGPROC)config_selection_dlgproc);
+        ret = DialogBox(hinstance, TEXT("ConfigureSelectionDlg"), hwnd, (DLGPROC)config_selection_dlgproc);
+        
+        has_been_inited = 1;
+        
+        return ret;
 }
