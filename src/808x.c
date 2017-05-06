@@ -2168,7 +2168,7 @@ void execx86(int cycs)
                         addr=getword();
 //                        printf("Reading AX from %05X %04X:%04X\n",ds+addr,ds>>4,addr);
                         AX=readmemw(ds,addr);
-                        cycles-=!4;
+                        cycles-=14;
                         break;
                         case 0xA2: /*MOV (w),AL*/
                         addr=getword();
