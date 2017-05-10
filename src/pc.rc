@@ -53,8 +53,6 @@ BEGIN
                         MENUITEM SEPARATOR
                         MENUITEM "Disc activity indicator", IDM_VID_DISC
                 END
-                MENUITEM SEPARATOR
-                MENUITEM "&Select configuration...", IDM_CONFIG_SELECT
         END
         POPUP "&Misc"
         BEGIN
@@ -318,8 +316,8 @@ BEGIN
 END
 
 ConfigureSelectionDlg DIALOGEX 0, 0, 200, 150
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select Configuration"
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "PCem Configuration Manager"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",     IDOK,     200-54, 4, 50, 14, WS_TABSTOP

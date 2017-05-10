@@ -31,6 +31,7 @@
 #include "thread.h"
 #include "video.h"
 
+#include "plat-joystick.h"
 #include "plat-midi.h"
 #include "plat-mouse.h"
 #include "plat-keyboard.h"
@@ -534,75 +535,13 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         if (!RegisterClassEx(&wincl))
                 return 0;
 
-        menu = LoadMenu(hThisInstance, TEXT("MainMenu"));
-        initmenu();
-        
-        /* The class is registered, let's create the program*/
-        hwnd = CreateWindowEx (
-                0,                   /* Extended possibilites for variation */
-                szClassName,         /* Classname */
-                "PCem v12",          /* Title Text */
-                WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
-                CW_USEDEFAULT,       /* Windows decides the position */
-                CW_USEDEFAULT,       /* where the window ends up on the screen */
-                640+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),                 /* The programs width */
-                480+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,                 /* and height in pixels */
-                HWND_DESKTOP,        /* The window is a child-window to desktop */
-                menu,                /* Menu */
-                hThisInstance,       /* Program Instance handler */
-                NULL                 /* No Window Creation data */
-        );
-
-        /* Make the window visible on the screen */
-        ShowWindow (hwnd, nFunsterStil);
-
-        ghMutex = CreateMutex(NULL, FALSE, NULL);
-//        win_set_window(hwnd);
-        
-        memset(rawinputkey, 0, sizeof(rawinputkey));
-	device.usUsagePage = 0x01;
-	device.usUsage = 0x06;
-	device.dwFlags = RIDEV_NOHOTKEYS;
-	device.hwndTarget = hwnd;
-	
-	if (RegisterRawInputDevices(&device, 1, sizeof(device)))
-		pclog("Raw input registered!\n");
-	else
-		pclog("Raw input registration failed!\n");
-
-	get_registry_key_map();
-
-        ghwnd=hwnd;
-
         getpath();
-        
-        if (vid_resize) SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
-        else            SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
 
-        if (!cdrom_enabled)
-           CheckMenuItem(menu, IDM_CDROM_DISABLED, MF_CHECKED);
-        else         
+        d = romset;
+        for (c = 0; c < ROM_MAX; c++)
         {
-        	if (cdrom_drive == CDROM_ISO)
-			CheckMenuItem(menu, IDM_CDROM_ISO, MF_CHECKED);
-		else
-			CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
-	}  
-        if (vid_resize) CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
-        if (video_force_aspect_ration)
-                CheckMenuItem(menu, IDM_VID_ASPECT, MF_CHECKED);
-        CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
-        CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
-        CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
-        CheckMenuItem(menu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
-        CheckMenuItem(menu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
-//        set_display_switch_mode(SWITCH_BACKGROUND);
-        
-        d=romset;
-        for (c=0;c<ROM_MAX;c++)
-        {
-                romset=c;
-                romspresent[c]=loadbios();
+                romset = c;
+                romspresent[c] = loadbios();
                 pclog("romset %i - %i\n", c, romspresent[c]);
         }
         
@@ -613,162 +552,217 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         }
         if (c == ROM_MAX)
         {
-                MessageBox(hwnd,"No ROMs present!\nYou must have at least one romset to use PCem.","PCem fatal error",MB_OK);
+                MessageBox(NULL, "No ROMs present!\nYou must have at least one romset to use PCem.","PCem fatal error",MB_OK);
                 return 0;
         }
 
-        romset=d;
+        romset = d;
         
         for (c = 0; c < GFX_MAX; c++)
                 gfx_present[c] = video_card_available(video_old_to_new(c));
 
-        loadconfig(NULL);
-
-        if (!config_selection_open(ghwnd, 0))
-                return 0;
-                
-        initpc(argc, argv);
-
-        if (!loadbios())
-        {
-                if (romset!=-1) MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCem error",MB_OK);
-                for (c=0;c<ROM_MAX;c++)
-                {
-                        if (romspresent[c])
-                        {
-                                romset = c;
-                                model = model_getmodel(romset);
-//                                saveconfig();
-//                                resetpchard();
-                                break;
-                        }
-                }
-        }
-
-        if (!video_card_available(video_old_to_new(gfxcard)))
-        {
-                if (romset!=-1) MessageBox(hwnd,"Configured video BIOS not available.\nDefaulting to available romset.","PCem error",MB_OK);
-                for (c = GFX_MAX-1; c >= 0; c--)
-                {
-                        if (gfx_present[c])
-                        {
-                                gfxcard = c;
-//                                saveconfig();
-//                                resetpchard();
-                                break;
-                        }
-                }
-        }
-
-        loadbios();
-        resetpchard();
-        
         timeBeginPeriod(1);
         
         atexit(releasemouse);
 
-        vid_apis[0][vid_api].init(ghwnd);
-
-//        QueryPerformanceFrequency(&counter_base);
-///        QueryPerformanceCounter(&counter_posold);
-//        counter_posold.QuadPart*=100;
-
-        mainthreadh=(HANDLE)_beginthread(mainthread,0,NULL);
-        SetThreadPriority(mainthreadh, THREAD_PRIORITY_HIGHEST);
-        
-       
-        updatewindowsize(640, 480);
-
         QueryPerformanceFrequency(&qpc_freq);
         timer_freq = qpc_freq.QuadPart;
-
-//        focus=1;
-//        setrefresh(100);
-
-//        ShowCursor(TRUE);
-
-//        return 0;
         
-        if (start_in_fullscreen)
-        {
-                startblit();
-                mouse_close();
-                vid_apis[0][vid_api].close();
-                video_fullscreen = 1;
-                vid_apis[1][vid_api].init(ghwnd);
-                mouse_init();
-                leave_fullscreen_flag = 0;
-                endblit();
-                device_force_redraw();
-        }
-        if (window_remember)
-        {
-                MoveWindow(hwnd, window_x, window_y,
-                        window_w,
-                        window_h,
-                        TRUE);
-        }
-                        
-        /* Run the message loop. It will run until GetMessage() returns 0 */
-        while (!quited)
-        {
-/*                if (infocus)
-                {
-                        if (drawits)
-                        {
-                                drawits--;
-                                if (drawits>10) drawits=0;
-                                runpc();
-                        }
-//;                        else
-//                           sleep(0);
-                        if ((pcem_key[KEY_LCONTROL] || pcem_key[KEY_RCONTROL]) && pcem_key[KEY_END] && mousecapture)
-                        {
-                                ClipCursor(&oldclip);
-                                mousecapture=0;
-                        }
-                }*/
+        sound_init();
 
-                while (GetMessage(&messages,NULL,0,0) && !quited)
+        initpc(argc, argv);
+        
+        while (1)
+        {
+                quited = 0;
+
+                if (!config_selection_open(NULL, 0))
+                        break;
+
+                ghMutex = CreateMutex(NULL, FALSE, NULL);
+                menu = LoadMenu(hThisInstance, TEXT("MainMenu"));
+
+                initmenu();
+        
+                /* The class is registered, let's create the program*/
+                hwnd = CreateWindowEx (
+                        0,                   /* Extended possibilites for variation */
+                        szClassName,         /* Classname */
+                        "PCem v12",          /* Title Text */
+                        WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
+                        CW_USEDEFAULT,       /* Windows decides the position */
+                        CW_USEDEFAULT,       /* where the window ends up on the screen */
+                        640+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),                 /* The programs width */
+                        480+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,                 /* and height in pixels */
+                        HWND_DESKTOP,        /* The window is a child-window to desktop */
+                        menu,                /* Menu */
+                        hThisInstance,       /* Program Instance handler */
+                        NULL                 /* No Window Creation data */
+                );
+
+                /* Make the window visible on the screen */
+                ShowWindow (hwnd, nFunsterStil);
+
+                memset(rawinputkey, 0, sizeof(rawinputkey));
+        	device.usUsagePage = 0x01;
+        	device.usUsage = 0x06;
+        	device.dwFlags = RIDEV_NOHOTKEYS;
+        	device.hwndTarget = hwnd;
+	
+        	if (RegisterRawInputDevices(&device, 1, sizeof(device)))
+        		pclog("Raw input registered!\n");
+        	else
+        		pclog("Raw input registration failed!\n");
+
+        	get_registry_key_map();
+
+                ghwnd = hwnd;
+        
+                if (vid_resize)
+                        SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
+                else
+                        SetWindowLong(hwnd, GWL_STYLE, (WS_OVERLAPPEDWINDOW&~WS_SIZEBOX&~WS_THICKFRAME&~WS_MAXIMIZEBOX)|WS_VISIBLE);
+
+                if (!cdrom_enabled)
+                        CheckMenuItem(menu, IDM_CDROM_DISABLED, MF_CHECKED);
+                else         
                 {
-                        if (messages.message==WM_QUIT) quited=1;
-                        TranslateMessage(&messages);
-                        DispatchMessage(&messages);                        
-                        if ((pcem_key[KEY_LCONTROL] || pcem_key[KEY_RCONTROL]) && pcem_key[KEY_END] && mousecapture)
+                	if (cdrom_drive == CDROM_ISO)
+        			CheckMenuItem(menu, IDM_CDROM_ISO, MF_CHECKED);
+        		else
+        			CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
+        	}  
+                if (vid_resize)
+                        CheckMenuItem(menu, IDM_VID_RESIZE, MF_CHECKED);
+                if (video_force_aspect_ration)
+                        CheckMenuItem(menu, IDM_VID_ASPECT, MF_CHECKED);
+                CheckMenuItem(menu, IDM_VID_DDRAW + vid_api, MF_CHECKED);
+                CheckMenuItem(menu, IDM_VID_FS_FULL + video_fullscreen_scale, MF_CHECKED);
+                CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
+                CheckMenuItem(menu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
+                CheckMenuItem(menu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
+        
+                loadconfig(NULL);
+        
+                if (!loadbios())
+                {
+                        if (romset != -1)
+                                MessageBox(hwnd,"Configured romset not available.\nDefaulting to available romset.","PCem error",MB_OK);
+                        for (c = 0; c < ROM_MAX; c++)
                         {
-                                ClipCursor(&oldclip);
-                                ShowCursor(TRUE);
-                                mousecapture=0;
+                                if (romspresent[c])
+                                {
+                                        romset = c;
+                                        model = model_getmodel(romset);
+                                        break;
+                                }
                         }
                 }
 
-                quited=1;
-//                else
-//                sleep(10);
-        }
+                if (!video_card_available(video_old_to_new(gfxcard)))
+                {
+                        if (romset != -1)
+                                MessageBox(hwnd,"Configured video BIOS not available.\nDefaulting to available romset.","PCem error",MB_OK);
+                        for (c = GFX_MAX-1; c >= 0; c--)
+                        {
+                                if (gfx_present[c])
+                                {
+                                        gfxcard = c;
+                                        break;
+                                }
+                        }
+                }
+
+                loadbios();
+                resetpchard();
         
-        startblit();
+                vid_apis[0][vid_api].init(ghwnd);
+
+                mainthreadh=(HANDLE)_beginthread(mainthread,0,NULL);
+                SetThreadPriority(mainthreadh, THREAD_PRIORITY_HIGHEST);
+               
+                updatewindowsize(640, 480);
+
+                keyboard_init();
+                mouse_init();
+                joystick_init();
+                midi_init();
+        
+                if (start_in_fullscreen)
+                {
+                        startblit();
+                        mouse_close();
+                        vid_apis[0][vid_api].close();
+                        video_fullscreen = 1;
+                        vid_apis[1][vid_api].init(ghwnd);
+                        mouse_init();
+                        leave_fullscreen_flag = 0;
+                        endblit();
+                        device_force_redraw();
+                }
+                if (window_remember)
+                {
+                        MoveWindow(hwnd, window_x, window_y,
+                                window_w,
+                                window_h,
+                                TRUE);
+                }
+                        
+                /* Run the message loop. It will run until GetMessage() returns 0 */
+                while (!quited)
+                {
+                        while (GetMessage(&messages,NULL,0,0) && !quited)
+                        {
+                                if (messages.message==WM_QUIT) quited=1;
+                                TranslateMessage(&messages);
+                                DispatchMessage(&messages);                        
+                                if ((pcem_key[KEY_LCONTROL] || pcem_key[KEY_RCONTROL]) && pcem_key[KEY_END] && mousecapture)
+                                {
+                                        ClipCursor(&oldclip);
+                                        ShowCursor(TRUE);
+                                        mousecapture=0;
+                                }
+                        }
+
+                        quited=1;
+                }
+        
+                startblit();
 //        pclog("Sleep 1000\n");
-        Sleep(200);
+                Sleep(200);
 //        pclog("TerminateThread\n");
-        TerminateThread(mainthreadh,0);
+                TerminateThread(mainthreadh,0);
+                
+//                endblit();
+
 //        pclog("Quited? %i\n",quited);
 //        pclog("Closepc\n");
-        savenvr();
-        if (save_window_pos && window_remember)
-                saveconfig(NULL);
-        closepc();
+                savenvr();
+                if (save_window_pos && window_remember)
+                        saveconfig(NULL);
 //        pclog("dumpregs\n");
 
-        vid_apis[video_fullscreen][vid_api].close();
-        
+                vid_apis[video_fullscreen][vid_api].close();
+
+                if (mousecapture) 
+                {
+                        ClipCursor(&oldclip);
+                        ShowCursor(TRUE);
+                }
+
+                keyboard_close();
+                mouse_close();
+                joystick_close();
+                midi_close();
+
+                DestroyWindow(hwnd);
+                CloseHandle(ghMutex);
+        }
+
+        closepc();
+                        
         timeEndPeriod(1);
 //        dumpregs();
-        if (mousecapture) 
-        {
-                ClipCursor(&oldclip);
-                ShowCursor(TRUE);
-        }
         
         UnregisterClass(szSubClassName, hinstance);
         UnregisterClass(szClassName, hinstance);
@@ -1049,41 +1043,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hmenu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
                         saveconfig(NULL);
                         break;
-                        
-                        case IDM_CONFIG_SELECT:
-                        pause = 1;
-                        if (config_selection_open(ghwnd, 1))
-                        {
-                                loadconfig(NULL);
-                                mem_resize();
-                                loadbios();
-                                resetpchard();
-                        }
-                        pause = 0;
-                        break;
-
-/*                        case IDM_CONFIG_LOAD:
-                        pause = 1;
-                        if (!getfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", ""))
-                        {
-                                if (MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) == IDOK)
-                                {
-                                        loadconfig(openfilestring);
-                                        config_save(config_file_default);
-                                        mem_resize();
-                                        loadbios();
-                                        resetpchard();
-                                }
-                        }
-                        pause = 0;
-                        break;                        
-                        
-                        case IDM_CONFIG_SAVE:
-                        pause = 1;
-                        if (!getsfile(hwnd, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", NULL))
-                                config_save(openfilestring);
-                        pause = 0;
-                        break;*/
                         
                         case IDM_CDROM_DISABLED:
                         if (cdrom_enabled)

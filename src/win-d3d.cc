@@ -173,7 +173,9 @@ void d3d_resize(int x, int y)
 void d3d_reset()
 {
         HRESULT hr;
-        
+
+        if (!d3ddev)
+                return;
         memset(&d3dpp, 0, sizeof(d3dpp));      
 
         d3dpp.Flags                  = 0;

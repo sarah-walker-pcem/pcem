@@ -242,11 +242,6 @@ void initpc(int argc, char *argv[])
                 }
         }
 
-        keyboard_init();
-        mouse_init();
-        joystick_init();
-        midi_init();
-
 //        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
         
         loadconfig(config_file);
@@ -279,7 +274,6 @@ void initpc(int argc, char *argv[])
                 
         //loadfont();
         loadnvr();
-        sound_init();
         resetide();
 #if __unix
 	if (cdrom_drive == -1)
@@ -558,7 +552,6 @@ void closepc()
         closevideo();
         mouse_emu_close();
         device_close_all();
-        midi_close();
 }
 
 /*int main()
