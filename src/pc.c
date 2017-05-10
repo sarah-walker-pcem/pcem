@@ -57,6 +57,8 @@ int vid_resize, vid_api;
 
 int cycles_lost = 0;
 
+int config_override = 0;
+
 int clockrate;
 int insc=0;
 float mips,flops;
@@ -216,7 +218,7 @@ void getpath()
 void initpc(int argc, char *argv[])
 {
         //char *p;
-        char *config_file = NULL;
+//        char *config_file = NULL;
         int c;
 //        allegro_init();
 
@@ -237,14 +239,15 @@ void initpc(int argc, char *argv[])
                 {
                         if ((c+1) == argc)
                                 break;
-                        config_file = argv[c+1];
+                        strncpy(config_file_default, argv[c+1], 256);
+                        config_override = 1;
                         c++;
                 }
         }
 
 //        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
         
-        loadconfig(config_file);
+        loadconfig(NULL);
         pclog("Config loaded\n");
 //        if (config_file)
 //                saveconfig();

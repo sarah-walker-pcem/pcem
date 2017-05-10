@@ -576,8 +576,11 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
                 quited = 0;
 
-                if (!config_selection_open(NULL, 0))
-                        break;
+                if (!config_override)
+                {
+                        if (!config_selection_open(NULL, 0))        
+                                break;
+                }
 
                 ghMutex = CreateMutex(NULL, FALSE, NULL);
                 menu = LoadMenu(hThisInstance, TEXT("MainMenu"));
@@ -618,6 +621,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
                 ghwnd = hwnd;
         
+                loadconfig(NULL);
+        
                 if (vid_resize)
                         SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_VISIBLE);
                 else
@@ -641,8 +646,6 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
                 CheckMenuItem(menu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
                 CheckMenuItem(menu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
-        
-                loadconfig(NULL);
         
                 if (!loadbios())
                 {
@@ -757,6 +760,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
                 DestroyWindow(hwnd);
                 CloseHandle(ghMutex);
+                
+                if (config_override)
+                        break;
         }
 
         closepc();

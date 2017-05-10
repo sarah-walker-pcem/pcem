@@ -533,6 +533,7 @@ extern uint64_t timer_freq;
 
 
 void loadconfig(char *fn);
+extern int config_override;
 
 extern int infocus;
 
