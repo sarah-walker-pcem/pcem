@@ -8,6 +8,7 @@
 #include "ali1429.h"
 #include "amstrad.h"
 #include "compaq.h"
+#include "dells200.h"
 #include "device.h"
 #include "dma.h"
 #include "fdc.h"
@@ -65,6 +66,7 @@ void         olim24_init();
 void             at_init();
 void         ibm_at_init();
 void         at_ide_init();
+void       dells200_init();
 void     deskpro386_init();
 void      ps1_m2011_init();
 void      ps1_m2121_init();
@@ -115,7 +117,7 @@ MODEL models[] =
         {"Commodore PC 30 III",   ROM_CMDPC30,          "cmdpc30",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,         at_ide_init, NULL},
         {"AMI 286 clone",         ROM_AMI286,           "ami286",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,        at_neat_init, NULL},
         {"Award 286 clone",       ROM_AWARD286,         "award286",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             1,  16,   1,        at_scat_init, NULL},
-        {"DELL System 200",       ROM_DELL200,          "dells200",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           1,  16,   1,             at_init, NULL},
+        {"DELL System 200",       ROM_DELL200,          "dells200",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           1,  16,   1,       dells200_init, NULL},
         {"IBM PS/1 model 2011",   ROM_IBMPS1_2011,      "ibmps1es",       { {"",      cpus_ps1_m2011},   {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PS2,                 1,  16,   1,      ps1_m2011_init, NULL},
         {"IBM PS/2 Model 30-286", ROM_IBMPS2_M30_286,   "ibmps2_m30_286", { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PS2,                 1,  16,   1,    ps2_m30_286_init, NULL},
         {"IBM PS/2 Model 50",     ROM_IBMPS2_M50,       "ibmps2_m50",     { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PS2|MODEL_MCA,       1,  16,   1,   ps2_model_50_init, NULL},
@@ -318,6 +320,12 @@ void deskpro386_init()
 {
         at_init();
         compaq_init();
+}
+
+void dells200_init()
+{
+        at_init();
+        dells200_chipset_init();
 }
 
 void ps1_common_init()
