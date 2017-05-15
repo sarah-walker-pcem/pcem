@@ -198,10 +198,8 @@ static DIALOG hdnew_dialog[]=
 static int create_hd(char *fn, int cyl, int hpc, int spt)
 {
 	int c;
-	int e;
 	uint8_t buf[512];
 	FILE *f = fopen64(hd_path_new, "wb");
-	e = errno;
 	if (!f)
 	{
 		alert("Can't open file for write", NULL, NULL, "OK", NULL, 0, 0);
@@ -213,6 +211,8 @@ static int create_hd(char *fn, int cyl, int hpc, int spt)
 		fwrite(buf, 512, 1, f);
 	}
 	fclose(f);
+
+	return 0;
 }
 
 static int hdconf_new(int msg, DIALOG *d, int c)
@@ -238,9 +238,6 @@ static int hdconf_new(int msg, DIALOG *d, int c)
                         if (ret == 1)
                         {
                                 int spt, hpc, cyl;
-                                int c, d;
-                                FILE *f;
-				uint8_t *buf;
                                 
                                 sscanf(hd_sectors_new, "%i", &spt);
                                 sscanf(hd_heads_new, "%i", &hpc);
@@ -470,7 +467,6 @@ static int hdconf_radio_cd(int msg, DIALOG *d, int c)
 int disc_hdconf()
 {
         int c;
-        int changed=0;
 
         hdc_new[0] = hdc[0];
         hdc_new[1] = hdc[1];
@@ -511,7 +507,7 @@ int disc_hdconf()
 
                 if (c == 1)
                 {
-                        if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) == 1)
+                        if (!has_been_inited || alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) == 1)
                         {
                                 hdc[0] = hdc_new[0];
                                 hdc[1] = hdc_new[1];
@@ -525,7 +521,7 @@ int disc_hdconf()
                                 
                                 cdrom_channel = new_cdrom_channel;
 
-                                saveconfig();
+                                saveconfig(NULL);
                                                                                 
                                 resetpchard();
                                 

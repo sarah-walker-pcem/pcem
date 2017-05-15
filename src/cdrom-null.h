@@ -1,11 +1,11 @@
-#ifndef CDROM_IOCTL_H
-#define CDROM_IOCTL_H
+#ifndef CDROM_NULL_H
+#define CDROM_NULL_H
 
 /* this header file lists the functions provided by
    various platform specific cdrom-ioctl files */
 
-extern int cdrom_null_open(char d);
-extern void cdrom_null_reset();
-extern void null_close();
+int cdrom_null_open(char d);
+void cdrom_null_reset();
+void null_close();
 
-#endif /* ! CDROM_IOCTL_H */
+#endif /* ! CDROM_NULL_H */

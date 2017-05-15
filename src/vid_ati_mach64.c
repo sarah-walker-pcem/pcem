@@ -14,6 +14,10 @@
 #include "vid_ati_eeprom.h"
 #include "vid_ics2595.h"
 
+#ifdef CLAMP
+#undef CLAMP
+#endif
+
 //#define MACH64_DEBUG
 
 #define FIFO_SIZE 65536

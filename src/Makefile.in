@@ -108,20 +108,20 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
-	acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
-	allegro-gui-deviceconfig.c allegro-gui-hdconf.c \
-	allegro-joystick.c allegro-keyboard.c allegro-main.c \
-	allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c \
-	cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c codegen.c \
-	codegen_ops.c codegen_timing_486.c codegen_timing_686.c \
-	codegen_timing_pentium.c codegen_timing_winchip.c compaq.c \
-	config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c \
-	disc_sector.c dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c \
-	gameport.c hdd.c hdd_esdi.c headland.c i430lx.c i430fx.c \
-	i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
-	joystick_ch_flightstick_pro.c joystick_standard.c \
-	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
-	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	acer386sx.c ali1429.c allegro-gui.c allegro-gui-config-sel.c \
+	allegro-gui-configure.c allegro-gui-deviceconfig.c \
+	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
+	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	codegen.c codegen_ops.c codegen_timing_486.c \
+	codegen_timing_686.c codegen_timing_pentium.c \
+	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
+	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
+	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
+	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
+	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
+	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
+	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c lpt.c mca.c mcr.c mem.c mfm_at.c \
 	mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c \
 	nmi.c nvr.c olivetti_m24.c opti495.c pc.c pci.c pic.c piix.c \
@@ -159,6 +159,7 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-386_dynarec_ops.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-acer386sx.$(OBJEXT) pcem-ali1429.$(OBJEXT) \
 	pcem-allegro-gui.$(OBJEXT) \
+	pcem-allegro-gui-config-sel.$(OBJEXT) \
 	pcem-allegro-gui-configure.$(OBJEXT) \
 	pcem-allegro-gui-deviceconfig.$(OBJEXT) \
 	pcem-allegro-gui-hdconf.$(OBJEXT) \
@@ -414,6 +415,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -427,20 +429,20 @@ CLEANFILES = $(noinst_SCRIPTS)
 pcem_CFLAGS = $(allegro_CFLAGS) $(am__append_2)
 pcem_LDADD = $(allegro_LIBS) -lopenal
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
-	acer386sx.c ali1429.c allegro-gui.c allegro-gui-configure.c \
-	allegro-gui-deviceconfig.c allegro-gui-hdconf.c \
-	allegro-joystick.c allegro-keyboard.c allegro-main.c \
-	allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c \
-	cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c codegen.c \
-	codegen_ops.c codegen_timing_486.c codegen_timing_686.c \
-	codegen_timing_pentium.c codegen_timing_winchip.c compaq.c \
-	config.c cpu.c dac.c device.c disc.c disc_fdi.c disc_img.c \
-	disc_sector.c dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c \
-	gameport.c hdd.c hdd_esdi.c headland.c i430lx.c i430fx.c \
-	i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
-	joystick_ch_flightstick_pro.c joystick_standard.c \
-	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
-	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	acer386sx.c ali1429.c allegro-gui.c allegro-gui-config-sel.c \
+	allegro-gui-configure.c allegro-gui-deviceconfig.c \
+	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
+	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	codegen.c codegen_ops.c codegen_timing_486.c \
+	codegen_timing_686.c codegen_timing_pentium.c \
+	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
+	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
+	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
+	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
+	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
+	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
+	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c lpt.c mca.c mcr.c mem.c mfm_at.c \
 	mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c \
 	nmi.c nvr.c olivetti_m24.c opti495.c pc.c pci.c pic.c piix.c \
@@ -570,6 +572,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-808x.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-acer386sx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ali1429.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-config-sel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-configure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-deviceconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-hdconf.Po@am__quote@
@@ -856,6 +859,20 @@ pcem-allegro-gui.obj: allegro-gui.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
+
+pcem-allegro-gui-config-sel.o: allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
+
+pcem-allegro-gui-config-sel.obj: allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
 
 pcem-allegro-gui-configure.o: allegro-gui-configure.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c

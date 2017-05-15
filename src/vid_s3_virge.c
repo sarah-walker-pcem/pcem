@@ -12,6 +12,16 @@
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 
+#ifdef MIN
+#undef MIN
+#endif
+#ifdef MAX
+#undef MAX
+#endif
+#ifdef CLAMP
+#undef CLAMP
+#endif
+
 static uint64_t virge_time = 0;
 static uint64_t status_time = 0;
 static int reg_writes = 0, reg_reads = 0;
