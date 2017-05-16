@@ -173,6 +173,8 @@ static int cdrom_empty()
 		resetpchard();
 		cdrom_update();
 	}
+	
+	return D_O_K;
 }
 
 static int cdrom_dev()
@@ -194,6 +196,8 @@ static int cdrom_dev()
 		resetpchard();
 		cdrom_update();
 	}
+	
+	return D_O_K;
 }
 
 static int cdrom_iso()
