@@ -21,8 +21,6 @@ int mouse_buttons = 0;
 
 void mouse_init()
 {
-        atexit(mouse_close);
-        
         if (FAILED(DirectInputCreate(hinstance, DIRECTINPUT_VERSION, &lpdi, NULL)))
                 fatal("mouse_init : DirectInputCreate failed\n"); 
         if (FAILED(lpdi->CreateDevice(GUID_SysMouse, &lpdi_mouse, NULL)))

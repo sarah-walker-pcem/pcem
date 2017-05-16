@@ -33,7 +33,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                 switch (config->type)
                                 {
                                         case CONFIG_BINARY:
-                                        val_int = config_get_int(config_device->name, config->name, config->default_int);
+                                        val_int = config_get_int(CFG_MACHINE, config_device->name, config->name, config->default_int);
                                         
                                         SendMessage(h, BM_SETCHECK, val_int, 0);
                                                 
@@ -41,7 +41,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         break;
                                      
                                         case CONFIG_SELECTION:
-                                        val_int = config_get_int(config_device->name, config->name, config->default_int);
+                                        val_int = config_get_int(CFG_MACHINE, config_device->name, config->name, config->default_int);
                                         
                                         c = 0;
                                         while (selection->description[0])
@@ -57,7 +57,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         break;
 
                                         case CONFIG_MIDI:
-                                        val_int = config_get_int(NULL, config->name, config->default_int);
+                                        val_int = config_get_int(CFG_MACHINE, NULL, config->name, config->default_int);
                                         
                                         num  = midi_get_num_devs();
                                         for (c = 0; c < num; c++)
@@ -95,7 +95,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         switch (config->type)
                                         {
                                                 case CONFIG_BINARY:
-                                                val_int = config_get_int(config_device->name, config->name, config->default_int);
+                                                val_int = config_get_int(CFG_MACHINE, config_device->name, config->name, config->default_int);
 
                                                 if (val_int != SendMessage(h, BM_GETCHECK, 0, 0))
                                                         changed = 1;
@@ -104,7 +104,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                                 break;
                                      
                                                 case CONFIG_SELECTION:
-                                                val_int = config_get_int(config_device->name, config->name, config->default_int);
+                                                val_int = config_get_int(CFG_MACHINE, config_device->name, config->name, config->default_int);
 
                                                 c = SendMessage(h, CB_GETCURSEL, 0, 0);
 
@@ -118,7 +118,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                                 break;
 
                                                 case CONFIG_MIDI:
-                                                val_int = config_get_int(NULL, config->name, config->default_int);
+                                                val_int = config_get_int(CFG_MACHINE, NULL, config->name, config->default_int);
 
                                                 c = SendMessage(h, CB_GETCURSEL, 0, 0);
 
@@ -137,7 +137,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         return TRUE;
                                 }
                                         
-                                if (MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) != IDOK)
+                                if (has_been_inited && MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) != IDOK)
                                 {
                                         EndDialog(hdlg, 0);
                                         return TRUE;
@@ -154,7 +154,7 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         switch (config->type)
                                         {
                                                 case CONFIG_BINARY:
-                                                config_set_int(config_device->name, config->name, SendMessage(h, BM_GETCHECK, 0, 0));
+                                                config_set_int(CFG_MACHINE, config_device->name, config->name, SendMessage(h, BM_GETCHECK, 0, 0));
                                                 
                                                 id++;
                                                 break;
@@ -163,14 +163,14 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                                 c = SendMessage(h, CB_GETCURSEL, 0, 0);
                                                 for (; c > 0; c--)
                                                         selection++;
-                                                config_set_int(config_device->name, config->name, selection->value);
+                                                config_set_int(CFG_MACHINE, config_device->name, config->name, selection->value);
                                         
                                                 id += 2;
                                                 break;
 
                                                 case CONFIG_MIDI:
                                                 c = SendMessage(h, CB_GETCURSEL, 0, 0);
-                                                config_set_int(NULL, config->name, c);
+                                                config_set_int(CFG_MACHINE, NULL, config->name, c);
                                         
                                                 id += 2;
                                                 break;
@@ -178,9 +178,10 @@ static BOOL CALLBACK deviceconfig_dlgproc(HWND hdlg, UINT message, WPARAM wParam
                                         config++;
                                 }
 
-                                saveconfig();
+                                saveconfig(NULL);
                         
-                                resetpchard();
+                                if (has_been_inited)
+                                        resetpchard();
 
                                 EndDialog(hdlg, 0);
                                 return TRUE;

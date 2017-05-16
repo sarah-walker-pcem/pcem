@@ -4,7 +4,9 @@
 #include "allegro-gui.h"
 #include "disc.h"
 #include "ide.h"
+#include "cdrom-ioctl.h"
 #include "cdrom-iso.h"
+#include "cdrom-null.h"
 
 void warning(const char *format, ...)
 {
@@ -63,7 +65,7 @@ static int disc_load_a()
         {
                 disc_close(0);
                 disc_load(0, fn);
-                saveconfig();
+                saveconfig(NULL);
         }
         return D_O_K;
 }
@@ -79,7 +81,7 @@ static int disc_load_b()
         {
                 disc_close(1);
                 disc_load(1, fn);
-                saveconfig();
+                saveconfig(NULL);
         }
         return D_O_K;
 }
@@ -87,7 +89,7 @@ static int disc_load_b()
 static int disc_eject_a()
 {
         disc_close(0);
-        saveconfig();
+        saveconfig(NULL);
         
         return D_O_K;
 }
@@ -95,7 +97,7 @@ static int disc_eject_a()
 static int disc_eject_b()
 {
         disc_close(1);
-        saveconfig();
+        saveconfig(NULL);
         
         return D_O_K;
 }
@@ -144,7 +146,7 @@ static int cdrom_disabled()
 	{
 		atapi->exit();
 		cdrom_enabled = 0;                                             
-		saveconfig();
+		saveconfig(NULL);
 		resetpchard();
 		cdrom_update();
 	}
@@ -167,10 +169,12 @@ static int cdrom_empty()
 		cdrom_drive = -1;
 		cdrom_enabled = 1;
 		cdrom_null_open(cdrom_drive);
-		saveconfig();
+		saveconfig(NULL);
 		resetpchard();
 		cdrom_update();
 	}
+	
+	return D_O_K;
 }
 
 static int cdrom_dev()
@@ -188,10 +192,12 @@ static int cdrom_dev()
 		cdrom_drive = 1;
 		cdrom_enabled = 1;
 		ioctl_open(cdrom_drive);
-		saveconfig();
+		saveconfig(NULL);
 		resetpchard();
 		cdrom_update();
 	}
+	
+	return D_O_K;
 }
 
 static int cdrom_iso()
@@ -222,7 +228,7 @@ static int cdrom_iso()
 			resetpchard();
 		}
 		cdrom_update();
-		saveconfig();
+		saveconfig(NULL);
         }
         return D_O_K;
 }

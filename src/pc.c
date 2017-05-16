@@ -57,6 +57,8 @@ int vid_resize, vid_api;
 
 int cycles_lost = 0;
 
+int config_override = 0;
+
 int clockrate;
 int insc=0;
 float mips,flops;
@@ -69,7 +71,7 @@ int framecount,fps;
 int output;
 int atfullspeed;
 
-void saveconfig();
+void saveconfig(char *fn);
 int infocus;
 int mousecapture;
 FILE *pclogf;
@@ -202,17 +204,23 @@ void pc_reset()
 //        video_init();
 }
 #undef printf
-void initpc(int argc, char *argv[])
+void getpath()
 {
         char *p;
-        char *config_file = NULL;
-        int c;
-//        allegro_init();
+        
         get_executable_name(pcempath,511);
         pclog("executable_name = %s\n", pcempath);
         p=get_filename(pcempath);
         *p=0;
         pclog("path = %s\n", pcempath);        
+}
+
+void initpc(int argc, char *argv[])
+{
+        //char *p;
+//        char *config_file = NULL;
+        int c;
+//        allegro_init();
 
         for (c = 1; c < argc; c++)
         {
@@ -231,22 +239,18 @@ void initpc(int argc, char *argv[])
                 {
                         if ((c+1) == argc)
                                 break;
-                        config_file = argv[c+1];
+                        strncpy(config_file_default, argv[c+1], 256);
+                        config_override = 1;
                         c++;
                 }
         }
 
-        keyboard_init();
-        mouse_init();
-        joystick_init();
-        midi_init();
-
-        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
+//        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
         
-        loadconfig(config_file);
+        loadconfig(NULL);
         pclog("Config loaded\n");
-        if (config_file)
-                saveconfig();
+//        if (config_file)
+//                saveconfig();
 
         cpuspeed2=(AT)?2:1;
 //        cpuspeed2=cpuspeed;
@@ -273,7 +277,6 @@ void initpc(int argc, char *argv[])
                 
         //loadfont();
         loadnvr();
-        sound_init();
         resetide();
 #if __unix
 	if (cdrom_drive == -1)
@@ -552,7 +555,6 @@ void closepc()
         closevideo();
         mouse_emu_close();
         device_close_all();
-        midi_close();
 }
 
 /*int main()
@@ -573,19 +575,37 @@ void loadconfig(char *fn)
 {
         int c, d;
         char s[512];
+        char global_config_file[512];
         char *p;
+
+        append_filename(global_config_file, pcempath, "pcem.cfg", 511);
+
+        config_load(CFG_GLOBAL, global_config_file);
         
         if (!fn)
-                config_load(config_file_default);
+                config_load(CFG_MACHINE, config_file_default);
         else
-                config_load(fn);
+                config_load(CFG_MACHINE, fn);
+
+        vid_resize = config_get_int(CFG_GLOBAL, NULL, "vid_resize", 0);
+        video_force_aspect_ration = config_get_int(CFG_GLOBAL, NULL, "vid_force_aspect_ratio", 0);
+        vid_disc_indicator = config_get_int(CFG_GLOBAL, NULL, "vid_disc_indicator", 1);
+        vid_api = config_get_int(CFG_GLOBAL, NULL, "vid_api", 0);
+        video_fullscreen_scale = config_get_int(CFG_GLOBAL, NULL, "video_fullscreen_scale", 0);
+        video_fullscreen_first = config_get_int(CFG_GLOBAL, NULL, "video_fullscreen_first", 1);
+
+        window_w = config_get_int(CFG_GLOBAL, NULL, "window_w", 0);
+        window_h = config_get_int(CFG_GLOBAL, NULL, "window_h", 0);
+        window_x = config_get_int(CFG_GLOBAL, NULL, "window_x", 0);
+        window_y = config_get_int(CFG_GLOBAL, NULL, "window_y", 0);
+        window_remember = config_get_int(CFG_GLOBAL, NULL, "window_remember", 0);
         
-        GAMEBLASTER = config_get_int(NULL, "gameblaster", 0);
-        GUS = config_get_int(NULL, "gus", 0);
-        SSI2001 = config_get_int(NULL, "ssi2001", 0);
-        voodoo_enabled = config_get_int(NULL, "voodoo", 0);
+        GAMEBLASTER = config_get_int(CFG_MACHINE, NULL, "gameblaster", 0);
+        GUS = config_get_int(CFG_MACHINE, NULL, "gus", 0);
+        SSI2001 = config_get_int(CFG_MACHINE, NULL, "ssi2001", 0);
+        voodoo_enabled = config_get_int(CFG_MACHINE, NULL, "voodoo", 0);
         
-        p = (char *)config_get_string(NULL, "model", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "model", "");
         if (p)
                 model = model_get_model_from_internal_name(p);
         else
@@ -595,220 +615,217 @@ void loadconfig(char *fn)
                 model = model_count() - 1;
 
         romset = model_getromset();
-        cpu_manufacturer = config_get_int(NULL, "cpu_manufacturer", 0);
-        cpu = config_get_int(NULL, "cpu", 0);
-        cpu_use_dynarec = config_get_int(NULL, "cpu_use_dynarec", 0);
-        cpu_waitstates = config_get_int(NULL, "cpu_waitstates", 0);
+        cpu_manufacturer = config_get_int(CFG_MACHINE, NULL, "cpu_manufacturer", 0);
+        cpu = config_get_int(CFG_MACHINE, NULL, "cpu", 0);
+        cpu_use_dynarec = config_get_int(CFG_MACHINE, NULL, "cpu_use_dynarec", 0);
+        cpu_waitstates = config_get_int(CFG_MACHINE, NULL, "cpu_waitstates", 0);
                 
-        p = (char *)config_get_string(NULL, "gfxcard", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "gfxcard", "");
         if (p)
                 gfxcard = video_get_video_from_internal_name(p);
         else
                 gfxcard = 0;
-        video_speed = config_get_int(NULL, "video_speed", 3);
-        p = (char *)config_get_string(NULL, "sndcard", "");
+        video_speed = config_get_int(CFG_MACHINE, NULL, "video_speed", 3);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "sndcard", "");
         if (p)
                 sound_card_current = sound_card_get_from_internal_name(p);
         else
                 sound_card_current = 0;
 
-        p = (char *)config_get_string(NULL, "disc_a", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_a", "");
         if (p) strcpy(discfns[0], p);
         else   strcpy(discfns[0], "");
 
-        p = (char *)config_get_string(NULL, "disc_b", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_b", "");
         if (p) strcpy(discfns[1], p);
         else   strcpy(discfns[1], "");
 
-        p = (char *)config_get_string(NULL, "hdd_controller", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdd_controller", "");
         if (p)
                 strncpy(hdd_controller_name, p, sizeof(hdd_controller_name)-1);
         else
                 strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);        
 
-        mem_size = config_get_int(NULL, "mem_size", 4096);
+        mem_size = config_get_int(CFG_MACHINE, NULL, "mem_size", 4096);
         if (mem_size < ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram))
                 mem_size = ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram);
 
-        cdrom_drive = config_get_int(NULL, "cdrom_drive", 0);
-        cdrom_enabled = config_get_int(NULL, "cdrom_enabled", 0);
-        cdrom_channel = config_get_int(NULL, "cdrom_channel", 2);
+        cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
+        cdrom_enabled = config_get_int(CFG_MACHINE, NULL, "cdrom_enabled", 0);
+        cdrom_channel = config_get_int(CFG_MACHINE, NULL, "cdrom_channel", 2);
         
-        p = (char *)config_get_string(NULL, "cdrom_path", "");
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "cdrom_path", "");
         if (p) strcpy(iso_path, p);
         else   strcpy(iso_path, "");
         
-        vid_resize = config_get_int(NULL, "vid_resize", 0);
-        video_force_aspect_ration = config_get_int(NULL, "vid_force_aspect_ratio", 0);
-        vid_disc_indicator = config_get_int(NULL, "vid_disc_indicator", 1);
-        vid_api = config_get_int(NULL, "vid_api", 0);
-        video_fullscreen_scale = config_get_int(NULL, "video_fullscreen_scale", 0);
-        video_fullscreen_first = config_get_int(NULL, "video_fullscreen_first", 1);
-
-        hdc[0].spt = config_get_int(NULL, "hdc_sectors", 0);
-        hdc[0].hpc = config_get_int(NULL, "hdc_heads", 0);
-        hdc[0].tracks = config_get_int(NULL, "hdc_cylinders", 0);
-        p = (char *)config_get_string(NULL, "hdc_fn", "");
+        hdc[0].spt = config_get_int(CFG_MACHINE, NULL, "hdc_sectors", 0);
+        hdc[0].hpc = config_get_int(CFG_MACHINE, NULL, "hdc_heads", 0);
+        hdc[0].tracks = config_get_int(CFG_MACHINE, NULL, "hdc_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdc_fn", "");
         if (p) strcpy(ide_fn[0], p);
         else   strcpy(ide_fn[0], "");
-        hdc[1].spt = config_get_int(NULL, "hdd_sectors", 0);
-        hdc[1].hpc = config_get_int(NULL, "hdd_heads", 0);
-        hdc[1].tracks = config_get_int(NULL, "hdd_cylinders", 0);
-        p = (char *)config_get_string(NULL, "hdd_fn", "");
+        hdc[1].spt = config_get_int(CFG_MACHINE, NULL, "hdd_sectors", 0);
+        hdc[1].hpc = config_get_int(CFG_MACHINE, NULL, "hdd_heads", 0);
+        hdc[1].tracks = config_get_int(CFG_MACHINE, NULL, "hdd_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdd_fn", "");
         if (p) strcpy(ide_fn[1], p);
         else   strcpy(ide_fn[1], "");
-        hdc[2].spt = config_get_int(NULL, "hde_sectors", 0);
-        hdc[2].hpc = config_get_int(NULL, "hde_heads", 0);
-        hdc[2].tracks = config_get_int(NULL, "hde_cylinders", 0);
-        p = (char *)config_get_string(NULL, "hde_fn", "");
+        hdc[2].spt = config_get_int(CFG_MACHINE, NULL, "hde_sectors", 0);
+        hdc[2].hpc = config_get_int(CFG_MACHINE, NULL, "hde_heads", 0);
+        hdc[2].tracks = config_get_int(CFG_MACHINE, NULL, "hde_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hde_fn", "");
         if (p) strcpy(ide_fn[2], p);
         else   strcpy(ide_fn[2], "");
-        hdc[3].spt = config_get_int(NULL, "hdf_sectors", 0);
-        hdc[3].hpc = config_get_int(NULL, "hdf_heads", 0);
-        hdc[3].tracks = config_get_int(NULL, "hdf_cylinders", 0);
-        p = (char *)config_get_string(NULL, "hdf_fn", "");
+        hdc[3].spt = config_get_int(CFG_MACHINE, NULL, "hdf_sectors", 0);
+        hdc[3].hpc = config_get_int(CFG_MACHINE, NULL, "hdf_heads", 0);
+        hdc[3].tracks = config_get_int(CFG_MACHINE, NULL, "hdf_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdf_fn", "");
         if (p) strcpy(ide_fn[3], p);
         else   strcpy(ide_fn[3], "");
 
-        fdd_set_type(0, config_get_int(NULL, "drive_a_type", 7));
-        fdd_set_type(1, config_get_int(NULL, "drive_b_type", 7));
-        bpb_disable = config_get_int(NULL, "bpb_disable", 0);
+        fdd_set_type(0, config_get_int(CFG_MACHINE, NULL, "drive_a_type", 7));
+        fdd_set_type(1, config_get_int(CFG_MACHINE, NULL, "drive_b_type", 7));
+        bpb_disable = config_get_int(CFG_MACHINE, NULL, "bpb_disable", 0);
 
-        window_w = config_get_int(NULL, "window_w", 0);
-        window_h = config_get_int(NULL, "window_h", 0);
-        window_x = config_get_int(NULL, "window_x", 0);
-        window_y = config_get_int(NULL, "window_y", 0);
-        window_remember = config_get_int(NULL, "window_remember", 0);
-
-        joystick_type = config_get_int(NULL, "joystick_type", 0);
-        mouse_type = config_get_int(NULL, "mouse_type", 0);
+        joystick_type = config_get_int(CFG_MACHINE, NULL, "joystick_type", 0);
+        mouse_type = config_get_int(CFG_MACHINE, NULL, "mouse_type", 0);
         
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
                 sprintf(s, "joystick_%i_nr", c);
-                joystick_state[c].plat_joystick_nr = config_get_int("Joysticks", s, 0);
+                joystick_state[c].plat_joystick_nr = config_get_int(CFG_MACHINE, "Joysticks", s, 0);
                 
                 if (joystick_state[c].plat_joystick_nr)
                 {
                         for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_axis_%i", c, d);
-                                joystick_state[c].axis_mapping[d] = config_get_int("Joysticks", s, d);
+                                joystick_state[c].axis_mapping[d] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                         }
                         for (d = 0; d < joystick_get_button_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_button_%i", c, d);
-                                joystick_state[c].button_mapping[d] = config_get_int("Joysticks", s, d);
+                                joystick_state[c].button_mapping[d] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                         }
                         for (d = 0; d < joystick_get_pov_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_pov_%i_x", c, d);
-                                joystick_state[c].pov_mapping[d][0] = config_get_int("Joysticks", s, d);
+                                joystick_state[c].pov_mapping[d][0] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                                 sprintf(s, "joystick_%i_pov_%i_y", c, d);
-                                joystick_state[c].pov_mapping[d][1] = config_get_int("Joysticks", s, d);
+                                joystick_state[c].pov_mapping[d][1] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                         }
                 }
         }
 
-        enable_sync = config_get_int(NULL, "enable_sync", 1);
+        enable_sync = config_get_int(CFG_MACHINE, NULL, "enable_sync", 1);
 }
 
-void saveconfig()
+void saveconfig(char *fn)
 {
         int c, d;
-        
-        config_set_int(NULL, "gameblaster", GAMEBLASTER);
-        config_set_int(NULL, "gus", GUS);
-        config_set_int(NULL, "ssi2001", SSI2001);
-        config_set_int(NULL, "voodoo", voodoo_enabled);
-        
-        config_set_string(NULL, "model", model_get_internal_name());
-        config_set_int(NULL, "cpu_manufacturer", cpu_manufacturer);
-        config_set_int(NULL, "cpu", cpu);
-        config_set_int(NULL, "cpu_use_dynarec", cpu_use_dynarec);
-        config_set_int(NULL, "cpu_waitstates", cpu_waitstates);
-        
-        config_set_string(NULL, "gfxcard", video_get_internal_name(video_old_to_new(gfxcard)));
-        config_set_int(NULL, "video_speed", video_speed);
-        config_set_string(NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
-        config_set_int(NULL, "cpu_speed", cpuspeed);
-        config_set_int(NULL, "has_fpu", hasfpu);
-        config_set_string(NULL, "disc_a", discfns[0]);
-        config_set_string(NULL, "disc_b", discfns[1]);
-        config_set_string(NULL, "hdd_controller", hdd_controller_name);
+        char global_config_file[512];
 
-        config_set_int(NULL, "mem_size", mem_size);
-        config_set_int(NULL, "cdrom_drive", cdrom_drive);
-        config_set_int(NULL, "cdrom_enabled", cdrom_enabled);
-        config_set_int(NULL, "cdrom_channel", cdrom_channel);
-        config_set_string(NULL, "cdrom_path", iso_path);
-        config_set_int(NULL, "vid_resize", vid_resize);
-        config_set_int(NULL, "vid_force_aspect_ratio", video_force_aspect_ration);
-        config_set_int(NULL, "vid_disc_indicator", vid_disc_indicator);
-        config_set_int(NULL, "vid_api", vid_api);
-        config_set_int(NULL, "video_fullscreen_scale", video_fullscreen_scale);
-        config_set_int(NULL, "video_fullscreen_first", video_fullscreen_first);
+        append_filename(global_config_file, pcempath, "pcem.cfg", 511);
+
+        config_set_int(CFG_GLOBAL, NULL, "vid_resize", vid_resize);
+        config_set_int(CFG_GLOBAL, NULL, "vid_force_aspect_ratio", video_force_aspect_ration);
+        config_set_int(CFG_GLOBAL, NULL, "vid_disc_indicator", vid_disc_indicator);
+        config_set_int(CFG_GLOBAL, NULL, "vid_api", vid_api);
+        config_set_int(CFG_GLOBAL, NULL, "video_fullscreen_scale", video_fullscreen_scale);
+        config_set_int(CFG_GLOBAL, NULL, "video_fullscreen_first", video_fullscreen_first);
+
+        config_set_int(CFG_GLOBAL, NULL, "window_w", window_w);
+        config_set_int(CFG_GLOBAL, NULL, "window_h", window_h);
+        config_set_int(CFG_GLOBAL, NULL, "window_x", window_x);
+        config_set_int(CFG_GLOBAL, NULL, "window_y", window_y);
+        config_set_int(CFG_GLOBAL, NULL, "window_remember", window_remember);
         
-        config_set_int(NULL, "hdc_sectors", hdc[0].spt);
-        config_set_int(NULL, "hdc_heads", hdc[0].hpc);
-        config_set_int(NULL, "hdc_cylinders", hdc[0].tracks);
-        config_set_string(NULL, "hdc_fn", ide_fn[0]);
-        config_set_int(NULL, "hdd_sectors", hdc[1].spt);
-        config_set_int(NULL, "hdd_heads", hdc[1].hpc);
-        config_set_int(NULL, "hdd_cylinders", hdc[1].tracks);
-        config_set_string(NULL, "hdd_fn", ide_fn[1]);
-        config_set_int(NULL, "hde_sectors", hdc[2].spt);
-        config_set_int(NULL, "hde_heads", hdc[2].hpc);
-        config_set_int(NULL, "hde_cylinders", hdc[2].tracks);
-        config_set_string(NULL, "hde_fn", ide_fn[2]);
-        config_set_int(NULL, "hdf_sectors", hdc[3].spt);
-        config_set_int(NULL, "hdf_heads", hdc[3].hpc);
-        config_set_int(NULL, "hdf_cylinders", hdc[3].tracks);
-        config_set_string(NULL, "hdf_fn", ide_fn[3]);
+        config_set_int(CFG_MACHINE, NULL, "gameblaster", GAMEBLASTER);
+        config_set_int(CFG_MACHINE, NULL, "gus", GUS);
+        config_set_int(CFG_MACHINE, NULL, "ssi2001", SSI2001);
+        config_set_int(CFG_MACHINE, NULL, "voodoo", voodoo_enabled);
+        
+        config_set_string(CFG_MACHINE, NULL, "model", model_get_internal_name());
+        config_set_int(CFG_MACHINE, NULL, "cpu_manufacturer", cpu_manufacturer);
+        config_set_int(CFG_MACHINE, NULL, "cpu", cpu);
+        config_set_int(CFG_MACHINE, NULL, "cpu_use_dynarec", cpu_use_dynarec);
+        config_set_int(CFG_MACHINE, NULL, "cpu_waitstates", cpu_waitstates);
+        
+        config_set_string(CFG_MACHINE, NULL, "gfxcard", video_get_internal_name(video_old_to_new(gfxcard)));
+        config_set_int(CFG_MACHINE, NULL, "video_speed", video_speed);
+        config_set_string(CFG_MACHINE, NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
+        config_set_int(CFG_MACHINE, NULL, "cpu_speed", cpuspeed);
+        config_set_int(CFG_MACHINE, NULL, "has_fpu", hasfpu);
+        config_set_string(CFG_MACHINE, NULL, "disc_a", discfns[0]);
+        config_set_string(CFG_MACHINE, NULL, "disc_b", discfns[1]);
+        config_set_string(CFG_MACHINE, NULL, "hdd_controller", hdd_controller_name);
 
-        config_set_int(NULL, "drive_a_type", fdd_get_type(0));
-        config_set_int(NULL, "drive_b_type", fdd_get_type(1));
-        config_set_int(NULL, "bpb_disable", bpb_disable);
+        config_set_int(CFG_MACHINE, NULL, "mem_size", mem_size);
+        config_set_int(CFG_MACHINE, NULL, "cdrom_drive", cdrom_drive);
+        config_set_int(CFG_MACHINE, NULL, "cdrom_enabled", cdrom_enabled);
+        config_set_int(CFG_MACHINE, NULL, "cdrom_channel", cdrom_channel);
+        config_set_string(CFG_MACHINE, NULL, "cdrom_path", iso_path);
+        
+        config_set_int(CFG_MACHINE, NULL, "hdc_sectors", hdc[0].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdc_heads", hdc[0].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdc_cylinders", hdc[0].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdc_fn", ide_fn[0]);
+        config_set_int(CFG_MACHINE, NULL, "hdd_sectors", hdc[1].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdd_heads", hdc[1].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdd_cylinders", hdc[1].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdd_fn", ide_fn[1]);
+        config_set_int(CFG_MACHINE, NULL, "hde_sectors", hdc[2].spt);
+        config_set_int(CFG_MACHINE, NULL, "hde_heads", hdc[2].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hde_cylinders", hdc[2].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hde_fn", ide_fn[2]);
+        config_set_int(CFG_MACHINE, NULL, "hdf_sectors", hdc[3].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdf_heads", hdc[3].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdf_cylinders", hdc[3].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdf_fn", ide_fn[3]);
 
-        config_set_int(NULL, "window_w", window_w);
-        config_set_int(NULL, "window_h", window_h);
-        config_set_int(NULL, "window_x", window_x);
-        config_set_int(NULL, "window_y", window_y);
-        config_set_int(NULL, "window_remember", window_remember);
+        config_set_int(CFG_MACHINE, NULL, "drive_a_type", fdd_get_type(0));
+        config_set_int(CFG_MACHINE, NULL, "drive_b_type", fdd_get_type(1));
+        config_set_int(CFG_MACHINE, NULL, "bpb_disable", bpb_disable);
 
-        config_set_int(NULL, "joystick_type", joystick_type);
-        config_set_int(NULL, "mouse_type", mouse_type);
+        config_set_int(CFG_MACHINE, NULL, "joystick_type", joystick_type);
+        config_set_int(CFG_MACHINE, NULL, "mouse_type", mouse_type);
                 
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
                 char s[80];
 
                 sprintf(s, "joystick_%i_nr", c);
-                config_set_int("Joysticks", s, joystick_state[c].plat_joystick_nr);
+                config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].plat_joystick_nr);
                 
                 if (joystick_state[c].plat_joystick_nr)
                 {
                         for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_axis_%i", c, d);
-                                config_set_int("Joysticks", s, joystick_state[c].axis_mapping[d]);
+                                config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].axis_mapping[d]);
                         }
                         for (d = 0; d < joystick_get_button_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_button_%i", c, d);
-                                config_set_int("Joysticks", s, joystick_state[c].button_mapping[d]);
+                                config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].button_mapping[d]);
                         }
                         for (d = 0; d < joystick_get_pov_count(joystick_type); d++)
                         {                        
                                 sprintf(s, "joystick_%i_pov_%i_x", c, d);
-                                config_set_int("Joysticks", s, joystick_state[c].pov_mapping[d][0]);
+                                config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].pov_mapping[d][0]);
                                 sprintf(s, "joystick_%i_pov_%i_y", c, d);
-                                config_set_int("Joysticks", s, joystick_state[c].pov_mapping[d][1]);
+                                config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].pov_mapping[d][1]);
                         }
                 }
         }
         
-        config_set_int(NULL, "enable_sync", enable_sync);
+        config_set_int(CFG_MACHINE, NULL, "enable_sync", enable_sync);
 
-        config_save(config_file_default);
+        pclog("config_save(%s)\n", config_file_default);
+        if (fn)
+                config_save(CFG_MACHINE, fn);
+        else
+                config_save(CFG_MACHINE, config_file_default);
+
+        config_save(CFG_GLOBAL, global_config_file);
 }

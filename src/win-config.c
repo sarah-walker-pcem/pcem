@@ -27,6 +27,8 @@ static int settings_sound_to_list[20], settings_list_to_sound[20];
 static int settings_mouse_to_list[20], settings_list_to_mouse[20];
 static char *hdd_names[16];
 
+int has_been_inited = 0;
+
 static int mouse_valid(int type, int model)
 {
         if ((type & MOUSE_TYPE_IF_MASK) == MOUSE_TYPE_PS2 && !(models[model].flags & MODEL_PS2))
@@ -471,7 +473,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
                             temp_mouse_type != mouse_type || hdd_changed)
                         {
-                                if (MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
+                                if (!has_been_inited || MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
 					savenvr();
                                         model = temp_model;
@@ -496,10 +498,12 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         				else
                                                 strcpy(hdd_controller_name, "none");
 
-                                        
-                                        mem_resize();
-                                        loadbios();
-                                        resetpchard();
+                                        if (has_been_inited)
+                                        {
+                                                mem_resize();
+                                                loadbios();
+                                                resetpchard();
+                                        }
                                 }
                                 else
                                 {
@@ -520,7 +524,8 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         cpu_waitstates = SendMessage(h, CB_GETCURSEL, 0, 0);
                         cpu_update_waitstates();
 
-                        saveconfig();
+                        if (has_been_inited)
+                                saveconfig(NULL);
 
                         speedchanged();
 

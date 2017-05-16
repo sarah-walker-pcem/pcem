@@ -53,9 +53,6 @@ BEGIN
                         MENUITEM SEPARATOR
                         MENUITEM "Disc activity indicator", IDM_VID_DISC
                 END
-                MENUITEM SEPARATOR
-                MENUITEM "&Load configuration...", IDM_CONFIG_LOAD
-                MENUITEM "&Save configuration...", IDM_CONFIG_SAVE
         END
         POPUP "&Misc"
         BEGIN
@@ -316,4 +313,18 @@ BEGIN
 
     COMBOBOX        IDC_HDTYPE, 7,54,172,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 
+END
+
+ConfigureSelectionDlg DIALOGEX 0, 0, 200, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "PCem Configuration Manager"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Load",   IDOK,     200-54, 4, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "Quit",   IDCANCEL, 200-54,132,50, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "New...", IDC_NEW,  200-54,40, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "Configuration...", IDC_CONFIG,  200-54,58, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "HDD...", IDC_HDCONF,  200-54,76, 50, 14, WS_TABSTOP
+    
+    LISTBOX                   IDC_LIST, 4,      4,140,142, WS_TABSTOP
 END

@@ -205,7 +205,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                         return TRUE;
 
                         case IDC_CFILE:
-                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", ""))
+                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", "", NULL))
                         {
                                 h = GetDlgItem(hdlg, IDC_EDITC);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);
@@ -458,7 +458,7 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         case IDOK:
                         if (hd_changed || cdrom_channel != new_cdrom_channel)
                         {                     
-                                if (MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) == IDOK)
+                                if (!has_been_inited || MessageBox(NULL, "This will reset PCem!\nOkay to continue?", "PCem", MB_OKCANCEL) == IDOK)
                                 {
                                         h = GetDlgItem(hdlg, IDC_EDIT_C_SPT);
                                         SendMessage(h, WM_GETTEXT, 255, (LPARAM)s);
@@ -514,10 +514,13 @@ static BOOL CALLBACK hdconf_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         hdc[3] = hd[3];
 
                                         cdrom_channel = new_cdrom_channel;
-                                        
-                                        saveconfig();
+                                       
+                                        if (has_been_inited)
+                                        {
+                                                saveconfig(NULL);
                                                                                 
-                                        resetpchard();
+                                                resetpchard();
+                                        }
                                 }                                
                         }
                         case IDCANCEL:

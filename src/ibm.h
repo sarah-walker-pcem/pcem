@@ -533,6 +533,7 @@ extern uint64_t timer_freq;
 
 
 void loadconfig(char *fn);
+extern int config_override;
 
 extern int infocus;
 
@@ -559,6 +560,7 @@ void resetpc();
 void resetpchard();
 void speedchanged();
 
-void saveconfig();
+void saveconfig(char *fn);
+void getpath();
 
 #define UNUSED(x) (void)x

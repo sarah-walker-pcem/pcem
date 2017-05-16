@@ -13,7 +13,7 @@ void midi_init()
 {
         MMRESULT hr;
         
-        midi_id = config_get_int(NULL, "midi", 0);
+        midi_id = config_get_int(CFG_MACHINE, NULL, "midi", 0);
 
         hr = midiOutOpen(&midi_out_device, midi_id, 0,
 		   0, CALLBACK_NULL);

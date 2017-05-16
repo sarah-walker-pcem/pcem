@@ -6,14 +6,14 @@
 #include "fdd.h"
 #include "gameport.h"
 #include "hdd.h"
+#include "mem.h"
 #include "model.h"
 #include "mouse.h"
 #include "sound.h"
 #include "video.h"
 #include "vid_voodoo.h"
 
-static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
-static int settings_sound_to_list[20], settings_list_to_sound[20];
+static int romstolist[ROM_MAX];
 static int settings_mouse_to_list[20], settings_list_to_mouse[20];
 
 typedef struct allegro_list_t
@@ -779,7 +779,7 @@ pclog("video_card_available : %i\n", c);
                             new_dynarec != cpu_use_dynarec || new_fda != fdd_get_type(0) || new_fdb != fdd_get_type(1) ||
 			    new_mouse != mouse_type || strncmp(hdd_list[new_hdd].internal_name, hdd_controller_name, sizeof(hdd_controller_name)-1))
                         {
-                                if (alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
+                                if (has_been_inited && alert("This will reset PCem!", "Okay to continue?", NULL, "OK", "Cancel", 0, 0) != 1)
                                         continue;
 
                                 model = new_model;
@@ -821,7 +821,7 @@ pclog("video_card_available : %i\n", c);
                         joystick_type = configure_dialog[31].d1;
                         gameport_update_joystick_type();
                         
-                        saveconfig();
+                        saveconfig(NULL);
 
                         speedchanged();
 

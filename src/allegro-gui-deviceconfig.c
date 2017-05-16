@@ -73,7 +73,7 @@ void deviceconfig_open(device_t *device)
                         d->dp = config->description;
                         d->proc = d_check_proc;
                         
-                        d->flags = config_get_int(device->name, config->name, config->default_int) ? D_SELECTED : 0;
+                        d->flags = config_get_int(CFG_MACHINE, device->name, config->name, config->default_int) ? D_SELECTED : 0;
                         d->bg = 0xffffff;
                         d->fg = 0;
                         
@@ -129,7 +129,7 @@ void deviceconfig_open(device_t *device)
                         c = 0;
                         while (config->selection[c].description[0])
                         {
-                                if (config_get_int(device->name, config->name, config->default_int) == config->selection[c].value)
+                                if (config_get_int(CFG_MACHINE, device->name, config->name, config->default_int) == config->selection[c].value)
                                         d->d1 = c;
                                 c++;
                         }
@@ -212,7 +212,7 @@ void deviceconfig_open(device_t *device)
                                         case CONFIG_BINARY:
                                         val = (d->flags & D_SELECTED) ? 1 : 0;
                                         
-                                        if (val != config_get_int(device->name, config->name, config->default_int))
+                                        if (val != config_get_int(CFG_MACHINE, device->name, config->name, config->default_int))
                                                 changed = 1;
                                         
                                         dialog_pos++;
@@ -226,7 +226,7 @@ void deviceconfig_open(device_t *device)
                                         
                                         val = config->selection[d->d1].value;
 
-                                        if (val != config_get_int(device->name, config->name, config->default_int))
+                                        if (val != config_get_int(CFG_MACHINE, device->name, config->name, config->default_int))
                                                 changed = 1;
 
                                         dialog_pos += 2;
@@ -262,7 +262,7 @@ void deviceconfig_open(device_t *device)
                                         case CONFIG_BINARY:
                                         val = (d->flags & D_SELECTED) ? 1 : 0;
                                         
-                                        config_set_int(config_device->name, config->name, val);
+                                        config_set_int(CFG_MACHINE, config_device->name, config->name, val);
                                                 
                                         dialog_pos++;
                                         break;
@@ -275,7 +275,7 @@ void deviceconfig_open(device_t *device)
                                         
                                         val = config->selection[d->d1].value;
 
-                                        config_set_int(config_device->name, config->name, val);
+                                        config_set_int(CFG_MACHINE, config_device->name, config->name, val);
                                         
                                         dialog_pos += 2;
                                         break;
@@ -290,7 +290,7 @@ void deviceconfig_open(device_t *device)
                                         break;
                         }
 
-                        saveconfig();
+                        saveconfig(NULL);
                         
                         resetpchard();
                         
