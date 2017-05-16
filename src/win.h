@@ -34,7 +34,7 @@ void joystickconfig_open(HWND hwnd, int joy_nr, int type);
 extern char openfilestring[260];
 
 int getfile(HWND hwnd, char *f, char *fn);
-int getsfile(HWND hwnd, char *f, char *fn, char *dir);
+int getsfile(HWND hwnd, char *f, char *fn, char *dir, char *ext);
 
 extern int pause;
 

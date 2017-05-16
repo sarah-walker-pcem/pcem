@@ -205,7 +205,7 @@ static BOOL CALLBACK hdnew_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPARA
                         return TRUE;
 
                         case IDC_CFILE:
-                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", "", NULL))
+                        if (!getsfile(hdlg, "Hard disc image (*.IMG)\0*.IMG\0All files (*.*)\0*.*\0", "", NULL, "img"))
                         {
                                 h = GetDlgItem(hdlg, IDC_EDITC);
                                 SendMessage(h, WM_SETTEXT, 0, (LPARAM)openfilestring);

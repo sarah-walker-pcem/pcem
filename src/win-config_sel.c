@@ -102,7 +102,7 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 strcat(s, "configs\\");
                                 pclog("Dir %s\n", s);
 
-                                if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", s))
+                                if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", s, "cfg"))
                                 {
                                         config_open(hdlg);
                                         

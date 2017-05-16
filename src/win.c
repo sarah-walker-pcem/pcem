@@ -818,7 +818,7 @@ int getfile(HWND hwnd, char *f, char *fn)
         return 1;
 }
 
-int getsfile(HWND hwnd, char *f, char *fn, char *dir)
+int getsfile(HWND hwnd, char *f, char *fn, char *dir, char *ext)
 {
         OPENFILENAME ofn;       // common dialog box structure
         BOOL r;
@@ -842,6 +842,7 @@ int getsfile(HWND hwnd, char *f, char *fn, char *dir)
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = dir;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        ofn.lpstrDefExt = ext;
 
         // Display the Open dialog box.
 
