@@ -411,6 +411,7 @@ void resetpchard()
 		}
 		else
 		{
+                        ioctl_set_drive(cdrom_drive);
 			ioctl_reset();
 		}
 	}

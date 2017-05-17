@@ -737,14 +737,20 @@ void ioctl_reset()
 
 void ioctl_set_drive(char d)
 {
+        ioctl_close();
+
         sprintf(ioctl_path, "\\\\.\\%c:", d);
         pclog("Path is %s\n", ioctl_path);
         tocvalid = 0;
         atapi = &ioctl_atapi;
+        
+        ioctl_open(d);
 }
 
 int ioctl_open(char d)
 {
+        if (hIOCTL)
+                ioctl_close();
 	hIOCTL	= CreateFile(ioctl_path,GENERIC_READ | GENERIC_WRITE,
                          FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
 	if (!hIOCTL)
