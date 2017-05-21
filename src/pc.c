@@ -272,9 +272,6 @@ void initpc(int argc, char *argv[])
         fdi_init();
         img_init();
 
-        disc_load(0, discfns[0]);
-        disc_load(1, discfns[1]);
-                
         //loadfont();
         loadnvr();
         resetide();
@@ -365,7 +362,9 @@ void resetpchard()
         mem_resize();
         fdc_init();
 	disc_reset();
-        
+        disc_load(0, discfns[0]);
+        disc_load(1, discfns[1]);
+
         model_init();
         mouse_emu_init();
         video_init();
