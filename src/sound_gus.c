@@ -600,7 +600,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
 uint8_t readgus(uint16_t addr, void *p)
 {
         gus_t *gus = (gus_t *)p;
-        uint8_t val;
+        uint8_t val = 0xff;
 //        /*if (addr!=0x246) */printf("Read GUS %04X %04X(%06X):%04X %02X\n",addr,CS,cs,pc,gus->global);
         switch (addr)
         {

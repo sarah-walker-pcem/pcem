@@ -130,7 +130,7 @@ void img_load(int drive, char *fn)
 	uint8_t bpb_sectors;
 	uint8_t bpb_sides;
 	uint32_t bpt;
-	uint8_t max_spt;	/* Used for XDF detection. */
+	uint8_t max_spt = 0;	/* Used for XDF detection. */
 
 	if (!xdf_maps_initialized)  initialize_xdf_maps();	/* Initialize XDF maps, will need them to properly register sectors in tracks. */
         
