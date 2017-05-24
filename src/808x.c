@@ -623,6 +623,7 @@ void resetx86()
         resets++;
         ins = 0;
         use32=0;
+        cpu_cur_status = 0;
         stack32=0;
 //        i86_Reset();
 //        cs=0xFFFF0;
@@ -662,6 +663,7 @@ void softresetx86()
 //        exit(-1);
         use32=0;
         stack32=0;
+        cpu_cur_status = 0;
 //        i86_Reset();
 //        cs=0xFFFF0;
         cpu_state.pc=0;

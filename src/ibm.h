@@ -167,6 +167,14 @@ struct
 
 #define cycles cpu_state._cycles
 
+uint32_t cpu_cur_status;
+
+#define CPU_STATUS_USE32   (1 << 0)
+#define CPU_STATUS_STACK32 (1 << 1)
+#define CPU_STATUS_FLATDS  (1 << 2)
+#define CPU_STATUS_FLATSS  (1 << 3)
+
+
 #define COMPILE_TIME_ASSERT(expr) typedef char COMP_TIME_ASSERT[(expr) ? 1 : 0];
 
 COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
