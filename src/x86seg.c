@@ -440,6 +440,8 @@ void loadseg(uint16_t seg, x86seg *s)
                 s->access = (3 << 5) | 2;
                 s->base = seg << 4;
                 s->seg = seg;
+                if (s == &_ss)
+                        stack32 = 0;
                 s->checked = 1;
         }
         
