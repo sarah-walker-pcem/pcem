@@ -935,7 +935,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         pause=0;
                         break;
                         case IDM_FILE_EXIT:
-                        PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
+                        PostMessage(hwnd, WM_CLOSE, 0, 0);
                         break;
                         case IDM_DISC_A:
                         if (!getfile(hwnd,"Disc image (*.IMG;*.IMA;*.FDI)\0*.IMG;*.IMA;*.FDI\0All files (*.*)\0*.*\0",discfns[0]))
