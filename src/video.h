@@ -29,7 +29,7 @@ typedef RGB PALETTE[256];
 
 #endif
 
-extern BITMAP *buffer, *buffer32;
+extern BITMAP *buffer32;
 
 int video_card_available(int card);
 char *video_card_getname(int card);
@@ -74,10 +74,8 @@ extern int readflash;
 extern void (*video_recalctimings)();
 
 void video_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
-void video_blit_memtoscreen_8(int x, int y, int w, int h);
 
 extern void (*video_blit_memtoscreen_func)(int x, int y, int y1, int y2, int w, int h);
-extern void (*video_blit_memtoscreen_8_func)(int x, int y, int w, int h);
 
 extern int video_timing_b, video_timing_w, video_timing_l;
 extern int video_speed;
@@ -99,3 +97,5 @@ void video_updatetiming();
 void hline(BITMAP *b, int x1, int y, int x2, int col);
 
 void destroy_bitmap(BITMAP *b);
+
+extern uint32_t cgapal[16];

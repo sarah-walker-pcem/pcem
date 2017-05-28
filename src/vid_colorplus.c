@@ -101,10 +101,10 @@ void colorplus_poll(void *p)
         int cols[4];
         int col;
         int oldsc;
-	static const int cols16[16] = { 0x10,0x12,0x14,0x16,
-					0x18,0x1A,0x1C,0x1E,
-					0x11,0x13,0x15,0x17,
-					0x19,0x1B,0x1D,0x1F };
+	static const int cols16[16] = { 0x0,0x2,0x4,0x6,
+					0x8,0xA,0xC,0xE,
+					0x1,0x3,0x5,0x7,
+					0x9,0xB,0xD,0xF };
 	uint8_t *plane0 = colorplus->cga.vram;
 	uint8_t *plane1 = colorplus->cga.vram + 0x4000;
 
@@ -137,8 +137,8 @@ void colorplus_poll(void *p)
 			/* Left / right border */
                         for (c = 0; c < 8; c++)
                         {
-                                buffer->line[colorplus->cga.displine][c] = 
-                                buffer->line[colorplus->cga.displine][c + (colorplus->cga.crtc[1] << 4) + 8] = (colorplus->cga.cgacol & 15) + 16;
+                                ((uint32_t *)buffer32->line[colorplus->cga.displine])[c] = 
+                                ((uint32_t *)buffer32->line[colorplus->cga.displine])[c + (colorplus->cga.crtc[1] << 4) + 8] = cgapal[colorplus->cga.cgacol & 15];
                         }
 			if (colorplus->control & COLORPLUS_320x200_MODE)
 			{
@@ -151,9 +151,9 @@ void colorplus_poll(void *p)
                                         colorplus->cga.ma++;
                                         for (c = 0; c < 8; c++)
                                         {
-                                                buffer->line[colorplus->cga.displine][(x << 4) + (c << 1) + 8] =
-                                                buffer->line[colorplus->cga.displine][(x << 4) + (c << 1) + 1 + 8] = 
-                                                  cols16[(dat0 >> 14) | ((dat1 >> 14) << 2)];
+                                                ((uint32_t *)buffer32->line[colorplus->cga.displine])[(x << 4) + (c << 1) + 8] =
+                                                ((uint32_t *)buffer32->line[colorplus->cga.displine])[(x << 4) + (c << 1) + 1 + 8] = 
+                                                  cgapal[cols16[(dat0 >> 14) | ((dat1 >> 14) << 2)]];
                                                 dat0 <<= 2;
                                                 dat1 <<= 2;
                                         }
@@ -161,25 +161,25 @@ void colorplus_poll(void *p)
 			}
 			else if (colorplus->control & COLORPLUS_640x200_MODE)
                         {
-                                cols[0] = (colorplus->cga.cgacol & 15) | 16;
-                                col = (colorplus->cga.cgacol & 16) ? 24 : 16;
+                                cols[0] = cgapal[colorplus->cga.cgacol & 15];
+                                col = (colorplus->cga.cgacol & 16) ? 8 : 0;
                                 if (colorplus->cga.cgamode & 4)
                                 {
-                                        cols[1] = col | 3;
-                                        cols[2] = col | 4;
-                                        cols[3] = col | 7;
+                                        cols[1] = cgapal[col | 3];
+                                        cols[2] = cgapal[col | 4];
+                                        cols[3] = cgapal[col | 7];
                                 }
                                 else if (colorplus->cga.cgacol & 32)
                                 {
-                                        cols[1] = col | 3;
-                                        cols[2] = col | 5;
-                                        cols[3] = col | 7;
+                                        cols[1] = cgapal[col | 3];
+                                        cols[2] = cgapal[col | 5];
+                                        cols[3] = cgapal[col | 7];
                                 }
                                 else
                                 {
-                                        cols[1] = col | 2;
-                                        cols[2] = col | 4;
-                                        cols[3] = col | 6;
+                                        cols[1] = cgapal[col | 2];
+                                        cols[2] = cgapal[col | 4];
+                                        cols[3] = cgapal[col | 6];
                                 }
                                 for (x = 0; x < colorplus->cga.crtc[1]; x++)
                                 {
@@ -190,7 +190,7 @@ void colorplus_poll(void *p)
                                         colorplus->cga.ma++;
                                         for (c = 0; c < 16; c++)
                                         {
-                                                buffer->line[colorplus->cga.displine][(x << 4) + c + 8] =
+                                                ((uint32_t *)buffer32->line[colorplus->cga.displine])[(x << 4) + c + 8] =
                                                   cols[(dat0 >> 15) | ((dat1 >> 15) << 1)];
                                                 dat0 <<= 1;
                                                 dat1 <<= 1;
@@ -200,8 +200,8 @@ void colorplus_poll(void *p)
                 }
                 else	/* Top / bottom border */
                 {
-                        cols[0] = (colorplus->cga.cgacol & 15) + 16;
-                        hline(buffer, 0, colorplus->cga.displine, (colorplus->cga.crtc[1] << 4) + 16, cols[0]);
+                        cols[0] = cgapal[colorplus->cga.cgacol & 15];
+                        hline(buffer32, 0, colorplus->cga.displine, (colorplus->cga.crtc[1] << 4) + 16, cols[0]);
                 }
 
                 x = (colorplus->cga.crtc[1] << 4) + 16;
@@ -283,7 +283,7 @@ void colorplus_poll(void *p)
                                                 updatewindowsize(xsize, (ysize << 1) + 16);
                                         }
                                         
-                                        video_blit_memtoscreen_8(0, colorplus->cga.firstline - 4, xsize, (colorplus->cga.lastline - colorplus->cga.firstline) + 8);
+                                        video_blit_memtoscreen(0, colorplus->cga.firstline - 4, 0, (colorplus->cga.lastline - colorplus->cga.firstline) + 8, xsize, (colorplus->cga.lastline - colorplus->cga.firstline) + 8);
                                         frames++;
 
                                         video_res_x = xsize - 16;

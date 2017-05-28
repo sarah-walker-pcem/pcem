@@ -109,6 +109,8 @@ typedef struct genius_t
         uint8_t *vram;
 } genius_t;
 
+static uint32_t genius_pal[4];
+
 /* Mapping of attributes to colours, in MDA emulation mode */
 static int mdacols[256][2][2];
 
@@ -265,7 +267,7 @@ void genius_textline(genius_t *genius, uint8_t background)
 	uint16_t ma = (genius->mda_crtc[13] | (genius->mda_crtc[12] << 8)) & 0x3fff;
 	uint16_t ca = (genius->mda_crtc[15] | (genius->mda_crtc[14] << 8)) & 0x3fff;
 	unsigned char *framebuf = genius->vram + 0x10000;
-	uint8_t col;
+	uint32_t col;
 
 	/* Character height is 12-15 */
 	charh = 15 - (genius->genius_charh & 3);
@@ -317,13 +319,13 @@ void genius_textline(genius_t *genius, uint8_t background)
 
 			if (genius->genius_control & 0x20)
 			{
-				col ^= 15;
+				col ^= 0xffffff;
 			}
 
 			for (c = 0; c < cw; c++)
 			{
 				if (col != background) 
-					buffer->line[genius->displine][(x * cw) + c] = col;
+					((uint32_t *)buffer32->line[genius->displine])[(x * cw) + c] = col;
 			}
 		}
 		else	/* Draw 8 pixels of character */
@@ -337,33 +339,35 @@ void genius_textline(genius_t *genius, uint8_t background)
 	
 				if (genius->genius_control & 0x20)
 				{
-					col ^= 15;
+					col ^= 0xffffff;
 				}
 				if (col != background)
 				{
-					buffer->line[genius->displine][(x * cw) + c] = col;
+					((uint32_t *)buffer32->line[genius->displine])[(x * cw) + c] = col;
 				}
 			}
 			/* The ninth pixel column... */
 			if ((chr & ~0x1f) == 0xc0) 
 			{
 				/* Echo column 8 for the graphics chars */
-				col = buffer->line[genius->displine][(x * cw) + 7];
-				if (col != background) buffer->line[genius->displine][(x * cw) + 8] = col;
+				col = ((uint32_t *)buffer32->line[genius->displine])[(x * cw) + 7];
+				if (col != background)
+                                        ((uint32_t *)buffer32->line[genius->displine])[(x * cw) + 8] = col;
 			}
 			else	/* Otherwise fill with background */	
 			{
 				col = mdacols[attr][blink][0];
 				if (genius->genius_control & 0x20)
 				{
-					col ^= 15;
+					col ^= 0xffffff;
 				}
-				if (col != background) buffer->line[genius->displine][(x * cw) + 8] = col;
+				if (col != background)
+                                        ((uint32_t *)buffer32->line[genius->displine])[(x * cw) + 8] = col;
 			}
                         if (drawcursor)
                         {
                         	for (c = 0; c < cw; c++)
-                                	buffer->line[genius->displine][(x * cw) + c] ^= mdacols[attr][0][1];
+                                	((uint32_t *)buffer32->line[genius->displine])[(x * cw) + c] ^= mdacols[attr][0][1];
                         }
 			++ma;
 		}
@@ -378,10 +382,10 @@ void genius_cgaline(genius_t *genius)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t ink;
+	uint32_t ink;
 	uint32_t addr;
 
-	ink = (genius->genius_control & 0x20) ? 16 : 16+15;
+	ink = (genius->genius_control & 0x20) ? genius_pal[0] : genius_pal[3];
 	/* We draw the CGA at row 600 */
 	if (genius->displine < 600) 
 	{
@@ -402,7 +406,7 @@ void genius_cgaline(genius_t *genius)
 		{
 			if (dat & 0x80)
 			{
-				buffer->line[genius->displine][x*8 + c] = ink;
+				((uint32_t *)buffer32->line[genius->displine])[x*8 + c] = ink;
 			}
 			dat = dat << 1;
 		}
@@ -420,7 +424,7 @@ void genius_hiresline(genius_t *genius)
 	uint8_t ink;
 	uint32_t addr;
         
-	ink = (genius->genius_control & 0x20) ? 16 : 16+15;
+	ink = (genius->genius_control & 0x20) ? genius_pal[0] : genius_pal[3];
 	/* The first 512 lines live at A0000 */
 	if (genius->displine < 512) 
 	{
@@ -440,7 +444,7 @@ void genius_hiresline(genius_t *genius)
 		{
 			if (dat & 0x80)
 			{
-				buffer->line[genius->displine][x*8 + c] = ink;
+				((uint32_t *)buffer32->line[genius->displine])[x*8 + c] = ink;
 			}
 			dat = dat << 1;
 		}
@@ -466,11 +470,11 @@ void genius_poll(void *p)
                 {
 			if (genius->genius_control & 0x20)
 			{
-				background = 16 + 15;
+				background = genius_pal[3];
 			}
 			else
 			{
-				background = 16;
+				background = genius_pal[0];
 			}
                         if (genius->displine == 0)
                         {
@@ -479,7 +483,7 @@ void genius_poll(void *p)
 			/* Start off with a blank line */
 			for (x = 0; x < GENIUS_XSIZE; x++)
 			{
-				buffer->line[genius->displine][x] = background;
+				((uint32_t *)buffer32->line[genius->displine])[x] = background;
 			}
 			/* If graphics display enabled, draw graphics on top
 			 * of the blanked line */
@@ -536,7 +540,7 @@ void genius_poll(void *p)
                                 if (ysize < 32) ysize = 200;
                                 updatewindowsize(xsize, ysize);
                         }
-                        video_blit_memtoscreen_8(0, 0, xsize, ysize);
+                        video_blit_memtoscreen(0, 0, 0, ysize, xsize, ysize);
 
                         frames++;
 			/* Fixed 728x1008 resolution */
@@ -566,27 +570,32 @@ void *genius_init()
         io_sethandler(0x03b0, 0x000C, genius_in, NULL, NULL, genius_out, NULL, NULL, genius);
         io_sethandler(0x03d0, 0x0010, genius_in, NULL, NULL, genius_out, NULL, NULL, genius);
 
+        genius_pal[0] = makecol(0x00, 0x00, 0x00);
+        genius_pal[1] = makecol(0x55, 0x55, 0x55);
+        genius_pal[2] = makecol(0xaa, 0xaa, 0xaa);
+        genius_pal[3] = makecol(0xff, 0xff, 0xff);
+
 	/* MDA attributes */
 	/* I don't know if the Genius's MDA emulation actually does 
 	 * emulate bright / non-bright. For the time being pretend it does. */
         for (c = 0; c < 256; c++)
         {
-                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = 16;
-                if (c & 8) mdacols[c][0][1] = 15 + 16;
-                else       mdacols[c][0][1] =  7 + 16;
+                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = genius_pal[0];
+                if (c & 8) mdacols[c][0][1] = genius_pal[3];
+                else       mdacols[c][0][1] = genius_pal[2];
         }
-        mdacols[0x70][0][1] = 16;
-        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = 16 + 15;
-        mdacols[0xF0][0][1] = 16;
-        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = 16 + 15;
-        mdacols[0x78][0][1] = 16 + 7;
-        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = 16 + 15;
-        mdacols[0xF8][0][1] = 16 + 7;
-        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = 16 + 15;
-        mdacols[0x00][0][1] = mdacols[0x00][1][1] = 16;
-        mdacols[0x08][0][1] = mdacols[0x08][1][1] = 16;
-        mdacols[0x80][0][1] = mdacols[0x80][1][1] = 16;
-        mdacols[0x88][0][1] = mdacols[0x88][1][1] = 16;
+        mdacols[0x70][0][1] = genius_pal[0];
+        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = genius_pal[3];
+        mdacols[0xF0][0][1] = genius_pal[0];
+        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = genius_pal[3];
+        mdacols[0x78][0][1] = genius_pal[2];
+        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = genius_pal[3];
+        mdacols[0xF8][0][1] = genius_pal[2];
+        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = genius_pal[3];
+        mdacols[0x00][0][1] = mdacols[0x00][1][1] = genius_pal[0];
+        mdacols[0x08][0][1] = mdacols[0x08][1][1] = genius_pal[0];
+        mdacols[0x80][0][1] = mdacols[0x80][1][1] = genius_pal[0];
+        mdacols[0x88][0][1] = mdacols[0x88][1][1] = genius_pal[0];
 
 /* Start off in 80x25 text mode */
         genius->cga_stat   = 0xF4;

@@ -245,7 +245,6 @@ int video_timing_b, video_timing_w, video_timing_l;
 int video_res_x, video_res_y, video_bpp;
 
 void (*video_blit_memtoscreen_func)(int x, int y, int y1, int y2, int w, int h);
-void (*video_blit_memtoscreen_8_func)(int x, int y, int w, int h);
 
 void video_init()
 {
@@ -314,7 +313,7 @@ void video_init()
 }
 
 
-BITMAP *buffer, *buffer32;
+BITMAP *buffer32;
 
 uint8_t fontdat[256][8];
 uint8_t fontdatm[256][16];
@@ -322,8 +321,6 @@ uint8_t fontdatw[512][32];	/* Wyse700 font */
 uint8_t fontdat8x12[256][16];	/* MDSI Genius font */
 
 int xsize=1,ysize=1;
-
-PALETTE cgapal;
 
 void loadfont(char *s, int format)
 {
@@ -419,7 +416,7 @@ void loadfont(char *s, int format)
 
 static struct
 {
-        int x, y, y1, y2, w, h, blit8;
+        int x, y, y1, y2, w, h;
         int busy;
         int buffer_in_use;
 
@@ -431,28 +428,13 @@ static struct
 
 static void blit_thread(void *param);
 
+uint32_t cgapal[16];
+
 void initvideo()
 {
         int c, d, e;
 
         buffer32 = create_bitmap(2048, 2048);
-
-        buffer = create_bitmap(2048, 2048);
-
-        for (c = 0; c < 64; c++)
-        {
-                cgapal[c + 64].r = (((c & 4) ? 2 : 0) | ((c & 0x10) ? 1 : 0)) * 21;
-                cgapal[c + 64].g = (((c & 2) ? 2 : 0) | ((c & 0x10) ? 1 : 0)) * 21;
-                cgapal[c + 64].b = (((c & 1) ? 2 : 0) | ((c & 0x10) ? 1 : 0)) * 21;
-                if ((c & 0x17) == 6) 
-                        cgapal[c + 64].g >>= 1;
-        }
-        for (c = 0; c < 64; c++)
-        {
-                cgapal[c + 128].r = (((c & 4) ? 2 : 0) | ((c & 0x20) ? 1 : 0)) * 21;
-                cgapal[c + 128].g = (((c & 2) ? 2 : 0) | ((c & 0x10) ? 1 : 0)) * 21;
-                cgapal[c + 128].b = (((c & 1) ? 2 : 0) | ((c & 0x08) ? 1 : 0)) * 21;
-        }
 
         for (c = 0; c < 256; c++)
         {
@@ -484,6 +466,23 @@ void initvideo()
         for (c = 0; c < 65536; c++)
                 video_16to32[c] = ((c & 31) << 3) | (((c >> 5) & 63) << 10) | (((c >> 11) & 31) << 19);
 
+        cgapal[0x0] = makecol(0x00, 0x00, 0x00);
+        cgapal[0x1] = makecol(0x00, 0x00, 0xaa);
+        cgapal[0x2] = makecol(0x00, 0xaa, 0x00);
+        cgapal[0x3] = makecol(0x00, 0xaa, 0xaa);
+        cgapal[0x4] = makecol(0xaa, 0x00, 0x00);
+        cgapal[0x5] = makecol(0xaa, 0x00, 0xaa);
+        cgapal[0x6] = makecol(0xaa, 0x55, 0x00);
+        cgapal[0x7] = makecol(0xaa, 0xaa, 0xaa);
+        cgapal[0x8] = makecol(0x55, 0x55, 0x55);
+        cgapal[0x9] = makecol(0x55, 0x55, 0xff);
+        cgapal[0xa] = makecol(0x55, 0xff, 0x55);
+        cgapal[0xb] = makecol(0x55, 0xff, 0xff);
+        cgapal[0xc] = makecol(0xff, 0x55, 0x55);
+        cgapal[0xd] = makecol(0xff, 0x55, 0xff);
+        cgapal[0xe] = makecol(0xff, 0xff, 0x55);
+        cgapal[0xf] = makecol(0xff, 0xff, 0xff);
+
         blit_data.wake_blit_thread = thread_create_event();
         blit_data.blit_complete = thread_create_event();
         blit_data.buffer_not_in_use = thread_create_event();
@@ -499,7 +498,6 @@ void closevideo()
 
         free(video_15to32);
         free(video_16to32);
-        destroy_bitmap(buffer);
         destroy_bitmap(buffer32);
 }
 
@@ -511,10 +509,7 @@ static void blit_thread(void *param)
                 thread_wait_event(blit_data.wake_blit_thread, -1);
                 thread_reset_event(blit_data.wake_blit_thread);
                 
-                if (blit_data.blit8)
-                        video_blit_memtoscreen_8_func(blit_data.x, blit_data.y, blit_data.w, blit_data.h);
-                else
-                        video_blit_memtoscreen_func(blit_data.x, blit_data.y, blit_data.y1, blit_data.y2, blit_data.w, blit_data.h);
+                video_blit_memtoscreen_func(blit_data.x, blit_data.y, blit_data.y1, blit_data.y2, blit_data.w, blit_data.h);
                 
                 blit_data.busy = 0;
                 thread_set_event(blit_data.blit_complete);
@@ -551,18 +546,5 @@ void video_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         blit_data.y2 = y2;
         blit_data.w = w;
         blit_data.h = h;
-        blit_data.blit8 = 0;
-        thread_set_event(blit_data.wake_blit_thread);
-}
-
-void video_blit_memtoscreen_8(int x, int y, int w, int h)
-{
-        video_wait_for_blit();
-        blit_data.busy = 1;
-        blit_data.x = x;
-        blit_data.y = y;
-        blit_data.w = w;
-        blit_data.h = h;
-        blit_data.blit8 = 1;
         thread_set_event(blit_data.wake_blit_thread);
 }

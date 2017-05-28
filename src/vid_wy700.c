@@ -149,6 +149,7 @@ static uint8_t mode_40x24[] =
 	0x0f,	/* Maximum raster address */
 };
 
+static uint32_t wy700_pal[4];
 
 /* Font ROM: Two fonts, each containing 256 characters, 16x16 pixels */
 extern uint8_t fontdatw[512][32];
@@ -553,7 +554,7 @@ void wy700_textline(wy700_t *wy700)
 		if (sc == 14 && mda && ((attr & 7) == 1))
 		{
 			for (c = 0; c < cw; c++)
-				buffer->line[wy700->displine][(x * cw) + c] =
+				((uint32_t *)buffer32->line[wy700->displine])[(x * cw) + c] =
 					mdacols[attr][blink][1];
 		}
 		else	/* Draw 16 pixels of character */
@@ -565,21 +566,23 @@ void wy700_textline(wy700_t *wy700)
 				int col;
 				if (c < 8)
 					col = (mda ? mdacols : cgacols)[attr][blink][(bitmap[0] & (1 << (c ^ 7))) ? 1 : 0];
-				else    col = (mda ? mdacols : cgacols)[attr][blink][(bitmap[1] & (1 << ((c & 7) ^ 7))) ? 1 : 0];
+				else
+                                        col = (mda ? mdacols : cgacols)[attr][blink][(bitmap[1] & (1 << ((c & 7) ^ 7))) ? 1 : 0];
 				if (!(wy700->enabled) || !(wy700->cga_ctrl & 8))
 					col = mdacols[0][0][0];
 				if (w == 40) 
 				{
-                        		buffer->line[wy700->displine][(x * cw) + 2*c] = col;
-                        		buffer->line[wy700->displine][(x * cw) + 2*c + 1] = col;
+                        		((uint32_t *)buffer32->line[wy700->displine])[(x * cw) + 2*c] = col;
+                        		((uint32_t *)buffer32->line[wy700->displine])[(x * cw) + 2*c + 1] = col;
 				}
-				else	buffer->line[wy700->displine][(x * cw) + c] = col;
+				else
+                                        ((uint32_t *)buffer32->line[wy700->displine])[(x * cw) + c] = col;
 			}
 
                         if (drawcursor)
                         {
                         	for (c = 0; c < cw; c++)
-                                	buffer->line[wy700->displine][(x * cw) + c] ^= (mda ? mdacols : cgacols)[attr][0][1];
+                                	((uint32_t *)buffer32->line[wy700->displine])[(x * cw) + c] ^= (mda ? mdacols : cgacols)[attr][0][1];
                         }
 			++ma;
 		}
@@ -592,7 +595,7 @@ void wy700_cgaline(wy700_t *wy700)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t ink = 0;
+	uint32_t ink = 0;
 	uint16_t addr;
 
 	uint16_t ma = (wy700->cga_crtc[13] | (wy700->cga_crtc[12] << 8)) & 0x3fff;
@@ -614,11 +617,11 @@ void wy700_cgaline(wy700_t *wy700)
 		{
 			for (c = 0; c < 32; c++)
 			{
-				ink = (dat & 0x80000000) ? 16 + 15: 16 + 0;
+				ink = (dat & 0x80000000) ? wy700_pal[3]: wy700_pal[0];
 				if (!(wy700->enabled) || !(wy700->cga_ctrl & 8))
-					ink = 16;
-				buffer->line[wy700->displine][x*64 + 2*c] =
-				buffer->line[wy700->displine][x*64 + 2*c+1] =
+					ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 2*c] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 2*c+1] =
 					ink;
 				dat = dat << 1;
 			}
@@ -627,19 +630,13 @@ void wy700_cgaline(wy700_t *wy700)
 		{
 			for (c = 0; c < 16; c++)
 			{
-				switch ((dat >> 30) & 3)
-				{
-					case 0: ink = 16 + 0; break;
-					case 1: ink = 16 + 8; break;
-					case 2: ink = 16 + 7; break;
-					case 3: ink = 16 + 15; break;
-				}
+                                ink = wy700_pal[(dat >> 30) & 3];
 				if (!(wy700->enabled) || !(wy700->cga_ctrl & 8))
-					ink = 16;
-				buffer->line[wy700->displine][x*64 + 4*c] =
-				buffer->line[wy700->displine][x*64 + 4*c+1] =
-				buffer->line[wy700->displine][x*64 + 4*c+2] =
-				buffer->line[wy700->displine][x*64 + 4*c+3] =
+					ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+1] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+2] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+3] =
 					ink;
 				dat = dat << 2;
 			}
@@ -652,7 +649,7 @@ void wy700_medresline(wy700_t *wy700)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t ink = 0;
+	uint32_t ink = 0;
 	uint32_t addr;
 
 	addr = (wy700->displine >> 1) * 80 + 4 * wy700->wy700_base;
@@ -669,19 +666,14 @@ void wy700_medresline(wy700_t *wy700)
 		{
 			for (c = 0; c < 16; c++)
 			{
-				switch ((dat >> 30) & 3)
-				{
-					case 0: ink = 16 + 0; break;
-					case 1: ink = 16 + 8; break;
-					case 2: ink = 16 + 7; break;
-					case 3: ink = 16 + 15; break;
-				}
+                                ink = wy700_pal[(dat >> 30) & 3];
 				/* Display disabled? */
-				if (!(wy700->wy700_mode & 8)) ink = 16;
-				buffer->line[wy700->displine][x*64 + 4*c] =
-				buffer->line[wy700->displine][x*64 + 4*c+1] =
-				buffer->line[wy700->displine][x*64 + 4*c+2] =
-				buffer->line[wy700->displine][x*64 + 4*c+3] =
+				if (!(wy700->wy700_mode & 8))
+                                        ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+1] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+2] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 4*c+3] =
 					ink;
 				dat = dat << 2;
 			}
@@ -690,11 +682,12 @@ void wy700_medresline(wy700_t *wy700)
 		{
 			for (c = 0; c < 32; c++)
 			{
-				ink = (dat & 0x80000000) ? 16 + 15: 16 + 0;
+				ink = (dat & 0x80000000) ? wy700_pal[3]: wy700_pal[0];
 				/* Display disabled? */
-				if (!(wy700->wy700_mode & 8)) ink = 16;
-				buffer->line[wy700->displine][x*64 + 2*c]   = 
-				buffer->line[wy700->displine][x*64 + 2*c+1] = 
+				if (!(wy700->wy700_mode & 8))
+                                        ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 2*c]   = 
+				((uint32_t *)buffer32->line[wy700->displine])[x*64 + 2*c+1] = 
 					ink;
 				dat = dat << 1;
 			}
@@ -710,7 +703,7 @@ void wy700_hiresline(wy700_t *wy700)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t ink = 0;
+	uint32_t ink = 0;
 	uint32_t addr;
 
 	addr = (wy700->displine >> 1) * 160 + 4 * wy700->wy700_base;
@@ -731,17 +724,12 @@ void wy700_hiresline(wy700_t *wy700)
 		{
 			for (c = 0; c < 16; c++)
 			{
-				switch ((dat >> 30) & 3)
-				{
-					case 0: ink = 16 + 0; break;
-					case 1: ink = 16 + 8; break;
-					case 2: ink = 16 + 7; break;
-					case 3: ink = 16 + 15; break;
-				}
+				ink = wy700_pal[(dat >> 30) & 3];
 				/* Display disabled? */
-				if (!(wy700->wy700_mode & 8)) ink = 16;
-				buffer->line[wy700->displine][x*32 + 2*c] =
-				buffer->line[wy700->displine][x*32 + 2*c+1] =
+				if (!(wy700->wy700_mode & 8))
+                                        ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*32 + 2*c] =
+				((uint32_t *)buffer32->line[wy700->displine])[x*32 + 2*c+1] =
 					ink;
 				dat = dat << 2;
 			}
@@ -750,10 +738,11 @@ void wy700_hiresline(wy700_t *wy700)
 		{
 			for (c = 0; c < 32; c++)
 			{
-				ink = (dat & 0x80000000) ? 16 + 15: 16 + 0;
+				ink = (dat & 0x80000000) ? wy700_pal[3]: wy700_pal[0];
 				/* Display disabled? */
-				if (!(wy700->wy700_mode & 8)) ink = 16;
-				buffer->line[wy700->displine][x*32 + c] = ink;
+				if (!(wy700->wy700_mode & 8))
+                                        ink = wy700_pal[0];
+				((uint32_t *)buffer32->line[wy700->displine])[x*32 + c] = ink;
 				dat = dat << 1;
 			}
 		}
@@ -845,7 +834,7 @@ void wy700_poll(void *p)
                                 if (ysize < 32) ysize = 200;
                                 updatewindowsize(xsize, ysize);
                         }
-                        video_blit_memtoscreen_8(0, 0, xsize, ysize);
+                        video_blit_memtoscreen(0, 0, 0, ysize, xsize, ysize);
 
                         frames++;
 			/* Fixed 1280x800 resolution */
@@ -888,72 +877,78 @@ void *wy700_init()
         io_sethandler(0x03b0, 0x000C, wy700_in, NULL, NULL, wy700_out, NULL, NULL, wy700);
         io_sethandler(0x03d0, 0x0010, wy700_in, NULL, NULL, wy700_out, NULL, NULL, wy700);
 
+        wy700_pal[0] = makecol(0x00, 0x00, 0x00);
+        wy700_pal[1] = makecol(0x55, 0x55, 0x55);
+        wy700_pal[2] = makecol(0xaa, 0xaa, 0xaa);
+        wy700_pal[3] = makecol(0xff, 0xff, 0xff);
+
 	/* Set up the emulated attributes. 
 	 * CGA is done in four groups: 00-0F, 10-7F, 80-8F, 90-FF */
         for (c = 0; c < 0x10; c++)
         {
-                cgacols[c][0][0] = cgacols[c][1][0] = cgacols[c][1][1] = 16;
-                if (c & 8) cgacols[c][0][1] = 15 + 16;
-                else       cgacols[c][0][1] =  7 + 16;
+                cgacols[c][0][0] = cgacols[c][1][0] = cgacols[c][1][1] = wy700_pal[0];
+                if (c & 8) cgacols[c][0][1] = wy700_pal[3];
+                else       cgacols[c][0][1] = wy700_pal[2];
 	}
         for (c = 0x10; c < 0x80; c++)
         {
-                cgacols[c][0][0] = cgacols[c][1][0] = cgacols[c][1][1] = 16 + 7;
-                if (c & 8) cgacols[c][0][1] = 15 + 16;
-                else       cgacols[c][0][1] =  0 + 16;
+                cgacols[c][0][0] = cgacols[c][1][0] = cgacols[c][1][1] = wy700_pal[2];
+                if (c & 8) cgacols[c][0][1] = wy700_pal[3];
+                else       cgacols[c][0][1] = wy700_pal[0];
 
-		if ((c & 0x0F) == 8) cgacols[c][0][1] = 8 + 16;
+		if ((c & 0x0F) == 8)
+                        cgacols[c][0][1] = wy700_pal[1];
 	}
 	/* With special cases for 00, 11, 22, ... 77 */
-	cgacols[0x00][0][1] = cgacols[0x00][1][1] = 16;
+	cgacols[0x00][0][1] = cgacols[0x00][1][1] = wy700_pal[0];
 	for (c = 0x11; c <= 0x77; c += 0x11)
 	{
-		cgacols[c][0][1] = cgacols[c][1][1] = 16 + 7;
+		cgacols[c][0][1] = cgacols[c][1][1] = wy700_pal[2];
 	}
         for (c = 0x80; c < 0x90; c++)
         {
-                cgacols[c][0][0] = 16 + 8;
-                if (c & 8) cgacols[c][0][1] = 15 + 16;
-                else       cgacols[c][0][1] =  7 + 16;
+                cgacols[c][0][0] = wy700_pal[1];
+                if (c & 8) cgacols[c][0][1] = wy700_pal[3];
+                else       cgacols[c][0][1] = wy700_pal[2];
 		cgacols[c][1][0] = cgacols[c][1][1] = cgacols[c-0x80][0][0];
 	}
         for (c = 0x90; c < 0x100; c++)
         {
-                cgacols[c][0][0] = 16 + 15;
-                if (c & 8) cgacols[c][0][1] =  8 + 16;
-                else       cgacols[c][0][1] =  7 + 16;
-		if ((c & 0x0F) == 0) cgacols[c][0][1] = 16;
+                cgacols[c][0][0] = wy700_pal[3];
+                if (c & 8) cgacols[c][0][1] = wy700_pal[1];
+                else       cgacols[c][0][1] = wy700_pal[2];
+		if ((c & 0x0F) == 0) cgacols[c][0][1] = wy700_pal[0];
 		cgacols[c][1][0] = cgacols[c][1][1] = cgacols[c-0x80][0][0];
 	}
 	/* Also special cases for 99, AA, ..., FF */
 	for (c = 0x99; c <= 0xFF; c += 0x11)
 	{
-		cgacols[c][0][1] = 16 + 15;
+		cgacols[c][0][1] = wy700_pal[3];
 	}
 	/* Special cases for 08, 80 and 88 */
-	cgacols[0x08][0][1] = 16 + 8;
-	cgacols[0x80][0][1] = 16;
-	cgacols[0x88][0][1] = 16 + 8;
+	cgacols[0x08][0][1] = wy700_pal[1];
+	cgacols[0x80][0][1] = wy700_pal[0];
+	cgacols[0x88][0][1] = wy700_pal[1];
 
 	/* MDA attributes */
         for (c = 0; c < 256; c++)
         {
-                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = 16;
-                if (c & 8) mdacols[c][0][1] = 15 + 16;
-                else       mdacols[c][0][1] =  7 + 16;
+                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = wy700_pal[0];
+                if (c & 8) mdacols[c][0][1] = wy700_pal[3];
+                else       mdacols[c][0][1] = wy700_pal[2];
         }
-        mdacols[0x70][0][1] = 16;
-        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = 16 + 15;
-        mdacols[0xF0][0][1] = 16;
-        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = 16 + 15;
-        mdacols[0x78][0][1] = 16 + 7;
-        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = 16 + 15;
-        mdacols[0xF8][0][1] = 16 + 7;
-        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = 16 + 15;
-        mdacols[0x00][0][1] = mdacols[0x00][1][1] = 16;
-        mdacols[0x08][0][1] = mdacols[0x08][1][1] = 16;
-        mdacols[0x80][0][1] = mdacols[0x80][1][1] = 16;
-        mdacols[0x88][0][1] = mdacols[0x88][1][1] = 16;
+        mdacols[0x70][0][1] = wy700_pal[0];
+        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = wy700_pal[3];
+        mdacols[0xF0][0][1] = wy700_pal[0];
+        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = wy700_pal[3];
+        mdacols[0x78][0][1] = wy700_pal[2];
+        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = wy700_pal[3];
+        mdacols[0xF8][0][1] = wy700_pal[2];
+        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = wy700_pal[3];
+        mdacols[0x00][0][1] = mdacols[0x00][1][1] = wy700_pal[0];
+        mdacols[0x08][0][1] = mdacols[0x08][1][1] = wy700_pal[0];
+        mdacols[0x80][0][1] = mdacols[0x80][1][1] = wy700_pal[0];
+        mdacols[0x88][0][1] = mdacols[0x88][1][1] = wy700_pal[0];
 
 /* Start off in 80x25 text mode */
         wy700->cga_stat   = 0xF4;

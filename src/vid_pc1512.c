@@ -187,15 +187,15 @@ static void pc1512_poll(void *p)
                         {
                                 if ((pc1512->cgamode & 0x12) == 0x12)
                                 {
-                                        buffer->line[pc1512->displine][c] = (pc1512->border & 15) + 16;
-                                        if (pc1512->cgamode & 1) buffer->line[pc1512->displine][c + (pc1512->crtc[1] << 3) + 8] = 0;
-                                        else                     buffer->line[pc1512->displine][c + (pc1512->crtc[1] << 4) + 8] = 0;
+                                        ((uint32_t *)buffer32->line[pc1512->displine])[c] = cgapal[pc1512->border & 15];
+                                        if (pc1512->cgamode & 1) ((uint32_t *)buffer32->line[pc1512->displine])[c + (pc1512->crtc[1] << 3) + 8] = 0;
+                                        else                     ((uint32_t *)buffer32->line[pc1512->displine])[c + (pc1512->crtc[1] << 4) + 8] = 0;
                                 }
                                 else
                                 {
-                                        buffer->line[pc1512->displine][c] = (pc1512->cgacol & 15) + 16;
-                                        if (pc1512->cgamode & 1) buffer->line[pc1512->displine][c + (pc1512->crtc[1] << 3) + 8] = (pc1512->cgacol & 15) + 16;
-                                        else                     buffer->line[pc1512->displine][c + (pc1512->crtc[1] << 4) + 8] = (pc1512->cgacol & 15) + 16;
+                                        ((uint32_t *)buffer32->line[pc1512->displine])[c] = cgapal[pc1512->cgacol & 15];
+                                        if (pc1512->cgamode & 1) ((uint32_t *)buffer32->line[pc1512->displine])[c + (pc1512->crtc[1] << 3) + 8] = cgapal[pc1512->cgacol & 15];
+                                        else                     ((uint32_t *)buffer32->line[pc1512->displine])[c + (pc1512->crtc[1] << 4) + 8] = cgapal[pc1512->cgacol & 15];
                                 }
                         }
                         if (pc1512->cgamode & 1)
@@ -207,25 +207,25 @@ static void pc1512_poll(void *p)
                                         drawcursor = ((pc1512->ma == ca) && pc1512->con && pc1512->cursoron);
                                         if (pc1512->cgamode & 0x20)
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = ((attr >> 4) & 7) + 16;
+                                                cols[1] = cgapal[attr & 15];
+                                                cols[0] = cgapal[(attr >> 4) & 7];
                                                 if ((pc1512->blink & 16) && (attr & 0x80) && !drawcursor) 
                                                         cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = (attr >> 4) + 16;
+                                                cols[1] = cgapal[attr & 15];
+                                                cols[0] = cgapal[attr >> 4];
                                         }
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[pc1512->displine][(x << 3) + c + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[pc1512->displine][(x << 3) + c + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                         pc1512->ma++;
                                 }
@@ -239,52 +239,52 @@ static void pc1512_poll(void *p)
                                         drawcursor = ((pc1512->ma == ca) && pc1512->con && pc1512->cursoron);
                                         if (pc1512->cgamode & 0x20)
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = ((attr >> 4) & 7) + 16;
+                                                cols[1] = cgapal[attr & 15];
+                                                cols[0] = cgapal[(attr >> 4) & 7];
                                                 if ((pc1512->blink & 16) && (attr & 0x80)) 
                                                         cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = (attr >> 4) + 16;
+                                                cols[1] = cgapal[attr & 15];
+                                                cols[0] = cgapal[attr >> 4];
                                         }
                                         pc1512->ma++;
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[pc1512->displine][(x << 4) + (c << 1) + 8] = 
-                                                    buffer->line[pc1512->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 8] = 
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[pc1512->displine][(x << 4) + (c << 1) + 8] = 
-                                                    buffer->line[pc1512->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 8] = 
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                 }
                         }
                         else if (!(pc1512->cgamode&16))
                         {
-                                cols[0] = (pc1512->cgacol & 15) | 16;
-                                col = (pc1512->cgacol & 16) ? 24 : 16;
+                                cols[0] = cgapal[pc1512->cgacol & 15];
+                                col = (pc1512->cgacol & 16) ? 8 : 0;
                                 if (pc1512->cgamode & 4)
                                 {
-                                        cols[1] = col | 3;
-                                        cols[2] = col | 4;
-                                        cols[3] = col | 7;
+                                        cols[1] = cgapal[col | 3];
+                                        cols[2] = cgapal[col | 4];
+                                        cols[3] = cgapal[col | 7];
                                 }
                                 else if (pc1512->cgacol & 32)
                                 {
-                                        cols[1] = col | 3;
-                                        cols[2] = col | 5;
-                                        cols[3] = col | 7;
+                                        cols[1] = cgapal[col | 3];
+                                        cols[2] = cgapal[col | 5];
+                                        cols[3] = cgapal[col | 7];
                                 }
                                 else
                                 {
-                                        cols[1] = col | 2;
-                                        cols[2] = col | 4;
-                                        cols[3] = col | 6;
+                                        cols[1] = cgapal[col | 2];
+                                        cols[2] = cgapal[col | 4];
+                                        cols[3] = cgapal[col | 6];
                                 }
                                 for (x = 0; x < 40; x++)
                                 {
@@ -292,8 +292,8 @@ static void pc1512_poll(void *p)
                                         pc1512->ma++;
                                         for (c = 0; c < 8; c++)
                                         {
-                                                buffer->line[pc1512->displine][(x << 4) + (c << 1) + 8] =
-                                                buffer->line[pc1512->displine][(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
+                                                ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 8] =
+                                                ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
                                                 dat <<= 2;
                                         }
                                 }
@@ -311,7 +311,7 @@ static void pc1512_poll(void *p)
                                         pc1512->ma++;
                                         for (c = 0; c < 16; c++)
                                         {
-                                                buffer->line[pc1512->displine][(x << 4) + c + 8] = (((dat >> 15) | ((dat2 >> 15) << 1) | ((dat3 >> 15) << 2) | ((dat4 >> 15) << 3)) & (pc1512->cgacol & 15)) + 16;
+                                                ((uint32_t *)buffer32->line[pc1512->displine])[(x << 4) + c + 8] = cgapal[((dat >> 15) | ((dat2 >> 15) << 1) | ((dat3 >> 15) << 2) | ((dat4 >> 15) << 3)) & (pc1512->cgacol & 15)];
                                                 dat  <<= 1;
                                                 dat2 <<= 1;
                                                 dat3 <<= 1;
@@ -322,9 +322,9 @@ static void pc1512_poll(void *p)
                 }
                 else
                 {
-                        cols[0] = ((pc1512->cgamode & 0x12) == 0x12) ? 0 : (pc1512->cgacol & 15) + 16;
-                        if (pc1512->cgamode & 1) hline(buffer, 0, pc1512->displine, (pc1512->crtc[1] << 3) + 16, cols[0]);
-                        else                     hline(buffer, 0, pc1512->displine, (pc1512->crtc[1] << 4) + 16, cols[0]);
+                        cols[0] = cgapal[((pc1512->cgamode & 0x12) == 0x12) ? 0 : (pc1512->cgacol & 15)];
+                        if (pc1512->cgamode & 1) hline(buffer32, 0, pc1512->displine, (pc1512->crtc[1] << 3) + 16, cols[0]);
+                        else                     hline(buffer32, 0, pc1512->displine, (pc1512->crtc[1] << 4) + 16, cols[0]);
                 }
 
                 pc1512->sc = oldsc;
@@ -402,7 +402,7 @@ static void pc1512_poll(void *p)
                                         updatewindowsize(xsize, (ysize << 1) + 16);
                                 }
 
-                                video_blit_memtoscreen_8(0, pc1512->firstline - 4, xsize, (pc1512->lastline - pc1512->firstline) + 8);
+                                video_blit_memtoscreen(0, pc1512->firstline - 4, 0, (pc1512->lastline - pc1512->firstline) + 8, xsize, (pc1512->lastline - pc1512->firstline) + 8);
 //                                        blit(buffer,vbuf,0,firstline-4,0,0,xsize,(lastline-firstline)+8+1);
 //                                        if (vid_resize) stretch_blit(vbuf,screen,0,0,xsize,(lastline-firstline)+8+1,0,0,winsizex,winsizey);
 //                                        else            stretch_blit(vbuf,screen,0,0,xsize,(lastline-firstline)+8+1,0,0,xsize,((lastline-firstline)<<1)+16+2);

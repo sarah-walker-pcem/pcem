@@ -32,7 +32,7 @@ typedef struct hercules_t
         uint8_t *vram;
 } hercules_t;
 
-static int mdacols[256][2][2];
+static uint32_t mdacols[256][2][2];
 
 void hercules_recalctimings(hercules_t *hercules);
 void hercules_write(uint32_t addr, uint8_t val, void *p);
@@ -153,7 +153,7 @@ void hercules_poll(void *p)
                                         dat = (hercules->vram[((hercules->ma << 1) & 0x1fff) + ca] << 8) | hercules->vram[((hercules->ma << 1) & 0x1fff) + ca + 1];
                                         hercules->ma++;
                                         for (c = 0; c < 16; c++)
-                                            buffer->line[hercules->displine][(x << 4) + c] = (dat & (32768 >> c)) ? 7 : 0;
+                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? 0xffffff : 0;
                                 }
                         }
                         else
@@ -167,20 +167,22 @@ void hercules_poll(void *p)
                                         if (hercules->sc == 12 && ((attr & 7) == 1))
                                         {
                                                 for (c = 0; c < 9; c++)
-                                                    buffer->line[hercules->displine][(x * 9) + c] = mdacols[attr][blink][1];
+                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][1];
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[hercules->displine][(x * 9) + c] = mdacols[attr][blink][(fontdatm[chr][hercules->sc] & (1 << (c ^ 7))) ? 1 : 0];
-                                                if ((chr & ~0x1f) == 0xc0) buffer->line[hercules->displine][(x * 9) + 8] = mdacols[attr][blink][fontdatm[chr][hercules->sc] & 1];
-                                                else                       buffer->line[hercules->displine][(x * 9) + 8] = mdacols[attr][blink][0];
+                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][(fontdatm[chr][hercules->sc] & (1 << (c ^ 7))) ? 1 : 0];
+                                                if ((chr & ~0x1f) == 0xc0)
+                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][fontdatm[chr][hercules->sc] & 1];
+                                                else
+                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][0];
                                         }
                                         hercules->ma++;
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 9; c++)
-                                                    buffer->line[hercules->displine][(x * 9) + c] ^= mdacols[attr][0][1];
+                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] ^= mdacols[attr][0][1];
                                         }
                                 }
                         }
@@ -268,7 +270,7 @@ void hercules_poll(void *p)
                                                 updatewindowsize(xsize, ysize);
                                         }
 
-                                        video_blit_memtoscreen_8(0, hercules->firstline, xsize, ysize);
+                                        video_blit_memtoscreen(0, hercules->firstline, 0, ysize, xsize, ysize);
 
                                         frames++;
                                         if ((hercules->ctrl & 2) && (hercules->ctrl2 & 1))
@@ -317,22 +319,22 @@ void *hercules_init()
 
         for (c = 0; c < 256; c++)
         {
-                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = 16;
-                if (c & 8) mdacols[c][0][1] = 15 + 16;
-                else       mdacols[c][0][1] =  7 + 16;
+                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = makecol32(0, 0, 0);
+                if (c & 8) mdacols[c][0][1] = makecol32(0xff, 0xff, 0xff);
+                else       mdacols[c][0][1] = makecol32(0xaa, 0xaa, 0xaa);
         }
-        mdacols[0x70][0][1] = 16;
-        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = 16 + 15;
-        mdacols[0xF0][0][1] = 16;
-        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = 16 + 15;
-        mdacols[0x78][0][1] = 16 + 7;
-        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = 16 + 15;
-        mdacols[0xF8][0][1] = 16 + 7;
-        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = 16 + 15;
-        mdacols[0x00][0][1] = mdacols[0x00][1][1] = 16;
-        mdacols[0x08][0][1] = mdacols[0x08][1][1] = 16;
-        mdacols[0x80][0][1] = mdacols[0x80][1][1] = 16;
-        mdacols[0x88][0][1] = mdacols[0x88][1][1] = 16;
+        mdacols[0x70][0][1] = makecol32(0, 0, 0);
+        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = makecol32(0xff, 0xff, 0xff);
+        mdacols[0xF0][0][1] = makecol32(0, 0, 0);
+        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = makecol32(0xff, 0xff, 0xff);
+        mdacols[0x78][0][1] = makecol32(0xaa, 0xaa, 0xaa);
+        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = makecol32(0xff, 0xff, 0xff);
+        mdacols[0xF8][0][1] = makecol32(0xaa, 0xaa, 0xaa);
+        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = makecol32(0xff, 0xff, 0xff);
+        mdacols[0x00][0][1] = mdacols[0x00][1][1] = makecol32(0, 0, 0);
+        mdacols[0x08][0][1] = mdacols[0x08][1][1] = makecol32(0, 0, 0);
+        mdacols[0x80][0][1] = mdacols[0x80][1][1] = makecol32(0, 0, 0);
+        mdacols[0x88][0][1] = mdacols[0x88][1][1] = makecol32(0, 0, 0);
 
         return hercules;
 }

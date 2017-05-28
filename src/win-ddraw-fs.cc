@@ -16,7 +16,6 @@ extern "C" void ddraw_fs_close();
 extern "C" void video_blit_complete();
 
 static void ddraw_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
-static void ddraw_fs_blit_memtoscreen_8(int x, int y, int w, int h);
 
 static LPDIRECTDRAW  lpdd  = NULL;
 static LPDIRECTDRAW4 lpdd4 = NULL;
@@ -29,41 +28,11 @@ static DDSURFACEDESC2 ddsd;
 static HWND ddraw_hwnd;
 static int ddraw_w, ddraw_h;
 
-static PALETTE cgapal =
-{
-        {0,0,0},{0,42,0},{42,0,0},{42,21,0},
-        {0,0,0},{0,42,42},{42,0,42},{42,42,42},
-        {0,0,0},{21,63,21},{63,21,21},{63,63,21},
-        {0,0,0},{21,63,63},{63,21,63},{63,63,63},
-
-        {0,0,0},{0,0,42},{0,42,0},{0,42,42},
-        {42,0,0},{42,0,42},{42,21,00},{42,42,42},
-        {21,21,21},{21,21,63},{21,63,21},{21,63,63},
-        {63,21,21},{63,21,63},{63,63,21},{63,63,63},
-
-        {0,0,0},{0,21,0},{0,0,42},{0,42,42},
-        {42,0,21},{21,10,21},{42,0,42},{42,0,63},
-        {21,21,21},{21,63,21},{42,21,42},{21,63,63},
-        {63,0,0},{42,42,0},{63,21,42},{41,41,41},
-        
-        {0,0,0},{0,42,42},{42,0,0},{42,42,42},
-        {0,0,0},{0,42,42},{42,0,0},{42,42,42},
-        {0,0,0},{0,63,63},{63,0,0},{63,63,63},
-        {0,0,0},{0,63,63},{63,0,0},{63,63,63},
-};
-
-static uint32_t pal_lookup[256];
-        
 void ddraw_fs_init(HWND h)
 {
-        int c;
-        
         ddraw_w = GetSystemMetrics(SM_CXSCREEN);
         ddraw_h = GetSystemMetrics(SM_CYSCREEN);
         
-        for (c = 0; c < 256; c++)
-            pal_lookup[c] = makecol(cgapal[c].r << 2, cgapal[c].g << 2, cgapal[c].b << 2);
-
         if (FAILED(DirectDrawCreate(NULL, &lpdd, NULL)))
            fatal("DirectDrawCreate failed\n");
         
@@ -108,7 +77,6 @@ void ddraw_fs_init(HWND h)
         pclog("DDRAW_INIT complete\n");
         ddraw_hwnd = h;
         video_blit_memtoscreen_func   = ddraw_fs_blit_memtoscreen;
-        video_blit_memtoscreen_8_func = ddraw_fs_blit_memtoscreen_8;
 }
 
 void ddraw_fs_close()
@@ -259,78 +227,4 @@ static void ddraw_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h
                 lpdds_pri->Restore();
                 lpdds_pri->Flip(NULL, DDFLIP_NOVSYNC);
         }
-}
-
-static void ddraw_fs_blit_memtoscreen_8(int x, int y, int w, int h)
-{
-        RECT r_src;
-        RECT r_dest;
-        RECT window_rect;
-        int xx, yy;
-        HRESULT hr;
-        DDBLTFX ddbltfx;
-
-        memset(&ddsd, 0, sizeof(ddsd));
-        ddsd.dwSize = sizeof(ddsd);
-
-        hr = lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-        if (hr == DDERR_SURFACELOST)
-        {
-                lpdds_back->Restore();
-                lpdds_back->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-                device_force_redraw();
-        }
-        if (!ddsd.lpSurface)
-        {
-                video_blit_complete();
-                return;
-        }
-        for (yy = 0; yy < h; yy++)
-        {
-                if ((y + yy) >= 0 && (y + yy) < buffer->h)
-                {
-                        uint32_t *p = (uint32_t *)((uintptr_t)ddsd.lpSurface + (yy * ddsd.lPitch));
-                        for (xx = 0; xx < w; xx++)
-                            p[xx] = pal_lookup[buffer->line[y + yy][x + xx]];
-                }
-        }
-        video_blit_complete();
-        lpdds_back->Unlock(NULL);
-
-        window_rect.left = 0;
-        window_rect.top = 0;
-        window_rect.right = ddraw_w;
-        window_rect.bottom = ddraw_h;
-        ddraw_fs_size(window_rect, &r_dest, w, h);
-        
-        r_src.left   = 0;
-        r_src.top    = 0;       
-        r_src.right  = w;
-        r_src.bottom = h;
-
-        ddbltfx.dwSize = sizeof(ddbltfx);
-        ddbltfx.dwFillColor = 0;
-        
-        lpdds_back2->Blt(&window_rect, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
-        
-        hr = lpdds_back2->Blt(&r_dest, lpdds_back, &r_src, DDBLT_WAIT, NULL);
-        if (hr == DDERR_SURFACELOST)
-        {
-                lpdds_back2->Restore();
-                lpdds_back2->Blt(&r_dest, lpdds_back, &r_src, DDBLT_WAIT, NULL);
-        }
-        
-        if (readflash && vid_disc_indicator)
-        {
-                RECT r;
-                r.left   = window_rect.right - 40;
-                r.right  = window_rect.right - 8;
-                r.top    = 8;
-                r.bottom = 14;
-                ddbltfx.dwFillColor = 0xffffff;
-                lpdds_back2->Blt(&r, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
-        }
-        
-        lpdds_pri->Flip(NULL, DDFLIP_NOVSYNC);        
 }

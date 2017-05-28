@@ -137,7 +137,7 @@ void cga_poll(void *p)
         int oldvc;
         uint8_t chr, attr;
         uint16_t dat;
-        int cols[4];
+        uint32_t cols[4];
         int col;
         int oldsc;
 
@@ -158,20 +158,15 @@ void cga_poll(void *p)
 //                                printf("Firstline %i\n",firstline);
                         }
                         cga->lastline = cga->displine;
+                        
+                        cols[0] = ((cga->cgamode & 0x12) == 0x12) ? 0 : (cga->cgacol & 15);
                         for (c = 0; c < 8; c++)
                         {
-                                if ((cga->cgamode & 0x12) == 0x12)
-                                {
-                                        buffer->line[cga->displine][c] = 0;
-                                        if (cga->cgamode & 1) buffer->line[cga->displine][c + (cga->crtc[1] << 3) + 8] = 0;
-                                        else                  buffer->line[cga->displine][c + (cga->crtc[1] << 4) + 8] = 0;
-                                }
+                                ((uint32_t *)buffer32->line[cga->displine])[c] = cols[0];
+                                if (cga->cgamode & 1)
+                                        ((uint32_t *)buffer32->line[cga->displine])[c + (cga->crtc[1] << 3) + 8] = cols[0];
                                 else
-                                {
-                                        buffer->line[cga->displine][c] = (cga->cgacol & 15) + 16;
-                                        if (cga->cgamode & 1) buffer->line[cga->displine][c + (cga->crtc[1] << 3) + 8] = (cga->cgacol & 15) + 16;
-                                        else                  buffer->line[cga->displine][c + (cga->crtc[1] << 4) + 8] = (cga->cgacol & 15) + 16;
-                                }
+                                        ((uint32_t *)buffer32->line[cga->displine])[c + (cga->crtc[1] << 4) + 8] = cols[0];
                         }
                         if (cga->cgamode & 1)
                         {
@@ -182,25 +177,25 @@ void cga_poll(void *p)
                                         drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
                                         if (cga->cgamode & 0x20)
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = ((attr >> 4) & 7) + 16;
+                                                cols[1] = attr & 15;
+                                                cols[0] = (attr >> 4) & 7;
                                                 if ((cga->cgablink & 8) && (attr & 0x80) && !cga->drawcursor) 
                                                         cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = (attr >> 4) + 16;
+                                                cols[1] = attr & 15;
+                                                cols[0] = attr >> 4;
                                         }
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[cga->displine][(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[cga->displine][(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                         cga->ma++;
                                 }
@@ -214,32 +209,35 @@ void cga_poll(void *p)
                                         drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
                                         if (cga->cgamode & 0x20)
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = ((attr >> 4) & 7) + 16;
-                                                if ((cga->cgablink & 8) && (attr & 0x80)) cols[1] = cols[0];
+                                                cols[1] = attr & 15;
+                                                cols[0] = (attr >> 4) & 7;
+                                                if ((cga->cgablink & 8) && (attr & 0x80) && !cga->drawcursor) 
+                                                        cols[1] = cols[0];
                                         }
                                         else
                                         {
-                                                cols[1] = (attr & 15) + 16;
-                                                cols[0] = (attr >> 4) + 16;
+                                                cols[1] = attr & 15;
+                                                cols[0] = attr >> 4;
                                         }
                                         cga->ma++;
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[cga->displine][(x << 4)+(c << 1) + 8] = buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4)+(c << 1) + 8] =
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    buffer->line[cga->displine][(x << 4) + (c << 1) + 8] = buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 8] =
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                 }
                         }
                         else if (!(cga->cgamode & 16))
                         {
-                                cols[0] = (cga->cgacol & 15) | 16;
-                                col = (cga->cgacol & 16) ? 24 : 16;
+                                cols[0] = cga->cgacol & 15;
+                                col = (cga->cgacol & 16) ? 8 : 0;
                                 if (cga->cgamode & 4)
                                 {
                                         cols[1] = col | 3;
@@ -264,22 +262,23 @@ void cga_poll(void *p)
                                         cga->ma++;
                                         for (c = 0; c < 8; c++)
                                         {
-                                                buffer->line[cga->displine][(x << 4) + (c << 1) + 8] =
-                                                  buffer->line[cga->displine][(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
+                                                ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 8] =
+                                                  ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
                                                 dat <<= 2;
                                         }
                                 }
                         }
                         else
                         {
-                                cols[0] = 0; cols[1] = (cga->cgacol & 15) + 16;
+                                cols[0] = 0;
+                                cols[1] = cga->cgacol & 15;
                                 for (x = 0; x < cga->crtc[1]; x++)
                                 {
                                         dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
                                         cga->ma++;
                                         for (c = 0; c < 16; c++)
                                         {
-                                                buffer->line[cga->displine][(x << 4) + c + 8] = cols[dat >> 15];
+                                                ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + c + 8] = cols[dat >> 15];
                                                 dat <<= 1;
                                         }
                                 }
@@ -287,9 +286,9 @@ void cga_poll(void *p)
                 }
                 else
                 {
-                        cols[0] = ((cga->cgamode & 0x12) == 0x12) ? 0 : (cga->cgacol & 15) + 16;
-                        if (cga->cgamode & 1) hline(buffer, 0, cga->displine, (cga->crtc[1] << 3) + 16, cols[0]);
-                        else                  hline(buffer, 0, cga->displine, (cga->crtc[1] << 4) + 16, cols[0]);
+                        cols[0] = ((cga->cgamode & 0x12) == 0x12) ? 0 : (cga->cgacol & 15);
+                        if (cga->cgamode & 1) hline(buffer32, 0, cga->displine, (cga->crtc[1] << 3) + 16, cols[0]);
+                        else                  hline(buffer32, 0, cga->displine, (cga->crtc[1] << 4) + 16, cols[0]);
                 }
 
                 if (cga->cgamode & 1) x = (cga->crtc[1] << 3) + 16;
@@ -298,10 +297,15 @@ void cga_poll(void *p)
                 if (cga->composite)
                 {
 			for (c = 0; c < x; c++)
-				buffer32->line[cga->displine][c] = buffer->line[cga->displine][c] & 0xf;
+				buffer32->line[cga->displine][c] = ((uint32_t *)buffer32->line[cga->displine])[c] & 0xf;
 
 			Composite_Process(cga->cgamode, 0, x >> 2, buffer32->line[cga->displine]);
                 }
+                else
+                {
+			for (c = 0; c < x; c++)
+				((uint32_t *)buffer32->line[cga->displine])[c] = cgapal[((uint32_t *)buffer32->line[cga->displine])[c] & 0xf];
+                }                        
 
                 cga->sc = oldsc;
                 if (cga->vc == cga->crtc[7] && !cga->sc)
@@ -380,10 +384,7 @@ void cga_poll(void *p)
                                                 updatewindowsize(xsize, (ysize << 1) + 16);
                                         }
                                         
-                                        if (cga->composite) 
-                                           video_blit_memtoscreen(0, cga->firstline - 4, 0, (cga->lastline - cga->firstline) + 8, xsize, (cga->lastline - cga->firstline) + 8);
-                                        else          
-                                           video_blit_memtoscreen_8(0, cga->firstline - 4, xsize, (cga->lastline - cga->firstline) + 8);
+                                        video_blit_memtoscreen(0, cga->firstline - 4, 0, (cga->lastline - cga->firstline) + 8, xsize, (cga->lastline - cga->firstline) + 8);
                                         frames++;
 
                                         video_res_x = xsize - 16;
