@@ -3,7 +3,7 @@ CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
 CFLAGS = -O3 -fomit-frame-pointer -msse2 -Wall -Werror -fno-strict-aliasing
-OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-iso.o \
+OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-image.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86-64.o compaq.o config.o cpu.o dac.o \
 	dells200.o device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o headland.o i430lx.o i430fx.o \
 	i430vx.o ide.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \
@@ -21,7 +21,7 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o win.o win-config.o win-config_sel.o win-d3d.o win-d3d-fs.o win-ddraw.o \
 	win-ddraw-fs.o win-deviceconfig.o win-hdconf.o win-joystick.o win-joystickconfig.o win-keyboard.o win-midi.o win-mouse.o \
 	win-status.o win-video.o x86seg.o x87.o xtide.o pc.res
-DBOBJ = dbopl.o vid_cga_comp.o
+DBOBJ = cdrom_image.o dbopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 

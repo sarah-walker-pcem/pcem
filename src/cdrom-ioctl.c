@@ -58,10 +58,7 @@ void ioctl_audio_callback(int16_t *output, int len)
 //	return;
 //        pclog("Audio callback %08X %08X %i %i %i %04X %i\n", ioctl_cd_pos, ioctl_cd_end, ioctl_cd_state, cd_buflen, len, cd_buffer[4], GetTickCount());
         if (ioctl_cd_state != CD_PLAYING) 
-        {
-                memset(output, 0, len * 2);
                 return;
-        }
         while (cd_buflen < len)
         {
                 if (ioctl_cd_pos < ioctl_cd_end)

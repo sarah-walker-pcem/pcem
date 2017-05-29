@@ -5,7 +5,7 @@
 #include "disc.h"
 #include "ide.h"
 #include "cdrom-ioctl.h"
-#include "cdrom-iso.h"
+#include "cdrom-image.h"
 #include "cdrom-null.h"
 
 void warning(const char *format, ...)
@@ -128,7 +128,7 @@ static void cdrom_update()
 		case -1:
 		cdrom_menu[1].flags = D_SELECTED;
 		break;
-		case CDROM_ISO:
+		case CDROM_IMAGE:
 		cdrom_menu[3].flags = D_SELECTED;
 		break;
 		default:
@@ -200,14 +200,14 @@ static int cdrom_dev()
 	return D_O_K;
 }
 
-static int cdrom_iso()
+static int cdrom_image()
 {
         char fn[260];
         int ret;
         int xsize = SCREEN_W - 32, ysize = SCREEN_H - 64;
 
-	strcpy(fn, iso_path);
-        ret = file_select_ex("Please choose an ISO image", fn, "ISO", 260, xsize, ysize);
+	strcpy(fn, image_path);
+        ret = file_select_ex("Please choose an image image", fn, "ISO;CUE", 260, xsize, ysize);
         if (ret)
         {
 		if (!cdrom_enabled)
@@ -220,8 +220,8 @@ static int cdrom_iso()
 			atapi->exit();
 		}
 
-		cdrom_drive = CDROM_ISO;
-		iso_open(fn);
+		cdrom_drive = CDROM_IMAGE;
+		image_open(fn);
 		if (!cdrom_enabled)
 		{
 			cdrom_enabled = 1;
@@ -238,7 +238,7 @@ static MENU cdrom_menu[] =
         {"&Disabled", cdrom_disabled, NULL, 0, NULL},
         {"&Empty", cdrom_empty, NULL, 0, NULL},
         {"/dev/cdrom", cdrom_dev, NULL, 0, NULL},
-        {"&ISO image...", cdrom_iso, NULL, 0, NULL},
+        {"&Image...", cdrom_image, NULL, 0, NULL},
         {NULL,NULL,NULL,0,NULL}
 };
 

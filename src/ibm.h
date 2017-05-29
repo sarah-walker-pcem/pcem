@@ -167,7 +167,7 @@ struct
 
 #define cycles cpu_state._cycles
 
-uint32_t cpu_cur_status;
+extern uint32_t cpu_cur_status;
 
 #define CPU_STATUS_USE32   (1 << 0)
 #define CPU_STATUS_STACK32 (1 << 1)

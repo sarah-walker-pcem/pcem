@@ -31,7 +31,7 @@ BEGIN
                 BEGIN
                         MENUITEM "&Disabled", IDM_CDROM_DISABLED
                         MENUITEM "&Empty",IDM_CDROM_EMPTY
-                        MENUITEM "&ISO...",IDM_CDROM_ISO
+                        MENUITEM "&Image...",IDM_CDROM_IMAGE
                 END
                 POPUP "&Video"
                 BEGIN

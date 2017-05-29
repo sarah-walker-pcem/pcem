@@ -2415,7 +2415,7 @@ static void atapicommand(int ide_board)
 		}
 
 
-		if ((cdrom_drive < 1) || (cdrom_drive == CDROM_ISO) || (cd_status <= CD_STATUS_DATA_ONLY) ||
+		if ((cdrom_drive < 1) || (cd_status <= CD_STATUS_DATA_ONLY) ||
                     !atapi->is_track_audio(pos, (idebufferb[0] == GPCMD_PLAY_AUDIO_MSF) ? 1 : 0))
                 {
                         ide->atastat = READY_STAT | ERR_STAT;    /*CHECK CONDITION*/

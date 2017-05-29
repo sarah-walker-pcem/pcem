@@ -56,6 +56,6 @@ extern int cdrom_channel;
 uint32_t atapi_get_cd_channel(int channel);
 uint32_t atapi_get_cd_volume(int channel);
 
-#define CDROM_ISO 200
+#define CDROM_IMAGE 200
 
 #endif //__IDE__

@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "cdrom-ioctl.h"
-#include "cdrom-iso.h"
+#include "cdrom-image.h"
 #include "config.h"
 #include "cpu.h"
 #include "device.h"
@@ -632,8 +632,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                         CheckMenuItem(menu, IDM_CDROM_DISABLED, MF_CHECKED);
                 else         
                 {
-                	if (cdrom_drive == CDROM_ISO)
-        			CheckMenuItem(menu, IDM_CDROM_ISO, MF_CHECKED);
+                	if (cdrom_drive == CDROM_IMAGE)
+        			CheckMenuItem(menu, IDM_CDROM_IMAGE, MF_CHECKED);
         		else
         			CheckMenuItem(menu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
         	}  
@@ -885,8 +885,8 @@ void atapi_close(void)
 {
 	switch (cdrom_drive)
 	{
-		case CDROM_ISO:
-		iso_close();
+		case CDROM_IMAGE:
+		image_close();
 		break;
 		default:
 		ioctl_close();
@@ -898,7 +898,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
         HMENU hmenu;
         RECT rect;
-        char temp_iso_path[1024];
+        char temp_image_path[1024];
         int new_cdrom_drive;
 //        pclog("Message %i %08X\n",message,message);
         switch (message)
@@ -1067,7 +1067,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         ioctl_set_drive(0);
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_CHECKED);
-			CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+			CheckMenuItem(hmenu, IDM_CDROM_IMAGE,		   MF_UNCHECKED);
 			old_cdrom_drive = cdrom_drive;
 			cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY,              MF_UNCHECKED);
@@ -1103,7 +1103,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			}
                         CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                         CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-			CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+			CheckMenuItem(hmenu, IDM_CDROM_IMAGE,		   MF_UNCHECKED);
 			old_cdrom_drive = cdrom_drive;
                         cdrom_drive=0;
                         CheckMenuItem(hmenu, IDM_CDROM_EMPTY, MF_CHECKED);
@@ -1119,8 +1119,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         }
                         break;
 
-                        case IDM_CDROM_ISO:
-                        if (!getfile(hwnd,"CD-ROM image (*.ISO)\0*.ISO\0All files (*.*)\0*.*\0",iso_path))
+                        case IDM_CDROM_IMAGE:
+                        if (!getfile(hwnd,"CD-ROM image (*.ISO;*.CUE)\0*.ISO;*.CUE\0All files (*.*)\0*.*\0",image_path))
                         {
                                 if (!cdrom_enabled)
                                 {
@@ -1128,15 +1128,15 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                                            break;
                                 }
 				old_cdrom_drive = cdrom_drive;
-				strcpy(temp_iso_path, openfilestring);
-				if ((strcmp(iso_path, temp_iso_path) == 0) && (cdrom_drive == CDROM_ISO) && cdrom_enabled)
+				strcpy(temp_image_path, openfilestring);
+				if ((strcmp(image_path, temp_image_path) == 0) && (cdrom_drive == CDROM_IMAGE) && cdrom_enabled)
 				{
 					/* Switching from ISO to the same ISO. Do nothing. */
 					break;
 				}
 				atapi->exit();
 				atapi_close();
-				iso_open(temp_iso_path);
+				image_open(temp_image_path);
 				if (cdrom_enabled)
 				{
 					/* Signal disc change to the emulated machine. */
@@ -1144,9 +1144,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				}
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                                 CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_UNCHECKED);
-				cdrom_drive = CDROM_ISO;
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		           MF_CHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_IMAGE,		           MF_UNCHECKED);
+				cdrom_drive = CDROM_IMAGE;
+                                CheckMenuItem(hmenu, IDM_CDROM_IMAGE,		           MF_CHECKED);
                                 saveconfig(NULL);
                                 if (!cdrom_enabled)
                                 {
@@ -1185,7 +1185,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				}
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_UNCHECKED);
                                 CheckMenuItem(hmenu, IDM_CDROM_DISABLED,           MF_UNCHECKED);
-                                CheckMenuItem(hmenu, IDM_CDROM_ISO,		   MF_UNCHECKED);
+                                CheckMenuItem(hmenu, IDM_CDROM_IMAGE,		   MF_UNCHECKED);
                                 cdrom_drive = new_cdrom_drive;
                                 CheckMenuItem(hmenu, IDM_CDROM_REAL + cdrom_drive, MF_CHECKED);
                                 saveconfig(NULL);
