@@ -271,7 +271,7 @@ static void d3d_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         D3DLOCKED_RECT dr;
         RECT window_rect;
         int yy;
-        double l, t, r, b;
+        double l = 0, t = 0, r = 0, b = 0;
 
 	if (y1 == y2)
 	{
