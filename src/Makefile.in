@@ -92,9 +92,19 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = pcem$(EXEEXT)
-@CPU_I386_TRUE@am__append_1 = codegen_x86.c
-@CPU_I386_TRUE@am__append_2 = -msse2
-@CPU_X86_64_TRUE@am__append_3 = codegen_x86-64.c
+@USE_WX_TRUE@am__append_1 = wx-main.cc wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
+@USE_WX_TRUE@ wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c wx-sdl2-midi.c \
+@USE_WX_TRUE@ wx-sdl2.c wx-config.c wx-deviceconfig.cc wx-sdl2-hdconf.c wx-status.cc wx-sdl2-status.c \
+@USE_WX_TRUE@ wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c
+
+@USE_WX_FALSE@am__append_2 = allegro-gui.c allegro-gui-config-sel.c allegro-gui-configure.c \
+@USE_WX_FALSE@ allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c \
+@USE_WX_FALSE@ allegro-keyboard.c allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
+@USE_WX_FALSE@ thread-pthread.c
+
+@CPU_I386_TRUE@am__append_3 = codegen_x86.c
+@CPU_I386_TRUE@am__append_4 = -msse2
+@CPU_X86_64_TRUE@am__append_5 = codegen_x86-64.c
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/allegro.m4 \
@@ -108,20 +118,17 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
-	acer386sx.c ali1429.c allegro-gui.c allegro-gui-config-sel.c \
-	allegro-gui-configure.c allegro-gui-deviceconfig.c \
-	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
-	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
-	codegen.c codegen_ops.c codegen_timing_486.c \
-	codegen_timing_686.c codegen_timing_pentium.c \
-	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
-	dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c \
-	dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c \
-	hdd_esdi.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
-	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
-	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
-	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	acer386sx.c ali1429.c amstrad.c cdrom-ioctl-linux.c \
+	cdrom-image.cc cdrom-null.c codegen.c codegen_ops.c \
+	codegen_timing_486.c codegen_timing_686.c \
+	codegen_timing_pentium.c codegen_timing_winchip.c compaq.c \
+	config.c cpu.c dac.c dells200.c device.c disc.c disc_fdi.c \
+	disc_img.c disc_sector.c dma.c fdc.c fdc37c665.c fdd.c \
+	fdi2raw.c gameport.c hdd.c hdd_esdi.c headland.c i430lx.c \
+	i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
+	joystick_ch_flightstick_pro.c joystick_standard.c \
+	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
+	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c lpt.c mca.c mcr.c mem.c mfm_at.c \
 	mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c \
 	nmi.c nvr.c olivetti_m24.c opti495.c pc.c pci.c pic.c piix.c \
@@ -131,14 +138,14 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
 	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
-	soundopenal.c tandy_eeprom.c tandy_rom.c thread-pthread.c \
-	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
-	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
-	vid_cl5429.c vid_colorplus.c vid_ega.c vid_et4000.c \
-	vid_et4000w32.c vid_genius.c vid_hercules.c vid_icd2061.c \
-	vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c \
-	vid_oti067.c vid_paradise.c vid_pc200.c vid_pc1512.c \
-	vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
+	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
+	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
+	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
+	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
+	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
+	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
 	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
@@ -151,25 +158,55 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	resid-fp/wave6581_PST.cc resid-fp/wave6581_P_T.cc \
 	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
-	resid-fp/wave8580__ST.cc resid-fp/wave.cc codegen_x86.c \
-	codegen_x86-64.c
-@CPU_I386_TRUE@am__objects_1 = pcem-codegen_x86.$(OBJEXT)
-@CPU_X86_64_TRUE@am__objects_2 = pcem-codegen_x86-64.$(OBJEXT)
+	resid-fp/wave8580__ST.cc resid-fp/wave.cc wx-main.cc \
+	wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
+	wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c \
+	wx-sdl2-video.c wx-sdl2-midi.c wx-sdl2.c wx-config.c \
+	wx-deviceconfig.cc wx-sdl2-hdconf.c wx-status.cc \
+	wx-sdl2-status.c wx-resources.cpp wx-thread.c wx-common.c \
+	wx-sdl2-display.c allegro-gui.c allegro-gui-config-sel.c \
+	allegro-gui-configure.c allegro-gui-deviceconfig.c \
+	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
+	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
+	thread-pthread.c codegen_x86.c codegen_x86-64.c
+@USE_WX_TRUE@am__objects_1 = pcem-wx-main.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-config_sel.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-dialogbox.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-utils.$(OBJEXT) pcem-wx-app.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-joystick.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-mouse.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-keyboard.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-video.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-midi.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2.$(OBJEXT) pcem-wx-config.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-deviceconfig.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-hdconf.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-status.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-status.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-resources.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-thread.$(OBJEXT) pcem-wx-common.$(OBJEXT) \
+@USE_WX_TRUE@	pcem-wx-sdl2-display.$(OBJEXT)
+@USE_WX_FALSE@am__objects_2 = pcem-allegro-gui.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-gui-config-sel.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-gui-configure.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-gui-deviceconfig.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-gui-hdconf.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-joystick.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-keyboard.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-main.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-midi.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-mouse.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-allegro-video.$(OBJEXT) \
+@USE_WX_FALSE@	pcem-thread-pthread.$(OBJEXT)
+@CPU_I386_TRUE@am__objects_3 = pcem-codegen_x86.$(OBJEXT)
+@CPU_X86_64_TRUE@am__objects_4 = pcem-codegen_x86-64.$(OBJEXT)
 am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-386_dynarec_ops.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-acer386sx.$(OBJEXT) pcem-ali1429.$(OBJEXT) \
-	pcem-allegro-gui.$(OBJEXT) \
-	pcem-allegro-gui-config-sel.$(OBJEXT) \
-	pcem-allegro-gui-configure.$(OBJEXT) \
-	pcem-allegro-gui-deviceconfig.$(OBJEXT) \
-	pcem-allegro-gui-hdconf.$(OBJEXT) \
-	pcem-allegro-joystick.$(OBJEXT) \
-	pcem-allegro-keyboard.$(OBJEXT) pcem-allegro-main.$(OBJEXT) \
-	pcem-allegro-midi.$(OBJEXT) pcem-allegro-mouse.$(OBJEXT) \
-	pcem-allegro-video.$(OBJEXT) pcem-amstrad.$(OBJEXT) \
-	pcem-cdrom-ioctl-linux.$(OBJEXT) cdrom-image.$(OBJEXT) \
-	pcem-cdrom-null.$(OBJEXT) pcem-codegen.$(OBJEXT) \
-	pcem-codegen_ops.$(OBJEXT) pcem-codegen_timing_486.$(OBJEXT) \
+	pcem-amstrad.$(OBJEXT) pcem-cdrom-ioctl-linux.$(OBJEXT) \
+	pcem-cdrom-image.$(OBJEXT) pcem-cdrom-null.$(OBJEXT) \
+	pcem-codegen.$(OBJEXT) pcem-codegen_ops.$(OBJEXT) \
+	pcem-codegen_timing_486.$(OBJEXT) \
 	pcem-codegen_timing_686.$(OBJEXT) \
 	pcem-codegen_timing_pentium.$(OBJEXT) \
 	pcem-codegen_timing_winchip.$(OBJEXT) pcem-compaq.$(OBJEXT) \
@@ -213,43 +250,47 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-sound_speaker.$(OBJEXT) pcem-sound_ssi2001.$(OBJEXT) \
 	pcem-sound_wss.$(OBJEXT) pcem-sound_ym7128.$(OBJEXT) \
 	pcem-soundopenal.$(OBJEXT) pcem-tandy_eeprom.$(OBJEXT) \
-	pcem-tandy_rom.$(OBJEXT) pcem-thread-pthread.$(OBJEXT) \
-	pcem-timer.$(OBJEXT) pcem-um8669f.$(OBJEXT) \
-	pcem-um8881f.$(OBJEXT) pcem-vid_ati_eeprom.$(OBJEXT) \
-	pcem-vid_ati_mach64.$(OBJEXT) pcem-vid_ati18800.$(OBJEXT) \
-	pcem-vid_ati28800.$(OBJEXT) pcem-vid_ati68860_ramdac.$(OBJEXT) \
-	pcem-vid_cga.$(OBJEXT) pcem-vid_cl5429.$(OBJEXT) \
-	pcem-vid_colorplus.$(OBJEXT) pcem-vid_ega.$(OBJEXT) \
-	pcem-vid_et4000.$(OBJEXT) pcem-vid_et4000w32.$(OBJEXT) \
-	pcem-vid_genius.$(OBJEXT) pcem-vid_hercules.$(OBJEXT) \
-	pcem-vid_icd2061.$(OBJEXT) pcem-vid_ics2595.$(OBJEXT) \
-	pcem-vid_incolor.$(OBJEXT) pcem-vid_mda.$(OBJEXT) \
-	pcem-vid_olivetti_m24.$(OBJEXT) pcem-vid_oti067.$(OBJEXT) \
-	pcem-vid_paradise.$(OBJEXT) pcem-vid_pc200.$(OBJEXT) \
-	pcem-vid_pc1512.$(OBJEXT) pcem-vid_pc1640.$(OBJEXT) \
-	pcem-vid_pcjr.$(OBJEXT) pcem-vid_ps1_svga.$(OBJEXT) \
-	pcem-vid_s3.$(OBJEXT) pcem-vid_s3_virge.$(OBJEXT) \
-	pcem-vid_sdac_ramdac.$(OBJEXT) pcem-vid_stg_ramdac.$(OBJEXT) \
-	pcem-vid_svga.$(OBJEXT) pcem-vid_svga_render.$(OBJEXT) \
-	pcem-vid_tandy.$(OBJEXT) pcem-vid_tandysl.$(OBJEXT) \
-	pcem-vid_tgui9440.$(OBJEXT) pcem-vid_tkd8001_ramdac.$(OBJEXT) \
-	pcem-vid_tvga.$(OBJEXT) pcem-vid_unk_ramdac.$(OBJEXT) \
-	pcem-vid_vga.$(OBJEXT) pcem-vid_voodoo.$(OBJEXT) \
-	pcem-video.$(OBJEXT) pcem-wd76c10.$(OBJEXT) \
-	pcem-vid_wy700.$(OBJEXT) pcem-x86seg.$(OBJEXT) \
-	pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) sound_dbopl.$(OBJEXT) \
-	sound_resid.$(OBJEXT) cdrom_image.$(OBJEXT) dbopl.$(OBJEXT) \
-	pcem-vid_cga_comp.$(OBJEXT) convolve.$(OBJEXT) \
-	convolve-sse.$(OBJEXT) envelope.$(OBJEXT) extfilt.$(OBJEXT) \
-	filter.$(OBJEXT) pot.$(OBJEXT) sid.$(OBJEXT) voice.$(OBJEXT) \
-	wave6581_PS_.$(OBJEXT) wave6581_PST.$(OBJEXT) \
-	wave6581_P_T.$(OBJEXT) wave6581__ST.$(OBJEXT) \
-	wave8580_PS_.$(OBJEXT) wave8580_PST.$(OBJEXT) \
-	wave8580_P_T.$(OBJEXT) wave8580__ST.$(OBJEXT) wave.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2)
+	pcem-tandy_rom.$(OBJEXT) pcem-timer.$(OBJEXT) \
+	pcem-um8669f.$(OBJEXT) pcem-um8881f.$(OBJEXT) \
+	pcem-vid_ati_eeprom.$(OBJEXT) pcem-vid_ati_mach64.$(OBJEXT) \
+	pcem-vid_ati18800.$(OBJEXT) pcem-vid_ati28800.$(OBJEXT) \
+	pcem-vid_ati68860_ramdac.$(OBJEXT) pcem-vid_cga.$(OBJEXT) \
+	pcem-vid_cl5429.$(OBJEXT) pcem-vid_colorplus.$(OBJEXT) \
+	pcem-vid_ega.$(OBJEXT) pcem-vid_et4000.$(OBJEXT) \
+	pcem-vid_et4000w32.$(OBJEXT) pcem-vid_genius.$(OBJEXT) \
+	pcem-vid_hercules.$(OBJEXT) pcem-vid_icd2061.$(OBJEXT) \
+	pcem-vid_ics2595.$(OBJEXT) pcem-vid_incolor.$(OBJEXT) \
+	pcem-vid_mda.$(OBJEXT) pcem-vid_olivetti_m24.$(OBJEXT) \
+	pcem-vid_oti067.$(OBJEXT) pcem-vid_paradise.$(OBJEXT) \
+	pcem-vid_pc200.$(OBJEXT) pcem-vid_pc1512.$(OBJEXT) \
+	pcem-vid_pc1640.$(OBJEXT) pcem-vid_pcjr.$(OBJEXT) \
+	pcem-vid_ps1_svga.$(OBJEXT) pcem-vid_s3.$(OBJEXT) \
+	pcem-vid_s3_virge.$(OBJEXT) pcem-vid_sdac_ramdac.$(OBJEXT) \
+	pcem-vid_stg_ramdac.$(OBJEXT) pcem-vid_svga.$(OBJEXT) \
+	pcem-vid_svga_render.$(OBJEXT) pcem-vid_tandy.$(OBJEXT) \
+	pcem-vid_tandysl.$(OBJEXT) pcem-vid_tgui9440.$(OBJEXT) \
+	pcem-vid_tkd8001_ramdac.$(OBJEXT) pcem-vid_tvga.$(OBJEXT) \
+	pcem-vid_unk_ramdac.$(OBJEXT) pcem-vid_vga.$(OBJEXT) \
+	pcem-vid_voodoo.$(OBJEXT) pcem-video.$(OBJEXT) \
+	pcem-wd76c10.$(OBJEXT) pcem-vid_wy700.$(OBJEXT) \
+	pcem-x86seg.$(OBJEXT) pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) \
+	pcem-sound_dbopl.$(OBJEXT) pcem-sound_resid.$(OBJEXT) \
+	pcem-cdrom_image.$(OBJEXT) pcem-dbopl.$(OBJEXT) \
+	pcem-vid_cga_comp.$(OBJEXT) pcem-convolve.$(OBJEXT) \
+	pcem-convolve-sse.$(OBJEXT) pcem-envelope.$(OBJEXT) \
+	pcem-extfilt.$(OBJEXT) pcem-filter.$(OBJEXT) \
+	pcem-pot.$(OBJEXT) pcem-sid.$(OBJEXT) pcem-voice.$(OBJEXT) \
+	pcem-wave6581_PS_.$(OBJEXT) pcem-wave6581_PST.$(OBJEXT) \
+	pcem-wave6581_P_T.$(OBJEXT) pcem-wave6581__ST.$(OBJEXT) \
+	pcem-wave8580_PS_.$(OBJEXT) pcem-wave8580_PST.$(OBJEXT) \
+	pcem-wave8580_P_T.$(OBJEXT) pcem-wave8580__ST.$(OBJEXT) \
+	pcem-wave.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3) $(am__objects_4)
 pcem_OBJECTS = $(am_pcem_OBJECTS)
 am__DEPENDENCIES_1 =
-pcem_DEPENDENCIES = $(am__DEPENDENCIES_1)
+@USE_WX_FALSE@pcem_DEPENDENCIES = $(am__DEPENDENCIES_1)
+pcem_LINK = $(CXXLD) $(pcem_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 SCRIPTS = $(noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -366,10 +407,29 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+SDL2_CONFIG = @SDL2_CONFIG@
+SDL_CFLAGS = @SDL_CFLAGS@
+SDL_LIBS = @SDL_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+WX_CFLAGS = @WX_CFLAGS@
+WX_CFLAGS_ONLY = @WX_CFLAGS_ONLY@
+WX_CONFIG_PATH = @WX_CONFIG_PATH@
+WX_CPPFLAGS = @WX_CPPFLAGS@
+WX_CXXFLAGS = @WX_CXXFLAGS@
+WX_CXXFLAGS_ONLY = @WX_CXXFLAGS_ONLY@
+WX_LIBS = @WX_LIBS@
+WX_LIBS_STATIC = @WX_LIBS_STATIC@
+WX_RESCOMP = @WX_RESCOMP@
+WX_VERSION = @WX_VERSION@
+WX_VERSION_MAJOR = @WX_VERSION_MAJOR@
+WX_VERSION_MICRO = @WX_VERSION_MICRO@
+WX_VERSION_MINOR = @WX_VERSION_MINOR@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -426,23 +486,18 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_SCRIPTS = ../pcem
 CLEANFILES = $(noinst_SCRIPTS)
-pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO $(am__append_2)
-pcem_LDADD = $(allegro_LIBS) -lopenal
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
-	acer386sx.c ali1429.c allegro-gui.c allegro-gui-config-sel.c \
-	allegro-gui-configure.c allegro-gui-deviceconfig.c \
-	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
-	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
-	codegen.c codegen_ops.c codegen_timing_486.c \
-	codegen_timing_686.c codegen_timing_pentium.c \
-	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
-	dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c \
-	dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c \
-	hdd_esdi.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
-	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
-	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
-	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	acer386sx.c ali1429.c amstrad.c cdrom-ioctl-linux.c \
+	cdrom-image.cc cdrom-null.c codegen.c codegen_ops.c \
+	codegen_timing_486.c codegen_timing_686.c \
+	codegen_timing_pentium.c codegen_timing_winchip.c compaq.c \
+	config.c cpu.c dac.c dells200.c device.c disc.c disc_fdi.c \
+	disc_img.c disc_sector.c dma.c fdc.c fdc37c665.c fdd.c \
+	fdi2raw.c gameport.c hdd.c hdd_esdi.c headland.c i430lx.c \
+	i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c \
+	joystick_ch_flightstick_pro.c joystick_standard.c \
+	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
+	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c lpt.c mca.c mcr.c mem.c mfm_at.c \
 	mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c \
 	nmi.c nvr.c olivetti_m24.c opti495.c pc.c pci.c pic.c piix.c \
@@ -452,14 +507,14 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
 	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
-	soundopenal.c tandy_eeprom.c tandy_rom.c thread-pthread.c \
-	timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
-	vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c \
-	vid_cl5429.c vid_colorplus.c vid_ega.c vid_et4000.c \
-	vid_et4000w32.c vid_genius.c vid_hercules.c vid_icd2061.c \
-	vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c \
-	vid_oti067.c vid_paradise.c vid_pc200.c vid_pc1512.c \
-	vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
+	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
+	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
+	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
+	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
+	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
+	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
 	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
@@ -473,7 +528,14 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
 	resid-fp/wave8580__ST.cc resid-fp/wave.cc $(am__append_1) \
-	$(am__append_3)
+	$(am__append_2) $(am__append_3) $(am__append_5)
+@USE_WX_FALSE@pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO \
+@USE_WX_FALSE@	$(am__append_4)
+@USE_WX_TRUE@pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell \
+@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_4)
+@USE_WX_TRUE@pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
+@USE_WX_FALSE@pcem_LDADD = $(allegro_LIBS) -lopenal
+@USE_WX_TRUE@pcem_LDADD = @LIBS@
 all: all-am
 
 .SUFFIXES:
@@ -552,7 +614,7 @@ clean-binPROGRAMS:
 
 pcem$(EXEEXT): $(pcem_OBJECTS) $(pcem_DEPENDENCIES) $(EXTRA_pcem_DEPENDENCIES) 
 	@rm -f pcem$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(pcem_OBJECTS) $(pcem_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(pcem_LINK) $(pcem_OBJECTS) $(pcem_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -560,14 +622,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdrom-image.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdrom_image.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolve-sse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolve.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dbopl.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/envelope.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extfilt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-386.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-386_dynarec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-386_dynarec_ops.Po@am__quote@
@@ -586,8 +640,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-mouse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-video.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-amstrad.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-ioctl-linux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-null.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom_image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen_ops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen_timing_486.Po@am__quote@
@@ -598,8 +654,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen_x86.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-compaq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-convolve-sse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-convolve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cpu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dac.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dbopl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dells200.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-device.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc.Po@am__quote@
@@ -607,10 +666,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_img.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_sector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dma.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-envelope.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-extfilt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc37c665.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdi2raw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-gameport.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-hdd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-hdd_esdi.Po@am__quote@
@@ -653,6 +715,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-pic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-piix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-pit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-pot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ppi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ps1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ps2.Po@am__quote@
@@ -662,12 +725,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-rtc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-scat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-serial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sis496.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_ad1848.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_adlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_adlibgold.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_cms.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_dbopl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_emu8k.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_gus.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_mpu401_uart.Po@am__quote@
@@ -675,6 +740,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_pas16.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_ps1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_pssj.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_resid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sb_dsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_sn76489.Po@am__quote@
@@ -731,24 +797,40 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_voodoo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_wy700.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-voice.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave6581_PST.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave6581_PS_.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave6581_P_T.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave6581__ST.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave8580_PST.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave8580_PS_.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave8580_P_T.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wave8580__ST.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wd76c10.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-app.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-config_sel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-deviceconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-dialogbox.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-resources.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-display.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-hdconf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-joystick.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-keyboard.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-midi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-mouse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-status.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-video.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-status.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-thread.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-x86seg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-x87.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-xtide.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pot.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sid.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sound_dbopl.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sound_resid.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/voice.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave6581_PST.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave6581_PS_.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave6581_P_T.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave6581__ST.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave8580_PST.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave8580_PS_.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave8580_P_T.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wave8580__ST.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -847,160 +929,6 @@ pcem-ali1429.obj: ali1429.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ali1429.c' object='pcem-ali1429.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-ali1429.obj `if test -f 'ali1429.c'; then $(CYGPATH_W) 'ali1429.c'; else $(CYGPATH_W) '$(srcdir)/ali1429.c'; fi`
-
-pcem-allegro-gui.o: allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
-
-pcem-allegro-gui.obj: allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
-
-pcem-allegro-gui-config-sel.o: allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
-
-pcem-allegro-gui-config-sel.obj: allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
-
-pcem-allegro-gui-configure.o: allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
-
-pcem-allegro-gui-configure.obj: allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
-
-pcem-allegro-gui-deviceconfig.o: allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
-
-pcem-allegro-gui-deviceconfig.obj: allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
-
-pcem-allegro-gui-hdconf.o: allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
-
-pcem-allegro-gui-hdconf.obj: allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
-
-pcem-allegro-joystick.o: allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.o -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
-
-pcem-allegro-joystick.obj: allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
-
-pcem-allegro-keyboard.o: allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.o -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
-
-pcem-allegro-keyboard.obj: allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
-
-pcem-allegro-main.o: allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.o -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
-
-pcem-allegro-main.obj: allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
-
-pcem-allegro-midi.o: allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.o -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
-
-pcem-allegro-midi.obj: allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
-
-pcem-allegro-mouse.o: allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.o -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
-
-pcem-allegro-mouse.obj: allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
-
-pcem-allegro-video.o: allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.o -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
-
-pcem-allegro-video.obj: allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
 
 pcem-amstrad.o: amstrad.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-amstrad.o -MD -MP -MF $(DEPDIR)/pcem-amstrad.Tpo -c -o pcem-amstrad.o `test -f 'amstrad.c' || echo '$(srcdir)/'`amstrad.c
@@ -2374,20 +2302,6 @@ pcem-tandy_rom.obj: tandy_rom.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_rom.obj `if test -f 'tandy_rom.c'; then $(CYGPATH_W) 'tandy_rom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_rom.c'; fi`
 
-pcem-thread-pthread.o: thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.o -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
-
-pcem-thread-pthread.obj: thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.obj -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
-
 pcem-timer.o: timer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-timer.o -MD -MP -MF $(DEPDIR)/pcem-timer.Tpo -c -o pcem-timer.o `test -f 'timer.c' || echo '$(srcdir)/'`timer.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-timer.Tpo $(DEPDIR)/pcem-timer.Po
@@ -3074,6 +2988,356 @@ pcem-vid_cga_comp.obj: dosbox/vid_cga_comp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_cga_comp.obj `if test -f 'dosbox/vid_cga_comp.c'; then $(CYGPATH_W) 'dosbox/vid_cga_comp.c'; else $(CYGPATH_W) '$(srcdir)/dosbox/vid_cga_comp.c'; fi`
 
+pcem-wx-config_sel.o: wx-config_sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-config_sel.o -MD -MP -MF $(DEPDIR)/pcem-wx-config_sel.Tpo -c -o pcem-wx-config_sel.o `test -f 'wx-config_sel.c' || echo '$(srcdir)/'`wx-config_sel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-config_sel.Tpo $(DEPDIR)/pcem-wx-config_sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-config_sel.c' object='pcem-wx-config_sel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-config_sel.o `test -f 'wx-config_sel.c' || echo '$(srcdir)/'`wx-config_sel.c
+
+pcem-wx-config_sel.obj: wx-config_sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-config_sel.obj -MD -MP -MF $(DEPDIR)/pcem-wx-config_sel.Tpo -c -o pcem-wx-config_sel.obj `if test -f 'wx-config_sel.c'; then $(CYGPATH_W) 'wx-config_sel.c'; else $(CYGPATH_W) '$(srcdir)/wx-config_sel.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-config_sel.Tpo $(DEPDIR)/pcem-wx-config_sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-config_sel.c' object='pcem-wx-config_sel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-config_sel.obj `if test -f 'wx-config_sel.c'; then $(CYGPATH_W) 'wx-config_sel.c'; else $(CYGPATH_W) '$(srcdir)/wx-config_sel.c'; fi`
+
+pcem-wx-sdl2-joystick.o: wx-sdl2-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-joystick.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-joystick.Tpo -c -o pcem-wx-sdl2-joystick.o `test -f 'wx-sdl2-joystick.c' || echo '$(srcdir)/'`wx-sdl2-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-joystick.Tpo $(DEPDIR)/pcem-wx-sdl2-joystick.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-joystick.c' object='pcem-wx-sdl2-joystick.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-joystick.o `test -f 'wx-sdl2-joystick.c' || echo '$(srcdir)/'`wx-sdl2-joystick.c
+
+pcem-wx-sdl2-joystick.obj: wx-sdl2-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-joystick.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-joystick.Tpo -c -o pcem-wx-sdl2-joystick.obj `if test -f 'wx-sdl2-joystick.c'; then $(CYGPATH_W) 'wx-sdl2-joystick.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-joystick.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-joystick.Tpo $(DEPDIR)/pcem-wx-sdl2-joystick.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-joystick.c' object='pcem-wx-sdl2-joystick.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-joystick.obj `if test -f 'wx-sdl2-joystick.c'; then $(CYGPATH_W) 'wx-sdl2-joystick.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-joystick.c'; fi`
+
+pcem-wx-sdl2-mouse.o: wx-sdl2-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-mouse.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-mouse.Tpo -c -o pcem-wx-sdl2-mouse.o `test -f 'wx-sdl2-mouse.c' || echo '$(srcdir)/'`wx-sdl2-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-mouse.Tpo $(DEPDIR)/pcem-wx-sdl2-mouse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-mouse.c' object='pcem-wx-sdl2-mouse.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-mouse.o `test -f 'wx-sdl2-mouse.c' || echo '$(srcdir)/'`wx-sdl2-mouse.c
+
+pcem-wx-sdl2-mouse.obj: wx-sdl2-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-mouse.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-mouse.Tpo -c -o pcem-wx-sdl2-mouse.obj `if test -f 'wx-sdl2-mouse.c'; then $(CYGPATH_W) 'wx-sdl2-mouse.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-mouse.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-mouse.Tpo $(DEPDIR)/pcem-wx-sdl2-mouse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-mouse.c' object='pcem-wx-sdl2-mouse.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-mouse.obj `if test -f 'wx-sdl2-mouse.c'; then $(CYGPATH_W) 'wx-sdl2-mouse.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-mouse.c'; fi`
+
+pcem-wx-sdl2-keyboard.o: wx-sdl2-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-keyboard.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-keyboard.Tpo -c -o pcem-wx-sdl2-keyboard.o `test -f 'wx-sdl2-keyboard.c' || echo '$(srcdir)/'`wx-sdl2-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-keyboard.Tpo $(DEPDIR)/pcem-wx-sdl2-keyboard.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-keyboard.c' object='pcem-wx-sdl2-keyboard.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-keyboard.o `test -f 'wx-sdl2-keyboard.c' || echo '$(srcdir)/'`wx-sdl2-keyboard.c
+
+pcem-wx-sdl2-keyboard.obj: wx-sdl2-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-keyboard.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-keyboard.Tpo -c -o pcem-wx-sdl2-keyboard.obj `if test -f 'wx-sdl2-keyboard.c'; then $(CYGPATH_W) 'wx-sdl2-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-keyboard.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-keyboard.Tpo $(DEPDIR)/pcem-wx-sdl2-keyboard.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-keyboard.c' object='pcem-wx-sdl2-keyboard.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-keyboard.obj `if test -f 'wx-sdl2-keyboard.c'; then $(CYGPATH_W) 'wx-sdl2-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-keyboard.c'; fi`
+
+pcem-wx-sdl2-video.o: wx-sdl2-video.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-video.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-video.Tpo -c -o pcem-wx-sdl2-video.o `test -f 'wx-sdl2-video.c' || echo '$(srcdir)/'`wx-sdl2-video.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-video.Tpo $(DEPDIR)/pcem-wx-sdl2-video.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-video.c' object='pcem-wx-sdl2-video.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-video.o `test -f 'wx-sdl2-video.c' || echo '$(srcdir)/'`wx-sdl2-video.c
+
+pcem-wx-sdl2-video.obj: wx-sdl2-video.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-video.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-video.Tpo -c -o pcem-wx-sdl2-video.obj `if test -f 'wx-sdl2-video.c'; then $(CYGPATH_W) 'wx-sdl2-video.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-video.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-video.Tpo $(DEPDIR)/pcem-wx-sdl2-video.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-video.c' object='pcem-wx-sdl2-video.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-video.obj `if test -f 'wx-sdl2-video.c'; then $(CYGPATH_W) 'wx-sdl2-video.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-video.c'; fi`
+
+pcem-wx-sdl2-midi.o: wx-sdl2-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-midi.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-midi.Tpo -c -o pcem-wx-sdl2-midi.o `test -f 'wx-sdl2-midi.c' || echo '$(srcdir)/'`wx-sdl2-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-midi.Tpo $(DEPDIR)/pcem-wx-sdl2-midi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-midi.c' object='pcem-wx-sdl2-midi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-midi.o `test -f 'wx-sdl2-midi.c' || echo '$(srcdir)/'`wx-sdl2-midi.c
+
+pcem-wx-sdl2-midi.obj: wx-sdl2-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-midi.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-midi.Tpo -c -o pcem-wx-sdl2-midi.obj `if test -f 'wx-sdl2-midi.c'; then $(CYGPATH_W) 'wx-sdl2-midi.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-midi.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-midi.Tpo $(DEPDIR)/pcem-wx-sdl2-midi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-midi.c' object='pcem-wx-sdl2-midi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-midi.obj `if test -f 'wx-sdl2-midi.c'; then $(CYGPATH_W) 'wx-sdl2-midi.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-midi.c'; fi`
+
+pcem-wx-sdl2.o: wx-sdl2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2.Tpo -c -o pcem-wx-sdl2.o `test -f 'wx-sdl2.c' || echo '$(srcdir)/'`wx-sdl2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2.Tpo $(DEPDIR)/pcem-wx-sdl2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2.c' object='pcem-wx-sdl2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2.o `test -f 'wx-sdl2.c' || echo '$(srcdir)/'`wx-sdl2.c
+
+pcem-wx-sdl2.obj: wx-sdl2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2.Tpo -c -o pcem-wx-sdl2.obj `if test -f 'wx-sdl2.c'; then $(CYGPATH_W) 'wx-sdl2.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2.Tpo $(DEPDIR)/pcem-wx-sdl2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2.c' object='pcem-wx-sdl2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2.obj `if test -f 'wx-sdl2.c'; then $(CYGPATH_W) 'wx-sdl2.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2.c'; fi`
+
+pcem-wx-config.o: wx-config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-config.o -MD -MP -MF $(DEPDIR)/pcem-wx-config.Tpo -c -o pcem-wx-config.o `test -f 'wx-config.c' || echo '$(srcdir)/'`wx-config.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-config.Tpo $(DEPDIR)/pcem-wx-config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-config.c' object='pcem-wx-config.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-config.o `test -f 'wx-config.c' || echo '$(srcdir)/'`wx-config.c
+
+pcem-wx-config.obj: wx-config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-config.obj -MD -MP -MF $(DEPDIR)/pcem-wx-config.Tpo -c -o pcem-wx-config.obj `if test -f 'wx-config.c'; then $(CYGPATH_W) 'wx-config.c'; else $(CYGPATH_W) '$(srcdir)/wx-config.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-config.Tpo $(DEPDIR)/pcem-wx-config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-config.c' object='pcem-wx-config.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-config.obj `if test -f 'wx-config.c'; then $(CYGPATH_W) 'wx-config.c'; else $(CYGPATH_W) '$(srcdir)/wx-config.c'; fi`
+
+pcem-wx-sdl2-hdconf.o: wx-sdl2-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-hdconf.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-hdconf.Tpo -c -o pcem-wx-sdl2-hdconf.o `test -f 'wx-sdl2-hdconf.c' || echo '$(srcdir)/'`wx-sdl2-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-hdconf.Tpo $(DEPDIR)/pcem-wx-sdl2-hdconf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-hdconf.c' object='pcem-wx-sdl2-hdconf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-hdconf.o `test -f 'wx-sdl2-hdconf.c' || echo '$(srcdir)/'`wx-sdl2-hdconf.c
+
+pcem-wx-sdl2-hdconf.obj: wx-sdl2-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-hdconf.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-hdconf.Tpo -c -o pcem-wx-sdl2-hdconf.obj `if test -f 'wx-sdl2-hdconf.c'; then $(CYGPATH_W) 'wx-sdl2-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-hdconf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-hdconf.Tpo $(DEPDIR)/pcem-wx-sdl2-hdconf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-hdconf.c' object='pcem-wx-sdl2-hdconf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-hdconf.obj `if test -f 'wx-sdl2-hdconf.c'; then $(CYGPATH_W) 'wx-sdl2-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-hdconf.c'; fi`
+
+pcem-wx-sdl2-status.o: wx-sdl2-status.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-status.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-status.Tpo -c -o pcem-wx-sdl2-status.o `test -f 'wx-sdl2-status.c' || echo '$(srcdir)/'`wx-sdl2-status.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-status.Tpo $(DEPDIR)/pcem-wx-sdl2-status.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-status.c' object='pcem-wx-sdl2-status.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-status.o `test -f 'wx-sdl2-status.c' || echo '$(srcdir)/'`wx-sdl2-status.c
+
+pcem-wx-sdl2-status.obj: wx-sdl2-status.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-status.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-status.Tpo -c -o pcem-wx-sdl2-status.obj `if test -f 'wx-sdl2-status.c'; then $(CYGPATH_W) 'wx-sdl2-status.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-status.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-status.Tpo $(DEPDIR)/pcem-wx-sdl2-status.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-status.c' object='pcem-wx-sdl2-status.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-status.obj `if test -f 'wx-sdl2-status.c'; then $(CYGPATH_W) 'wx-sdl2-status.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-status.c'; fi`
+
+pcem-wx-thread.o: wx-thread.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-thread.o -MD -MP -MF $(DEPDIR)/pcem-wx-thread.Tpo -c -o pcem-wx-thread.o `test -f 'wx-thread.c' || echo '$(srcdir)/'`wx-thread.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-thread.Tpo $(DEPDIR)/pcem-wx-thread.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-thread.c' object='pcem-wx-thread.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-thread.o `test -f 'wx-thread.c' || echo '$(srcdir)/'`wx-thread.c
+
+pcem-wx-thread.obj: wx-thread.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-thread.obj -MD -MP -MF $(DEPDIR)/pcem-wx-thread.Tpo -c -o pcem-wx-thread.obj `if test -f 'wx-thread.c'; then $(CYGPATH_W) 'wx-thread.c'; else $(CYGPATH_W) '$(srcdir)/wx-thread.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-thread.Tpo $(DEPDIR)/pcem-wx-thread.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-thread.c' object='pcem-wx-thread.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-thread.obj `if test -f 'wx-thread.c'; then $(CYGPATH_W) 'wx-thread.c'; else $(CYGPATH_W) '$(srcdir)/wx-thread.c'; fi`
+
+pcem-wx-common.o: wx-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-common.o -MD -MP -MF $(DEPDIR)/pcem-wx-common.Tpo -c -o pcem-wx-common.o `test -f 'wx-common.c' || echo '$(srcdir)/'`wx-common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-common.Tpo $(DEPDIR)/pcem-wx-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-common.c' object='pcem-wx-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-common.o `test -f 'wx-common.c' || echo '$(srcdir)/'`wx-common.c
+
+pcem-wx-common.obj: wx-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-common.obj -MD -MP -MF $(DEPDIR)/pcem-wx-common.Tpo -c -o pcem-wx-common.obj `if test -f 'wx-common.c'; then $(CYGPATH_W) 'wx-common.c'; else $(CYGPATH_W) '$(srcdir)/wx-common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-common.Tpo $(DEPDIR)/pcem-wx-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-common.c' object='pcem-wx-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-common.obj `if test -f 'wx-common.c'; then $(CYGPATH_W) 'wx-common.c'; else $(CYGPATH_W) '$(srcdir)/wx-common.c'; fi`
+
+pcem-wx-sdl2-display.o: wx-sdl2-display.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-display.o -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-display.Tpo -c -o pcem-wx-sdl2-display.o `test -f 'wx-sdl2-display.c' || echo '$(srcdir)/'`wx-sdl2-display.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-display.Tpo $(DEPDIR)/pcem-wx-sdl2-display.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-display.c' object='pcem-wx-sdl2-display.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-display.o `test -f 'wx-sdl2-display.c' || echo '$(srcdir)/'`wx-sdl2-display.c
+
+pcem-wx-sdl2-display.obj: wx-sdl2-display.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-sdl2-display.obj -MD -MP -MF $(DEPDIR)/pcem-wx-sdl2-display.Tpo -c -o pcem-wx-sdl2-display.obj `if test -f 'wx-sdl2-display.c'; then $(CYGPATH_W) 'wx-sdl2-display.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-display.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-sdl2-display.Tpo $(DEPDIR)/pcem-wx-sdl2-display.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-display.c' object='pcem-wx-sdl2-display.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-display.obj `if test -f 'wx-sdl2-display.c'; then $(CYGPATH_W) 'wx-sdl2-display.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-display.c'; fi`
+
+pcem-allegro-gui.o: allegro-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
+
+pcem-allegro-gui.obj: allegro-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
+
+pcem-allegro-gui-config-sel.o: allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
+
+pcem-allegro-gui-config-sel.obj: allegro-gui-config-sel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
+
+pcem-allegro-gui-configure.o: allegro-gui-configure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
+
+pcem-allegro-gui-configure.obj: allegro-gui-configure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
+
+pcem-allegro-gui-deviceconfig.o: allegro-gui-deviceconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
+
+pcem-allegro-gui-deviceconfig.obj: allegro-gui-deviceconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
+
+pcem-allegro-gui-hdconf.o: allegro-gui-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
+
+pcem-allegro-gui-hdconf.obj: allegro-gui-hdconf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
+
+pcem-allegro-joystick.o: allegro-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.o -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
+
+pcem-allegro-joystick.obj: allegro-joystick.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
+
+pcem-allegro-keyboard.o: allegro-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.o -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
+
+pcem-allegro-keyboard.obj: allegro-keyboard.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
+
+pcem-allegro-main.o: allegro-main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.o -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
+
+pcem-allegro-main.obj: allegro-main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
+
+pcem-allegro-midi.o: allegro-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.o -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
+
+pcem-allegro-midi.obj: allegro-midi.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
+
+pcem-allegro-mouse.o: allegro-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.o -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
+
+pcem-allegro-mouse.obj: allegro-mouse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
+
+pcem-allegro-video.o: allegro-video.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.o -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
+
+pcem-allegro-video.obj: allegro-video.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
+
+pcem-thread-pthread.o: thread-pthread.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.o -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
+
+pcem-thread-pthread.obj: thread-pthread.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.obj -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
+
 pcem-codegen_x86.o: codegen_x86.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-codegen_x86.o -MD -MP -MF $(DEPDIR)/pcem-codegen_x86.Tpo -c -o pcem-codegen_x86.o `test -f 'codegen_x86.c' || echo '$(srcdir)/'`codegen_x86.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-codegen_x86.Tpo $(DEPDIR)/pcem-codegen_x86.Po
@@ -3116,271 +3380,411 @@ pcem-codegen_x86-64.obj: codegen_x86-64.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-cdrom_image.o: dosbox/cdrom_image.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cdrom_image.o -MD -MP -MF $(DEPDIR)/cdrom_image.Tpo -c -o cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cdrom_image.Tpo $(DEPDIR)/cdrom_image.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='cdrom_image.o' libtool=no @AMDEPBACKSLASH@
+pcem-cdrom-image.o: cdrom-image.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-cdrom-image.o -MD -MP -MF $(DEPDIR)/pcem-cdrom-image.Tpo -c -o pcem-cdrom-image.o `test -f 'cdrom-image.cc' || echo '$(srcdir)/'`cdrom-image.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom-image.Tpo $(DEPDIR)/pcem-cdrom-image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='cdrom-image.cc' object='pcem-cdrom-image.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-cdrom-image.o `test -f 'cdrom-image.cc' || echo '$(srcdir)/'`cdrom-image.cc
 
-cdrom_image.obj: dosbox/cdrom_image.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cdrom_image.obj -MD -MP -MF $(DEPDIR)/cdrom_image.Tpo -c -o cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cdrom_image.Tpo $(DEPDIR)/cdrom_image.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='cdrom_image.obj' libtool=no @AMDEPBACKSLASH@
+pcem-cdrom-image.obj: cdrom-image.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-cdrom-image.obj -MD -MP -MF $(DEPDIR)/pcem-cdrom-image.Tpo -c -o pcem-cdrom-image.obj `if test -f 'cdrom-image.cc'; then $(CYGPATH_W) 'cdrom-image.cc'; else $(CYGPATH_W) '$(srcdir)/cdrom-image.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom-image.Tpo $(DEPDIR)/pcem-cdrom-image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='cdrom-image.cc' object='pcem-cdrom-image.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-cdrom-image.obj `if test -f 'cdrom-image.cc'; then $(CYGPATH_W) 'cdrom-image.cc'; else $(CYGPATH_W) '$(srcdir)/cdrom-image.cc'; fi`
 
-dbopl.o: dosbox/dbopl.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dbopl.o -MD -MP -MF $(DEPDIR)/dbopl.Tpo -c -o dbopl.o `test -f 'dosbox/dbopl.cpp' || echo '$(srcdir)/'`dosbox/dbopl.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dbopl.Tpo $(DEPDIR)/dbopl.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/dbopl.cpp' object='dbopl.o' libtool=no @AMDEPBACKSLASH@
+pcem-sound_dbopl.o: sound_dbopl.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sound_dbopl.o -MD -MP -MF $(DEPDIR)/pcem-sound_dbopl.Tpo -c -o pcem-sound_dbopl.o `test -f 'sound_dbopl.cc' || echo '$(srcdir)/'`sound_dbopl.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_dbopl.Tpo $(DEPDIR)/pcem-sound_dbopl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='sound_dbopl.cc' object='pcem-sound_dbopl.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dbopl.o `test -f 'dosbox/dbopl.cpp' || echo '$(srcdir)/'`dosbox/dbopl.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sound_dbopl.o `test -f 'sound_dbopl.cc' || echo '$(srcdir)/'`sound_dbopl.cc
 
-dbopl.obj: dosbox/dbopl.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dbopl.obj -MD -MP -MF $(DEPDIR)/dbopl.Tpo -c -o dbopl.obj `if test -f 'dosbox/dbopl.cpp'; then $(CYGPATH_W) 'dosbox/dbopl.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/dbopl.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dbopl.Tpo $(DEPDIR)/dbopl.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/dbopl.cpp' object='dbopl.obj' libtool=no @AMDEPBACKSLASH@
+pcem-sound_dbopl.obj: sound_dbopl.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sound_dbopl.obj -MD -MP -MF $(DEPDIR)/pcem-sound_dbopl.Tpo -c -o pcem-sound_dbopl.obj `if test -f 'sound_dbopl.cc'; then $(CYGPATH_W) 'sound_dbopl.cc'; else $(CYGPATH_W) '$(srcdir)/sound_dbopl.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_dbopl.Tpo $(DEPDIR)/pcem-sound_dbopl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='sound_dbopl.cc' object='pcem-sound_dbopl.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dbopl.obj `if test -f 'dosbox/dbopl.cpp'; then $(CYGPATH_W) 'dosbox/dbopl.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/dbopl.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sound_dbopl.obj `if test -f 'sound_dbopl.cc'; then $(CYGPATH_W) 'sound_dbopl.cc'; else $(CYGPATH_W) '$(srcdir)/sound_dbopl.cc'; fi`
 
-convolve.o: resid-fp/convolve.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT convolve.o -MD -MP -MF $(DEPDIR)/convolve.Tpo -c -o convolve.o `test -f 'resid-fp/convolve.cc' || echo '$(srcdir)/'`resid-fp/convolve.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/convolve.Tpo $(DEPDIR)/convolve.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve.cc' object='convolve.o' libtool=no @AMDEPBACKSLASH@
+pcem-sound_resid.o: sound_resid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sound_resid.o -MD -MP -MF $(DEPDIR)/pcem-sound_resid.Tpo -c -o pcem-sound_resid.o `test -f 'sound_resid.cc' || echo '$(srcdir)/'`sound_resid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_resid.Tpo $(DEPDIR)/pcem-sound_resid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='sound_resid.cc' object='pcem-sound_resid.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o convolve.o `test -f 'resid-fp/convolve.cc' || echo '$(srcdir)/'`resid-fp/convolve.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sound_resid.o `test -f 'sound_resid.cc' || echo '$(srcdir)/'`sound_resid.cc
 
-convolve.obj: resid-fp/convolve.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT convolve.obj -MD -MP -MF $(DEPDIR)/convolve.Tpo -c -o convolve.obj `if test -f 'resid-fp/convolve.cc'; then $(CYGPATH_W) 'resid-fp/convolve.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/convolve.Tpo $(DEPDIR)/convolve.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve.cc' object='convolve.obj' libtool=no @AMDEPBACKSLASH@
+pcem-sound_resid.obj: sound_resid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sound_resid.obj -MD -MP -MF $(DEPDIR)/pcem-sound_resid.Tpo -c -o pcem-sound_resid.obj `if test -f 'sound_resid.cc'; then $(CYGPATH_W) 'sound_resid.cc'; else $(CYGPATH_W) '$(srcdir)/sound_resid.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_resid.Tpo $(DEPDIR)/pcem-sound_resid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='sound_resid.cc' object='pcem-sound_resid.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o convolve.obj `if test -f 'resid-fp/convolve.cc'; then $(CYGPATH_W) 'resid-fp/convolve.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sound_resid.obj `if test -f 'sound_resid.cc'; then $(CYGPATH_W) 'sound_resid.cc'; else $(CYGPATH_W) '$(srcdir)/sound_resid.cc'; fi`
 
-convolve-sse.o: resid-fp/convolve-sse.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT convolve-sse.o -MD -MP -MF $(DEPDIR)/convolve-sse.Tpo -c -o convolve-sse.o `test -f 'resid-fp/convolve-sse.cc' || echo '$(srcdir)/'`resid-fp/convolve-sse.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/convolve-sse.Tpo $(DEPDIR)/convolve-sse.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve-sse.cc' object='convolve-sse.o' libtool=no @AMDEPBACKSLASH@
+pcem-cdrom_image.o: dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-cdrom_image.o -MD -MP -MF $(DEPDIR)/pcem-cdrom_image.Tpo -c -o pcem-cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom_image.Tpo $(DEPDIR)/pcem-cdrom_image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='pcem-cdrom_image.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o convolve-sse.o `test -f 'resid-fp/convolve-sse.cc' || echo '$(srcdir)/'`resid-fp/convolve-sse.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
 
-convolve-sse.obj: resid-fp/convolve-sse.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT convolve-sse.obj -MD -MP -MF $(DEPDIR)/convolve-sse.Tpo -c -o convolve-sse.obj `if test -f 'resid-fp/convolve-sse.cc'; then $(CYGPATH_W) 'resid-fp/convolve-sse.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve-sse.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/convolve-sse.Tpo $(DEPDIR)/convolve-sse.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve-sse.cc' object='convolve-sse.obj' libtool=no @AMDEPBACKSLASH@
+pcem-cdrom_image.obj: dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-cdrom_image.obj -MD -MP -MF $(DEPDIR)/pcem-cdrom_image.Tpo -c -o pcem-cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom_image.Tpo $(DEPDIR)/pcem-cdrom_image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='pcem-cdrom_image.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o convolve-sse.obj `if test -f 'resid-fp/convolve-sse.cc'; then $(CYGPATH_W) 'resid-fp/convolve-sse.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve-sse.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
 
-envelope.o: resid-fp/envelope.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT envelope.o -MD -MP -MF $(DEPDIR)/envelope.Tpo -c -o envelope.o `test -f 'resid-fp/envelope.cc' || echo '$(srcdir)/'`resid-fp/envelope.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/envelope.Tpo $(DEPDIR)/envelope.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/envelope.cc' object='envelope.o' libtool=no @AMDEPBACKSLASH@
+pcem-dbopl.o: dosbox/dbopl.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-dbopl.o -MD -MP -MF $(DEPDIR)/pcem-dbopl.Tpo -c -o pcem-dbopl.o `test -f 'dosbox/dbopl.cpp' || echo '$(srcdir)/'`dosbox/dbopl.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-dbopl.Tpo $(DEPDIR)/pcem-dbopl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/dbopl.cpp' object='pcem-dbopl.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o envelope.o `test -f 'resid-fp/envelope.cc' || echo '$(srcdir)/'`resid-fp/envelope.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-dbopl.o `test -f 'dosbox/dbopl.cpp' || echo '$(srcdir)/'`dosbox/dbopl.cpp
 
-envelope.obj: resid-fp/envelope.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT envelope.obj -MD -MP -MF $(DEPDIR)/envelope.Tpo -c -o envelope.obj `if test -f 'resid-fp/envelope.cc'; then $(CYGPATH_W) 'resid-fp/envelope.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/envelope.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/envelope.Tpo $(DEPDIR)/envelope.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/envelope.cc' object='envelope.obj' libtool=no @AMDEPBACKSLASH@
+pcem-dbopl.obj: dosbox/dbopl.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-dbopl.obj -MD -MP -MF $(DEPDIR)/pcem-dbopl.Tpo -c -o pcem-dbopl.obj `if test -f 'dosbox/dbopl.cpp'; then $(CYGPATH_W) 'dosbox/dbopl.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/dbopl.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-dbopl.Tpo $(DEPDIR)/pcem-dbopl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/dbopl.cpp' object='pcem-dbopl.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o envelope.obj `if test -f 'resid-fp/envelope.cc'; then $(CYGPATH_W) 'resid-fp/envelope.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/envelope.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-dbopl.obj `if test -f 'dosbox/dbopl.cpp'; then $(CYGPATH_W) 'dosbox/dbopl.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/dbopl.cpp'; fi`
 
-extfilt.o: resid-fp/extfilt.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT extfilt.o -MD -MP -MF $(DEPDIR)/extfilt.Tpo -c -o extfilt.o `test -f 'resid-fp/extfilt.cc' || echo '$(srcdir)/'`resid-fp/extfilt.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extfilt.Tpo $(DEPDIR)/extfilt.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/extfilt.cc' object='extfilt.o' libtool=no @AMDEPBACKSLASH@
+pcem-convolve.o: resid-fp/convolve.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-convolve.o -MD -MP -MF $(DEPDIR)/pcem-convolve.Tpo -c -o pcem-convolve.o `test -f 'resid-fp/convolve.cc' || echo '$(srcdir)/'`resid-fp/convolve.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-convolve.Tpo $(DEPDIR)/pcem-convolve.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve.cc' object='pcem-convolve.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o extfilt.o `test -f 'resid-fp/extfilt.cc' || echo '$(srcdir)/'`resid-fp/extfilt.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-convolve.o `test -f 'resid-fp/convolve.cc' || echo '$(srcdir)/'`resid-fp/convolve.cc
 
-extfilt.obj: resid-fp/extfilt.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT extfilt.obj -MD -MP -MF $(DEPDIR)/extfilt.Tpo -c -o extfilt.obj `if test -f 'resid-fp/extfilt.cc'; then $(CYGPATH_W) 'resid-fp/extfilt.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/extfilt.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extfilt.Tpo $(DEPDIR)/extfilt.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/extfilt.cc' object='extfilt.obj' libtool=no @AMDEPBACKSLASH@
+pcem-convolve.obj: resid-fp/convolve.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-convolve.obj -MD -MP -MF $(DEPDIR)/pcem-convolve.Tpo -c -o pcem-convolve.obj `if test -f 'resid-fp/convolve.cc'; then $(CYGPATH_W) 'resid-fp/convolve.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-convolve.Tpo $(DEPDIR)/pcem-convolve.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve.cc' object='pcem-convolve.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o extfilt.obj `if test -f 'resid-fp/extfilt.cc'; then $(CYGPATH_W) 'resid-fp/extfilt.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/extfilt.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-convolve.obj `if test -f 'resid-fp/convolve.cc'; then $(CYGPATH_W) 'resid-fp/convolve.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve.cc'; fi`
 
-filter.o: resid-fp/filter.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT filter.o -MD -MP -MF $(DEPDIR)/filter.Tpo -c -o filter.o `test -f 'resid-fp/filter.cc' || echo '$(srcdir)/'`resid-fp/filter.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/filter.Tpo $(DEPDIR)/filter.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/filter.cc' object='filter.o' libtool=no @AMDEPBACKSLASH@
+pcem-convolve-sse.o: resid-fp/convolve-sse.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-convolve-sse.o -MD -MP -MF $(DEPDIR)/pcem-convolve-sse.Tpo -c -o pcem-convolve-sse.o `test -f 'resid-fp/convolve-sse.cc' || echo '$(srcdir)/'`resid-fp/convolve-sse.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-convolve-sse.Tpo $(DEPDIR)/pcem-convolve-sse.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve-sse.cc' object='pcem-convolve-sse.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o filter.o `test -f 'resid-fp/filter.cc' || echo '$(srcdir)/'`resid-fp/filter.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-convolve-sse.o `test -f 'resid-fp/convolve-sse.cc' || echo '$(srcdir)/'`resid-fp/convolve-sse.cc
 
-filter.obj: resid-fp/filter.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT filter.obj -MD -MP -MF $(DEPDIR)/filter.Tpo -c -o filter.obj `if test -f 'resid-fp/filter.cc'; then $(CYGPATH_W) 'resid-fp/filter.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/filter.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/filter.Tpo $(DEPDIR)/filter.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/filter.cc' object='filter.obj' libtool=no @AMDEPBACKSLASH@
+pcem-convolve-sse.obj: resid-fp/convolve-sse.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-convolve-sse.obj -MD -MP -MF $(DEPDIR)/pcem-convolve-sse.Tpo -c -o pcem-convolve-sse.obj `if test -f 'resid-fp/convolve-sse.cc'; then $(CYGPATH_W) 'resid-fp/convolve-sse.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve-sse.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-convolve-sse.Tpo $(DEPDIR)/pcem-convolve-sse.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/convolve-sse.cc' object='pcem-convolve-sse.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o filter.obj `if test -f 'resid-fp/filter.cc'; then $(CYGPATH_W) 'resid-fp/filter.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/filter.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-convolve-sse.obj `if test -f 'resid-fp/convolve-sse.cc'; then $(CYGPATH_W) 'resid-fp/convolve-sse.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/convolve-sse.cc'; fi`
 
-pot.o: resid-fp/pot.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT pot.o -MD -MP -MF $(DEPDIR)/pot.Tpo -c -o pot.o `test -f 'resid-fp/pot.cc' || echo '$(srcdir)/'`resid-fp/pot.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pot.Tpo $(DEPDIR)/pot.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/pot.cc' object='pot.o' libtool=no @AMDEPBACKSLASH@
+pcem-envelope.o: resid-fp/envelope.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-envelope.o -MD -MP -MF $(DEPDIR)/pcem-envelope.Tpo -c -o pcem-envelope.o `test -f 'resid-fp/envelope.cc' || echo '$(srcdir)/'`resid-fp/envelope.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-envelope.Tpo $(DEPDIR)/pcem-envelope.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/envelope.cc' object='pcem-envelope.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o pot.o `test -f 'resid-fp/pot.cc' || echo '$(srcdir)/'`resid-fp/pot.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-envelope.o `test -f 'resid-fp/envelope.cc' || echo '$(srcdir)/'`resid-fp/envelope.cc
 
-pot.obj: resid-fp/pot.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT pot.obj -MD -MP -MF $(DEPDIR)/pot.Tpo -c -o pot.obj `if test -f 'resid-fp/pot.cc'; then $(CYGPATH_W) 'resid-fp/pot.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/pot.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pot.Tpo $(DEPDIR)/pot.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/pot.cc' object='pot.obj' libtool=no @AMDEPBACKSLASH@
+pcem-envelope.obj: resid-fp/envelope.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-envelope.obj -MD -MP -MF $(DEPDIR)/pcem-envelope.Tpo -c -o pcem-envelope.obj `if test -f 'resid-fp/envelope.cc'; then $(CYGPATH_W) 'resid-fp/envelope.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/envelope.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-envelope.Tpo $(DEPDIR)/pcem-envelope.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/envelope.cc' object='pcem-envelope.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o pot.obj `if test -f 'resid-fp/pot.cc'; then $(CYGPATH_W) 'resid-fp/pot.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/pot.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-envelope.obj `if test -f 'resid-fp/envelope.cc'; then $(CYGPATH_W) 'resid-fp/envelope.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/envelope.cc'; fi`
 
-sid.o: resid-fp/sid.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sid.o -MD -MP -MF $(DEPDIR)/sid.Tpo -c -o sid.o `test -f 'resid-fp/sid.cc' || echo '$(srcdir)/'`resid-fp/sid.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sid.Tpo $(DEPDIR)/sid.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/sid.cc' object='sid.o' libtool=no @AMDEPBACKSLASH@
+pcem-extfilt.o: resid-fp/extfilt.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-extfilt.o -MD -MP -MF $(DEPDIR)/pcem-extfilt.Tpo -c -o pcem-extfilt.o `test -f 'resid-fp/extfilt.cc' || echo '$(srcdir)/'`resid-fp/extfilt.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-extfilt.Tpo $(DEPDIR)/pcem-extfilt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/extfilt.cc' object='pcem-extfilt.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sid.o `test -f 'resid-fp/sid.cc' || echo '$(srcdir)/'`resid-fp/sid.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-extfilt.o `test -f 'resid-fp/extfilt.cc' || echo '$(srcdir)/'`resid-fp/extfilt.cc
 
-sid.obj: resid-fp/sid.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sid.obj -MD -MP -MF $(DEPDIR)/sid.Tpo -c -o sid.obj `if test -f 'resid-fp/sid.cc'; then $(CYGPATH_W) 'resid-fp/sid.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/sid.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sid.Tpo $(DEPDIR)/sid.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/sid.cc' object='sid.obj' libtool=no @AMDEPBACKSLASH@
+pcem-extfilt.obj: resid-fp/extfilt.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-extfilt.obj -MD -MP -MF $(DEPDIR)/pcem-extfilt.Tpo -c -o pcem-extfilt.obj `if test -f 'resid-fp/extfilt.cc'; then $(CYGPATH_W) 'resid-fp/extfilt.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/extfilt.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-extfilt.Tpo $(DEPDIR)/pcem-extfilt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/extfilt.cc' object='pcem-extfilt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sid.obj `if test -f 'resid-fp/sid.cc'; then $(CYGPATH_W) 'resid-fp/sid.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/sid.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-extfilt.obj `if test -f 'resid-fp/extfilt.cc'; then $(CYGPATH_W) 'resid-fp/extfilt.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/extfilt.cc'; fi`
 
-voice.o: resid-fp/voice.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT voice.o -MD -MP -MF $(DEPDIR)/voice.Tpo -c -o voice.o `test -f 'resid-fp/voice.cc' || echo '$(srcdir)/'`resid-fp/voice.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/voice.Tpo $(DEPDIR)/voice.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/voice.cc' object='voice.o' libtool=no @AMDEPBACKSLASH@
+pcem-filter.o: resid-fp/filter.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-filter.o -MD -MP -MF $(DEPDIR)/pcem-filter.Tpo -c -o pcem-filter.o `test -f 'resid-fp/filter.cc' || echo '$(srcdir)/'`resid-fp/filter.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-filter.Tpo $(DEPDIR)/pcem-filter.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/filter.cc' object='pcem-filter.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o voice.o `test -f 'resid-fp/voice.cc' || echo '$(srcdir)/'`resid-fp/voice.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-filter.o `test -f 'resid-fp/filter.cc' || echo '$(srcdir)/'`resid-fp/filter.cc
 
-voice.obj: resid-fp/voice.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT voice.obj -MD -MP -MF $(DEPDIR)/voice.Tpo -c -o voice.obj `if test -f 'resid-fp/voice.cc'; then $(CYGPATH_W) 'resid-fp/voice.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/voice.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/voice.Tpo $(DEPDIR)/voice.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/voice.cc' object='voice.obj' libtool=no @AMDEPBACKSLASH@
+pcem-filter.obj: resid-fp/filter.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-filter.obj -MD -MP -MF $(DEPDIR)/pcem-filter.Tpo -c -o pcem-filter.obj `if test -f 'resid-fp/filter.cc'; then $(CYGPATH_W) 'resid-fp/filter.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/filter.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-filter.Tpo $(DEPDIR)/pcem-filter.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/filter.cc' object='pcem-filter.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o voice.obj `if test -f 'resid-fp/voice.cc'; then $(CYGPATH_W) 'resid-fp/voice.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/voice.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-filter.obj `if test -f 'resid-fp/filter.cc'; then $(CYGPATH_W) 'resid-fp/filter.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/filter.cc'; fi`
 
-wave6581_PS_.o: resid-fp/wave6581_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_PS_.o -MD -MP -MF $(DEPDIR)/wave6581_PS_.Tpo -c -o wave6581_PS_.o `test -f 'resid-fp/wave6581_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_PS_.Tpo $(DEPDIR)/wave6581_PS_.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PS_.cc' object='wave6581_PS_.o' libtool=no @AMDEPBACKSLASH@
+pcem-pot.o: resid-fp/pot.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-pot.o -MD -MP -MF $(DEPDIR)/pcem-pot.Tpo -c -o pcem-pot.o `test -f 'resid-fp/pot.cc' || echo '$(srcdir)/'`resid-fp/pot.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-pot.Tpo $(DEPDIR)/pcem-pot.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/pot.cc' object='pcem-pot.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_PS_.o `test -f 'resid-fp/wave6581_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PS_.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-pot.o `test -f 'resid-fp/pot.cc' || echo '$(srcdir)/'`resid-fp/pot.cc
 
-wave6581_PS_.obj: resid-fp/wave6581_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_PS_.obj -MD -MP -MF $(DEPDIR)/wave6581_PS_.Tpo -c -o wave6581_PS_.obj `if test -f 'resid-fp/wave6581_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PS_.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_PS_.Tpo $(DEPDIR)/wave6581_PS_.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PS_.cc' object='wave6581_PS_.obj' libtool=no @AMDEPBACKSLASH@
+pcem-pot.obj: resid-fp/pot.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-pot.obj -MD -MP -MF $(DEPDIR)/pcem-pot.Tpo -c -o pcem-pot.obj `if test -f 'resid-fp/pot.cc'; then $(CYGPATH_W) 'resid-fp/pot.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/pot.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-pot.Tpo $(DEPDIR)/pcem-pot.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/pot.cc' object='pcem-pot.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_PS_.obj `if test -f 'resid-fp/wave6581_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PS_.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-pot.obj `if test -f 'resid-fp/pot.cc'; then $(CYGPATH_W) 'resid-fp/pot.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/pot.cc'; fi`
 
-wave6581_PST.o: resid-fp/wave6581_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_PST.o -MD -MP -MF $(DEPDIR)/wave6581_PST.Tpo -c -o wave6581_PST.o `test -f 'resid-fp/wave6581_PST.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_PST.Tpo $(DEPDIR)/wave6581_PST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PST.cc' object='wave6581_PST.o' libtool=no @AMDEPBACKSLASH@
+pcem-sid.o: resid-fp/sid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sid.o -MD -MP -MF $(DEPDIR)/pcem-sid.Tpo -c -o pcem-sid.o `test -f 'resid-fp/sid.cc' || echo '$(srcdir)/'`resid-fp/sid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sid.Tpo $(DEPDIR)/pcem-sid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/sid.cc' object='pcem-sid.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_PST.o `test -f 'resid-fp/wave6581_PST.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PST.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sid.o `test -f 'resid-fp/sid.cc' || echo '$(srcdir)/'`resid-fp/sid.cc
 
-wave6581_PST.obj: resid-fp/wave6581_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_PST.obj -MD -MP -MF $(DEPDIR)/wave6581_PST.Tpo -c -o wave6581_PST.obj `if test -f 'resid-fp/wave6581_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PST.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_PST.Tpo $(DEPDIR)/wave6581_PST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PST.cc' object='wave6581_PST.obj' libtool=no @AMDEPBACKSLASH@
+pcem-sid.obj: resid-fp/sid.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-sid.obj -MD -MP -MF $(DEPDIR)/pcem-sid.Tpo -c -o pcem-sid.obj `if test -f 'resid-fp/sid.cc'; then $(CYGPATH_W) 'resid-fp/sid.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/sid.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sid.Tpo $(DEPDIR)/pcem-sid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/sid.cc' object='pcem-sid.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_PST.obj `if test -f 'resid-fp/wave6581_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PST.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-sid.obj `if test -f 'resid-fp/sid.cc'; then $(CYGPATH_W) 'resid-fp/sid.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/sid.cc'; fi`
 
-wave6581_P_T.o: resid-fp/wave6581_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_P_T.o -MD -MP -MF $(DEPDIR)/wave6581_P_T.Tpo -c -o wave6581_P_T.o `test -f 'resid-fp/wave6581_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave6581_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_P_T.Tpo $(DEPDIR)/wave6581_P_T.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_P_T.cc' object='wave6581_P_T.o' libtool=no @AMDEPBACKSLASH@
+pcem-voice.o: resid-fp/voice.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-voice.o -MD -MP -MF $(DEPDIR)/pcem-voice.Tpo -c -o pcem-voice.o `test -f 'resid-fp/voice.cc' || echo '$(srcdir)/'`resid-fp/voice.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-voice.Tpo $(DEPDIR)/pcem-voice.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/voice.cc' object='pcem-voice.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_P_T.o `test -f 'resid-fp/wave6581_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave6581_P_T.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-voice.o `test -f 'resid-fp/voice.cc' || echo '$(srcdir)/'`resid-fp/voice.cc
 
-wave6581_P_T.obj: resid-fp/wave6581_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581_P_T.obj -MD -MP -MF $(DEPDIR)/wave6581_P_T.Tpo -c -o wave6581_P_T.obj `if test -f 'resid-fp/wave6581_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_P_T.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581_P_T.Tpo $(DEPDIR)/wave6581_P_T.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_P_T.cc' object='wave6581_P_T.obj' libtool=no @AMDEPBACKSLASH@
+pcem-voice.obj: resid-fp/voice.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-voice.obj -MD -MP -MF $(DEPDIR)/pcem-voice.Tpo -c -o pcem-voice.obj `if test -f 'resid-fp/voice.cc'; then $(CYGPATH_W) 'resid-fp/voice.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/voice.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-voice.Tpo $(DEPDIR)/pcem-voice.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/voice.cc' object='pcem-voice.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581_P_T.obj `if test -f 'resid-fp/wave6581_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_P_T.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-voice.obj `if test -f 'resid-fp/voice.cc'; then $(CYGPATH_W) 'resid-fp/voice.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/voice.cc'; fi`
 
-wave6581__ST.o: resid-fp/wave6581__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581__ST.o -MD -MP -MF $(DEPDIR)/wave6581__ST.Tpo -c -o wave6581__ST.o `test -f 'resid-fp/wave6581__ST.cc' || echo '$(srcdir)/'`resid-fp/wave6581__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581__ST.Tpo $(DEPDIR)/wave6581__ST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581__ST.cc' object='wave6581__ST.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_PS_.o: resid-fp/wave6581_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_PS_.o -MD -MP -MF $(DEPDIR)/pcem-wave6581_PS_.Tpo -c -o pcem-wave6581_PS_.o `test -f 'resid-fp/wave6581_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_PS_.Tpo $(DEPDIR)/pcem-wave6581_PS_.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PS_.cc' object='pcem-wave6581_PS_.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581__ST.o `test -f 'resid-fp/wave6581__ST.cc' || echo '$(srcdir)/'`resid-fp/wave6581__ST.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_PS_.o `test -f 'resid-fp/wave6581_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PS_.cc
 
-wave6581__ST.obj: resid-fp/wave6581__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave6581__ST.obj -MD -MP -MF $(DEPDIR)/wave6581__ST.Tpo -c -o wave6581__ST.obj `if test -f 'resid-fp/wave6581__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581__ST.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave6581__ST.Tpo $(DEPDIR)/wave6581__ST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581__ST.cc' object='wave6581__ST.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_PS_.obj: resid-fp/wave6581_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_PS_.obj -MD -MP -MF $(DEPDIR)/pcem-wave6581_PS_.Tpo -c -o pcem-wave6581_PS_.obj `if test -f 'resid-fp/wave6581_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PS_.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_PS_.Tpo $(DEPDIR)/pcem-wave6581_PS_.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PS_.cc' object='pcem-wave6581_PS_.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave6581__ST.obj `if test -f 'resid-fp/wave6581__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581__ST.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_PS_.obj `if test -f 'resid-fp/wave6581_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PS_.cc'; fi`
 
-wave8580_PS_.o: resid-fp/wave8580_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_PS_.o -MD -MP -MF $(DEPDIR)/wave8580_PS_.Tpo -c -o wave8580_PS_.o `test -f 'resid-fp/wave8580_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_PS_.Tpo $(DEPDIR)/wave8580_PS_.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PS_.cc' object='wave8580_PS_.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_PST.o: resid-fp/wave6581_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_PST.o -MD -MP -MF $(DEPDIR)/pcem-wave6581_PST.Tpo -c -o pcem-wave6581_PST.o `test -f 'resid-fp/wave6581_PST.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_PST.Tpo $(DEPDIR)/pcem-wave6581_PST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PST.cc' object='pcem-wave6581_PST.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_PS_.o `test -f 'resid-fp/wave8580_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PS_.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_PST.o `test -f 'resid-fp/wave6581_PST.cc' || echo '$(srcdir)/'`resid-fp/wave6581_PST.cc
 
-wave8580_PS_.obj: resid-fp/wave8580_PS_.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_PS_.obj -MD -MP -MF $(DEPDIR)/wave8580_PS_.Tpo -c -o wave8580_PS_.obj `if test -f 'resid-fp/wave8580_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PS_.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_PS_.Tpo $(DEPDIR)/wave8580_PS_.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PS_.cc' object='wave8580_PS_.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_PST.obj: resid-fp/wave6581_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_PST.obj -MD -MP -MF $(DEPDIR)/pcem-wave6581_PST.Tpo -c -o pcem-wave6581_PST.obj `if test -f 'resid-fp/wave6581_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PST.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_PST.Tpo $(DEPDIR)/pcem-wave6581_PST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_PST.cc' object='pcem-wave6581_PST.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_PS_.obj `if test -f 'resid-fp/wave8580_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PS_.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_PST.obj `if test -f 'resid-fp/wave6581_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_PST.cc'; fi`
 
-wave8580_PST.o: resid-fp/wave8580_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_PST.o -MD -MP -MF $(DEPDIR)/wave8580_PST.Tpo -c -o wave8580_PST.o `test -f 'resid-fp/wave8580_PST.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_PST.Tpo $(DEPDIR)/wave8580_PST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PST.cc' object='wave8580_PST.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_P_T.o: resid-fp/wave6581_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_P_T.o -MD -MP -MF $(DEPDIR)/pcem-wave6581_P_T.Tpo -c -o pcem-wave6581_P_T.o `test -f 'resid-fp/wave6581_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave6581_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_P_T.Tpo $(DEPDIR)/pcem-wave6581_P_T.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_P_T.cc' object='pcem-wave6581_P_T.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_PST.o `test -f 'resid-fp/wave8580_PST.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PST.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_P_T.o `test -f 'resid-fp/wave6581_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave6581_P_T.cc
 
-wave8580_PST.obj: resid-fp/wave8580_PST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_PST.obj -MD -MP -MF $(DEPDIR)/wave8580_PST.Tpo -c -o wave8580_PST.obj `if test -f 'resid-fp/wave8580_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PST.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_PST.Tpo $(DEPDIR)/wave8580_PST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PST.cc' object='wave8580_PST.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581_P_T.obj: resid-fp/wave6581_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581_P_T.obj -MD -MP -MF $(DEPDIR)/pcem-wave6581_P_T.Tpo -c -o pcem-wave6581_P_T.obj `if test -f 'resid-fp/wave6581_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_P_T.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581_P_T.Tpo $(DEPDIR)/pcem-wave6581_P_T.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581_P_T.cc' object='pcem-wave6581_P_T.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_PST.obj `if test -f 'resid-fp/wave8580_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PST.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581_P_T.obj `if test -f 'resid-fp/wave6581_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave6581_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581_P_T.cc'; fi`
 
-wave8580_P_T.o: resid-fp/wave8580_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_P_T.o -MD -MP -MF $(DEPDIR)/wave8580_P_T.Tpo -c -o wave8580_P_T.o `test -f 'resid-fp/wave8580_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave8580_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_P_T.Tpo $(DEPDIR)/wave8580_P_T.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_P_T.cc' object='wave8580_P_T.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581__ST.o: resid-fp/wave6581__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581__ST.o -MD -MP -MF $(DEPDIR)/pcem-wave6581__ST.Tpo -c -o pcem-wave6581__ST.o `test -f 'resid-fp/wave6581__ST.cc' || echo '$(srcdir)/'`resid-fp/wave6581__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581__ST.Tpo $(DEPDIR)/pcem-wave6581__ST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581__ST.cc' object='pcem-wave6581__ST.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_P_T.o `test -f 'resid-fp/wave8580_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave8580_P_T.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581__ST.o `test -f 'resid-fp/wave6581__ST.cc' || echo '$(srcdir)/'`resid-fp/wave6581__ST.cc
 
-wave8580_P_T.obj: resid-fp/wave8580_P_T.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580_P_T.obj -MD -MP -MF $(DEPDIR)/wave8580_P_T.Tpo -c -o wave8580_P_T.obj `if test -f 'resid-fp/wave8580_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_P_T.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580_P_T.Tpo $(DEPDIR)/wave8580_P_T.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_P_T.cc' object='wave8580_P_T.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave6581__ST.obj: resid-fp/wave6581__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave6581__ST.obj -MD -MP -MF $(DEPDIR)/pcem-wave6581__ST.Tpo -c -o pcem-wave6581__ST.obj `if test -f 'resid-fp/wave6581__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581__ST.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave6581__ST.Tpo $(DEPDIR)/pcem-wave6581__ST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave6581__ST.cc' object='pcem-wave6581__ST.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580_P_T.obj `if test -f 'resid-fp/wave8580_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_P_T.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave6581__ST.obj `if test -f 'resid-fp/wave6581__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave6581__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave6581__ST.cc'; fi`
 
-wave8580__ST.o: resid-fp/wave8580__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580__ST.o -MD -MP -MF $(DEPDIR)/wave8580__ST.Tpo -c -o wave8580__ST.o `test -f 'resid-fp/wave8580__ST.cc' || echo '$(srcdir)/'`resid-fp/wave8580__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580__ST.Tpo $(DEPDIR)/wave8580__ST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580__ST.cc' object='wave8580__ST.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave8580_PS_.o: resid-fp/wave8580_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_PS_.o -MD -MP -MF $(DEPDIR)/pcem-wave8580_PS_.Tpo -c -o pcem-wave8580_PS_.o `test -f 'resid-fp/wave8580_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_PS_.Tpo $(DEPDIR)/pcem-wave8580_PS_.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PS_.cc' object='pcem-wave8580_PS_.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580__ST.o `test -f 'resid-fp/wave8580__ST.cc' || echo '$(srcdir)/'`resid-fp/wave8580__ST.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_PS_.o `test -f 'resid-fp/wave8580_PS_.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PS_.cc
 
-wave8580__ST.obj: resid-fp/wave8580__ST.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave8580__ST.obj -MD -MP -MF $(DEPDIR)/wave8580__ST.Tpo -c -o wave8580__ST.obj `if test -f 'resid-fp/wave8580__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580__ST.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave8580__ST.Tpo $(DEPDIR)/wave8580__ST.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580__ST.cc' object='wave8580__ST.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave8580_PS_.obj: resid-fp/wave8580_PS_.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_PS_.obj -MD -MP -MF $(DEPDIR)/pcem-wave8580_PS_.Tpo -c -o pcem-wave8580_PS_.obj `if test -f 'resid-fp/wave8580_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PS_.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_PS_.Tpo $(DEPDIR)/pcem-wave8580_PS_.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PS_.cc' object='pcem-wave8580_PS_.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave8580__ST.obj `if test -f 'resid-fp/wave8580__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580__ST.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_PS_.obj `if test -f 'resid-fp/wave8580_PS_.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PS_.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PS_.cc'; fi`
 
-wave.o: resid-fp/wave.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave.o -MD -MP -MF $(DEPDIR)/wave.Tpo -c -o wave.o `test -f 'resid-fp/wave.cc' || echo '$(srcdir)/'`resid-fp/wave.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave.Tpo $(DEPDIR)/wave.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave.cc' object='wave.o' libtool=no @AMDEPBACKSLASH@
+pcem-wave8580_PST.o: resid-fp/wave8580_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_PST.o -MD -MP -MF $(DEPDIR)/pcem-wave8580_PST.Tpo -c -o pcem-wave8580_PST.o `test -f 'resid-fp/wave8580_PST.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_PST.Tpo $(DEPDIR)/pcem-wave8580_PST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PST.cc' object='pcem-wave8580_PST.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave.o `test -f 'resid-fp/wave.cc' || echo '$(srcdir)/'`resid-fp/wave.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_PST.o `test -f 'resid-fp/wave8580_PST.cc' || echo '$(srcdir)/'`resid-fp/wave8580_PST.cc
 
-wave.obj: resid-fp/wave.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT wave.obj -MD -MP -MF $(DEPDIR)/wave.Tpo -c -o wave.obj `if test -f 'resid-fp/wave.cc'; then $(CYGPATH_W) 'resid-fp/wave.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wave.Tpo $(DEPDIR)/wave.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave.cc' object='wave.obj' libtool=no @AMDEPBACKSLASH@
+pcem-wave8580_PST.obj: resid-fp/wave8580_PST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_PST.obj -MD -MP -MF $(DEPDIR)/pcem-wave8580_PST.Tpo -c -o pcem-wave8580_PST.obj `if test -f 'resid-fp/wave8580_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PST.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_PST.Tpo $(DEPDIR)/pcem-wave8580_PST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_PST.cc' object='pcem-wave8580_PST.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o wave.obj `if test -f 'resid-fp/wave.cc'; then $(CYGPATH_W) 'resid-fp/wave.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_PST.obj `if test -f 'resid-fp/wave8580_PST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_PST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_PST.cc'; fi`
+
+pcem-wave8580_P_T.o: resid-fp/wave8580_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_P_T.o -MD -MP -MF $(DEPDIR)/pcem-wave8580_P_T.Tpo -c -o pcem-wave8580_P_T.o `test -f 'resid-fp/wave8580_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave8580_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_P_T.Tpo $(DEPDIR)/pcem-wave8580_P_T.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_P_T.cc' object='pcem-wave8580_P_T.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_P_T.o `test -f 'resid-fp/wave8580_P_T.cc' || echo '$(srcdir)/'`resid-fp/wave8580_P_T.cc
+
+pcem-wave8580_P_T.obj: resid-fp/wave8580_P_T.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580_P_T.obj -MD -MP -MF $(DEPDIR)/pcem-wave8580_P_T.Tpo -c -o pcem-wave8580_P_T.obj `if test -f 'resid-fp/wave8580_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_P_T.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580_P_T.Tpo $(DEPDIR)/pcem-wave8580_P_T.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580_P_T.cc' object='pcem-wave8580_P_T.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580_P_T.obj `if test -f 'resid-fp/wave8580_P_T.cc'; then $(CYGPATH_W) 'resid-fp/wave8580_P_T.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580_P_T.cc'; fi`
+
+pcem-wave8580__ST.o: resid-fp/wave8580__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580__ST.o -MD -MP -MF $(DEPDIR)/pcem-wave8580__ST.Tpo -c -o pcem-wave8580__ST.o `test -f 'resid-fp/wave8580__ST.cc' || echo '$(srcdir)/'`resid-fp/wave8580__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580__ST.Tpo $(DEPDIR)/pcem-wave8580__ST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580__ST.cc' object='pcem-wave8580__ST.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580__ST.o `test -f 'resid-fp/wave8580__ST.cc' || echo '$(srcdir)/'`resid-fp/wave8580__ST.cc
+
+pcem-wave8580__ST.obj: resid-fp/wave8580__ST.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave8580__ST.obj -MD -MP -MF $(DEPDIR)/pcem-wave8580__ST.Tpo -c -o pcem-wave8580__ST.obj `if test -f 'resid-fp/wave8580__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580__ST.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave8580__ST.Tpo $(DEPDIR)/pcem-wave8580__ST.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave8580__ST.cc' object='pcem-wave8580__ST.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave8580__ST.obj `if test -f 'resid-fp/wave8580__ST.cc'; then $(CYGPATH_W) 'resid-fp/wave8580__ST.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave8580__ST.cc'; fi`
+
+pcem-wave.o: resid-fp/wave.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave.o -MD -MP -MF $(DEPDIR)/pcem-wave.Tpo -c -o pcem-wave.o `test -f 'resid-fp/wave.cc' || echo '$(srcdir)/'`resid-fp/wave.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave.Tpo $(DEPDIR)/pcem-wave.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave.cc' object='pcem-wave.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave.o `test -f 'resid-fp/wave.cc' || echo '$(srcdir)/'`resid-fp/wave.cc
+
+pcem-wave.obj: resid-fp/wave.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wave.obj -MD -MP -MF $(DEPDIR)/pcem-wave.Tpo -c -o pcem-wave.obj `if test -f 'resid-fp/wave.cc'; then $(CYGPATH_W) 'resid-fp/wave.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wave.Tpo $(DEPDIR)/pcem-wave.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='resid-fp/wave.cc' object='pcem-wave.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wave.obj `if test -f 'resid-fp/wave.cc'; then $(CYGPATH_W) 'resid-fp/wave.cc'; else $(CYGPATH_W) '$(srcdir)/resid-fp/wave.cc'; fi`
+
+pcem-wx-main.o: wx-main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-main.o -MD -MP -MF $(DEPDIR)/pcem-wx-main.Tpo -c -o pcem-wx-main.o `test -f 'wx-main.cc' || echo '$(srcdir)/'`wx-main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-main.Tpo $(DEPDIR)/pcem-wx-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-main.cc' object='pcem-wx-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-main.o `test -f 'wx-main.cc' || echo '$(srcdir)/'`wx-main.cc
+
+pcem-wx-main.obj: wx-main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-main.obj -MD -MP -MF $(DEPDIR)/pcem-wx-main.Tpo -c -o pcem-wx-main.obj `if test -f 'wx-main.cc'; then $(CYGPATH_W) 'wx-main.cc'; else $(CYGPATH_W) '$(srcdir)/wx-main.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-main.Tpo $(DEPDIR)/pcem-wx-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-main.cc' object='pcem-wx-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-main.obj `if test -f 'wx-main.cc'; then $(CYGPATH_W) 'wx-main.cc'; else $(CYGPATH_W) '$(srcdir)/wx-main.cc'; fi`
+
+pcem-wx-dialogbox.o: wx-dialogbox.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-dialogbox.o -MD -MP -MF $(DEPDIR)/pcem-wx-dialogbox.Tpo -c -o pcem-wx-dialogbox.o `test -f 'wx-dialogbox.cc' || echo '$(srcdir)/'`wx-dialogbox.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-dialogbox.Tpo $(DEPDIR)/pcem-wx-dialogbox.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-dialogbox.cc' object='pcem-wx-dialogbox.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-dialogbox.o `test -f 'wx-dialogbox.cc' || echo '$(srcdir)/'`wx-dialogbox.cc
+
+pcem-wx-dialogbox.obj: wx-dialogbox.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-dialogbox.obj -MD -MP -MF $(DEPDIR)/pcem-wx-dialogbox.Tpo -c -o pcem-wx-dialogbox.obj `if test -f 'wx-dialogbox.cc'; then $(CYGPATH_W) 'wx-dialogbox.cc'; else $(CYGPATH_W) '$(srcdir)/wx-dialogbox.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-dialogbox.Tpo $(DEPDIR)/pcem-wx-dialogbox.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-dialogbox.cc' object='pcem-wx-dialogbox.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-dialogbox.obj `if test -f 'wx-dialogbox.cc'; then $(CYGPATH_W) 'wx-dialogbox.cc'; else $(CYGPATH_W) '$(srcdir)/wx-dialogbox.cc'; fi`
+
+pcem-wx-utils.o: wx-utils.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-utils.o -MD -MP -MF $(DEPDIR)/pcem-wx-utils.Tpo -c -o pcem-wx-utils.o `test -f 'wx-utils.cc' || echo '$(srcdir)/'`wx-utils.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-utils.Tpo $(DEPDIR)/pcem-wx-utils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-utils.cc' object='pcem-wx-utils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-utils.o `test -f 'wx-utils.cc' || echo '$(srcdir)/'`wx-utils.cc
+
+pcem-wx-utils.obj: wx-utils.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-utils.obj -MD -MP -MF $(DEPDIR)/pcem-wx-utils.Tpo -c -o pcem-wx-utils.obj `if test -f 'wx-utils.cc'; then $(CYGPATH_W) 'wx-utils.cc'; else $(CYGPATH_W) '$(srcdir)/wx-utils.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-utils.Tpo $(DEPDIR)/pcem-wx-utils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-utils.cc' object='pcem-wx-utils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-utils.obj `if test -f 'wx-utils.cc'; then $(CYGPATH_W) 'wx-utils.cc'; else $(CYGPATH_W) '$(srcdir)/wx-utils.cc'; fi`
+
+pcem-wx-app.o: wx-app.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-app.o -MD -MP -MF $(DEPDIR)/pcem-wx-app.Tpo -c -o pcem-wx-app.o `test -f 'wx-app.cc' || echo '$(srcdir)/'`wx-app.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-app.Tpo $(DEPDIR)/pcem-wx-app.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-app.cc' object='pcem-wx-app.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-app.o `test -f 'wx-app.cc' || echo '$(srcdir)/'`wx-app.cc
+
+pcem-wx-app.obj: wx-app.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-app.obj -MD -MP -MF $(DEPDIR)/pcem-wx-app.Tpo -c -o pcem-wx-app.obj `if test -f 'wx-app.cc'; then $(CYGPATH_W) 'wx-app.cc'; else $(CYGPATH_W) '$(srcdir)/wx-app.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-app.Tpo $(DEPDIR)/pcem-wx-app.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-app.cc' object='pcem-wx-app.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-app.obj `if test -f 'wx-app.cc'; then $(CYGPATH_W) 'wx-app.cc'; else $(CYGPATH_W) '$(srcdir)/wx-app.cc'; fi`
+
+pcem-wx-deviceconfig.o: wx-deviceconfig.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-deviceconfig.o -MD -MP -MF $(DEPDIR)/pcem-wx-deviceconfig.Tpo -c -o pcem-wx-deviceconfig.o `test -f 'wx-deviceconfig.cc' || echo '$(srcdir)/'`wx-deviceconfig.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-deviceconfig.Tpo $(DEPDIR)/pcem-wx-deviceconfig.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-deviceconfig.cc' object='pcem-wx-deviceconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-deviceconfig.o `test -f 'wx-deviceconfig.cc' || echo '$(srcdir)/'`wx-deviceconfig.cc
+
+pcem-wx-deviceconfig.obj: wx-deviceconfig.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-deviceconfig.obj -MD -MP -MF $(DEPDIR)/pcem-wx-deviceconfig.Tpo -c -o pcem-wx-deviceconfig.obj `if test -f 'wx-deviceconfig.cc'; then $(CYGPATH_W) 'wx-deviceconfig.cc'; else $(CYGPATH_W) '$(srcdir)/wx-deviceconfig.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-deviceconfig.Tpo $(DEPDIR)/pcem-wx-deviceconfig.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-deviceconfig.cc' object='pcem-wx-deviceconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-deviceconfig.obj `if test -f 'wx-deviceconfig.cc'; then $(CYGPATH_W) 'wx-deviceconfig.cc'; else $(CYGPATH_W) '$(srcdir)/wx-deviceconfig.cc'; fi`
+
+pcem-wx-status.o: wx-status.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-status.o -MD -MP -MF $(DEPDIR)/pcem-wx-status.Tpo -c -o pcem-wx-status.o `test -f 'wx-status.cc' || echo '$(srcdir)/'`wx-status.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-status.Tpo $(DEPDIR)/pcem-wx-status.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-status.cc' object='pcem-wx-status.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-status.o `test -f 'wx-status.cc' || echo '$(srcdir)/'`wx-status.cc
+
+pcem-wx-status.obj: wx-status.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-status.obj -MD -MP -MF $(DEPDIR)/pcem-wx-status.Tpo -c -o pcem-wx-status.obj `if test -f 'wx-status.cc'; then $(CYGPATH_W) 'wx-status.cc'; else $(CYGPATH_W) '$(srcdir)/wx-status.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-status.Tpo $(DEPDIR)/pcem-wx-status.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-status.cc' object='pcem-wx-status.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-status.obj `if test -f 'wx-status.cc'; then $(CYGPATH_W) 'wx-status.cc'; else $(CYGPATH_W) '$(srcdir)/wx-status.cc'; fi`
+
+pcem-wx-resources.o: wx-resources.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-resources.o -MD -MP -MF $(DEPDIR)/pcem-wx-resources.Tpo -c -o pcem-wx-resources.o `test -f 'wx-resources.cpp' || echo '$(srcdir)/'`wx-resources.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-resources.Tpo $(DEPDIR)/pcem-wx-resources.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-resources.cpp' object='pcem-wx-resources.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-resources.o `test -f 'wx-resources.cpp' || echo '$(srcdir)/'`wx-resources.cpp
+
+pcem-wx-resources.obj: wx-resources.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -MT pcem-wx-resources.obj -MD -MP -MF $(DEPDIR)/pcem-wx-resources.Tpo -c -o pcem-wx-resources.obj `if test -f 'wx-resources.cpp'; then $(CYGPATH_W) 'wx-resources.cpp'; else $(CYGPATH_W) '$(srcdir)/wx-resources.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-resources.Tpo $(DEPDIR)/pcem-wx-resources.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='wx-resources.cpp' object='pcem-wx-resources.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CXXFLAGS) $(CXXFLAGS) -c -o pcem-wx-resources.obj `if test -f 'wx-resources.cpp'; then $(CYGPATH_W) 'wx-resources.cpp'; else $(CYGPATH_W) '$(srcdir)/wx-resources.cpp'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
