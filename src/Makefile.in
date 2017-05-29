@@ -112,13 +112,13 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	allegro-gui-configure.c allegro-gui-deviceconfig.c \
 	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
 	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
 	codegen.c codegen_ops.c codegen_timing_486.c \
 	codegen_timing_686.c codegen_timing_pentium.c \
 	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
-	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
-	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
-	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
+	dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c \
+	dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c \
+	hdd_esdi.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
 	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
 	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
 	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
@@ -143,8 +143,8 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
-	xtide.c sound_dbopl.cc sound_resid.cc dosbox/dbopl.cpp \
-	dosbox/vid_cga_comp.c resid-fp/convolve.cc \
+	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
+	dosbox/dbopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
 	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
 	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
 	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
@@ -167,24 +167,24 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-allegro-keyboard.$(OBJEXT) pcem-allegro-main.$(OBJEXT) \
 	pcem-allegro-midi.$(OBJEXT) pcem-allegro-mouse.$(OBJEXT) \
 	pcem-allegro-video.$(OBJEXT) pcem-amstrad.$(OBJEXT) \
-	pcem-cdrom-ioctl-linux.$(OBJEXT) pcem-cdrom-iso.$(OBJEXT) \
+	pcem-cdrom-ioctl-linux.$(OBJEXT) cdrom-image.$(OBJEXT) \
 	pcem-cdrom-null.$(OBJEXT) pcem-codegen.$(OBJEXT) \
 	pcem-codegen_ops.$(OBJEXT) pcem-codegen_timing_486.$(OBJEXT) \
 	pcem-codegen_timing_686.$(OBJEXT) \
 	pcem-codegen_timing_pentium.$(OBJEXT) \
 	pcem-codegen_timing_winchip.$(OBJEXT) pcem-compaq.$(OBJEXT) \
 	pcem-config.$(OBJEXT) pcem-cpu.$(OBJEXT) pcem-dac.$(OBJEXT) \
-	pcem-device.$(OBJEXT) pcem-disc.$(OBJEXT) \
-	pcem-disc_fdi.$(OBJEXT) pcem-disc_img.$(OBJEXT) \
-	pcem-disc_sector.$(OBJEXT) pcem-dma.$(OBJEXT) \
-	pcem-fdc.$(OBJEXT) pcem-fdc37c665.$(OBJEXT) pcem-fdd.$(OBJEXT) \
-	pcem-fdi2raw.$(OBJEXT) pcem-gameport.$(OBJEXT) \
-	pcem-hdd.$(OBJEXT) pcem-hdd_esdi.$(OBJEXT) \
-	pcem-headland.$(OBJEXT) pcem-i430lx.$(OBJEXT) \
-	pcem-i430fx.$(OBJEXT) pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) \
-	pcem-intel.$(OBJEXT) pcem-intel_flash.$(OBJEXT) \
-	pcem-io.$(OBJEXT) pcem-jim.$(OBJEXT) \
-	pcem-joystick_ch_flightstick_pro.$(OBJEXT) \
+	pcem-dells200.$(OBJEXT) pcem-device.$(OBJEXT) \
+	pcem-disc.$(OBJEXT) pcem-disc_fdi.$(OBJEXT) \
+	pcem-disc_img.$(OBJEXT) pcem-disc_sector.$(OBJEXT) \
+	pcem-dma.$(OBJEXT) pcem-fdc.$(OBJEXT) pcem-fdc37c665.$(OBJEXT) \
+	pcem-fdd.$(OBJEXT) pcem-fdi2raw.$(OBJEXT) \
+	pcem-gameport.$(OBJEXT) pcem-hdd.$(OBJEXT) \
+	pcem-hdd_esdi.$(OBJEXT) pcem-headland.$(OBJEXT) \
+	pcem-i430lx.$(OBJEXT) pcem-i430fx.$(OBJEXT) \
+	pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) pcem-intel.$(OBJEXT) \
+	pcem-intel_flash.$(OBJEXT) pcem-io.$(OBJEXT) \
+	pcem-jim.$(OBJEXT) pcem-joystick_ch_flightstick_pro.$(OBJEXT) \
 	pcem-joystick_standard.$(OBJEXT) \
 	pcem-joystick_sw_pad.$(OBJEXT) pcem-joystick_tm_fcs.$(OBJEXT) \
 	pcem-keyboard.$(OBJEXT) pcem-keyboard_amstrad.$(OBJEXT) \
@@ -238,7 +238,7 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-video.$(OBJEXT) pcem-wd76c10.$(OBJEXT) \
 	pcem-vid_wy700.$(OBJEXT) pcem-x86seg.$(OBJEXT) \
 	pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) sound_dbopl.$(OBJEXT) \
-	sound_resid.$(OBJEXT) dbopl.$(OBJEXT) \
+	sound_resid.$(OBJEXT) cdrom_image.$(OBJEXT) dbopl.$(OBJEXT) \
 	pcem-vid_cga_comp.$(OBJEXT) convolve.$(OBJEXT) \
 	convolve-sse.$(OBJEXT) envelope.$(OBJEXT) extfilt.$(OBJEXT) \
 	filter.$(OBJEXT) pot.$(OBJEXT) sid.$(OBJEXT) voice.$(OBJEXT) \
@@ -426,20 +426,20 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_SCRIPTS = ../pcem
 CLEANFILES = $(noinst_SCRIPTS)
-pcem_CFLAGS = $(allegro_CFLAGS) $(am__append_2)
+pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO $(am__append_2)
 pcem_LDADD = $(allegro_LIBS) -lopenal
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	acer386sx.c ali1429.c allegro-gui.c allegro-gui-config-sel.c \
 	allegro-gui-configure.c allegro-gui-deviceconfig.c \
 	allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c \
 	allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-	amstrad.c cdrom-ioctl-linux.c cdrom-iso.c cdrom-null.c \
+	amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
 	codegen.c codegen_ops.c codegen_timing_486.c \
 	codegen_timing_686.c codegen_timing_pentium.c \
 	codegen_timing_winchip.c compaq.c config.c cpu.c dac.c \
-	device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c \
-	fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
-	headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
+	dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c \
+	dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c \
+	hdd_esdi.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c \
 	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
 	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
 	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
@@ -464,8 +464,8 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
 	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
-	xtide.c sound_dbopl.cc sound_resid.cc dosbox/dbopl.cpp \
-	dosbox/vid_cga_comp.c resid-fp/convolve.cc \
+	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
+	dosbox/dbopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
 	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
 	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
 	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
@@ -560,6 +560,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdrom-image.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdrom_image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolve-sse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dbopl.Po@am__quote@
@@ -585,7 +587,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-video.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-amstrad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-ioctl-linux.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-iso.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-null.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-codegen_ops.Po@am__quote@
@@ -599,6 +600,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cpu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dac.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-dells200.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-device.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-disc_fdi.Po@am__quote@
@@ -1028,20 +1030,6 @@ pcem-cdrom-ioctl-linux.obj: cdrom-ioctl-linux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-ioctl-linux.obj `if test -f 'cdrom-ioctl-linux.c'; then $(CYGPATH_W) 'cdrom-ioctl-linux.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-ioctl-linux.c'; fi`
 
-pcem-cdrom-iso.o: cdrom-iso.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-iso.o -MD -MP -MF $(DEPDIR)/pcem-cdrom-iso.Tpo -c -o pcem-cdrom-iso.o `test -f 'cdrom-iso.c' || echo '$(srcdir)/'`cdrom-iso.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom-iso.Tpo $(DEPDIR)/pcem-cdrom-iso.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cdrom-iso.c' object='pcem-cdrom-iso.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-iso.o `test -f 'cdrom-iso.c' || echo '$(srcdir)/'`cdrom-iso.c
-
-pcem-cdrom-iso.obj: cdrom-iso.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-iso.obj -MD -MP -MF $(DEPDIR)/pcem-cdrom-iso.Tpo -c -o pcem-cdrom-iso.obj `if test -f 'cdrom-iso.c'; then $(CYGPATH_W) 'cdrom-iso.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-iso.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom-iso.Tpo $(DEPDIR)/pcem-cdrom-iso.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cdrom-iso.c' object='pcem-cdrom-iso.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-cdrom-iso.obj `if test -f 'cdrom-iso.c'; then $(CYGPATH_W) 'cdrom-iso.c'; else $(CYGPATH_W) '$(srcdir)/cdrom-iso.c'; fi`
-
 pcem-cdrom-null.o: cdrom-null.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-cdrom-null.o -MD -MP -MF $(DEPDIR)/pcem-cdrom-null.Tpo -c -o pcem-cdrom-null.o `test -f 'cdrom-null.c' || echo '$(srcdir)/'`cdrom-null.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-cdrom-null.Tpo $(DEPDIR)/pcem-cdrom-null.Po
@@ -1195,6 +1183,20 @@ pcem-dac.obj: dac.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dac.c' object='pcem-dac.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-dac.obj `if test -f 'dac.c'; then $(CYGPATH_W) 'dac.c'; else $(CYGPATH_W) '$(srcdir)/dac.c'; fi`
+
+pcem-dells200.o: dells200.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-dells200.o -MD -MP -MF $(DEPDIR)/pcem-dells200.Tpo -c -o pcem-dells200.o `test -f 'dells200.c' || echo '$(srcdir)/'`dells200.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-dells200.Tpo $(DEPDIR)/pcem-dells200.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dells200.c' object='pcem-dells200.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-dells200.o `test -f 'dells200.c' || echo '$(srcdir)/'`dells200.c
+
+pcem-dells200.obj: dells200.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-dells200.obj -MD -MP -MF $(DEPDIR)/pcem-dells200.Tpo -c -o pcem-dells200.obj `if test -f 'dells200.c'; then $(CYGPATH_W) 'dells200.c'; else $(CYGPATH_W) '$(srcdir)/dells200.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-dells200.Tpo $(DEPDIR)/pcem-dells200.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dells200.c' object='pcem-dells200.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-dells200.obj `if test -f 'dells200.c'; then $(CYGPATH_W) 'dells200.c'; else $(CYGPATH_W) '$(srcdir)/dells200.c'; fi`
 
 pcem-device.o: device.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-device.o -MD -MP -MF $(DEPDIR)/pcem-device.Tpo -c -o pcem-device.o `test -f 'device.c' || echo '$(srcdir)/'`device.c
@@ -3113,6 +3115,20 @@ pcem-codegen_x86-64.obj: codegen_x86-64.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+cdrom_image.o: dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cdrom_image.o -MD -MP -MF $(DEPDIR)/cdrom_image.Tpo -c -o cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cdrom_image.Tpo $(DEPDIR)/cdrom_image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='cdrom_image.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cdrom_image.o `test -f 'dosbox/cdrom_image.cpp' || echo '$(srcdir)/'`dosbox/cdrom_image.cpp
+
+cdrom_image.obj: dosbox/cdrom_image.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cdrom_image.obj -MD -MP -MF $(DEPDIR)/cdrom_image.Tpo -c -o cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cdrom_image.Tpo $(DEPDIR)/cdrom_image.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dosbox/cdrom_image.cpp' object='cdrom_image.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cdrom_image.obj `if test -f 'dosbox/cdrom_image.cpp'; then $(CYGPATH_W) 'dosbox/cdrom_image.cpp'; else $(CYGPATH_W) '$(srcdir)/dosbox/cdrom_image.cpp'; fi`
 
 dbopl.o: dosbox/dbopl.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dbopl.o -MD -MP -MF $(DEPDIR)/dbopl.Tpo -c -o dbopl.o `test -f 'dosbox/dbopl.cpp' || echo '$(srcdir)/'`dosbox/dbopl.cpp

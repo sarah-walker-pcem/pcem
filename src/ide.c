@@ -684,7 +684,7 @@ void ide_set_signature(IDE *ide)
 	ide->sector=1;
 	ide->head=0;
 	ide->cylinder=(IDE_DRIVE_IS_CDROM(ide) ? 0xEB14 : ((ide->type == IDE_HDD) ? 0 : 0xFFFF));
-	if (ide->type == IDE_HDD)  ide->drive = 0;
+//	if (ide->type == IDE_HDD)  ide->drive = 0;
 }
 
 void resetide(void)
@@ -717,6 +717,7 @@ void resetide(void)
 #else
 	for (d = 0; d < 4; d++)
 	{
+	        ide_drives[d].drive = d;
 		ide_drives[d].packetstatus = 0xFF;
 
 		if ((cdrom_channel == d) && cdrom_enabled)
@@ -1378,7 +1379,7 @@ void callbackide(int ide_board)
 //                if (addr) output=3;
                 ide_irq_raise(ide);
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1414,7 +1415,7 @@ void callbackide(int ide_board)
                         }
                 }
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1437,7 +1438,7 @@ void callbackide(int ide_board)
                 if (ide->blockcount >= ide->blocksize)
                    ide->blockcount = 0;
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1461,7 +1462,7 @@ void callbackide(int ide_board)
                 else
                    ide->atastat = READY_STAT | DSC_STAT;
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
                 
@@ -1497,7 +1498,7 @@ void callbackide(int ide_board)
                         }
                 }
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1525,7 +1526,7 @@ void callbackide(int ide_board)
                 else
                    ide->atastat = READY_STAT | DSC_STAT;
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1539,7 +1540,7 @@ void callbackide(int ide_board)
 //                pclog("Read verify callback %i %i %i offset %08X %i left\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount);
                 ide_irq_raise(ide);
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1558,7 +1559,7 @@ void callbackide(int ide_board)
                 ide->atastat = READY_STAT | DSC_STAT;
                 ide_irq_raise(ide);
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 return;
 
@@ -1883,7 +1884,7 @@ static void atapicommand(int ide_board)
 #ifndef RPCEMU_IDE
         pclog("New ATAPI command %02X %i\n",idebufferb[0],ins);
 #endif
-//        readflash=1;
+//        readflash_set(READFLASH_HDD, ide->drive, 1);
         msf=idebufferb[1]&2;
         ide->cdlen=0;
 
@@ -2092,7 +2093,7 @@ static void atapicommand(int ide_board)
 		else
 	                atapi->readsector_raw(idebufferb,ide->cdpos);
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
 		readcdmode = (rcdmode == 0xF8);
                 ide->cdpos++;
@@ -2157,7 +2158,7 @@ static void atapicommand(int ide_board)
                         break;
                 }
 #ifndef RPCEMU_IDE
-                readflash=1;
+                readflash_set(READFLASH_HDC, ide->drive);
 #endif
                 ide->cdpos++;
                 ide->cdlen--;
@@ -2690,7 +2691,7 @@ static void callreadcd(IDE *ide)
 	else
 		atapi->readsector((uint8_t *) ide->buffer, ide->cdpos);
 #ifndef RPCEMU_IDE
-        readflash=1;
+        readflash_set(READFLASH_HDC, ide->drive);
 #endif
         ide->cdpos++;
         ide->cdlen--;

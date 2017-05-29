@@ -575,7 +575,7 @@ bad_command:
 //                                        pclog("Read a track track=%i head=%i sector=%i eot=%i\n", fdc.track[fdc.drive], fdc.head, fdc.sector, fdc.eot[fdc.drive]);
                                         disc_readsector(fdc.drive, SECTOR_FIRST, fdc.track[fdc.drive], fdc.head, fdc.rate, fdc.params[4]);
                                         disctime = 0;
-                                        readflash = 1;
+                                        readflash_set(READFLASH_FDC, fdc.drive);
                                         fdc.inread = 1;
                                         break;
 
@@ -601,7 +601,7 @@ bad_command:
                                         disc_writesector(fdc.drive, fdc.sector, fdc.track[fdc.drive], fdc.head, fdc.rate, fdc.params[4]);
                                         disctime = 0;
                                         fdc.written = 0;
-                                        readflash = 1;
+                                        readflash_set(READFLASH_FDC, fdc.drive);
                                         fdc.pos = 0;
                                         if (fdc.pcjr)
                                                 fdc.stat = 0xb0;
@@ -621,7 +621,7 @@ bad_command:
                                         
                                         disc_readsector(fdc.drive, fdc.sector, fdc.track[fdc.drive], fdc.head, fdc.rate, fdc.params[4]);
                                         disctime = 0;
-                                        readflash = 1;
+                                        readflash_set(READFLASH_FDC, fdc.drive);
                                         fdc.inread = 1;
                                         break;
                                         
@@ -815,7 +815,7 @@ void fdc_callback()
 		return;
 
                 case 2: /*Read track*/
-                readflash = 1;
+                readflash_set(READFLASH_FDC, fdc.drive);
                 fdc.eot[fdc.drive]--;
 //                pclog("Read a track callback, eot=%i\n", fdc.eot[fdc.drive]);
                 if (!fdc.eot[fdc.drive] || fdc.tc)
@@ -861,7 +861,7 @@ void fdc_callback()
                 case 5: /*Write data*/
                 if (!fdc.in_seek_mt)
                 {
-                        readflash = 1;
+                        readflash_set(READFLASH_FDC, fdc.drive);
                         fdc.sector++;
                         if (fdc.sector > fdc.params[5])
                         {
@@ -911,7 +911,7 @@ void fdc_callback()
 //                rpclog("Read data %i\n", fdc.tc);
                 if (!fdc.in_seek_mt)
                 {
-                        readflash = 1;
+                        readflash_set(READFLASH_FDC, fdc.drive);
                         fdc.sector++;
                         if (fdc.sector > fdc.params[5])
                         {

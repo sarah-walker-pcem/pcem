@@ -10,13 +10,13 @@ CLEANFILES = $(noinst_SCRIPTS)
 amrefresh:	
 
 
-pcem_CFLAGS = $(allegro_CFLAGS)
+pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO
 
 pcem_LDADD = $(allegro_LIBS) -lopenal
 
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c allegro-gui.c \
 allegro-gui-config-sel.c allegro-gui-configure.c allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c allegro-keyboard.c allegro-main.c  \
-allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-image.c cdrom-null.c \
+allegro-midi.c allegro-mouse.c allegro-video.c amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
 codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dac.c dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \

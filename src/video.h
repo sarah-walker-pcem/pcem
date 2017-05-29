@@ -1,4 +1,4 @@
-#ifdef __unix
+#ifdef PCEM_ALLEGRO
 
 #undef MAX_JOYSTICKS
 #include "allegro-main.h"

@@ -391,7 +391,7 @@ static void xebec_callback(void *p)
                                 
                         xebec_complete(xebec);
 
-                        readflash = 1;
+                        readflash_set(READFLASH_HDC, xebec->drive_sel);
                         break;
                                                 
                         default:
@@ -450,7 +450,7 @@ static void xebec_callback(void *p)
 
                                 fseeko64(drive->hdfile, addr * 512, SEEK_SET);
                                 fread(xebec->sector_buf, 512, 1, drive->hdfile);
-                                readflash = 1;
+                                readflash_set(READFLASH_HDC, xebec->drive_sel);
                         }
                         if (xebec->irq_dma_mask & DMA_ENA)
                                 xebec->callback = XEBEC_TIME;
@@ -506,7 +506,7 @@ static void xebec_callback(void *p)
                                 
                                 fseeko64(drive->hdfile, addr * 512, SEEK_SET);
                                 fread(xebec->sector_buf, 512, 1, drive->hdfile);
-                                readflash = 1;
+                                readflash_set(READFLASH_HDC, xebec->drive_sel);
 
                                 xebec->state = STATE_SEND_DATA;
                                 
@@ -592,7 +592,7 @@ static void xebec_callback(void *p)
                                 fwrite(xebec->sector_buf, 512, 1, drive->hdfile);
                         }
                                 
-                        readflash = 1;
+                        readflash_set(READFLASH_HDC, xebec->drive_sel);
                         
                         xebec_next_sector(xebec);
                         xebec->data_pos = 0;

@@ -1647,7 +1647,7 @@ static inline int fastlog(uint64_t val)
         return (exp << 8) | logtable[frac];
 }
 
-static inline int fls(uint16_t val)
+static inline int voodoo_fls(uint16_t val)
 {
         int num = 0;
         
@@ -2768,7 +2768,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         w_depth = 0xf001;
                                 else
                                 {
-                                        int exp = fls((uint16_t)((uint32_t)state->w >> 16));
+                                        int exp = voodoo_fls((uint16_t)((uint32_t)state->w >> 16));
                                         int mant = ((~(uint32_t)state->w >> (19 - exp))) & 0xfff;
                                         w_depth = (exp << 12) + mant + 1;
                                         if (w_depth > 0xffff)
