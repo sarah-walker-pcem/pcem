@@ -123,7 +123,10 @@ static void ddraw_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 //        pclog("Blit memtoscreen %i,%i %i %i %i,%i\n", x, y, y1, y2, w, h);
 
         if (h <= 0)
+        {
+                video_blit_complete();
                 return;
+        }
                 
         memset(&ddsd, 0, sizeof(ddsd));
         ddsd.dwSize = sizeof(ddsd);
