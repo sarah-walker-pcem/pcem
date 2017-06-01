@@ -81,6 +81,9 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
         }
         else
         {
+                if (addr >= 0x0f && addr < 0x4c)
+                        return;
+
                 switch (addr)
                 {
                         case 0x00: case 0x01: case 0x02: case 0x03:
@@ -343,7 +346,7 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
         card_piix[0x00] = 0x86; card_piix[0x01] = 0x80; /*Intel*/
         card_piix[0x02] = 0x2e; card_piix[0x03] = 0x12; /*82371FB (PIIX)*/
         card_piix[0x04] = 0x07; card_piix[0x05] = 0x00;
-        card_piix[0x06] = 0x00; card_piix[0x07] = 0x02;
+        card_piix[0x06] = 0x80; card_piix[0x07] = 0x02;
         card_piix[0x08] = 0x00; /*A0 stepping*/
         card_piix[0x09] = 0x00; card_piix[0x0a] = 0x01; card_piix[0x0b] = 0x06;
         card_piix[0x0e] = 0x80; /*Multi-function device*/
