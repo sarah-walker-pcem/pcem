@@ -87,6 +87,35 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         case 0x08: case 0x09: case 0x0a: case 0x0b:
                         case 0x0e:
                         return;
+                        
+                        case 0x60:
+//                        pclog("IRQ routing %02x %02x\n", addr, val);
+                        if (val & 0x80)
+                                pci_set_irq_routing(PCI_INTA, PCI_IRQ_DISABLED);
+                        else
+                                pci_set_irq_routing(PCI_INTA, val & 0xf);
+                        break;
+                        case 0x61:
+//                        pclog("IRQ routing %02x %02x\n", addr, val);
+                        if (val & 0x80)
+                                pci_set_irq_routing(PCI_INTB, PCI_IRQ_DISABLED);
+                        else
+                                pci_set_irq_routing(PCI_INTB, val & 0xf);
+                        break;
+                        case 0x62:
+//                        pclog("IRQ routing %02x %02x\n", addr, val);
+                        if (val & 0x80)
+                                pci_set_irq_routing(PCI_INTC, PCI_IRQ_DISABLED);
+                        else
+                                pci_set_irq_routing(PCI_INTC, val & 0xf);
+                        break;
+                        case 0x63:
+//                        pclog("IRQ routing %02x %02x\n", addr, val);
+                        if (val & 0x80)
+                                pci_set_irq_routing(PCI_INTD, PCI_IRQ_DISABLED);
+                        else
+                                pci_set_irq_routing(PCI_INTD, val & 0xf);
+                        break;
                 }
                 card_piix[addr] = val;
         }
@@ -306,7 +335,7 @@ void piix_bus_master_set_irq(int channel)
         piix_busmaster[channel].status |= 4;
 }
 
-void piix_init(int card)
+void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
 {
         pci_add_specific(card, piix_read, piix_write, NULL);
         
@@ -346,4 +375,9 @@ void piix_init(int card)
         card_piix_ide[0x42] = card_piix_ide[0x43] = 0x00;
         
         ide_set_bus_master(piix_bus_master_sector_read, piix_bus_master_sector_write, piix_bus_master_set_irq);
+        
+        pci_set_card_routing(pci_a, PCI_INTA);
+        pci_set_card_routing(pci_b, PCI_INTB);
+        pci_set_card_routing(pci_c, PCI_INTC);
+        pci_set_card_routing(pci_d, PCI_INTD);
 }

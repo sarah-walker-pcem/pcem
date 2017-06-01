@@ -65,6 +65,35 @@ void sis496_write(int func, int addr, uint8_t val, void *p)
                         sis496_recalcmapping(sis496);
                 }
                 break;
+                
+                case 0xc0:
+  //              pclog("IRQ routing %02x %02x\n", addr, val);
+                if (val & 0x80)
+                        pci_set_irq_routing(PCI_INTA, val & 0xf);
+                else
+                        pci_set_irq_routing(PCI_INTA, PCI_IRQ_DISABLED);
+                break;
+                case 0xc1:
+//                pclog("IRQ routing %02x %02x\n", addr, val);
+                if (val & 0x80)
+                        pci_set_irq_routing(PCI_INTB, val & 0xf);
+                else
+                        pci_set_irq_routing(PCI_INTB, PCI_IRQ_DISABLED);
+                break;
+                case 0xc2:
+//                pclog("IRQ routing %02x %02x\n", addr, val);
+                if (val & 0x80)
+                        pci_set_irq_routing(PCI_INTC, val & 0xf);
+                else
+                        pci_set_irq_routing(PCI_INTC, PCI_IRQ_DISABLED);
+                break;
+                case 0xc3:
+//                pclog("IRQ routing %02x %02x\n", addr, val);
+                if (val & 0x80)
+                        pci_set_irq_routing(PCI_INTD, val & 0xf);
+                else
+                        pci_set_irq_routing(PCI_INTD, PCI_IRQ_DISABLED);
+                break;
         }
                 
         if ((addr >= 4 && addr < 8) || addr >= 0x40)
@@ -103,6 +132,10 @@ void *sis496_init()
         sis496->pci_conf[0x0b] = 0x06;
         
         sis496->pci_conf[0x0e] = 0x00; /*Single function device*/
+
+        pci_set_card_routing(15, PCI_INTA);
+        pci_set_card_routing(13, PCI_INTD);
+        pci_set_card_routing(11, PCI_INTC);
 
 	return sis496;
 }

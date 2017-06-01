@@ -44,6 +44,7 @@
 #include "ps2_mca.h"
 #include "scat.h"
 #include "serial.h"
+#include "sio.h"
 #include "sis496.h"
 #include "sound_ps1.h"
 #include "sound_pssj.h"
@@ -51,7 +52,6 @@
 #include "tandy_eeprom.h"
 #include "tandy_rom.h"
 #include "um8669f.h"
-#include "um8881f.h"
 #include "vid_pcjr.h"
 #include "vid_tandy.h"
 #include "wd76c10.h"
@@ -81,7 +81,6 @@ void     at_wd76c10_init();
 void     at_ali1429_init();
 void    at_headland_init();
 void     at_opti495_init();
-void     at_um8881f_init();
 void      at_sis496_init();
 void      at_i430vx_init();
 void      at_batman_init();
@@ -134,7 +133,6 @@ MODEL models[] =
         {"AMI 386DX clone",       ROM_AMI386DX_OPTI495, "ami386dx",       { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, 0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_opti495_init, NULL},
         {"AMI 486 clone",         ROM_AMI486,           "ami486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
         {"AMI WinBIOS 486",       ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
-/*        {"AMI WinBIOS 486 PCI", ROM_PCI486,    { "Intel", cpus_i486,    "AMD", cpus_Am486, "Cyrix", cpus_Cx486},   0, 1,  1, 256, 1, at_um8881f_init},*/
         {"Award SiS 496/497",     ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,             1, 256,   1,      at_sis496_init, NULL},
         {"Intel Premiere/PCI",    ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
         {"Intel Advanced/EV",     ROM_ENDEAVOR,         "endeavor",       { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
@@ -458,19 +456,14 @@ void at_ali1429_init()
         ali1429_init();
 }
 
-void at_um8881f_init()
-{
-        at_init();
-        ide_init();
-        pci_init(PCI_CONFIG_TYPE_1, 0, 31);
-        um8881f_init();
-}
-
 void at_sis496_init()
 {
         at_init();
         ide_init();
-        pci_init(PCI_CONFIG_TYPE_1, 0, 31);
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0xb);
+        pci_slot(0xd);
+        pci_slot(0xf);
         device_add(&sis496_device);
 }
 
@@ -478,8 +471,12 @@ void at_batman_init()
 {
         at_init();
         ide_init();
-        pci_init(PCI_CONFIG_TYPE_2, 0xd, 0x10);
+        pci_init(PCI_CONFIG_TYPE_2);
+        pci_slot(0xc);
+        pci_slot(0xe);
+        pci_slot(0x6);
         i430lx_init();
+        sio_init(2, 0xc, 0xe, 0x6, 0);
         fdc37c665_init();
         intel_batman_init();
         device_add(&intel_flash_bxt_ami_device);
@@ -488,9 +485,13 @@ void at_endeavor_init()
 {
         at_init();
         ide_init();
-        pci_init(PCI_CONFIG_TYPE_1, 0xd, 0x10);
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0xd);
+        pci_slot(0xe);
+        pci_slot(0xf);
+        pci_slot(0x10);
         i430fx_init();
-        piix_init(7);
+        piix_init(7, 0xd, 0xe, 0xf, 0x10);
         um8669f_init();
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
@@ -500,9 +501,13 @@ void at_i430vx_init()
 {
         at_init();
         ide_init();
-        pci_init(PCI_CONFIG_TYPE_1, 0, 31);
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0x11);
+        pci_slot(0x12);
+        pci_slot(0x13);
+        pci_slot(0x14);
         i430vx_init();
-        piix_init(7);
+        piix_init(7, 18, 17, 20, 19);
         um8669f_init();
         device_add(&intel_flash_bxt_device);
 }
