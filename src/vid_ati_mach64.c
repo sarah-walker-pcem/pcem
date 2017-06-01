@@ -71,6 +71,8 @@ typedef struct mach64_t
         int type;
         
         uint8_t pci_regs[256];
+        uint8_t int_line;
+        int card;
 
         int bank_r[2];
         int bank_w[2];
@@ -197,6 +199,7 @@ typedef struct mach64_t
         uint16_t pci_id;
         uint32_t config_chip_id;
         uint32_t block_decoded_io;
+        int use_block_decoded_io;
         
         int pll_addr;
         uint8_t pll_regs[16];
@@ -550,6 +553,14 @@ void mach64_updatemapping(mach64_t *mach64)
                 mem_mapping_disable(&mach64->mmio_linear_mapping);
                 mem_mapping_disable(&mach64->mmio_linear_mapping_2);
         }
+}
+
+static void mach64_update_irqs(mach64_t *mach64)
+{
+        if ((mach64->crtc_int_cntl & 0xaa0024) & ((mach64->crtc_int_cntl << 1) & 0xaa0024))
+                pci_set_irq(mach64->card, PCI_INTA);
+        else
+                pci_clear_irq(mach64->card, PCI_INTA);
 }
 
 static inline void wake_fifo_thread(mach64_t *mach64)
@@ -1671,6 +1682,7 @@ static void mach64_vblank_start(svga_t *svga)
         int overlay_cmp_mix = (mach64->overlay_key_cntl >> 8) & 0xf;
         
         mach64->crtc_int_cntl |= 4;
+        mach64_update_irqs(mach64);
         
         svga->overlay.x = (mach64->overlay_y_x_start >> 16) & 0x7ff;
         svga->overlay.y = mach64->overlay_y_x_start & 0x7ff;
@@ -2230,6 +2242,7 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 mach64->crtc_int_cntl = (mach64->crtc_int_cntl & 0x75) | (val & ~0x75);
                 if (val & 4)
                         mach64->crtc_int_cntl &= ~4;
+                mach64_update_irqs(mach64);
                 break;
 
                 case 0x1c: case 0x1d: case 0x1e: case 0x1f:
@@ -3146,17 +3159,20 @@ static void mach64_io_set(mach64_t *mach64)
         
         io_sethandler(0x03c0, 0x0020, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
         
-        for (c = 0; c < 8; c++)
+        if (!mach64->use_block_decoded_io)
         {
-                io_sethandler((c * 0x1000) + 0x2ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0x6ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0xaec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
-                io_sethandler((c * 0x1000) + 0xeec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                for (c = 0; c < 8; c++)
+                {
+                        io_sethandler((c * 0x1000) + 0x2ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                        io_sethandler((c * 0x1000) + 0x6ec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                        io_sethandler((c * 0x1000) + 0xaec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                        io_sethandler((c * 0x1000) + 0xeec, 0x0004, mach64_ext_inb, mach64_ext_inw, mach64_ext_inl, mach64_ext_outb, mach64_ext_outw, mach64_ext_outl, mach64);
+                }
         }
 
         io_sethandler(0x01ce, 0x0002, mach64_in, NULL, NULL, mach64_out, NULL, NULL, mach64);
 
-        if (mach64->block_decoded_io && mach64->block_decoded_io < 0x10000)
+        if (mach64->use_block_decoded_io && mach64->block_decoded_io && mach64->block_decoded_io < 0x10000)
                 io_sethandler(mach64->block_decoded_io, 0x0400, mach64_block_inb, mach64_block_inw, mach64_block_inl, mach64_block_outb, mach64_block_outw, mach64_block_outl, mach64);
 }
 
@@ -3203,6 +3219,11 @@ uint8_t mach64_pci_read(int func, int addr, void *p)
                 case 0x31: return 0x00;
                 case 0x32: return mach64->pci_regs[0x32];
                 case 0x33: return mach64->pci_regs[0x33];
+                
+                case 0x3c: return mach64->int_line;
+                case 0x3d: return PCI_INTA;
+                
+                case 0x40: return mach64->use_block_decoded_io;
         }
         return 0;
 }
@@ -3280,6 +3301,21 @@ void mach64_pci_write(int func, int addr, uint8_t val, void *p)
                         mem_mapping_disable(&mach64->bios_rom.mapping);
                 }
                 return;
+
+                case 0x3c:
+                mach64->int_line = val;
+                break;
+                
+                case 0x40:
+                if (mach64->type == MACH64_VT2)
+                {
+                        if (mach64->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_IO)
+                                mach64_io_remove(mach64);
+                        mach64->use_block_decoded_io = val & 0x04;
+                        if (mach64->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_IO)
+                                mach64_io_set(mach64);
+                }
+                break;
         }
 }
 
@@ -3308,7 +3344,7 @@ static void *mach64_common_init()
 
         mach64_io_set(mach64);
 
-        pci_add(mach64_pci_read, mach64_pci_write, mach64);
+        mach64->card = pci_add(mach64_pci_read, mach64_pci_write, mach64);
 
         mach64->pci_regs[PCI_REG_COMMAND] = 3;
         mach64->pci_regs[0x30] = 0x00;
@@ -3356,7 +3392,8 @@ static void *mach64vt2_init()
         mach64->config_chip_id = 0x40005654;
         mach64->dac_cntl = 1 << 16; /*Internal 24-bit DAC*/
         mach64->config_stat0 = 4;
-
+        mach64->use_block_decoded_io = PCI ? 4 : 0;
+        
         ati_eeprom_load(&mach64->eeprom, "mach64vt.nvr", 1);
 
         rom_init(&mach64->bios_rom, "roms/atimach64vt2pci.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);

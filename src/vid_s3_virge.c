@@ -127,6 +127,7 @@ typedef struct virge_t
         uint32_t linear_base, linear_size;
 
         uint8_t pci_regs[256];
+        int card;
 
         int is_375;
 
@@ -234,6 +235,8 @@ typedef struct virge_t
         event_t *fifo_not_full_event;
         
         int virge_busy;
+        
+        uint8_t subsys_stat, subsys_cntl;
 } virge_t;
 
 static inline void wake_fifo_thread(virge_t *virge)
@@ -298,6 +301,21 @@ enum
         CMD_SET_COMMAND_NOP = (15 << 27)
 };
 
+#define INT_VSY      (1 << 0)
+#define INT_S3D_DONE (1 << 1)
+#define INT_FIFO_OVF (1 << 2)
+#define INT_FIFO_EMP (1 << 3)
+#define INT_3DF_EMP  (1 << 6)
+#define INT_MASK 0xff
+
+static void s3_virge_update_irqs(virge_t *virge)
+{
+        if ((virge->svga.crtc[0x32] & 0x10) && (virge->subsys_stat & virge->subsys_cntl & INT_MASK))
+                pci_set_irq(virge->card, PCI_INTA);
+        else
+                pci_clear_irq(virge->card, PCI_INTA);
+}
+
 static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
 {
         virge_t *virge = (virge_t *)p;
@@ -353,6 +371,7 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         case 0x32:
                         if ((svga->crtc[0x67] & 0xc) != 0xc)
                                 svga->vrammask = (val & 0x40) ? 0x3ffff : ((virge->memory_size << 20) - 1);
+                        s3_virge_update_irqs(virge);
                         break;
                         
                         case 0x50:
@@ -717,6 +736,14 @@ static void s3_virge_updatemapping(virge_t *virge)
 
 }
 
+static void s3_virge_vblank_start(svga_t *svga)
+{
+        virge_t *virge = (virge_t *)svga->p;
+
+        virge->subsys_stat |= INT_VSY;
+        s3_virge_update_irqs(virge);
+}
+
 static void s3_virge_wait_fifo_idle(virge_t *virge)
 {
         while (!FIFO_EMPTY)
@@ -851,6 +878,7 @@ static uint32_t s3_virge_mmio_read_l(uint32_t addr, void *p)
                         ret = (0x10 << 8);
                 else
                         ret = (0x10 << 8) | (1 << 13);
+                ret |= virge->subsys_stat;
                 if (!virge->virge_busy)
                         wake_fifo_thread(virge);
 //                pclog("Read status %04x %i\n", ret, virge->s3d_busy);
@@ -1270,6 +1298,8 @@ static void fifo_thread(void *param)
                         virge_time += end_time - start_time;
                 }
                 virge->virge_busy = 0;
+                virge->subsys_stat |= INT_FIFO_EMP | INT_3DF_EMP;
+                s3_virge_update_irqs(virge);
         }
 }
 
@@ -1478,6 +1508,12 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 virge->streams.sec_h = val & 0x7ff;                
                 svga_recalctimings(svga);
                 svga->fullchange = changeframecount;
+                break;
+                
+                case 0x8504:
+                virge->subsys_stat &= ~(val & 0xff);
+                virge->subsys_cntl = (val >> 8);
+                s3_virge_update_irqs(virge);
                 break;
                 
                 case 0xa000: case 0xa004: case 0xa008: case 0xa00c:
@@ -3304,6 +3340,8 @@ static void render_thread(void *param)
                                 thread_set_event(virge->not_full_event);
                 }
                 virge->s3d_busy = 0;
+                virge->subsys_stat |= INT_S3D_DONE;
+                s3_virge_update_irqs(virge);
         }
 }
 
@@ -3857,6 +3895,7 @@ static void *s3_virge_375_init()
                    s3_virge_in, s3_virge_out,
                    s3_virge_hwcursor_draw,
                    s3_virge_overlay_draw);
+        virge->svga.vblank_start = s3_virge_vblank_start;
 
         rom_init(&virge->bios_rom, "roms/86c375_1.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)
@@ -3925,7 +3964,7 @@ static void *s3_virge_375_init()
         
         virge->is_375 = 1;
         
-        pci_add(s3_virge_pci_read, s3_virge_pci_write, virge);
+        virge->card = pci_add(s3_virge_pci_read, s3_virge_pci_write, virge);
  
         virge->wake_render_thread = thread_create_event();
         virge->wake_main_thread = thread_create_event();
