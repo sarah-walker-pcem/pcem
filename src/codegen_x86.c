@@ -23,6 +23,7 @@
 #include <windows.h>
 #endif
 
+int codegen_flat_ds, codegen_flat_ss;
 int mmx_ebx_ecx_loaded;
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
@@ -1478,6 +1479,9 @@ void codegen_block_start_recompile(codeblock_t *block)
 
         block->TOP = cpu_state.TOP;
         block->was_recompiled = 1;
+
+        codegen_flat_ds = cpu_cur_status & CPU_STATUS_FLATDS;
+        codegen_flat_ss = cpu_cur_status & CPU_STATUS_FLATSS;
 }
 
 void codegen_block_remove()

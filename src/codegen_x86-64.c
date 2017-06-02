@@ -23,7 +23,7 @@
 #include <windows.h>
 #endif
 
-
+int codegen_flat_ds, codegen_flat_ss;
 int codegen_flags_changed = 0;
 int codegen_fpu_entered = 0;
 int codegen_fpu_loaded_iq[8];
@@ -384,6 +384,9 @@ void codegen_block_start_recompile(codeblock_t *block)
         codegen_reg_loaded[4] = codegen_reg_loaded[5] = codegen_reg_loaded[6] = codegen_reg_loaded[7] = 0;
 
         block->was_recompiled = 1;
+
+        codegen_flat_ds = cpu_cur_status & CPU_STATUS_FLATDS;
+        codegen_flat_ss = cpu_cur_status & CPU_STATUS_FLATSS;
 }
 
 void codegen_block_remove()

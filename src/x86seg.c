@@ -434,6 +434,10 @@ void loadseg(uint16_t seg, x86seg *s)
                 }
 #endif
                 s->checked = 0;
+                if (s == &_ds)
+                        codegen_flat_ds = 0;
+                if (s == &_ss)
+                        codegen_flat_ss = 0;
         }
         else
         {
@@ -443,6 +447,10 @@ void loadseg(uint16_t seg, x86seg *s)
                 if (s == &_ss)
                         stack32 = 0;
                 s->checked = 1;
+                if (s == &_ds)
+                        codegen_flat_ds = 0;
+                if (s == &_ss)
+                        codegen_flat_ss = 0;
         }
         
         if (s == &_ds)

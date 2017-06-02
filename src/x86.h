@@ -111,3 +111,6 @@ void dumpregs();
 void execx86(int cycs);
 void exec386(int cycs);
 void exec386_dynarec(int cycs);
+
+extern int codegen_flat_ds;
+extern int codegen_flat_ss;
