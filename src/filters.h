@@ -132,11 +132,11 @@ static inline float high_cut_iir(int i, float NewSample) {
 
 
 #undef NCoef
-#define NCoef 1
+#define NCoef 2
 
 //fc=3.2kHz
 static inline float sb_iir(int i, float NewSample) {
-/*    float ACoef[NCoef+1] = {
+    float ACoef[NCoef+1] = {
         0.03356837051492005100,
         0.06713674102984010200,
         0.03356837051492005100
@@ -146,9 +146,9 @@ static inline float sb_iir(int i, float NewSample) {
         1.00000000000000000000,
         -1.41898265221812010000,
         0.55326988968868285000
-    };*/
+    };
     
-    float ACoef[NCoef+1] = {
+/*    float ACoef[NCoef+1] = {
         0.17529642630084405000,
         0.17529642630084405000
     };
@@ -156,7 +156,7 @@ static inline float sb_iir(int i, float NewSample) {
     float BCoef[NCoef+1] = {
         1.00000000000000000000,
         -0.64940759319751051000
-    };
+    };*/
     static float y[2][NCoef+1]; //output samples
     static float x[2][NCoef+1]; //input samples
     int n;
