@@ -503,11 +503,11 @@ void sb_exec_command(sb_dsp_t *dsp)
 //                pclog("ASP read reg %02X %02X\n", sb_data[0], sb_asp_regs[sb_data[0]]);
                 break;
                 case 0xF8:
-                if (dsp->sb_type < SB16) break;
+                if (dsp->sb_type >= SB16) break;
                 sb_add_data(dsp, 0);
                 break;
                 case 0xF9:
-                if (dsp->sb_type >= SB16) break;
+                if (dsp->sb_type < SB16) break;
                 if (dsp->sb_data[0] == 0x0e)      sb_add_data(dsp, 0xff);
                 else if (dsp->sb_data[0] == 0x0f) sb_add_data(dsp, 0x07);
                 else if (dsp->sb_data[0] == 0x37) sb_add_data(dsp, 0x38);
