@@ -69,6 +69,45 @@ static void mem_load_atide115_bios()
                 fclose(f);
         }
 }
+
+static int mem_load_basic(char *path)
+{
+        char s[256];
+        FILE *f;
+        
+        sprintf(s, "%s/ibm-basic-1.10.rom", path);
+        f = romfopen(s, "rb");
+        if (!f)
+        {
+                sprintf(s, "%s/basicc11.f6", path);
+                f = romfopen(s, "rb");
+                if (!f) return 1; /*I don't really care if BASIC is there or not*/
+                fread(rom + 0x6000, 8192, 1, f);
+                fclose(f);
+                sprintf(s, "%s/basicc11.f8", path);
+                f = romfopen(s, "rb");
+                if (!f) return 0; /*But if some of it is there, then all of it must be*/
+                fread(rom + 0x8000, 8192, 1, f);
+                fclose(f);
+                sprintf(s, "%s/basicc11.fa", path);
+                f = romfopen(s, "rb");
+                if (!f) return 0;
+                fread(rom + 0xA000, 8192, 1, f);
+                fclose(f);
+                sprintf(s, "%s/basicc11.fc", path);
+                f = romfopen(s, "rb");
+                if (!f) return 0;
+                fread(rom + 0xC000, 8192, 1, f);
+                fclose(f);
+        }
+        else
+        {
+                fread(rom + 0x6000, 32768, 1, f);
+                fclose(f);
+        }
+
+        return 1;
+}
         
 int loadbios()
 {
@@ -361,22 +400,8 @@ int loadbios()
 //                f=fopen("pc081682.bin","rb");
                 fread(rom+0xE000,8192,1,f);
                 fclose(f);
-                f=romfopen("roms/ibmpc/basicc11.f6","rb");
-                if (!f) return 1; /*I don't really care if BASIC is there or not*/
-                fread(rom+0x6000,8192,1,f);
-                fclose(f);
-                f=romfopen("roms/ibmpc/basicc11.f8","rb");
-                if (!f) break; /*But if some of it is there, then all of it must be*/
-                fread(rom+0x8000,8192,1,f);
-                fclose(f);
-                f=romfopen("roms/ibmpc/basicc11.fa","rb");
-                if (!f) break;
-                fread(rom+0xA000,8192,1,f);
-                fclose(f);
-                f=romfopen("roms/ibmpc/basicc11.fc","rb");
-                if (!f) break;
-                fread(rom+0xC000,8192,1,f);
-                fclose(f);
+                if (!mem_load_basic("roms/ibmpc"))
+                        break;
                 return 1;
 
                 case ROM_MEGAPC:
@@ -531,6 +556,8 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
+                if (!mem_load_basic("roms/ltxt"))
+                        break;
                 return 1;
 
                 case ROM_LXT3:
@@ -538,6 +565,8 @@ int loadbios()
                 if (!f) break;
                 fread(rom + 0xE000, 8192, 1, f);
                 fclose(f);
+                if (!mem_load_basic("roms/lxt3"))
+                        break;
                 return 1;
 
                 case ROM_PX386: /*Phoenix 80386 BIOS*/
