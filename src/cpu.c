@@ -68,6 +68,7 @@ int cpu_hasrdtsc;
 int cpu_hasMMX, cpu_hasMSR;
 int cpu_hasCR4;
 int cpu_use_dynarec;
+int cpu_cyrix_alignment;
 
 uint64_t cpu_CR4_mask;
 
@@ -90,6 +91,7 @@ int timing_iret_rm, timing_iret_v86, timing_iret_pm, timing_iret_pm_outer;
 int timing_call_rm, timing_call_pm, timing_call_pm_gate, timing_call_pm_gate_inner;
 int timing_retf_rm, timing_retf_pm, timing_retf_pm_outer;
 int timing_jmp_rm, timing_jmp_pm, timing_jmp_pm_gate;
+int timing_misaligned;
 
 static struct
 {
@@ -581,6 +583,9 @@ void cpu_set()
         }
 
         memset(&msr, 0, sizeof(msr));
+
+        timing_misaligned = 0;
+        cpu_cyrix_alignment = 0;
         
         switch (cpu_s->cpu_type)
         {
@@ -712,6 +717,7 @@ void cpu_set()
                 timing_jmp_rm      = 9;
                 timing_jmp_pm      = 26;
                 timing_jmp_pm_gate = 37;
+                timing_misaligned = 3;
                 break;
                 
                 case CPU_486DLC:
@@ -744,6 +750,7 @@ void cpu_set()
                 timing_jmp_rm      = 9;
                 timing_jmp_pm      = 26;
                 timing_jmp_pm_gate = 37;
+                timing_misaligned = 3;
                 break;
                 
                 case CPU_i486SX:
@@ -776,6 +783,7 @@ void cpu_set()
                 timing_jmp_rm      = 17;
                 timing_jmp_pm      = 19;
                 timing_jmp_pm_gate = 32;
+                timing_misaligned = 3;
                 break;
 
                 case CPU_Am486SX:
@@ -809,6 +817,7 @@ void cpu_set()
                 timing_jmp_rm      = 17;
                 timing_jmp_pm      = 19;
                 timing_jmp_pm_gate = 32;
+                timing_misaligned = 3;
                 break;
                 
                 case CPU_Cx486S:
@@ -841,6 +850,7 @@ void cpu_set()
                 timing_jmp_rm      = 9;
                 timing_jmp_pm      = 26;
                 timing_jmp_pm_gate = 37;
+                timing_misaligned = 3;
                 break;
                 
                 case CPU_Cx5x86:
@@ -872,6 +882,8 @@ void cpu_set()
                 timing_jmp_rm      = 5;
                 timing_jmp_pm      = 7;
                 timing_jmp_pm_gate = 17;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
                 break;
 
                 case CPU_WINCHIP:
@@ -909,6 +921,8 @@ void cpu_set()
                 timing_jmp_rm      = 5;
                 timing_jmp_pm      = 7;
                 timing_jmp_pm_gate = 17;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
                 codegen_timing_set(&codegen_timing_winchip);
                 break;
 
@@ -942,6 +956,7 @@ void cpu_set()
                 timing_jmp_rm      = 3;
                 timing_jmp_pm      = 3;
                 timing_jmp_pm_gate = 18;
+                timing_misaligned = 3;
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = 0;
@@ -981,6 +996,7 @@ void cpu_set()
                 timing_jmp_rm      = 3;
                 timing_jmp_pm      = 3;
                 timing_jmp_pm_gate = 18;
+                timing_misaligned = 3;
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = 1;
@@ -1019,6 +1035,8 @@ void cpu_set()
                 timing_jmp_rm      = 1;
                 timing_jmp_pm      = 4;
                 timing_jmp_pm_gate = 14;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = 0;
@@ -1057,6 +1075,8 @@ void cpu_set()
                 timing_jmp_rm      = 1;
                 timing_jmp_pm      = 4;
                 timing_jmp_pm_gate = 14;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = 0;
@@ -1129,6 +1149,8 @@ void cpu_set()
                 timing_jmp_rm      = 1;
                 timing_jmp_pm      = 4;
                 timing_jmp_pm_gate = 14;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
                 cpu_hasrdtsc = 1;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_hasMMX = 1;

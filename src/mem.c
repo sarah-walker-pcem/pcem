@@ -1099,21 +1099,29 @@ void writememb386l(uint32_t seg, uint32_t addr, uint8_t val)
 uint16_t readmemwl(uint32_t seg, uint32_t addr)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
-        if ((addr2&0xFFF)>0xFFE)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffff;
-                        if (mmutranslate_read(addr2+1) == 0xffffffff) return 0xffff;
-                }
-                if (is386) return readmemb386l(seg,addr)|(readmemb386l(seg,addr+1)<<8);
-                else       return readmembl(seg+addr)|(readmembl(seg+addr+1)<<8);
-        }
+
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
                 printf("NULL segment! rw %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
+        }
+        if (addr2 & 1)
+        {
+                if (!cpu_cyrix_alignment || (addr2 & 7) == 7)
+                        cycles -= timing_misaligned;
+                if ((addr2 & 0xFFF) > 0xFFE)
+                {
+                        if (cr0 >> 31)
+                        {
+                                if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffff;
+                                if (mmutranslate_read(addr2+1) == 0xffffffff) return 0xffff;
+                        }
+                        if (is386) return readmemb386l(seg,addr)|(readmemb386l(seg,addr+1)<<8);
+                        else       return readmembl(seg+addr)|(readmembl(seg+addr+1)<<8);
+                }
+                else if (readlookup2[addr2 >> 12] != -1)
+                        return *(uint16_t *)(readlookup2[addr2 >> 12] + addr2);
         }
         if (cr0>>31)
         {
@@ -1137,25 +1145,6 @@ uint16_t readmemwl(uint32_t seg, uint32_t addr)
 void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
-        if ((addr2&0xFFF)>0xFFE)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
-                        if (mmutranslate_write(addr2+1) == 0xffffffff) return;
-                }
-                if (is386)
-                {
-                        writememb386l(seg,addr,val);
-                        writememb386l(seg,addr+1,val>>8);
-                }
-                else
-                {
-                        writemembl(seg+addr,val);
-                        writemembl(seg+addr+1,val>>8);
-                }
-                return;
-        }
 
         if (seg==-1)
         {
@@ -1163,6 +1152,37 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
                 printf("NULL segment! ww %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
         }
+
+        if (addr2 & 1)
+        {
+                if (!cpu_cyrix_alignment || (addr2 & 7) == 7)
+                        cycles -= timing_misaligned;
+                if ((addr2 & 0xFFF) > 0xFFE)
+                {
+                        if (cr0 >> 31)
+                        {
+                                if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                                if (mmutranslate_write(addr2+1) == 0xffffffff) return;
+                        }
+                        if (is386)
+                        {
+                                writememb386l(seg,addr,val);
+                                writememb386l(seg,addr+1,val>>8);
+                        }
+                        else
+                        {
+                                writemembl(seg+addr,val);
+                                writemembl(seg+addr+1,val>>8);
+                        }
+                        return;
+                }
+                else if (writelookup2[addr2 >> 12] != -1)
+                {
+                        *(uint16_t *)(writelookup2[addr2 >> 12] + addr2) = val;
+                        return;
+                }
+        }
+
         if (page_lookup[addr2>>12])
         {
                 page_lookup[addr2>>12]->write_w(addr2, val, page_lookup[addr2>>12]);
@@ -1197,15 +1217,6 @@ void writememwl(uint32_t seg, uint32_t addr, uint16_t val)
 uint32_t readmemll(uint32_t seg, uint32_t addr)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
-        if ((addr2&0xFFF)>0xFFC)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
-                        if (mmutranslate_read(addr2+3) == 0xffffffff) return 0xffffffff;
-                }
-                return readmemwl(seg,addr)|(readmemwl(seg,addr+2)<<16);
-        }
 
         if (seg==-1)
         {
@@ -1213,7 +1224,24 @@ uint32_t readmemll(uint32_t seg, uint32_t addr)
                 printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
         }
-        
+
+        if (addr2 & 3)
+        {
+                if (!cpu_cyrix_alignment || (addr2 & 7) > 4)
+                        cycles -= timing_misaligned;
+                if ((addr2&0xFFF)>0xFFC)
+                {
+                        if (cr0>>31)
+                        {
+                                if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
+                                if (mmutranslate_read(addr2+3) == 0xffffffff) return 0xffffffff;
+                        }
+                        return readmemwl(seg,addr)|(readmemwl(seg,addr+2)<<16);
+                }
+                else if (readlookup2[addr2 >> 12] != -1)
+                        return *(uint32_t *)(readlookup2[addr2 >> 12] + addr2);
+        }
+
         if (cr0>>31)
         {
                 addr2 = mmutranslate_read(addr2);
@@ -1236,22 +1264,32 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
 
-        if ((addr2&0xFFF)>0xFFC)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
-                        if (mmutranslate_write(addr2+3) == 0xffffffff) return;
-                }
-                writememwl(seg,addr,val);
-                writememwl(seg,addr+2,val>>16);
-                return;
-        }
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
                 printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
+        }
+        if (addr2 & 3)
+        {
+                if (!cpu_cyrix_alignment || (addr2 & 7) > 4)
+                        cycles -= timing_misaligned;
+                if ((addr2 & 0xFFF) > 0xFFC)
+                {
+                        if (cr0>>31)
+                        {
+                                if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                                if (mmutranslate_write(addr2+3) == 0xffffffff) return;
+                        }
+                        writememwl(seg,addr,val);
+                        writememwl(seg,addr+2,val>>16);
+                        return;
+                }
+                else if (writelookup2[addr2 >> 12] != -1)
+                {
+                        *(uint32_t *)(writelookup2[addr2 >> 12] + addr2) = val;
+                        return;
+                }
         }
         if (page_lookup[addr2>>12])
         {
@@ -1294,21 +1332,28 @@ void writememll(uint32_t seg, uint32_t addr, uint32_t val)
 uint64_t readmemql(uint32_t seg, uint32_t addr)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
-        if ((addr2&0xFFF)>0xFF8)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
-                        if (mmutranslate_read(addr2+7) == 0xffffffff) return 0xffffffff;
-                }
-                return readmemll(seg,addr)|((uint64_t)readmemll(seg,addr+4)<<32);
-        }
 
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
                 printf("NULL segment! rl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return -1;
+        }
+
+        if (addr2 & 7)
+        {
+                cycles -= timing_misaligned;
+                if ((addr2 & 0xFFF) > 0xFF8)
+                {
+                        if (cr0>>31)
+                        {
+                                if (mmutranslate_read(addr2)   == 0xffffffff) return 0xffffffff;
+                                if (mmutranslate_read(addr2+7) == 0xffffffff) return 0xffffffff;
+                        }
+                        return readmemll(seg,addr)|((uint64_t)readmemll(seg,addr+4)<<32);
+                }
+                else if (readlookup2[addr2 >> 12] != -1)
+                        return *(uint64_t *)(readlookup2[addr2 >> 12] + addr2);
         }
         
         if (cr0>>31)
@@ -1330,22 +1375,31 @@ void writememql(uint32_t seg, uint32_t addr, uint64_t val)
 {
         uint32_t addr2 = mem_logical_addr = seg + addr;
 
-        if ((addr2 & 0xFFF) > 0xFF8)
-        {
-                if (cr0>>31)
-                {
-                        if (mmutranslate_write(addr2)   == 0xffffffff) return;
-                        if (mmutranslate_write(addr2+7) == 0xffffffff) return;
-                }
-                writememll(seg, addr, val);
-                writememll(seg, addr+4, val >> 32);
-                return;
-        }
         if (seg==-1)
         {
                 x86gpf("NULL segment", 0);
                 printf("NULL segment! wl %04X(%08X):%08X %02X %08X\n",CS,cs,cpu_state.pc,opcode,addr);
                 return;
+        }
+        if (addr2 & 7)
+        {
+                cycles -= timing_misaligned;
+                if ((addr2 & 0xFFF) > 0xFF8)
+                {
+                        if (cr0>>31)
+                        {
+                                if (mmutranslate_write(addr2)   == 0xffffffff) return;
+                                if (mmutranslate_write(addr2+7) == 0xffffffff) return;
+                        }
+                        writememll(seg, addr, val);
+                        writememll(seg, addr+4, val >> 32);
+                        return;
+                }
+                else if (writelookup2[addr2 >> 12] != -1)
+                {
+                        *(uint64_t *)(writelookup2[addr2 >> 12] + addr2) = val;
+                        return;
+                }
         }
         if (page_lookup[addr2>>12])
         {
