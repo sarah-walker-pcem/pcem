@@ -88,6 +88,7 @@ extern CPU cpus_Pentium[];
 extern CPU cpus_6x86[];
 
 extern CPU cpus_pcjr[];
+extern CPU cpus_europc[];
 extern CPU cpus_pc1512[];
 extern CPU cpus_ibmat[];
 extern CPU cpus_ps1_m2011[];
