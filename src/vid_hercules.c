@@ -153,7 +153,7 @@ void hercules_poll(void *p)
                                         dat = (hercules->vram[((hercules->ma << 1) & 0x1fff) + ca] << 8) | hercules->vram[((hercules->ma << 1) & 0x1fff) + ca + 1];
                                         hercules->ma++;
                                         for (c = 0; c < 16; c++)
-                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? 0xaaaaaa : 0;
+                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? cgapal[0x7] : 0;
                                 }
                         }
                         else
@@ -307,6 +307,7 @@ void hercules_poll(void *p)
 
 void *hercules_init()
 {
+        int display_type;
         int c;
         hercules_t *hercules = malloc(sizeof(hercules_t));
         memset(hercules, 0, sizeof(hercules_t));
@@ -317,24 +318,27 @@ void *hercules_init()
         mem_mapping_add(&hercules->mapping, 0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, hercules);
         io_sethandler(0x03b0, 0x0010, hercules_in, NULL, NULL, hercules_out, NULL, NULL, hercules);
 
+        display_type = device_get_config_int("display_type");
+        cgapal_rebuild(display_type, 0);
+
         for (c = 0; c < 256; c++)
         {
-                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = makecol32(0, 0, 0);
-                if (c & 8) mdacols[c][0][1] = makecol32(0xff, 0xff, 0xff);
-                else       mdacols[c][0][1] = makecol32(0xaa, 0xaa, 0xaa);
+                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = cgapal[0];
+                if (c & 8) mdacols[c][0][1] = cgapal[0xf];
+                else       mdacols[c][0][1] = cgapal[0x7];
         }
-        mdacols[0x70][0][1] = makecol32(0, 0, 0);
-        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0xF0][0][1] = makecol32(0, 0, 0);
-        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0x78][0][1] = makecol32(0xaa, 0xaa, 0xaa);
-        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0xF8][0][1] = makecol32(0xaa, 0xaa, 0xaa);
-        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0x00][0][1] = mdacols[0x00][1][1] = makecol32(0, 0, 0);
-        mdacols[0x08][0][1] = mdacols[0x08][1][1] = makecol32(0, 0, 0);
-        mdacols[0x80][0][1] = mdacols[0x80][1][1] = makecol32(0, 0, 0);
-        mdacols[0x88][0][1] = mdacols[0x88][1][1] = makecol32(0, 0, 0);
+        mdacols[0x70][0][1] = cgapal[0];
+        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = cgapal[0xf];
+        mdacols[0xF0][0][1] = cgapal[0];
+        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = cgapal[0xf];
+        mdacols[0x78][0][1] = cgapal[0x7];
+        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = cgapal[0xf];
+        mdacols[0xF8][0][1] = cgapal[0x7];
+        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = cgapal[0xf];
+        mdacols[0x00][0][1] = mdacols[0x00][1][1] = cgapal[0];
+        mdacols[0x08][0][1] = mdacols[0x08][1][1] = cgapal[0];
+        mdacols[0x80][0][1] = mdacols[0x80][1][1] = cgapal[0];
+        mdacols[0x88][0][1] = mdacols[0x88][1][1] = cgapal[0];
 
         return hercules;
 }
@@ -354,6 +358,37 @@ void hercules_speed_changed(void *p)
         hercules_recalctimings(hercules);
 }
 
+static device_config_t hercules_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "Green",
+                                .value = DISPLAY_GREEN
+                        },
+                        {
+                                .description = "Amber",
+                                .value = DISPLAY_AMBER
+                        },
+                        {
+                                .description = "White",
+                                .value = DISPLAY_WHITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = DISPLAY_WHITE
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t hercules_device =
 {
         "Hercules",
@@ -363,5 +398,6 @@ device_t hercules_device =
         NULL,
         hercules_speed_changed,
         NULL,
-        NULL
+        NULL,
+        hercules_config
 };

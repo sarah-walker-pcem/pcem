@@ -99,3 +99,12 @@ void hline(BITMAP *b, int x1, int y, int x2, int col);
 void destroy_bitmap(BITMAP *b);
 
 extern uint32_t cgapal[16];
+
+#define DISPLAY_RGB 0
+#define DISPLAY_COMPOSITE 1
+#define DISPLAY_RGB_NO_BROWN 2
+#define DISPLAY_GREEN 3
+#define DISPLAY_AMBER 4
+#define DISPLAY_WHITE 5
+
+void cgapal_rebuild(int display_type, int contrast);

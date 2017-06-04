@@ -263,6 +263,7 @@ void mda_poll(void *p)
 
 void *mda_init()
 {
+        int display_type;
         int c;
         mda_t *mda = malloc(sizeof(mda_t));
         memset(mda, 0, sizeof(mda_t));
@@ -273,24 +274,27 @@ void *mda_init()
         mem_mapping_add(&mda->mapping, 0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, mda);
         io_sethandler(0x03b0, 0x0010, mda_in, NULL, NULL, mda_out, NULL, NULL, mda);
 
+        display_type = device_get_config_int("display_type");
+        cgapal_rebuild(display_type, 0);
+
         for (c = 0; c < 256; c++)
         {
-                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = makecol32(0, 0, 0);
-                if (c & 8) mdacols[c][0][1] = makecol32(0xff, 0xff, 0xff);
-                else       mdacols[c][0][1] = makecol32(0xaa, 0xaa, 0xaa);
+                mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = cgapal[0];
+                if (c & 8) mdacols[c][0][1] = cgapal[0xf];
+                else       mdacols[c][0][1] = cgapal[0x7];
         }
-        mdacols[0x70][0][1] = makecol32(0, 0, 0);
-        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0xF0][0][1] = makecol32(0, 0, 0);
-        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0x78][0][1] = makecol32(0xaa, 0xaa, 0xaa);
-        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0xF8][0][1] = makecol32(0xaa, 0xaa, 0xaa);
-        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = makecol32(0xff, 0xff, 0xff);
-        mdacols[0x00][0][1] = mdacols[0x00][1][1] = makecol32(0, 0, 0);
-        mdacols[0x08][0][1] = mdacols[0x08][1][1] = makecol32(0, 0, 0);
-        mdacols[0x80][0][1] = mdacols[0x80][1][1] = makecol32(0, 0, 0);
-        mdacols[0x88][0][1] = mdacols[0x88][1][1] = makecol32(0, 0, 0);
+        mdacols[0x70][0][1] = cgapal[0];
+        mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = cgapal[0xf];
+        mdacols[0xF0][0][1] = cgapal[0];
+        mdacols[0xF0][0][0] = mdacols[0xF0][1][0] = mdacols[0xF0][1][1] = cgapal[0xf];
+        mdacols[0x78][0][1] = cgapal[0x7];
+        mdacols[0x78][0][0] = mdacols[0x78][1][0] = mdacols[0x78][1][1] = cgapal[0xf];
+        mdacols[0xF8][0][1] = cgapal[0x7];
+        mdacols[0xF8][0][0] = mdacols[0xF8][1][0] = mdacols[0xF8][1][1] = cgapal[0xf];
+        mdacols[0x00][0][1] = mdacols[0x00][1][1] = cgapal[0];
+        mdacols[0x08][0][1] = mdacols[0x08][1][1] = cgapal[0];
+        mdacols[0x80][0][1] = mdacols[0x80][1][1] = cgapal[0];
+        mdacols[0x88][0][1] = mdacols[0x88][1][1] = cgapal[0];
 
         return mda;
 }
@@ -310,6 +314,37 @@ void mda_speed_changed(void *p)
         mda_recalctimings(mda);
 }
 
+static device_config_t mda_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "Green",
+                                .value = DISPLAY_GREEN
+                        },
+                        {
+                                .description = "Amber",
+                                .value = DISPLAY_AMBER
+                        },
+                        {
+                                .description = "White",
+                                .value = DISPLAY_WHITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = DISPLAY_WHITE
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t mda_device =
 {
         "MDA",
@@ -319,5 +354,6 @@ device_t mda_device =
         NULL,
         mda_speed_changed,
         NULL,
-        NULL
+        NULL,
+        mda_config
 };

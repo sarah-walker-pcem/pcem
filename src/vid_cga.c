@@ -10,9 +10,6 @@
 #include "vid_cga.h"
 #include "dosbox/vid_cga_comp.h"
 
-#define CGA_RGB 0
-#define CGA_COMPOSITE 1
-
 #define COMPOSITE_OLD 0
 #define COMPOSITE_NEW 1
 
@@ -442,14 +439,15 @@ void cga_init(cga_t *cga)
 
 void *cga_standalone_init()
 {
-        int display_type;
+        int display_type, contrast;
         cga_t *cga = malloc(sizeof(cga_t));
         memset(cga, 0, sizeof(cga_t));
 
         display_type = device_get_config_int("display_type");
-        cga->composite = (display_type != CGA_RGB);
+        cga->composite = (display_type == DISPLAY_COMPOSITE);
         cga->revision = device_get_config_int("composite_type");
         cga->snow_enabled = device_get_config_int("snow_enabled");
+        contrast = device_get_config_int("contrast");
 
         cga->vram = malloc(0x4000);
                 
@@ -457,7 +455,9 @@ void *cga_standalone_init()
         timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
         mem_mapping_add(&cga->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, cga);
         io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, cga);
-		
+
+        cgapal_rebuild(display_type, contrast);
+
         return cga;
 }
 
@@ -486,17 +486,33 @@ static device_config_t cga_config[] =
                 {
                         {
                                 .description = "RGB",
-                                .value = CGA_RGB
+                                .value = DISPLAY_RGB
+                        },
+                        {
+                                .description = "RGB (no brown)",
+                                .value = DISPLAY_RGB_NO_BROWN
+                        },
+                        {
+                                .description = "Green Monochrome",
+                                .value = DISPLAY_GREEN
+                        },
+                        {
+                                .description = "Amber Monochrome",
+                                .value = DISPLAY_AMBER
+                        },
+                        {
+                                .description = "White Monochrome",
+                                .value = DISPLAY_WHITE
                         },
                         {
                                 .description = "Composite",
-                                .value = CGA_COMPOSITE
+                                .value = DISPLAY_COMPOSITE
                         },
                         {
                                 .description = ""
                         }
                 },
-                .default_int = CGA_RGB
+                .default_int = DISPLAY_RGB
         },
         {
                 .name = "composite_type",
@@ -523,6 +539,12 @@ static device_config_t cga_config[] =
                 .description = "Snow emulation",
                 .type = CONFIG_BINARY,
                 .default_int = 1
+        },
+        {
+                .name = "contrast",
+                .description = "Alternate monochrome contrast",
+                .type = CONFIG_BINARY,
+                .default_int = 0
         },
         {
                 .type = -1

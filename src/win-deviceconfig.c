@@ -235,7 +235,7 @@ void deviceconfig_open(HWND hwnd, device_t *device)
                         item->y = y;
                         item->id = id++;
                 
-                        item->cx = 80;
+                        item->cx = 200;
                         item->cy = 15;
 
                         item->style = WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX;
