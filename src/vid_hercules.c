@@ -153,7 +153,7 @@ void hercules_poll(void *p)
                                         dat = (hercules->vram[((hercules->ma << 1) & 0x1fff) + ca] << 8) | hercules->vram[((hercules->ma << 1) & 0x1fff) + ca + 1];
                                         hercules->ma++;
                                         for (c = 0; c < 16; c++)
-                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? 0xffffff : 0;
+                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? 0xaaaaaa : 0;
                                 }
                         }
                         else
