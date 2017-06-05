@@ -7,7 +7,7 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86-64.o compaq.o config.o cpu.o dac.o \
 	dells200.o device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o headland.o i430lx.o i430fx.o \
 	i430vx.o ide.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \
-	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o lpt.o mca.o mcr.o mem.o mfm_at.o mfm_xebec.o model.o mouse.o mouse_ps2.o \
+	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o laserxt.o lpt.o mca.o mcr.o mem.o mfm_at.o mfm_xebec.o model.o mouse.o mouse_ps2.o \
 	mouse_serial.o neat.o nmi.o nvr.o olivetti_m24.o opti495.o pc.o pci.o pic.o piix.o pit.o ppi.o ps1.o ps2.o ps2_mca.o ps2_nvr.o rom.o rtc.o \
 	scat.o serial.o sio.o sis496.o sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_cms.o sound_dbopl.o \
 	sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o sound_pas16.o sound_ps1.o sound_pssj.o sound_resid.o \

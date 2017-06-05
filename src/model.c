@@ -27,6 +27,7 @@
 #include "keyboard_olim24.h"
 #include "keyboard_pcjr.h"
 #include "keyboard_xt.h"
+#include "laserxt.h"
 #include "lpt.h"
 #include "mem.h"
 #include "mouse_ps2.h"
@@ -85,7 +86,7 @@ void      at_sis496_init();
 void      at_i430vx_init();
 void      at_batman_init();
 void    at_endeavor_init();
-
+void     xt_laserxt_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -98,8 +99,8 @@ MODEL models[] =
         {"Generic XT clone",      ROM_GENXT,            "genxt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"AMI XT clone",          ROM_AMIXT,            "amixt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"DTK XT clone",          ROM_DTKXT,            "dtk",            { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
-        {"VTech Laser Turbo XT",  ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
-        {"VTech Laser XT3",       ROM_LXT3,             "lxt3",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
+        {"VTech Laser Turbo XT",  ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
+        {"VTech Laser XT3",       ROM_LXT3,             "lxt3",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
         {"Phoenix XT clone",      ROM_PXXT,             "pxxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"Juko XT clone",         ROM_JUKOPC,           "jukopc",         { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"Tandy 1000",            ROM_TANDY,            "tandy",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  128, 640, 128,      tandy1k_init, &tandy1000_device},
@@ -287,6 +288,12 @@ void olim24_init()
         olivetti_m24_init();
 	nmi_init();
         device_add(&gameport_device);
+}
+
+void xt_laserxt_init()
+{
+        xt_init();
+        laserxt_init();
 }
 
 void at_init()

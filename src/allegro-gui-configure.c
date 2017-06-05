@@ -290,7 +290,7 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0}, //7
         {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //8
         
-        {d_edit_proc,    70*2, 276,    32, 14, 0, 0xffffff, 0, 0, 3, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 276,    40, 14, 0, 0xffffff, 0, 0, 4, 0, mem_size_str, 0, 0},
                         
         {d_text_proc,    98*2, 276,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
         
