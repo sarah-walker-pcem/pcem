@@ -78,11 +78,12 @@ static void wss_get_buffer(int32_t *buffer, int len, void *p)
 
 void *wss_init()
 {
+        int opl_emu;
         wss_t *wss = malloc(sizeof(wss_t));
-
         memset(wss, 0, sizeof(wss_t));
 
-        opl3_init(&wss->opl);
+        opl_emu = device_get_config_int("opl_emu");
+        opl3_init(&wss->opl, opl_emu);
         ad1848_init(&wss->ad1848);
         
         ad1848_setirq(&wss->ad1848, 7);
@@ -111,6 +112,30 @@ void wss_speed_changed(void *p)
         ad1848_speed_changed(&wss->ad1848);
 }
 
+static device_config_t wss_config[] =
+{
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t wss_device =
 {
         "Windows Sound System",
@@ -120,5 +145,6 @@ device_t wss_device =
         NULL,
         wss_speed_changed,
         NULL,
-        NULL
+        NULL,
+        wss_config
 };

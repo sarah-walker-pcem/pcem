@@ -39,6 +39,8 @@ typedef struct sb_t
         int pos;
         
         uint8_t pos_regs[8];
+        
+        int opl_emu;
 } sb_t;
 
 static int sb_att[]=
@@ -61,8 +63,8 @@ static void sb_get_buffer_opl2(int32_t *buffer, int len, void *p)
         {
                 int32_t out_l, out_r;
                 
-                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * 55000) >> 16);
-                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * 55000) >> 16);
+                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * 51000) >> 16);
+                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * 51000) >> 16);
 
                 if (sb->mixer.filter)
                 {
@@ -112,8 +114,8 @@ static void sb_get_buffer_opl3(int32_t *buffer, int len, void *p)
         {
                 int32_t out_l, out_r;
                 
-                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * 55000) >> 16);
-                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * 55000) >> 16);
+                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * (sb->opl_emu ? 47000 : 55000)) >> 16);
+                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * (sb->opl_emu ? 47000 : 55000)) >> 16);
 
                 if (sb->mixer.filter)
                 {
@@ -322,6 +324,7 @@ uint8_t sb_16_mixer_read(uint16_t addr, void *p)
 
         switch (mixer->index)
         {
+                case 0x40: return 0xff;
                 case 0x80:
                 switch (sb->dsp.sb_irqnum)
                 {
@@ -535,7 +538,8 @@ void *sb_pro_v2_init()
         uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
-        opl3_init(&sb->opl);
+        sb->opl_emu = device_get_config_int("opl_emu");
+        opl3_init(&sb->opl, sb->opl_emu);
         sb_dsp_init(&sb->dsp, SBPRO2);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
@@ -558,14 +562,11 @@ void *sb_pro_v2_init()
 void *sb_pro_mcv_init()
 {
         sb_t *sb = malloc(sizeof(sb_t));
-        //uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
 
-        opl3_init(&sb->opl);
+        sb->opl_emu = device_get_config_int("opl_emu");
+        opl3_init(&sb->opl, sb->opl_emu);
         sb_dsp_init(&sb->dsp, SBPRO2);
-        /*sb_dsp_setaddr(&sb->dsp, addr);
-        sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
-        sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));*/
         sb_mixer_init(&sb->mixer);
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         sound_add_handler(sb_get_buffer_opl3, sb);
@@ -587,7 +588,8 @@ void *sb_16_init()
         sb_t *sb = malloc(sizeof(sb_t));
         memset(sb, 0, sizeof(sb_t));
 
-        opl3_init(&sb->opl);
+        sb->opl_emu = device_get_config_int("opl_emu");
+        opl3_init(&sb->opl, sb->opl_emu);
         sb_dsp_init(&sb->dsp, SB16);
         sb_dsp_setaddr(&sb->dsp, 0x0220);
         sb_mixer_init(&sb->mixer);
@@ -626,7 +628,8 @@ void *sb_awe32_init()
         int onboard_ram = device_get_config_int("onboard_ram");
         memset(sb, 0, sizeof(sb_t));
 
-        opl3_init(&sb->opl);
+        sb->opl_emu = device_get_config_int("opl_emu");
+        opl3_init(&sb->opl, sb->opl_emu);
         sb_dsp_init(&sb->dsp, SB16 + 1);
         sb_dsp_setaddr(&sb->dsp, 0x0220);
         sb_mixer_init(&sb->mixer);
@@ -812,7 +815,7 @@ static device_config_t sb_mcv_config[] =
         }
 };
 
-static device_config_t sb_pro_config[] =
+static device_config_t sb_pro_v1_config[] =
 {
         {
                 .name = "addr",
@@ -888,6 +891,123 @@ static device_config_t sb_pro_config[] =
         }
 };
 
+static device_config_t sb_pro_v2_config[] =
+{
+        {
+                .name = "addr",
+                .description = "Address",
+                .type = CONFIG_BINARY,
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "0x220",
+                                .value = 0x220
+                        },
+                        {
+                                .description = "0x240",
+                                .value = 0x240
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 0x220
+        },
+        {
+                .name = "irq",
+                .description = "IRQ",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "IRQ 2",
+                                .value = 2
+                        },
+                        {
+                                .description = "IRQ 5",
+                                .value = 5
+                        },
+                        {
+                                .description = "IRQ 7",
+                                .value = 7
+                        },
+                        {
+                                .description = "IRQ 10",
+                                .value = 10
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 7
+        },
+        {
+                .name = "dma",
+                .description = "DMA",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DMA 1",
+                                .value = 1
+                        },
+                        {
+                                .description = "DMA 3",
+                                .value = 3
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 1
+        },
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
+        },
+        {
+                .type = -1
+        }
+};
+
+static device_config_t sb_pro_mcv_config[] =
+{
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
+        },
+        {
+                .type = -1
+        }
+};
+
 static device_config_t sb_16_config[] =
 {
         {
@@ -895,6 +1015,23 @@ static device_config_t sb_16_config[] =
                 .description = "MIDI out device",
                 .type = CONFIG_MIDI,
                 .default_int = 0
+        },
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
         },
         {
                 .type = -1
@@ -940,6 +1077,23 @@ static device_config_t sb_awe32_config[] =
                         }
                 },
                 .default_int = 512
+        },
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
         },
         {
                 .type = -1
@@ -1004,7 +1158,7 @@ device_t sb_pro_v1_device =
         sb_speed_changed,
         NULL,
         sb_add_status_info,
-        sb_pro_config
+        sb_pro_v1_config
 };
 device_t sb_pro_v2_device =
 {
@@ -1016,7 +1170,7 @@ device_t sb_pro_v2_device =
         sb_speed_changed,
         NULL,
         sb_add_status_info,
-        sb_pro_config
+        sb_pro_v2_config
 };
 device_t sb_pro_mcv_device =
 {
@@ -1028,7 +1182,7 @@ device_t sb_pro_mcv_device =
         sb_speed_changed,
         NULL,
         sb_add_status_info,
-        NULL
+        sb_pro_mcv_config
 };
 device_t sb_16_device =
 {

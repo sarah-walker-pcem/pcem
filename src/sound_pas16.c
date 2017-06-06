@@ -731,7 +731,7 @@ void *pas16_init()
         pas16_t *pas16 = malloc(sizeof(pas16_t));
         memset(pas16, 0, sizeof(pas16_t));
 
-        opl3_init(&pas16->opl);
+        opl3_init(&pas16->opl, 0);
         sb_dsp_init(&pas16->dsp, SB2);
 
         io_sethandler(0x9a01, 0x0001, NULL, NULL, NULL, pas16_out_base, NULL, NULL,  pas16);

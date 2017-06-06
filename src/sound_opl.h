@@ -24,7 +24,10 @@ void opl2_poll(opl_t *opl, int16_t *bufl, int16_t *bufr);
 void opl3_poll(opl_t *opl, int16_t *bufl, int16_t *bufr);
 
 void opl2_init(opl_t *opl);
-void opl3_init(opl_t *opl);
+void opl3_init(opl_t *opl, int opl_emu);
 
 void opl2_update2(opl_t *opl);
 void opl3_update2(opl_t *opl);
+
+#define OPL_DBOPL 0
+#define OPL_NUKED 1

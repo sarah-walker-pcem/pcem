@@ -21,7 +21,7 @@ vid_pc1512.o vid_pc1640.o vid_pcjr.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_
 vid_stg_ramdac.o vid_svga.o vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui9440.o \
 vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o \
 x86seg.o x87.o xtide.o sound_dbopl.o sound_resid.o
-DBOBJ = cdrom_image.o dbopl.o vid_cga_comp.o
+DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 

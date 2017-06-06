@@ -27,7 +27,7 @@ vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
 x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
-dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
+dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
 resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc resid-fp/sid.cc \
 resid-fp/voice.cc resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
 resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \

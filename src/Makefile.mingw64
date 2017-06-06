@@ -21,7 +21,7 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o win.o win-config.o win-config_sel.o win-d3d.o win-d3d-fs.o win-ddraw.o \
 	win-ddraw-fs.o win-deviceconfig.o win-hdconf.o win-joystick.o win-joystickconfig.o win-keyboard.o win-midi.o win-mouse.o \
 	win-status.o win-video.o x86seg.o x87.o xtide.o pc.res
-DBOBJ = cdrom_image.o dbopl.o vid_cga_comp.o
+DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
 

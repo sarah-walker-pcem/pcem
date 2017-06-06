@@ -159,17 +159,17 @@ static void opl_timer_callback11(void *p)
         
 void opl2_init(opl_t *opl)
 {
-        opl_init(ym3812_timer_set_0, opl, 0, 0);
-        opl_init(ym3812_timer_set_1, opl, 1, 0);
+        opl_init(ym3812_timer_set_0, opl, 0, 0, 0);
+        opl_init(ym3812_timer_set_1, opl, 1, 0, 0);
         timer_add(opl_timer_callback00, &opl->timers[0][0], &opl->timers_enable[0][0], (void *)opl);
         timer_add(opl_timer_callback01, &opl->timers[0][1], &opl->timers_enable[0][1], (void *)opl);
         timer_add(opl_timer_callback10, &opl->timers[1][0], &opl->timers_enable[1][0], (void *)opl);
         timer_add(opl_timer_callback11, &opl->timers[1][1], &opl->timers_enable[1][1], (void *)opl);
 }
 
-void opl3_init(opl_t *opl)
+void opl3_init(opl_t *opl, int opl_emu)
 {
-        opl_init(ymf262_timer_set, opl, 0, 1);
+        opl_init(ymf262_timer_set, opl, 0, 1, opl_emu);
         timer_add(opl_timer_callback00, &opl->timers[0][0], &opl->timers_enable[0][0], (void *)opl);
         timer_add(opl_timer_callback01, &opl->timers[0][1], &opl->timers_enable[0][1], (void *)opl);
 }

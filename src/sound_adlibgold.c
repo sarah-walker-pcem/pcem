@@ -768,12 +768,14 @@ void *adgold_init()
         FILE *f;
         int c;
         double out;
+        int opl_emu;
         adgold_t *adgold = malloc(sizeof(adgold_t));
         memset(adgold, 0, sizeof(adgold_t));
 
         adgold->surround_enabled = device_get_config_int("surround");
+        opl_emu = device_get_config_int("opl_emu");
         
-        opl3_init(&adgold->opl);
+        opl3_init(&adgold->opl, opl_emu);
         if (adgold->surround_enabled)
                 ym7128_init(&adgold->ym7128);
 
@@ -843,6 +845,23 @@ static device_config_t adgold_config[] =
                 .description = "Surround module",
                 .type = CONFIG_BINARY,
                 .default_int = 1
+        },
+        {
+                .name = "opl_emu",
+                .description = "OPL emulator",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "DBOPL",
+                                .value = OPL_DBOPL
+                        },
+                        {
+                                .description = "NukedOPL",
+                                .value = OPL_NUKED
+                        },
+                },
+                .default_int = OPL_DBOPL
         },
         {
                 .type = -1
