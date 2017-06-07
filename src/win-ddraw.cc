@@ -59,7 +59,14 @@ void ddraw_init(HWND h)
         ddsd.dwHeight = 2048;
         ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_VIDEOMEMORY;
         if (FAILED(lpdd4->CreateSurface(&ddsd, &lpdds_back, NULL)))
-           fatal("CreateSurface back failed\n");
+        {
+                ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+                ddsd.dwWidth  = 2048;
+                ddsd.dwHeight = 2048;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+                if (FAILED(lpdd4->CreateSurface(&ddsd, &lpdds_back, NULL)))
+                        fatal("CreateSurface back failed\n");
+        }
 
         memset(&ddsd, 0, sizeof(ddsd));
         ddsd.dwSize = sizeof(ddsd);
@@ -69,7 +76,14 @@ void ddraw_init(HWND h)
         ddsd.dwHeight = 2048;
         ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_VIDEOMEMORY;
         if (FAILED(lpdd4->CreateSurface(&ddsd, &lpdds_back2, NULL)))
-           fatal("CreateSurface back failed\n");
+        {
+                ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+                ddsd.dwWidth  = 2048;
+                ddsd.dwHeight = 2048;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+                if (FAILED(lpdd4->CreateSurface(&ddsd, &lpdds_back2, NULL)))
+                        fatal("CreateSurface back failed\n");
+        }
            
         if (FAILED(lpdd4->CreateClipper(0, &lpdd_clipper, NULL)))
            fatal("CreateClipper failed\n");
