@@ -114,8 +114,8 @@ static void sb_get_buffer_opl3(int32_t *buffer, int len, void *p)
         {
                 int32_t out_l, out_r;
                 
-                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * (sb->opl_emu ? 47000 : 55000)) >> 16);
-                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * (sb->opl_emu ? 47000 : 55000)) >> 16);
+                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * (sb->opl_emu ? 47000 : 51000)) >> 16);
+                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * (sb->opl_emu ? 47000 : 51000)) >> 16);
 
                 if (sb->mixer.filter)
                 {
@@ -168,8 +168,8 @@ static void sb_get_buffer_emu8k(int32_t *buffer, int len, void *p)
                 int c_emu8k = (((c/2) * 44100) / 48000)*2;
                 int32_t out_l, out_r;
                 
-                out_l = (((int32_t)sb->opl.buffer[c]     * (int32_t)mixer->fm_l) >> 16);
-                out_r = (((int32_t)sb->opl.buffer[c + 1] * (int32_t)mixer->fm_r) >> 16);
+                out_l = ((((sb->opl.buffer[c]     * mixer->fm_l) >> 16) * (sb->opl_emu ? 47000 : 51000)) >> 16);
+                out_r = ((((sb->opl.buffer[c + 1] * mixer->fm_r) >> 16) * (sb->opl_emu ? 47000 : 51000)) >> 16);
 
                 out_l += ((sb->emu8k.buffer[c_emu8k]     * mixer->fm_l) >> 16);
                 out_r += ((sb->emu8k.buffer[c_emu8k + 1] * mixer->fm_l) >> 16);
