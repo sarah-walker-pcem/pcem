@@ -72,7 +72,8 @@ void d3d_init(HWND h)
         d3dpp.BackBufferWidth        = 0;
         d3dpp.BackBufferHeight       = 0;
 
-        d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
+        if (FAILED(d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev)))
+                fatal("CreateDevice failed\n");
         
         d3d_init_objects();
         

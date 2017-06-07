@@ -95,7 +95,8 @@ void d3d_fs_init(HWND h)
         d3dpp.BackBufferWidth        = d3d_fs_w;
         d3dpp.BackBufferHeight       = d3d_fs_h;
 
-        d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
+        if (FAILED(d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, h, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev)))
+                fatal("CreateDevice failed\n");
         
         d3d_fs_init_objects();
         
