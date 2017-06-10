@@ -21,6 +21,9 @@
 #define IDM_VID_FS_43      40072
 #define IDM_VID_FS_SQ      40073
 #define IDM_VID_FS_INT     40074
+#define IDM_BUF_100MS      40080
+#define IDM_BUF_200MS      40081
+#define IDM_BUF_400MS      40082
 #define IDM_CDROM_EMPTY    40100
 #define IDM_CDROM_REAL     40100
 #define IDM_CDROM_DISABLED 40200

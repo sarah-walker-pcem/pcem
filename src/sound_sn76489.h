@@ -1,3 +1,5 @@
+#include "sound.h"
+
 enum
 {
         SN76496,
@@ -23,7 +25,7 @@ typedef struct sn76489_t
         int type;
         int extra_divide;
         
-        int16_t buffer[SOUNDBUFLEN];
+        int16_t buffer[MAXSOUNDBUFLEN];
         int pos;
         
         double psgconst;

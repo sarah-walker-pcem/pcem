@@ -36,6 +36,7 @@
 #include "serial.h"
 #include "sound.h"
 #include "sound_cms.h"
+#include "sound_dbopl.h"
 #include "sound_opl.h"
 #include "sound_sb.h"
 #include "sound_speaker.h"
@@ -430,6 +431,8 @@ void resetpchard()
 			ioctl_reset();
 		}
 	}
+
+        sound_update_buf_length();
 }
 
 char romsets[17][40]={"IBM PC","IBM XT","Generic Turbo XT","Euro PC","Tandy 1000","Amstrad PC1512","Sinclair PC200","Amstrad PC1640","IBM AT","AMI 286 clone","Dell System 200","Misc 286","IBM AT 386","Misc 386","386 clone","486 clone","486 clone 2"};
@@ -631,6 +634,8 @@ void loadconfig(char *fn)
         window_x = config_get_int(CFG_GLOBAL, NULL, "window_x", 0);
         window_y = config_get_int(CFG_GLOBAL, NULL, "window_y", 0);
         window_remember = config_get_int(CFG_GLOBAL, NULL, "window_remember", 0);
+
+        sound_buf_len = config_get_int(CFG_GLOBAL, NULL, "sound_buf_len", 200);
         
         GAMEBLASTER = config_get_int(CFG_MACHINE, NULL, "gameblaster", 0);
         GUS = config_get_int(CFG_MACHINE, NULL, "gus", 0);
@@ -781,6 +786,8 @@ void saveconfig(char *fn)
         config_set_int(CFG_GLOBAL, NULL, "window_x", window_x);
         config_set_int(CFG_GLOBAL, NULL, "window_y", window_y);
         config_set_int(CFG_GLOBAL, NULL, "window_remember", window_remember);
+
+        config_set_int(CFG_GLOBAL, NULL, "sound_buf_len", sound_buf_len);
         
         config_set_int(CFG_MACHINE, NULL, "gameblaster", GAMEBLASTER);
         config_set_int(CFG_MACHINE, NULL, "gus", GUS);

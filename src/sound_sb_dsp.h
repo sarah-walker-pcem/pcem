@@ -57,7 +57,7 @@ typedef struct sb_dsp_t
         
         int wb_time, wb_full;
         
-        int16_t buffer[SOUNDBUFLEN * 2];
+        int16_t buffer[MAXSOUNDBUFLEN * 2];
         int pos;
 } sb_dsp_t;
 

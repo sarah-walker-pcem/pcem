@@ -646,6 +646,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                 CheckMenuItem(menu, IDM_VID_REMEMBER, window_remember ? MF_CHECKED : MF_UNCHECKED);
                 CheckMenuItem(menu, IDM_BPB_DISABLE, bpb_disable ? MF_CHECKED : MF_UNCHECKED);
                 CheckMenuItem(menu, IDM_VID_DISC, vid_disc_indicator ? MF_CHECKED : MF_UNCHECKED);
+                CheckMenuItem(menu, IDM_BUF_100MS, (sound_buf_len == 100) ? MF_CHECKED : MF_UNCHECKED);
+                CheckMenuItem(menu, IDM_BUF_200MS, (sound_buf_len == 200) ? MF_CHECKED : MF_UNCHECKED);
+                CheckMenuItem(menu, IDM_BUF_400MS, (sound_buf_len == 400) ? MF_CHECKED : MF_UNCHECKED);
         
                 if (!loadbios())
                 {
@@ -1051,6 +1054,25 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         saveconfig(NULL);
                         break;
                         
+                        case IDM_BUF_100MS: case IDM_BUF_200MS: case IDM_BUF_400MS:
+                        switch (LOWORD(wParam))
+                        {
+                                case IDM_BUF_100MS:
+                                sound_buf_len = 100;
+                                break;
+                                case IDM_BUF_200MS:
+                                sound_buf_len = 200;
+                                break;
+                                case IDM_BUF_400MS:
+                                sound_buf_len = 400;
+                                break;
+                        }
+                        CheckMenuItem(hmenu, IDM_BUF_100MS, (sound_buf_len == 100) ? MF_CHECKED : MF_UNCHECKED);
+                        CheckMenuItem(hmenu, IDM_BUF_200MS, (sound_buf_len == 200) ? MF_CHECKED : MF_UNCHECKED);
+                        CheckMenuItem(hmenu, IDM_BUF_400MS, (sound_buf_len == 400) ? MF_CHECKED : MF_UNCHECKED);
+                        saveconfig(NULL);
+                        break;
+
                         case IDM_CDROM_DISABLED:
                         if (cdrom_enabled)
                         {

@@ -27,7 +27,7 @@ typedef struct pssj_t
         int wave_pos;
         int pulse_width;
 
-        int16_t buffer[SOUNDBUFLEN];
+        int16_t buffer[MAXSOUNDBUFLEN];
         int pos;
 } pssj_t;
 

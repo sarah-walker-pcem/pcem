@@ -21,7 +21,7 @@ typedef struct ad1848_t
         
         int timer_count, timer_latch;
 
-        int16_t buffer[SOUNDBUFLEN * 2];
+        int16_t buffer[MAXSOUNDBUFLEN * 2];
         int pos;
 } ad1848_t;
 

@@ -55,8 +55,8 @@ typedef struct adgold_t
         int vol_l, vol_r;
         int treble, bass;
 
-        int16_t opl_buffer[SOUNDBUFLEN * 2];
-        int16_t mma_buffer[2][SOUNDBUFLEN];
+        int16_t opl_buffer[MAXSOUNDBUFLEN * 2];
+        int16_t mma_buffer[2][MAXSOUNDBUFLEN];
 
         int pos;
         

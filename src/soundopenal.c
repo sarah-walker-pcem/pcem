@@ -16,6 +16,9 @@ ALuint buffers_cd[4]; // front and back buffers
 static ALuint source[2];     // audio source
 #endif
 #define FREQ 48000
+
+int SOUNDBUFLEN = 48000/20;
+
 #define BUFLEN SOUNDBUFLEN
 
 void closeal();

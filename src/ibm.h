@@ -485,8 +485,6 @@ float VGACONST1,VGACONST2;
 float RTCCONST;
 int gated,speakval,speakon;
 
-#define SOUNDBUFLEN (48000/20)
-
 
 /*Sound Blaster*/
 #define SADLIB    1     /*No DSP*/

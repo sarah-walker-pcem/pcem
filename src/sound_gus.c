@@ -39,7 +39,7 @@ typedef struct gus_t
 
         int32_t out_l, out_r;
         
-        int16_t buffer[2][SOUNDBUFLEN];
+        int16_t buffer[2][MAXSOUNDBUFLEN];
         int pos;
         
         int samp_timer, samp_latch;

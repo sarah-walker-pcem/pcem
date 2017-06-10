@@ -23,7 +23,7 @@ typedef struct cms_t
         int noisecount[2][2];
         int noisetype[2][2];
 
-        int16_t buffer[SOUNDBUFLEN * 2];
+        int16_t buffer[MAXSOUNDBUFLEN * 2];
 
         int pos;
 } cms_t;

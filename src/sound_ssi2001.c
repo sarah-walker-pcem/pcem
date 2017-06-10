@@ -10,7 +10,7 @@
 typedef struct ssi2001_t
 {
         void    *psid;
-        int16_t buffer[SOUNDBUFLEN * 2];
+        int16_t buffer[MAXSOUNDBUFLEN * 2];
         int     pos;
 } ssi2001_t;
 

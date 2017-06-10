@@ -120,7 +120,18 @@ static int16_t cd_buffer[CD_BUFLEN * 2];
 static thread_t *sound_cd_thread_h;
 static event_t *sound_cd_event;
 static unsigned int cd_vol_l, cd_vol_r;
-static int cd_buf_update = CD_BUFLEN / SOUNDBUFLEN;
+
+int sound_buf_len = 48000 / 10;
+
+void sound_update_buf_length()
+{
+        int new_buf_len = (48000 / (1000 / sound_buf_len)) / 4;
+        
+        if (new_buf_len > MAXSOUNDBUFLEN)
+                new_buf_len = MAXSOUNDBUFLEN;
+                
+        SOUNDBUFLEN = new_buf_len;
+}
 
 void sound_set_cd_volume(unsigned int vol_l, unsigned int vol_r)
 {
@@ -194,7 +205,7 @@ void sound_init()
         initalmain(0,NULL);
         inital();
 
-        outbuffer = malloc(SOUNDBUFLEN * 2 * sizeof(int32_t));
+        outbuffer = malloc(MAXSOUNDBUFLEN * 2 * sizeof(int32_t));
         
         sound_cd_event = thread_create_event();
         sound_cd_thread_h = thread_create(sound_cd_thread, NULL);
@@ -207,9 +218,17 @@ void sound_add_handler(void (*get_buffer)(int32_t *buffer, int len, void *p), vo
         sound_handlers_num++;
 }
 
+static int cd_pos = 0;
 void sound_poll(void *priv)
 {
         sound_poll_time += sound_poll_latch;
+
+        cd_pos++;
+        if (cd_pos == (CD_BUFLEN * 48000) / CD_FREQ)
+        {
+                cd_pos = 0;
+                thread_set_event(sound_cd_event);
+        }
         
         sound_pos_global++;
         if (sound_pos_global == SOUNDBUFLEN)
@@ -238,14 +257,8 @@ void sound_poll(void *priv)
         
                 if (soundon) givealbuffer(outbuffer);
 
-                cd_buf_update--;
-                if (!cd_buf_update)
-                {
-                        cd_buf_update = (48000 / SOUNDBUFLEN) / (CD_FREQ / CD_BUFLEN);
-                        thread_set_event(sound_cd_event);
-                }
-
                 sound_pos_global = 0;
+                sound_update_buf_length();
         }
 }
 

@@ -4,7 +4,7 @@
 
 int speaker_mute = 0;
 
-static int16_t speaker_buffer[SOUNDBUFLEN];
+static int16_t speaker_buffer[MAXSOUNDBUFLEN];
 
 static int speaker_pos = 0;
 

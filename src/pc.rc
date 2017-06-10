@@ -53,6 +53,15 @@ BEGIN
                         MENUITEM SEPARATOR
                         MENUITEM "Disc activity indicator", IDM_VID_DISC
                 END
+                POPUP "&Sound"
+                BEGIN
+                        POPUP "&Buffer length"
+                        BEGIN
+                                MENUITEM "&100ms", IDM_BUF_100MS
+                                MENUITEM "&200ms", IDM_BUF_200MS
+                                MENUITEM "&400ms", IDM_BUF_400MS
+                        END
+                END
         END
         POPUP "&Misc"
         BEGIN

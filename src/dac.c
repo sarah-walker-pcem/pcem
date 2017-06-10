@@ -1,5 +1,6 @@
 #include "ibm.h"
 #include "dac.h"
+#include "sound.h"
 
 uint8_t dac,dac2;
 uint8_t dacctrl;
@@ -43,7 +44,7 @@ void pollss()
         }
 }
 
-int16_t dacbuffer[SOUNDBUFLEN+20];
+int16_t dacbuffer[MAXSOUNDBUFLEN+20];
 int dacbufferpos=0;
 void getdacsamp()
 {

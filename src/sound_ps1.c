@@ -21,7 +21,7 @@ typedef struct ps1_audio_t
         
         uint8_t dac_val;
 
-        int16_t buffer[SOUNDBUFLEN];
+        int16_t buffer[MAXSOUNDBUFLEN];
         int pos;
 } ps1_audio_t;
 
