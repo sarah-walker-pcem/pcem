@@ -7142,7 +7142,9 @@ void *voodoo_init()
 
 void voodoo_close(void *p)
 {
+#ifndef RELEASE_BUILD
         FILE *f;
+#endif
         voodoo_t *voodoo = (voodoo_t *)p;
         int c;
         
