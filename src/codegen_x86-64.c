@@ -99,7 +99,7 @@ void codegen_reset()
 
 void dump_block()
 {
-        codeblock_t *block = pages[0x119000 >> 12].block;
+/*        codeblock_t *block = pages[0x119000 >> 12].block;
 
         pclog("dump_block:\n");
         while (block)
@@ -112,12 +112,12 @@ void dump_block()
                 
                 block = block->next;
         }
-        pclog("dump_block done\n");
+        pclog("dump_block done\n");*/
 }
 
 static void add_to_block_list(codeblock_t *block)
 {
-        codeblock_t *block_prev = pages[block->phys >> 12].block;
+        codeblock_t *block_prev = pages[block->phys >> 12].block[(block->phys >> 10) & 3];
 
         if (!block->page_mask)
                 fatal("add_to_block_list - mask = 0\n");
@@ -126,12 +126,12 @@ static void add_to_block_list(codeblock_t *block)
         {
                 block->next = block_prev;
                 block_prev->prev = block;
-                pages[block->phys >> 12].block = block;
+                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block;
         }
         else
         {
                 block->next = NULL;
-                pages[block->phys >> 12].block = block;
+                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block;
         }
 
         if (block->next)
@@ -142,18 +142,18 @@ static void add_to_block_list(codeblock_t *block)
         
         if (block->page_mask2)
         {
-                block_prev = pages[block->phys_2 >> 12].block_2;
+                block_prev = pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3];
 
                 if (block_prev)
                 {
                         block->next_2 = block_prev;
                         block_prev->prev_2 = block;
-                        pages[block->phys_2 >> 12].block_2 = block;
+                        pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block;
                 }
                 else
                 {
                         block->next_2 = NULL;
-                        pages[block->phys_2 >> 12].block_2 = block;
+                        pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block;
                 }
         }
 }
@@ -171,7 +171,7 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
         }
         else
         {
-                pages[block->phys >> 12].block = block->next;
+                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block->next;
                 if (block->next)
                         block->next->prev = NULL;
                 else
@@ -193,7 +193,7 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
         else
         {
 //                pclog(" pages.block_2=%p 3 %p %p\n", (void *)block->next_2, (void *)block, (void *)pages[block->phys_2 >> 12].block_2);
-                pages[block->phys_2 >> 12].block_2 = block->next_2;
+                pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block->next_2;
                 if (block->next_2)
                         block->next_2->prev_2 = NULL;
                 else
@@ -218,7 +218,7 @@ static void delete_block(codeblock_t *block)
 
 void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
 {
-        struct codeblock_t *block = page->block;
+        struct codeblock_t *block = page->block[(phys_addr >> 10) & 3];
 
         while (block)
         {
@@ -232,7 +232,7 @@ void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
                 block = block->next;
         }
 
-        block = page->block_2;
+        block = page->block_2[(phys_addr >> 10) & 3];
         
         while (block)
         {
@@ -252,7 +252,7 @@ void codegen_block_init(uint32_t phys_addr)
         codeblock_t *block;
         page_t *page = &pages[phys_addr >> 12];
         
-        if (!page->block)
+        if (!page->block[(phys_addr >> 10) & 3])
                 mem_flush_write_page(phys_addr, cs+cpu_state.pc);
 
         block_current = (block_current + 1) & BLOCK_MASK;
@@ -274,6 +274,8 @@ void codegen_block_init(uint32_t phys_addr)
         block->_cs = cs;
         block->pnt = block_current;
         block->phys = phys_addr;
+        block->dirty_mask = &page->dirty_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK];
+        block->dirty_mask2 = NULL;
         block->next = block->prev = NULL;
         block->next_2 = block->prev_2 = NULL;
         block->page_mask = 0;
@@ -291,7 +293,7 @@ void codegen_block_start_recompile(codeblock_t *block)
 {
         page_t *page = &pages[block->phys >> 12];
         
-        if (!page->block)
+        if (!page->block[(block->phys >> 10) & 3])
                 mem_flush_write_page(block->phys, cs+cpu_state.pc);
 
         block_num = HASH(block->phys);
@@ -402,17 +404,19 @@ void codegen_block_remove()
 void codegen_block_generate_end_mask()
 {
         codeblock_t *block = &codeblock[block_current];
-        uint32_t start_pc = (block->pc & 0xffc) | (block->phys & ~0xfff);
-        uint32_t end_pc = ((codegen_endpc + 3) & 0xffc) | (block->phys & ~0xfff);
+        uint32_t start_pc;
+        uint32_t end_pc;
 
         block->endpc = codegen_endpc;
 
         block->page_mask = 0;
-        start_pc = block->pc & 0xffc;
-        start_pc &= ~PAGE_MASK_MASK;
-        end_pc = ((block->endpc & 0xffc) + PAGE_MASK_MASK) & ~PAGE_MASK_MASK;
-        if (end_pc > 0xfff || end_pc < start_pc)
-                end_pc = 0xfff;
+        start_pc = (block->pc & 0x3ff) & ~15;
+        if ((block->pc ^ block->endpc) & ~0x3ff)
+                end_pc = 0x3ff & ~15;
+        else
+                end_pc = (block->endpc & 0x3ff) & ~15;
+        if (end_pc < start_pc)
+                end_pc = 0x3ff;
         start_pc >>= PAGE_MASK_SHIFT;
         end_pc >>= PAGE_MASK_SHIFT;
         
@@ -423,26 +427,27 @@ void codegen_block_generate_end_mask()
 //                pclog("  %08x %llx\n", start_pc, block->page_mask);
         }
         
-        pages[block->phys >> 12].code_present_mask |= block->page_mask;
+        pages[block->phys >> 12].code_present_mask[(block->phys >> 10) & 3] |= block->page_mask;
 
         block->phys_2 = -1;
         block->page_mask2 = 0;
         block->next_2 = block->prev_2 = NULL;
-        if ((block->pc ^ block->endpc) & ~0xfff)
+        if ((block->pc ^ block->endpc) & ~0x3ff)
         {
                 block->phys_2 = get_phys_noabrt(block->endpc);
                 if (block->phys_2 != -1)
                 {
-//                pclog("start block - %08x %08x %p %p %p  %08x\n", block->pc, block->endpc, (void *)block, (void *)block->next_2, (void *)pages[block->phys_2 >> 12].block_2, block->phys_2);
+                        page_t *page_2 = &pages[block->phys_2 >> 12];
 
                         start_pc = 0;
-                        end_pc = (block->endpc & 0xfff) >> PAGE_MASK_SHIFT;
+                        end_pc = (block->endpc & 0x3ff) >> PAGE_MASK_SHIFT;
                         for (; start_pc <= end_pc; start_pc++)
                                 block->page_mask2 |= ((uint64_t)1 << start_pc);
-                
-                        if (!pages[block->phys_2 >> 12].block_2)
+                        page_2->code_present_mask[(block->phys_2 >> 10) & 3] |= block->page_mask2;
+                        
+                        if (!pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3])
                                 mem_flush_write_page(block->phys_2, block->endpc);
-//                pclog("New block - %08x %08x %p %p  phys %08x %08x %016llx\n", block->pc, block->endpc, (void *)block, (void *)block->next_2, block->phys, block->phys_2, block->page_mask2);
+
                         if (!block->page_mask2)
                                 fatal("!page_mask2\n");
                         if (block->next_2)
@@ -451,6 +456,8 @@ void codegen_block_generate_end_mask()
                                 if (!block->next_2->pc)
                                         fatal("block->next_2->pc=0 %p\n", (void *)block->next_2);
                         }
+                        
+                        block->dirty_mask2 = &page_2->dirty_mask[(block->phys_2 >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK];
                 }
         }
 
