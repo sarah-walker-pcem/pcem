@@ -261,6 +261,9 @@ typedef struct IDE
         uint32_t lba_addr;
         int skip512;
         int blocksize, blockcount;
+        uint8_t sector_buffer[256*512];
+        int do_initial_read;
+        int sector_pos;
 } IDE;
 
 IDE ide_drives[4];
@@ -978,6 +981,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         timer_process();
                         idecallback[ide_board]=200*IDE_TIME;
                         timer_update_outstanding();
+                        ide->do_initial_read = 1;
                         return;
                         
                 case WIN_WRITE_MULTIPLE:
@@ -1365,14 +1369,24 @@ void callbackide(int ide_board)
 			ide_set_signature(ide);
                         goto abort_cmd;
                 }
-                addr = ide_get_sector(ide) * 512;
+                if (ide->do_initial_read)
+                {
+                        ide->do_initial_read = 0;
+                        ide->sector_pos = 0;
+                        addr = ide_get_sector(ide) * 512;
+                        fseeko64(ide->hdfile, addr, SEEK_SET);
+                        if (ide->secount)
+                                fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
+                        else
+                                fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+                }                        
+                memcpy(ide->buffer, &ide->sector_buffer[ide->sector_pos*512], 512);
+                ide->sector_pos++;
 //                pclog("Read %i %i %i %08X\n",ide.cylinder,ide.head,ide.sector,addr);
                 /*                if (ide.cylinder || ide.head)
                 {
                         fatal("Read from other cylinder/head");
                 }*/
-                fseeko64(ide->hdfile, addr, SEEK_SET);
-                fread(ide->buffer, 512, 1, ide->hdfile);
                 ide->pos=0;
                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
 //                pclog("Read sector callback %i %i %i offset %08X %i left %i %02X\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount,ide.spt,ide.atastat[ide.board]);
@@ -1387,18 +1401,27 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
-                addr = ide_get_sector(ide) * 512;
-                fseeko64(ide->hdfile, addr, SEEK_SET);
-                fread(ide->buffer, 512, 1, ide->hdfile);
+                if (ide->do_initial_read)
+                {
+                        ide->do_initial_read = 0;
+                        ide->sector_pos = 0;
+                        addr = ide_get_sector(ide) * 512;
+                        fseeko64(ide->hdfile, addr, SEEK_SET);
+                        if (ide->secount)
+                                fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
+                        else
+                                fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+                }                        
                 ide->pos=0;
                 
                 if (ide_bus_master_read_sector)
                 {
-                        if (ide_bus_master_read_sector(ide_board, (uint8_t *)ide->buffer))
-                           idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
+                        if (ide_bus_master_read_sector(ide_board, &ide->sector_buffer[ide->sector_pos*512]))
+                                idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
                         else
                         {
                                 /*DMA successful*/
+                                ide->sector_pos++;                                
                                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
 
                                 ide->secount = (ide->secount - 1) & 0xff;
@@ -1423,10 +1446,19 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
-                addr = ide_get_sector(ide) * 512;
-//                pclog("Read multiple from %08X %i (%i) %i\n", addr, ide->blockcount, ide->blocksize, ide->secount);
-                fseeko64(ide->hdfile, addr, SEEK_SET);
-                fread(ide->buffer, 512, 1, ide->hdfile);
+                if (ide->do_initial_read)
+                {
+                        ide->do_initial_read = 0;
+                        ide->sector_pos = 0;
+                        addr = ide_get_sector(ide) * 512;
+                        fseeko64(ide->hdfile, addr, SEEK_SET);
+                        if (ide->secount)
+                                fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
+                        else
+                                fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+                }                        
+                memcpy(ide->buffer, &ide->sector_buffer[ide->sector_pos*512], 512);
+                ide->sector_pos++;
                 ide->pos=0;
                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
                 if (!ide->blockcount)// || ide->secount == 1)
