@@ -19,6 +19,8 @@ extern "C"
         int stop_emulation();
 }
 
+extern int config_override;
+
 extern void InitXmlResource();
 
 wxDEFINE_EVENT(WX_CALLBACK_EVENT, CallbackEvent);
@@ -126,7 +128,10 @@ void Frame::OnStopEmulationEvent(wxCommandEvent& event)
                 if (ret == wxID_OK)
                 {
                         stop_emulation();
-                        ShowConfigSelection();
+                        if (!config_override)
+                                ShowConfigSelection();
+                        else
+                                Quit(1);
                 }
                 else
                         resume_emulation();
