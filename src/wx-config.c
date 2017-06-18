@@ -298,7 +298,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         (models[romstomodel[romset]].min_ram << 16)
                         | models[romstomodel[romset]].max_ram);
                         wx_sendmessage(h, WX_UDM_SETINCR, 0, models[model].ram_granularity);
-                        if (!(models[model].flags & MODEL_AT))
+                        if (!((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128))
                                 wx_sendmessage(h, WX_UDM_SETPOS, 0, mem_size);
                         else
                                 wx_sendmessage(h, WX_UDM_SETPOS, 0, mem_size / 1024);
@@ -343,7 +343,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         wx_sendmessage(h, WX_CB_SETCURSEL, fdd_get_type(1), 0);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_MB"));
-                        if (models[model].flags & MODEL_AT)
+                        if ((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128))
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "MB");
                         else
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "KB");
@@ -429,7 +429,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                         mem = models[temp_model].min_ram;
                                 else if (mem > models[temp_model].max_ram)
                                         mem = models[temp_model].max_ram;
-                                if (models[temp_model].flags & MODEL_AT)
+                                if ((models[temp_model].flags & MODEL_AT) && models[temp_model].ram_granularity < 128)
                                         mem *= 1024;
 
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOVID"));
@@ -609,7 +609,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
 
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_MB"));
-                                if (models[temp_model].flags & MODEL_AT)
+                                if ((models[temp_model].flags & MODEL_AT) && models[temp_model].ram_granularity < 128)
                                         wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "MB");
                                 else
                                         wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "KB");

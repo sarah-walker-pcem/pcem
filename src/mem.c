@@ -1561,6 +1561,50 @@ void mem_write_raml(uint32_t addr, uint32_t val, void *priv)
         mem_write_raml_page(addr, val, &pages[addr >> 12]);
 }
 
+
+static uint32_t remap_start_addr;
+
+uint8_t mem_read_remapped(uint32_t addr, void *priv)
+{
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addreadlookup(mem_logical_addr, addr);
+        return ram[addr];
+}
+uint16_t mem_read_remappedw(uint32_t addr, void *priv)
+{
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addreadlookup(mem_logical_addr, addr);
+        return *(uint16_t *)&ram[addr];
+}
+uint32_t mem_read_remappedl(uint32_t addr, void *priv)
+{
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addreadlookup(mem_logical_addr, addr);
+        return *(uint32_t *)&ram[addr];
+}
+
+void mem_write_remapped(uint32_t addr, uint8_t val, void *priv)
+{
+        uint32_t oldaddr = addr;
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addwritelookup(mem_logical_addr, addr);
+        mem_write_ramb_page(addr, val, &pages[oldaddr >> 12]);
+}
+void mem_write_remappedw(uint32_t addr, uint16_t val, void *priv)
+{
+        uint32_t oldaddr = addr;
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addwritelookup(mem_logical_addr, addr);
+        mem_write_ramw_page(addr, val, &pages[oldaddr >> 12]);
+}
+void mem_write_remappedl(uint32_t addr, uint32_t val, void *priv)
+{
+        uint32_t oldaddr = addr;
+        addr = 0xA0000 + (addr - remap_start_addr);
+        addwritelookup(mem_logical_addr, addr);
+        mem_write_raml_page(addr, val, &pages[oldaddr >> 12]);
+}
+
 uint8_t mem_read_bios(uint32_t addr, void *priv)
 {
                         if (AMIBIOS && (addr&0xFFFFF)==0xF8281) /*This is read constantly during AMIBIOS POST, but is never written to. It's clearly a status register of some kind, but for what?*/
@@ -1858,7 +1902,7 @@ void mem_init()
 {
         int c;
 
-        ram = malloc((mem_size + 384) * 1024);
+        ram = malloc(mem_size * 1024);
 //        rom = malloc(0x20000);
         readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
         writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
@@ -1866,12 +1910,12 @@ void mem_init()
         pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         page_lookup = malloc((1 << 20) * sizeof(page_t *));
 
-        memset(ram, 0, (mem_size + 384) * 1024);
+        memset(ram, 0, mem_size * 1024);
         memset(pages, 0, (((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         
         memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
         
-        for (c = 0; c < ((mem_size * 1024) >> 12); c++)
+        for (c = 0; c < (((mem_size + 384) * 1024) >> 12); c++)
         {
                 pages[c].mem = &ram[c << 12];
                 pages[c].write_b = mem_write_ramb_page;
@@ -1880,7 +1924,7 @@ void mem_init()
         }
 
         memset(isram, 0, sizeof(isram));
-        for (c = 0; c < (mem_size / 256); c++)
+        for (c = 0; c < (mem_size / 64); c++)
         {
                 isram[c] = 1;
                 if (c >= 0xa && c <= 0xf) 
@@ -1916,49 +1960,39 @@ void mem_init()
 //        pclog("Mem resize %i %i\n",mem_size,c);
 }
 
-void mem_remap_top_256k()
+static void mem_remap_top(int max_size)
 {
         int c;
         
-        for (c = ((mem_size * 1024) >> 12); c < (((mem_size + 256) * 1024) >> 12); c++)
+        if (mem_size > 640)
         {
-                pages[c].mem = &ram[c << 12];
-                pages[c].write_b = mem_write_ramb_page;
-                pages[c].write_w = mem_write_ramw_page;
-                pages[c].write_l = mem_write_raml_page;
-        }
+                uint32_t start = (mem_size >= 1024) ? mem_size : 1024;
+                int size = mem_size - 640;
+                if (size > max_size)
+                        size = max_size;
+                
+                remap_start_addr = start * 1024;
+                        
+                for (c = ((start * 1024) >> 12); c < (((start + size) * 1024) >> 12); c++)
+                {
+                        pages[c].mem = &ram[0xA0000 + ((c - ((start * 1024) >> 12)) << 12)];
+                        pages[c].write_b = mem_write_ramb_page;
+                        pages[c].write_w = mem_write_ramw_page;
+                        pages[c].write_l = mem_write_raml_page;
+                }
 
-        for (c = (mem_size / 256); c < ((mem_size + 256) / 256); c++)
-        {
-                isram[c] = 1;
-                if (c >= 0xa && c <= 0xd) 
-                        isram[c] = 0;
+                mem_set_mem_state(start * 1024, size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                mem_mapping_add(&ram_remapped_mapping, start * 1024, size * 1024, mem_read_remapped,    mem_read_remappedw,    mem_read_remappedl,    mem_write_remapped, mem_write_remappedw, mem_write_remappedl,   ram + 0xA0000,  MEM_MAPPING_INTERNAL, NULL);
         }
+}
 
-        mem_set_mem_state(mem_size * 1024, 256 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-        mem_mapping_add(&ram_remapped_mapping, mem_size * 1024, 256 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + (mem_size * 1024),  MEM_MAPPING_INTERNAL, NULL);
+void mem_remap_top_256k()
+{
+        mem_remap_top(256);
 }
 void mem_remap_top_384k()
 {
-        int c;
-        
-        for (c = ((mem_size * 1024) >> 12); c < (((mem_size + 384) * 1024) >> 12); c++)
-        {
-                pages[c].mem = &ram[c << 12];
-                pages[c].write_b = mem_write_ramb_page;
-                pages[c].write_w = mem_write_ramw_page;
-                pages[c].write_l = mem_write_raml_page;
-        }
-
-        for (c = (mem_size / 256); c < ((mem_size + 384) / 256); c++)
-        {
-                isram[c] = 1;
-                if (c >= 0xa && c <= 0xf) 
-                        isram[c] = 0;
-        }
-
-        mem_set_mem_state(mem_size * 1024, 384 * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-        mem_mapping_add(&ram_remapped_mapping, mem_size * 1024, 384 * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + (mem_size * 1024),  MEM_MAPPING_INTERNAL, NULL);
+        mem_remap_top(384);
 }
 
 void mem_resize()
@@ -1966,8 +2000,8 @@ void mem_resize()
         int c;
         
         free(ram);
-        ram = malloc((mem_size + 384) * 1024);
-        memset(ram, 0, (mem_size + 384) * 1024);
+        ram = malloc(mem_size * 1024);
+        memset(ram, 0, mem_size * 1024);
         
         free(pages);
         pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
@@ -1981,7 +2015,7 @@ void mem_resize()
         }
         
         memset(isram, 0, sizeof(isram));
-        for (c = 0; c < (mem_size / 256); c++)
+        for (c = 0; c < (mem_size / 64); c++)
         {
                 isram[c] = 1;
                 if (c >= 0xa && c <= 0xf) 

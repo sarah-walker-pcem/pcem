@@ -290,7 +290,7 @@ static DIALOG configure_dialog[] =
         {d_list_proc,    70*2, 132, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_vidspeed, 0, 0}, //7
         {list_proc,      70*2, 152, 152*2, 20, 0, 0xffffff, 0, 0, 0, 0, list_proc_sound, 0, 0}, //8
         
-        {d_edit_proc,    70*2, 276,    40, 14, 0, 0xffffff, 0, 0, 4, 0, mem_size_str, 0, 0},
+        {d_edit_proc,    70*2, 276,    48, 14, 0, 0xffffff, 0, 0, 5, 0, mem_size_str, 0, 0},
                         
         {d_text_proc,    98*2, 276,  40, 10, 0, 0xffffff, 0, 0, 0, 0, mem_size_units, 0, 0},
         
@@ -472,7 +472,7 @@ static int list_proc(int msg, DIALOG *d, int c)
 			new_mem_size = models[new_model].max_ram;
 		sprintf(mem_size_str, "%i", new_mem_size);
 
-		if (models[new_model].flags & MODEL_AT)
+		if ((models[new_model].flags & MODEL_AT) && models[new_model].ram_granularity < 128)
 			sprintf(mem_size_units, "MB");
 		else
 			sprintf(mem_size_units, "kB");
@@ -714,12 +714,12 @@ pclog("video_card_available : %i\n", c);
         else
                 configure_dialog[14].flags &= ~D_SELECTED;
 
-	if (models[model].flags & MODEL_AT)
+	if ((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128)
 	        sprintf(mem_size_str, "%i", mem_size / 1024);
 	else
 	        sprintf(mem_size_str, "%i", mem_size);
 
-	if (models[model].flags & MODEL_AT)
+	if ((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128)
 		sprintf(mem_size_units, "MB");
 	else
 		sprintf(mem_size_units, "kB");
@@ -770,7 +770,7 @@ pclog("video_card_available : %i\n", c);
                                 new_mem_size = models[new_model].min_ram;
                         else if (new_mem_size > models[new_model].max_ram)
                                 new_mem_size = models[new_model].max_ram;
-			if (models[new_model].flags & MODEL_AT)
+			if ((models[new_model].flags & MODEL_AT) && models[new_model].ram_granularity < 128)
 				new_mem_size *= 1024;
                         
                         if (new_model != model || new_gfxcard != gfxcard || new_mem_size != mem_size || 

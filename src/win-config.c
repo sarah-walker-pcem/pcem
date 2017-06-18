@@ -285,7 +285,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 h = GetDlgItem(hdlg, IDC_MEMSPIN);
                 SendMessage(h, UDM_SETBUDDY, (WPARAM)GetDlgItem(hdlg, IDC_MEMTEXT), 0);
                 SendMessage(h, UDM_SETRANGE, 0, (models[romstomodel[romset]].min_ram << 16) | models[romstomodel[romset]].max_ram);
-                if (!models[model].flags & MODEL_AT)
+                if (!((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128))
                         SendMessage(h, UDM_SETPOS, 0, mem_size);
                 else
                         SendMessage(h, UDM_SETPOS, 0, mem_size / 1024);
@@ -333,7 +333,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                 SendMessage(h, CB_SETCURSEL, fdd_get_type(1), 0);
 
                 h = GetDlgItem(hdlg, IDC_TEXT_MB);
-                if (models[model].flags & MODEL_AT)
+                if ((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128)
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
                 else
                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");
@@ -417,7 +417,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 mem = models[temp_model].min_ram;
                         else if (mem > models[temp_model].max_ram)
                                 mem = models[temp_model].max_ram;
-			if (models[temp_model].flags & MODEL_AT)
+			if ((models[temp_model].flags & MODEL_AT) && models[temp_model].ram_granularity < 128)
                                 mem *= 1024;			
 			
                         h = GetDlgItem(hdlg, IDC_COMBOVID);
@@ -582,7 +582,7 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 SendMessage(h, BM_SETCHECK, ((cpu_flags & CPU_SUPPORTS_DYNAREC) && temp_dynarec) || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
 
                                 h = GetDlgItem(hdlg, IDC_TEXT_MB);
-                                if (models[temp_model].flags & MODEL_AT)
+                                if ((models[temp_model].flags & MODEL_AT) && models[temp_model].ram_granularity < 128)
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"MB");
                                 else
                                         SendMessage(h, WM_SETTEXT, 0, (LPARAM)(LPCSTR)"KB");

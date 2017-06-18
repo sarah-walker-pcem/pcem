@@ -684,8 +684,8 @@ void loadconfig(char *fn)
                 strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);        
 
         mem_size = config_get_int(CFG_MACHINE, NULL, "mem_size", 4096);
-        if (mem_size < ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram))
-                mem_size = ((models[model].flags & MODEL_AT) ? models[model].min_ram*1024 : models[model].min_ram);
+        if (mem_size < (((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128) ? models[model].min_ram*1024 : models[model].min_ram))
+                mem_size = (((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128) ? models[model].min_ram*1024 : models[model].min_ram);
 
         cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(CFG_MACHINE, NULL, "cdrom_enabled", 0);
