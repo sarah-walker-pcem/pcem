@@ -4,19 +4,9 @@
 
 extern "C"
 {
-//#include "ibm.h"
+#include "ibm.h"
 #include "ide.h"
-
-int cdrom_drive;
-int old_cdrom_drive;
-void pclog(const char *format, ...);
 }
-
-#define CD_STATUS_EMPTY         0
-#define CD_STATUS_DATA_ONLY     1
-#define CD_STATUS_PLAYING       2
-#define CD_STATUS_PAUSED        3
-#define CD_STATUS_STOPPED       4
 
 char image_path[1024];
 static int image_changed = 0;
