@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <math.h>
 #include "ibm.h"
 #include "cdrom-ioctl.h"
 #include "cdrom-image.h"
@@ -40,6 +41,8 @@
 #define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)
 
 #define IDM_CDROM_REAL 1500
+
+#define MIN_SND_BUF 50
 
 uint64_t timer_freq;
 
@@ -284,6 +287,9 @@ void wx_setupmenu()
         wx_checkmenuitem(menu, WX_ID("IDM_VID_REMEMBER"),
                         window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
         wx_checkmenuitem(menu, WX_ID("IDM_BPB_DISABLE"), bpb_disable ? WX_MB_CHECKED : WX_MB_UNCHECKED);
+
+        sprintf(menuitem, "IDM_SND_BUF[%d]", (int)(log(sound_buf_len/MIN_SND_BUF)/log(2)));
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
 
         sprintf(menuitem, "IDM_VID_SCALE_MODE[%d]", video_scale_mode);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
@@ -727,6 +733,11 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
         else if (ID_IS("IDM_VID_LOST_FOCUS_DIM"))
         {
                 video_focus_dim = checked;
+                saveconfig(NULL);
+        }
+        else if (ID_RANGE("IDM_SND_BUF[start]", "IDM_SND_BUF[end]"))
+        {
+                sound_buf_len = MIN_SND_BUF*1<<(wParam - wx_xrcid("IDM_SND_BUF[start]"));
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_CDROM_DISABLED"))

@@ -28,6 +28,7 @@
 	<ids-range name="IDM_VID_SCALE" start="1200" />
 	<ids-range name="IDM_VID_SCALE_MODE" start="1300" />
 	<ids-range name="IDM_VID_RENDER_DRIVER" start="1400" />
+	<ids-range name="IDM_SND_BUF" start="2000" />
 	<object class="wxMenuBar" name="status_menu">
 		<object class="wxMenu">
 			<label>_Options</label>
@@ -227,6 +228,28 @@
 			<object class="wxMenuItem" name="IDM_VID_VSYNC">
 				<label>_VSync</label>
 				<checkable>1</checkable>
+			</object>
+		</object>
+		<object class="wxMenu">
+			<label>Sound</label>
+			<object class="wxMenu">
+				<label>_Buffer length</label>
+				<object class="wxMenuItem" name="IDM_SND_BUF[0]">
+					<label>_50 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[1]">
+					<label>_100 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[2]">
+					<label>_200 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[3]">
+					<label>_400 ms</label>
+					<radio>1</radio>
+				</object>
 			</object>
 		</object>
 		<object class="separator"/>
