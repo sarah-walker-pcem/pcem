@@ -343,7 +343,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         wx_sendmessage(h, WX_CB_SETCURSEL, fdd_get_type(1), 0);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_MB"));
-                        if ((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128))
+                        if ((models[model].flags & MODEL_AT) && (models[model].ram_granularity < 128))
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "MB");
                         else
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "KB");
