@@ -38,14 +38,14 @@ int checkio(int port);
                         }
 
 #define CHECK_READ(seg, low, high)  \
-        if ((low < (seg)->limit_low) || (high > (seg)->limit_high))       \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || ((msw & 1) && !(eflags & VM_FLAG) && (((seg)->access & 10) == 8)))       \
         {                                       \
                 x86gpf("Limit check", 0);       \
                 return 1;                       \
         }
 
 #define CHECK_WRITE(seg, low, high)  \
-        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || !((seg)->access & 2))       \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || !((seg)->access & 2) || ((msw & 1) && !(eflags & VM_FLAG) && ((seg)->access & 8)))       \
         {                                       \
                 x86gpf("Limit check", 0);       \
                 return 1;                       \
