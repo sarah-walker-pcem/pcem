@@ -181,6 +181,7 @@ static int opMOV_b_imm_a16(uint32_t fetchdat)
 {
         uint8_t temp;
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = readmemb(cs,cpu_state.pc); cpu_state.pc++;               if (cpu_state.abrt) return 1;
         CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
         seteab(temp);
@@ -192,6 +193,7 @@ static int opMOV_b_imm_a32(uint32_t fetchdat)
 {
         uint8_t temp;
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = getbyte();               if (cpu_state.abrt) return 1;
         seteab(temp);
         CLOCK_CYCLES(timing_rr);
@@ -203,6 +205,7 @@ static int opMOV_w_imm_a16(uint32_t fetchdat)
 {
         uint16_t temp;
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = getword();               if (cpu_state.abrt) return 1;
         seteaw(temp);
         CLOCK_CYCLES(timing_rr);
@@ -213,6 +216,7 @@ static int opMOV_w_imm_a32(uint32_t fetchdat)
 {
         uint16_t temp;
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = getword();               if (cpu_state.abrt) return 1;
         seteaw(temp);
         CLOCK_CYCLES(timing_rr);
@@ -223,6 +227,7 @@ static int opMOV_l_imm_a16(uint32_t fetchdat)
 {
         uint32_t temp;
         fetch_ea_16(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = getlong();               if (cpu_state.abrt) return 1;
         seteal(temp);
         CLOCK_CYCLES(timing_rr);
@@ -233,6 +238,7 @@ static int opMOV_l_imm_a32(uint32_t fetchdat)
 {
         uint32_t temp;
         fetch_ea_32(fetchdat);
+        ILLEGAL_ON((rmdat & 0x38) != 0);
         temp = getlong();               if (cpu_state.abrt) return 1;
         seteal(temp);
         CLOCK_CYCLES(timing_rr);
