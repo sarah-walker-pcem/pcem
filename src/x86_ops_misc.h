@@ -734,7 +734,7 @@ static int opLOADALL(uint32_t fetchdat)
                 x86gpf(NULL,0);
                 return 1;
         }
-        msw = readmemw(0, 0x806);
+        msw = (msw & 1) | readmemw(0, 0x806);
         flags = (readmemw(0, 0x818) & 0xffd5) | 2;
         flags_extract();
         tr.seg = readmemw(0, 0x816);
