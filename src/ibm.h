@@ -244,8 +244,13 @@ uint32_t dr[8];
 #define V_FLAG  0x0800
 #define NT_FLAG 0x4000
 #define VM_FLAG 0x0002 /*In EFLAGS*/
+#define VIF_FLAG 0x0008 /*In EFLAGS*/
+#define VIP_FLAG 0x0010 /*In EFLAGS*/
 
 #define WP_FLAG 0x10000 /*In CR0*/
+
+#define CR4_VME (1 << 0)
+#define CR4_PVI (1 << 1)
 
 #define IOPL ((flags>>12)&3)
 
