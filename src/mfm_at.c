@@ -11,6 +11,7 @@
 
 #include "ibm.h"
 #include "device.h"
+#include "hdd_file.h"
 #include "io.h"
 #include "pic.h"
 #include "timer.h"
@@ -49,12 +50,10 @@ extern char ide_fn[4][512];
 
 typedef struct mfm_drive_t
 {
-        int spt, hpc;
-        int tracks;
         int cfg_spt;
         int cfg_hpc;
         int current_cylinder;
-        FILE *hdfile;
+        hdd_file_t hdd_file;
 } mfm_drive_t;
 
 typedef struct mfm_t
@@ -123,12 +122,12 @@ static int mfm_get_sector(mfm_t *mfm, off64_t *addr)
                 pclog("mfm_get_sector: past end of configured sectors\n");
                 return 1;
         }
-        if (mfm->head > drive->hpc)
+        if (mfm->head > drive->hdd_file.hpc)
         {
                 pclog("mfm_get_sector: past end of heads\n");
                 return 1;
         }
-        if (mfm->sector >= drive->spt+1)
+        if (mfm->sector >= drive->hdd_file.spt+1)
         {
                 pclog("mfm_get_sector: past end of sectors\n");
                 return 1;
@@ -156,51 +155,11 @@ static void mfm_next_sector(mfm_t *mfm)
                 {
         		mfm->head = 0;
         		mfm->cylinder++;
-        		if (drive->current_cylinder < drive->tracks)
+        		if (drive->current_cylinder < drive->hdd_file.tracks)
                 		drive->current_cylinder++;
 		}
 	}
 }
-
-static void loadhd(mfm_t *mfm, int d, const char *fn)
-{
-        mfm_drive_t *drive = &mfm->drives[d];
-        
-	if (drive->hdfile == NULL)
-        {
-		/* Try to open existing hard disk image */
-		drive->hdfile = fopen64(fn, "rb+");
-		if (drive->hdfile == NULL)
-                {
-			/* Failed to open existing hard disk image */
-			if (errno == ENOENT)
-                        {
-				/* Failed because it does not exist,
-				   so try to create new file */
-				drive->hdfile = fopen64(fn, "wb+");
-				if (drive->hdfile == NULL)
-                                {
-					pclog("Cannot create file '%s': %s",
-					      fn, strerror(errno));
-					return;
-				}
-			}
-                        else
-                        {
-				/* Failed for another reason */
-				pclog("Cannot open file '%s': %s",
-				      fn, strerror(errno));
-				return;
-			}
-		}
-	}
-
-        drive->spt = hdc[d].spt;
-        drive->hpc = hdc[d].hpc;
-        drive->tracks = hdc[d].tracks;
-}
-
-
 
 void mfm_write(uint16_t port, uint8_t val, void *p)
 {
@@ -236,14 +195,14 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
                 case 0x1F6: /* Drive/Head */
                 mfm->head = val & 0xF;
                 mfm->drive_sel = (val & 0x10) ? 1 : 0;
-                if (mfm->drives[mfm->drive_sel].hdfile == NULL)
+                if (mfm->drives[mfm->drive_sel].hdd_file.f == NULL)
                         mfm->status = 0;
                 else
                         mfm->status = STAT_READY | STAT_DSC;
                 return;
 
                 case 0x1F7: /* Command register */
-                if (mfm->drives[mfm->drive_sel].hdfile == NULL)
+                if (mfm->drives[mfm->drive_sel].hdd_file.f == NULL)
                         fatal("Command on non-present drive\n");
 
                 mfm_irq_lower(mfm);
@@ -458,10 +417,10 @@ static void do_seek(mfm_t *mfm)
 {
         mfm_drive_t *drive = &mfm->drives[mfm->drive_sel];
         
-        if (mfm->cylinder < drive->tracks)
+        if (mfm->cylinder < drive->hdd_file.tracks)
                 drive->current_cylinder = mfm->cylinder;
         else
-                drive->current_cylinder = drive->tracks-1;
+                drive->current_cylinder = drive->hdd_file.tracks-1;
 }
 
 void mfm_callback(void *p)
@@ -469,7 +428,6 @@ void mfm_callback(void *p)
         mfm_t *mfm = (mfm_t *)p;
         mfm_drive_t *drive = &mfm->drives[mfm->drive_sel];
         off64_t addr;
-        int c;
         
 //        pclog("mfm_callback: command=%02x reset=%i\n", mfm->command, mfm->reset);
         mfm->callback = 0;
@@ -510,8 +468,7 @@ void mfm_callback(void *p)
                 }
                 
 //                pclog("Read %i %i %i %08X\n",ide.cylinder,ide.head,ide.sector,addr);
-                fseeko64(drive->hdfile, addr * 512, SEEK_SET);
-                fread(mfm->buffer, 512, 1, drive->hdfile);
+                hdd_read_sectors(&drive->hdd_file, addr, 1, mfm->buffer);
                 mfm->pos = 0;
                 mfm->status = STAT_DRQ | STAT_READY | STAT_DSC;
 //                pclog("Read sector callback %i %i %i offset %08X %i left %i %02X\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount,ide.spt,ide.atastat[ide.board]);
@@ -529,8 +486,7 @@ void mfm_callback(void *p)
                         mfm_irq_raise(mfm);
                         break;
                 }
-                fseeko64(drive->hdfile, addr * 512, SEEK_SET);
-                fwrite(mfm->buffer, 512, 1, drive->hdfile);
+                hdd_write_sectors(&drive->hdd_file, addr, 1, mfm->buffer);
                 mfm_irq_raise(mfm);
                 mfm->secount = (mfm->secount - 1) & 0xff;
                 if (mfm->secount)
@@ -562,12 +518,7 @@ void mfm_callback(void *p)
                         mfm_irq_raise(mfm);
                         break;
                 }
-                fseeko64(drive->hdfile, addr * 512, SEEK_SET);
-                memset(mfm->buffer, 0, 512);
-                for (c = 0; c < mfm->secount; c++)
-                {
-                        fwrite(mfm->buffer, 512, 1, drive->hdfile);
-                }
+                hdd_format_sectors(&drive->hdd_file, addr, mfm->secount);
                 mfm->status = STAT_READY | STAT_DSC;
                 mfm_irq_raise(mfm);
                 readflash_set(READFLASH_HDC, mfm->drive_sel);
@@ -601,8 +552,8 @@ void *mfm_init()
         mfm_t *mfm = malloc(sizeof(mfm_t));
         memset(mfm, 0, sizeof(mfm_t));
 
-	loadhd(mfm, 0, ide_fn[0]);
-	loadhd(mfm, 1, ide_fn[1]);
+        hdd_load(&mfm->drives[0].hdd_file, 0, ide_fn[0]);
+        hdd_load(&mfm->drives[1].hdd_file, 1, ide_fn[1]);
 
         mfm->status = STAT_READY | STAT_DSC;
         mfm->error = 1; /*No errors*/
@@ -619,15 +570,9 @@ void *mfm_init()
 void mfm_close(void *p)
 {
         mfm_t *mfm = (mfm_t *)p;
-        int d;
-
-        for (d = 0; d < 2; d++)
-        {
-                mfm_drive_t *drive = &mfm->drives[d];
-                
-                if (drive->hdfile != NULL)
-                        fclose(drive->hdfile);
-        }
+        
+        hdd_close(&mfm->drives[0].hdd_file);
+        hdd_close(&mfm->drives[1].hdd_file);
 
         free(mfm);
 }

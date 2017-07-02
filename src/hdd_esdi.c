@@ -12,6 +12,7 @@
 
 #include "device.h"
 #include "dma.h"
+#include "hdd_file.h"
 #include "io.h"
 #include "mca.h"
 #include "mem.h"
@@ -26,14 +27,6 @@
 #define CMD_ADAPTER 0
 
 extern char ide_fn[4][512];
-
-typedef struct esdi_drive_t
-{
-        int spt, hpc;
-        int tracks;
-        int sectors;
-        FILE *hdfile;
-} esdi_drive_t;
 
 typedef struct esdi_t
 {
@@ -74,7 +67,7 @@ typedef struct esdi_t
                 int req_in_progress;
         } cmds[3];
         
-        esdi_drive_t drives[2];
+        hdd_file_t hdd_file[2];
         
         uint8_t pos_regs[8];
 } esdi_t;
@@ -379,15 +372,15 @@ static void device_not_present(esdi_t *esdi)
                         return;                                                         \
                 }                                                                       \
                 if (esdi->cmd_dev == ATTN_DEVICE_0)                                     \
-                        drive = &esdi->drives[0];                                       \
+                        hdd_file = &esdi->hdd_file[0];                                  \
                 else                                                                    \
-                        drive = &esdi->drives[1];                                       \
+                        hdd_file = &esdi->hdd_file[1];                                  \
         } while (0)
                 
 static void esdi_callback(void *p)
 {
         esdi_t *esdi = (esdi_t *)p;
-        esdi_drive_t *drive;
+        hdd_file_t *hdd_file;
         
         esdi->callback = 0;
         
@@ -406,7 +399,7 @@ static void esdi_callback(void *p)
                 case CMD_READ:
                 ESDI_DRIVE_ONLY();
 
-                if (!drive->hdfile)
+                if (!hdd_file->f)
                 {
                         device_not_present(esdi);
                         return;
@@ -441,11 +434,9 @@ static void esdi_callback(void *p)
                         {
                                 if (!esdi->data_pos)
                                 {
-                                        if (esdi->rba >= drive->sectors)
+                                        if (esdi->rba >= hdd_file->sectors)
                                                 fatal("Read past end of drive\n");
-                                        fseek(drive->hdfile, esdi->rba * 512, SEEK_SET);
-                                        fread(esdi->data, 512, 1, drive->hdfile);
-                                        readflash_set(READFLASH_HDC, esdi->cmd_dev == ATTN_DEVICE_0 ? 0 : 1);
+                                        hdd_read_sectors(hdd_file, esdi->rba, 1, esdi->data);
                                 }
 //                                pclog("Read sector %i %i %08x\n", esdi->sector_pos, esdi->data_pos, esdi->rba*512);
                                 while (esdi->data_pos < 256)
@@ -486,7 +477,7 @@ static void esdi_callback(void *p)
                 case CMD_WRITE_VERIFY:
                 ESDI_DRIVE_ONLY();
 
-                if (!drive->hdfile)
+                if (!hdd_file->f)
                 {
                         device_not_present(esdi);
                         return;
@@ -534,10 +525,9 @@ static void esdi_callback(void *p)
                                         esdi->data[esdi->data_pos++] = val & 0xffff;
                                 }
 
-                                if (esdi->rba >= drive->sectors)
+                                if (esdi->rba >= hdd_file->sectors)
                                         fatal("Write past end of drive\n");
-                                fseek(drive->hdfile, esdi->rba * 512, SEEK_SET);
-                                fwrite(esdi->data, 512, 1, drive->hdfile);
+                                hdd_write_sectors(hdd_file, esdi->rba, 1, esdi->data);
                                 esdi->rba++;
                                 esdi->sector_pos++;
                                 readflash_set(READFLASH_HDC, esdi->cmd_dev == ATTN_DEVICE_0 ? 0 : 1);
@@ -563,7 +553,7 @@ static void esdi_callback(void *p)
                 case CMD_READ_VERIFY:
                 ESDI_DRIVE_ONLY();
 
-                if (!drive->hdfile)
+                if (!hdd_file->f)
                 {
                         device_not_present(esdi);
                         return;
@@ -578,7 +568,7 @@ static void esdi_callback(void *p)
                 case CMD_SEEK:
                 ESDI_DRIVE_ONLY();
 
-                if (!drive->hdfile)
+                if (!hdd_file->f)
                 {
                         device_not_present(esdi);
                         return;
@@ -593,7 +583,7 @@ static void esdi_callback(void *p)
                 case CMD_GET_DEV_CONFIG:
                 ESDI_DRIVE_ONLY();
 
-                if (!drive->hdfile)
+                if (!hdd_file->f)
                 {
                         device_not_present(esdi);
                         return;
@@ -607,10 +597,10 @@ static void esdi_callback(void *p)
                 esdi->status_len = 6;
                 esdi->status_data[0] = CMD_GET_POS_INFO | STATUS_LEN(6) | STATUS_DEVICE_HOST_ADAPTER;
                 esdi->status_data[1] = 0x10; /*Zero defect*/
-                esdi->status_data[2] = drive->sectors & 0xffff;
-                esdi->status_data[3] = drive->sectors >> 16;
-                esdi->status_data[4] = drive->tracks;
-                esdi->status_data[5] = drive->hpc | (drive->spt << 16);
+                esdi->status_data[2] = hdd_file->sectors & 0xffff;
+                esdi->status_data[3] = hdd_file->sectors >> 16;
+                esdi->status_data[4] = hdd_file->tracks;
+                esdi->status_data[5] = hdd_file->hpc | (hdd_file->spt << 16);
                 
 /*                pclog("CMD_GET_DEV_CONFIG %i  %04x %04x %04x %04x %04x %04x\n", drive->sectors,
                                 esdi->status_data[0], esdi->status_data[1],
@@ -827,45 +817,6 @@ static void esdi_mca_write(int port, uint8_t val, void *p)
         }
 }
 
-static void loadhd(esdi_t *esdi, int d, const char *fn)
-{
-        esdi_drive_t *drive = &esdi->drives[d];
-        
-	if (drive->hdfile == NULL)
-        {
-		/* Try to open existing hard disk image */
-		drive->hdfile = fopen64(fn, "rb+");
-		if (drive->hdfile == NULL)
-                {
-			/* Failed to open existing hard disk image */
-			if (errno == ENOENT)
-                        {
-				/* Failed because it does not exist,
-				   so try to create new file */
-				drive->hdfile = fopen64(fn, "wb+");
-				if (drive->hdfile == NULL)
-                                {
-					pclog("Cannot create file '%s': %s",
-					      fn, strerror(errno));
-					return;
-				}
-			}
-                        else
-                        {
-				/* Failed for another reason */
-				pclog("Cannot open file '%s': %s",
-				      fn, strerror(errno));
-				return;
-			}
-		}
-	}
-
-        drive->spt = hdc[d].spt;
-        drive->hpc = hdc[d].hpc;
-        drive->tracks = hdc[d].tracks;
-        drive->sectors = hdc[d].spt * hdc[d].hpc * hdc[d].tracks;
-}
-
 static void *esdi_init()
 {
         esdi_t *esdi = malloc(sizeof(esdi_t));
@@ -874,8 +825,8 @@ static void *esdi_init()
         rom_init_interleaved(&esdi->bios_rom, "roms/90x8970.bin", "roms/90x8969.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
         mem_mapping_disable(&esdi->bios_rom.mapping);
 
-	loadhd(esdi, 0, ide_fn[0]);
-	loadhd(esdi, 1, ide_fn[1]);
+        hdd_load(&esdi->hdd_file[0], 0, ide_fn[0]);
+        hdd_load(&esdi->hdd_file[1], 1, ide_fn[1]);
                 
         timer_add(esdi_callback, &esdi->callback, &esdi->callback, esdi);
         
@@ -894,16 +845,10 @@ static void *esdi_init()
 static void esdi_close(void *p)
 {
         esdi_t *esdi = (esdi_t *)p;
-        int d;
-
-        for (d = 0; d < 2; d++)
-        {
-                esdi_drive_t *drive = &esdi->drives[d];
-                
-                if (drive->hdfile != NULL)
-                        fclose(drive->hdfile);
-        }
         
+        hdd_close(&esdi->hdd_file[0]);
+        hdd_close(&esdi->hdd_file[1]);
+
         free(esdi);
 }
 

@@ -23,6 +23,7 @@
         #include "io.h"
         #include "pic.h"
         #include "timer.h"
+        #include "hdd_file.h"
 #endif
 #include "ide.h"
 
@@ -247,13 +248,10 @@ typedef struct IDE
         uint8_t fdisk;
         int pos;
         int packlen;
-        int spt,hpc;
-        int tracks;
         int packetstatus;
         int cdpos,cdlen;
         uint8_t asc;
         int reset;
-        FILE *hdfile;
         uint16_t buffer[65536];
         int irqstat;
         int service;
@@ -264,6 +262,13 @@ typedef struct IDE
         uint8_t sector_buffer[256*512];
         int do_initial_read;
         int sector_pos;
+#ifdef RPCEMU_IDE
+        FILE *hdfile;
+        int spt,hpc;
+        int tracks;
+#else
+        hdd_file_t hdd_file;
+#endif
 } IDE;
 
 IDE ide_drives[4];
@@ -561,9 +566,13 @@ static off64_t ide_get_sector(IDE *ide)
         }
         else
         {
+#ifdef RPCEMU_IDE
         	int heads = ide->hpc;
         	int sectors = ide->spt;
-
+#else
+        	int heads = ide->hdd_file.hpc;
+        	int sectors = ide->hdd_file.spt;
+#endif
         	return ((((off64_t) ide->cylinder * heads) + ide->head) *
         	          sectors) + (ide->sector - 1) + ide->skip512;
         }
@@ -581,10 +590,18 @@ static void ide_next_sector(IDE *ide)
         else
         {
         	ide->sector++;
+#ifdef RPCEMU_IDE
         	if (ide->sector == (ide->spt + 1)) {
+#else
+        	if (ide->sector == (ide->hdd_file.spt + 1)) {
+#endif
         		ide->sector = 1;
         		ide->head++;
+#ifdef RPCEMU_IDE
         		if (ide->head == ide->hpc) {
+#else
+        		if (ide->head == ide->hdd_file.hpc) {
+#endif
         			ide->head = 0;
         			ide->cylinder++;
                         }
@@ -649,35 +666,12 @@ static void loadhd(IDE *ide, int d, const char *fn)
 #else
 static void loadhd(IDE *ide, int d, const char *fn)
 {
-	if (ide->hdfile == NULL) {
-		/* Try to open existing hard disk image */
-		ide->hdfile = fopen64(fn, "rb+");
-		if (ide->hdfile == NULL) {
-			/* Failed to open existing hard disk image */
-			if (errno == ENOENT) {
-				/* Failed because it does not exist,
-				   so try to create new file */
-				ide->hdfile = fopen64(fn, "wb+");
-				if (ide->hdfile == NULL) {
-                                        ide->type = IDE_NONE;
-/*					fatal("Cannot create file '%s': %s",
-					      fn, strerror(errno));*/
-					return;
-				}
-			} else {
-				/* Failed for another reason */
-                                ide->type = IDE_NONE;
-/*				fatal("Cannot open file '%s': %s",
-				      fn, strerror(errno));*/
-				return;
-			}
-		}
-	}
-
-        ide->spt = hdc[d].spt;
-        ide->hpc = hdc[d].hpc;
-        ide->tracks = hdc[d].tracks;
-        ide->type = IDE_HDD;
+        hdd_load(&ide->hdd_file, d, fn);
+        
+        if (ide->hdd_file.f)
+                ide->type = IDE_HDD;
+        else
+                ide->type = IDE_NONE;
 }
 #endif
 
@@ -697,10 +691,14 @@ void resetide(void)
         /* Close hard disk image files (if previously open) */
         for (d = 0; d < 4; d++) {
                 ide_drives[d].type = IDE_NONE;
+#ifdef RPCEMU_IDE
                 if (ide_drives[d].hdfile != NULL) {
                         fclose(ide_drives[d].hdfile);
                         ide_drives[d].hdfile = NULL;
                 }
+#else
+                hdd_close(&ide_drives[d].hdd_file);
+#endif
                 ide_drives[d].atastat = READY_STAT | DSC_STAT;
                 ide_drives[d].service = 0;
                 ide_drives[d].board = (d & 2) ? 1 : 0;
@@ -1295,8 +1293,10 @@ void callbackide(int ide_board)
 {
         IDE *ide = &ide_drives[cur_ide[ide_board]];
         IDE *ide_other = &ide_drives[cur_ide[ide_board] ^ 1];
+#if RPCEMU_IDE
         off64_t addr;
         int c;
+#endif
         ext_ide = ide;
 //        return;
         if (ide->command==0x30) times30++;
@@ -1373,12 +1373,16 @@ void callbackide(int ide_board)
                 {
                         ide->do_initial_read = 0;
                         ide->sector_pos = 0;
+#ifdef RPCEMU_IDE
                         addr = ide_get_sector(ide) * 512;
                         fseeko64(ide->hdfile, addr, SEEK_SET);
                         if (ide->secount)
                                 fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
                         else
                                 fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+#else
+                        hdd_read_sectors(&ide->hdd_file, ide_get_sector(ide), ide->secount ? ide->secount : 256, ide->sector_buffer);
+#endif
                 }                        
                 memcpy(ide->buffer, &ide->sector_buffer[ide->sector_pos*512], 512);
                 ide->sector_pos++;
@@ -1405,12 +1409,16 @@ void callbackide(int ide_board)
                 {
                         ide->do_initial_read = 0;
                         ide->sector_pos = 0;
+#ifdef RPCEMU_IDE
                         addr = ide_get_sector(ide) * 512;
                         fseeko64(ide->hdfile, addr, SEEK_SET);
                         if (ide->secount)
                                 fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
                         else
                                 fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+#else
+                        hdd_read_sectors(&ide->hdd_file, ide_get_sector(ide), ide->secount ? ide->secount : 256, ide->sector_buffer);
+#endif
                 }                        
                 ide->pos=0;
                 
@@ -1450,12 +1458,16 @@ void callbackide(int ide_board)
                 {
                         ide->do_initial_read = 0;
                         ide->sector_pos = 0;
+#ifdef RPCEMU_IDE
                         addr = ide_get_sector(ide) * 512;
                         fseeko64(ide->hdfile, addr, SEEK_SET);
                         if (ide->secount)
                                 fread(ide->sector_buffer, ide->secount*512, 1, ide->hdfile);
                         else
                                 fread(ide->sector_buffer, 256*512, 1, ide->hdfile);
+#else
+                        hdd_read_sectors(&ide->hdd_file, ide_get_sector(ide), ide->secount ? ide->secount : 256, ide->sector_buffer);
+#endif
                 }                        
                 memcpy(ide->buffer, &ide->sector_buffer[ide->sector_pos*512], 512);
                 ide->sector_pos++;
@@ -1479,10 +1491,14 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
+#ifdef RPCEMU_IDE
                 addr = ide_get_sector(ide) * 512;
 //                pclog("Write sector callback %i %i %i offset %08X %i left %i\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount,ide.spt);
                 fseeko64(ide->hdfile, addr, SEEK_SET);
                 fwrite(ide->buffer, 512, 1, ide->hdfile);
+#else
+                hdd_write_sectors(&ide->hdd_file, ide_get_sector(ide), 1, ide->buffer);
+#endif
                 ide_irq_raise(ide);
                 ide->secount = (ide->secount - 1) & 0xff;
                 if (ide->secount)
@@ -1510,9 +1526,13 @@ void callbackide(int ide_board)
                         else
                         {
                                 /*DMA successful*/
+#ifdef RPCEMU_IDE
                                 addr = ide_get_sector(ide) * 512;
                                 fseeko64(ide->hdfile, addr, SEEK_SET);
                                 fwrite(ide->buffer, 512, 1, ide->hdfile);
+#else
+                                hdd_write_sectors(&ide->hdd_file, ide_get_sector(ide), 1, ide->buffer);
+#endif
                                 
                                 ide->atastat = DRQ_STAT | READY_STAT | DSC_STAT;
 
@@ -1538,10 +1558,14 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
+#ifdef RPCEMU_IDE
                 addr = ide_get_sector(ide) * 512;
 //                pclog("Write sector callback %i %i %i offset %08X %i left %i\n",ide.sector,ide.cylinder,ide.head,addr,ide.secount,ide.spt);
                 fseeko64(ide->hdfile, addr, SEEK_SET);
                 fwrite(ide->buffer, 512, 1, ide->hdfile);
+#else
+                hdd_write_sectors(&ide->hdd_file, ide_get_sector(ide), 1, ide->buffer);
+#endif
                 ide->blockcount++;
                 if (ide->blockcount >= ide->blocksize || ide->secount == 1)
                 {
@@ -1580,6 +1604,7 @@ void callbackide(int ide_board)
                 if (IDE_DRIVE_IS_CDROM(ide)) {
                         goto abort_cmd;
                 }
+#ifdef RPCEMU_IDE
                 addr = ide_get_sector(ide) * 512;
 //                pclog("Format cyl %i head %i offset %08X %08X %08X secount %i\n",ide.cylinder,ide.head,addr,addr>>32,addr,ide.secount);
                 fseeko64(ide->hdfile, addr, SEEK_SET);
@@ -1588,6 +1613,9 @@ void callbackide(int ide_board)
                 {
                         fwrite(ide->buffer, 512, 1, ide->hdfile);
                 }
+#else
+                hdd_format_sectors(&ide->hdd_file, ide_get_sector(ide), ide->secount);
+#endif
                 ide->atastat = READY_STAT | DSC_STAT;
                 ide_irq_raise(ide);
 #ifndef RPCEMU_IDE
@@ -1616,8 +1644,13 @@ void callbackide(int ide_board)
 #endif
                         goto abort_cmd;
                 }
-                ide->spt=ide->secount;
-                ide->hpc=ide->head+1;
+#if RPCEMU_IDE
+                ide->spt = ide->secount;
+                ide->hpc = ide->head+1;
+#else
+                ide->hdd_file.spt = ide->secount;
+                ide->hdd_file.hpc = ide->head+1;
+#endif
                 ide->atastat = READY_STAT | DSC_STAT;
 #ifndef RPCEMU_IDE
 //                pclog("SPECIFY - %i sectors per track, %i heads per cylinder  %i %i\n",ide->spt,ide->hpc,cur_ide[ide_board],ide_board);
