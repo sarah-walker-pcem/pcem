@@ -31,7 +31,7 @@ int rom_present(char *fn)
         return 0;
 }
 
-static uint8_t rom_read(uint32_t addr, void *p)
+uint8_t rom_read(uint32_t addr, void *p)
 {
         rom_t *rom = (rom_t *)p;
 //        pclog("rom_read : %08x %08x %02x\n", addr, rom->mask, rom->rom[addr & rom->mask]);
