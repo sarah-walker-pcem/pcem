@@ -68,7 +68,7 @@ static int hdconf_open(int msg, DIALOG *d, int c)
                         fseeko64(f, -1, SEEK_END);
                         sz = ftello64(f) + 1;
                         fclose(f);
-                        if ((sz % 17) == 0 && sz <= 133693440)
+                        if ((sz % 17) == 0 && sz <= 142606336)
                         {
                                 sprintf(hd_sectors_new, "17");
                                 if (sz <= 26738688)
@@ -76,20 +76,21 @@ static int hdconf_open(int msg, DIALOG *d, int c)
                                         sprintf(hd_heads_new, "4");
                                         sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 4) / 17);
                                 }
-                                else if (sz <= 53477376)
+                                else if ((sz % 3072) == 0 && sz <= 53477376)
                                 {
                                         sprintf(hd_heads_new, "6");
                                         sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 6) / 17);
                                 }
-                                else if (sz <= 71303168)
-                                {
-                                        sprintf(hd_heads_new, "8");
-                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 8) / 17);
-                                }
                                 else
                                 {
-                                        sprintf(hd_heads_new, "15");
-                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / 15) / 17);
+                                        int i;
+                                        for(i=5;i<16;i++)
+                                        {
+                                                if((sz % (i * 512)) == 0 && sz <= 1024*i*17*512) break;
+                                                if (i == 5) i++;
+                                        }
+                                        sprintf(hd_heads_new, "%i",i);
+                                        sprintf(hd_cylinders_new, "%i", (int)((sz / 512) / i) / 17);
                                 }
                         }
                         else

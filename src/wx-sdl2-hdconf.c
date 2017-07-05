@@ -65,12 +65,17 @@ static void check_hd_type(off64_t sz)
 
                         if (sz <= 26738688)
                                 hd_new_hpc = 4;
-                        else if (sz <= 53477376)
+                        else if ((sz % 3072) == 0 && sz <= 53477376)
                                 hd_new_hpc = 6;
-                        else if (sz <= 71303168)
-                                hd_new_hpc = 8;
                         else
-                                hd_new_hpc = 15;
+                        {
+                                for (c=5;c<16;c++)
+                                {
+                                        if((sz % (c * 512)) == 0 && sz <= 1024*c*17*512) break;
+                                        if (c == 5) c++;
+                                }
+                                hd_new_hpc = c;
+                        }
 
                         hd_new_cyl = (int)((sz / 512) / hd_new_hpc) / 17;
                 }
