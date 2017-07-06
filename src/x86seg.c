@@ -2442,6 +2442,17 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                         return;
                 }
 
+                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
+                {
+                        if (tr.seg&4) tempw=readmemw(ldt.base,(seg&~7)+4);
+                        else          tempw=readmemw(gdt.base,(seg&~7)+4);
+                        if (cpu_state.abrt) return;
+                        tempw|=0x200;
+                        if (tr.seg&4) writememw(ldt.base,(seg&~7)+4,tempw);
+                        else          writememw(gdt.base,(seg&~7)+4,tempw);
+                }
+                if (cpu_state.abrt) return;
+
                 if (optype==IRET) flags&=~NT_FLAG;
                 
 //                if (output) pclog("Write PC %08X %08X\n",tr.base,pc);
@@ -2466,15 +2477,22 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 writememl(tr.base,0x54,DS);
                 writememl(tr.base,0x58,FS);
                 writememl(tr.base,0x5C,GS);
-
-                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
+                
+                if (optype==JMP || optype==IRET)
                 {
-                        if (tr.seg&4) tempw=readmemw(ldt.base,(seg&~7)+4);
-                        else          tempw=readmemw(gdt.base,(seg&~7)+4);
+                        if (tr.seg&4) tempw=readmemw(ldt.base,(tr.seg&~7)+4);
+                        else          tempw=readmemw(gdt.base,(tr.seg&~7)+4);
                         if (cpu_state.abrt) return;
-                        tempw|=0x200;
-                        if (tr.seg&4) writememw(ldt.base,(seg&~7)+4,tempw);
-                        else          writememw(gdt.base,(seg&~7)+4,tempw);
+                        tempw&=~0x200;
+                        if (tr.seg&4) writememw(ldt.base,(tr.seg&~7)+4,tempw);
+                        else          writememw(gdt.base,(tr.seg&~7)+4,tempw);
+                }
+                if (cpu_state.abrt) return;
+                
+                if (optype==OPTYPE_INT || optype==CALL)
+                {
+                        writememl(base,0,tr.seg);
+                        new_flags|=NT_FLAG;
                 }
                 if (cpu_state.abrt) return;
 
@@ -2499,24 +2517,6 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 new_fs=readmemw(base,0x58);
                 new_gs=readmemw(base,0x5C);
                 new_ldt=readmemw(base,0x60);
-                
-                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
-                {
-                        if (tr.seg&4) tempw=readmemw(ldt.base,(tr.seg&~7)+4);
-                        else          tempw=readmemw(gdt.base,(tr.seg&~7)+4);
-                        if (cpu_state.abrt) return;
-                        tempw&=~0x200;
-                        if (tr.seg&4) writememw(ldt.base,(tr.seg&~7)+4,tempw);
-                        else          writememw(gdt.base,(tr.seg&~7)+4,tempw);
-                }
-                if (cpu_state.abrt) return;
-                
-                if (optype==OPTYPE_INT || optype==CALL)
-                {
-                        writememl(base,0,tr.seg);
-                        new_flags|=NT_FLAG;
-                }
-                if (cpu_state.abrt) return;
 
                 cr0 |= 8;
                 
@@ -2654,6 +2654,17 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                         return;
                 }
 
+                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
+                {
+                        if (tr.seg&4) tempw=readmemw(ldt.base,(seg&~7)+4);
+                        else          tempw=readmemw(gdt.base,(seg&~7)+4);
+                        if (cpu_state.abrt) return;
+                        tempw|=0x200;
+                        if (tr.seg&4) writememw(ldt.base,(seg&~7)+4,tempw);
+                        else          writememw(gdt.base,(seg&~7)+4,tempw);
+                }
+                if (cpu_state.abrt) return;
+
                 if (optype==IRET) flags&=~NT_FLAG;
                 
 //                if (output) pclog("Write PC %08X %08X\n",tr.base,pc);
@@ -2675,15 +2686,22 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 writememw(tr.base,0x24,CS);
                 writememw(tr.base,0x26,SS);
                 writememw(tr.base,0x28,DS);
-
-                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
+                
+                if (optype==JMP || optype==IRET)
                 {
-                        if (tr.seg&4) tempw=readmemw(ldt.base,(seg&~7)+4);
-                        else          tempw=readmemw(gdt.base,(seg&~7)+4);
+                        if (tr.seg&4) tempw=readmemw(ldt.base,(tr.seg&~7)+4);
+                        else          tempw=readmemw(gdt.base,(tr.seg&~7)+4);
                         if (cpu_state.abrt) return;
-                        tempw|=0x200;
-                        if (tr.seg&4) writememw(ldt.base,(seg&~7)+4,tempw);
-                        else          writememw(gdt.base,(seg&~7)+4,tempw);
+                        tempw&=~0x200;
+                        if (tr.seg&4) writememw(ldt.base,(tr.seg&~7)+4,tempw);
+                        else          writememw(gdt.base,(tr.seg&~7)+4,tempw);
+                }
+                if (cpu_state.abrt) return;
+                
+                if (optype==OPTYPE_INT || optype==CALL)
+                {
+                        writememw(base,0,tr.seg);
+                        new_flags|=NT_FLAG;
                 }
                 if (cpu_state.abrt) return;
                 
@@ -2705,24 +2723,6 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 new_ss=readmemw(base,0x26);
                 new_ds=readmemw(base,0x28);
                 new_ldt=readmemw(base,0x2A);
-                
-                if (optype==JMP || optype==CALL || optype==OPTYPE_INT)
-                {
-                        if (tr.seg&4) tempw=readmemw(ldt.base,(tr.seg&~7)+4);
-                        else          tempw=readmemw(gdt.base,(tr.seg&~7)+4);
-                        if (cpu_state.abrt) return;
-                        tempw&=~0x200;
-                        if (tr.seg&4) writememw(ldt.base,(tr.seg&~7)+4,tempw);
-                        else          writememw(gdt.base,(tr.seg&~7)+4,tempw);
-                }
-                if (cpu_state.abrt) return;
-                
-                if (optype==OPTYPE_INT || optype==CALL)
-                {
-                        writememw(base,0,tr.seg);
-                        new_flags|=NT_FLAG;
-                }
-                if (cpu_state.abrt) return;
 
                 msw |= 8;
                
