@@ -440,3 +440,60 @@ void wx_close_status(void* window)
                 status->Close();
         }
 }
+
+void wx_get_home_directory(char* path)
+{
+        wxString home = wxFileName::GetHomeDir();
+        if (!home.EndsWith(wxFileName::GetPathSeparator())) {
+                home.Append(wxFileName::GetPathSeparator());
+        }
+        strcpy(path, home);
+}
+
+int wx_create_directory(char* path)
+{
+        return wxFileName::Mkdir(path);
+}
+
+int wx_setup(char* path)
+{
+        wxFileName p(path);
+        if (!p.DirExists())
+        {
+                if (!p.Mkdir())
+                        return FALSE;
+                wxFileName configs(p);
+                configs.AppendDir("configs");
+                if (!configs.DirExists() && !configs.Mkdir())
+                        return FALSE;
+
+                wxFileName roms(p);
+                roms.AppendDir("roms");
+                if (!roms.DirExists() && !roms.Mkdir())
+                        return FALSE;
+
+                wxFileName nvr(p);
+                nvr.AppendDir("nvr");
+                if (!nvr.DirExists() && !nvr.Mkdir())
+                        return FALSE;
+
+                wxFileName logs(p);
+                logs.AppendDir("logs");
+                if (!logs.DirExists() && !logs.Mkdir())
+                        return FALSE;
+        }
+
+        return TRUE;
+}
+
+int wx_file_exists(char* path)
+{
+        wxFileName p(path);
+        return p.Exists();
+}
+
+int wx_dir_exists(char* path)
+{
+        wxFileName p(path);
+        return p.DirExists();
+}

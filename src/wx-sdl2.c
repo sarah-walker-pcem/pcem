@@ -31,6 +31,7 @@
 #include "disc.h"
 #include "disc_img.h"
 #include "mem.h"
+#include "paths.h"
 
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
@@ -88,8 +89,6 @@ int video_width = 640;
 int video_height = 480;
 
 char menuitem[60];
-
-extern void add_config_callback(void(*loadconfig)(), void(*saveconfig)(), void(*onloaded)());
 
 extern int config_selection_open(void* hwnd, int inited);
 
@@ -190,10 +189,20 @@ int mainthread(void* param)
         return TRUE;
 }
 
-void get_executable_name(char *s, int size)
+int dir_exists(char* path)
 {
+        return wx_dir_exists(path);
+}
+
+void get_pcem_path(char *s, int size)
+{
+#ifdef __linux
+        wx_get_home_directory(s);
+        strcat(s, ".pcem/");
+#else
         char* path = SDL_GetBasePath();
         strcpy(s, path);
+#endif
 }
 
 void set_window_title(const char *s)
@@ -335,20 +344,44 @@ extern void wx_saveconfig();
 
 int pc_main(int argc, char** argv)
 {
-#ifndef __APPLE__
-        display_init();
+        char s[512];
+        paths_init();
+
+#ifdef __linux__
+        /* create directories if they don't exist */
+        if (!wx_setup(pcem_path))
+                return FALSE;
+
+        /* set up default paths */
+        sprintf(s, "%s%s%c%s", pcem_path, "roms/", get_path_separator(), "/usr/share/pcem/roms/");
+        set_default_roms_paths(s);
+        append_filename(s, pcem_path, "nvr/", 511);
+        set_default_nvr_path(s);
+        append_filename(s, pcem_path, "configs/", 511);
+        set_default_configs_path(s);
+        append_filename(s, pcem_path, "logs/", 511);
+        set_default_logs_path(s);
 #endif
-        sdl_video_init();
 
         add_config_callback(sdl_loadconfig, sdl_saveconfig, sdl_onconfigloaded);
         add_config_callback(wx_loadconfig, wx_saveconfig, 0);
 
-        getpath();
+        initpc(argc, argv);
+        resetpchard();
 
         sound_init();
 
-        initpc(argc, argv);
-        resetpchard();
+#ifdef __linux__
+        /* check if cfg exists, and if not create it */
+        append_filename(s, pcem_path, "pcem.cfg", 511);
+        if (!wx_file_exists(s))
+                saveconfig(NULL);
+#endif
+
+#ifndef __APPLE__
+        display_init();
+#endif
+        sdl_video_init();
 
         return TRUE;
 }

@@ -503,8 +503,6 @@ int gated,speakval,speakon;
 #define SND_WSS   9     /*Windows Sound System*/
 #define SND_PAS16 10    /*Pro Audio Spectrum 16*/
 
-char pcempath[512];
-
 
 /*Hard disc*/
 
@@ -561,8 +559,6 @@ void resetpc_cad();
 extern int start_in_fullscreen;
 extern int window_w, window_h, window_x, window_y, window_remember;
 
-void get_executable_name(char *s, int size);
-
 void startblit();
 void endblit();
 
@@ -578,6 +574,5 @@ void resetpchard();
 void speedchanged();
 
 void saveconfig(char *fn);
-void getpath();
 
 #define UNUSED(x) (void)x

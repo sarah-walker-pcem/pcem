@@ -56,8 +56,8 @@ void *tandy_rom_init()
 
         tandy_rom = malloc(0x80000);
 
-        f  = romfopen("roms/tandy1000sl2/8079047.hu1" ,"rb");
-        ff = romfopen("roms/tandy1000sl2/8079048.hu2","rb");
+        f  = romfopen("tandy1000sl2/8079047.hu1" ,"rb");
+        ff = romfopen("tandy1000sl2/8079048.hu2","rb");
         for (c = 0x0000; c < 0x80000; c += 2)
         {
                 tandy_rom[c] = getc(f);

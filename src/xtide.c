@@ -70,7 +70,7 @@ static void *xtide_init()
         xtide_t *xtide = malloc(sizeof(xtide_t));
         memset(xtide, 0, sizeof(xtide_t));
 
-        rom_init(&xtide->bios_rom, "roms/ide_xt.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&xtide->bios_rom, "ide_xt.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
         ide_init();
         ide_pri_disable();
         ide_sec_disable();
@@ -84,7 +84,7 @@ static void *xtide_at_init()
         xtide_t *xtide = malloc(sizeof(xtide_t));
         memset(xtide, 0, sizeof(xtide_t));
 
-        rom_init(&xtide->bios_rom, "roms/ide_at.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&xtide->bios_rom, "ide_at.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
         ide_init();
         
         return xtide;
@@ -99,12 +99,12 @@ static void xtide_close(void *p)
 
 static int xtide_available()
 {
-        return rom_present("roms/ide_xt.bin");
+        return rom_present("ide_xt.bin");
 }
 
 static int xtide_at_available()
 {
-        return rom_present("roms/ide_at.bin");
+        return rom_present("ide_at.bin");
 }
 
 device_t xtide_device =

@@ -2246,7 +2246,7 @@ static void *s3_init(char *bios_fn, int chip)
 
 void *s3_bahamas64_init()
 {
-        s3_t *s3 = s3_init("roms/bahamas64.bin", S3_VISION864);
+        s3_t *s3 = s3_init("bahamas64.bin", S3_VISION864);
 
         s3->id = 0xc0; /*Vision864P*/
         s3->id_ext = s3->id_ext_pci = 0xc0;
@@ -2260,12 +2260,12 @@ void *s3_bahamas64_init()
 
 int s3_bahamas64_available()
 {
-        return rom_present("roms/bahamas64.bin");
+        return rom_present("bahamas64.bin");
 }
 
 void *s3_9fx_init()
 {
-        s3_t *s3 = s3_init("roms/s3_764.bin", S3_TRIO64);
+        s3_t *s3 = s3_init("s3_764.bin", S3_TRIO64);
 
         s3->id = 0xe1; /*Trio64*/
         s3->id_ext = s3->id_ext_pci = 0x11;
@@ -2279,12 +2279,12 @@ void *s3_9fx_init()
 
 int s3_9fx_available()
 {
-        return rom_present("roms/s3_764.bin");
+        return rom_present("s3_764.bin");
 }
 
 void *s3_phoenix_trio32_init()
 {
-        s3_t *s3 = s3_init("roms/86c732p.bin", S3_TRIO32);
+        s3_t *s3 = s3_init("86c732p.bin", S3_TRIO32);
 
         s3->id = 0xe1; /*Trio32*/
         s3->id_ext = 0x10;
@@ -2299,12 +2299,12 @@ void *s3_phoenix_trio32_init()
 
 int s3_phoenix_trio32_available()
 {
-        return rom_present("roms/86c732p.bin");
+        return rom_present("86c732p.bin");
 }
 
 void *s3_phoenix_trio64_init()
 {
-        s3_t *s3 = s3_init("roms/86c764x1.bin", S3_TRIO64);
+        s3_t *s3 = s3_init("86c764x1.bin", S3_TRIO64);
 
         s3->id = 0xe1; /*Trio64*/
         s3->id_ext = s3->id_ext_pci = 0x11;
@@ -2318,7 +2318,7 @@ void *s3_phoenix_trio64_init()
 
 int s3_phoenix_trio64_available()
 {
-        return rom_present("roms/86c764x1.bin");
+        return rom_present("86c764x1.bin");
 }
 
 void s3_close(void *p)

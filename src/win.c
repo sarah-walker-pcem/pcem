@@ -41,6 +41,7 @@
 #include "win-ddraw-fs.h"
 #include "win-d3d.h"
 #include "win-d3d-fs.h"
+#include "paths.h"
 //#include "win-opengl.h"
 
 #ifndef MAPVK_VK_TO_VSC
@@ -314,7 +315,15 @@ static void initmenu(void)
         }
 }
 
-void get_executable_name(char *s, int size)
+int dir_exists(char *path)
+{
+        DWORD dwAttrib = GetFileAttributes(path);
+
+        return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+               (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void get_pcem_path(char *s, int size)
 {
         GetModuleFileName(hinstance, s, size);
 }
@@ -486,7 +495,7 @@ static void process_command_line()
                                 argbuf[i] = 0;
                                 i++;
                         }
-                        pclog("Arg %i - %s\n",argc-1,argv[argc-1]);
+                        //pclog("Arg %i - %s\n",argc-1,argv[argc-1]);
                 }
         }
 
@@ -535,7 +544,19 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         if (!RegisterClassEx(&wincl))
                 return 0;
 
-        getpath();
+        paths_init();
+
+        timeBeginPeriod(1);
+
+        atexit(releasemouse);
+
+        QueryPerformanceFrequency(&qpc_freq);
+        timer_freq = qpc_freq.QuadPart;
+
+        sound_init();
+
+        initpc(argc, argv);
+
 
         d = romset;
         for (c = 0; c < ROM_MAX; c++)
@@ -561,17 +582,6 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         for (c = 0; c < GFX_MAX; c++)
                 gfx_present[c] = video_card_available(video_old_to_new(c));
 
-        timeBeginPeriod(1);
-        
-        atexit(releasemouse);
-
-        QueryPerformanceFrequency(&qpc_freq);
-        timer_freq = qpc_freq.QuadPart;
-        
-        sound_init();
-
-        initpc(argc, argv);
-        
         while (1)
         {
                 quited = 0;

@@ -615,7 +615,7 @@ void genius_close(void *p)
 
 static int genius_available()
 {
-        return rom_present("roms/8x12.bin");
+        return rom_present("8x12.bin");
 }
 
 void genius_speed_changed(void *p)

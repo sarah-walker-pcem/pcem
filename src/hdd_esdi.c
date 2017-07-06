@@ -822,7 +822,7 @@ static void *esdi_init()
         esdi_t *esdi = malloc(sizeof(esdi_t));
         memset(esdi, 0, sizeof(esdi_t));
 
-        rom_init_interleaved(&esdi->bios_rom, "roms/90x8970.bin", "roms/90x8969.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init_interleaved(&esdi->bios_rom, "90x8970.bin", "90x8969.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
         mem_mapping_disable(&esdi->bios_rom.mapping);
 
         hdd_load(&esdi->hdd_file[0], 0, ide_fn[0]);
@@ -854,7 +854,7 @@ static void esdi_close(void *p)
 
 static int esdi_available()
 {
-        return rom_present("roms/90x8969.bin") && rom_present("roms/90x8970.bin");
+        return rom_present("90x8969.bin") && rom_present("90x8970.bin");
 }
 
 device_t hdd_esdi_device =

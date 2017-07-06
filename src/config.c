@@ -190,8 +190,6 @@ void config_load(int is_global, char *fn)
         }
         
         fclose(f);
-        
-        config_dump(is_global);
 }
 
 
@@ -351,6 +349,18 @@ char *get_filename(char *s)
 void append_filename(char *dest, char *s1, char *s2, int size)
 {
         sprintf(dest, "%s%s", s1, s2);
+}
+
+void append_slash(char *s, int size)
+{
+        int c = strlen(s)-1;
+        if (s[c] != '/' && s[c] != '\\')
+        {
+                if (c < size-2)
+                        strcat(s, "/");
+                else
+                        s[c] = '/';
+        }
 }
 
 void put_backslash(char *s)

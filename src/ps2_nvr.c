@@ -3,6 +3,7 @@
 #include "device.h"
 #include "io.h"
 #include "ps2_nvr.h"
+#include "nvr.h"
 
 typedef struct ps2_nvr_t
 {
@@ -57,7 +58,7 @@ static void *ps2_nvr_init()
 
         switch (romset)
         {
-                case ROM_IBMPS2_M80:  f = romfopen("nvr/ibmps2_m80_sec.nvr", "rb"); break;
+                case ROM_IBMPS2_M80:  f = nvrfopen("ibmps2_m80_sec.nvr", "rb"); break;
         }
         if (f)
         {
@@ -77,7 +78,7 @@ static void ps2_nvr_close(void *p)
 
         switch (romset)
         {
-                case ROM_IBMPS2_M80:  f = romfopen("nvr/ibmps2_m80_sec.nvr", "wb"); break;
+                case ROM_IBMPS2_M80:  f = nvrfopen("ibmps2_m80_sec.nvr", "wb"); break;
         }
         if (f)
         {

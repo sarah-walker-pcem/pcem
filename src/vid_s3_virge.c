@@ -3802,7 +3802,7 @@ static void *s3_virge_init()
                    s3_virge_hwcursor_draw,
                    s3_virge_overlay_draw);
 
-        rom_init(&virge->bios_rom, "roms/s3virge.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&virge->bios_rom, "s3virge.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)
                 mem_mapping_disable(&virge->bios_rom.mapping);
 
@@ -3897,7 +3897,7 @@ static void *s3_virge_375_init()
                    s3_virge_overlay_draw);
         virge->svga.vblank_start = s3_virge_vblank_start;
 
-        rom_init(&virge->bios_rom, "roms/86c375_1.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&virge->bios_rom, "86c375_1.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         if (PCI)
                 mem_mapping_disable(&virge->bios_rom.mapping);
 
@@ -4003,12 +4003,12 @@ static void s3_virge_close(void *p)
 
 static int s3_virge_available()
 {
-        return rom_present("roms/s3virge.bin");
+        return rom_present("s3virge.bin");
 }
 
 static int s3_virge_375_available()
 {
-        return rom_present("roms/86c375_1.bin");
+        return rom_present("86c375_1.bin");
 }
 
 static void s3_virge_speed_changed(void *p)

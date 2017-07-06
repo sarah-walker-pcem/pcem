@@ -8,6 +8,8 @@
 #include "386.h"
 #include "386_common.h"
 #include "cpu.h"
+#include "config.h"
+#include "paths.h"
 
 /*Controls whether the accessed bit in a descriptor is set when CS is loaded.*/
 #define CS_ACCESSED
@@ -38,19 +40,24 @@ int output;
 FILE *pclogf;
 void x86abort(const char *format, ...)
 {
-   char buf[256];
-//   return;
-   if (!pclogf)
-      pclogf=fopen("pclog.txt","wt");
-//return;
-   va_list ap;
-   va_start(ap, format);
-   vsprintf(buf, format, ap);
-   va_end(ap);
-   fputs(buf,pclogf);
-   fflush(pclogf);
-   dumpregs();
-   exit(-1);
+        char buf[256];
+        //   return;
+        if (!pclogf)
+        {
+                strcpy(buf, logs_path);
+                put_backslash(buf);
+                strcat(buf, "pcem.log");
+                pclogf=fopen(buf, "wt");
+        }
+        //return;
+        va_list ap;
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        fputs(buf,pclogf);
+        fflush(pclogf);
+        dumpregs();
+        exit(-1);
 }
 
 uint8_t opcode2;

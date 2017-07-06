@@ -8,3 +8,5 @@ void loadnvr();
 void savenvr();
 
 void nvr_recalc();
+
+FILE *nvrfopen(char *fn, char *mode);

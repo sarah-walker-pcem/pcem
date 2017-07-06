@@ -11,6 +11,7 @@
 #include "pit.h"
 #include "sound.h"
 #include "timer.h"
+#include "nvr.h"
 
 #include "filters.h"
 
@@ -788,7 +789,7 @@ void *adgold_init()
         for (; c >= 0; c--)
                 attenuation[c] = 0;
 
-        f = romfopen("nvr/adgold.bin", "rb");
+        f = nvrfopen("adgold.bin", "rb");
         if (f)
         {
                 fread(adgold->adgold_eeprom, 0x18, 1, f);
@@ -828,7 +829,7 @@ void adgold_close(void *p)
         FILE *f;
         adgold_t *adgold = (adgold_t *)p;
         
-        f = romfopen("nvr/adgold.bin", "wb");
+        f = nvrfopen("adgold.bin", "wb");
         if (f)
         {
                 fwrite(adgold->adgold_eeprom, 0x18, 1, f);

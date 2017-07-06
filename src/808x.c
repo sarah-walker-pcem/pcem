@@ -23,6 +23,7 @@
 #include "timer.h"
 #include "x86.h"
 #include "x87.h"
+#include "paths.h"
 
 int xt_cpu_multi;
 int nmi = 0;
@@ -507,7 +508,7 @@ void dumpregs()
 //        return;
 //        savenvr();
 //        return;
-chdir(pcempath);
+        chdir(logs_path);
         nopageerrors=1;
 /*        f=fopen("rram3.dmp","wb");
         for (c=0;c<0x8000000;c++) putc(readmemb(c+0x10000000),f);

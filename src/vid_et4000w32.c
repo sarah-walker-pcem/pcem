@@ -1176,7 +1176,7 @@ void *et4000w32p_init()
                    et4000w32p_hwcursor_draw,
                    NULL); 
 
-        rom_init(&et4000->bios_rom, "roms/et4000w32.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&et4000->bios_rom, "et4000w32.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         /*Some BIOSes (eg Diamond Stealth 32 VLB) have a PCI data structure, but
           with the wrong PCI device ID. The BIOSes on the Intel boards detect this
@@ -1212,7 +1212,7 @@ void *et4000w32p_init()
 
 int et4000w32p_available()
 {
-        return rom_present("roms/et4000w32.bin");
+        return rom_present("et4000w32.bin");
 }
 
 void et4000w32p_close(void *p)

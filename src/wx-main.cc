@@ -7,9 +7,11 @@ int pc_main(int, char**);
 
 int main(int argc, char **argv)
 {
-    pc_main(argc, argv);
+        if (!pc_main(argc, argv))
+                return -1;
 
-    wxApp::SetInstance(new App());
-    wxEntry(argc, argv);
+        wxApp::SetInstance(new App());
+        wxEntry(argc, argv);
+        return 0;
 }
 

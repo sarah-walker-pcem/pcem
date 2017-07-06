@@ -47,6 +47,7 @@
 #include "amstrad.h"
 #include "hdd.h"
 #include "x86.h"
+#include "paths.h"
 
 int window_w, window_h, window_x, window_y, window_remember;
 
@@ -79,37 +80,47 @@ FILE *pclogf;
 void pclog(const char *format, ...)
 {
 #ifndef RELEASE_BUILD
-   char buf[1024];
-   //return;
-   if (!pclogf)
-      pclogf=fopen("pclog.txt","wt");
-//return;
-   va_list ap;
-   va_start(ap, format);
-   vsprintf(buf, format, ap);
-   va_end(ap);
-   fputs(buf,pclogf);
-//fflush(pclogf);
+        char buf[1024];
+        //return;
+        if (!pclogf)
+        {
+                strcpy(buf, logs_path);
+                put_backslash(buf);
+                strcat(buf, "pcem.log");
+                pclogf=fopen(buf, "wt");
+        }
+        //return;
+        va_list ap;
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        fputs(buf,pclogf);
+        //fflush(pclogf);
 #endif
 }
 
 void fatal(const char *format, ...)
 {
-   char buf[256];
-//   return;
-   if (!pclogf)
-      pclogf=fopen("pclog.txt","wt");
-//return;
-   va_list ap;
-   va_start(ap, format);
-   vsprintf(buf, format, ap);
-   va_end(ap);
-   fputs(buf,pclogf);
-   fflush(pclogf);
-   savenvr();
-   dumppic();
-   dumpregs();
-   exit(-1);
+        char buf[256];
+        //   return;
+        if (!pclogf)
+        {
+                strcpy(buf, logs_path);
+                put_backslash(buf);
+                strcat(buf, "pcem.log");
+                pclogf=fopen(buf, "wt");
+        }
+        //return;
+        va_list ap;
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        fputs(buf,pclogf);
+        fflush(pclogf);
+        savenvr();
+        dumppic();
+        dumpregs();
+        exit(-1);
 }
 
 uint8_t cgastat;
@@ -205,16 +216,7 @@ void pc_reset()
 //        video_init();
 }
 #undef printf
-void getpath()
-{
-        char *p;
-        
-        get_executable_name(pcempath,511);
-        pclog("executable_name = %s\n", pcempath);
-        p=get_filename(pcempath);
-        *p=0;
-        pclog("path = %s\n", pcempath);        
-}
+
 
 void initpc(int argc, char *argv[])
 {
@@ -246,7 +248,7 @@ void initpc(int argc, char *argv[])
                 }
         }
 
-//        append_filename(config_file_default, pcempath, "pcem.cfg", 511);        
+//        append_filename(config_file_default, pcempath, "pcem.cfg", 511);
         
         loadconfig(NULL);
         pclog("Config loaded\n");
@@ -613,7 +615,7 @@ void loadconfig(char *fn)
         char global_config_file[512];
         char *p;
 
-        append_filename(global_config_file, pcempath, "pcem.cfg", 511);
+        append_filename(global_config_file, pcem_path, "pcem.cfg", 511);
 
         config_load(CFG_GLOBAL, global_config_file);
         
@@ -765,6 +767,9 @@ void loadconfig(char *fn)
         for (d = 0; d < num_config_callbacks; ++d)
                 if (config_callbacks[d].onloaded)
                         config_callbacks[d].onloaded();
+
+        config_dump(CFG_GLOBAL);
+        config_dump(CFG_MACHINE);
 }
 
 void saveconfig(char *fn)
@@ -772,7 +777,7 @@ void saveconfig(char *fn)
         int c, d;
         char global_config_file[512];
 
-        append_filename(global_config_file, pcempath, "pcem.cfg", 511);
+        append_filename(global_config_file, pcem_path, "pcem.cfg", 511);
 
         config_set_int(CFG_GLOBAL, NULL, "vid_resize", vid_resize);
         config_set_int(CFG_GLOBAL, NULL, "vid_force_aspect_ratio", video_force_aspect_ration);
@@ -877,7 +882,7 @@ void saveconfig(char *fn)
         pclog("config_save(%s)\n", config_file_default);
         if (fn)
                 config_save(CFG_MACHINE, fn);
-        else
+        else if (strlen(config_file_default))
                 config_save(CFG_MACHINE, config_file_default);
 
         config_save(CFG_GLOBAL, global_config_file);

@@ -65,6 +65,13 @@ extern "C" {
         void wx_show_status(void* window);
         void wx_close_status(void* window);
 
+        void wx_get_home_directory(char* path);
+        int wx_create_directory(char* path);
+
+        int wx_setup(char* path);
+        int wx_file_exists(char* path);
+        int wx_dir_exists(char* path);
+
         int confirm();
 #ifdef __cplusplus
 }

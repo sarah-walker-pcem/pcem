@@ -676,9 +676,9 @@ void emu8k_init(emu8k_t *emu8k, int onboard_ram)
         int c;
         double out;
         
-        f = romfopen("roms/awe32.raw", "rb");
+        f = romfopen("awe32.raw", "rb");
         if (!f)
-                fatal("ROMS/AWE32.RAW not found\n");
+                fatal("AWE32.RAW not found\n");
         
         if (onboard_ram)
         {

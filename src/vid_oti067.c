@@ -174,12 +174,12 @@ void *oti067_common_init(char *bios_fn, int vram_size)
 void *oti067_init()
 {
         int vram_size = device_get_config_int("memory");
-        return oti067_common_init("roms/oti067/bios.bin", vram_size);
+        return oti067_common_init("oti067/bios.bin", vram_size);
 }
 
 void *oti067_acer386_init()
 {
-        oti067_t *oti067 = oti067_common_init("roms/acer386/oti067.bin", 512);
+        oti067_t *oti067 = oti067_common_init("acer386/oti067.bin", 512);
         
         if (oti067)
                 oti067->bios_rom.rom[0x5d] = 0x74;
@@ -189,7 +189,7 @@ void *oti067_acer386_init()
 
 static int oti067_available()
 {
-        return rom_present("roms/oti067/bios.bin");
+        return rom_present("oti067/bios.bin");
 }
 
 void oti067_close(void *p)

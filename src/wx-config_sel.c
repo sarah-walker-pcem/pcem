@@ -2,6 +2,7 @@
 #include "config.h"
 #include "wx-utils.h"
 #include "wx-sdl2.h"
+#include "paths.h"
 
 extern void config_open(void* hwnd);
 extern void hdconf_open(void* hwnd);
@@ -12,9 +13,9 @@ static void config_list_update(void* hdlg)
         int num, c;
         void* h;
 
-        strcpy(s, pcempath);
+        strcpy(s, configs_path);
         put_backslash(s);
-        strcat(s, "configs/*.cfg");
+        strcat(s, "*.cfg");
         pclog("Dir %s\n", s);
 
         wx_dlgdirlist(hdlg, s, WX_ID("IDC_LIST"), 0, 0);
@@ -67,12 +68,11 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                 {
                                         char cfg[512];
 
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs/");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
-//                                        sprintf(cfg, "%s\\configs\\%scfg", pcempath, s);
+//                                        sprintf(cfg, "%s\\configs\\%scfg", config_path, s);
                                         pclog("Config name %s\n", cfg);
 
                                         strcpy(config_file_default, cfg);
@@ -96,9 +96,8 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
 //                                if (!getsfile(hdlg, "Configuration (*.cfg)|*.cfg|All files (*.*)|*.*", "", s, "cfg"))
                                 if (wx_textentrydialog(hdlg, "Enter name:", "New config", 0, 1, 64, (LONG_PARAM)name))
                                 {
-                                        strcpy(openfilestring, pcempath);
+                                        strcpy(openfilestring, configs_path);
                                         put_backslash(openfilestring);
-                                        strcat(openfilestring, "configs/");
                                         strcat(openfilestring, name);
                                         strcat(openfilestring, ".cfg");
 
@@ -124,9 +123,8 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                 {
                                         char cfg[512];
 
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs/");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
                                         pclog("Config name %s\n", cfg);
@@ -149,9 +147,8 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                 {
                                         char cfg[512];
 
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs/");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
                                         pclog("Config name %s\n", cfg);
@@ -181,15 +178,13 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                                 char old_path[512];
                                                 char new_path[512];
 
-                                                strcpy(old_path, pcempath);
+                                                strcpy(old_path, configs_path);
                                                 put_backslash(old_path);
-                                                strcat(old_path, "configs/");
                                                 strcat(old_path, old_name);
                                                 strcat(old_path, ".cfg");
 
-                                                strcpy(new_path, pcempath);
+                                                strcpy(new_path, configs_path);
                                                 put_backslash(new_path);
-                                                strcat(new_path, "configs/");
                                                 strcat(new_path, name);
                                                 strcat(new_path, ".cfg");
 
@@ -217,9 +212,8 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                         sprintf(s, "Do you want to delete \"%s\"?", name);
                                         if (wx_messagebox(NULL, s, "PCem", WX_MB_OKCANCEL) == WX_IDOK)
                                         {
-                                                strcpy(s, pcempath);
+                                                strcpy(s, configs_path);
                                                 put_backslash(s);
-                                                strcat(s, "configs/");
                                                 strcat(s, name);
                                                 strcat(s, ".cfg");
 

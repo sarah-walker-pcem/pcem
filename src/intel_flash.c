@@ -162,13 +162,13 @@ void *intel_flash_init(uint8_t type)
 	switch(romset)
 	{
 		case ROM_REVENGE:
-		strcpy(flash_path, "roms/revenge/");
+		strcpy(flash_path, "revenge/");
 		break;
 		case ROM_ENDEAVOR:
-		strcpy(flash_path, "roms/endeavor/");
+		strcpy(flash_path, "endeavor/");
 		break;
 		case ROM_430VX:
-		strcpy(flash_path, "roms/430vx/");
+		strcpy(flash_path, "430vx/");
 		break;
 		default:
                 fatal("intel_flash_init on unsupported ROM set %i\n", romset);

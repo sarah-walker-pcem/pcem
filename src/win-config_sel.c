@@ -9,6 +9,7 @@
 #include "config.h"
 #include "resources.h"
 #include "win.h"
+#include "paths.h"
 
 static void config_list_update(HWND hdlg)
 {
@@ -16,9 +17,9 @@ static void config_list_update(HWND hdlg)
         int num, c;
         HWND h;
 
-        strcpy(s, pcempath);
+        strcpy(s, configs_path);
         put_backslash(s);
-        strcat(s, "configs\\*.cfg");
+        strcat(s, "*.cfg");
         pclog("Dir %s\n", s);
 
         DlgDirList(hdlg, s, IDC_LIST, 0, 0);
@@ -71,12 +72,11 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 {
                                         char cfg[512];
                                         
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs\\");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
-//                                        sprintf(cfg, "%s\\configs\\%scfg", pcempath, s);
+//                                        sprintf(cfg, "%s\\configs\\%scfg", configs_path, s);
                                         pclog("Config name %s\n", cfg);
                                         
                                         strcpy(config_file_default, cfg);
@@ -97,9 +97,8 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                         {
                                 char s[512];
                                 
-                                strcpy(s, pcempath);
+                                strcpy(s, configs_path);
                                 put_backslash(s);
-                                strcat(s, "configs\\");
                                 pclog("Dir %s\n", s);
 
                                 if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", s, "cfg"))
@@ -125,9 +124,8 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 {
                                         char cfg[512];
                                         
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs\\");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
                                         pclog("Config name %s\n", cfg);
@@ -151,9 +149,8 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 {
                                         char cfg[512];
                                         
-                                        strcpy(cfg, pcempath);
+                                        strcpy(cfg, configs_path);
                                         put_backslash(cfg);
-                                        strcat(cfg, "configs\\");
                                         strcat(cfg, s);
                                         strcat(cfg, "cfg");
                                         pclog("Config name %s\n", cfg);
