@@ -20,6 +20,9 @@ static mem_mapping_t scat_512k_clip_mapping;
 static mem_mapping_t scat_4000_9FFF_mapping[24];
 static mem_mapping_t scat_A000_BFFF_mapping;
 
+uint8_t scat_read(uint16_t port, void *priv);
+void scat_write(uint16_t port, uint8_t val, void *priv);
+
 void scat_shadow_state_update()
 {
         int i, val;
@@ -136,6 +139,32 @@ uint32_t get_scat_addr(uint32_t addr, scat_t *p)
         return addr;
 }
 
+void scat_set_global_EMS_state(int state)
+{
+        int i;
+        uint32_t base_addr, virt_addr;
+
+        for(i=0; i<32; i++)
+        {
+                base_addr = (i + 16) << 14;
+                if(i >= 24)
+                        base_addr += 0x30000;
+                if(state && (scat_stat[i].regs_2x9 & 0x80))
+                {
+                        virt_addr = get_scat_addr(base_addr, &scat_stat[i]);
+                        if(i < 24) mem_mapping_disable(&scat_4000_9FFF_mapping[i]);
+                        mem_mapping_set_exec(&scat_mapping[i], ram + virt_addr);
+                        mem_mapping_enable(&scat_mapping[i]);
+                }
+                else
+                {
+                        mem_mapping_set_exec(&scat_mapping[i], ram + base_addr);
+                        mem_mapping_disable(&scat_mapping[i]);
+                        if(i < 24) mem_mapping_enable(&scat_4000_9FFF_mapping[i]);
+                }
+        }
+}
+
 void scat_write(uint16_t port, uint8_t val, void *priv)
 {
         uint8_t scat_reg_valid = 0, scat_shadow_update = 0, index;
@@ -152,7 +181,28 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 {
                         case SCAT_CLOCK_CONTROL:
                         case SCAT_PERIPHERAL_CONTROL:
+                        scat_reg_valid = 1;
+                        break;
                         case SCAT_EMS_CONTROL:
+                        if(val & 0x40)
+                        {
+                                if(val & 1)
+                                {
+                                        io_sethandler(0x0218, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                                        io_removehandler(0x0208, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                                }
+                                else
+                                {
+                                        io_sethandler(0x0208, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                                        io_removehandler(0x0218, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                                }
+                        }
+                        else
+                        {
+                                io_removehandler(0x0208, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                                io_removehandler(0x0218, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
+                        }
+                        scat_set_global_EMS_state(val & 0x80);
                         scat_reg_valid = 1;
                         break;
                         case SCAT_POWER_MANAGEMENT:
@@ -204,7 +254,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                         scat_regs[scat_index] = val;
                 if (scat_shadow_update)
                         scat_shadow_state_update();
-                pclog("Write SCAT Register %02X to %02X at %04X:%04X\n", scat_index, val, CS, cpu_state.pc);
+//                pclog("Write SCAT Register %02X to %02X at %04X:%04X\n", scat_index, val, CS, cpu_state.pc);
                 break;
 
                 case 0x92:
@@ -224,11 +274,11 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x208:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x8 = val;
 
-                        if(scat_stat[index].regs_2x9 & 0x80)
+                        if((scat_regs[SCAT_EMS_CONTROL] & 0x80) && (scat_stat[index].regs_2x9 & 0x80))
                         {
                                 flushmmucache();
                         }
@@ -237,29 +287,32 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x209:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x9 = val;
                         base_addr = (index + 16) << 14;
                         if(index >= 24)
                                 base_addr += 0x30000;
 
-                        if (val & 0x80)
+                        if (scat_regs[SCAT_EMS_CONTROL] & 0x80)
                         {
-                                virt_addr = get_scat_addr(base_addr, &scat_stat[index]);
-                                if(index < 24) mem_mapping_disable(&scat_4000_9FFF_mapping[index]);
-                                mem_mapping_set_exec(&scat_mapping[index], ram + virt_addr);
-                                mem_mapping_enable(&scat_mapping[index]);
-                                pclog("Map page %d(address %05X) to address %06X\n", scat_ems_reg_2xA & 0x1f, base_addr, virt_addr);
+                                if (val & 0x80)
+                                {
+                                        virt_addr = get_scat_addr(base_addr, &scat_stat[index]);
+                                        if(index < 24) mem_mapping_disable(&scat_4000_9FFF_mapping[index]);
+                                        mem_mapping_set_exec(&scat_mapping[index], ram + virt_addr);
+                                        mem_mapping_enable(&scat_mapping[index]);
+//                                        pclog("Map page %d(address %05X) to address %06X\n", scat_ems_reg_2xA & 0x1f, base_addr, virt_addr);
+                                }
+                                else
+                                {
+                                        mem_mapping_set_exec(&scat_mapping[index], ram + base_addr);
+                                        mem_mapping_disable(&scat_mapping[index]);
+                                        if(index < 24) mem_mapping_enable(&scat_4000_9FFF_mapping[index]);
+//                                        pclog("Unmap page %d(address %06X)\n", scat_ems_reg_2xA & 0x1f, base_addr);
+                                }
+                                flushmmucache();
                         }
-                        else
-                        {
-                                mem_mapping_set_exec(&scat_mapping[index], ram + base_addr);
-                                mem_mapping_disable(&scat_mapping[index]);
-                                if(index < 24) mem_mapping_enable(&scat_4000_9FFF_mapping[index]);
-                                pclog("Unmap page %d(address %06X)\n", scat_ems_reg_2xA & 0x1f, base_addr);
-                        }
-                        flushmmucache();
 
                         if (scat_ems_reg_2xA & 0x80)
                         {
@@ -270,7 +323,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x20A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         scat_ems_reg_2xA = val;
                 }
                 break;
@@ -278,11 +331,11 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x218:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x8 = val;
 
-                        if(scat_stat[index].regs_2x9 & 0x80)
+                        if((scat_regs[SCAT_EMS_CONTROL] & 0x80) && (scat_stat[index].regs_2x9 & 0x80))
                         {
                                 flushmmucache();
                         }
@@ -291,29 +344,32 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x219:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         scat_stat[index].regs_2x9 = val;
                         base_addr = (index + 16) << 14;
                         if (index >= 24)
                                 base_addr += 0x30000;
 
-                        if (val & 0x80)
+                        if (scat_regs[SCAT_EMS_CONTROL] & 0x80)
                         {
-                                virt_addr = get_scat_addr(base_addr, &scat_stat[index]);
-                                if(index < 24) mem_mapping_disable(&scat_4000_9FFF_mapping[index]);
-                                mem_mapping_set_exec(&scat_mapping[index], ram + virt_addr);
-                                mem_mapping_enable(&scat_mapping[index]);
-                                pclog("Map page %d(address %05X) to address %06X\n", scat_ems_reg_2xA & 0x1f, base_addr, virt_addr);
+                                if (val & 0x80)
+                                {
+                                        virt_addr = get_scat_addr(base_addr, &scat_stat[index]);
+                                        if(index < 24) mem_mapping_disable(&scat_4000_9FFF_mapping[index]);
+                                        mem_mapping_set_exec(&scat_mapping[index], ram + virt_addr);
+                                        mem_mapping_enable(&scat_mapping[index]);
+                                        pclog("Map page %d(address %05X) to address %06X\n", scat_ems_reg_2xA & 0x1f, base_addr, virt_addr);
+                                }
+                                else
+                                {
+                                        mem_mapping_set_exec(&scat_mapping[index], ram + base_addr);
+                                        mem_mapping_disable(&scat_mapping[index]);
+                                        if(index < 24) mem_mapping_enable(&scat_4000_9FFF_mapping[index]);
+                                        pclog("Unmap page %d(address %05X)\n", scat_ems_reg_2xA & 0x1f, base_addr);
+                                }
+                                flushmmucache();
                         }
-                        else
-                        {
-                                mem_mapping_set_exec(&scat_mapping[index], ram + base_addr);
-                                mem_mapping_disable(&scat_mapping[index]);
-                                if(index < 24) mem_mapping_enable(&scat_4000_9FFF_mapping[index]);
-                                pclog("Unmap page %d(address %05X)\n", scat_ems_reg_2xA & 0x1f, base_addr);
-                        }
-                        flushmmucache();
 
                         if (scat_ems_reg_2xA & 0x80)
                         {
@@ -324,7 +380,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x21A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
+//                        pclog("Write SCAT EMS Control Port %04X to %02X at %04X:%04X\n", port, val, CS, cpu_state.pc);
                         scat_ems_reg_2xA = val;
                 }
                 break;
@@ -349,7 +405,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                         val = scat_regs[scat_index];
                         break;
                 }
-                pclog("Read SCAT Register %02X at %04X:%04X\n", scat_index, CS, cpu_state.pc);
+//                pclog("Read SCAT Register %02X at %04X:%04X\n", scat_index, CS, cpu_state.pc);
                 break;
 
                 case 0x92:
@@ -359,7 +415,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x208:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x8;
                 }
@@ -367,7 +423,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x209:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x9;
                 }
@@ -375,7 +431,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x20A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x40)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         val = scat_ems_reg_2xA;
                 }
                 break;
@@ -383,7 +439,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x218:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x8;
                 }
@@ -391,7 +447,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x219:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         index = scat_ems_reg_2xA & 0x1F;
                         val = scat_stat[index].regs_2x9;
                 }
@@ -399,7 +455,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 case 0x21A:
                 if ((scat_regs[SCAT_EMS_CONTROL] & 0x41) == 0x41)
                 {
-                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
+//                        pclog("Read SCAT EMS Control Port %04X at %04X:%04X\n", port, CS, cpu_state.pc);
                         val = scat_ems_reg_2xA;
                 }
                 break;
@@ -434,8 +490,6 @@ void scat_init()
 
         io_sethandler(0x0022, 0x0002, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
         io_sethandler(0x0092, 0x0001, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
-        io_sethandler(0x0208, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
-        io_sethandler(0x0218, 0x0003, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
 
         for (i = 0; i < 256; i++)
         {
