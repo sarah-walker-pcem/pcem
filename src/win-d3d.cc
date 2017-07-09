@@ -221,11 +221,9 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
         r.bottom = y2;
         r.right  = 2047;
 
+        hr = d3dTexture->LockRect(0, &dr, &r, 0);
         if (hr == D3D_OK)
         {        
-                if (FAILED(d3dTexture->LockRect(0, &dr, &r, 0)))
-                   fatal("LockRect failed\n");
-        
                 for (yy = y1; yy < y2; yy++)
                 {
                         if ((y + yy) >= 0 && (y + yy) < buffer32->h)
@@ -236,7 +234,10 @@ void d3d_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                 d3dTexture->UnlockRect(0);
         }
         else
+        {
                 video_blit_complete();
+                return;
+        }
 
         d3d_verts[0].tu = d3d_verts[2].tu = d3d_verts[3].tu = 0;//0.5 / 2048.0;
         d3d_verts[0].tv = d3d_verts[3].tv = d3d_verts[4].tv = 0;//0.5 / 2048.0;

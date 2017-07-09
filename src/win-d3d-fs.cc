@@ -291,14 +291,20 @@ static void d3d_fs_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                 lock_rect.bottom = y2;
                 lock_rect.right  = 2047;
 
-                if (FAILED(d3dTexture->LockRect(0, &dr, &lock_rect, 0)))
-                   fatal("LockRect failed\n");
-        
-                for (yy = y1; yy < y2; yy++)
-                        memcpy((void *)((uintptr_t)dr.pBits + ((yy - y1) * dr.Pitch)), &(((uint32_t *)buffer32->line[yy + y])[x]), w * 4);
+                hr = d3dTexture->LockRect(0, &dr, &lock_rect, 0);
+                if (hr == D3D_OK)
+                {            
+                        for (yy = y1; yy < y2; yy++)
+                                memcpy((void *)((uintptr_t)dr.pBits + ((yy - y1) * dr.Pitch)), &(((uint32_t *)buffer32->line[yy + y])[x]), w * 4);
 
-                video_blit_complete();
-                d3dTexture->UnlockRect(0);
+                        video_blit_complete();
+                        d3dTexture->UnlockRect(0);
+                }
+                else
+                {
+                        video_blit_complete();
+                        return;
+                }
         }
         else
                 video_blit_complete();
