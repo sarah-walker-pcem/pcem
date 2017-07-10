@@ -59,7 +59,8 @@ int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
 
         if ((hdd->sectors - offset) < transfer_sectors)
                 transfer_sectors = hdd->sectors - offset;
-        addr = offset * 512;
+        addr = (uint64_t)offset * 512;
+
         fseeko64(hdd->f, addr, SEEK_SET);
         fread(buffer, transfer_sectors*512, 1, hdd->f);
         
@@ -75,7 +76,8 @@ int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
 
         if ((hdd->sectors - offset) < transfer_sectors)
                 transfer_sectors = hdd->sectors - offset;
-        addr = offset * 512;
+        addr = (uint64_t)offset * 512;
+
         fseeko64(hdd->f, addr, SEEK_SET);
         fwrite(buffer, transfer_sectors*512, 1, hdd->f);
         
@@ -95,7 +97,7 @@ int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors)
         
         if ((hdd->sectors - offset) < transfer_sectors)
                 transfer_sectors = hdd->sectors - offset;
-        addr = offset * 512;
+        addr = (uint64_t)offset * 512;
         fseeko64(hdd->f, addr, SEEK_SET);
         for (c = 0; c < transfer_sectors; c++)
                 fwrite(zero_buffer, 512, 1, hdd->f);
