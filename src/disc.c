@@ -205,9 +205,25 @@ void disc_set_rate(int drive, int drvden, int rate)
 
 void disc_reset()
 {
+        int drive;
+        
         curdrive = 0;
         disc_period = 32;
 	timer_add(disc_poll, &disc_poll_time, &motoron, NULL);
+
+        for (drive = 0; drive < 2; drive++)
+        {
+                if (loaders[driveloaders[drive]].close)
+                        loaders[driveloaders[drive]].close(drive);
+                drive_empty[drive] = 1;
+                drives[drive].hole = NULL;
+                drives[drive].poll = NULL;
+                drives[drive].seek = NULL;
+                drives[drive].readsector = NULL;
+                drives[drive].writesector = NULL;
+                drives[drive].readaddress = NULL;
+                drives[drive].format = NULL;
+        }
 }
 
 void disc_init()
