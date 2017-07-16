@@ -385,6 +385,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_SPC4200P:
+                f=romfopen("spc4200p/u8.01","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_EUROPC:
 //                return 0;
                 f=romfopen("europc/50145","rb");

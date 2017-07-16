@@ -404,6 +404,7 @@ enum
         ROM_CMDPC30,
         ROM_AMI286,
         ROM_AWARD286,
+        ROM_SPC4200P,
         ROM_DELL200,
         ROM_MISC286,
         ROM_IBMAT386,

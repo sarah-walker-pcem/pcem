@@ -1045,6 +1045,12 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         return;
 
                 case WIN_DRIVE_DIAGNOSTICS: /* Execute Drive Diagnostics */
+                        ide->atastat = BUSY_STAT;
+                        timer_process();
+                        idecallback[ide_board]=200*IDE_TIME;
+                        timer_update_outstanding();
+                        return;
+
                 case WIN_PIDENTIFY: /* Identify Packet Device */
                 case WIN_SET_MULTIPLE_MODE: /*Set Multiple Mode*/
 //                output=1;
