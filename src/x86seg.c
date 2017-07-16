@@ -704,8 +704,8 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 return;
                         }
                         type=segdat[2]&0xF00;
-                        if (type==0x400) newpc=segdat[0];
-                        else             newpc=segdat[0]|(segdat[3]<<16);
+                        newpc=segdat[0];
+                        if (type&0x800) newpc|=segdat[3]<<16;
                         switch (type)
                         {
                                 case 0x400: /*Call gate*/
@@ -810,6 +810,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 case 0x900: /*386 Task gate*/
 //                                pclog("Task gate\n");
                                 cpu_state.pc=oxpc;
+                                optype=JMP;
                                 cpl_override=1;
                                 taskswitch286(seg,segdat,segdat[2]&0x800);
                                 flags &= ~NT_FLAG;
@@ -965,8 +966,8 @@ void loadcscall(uint16_t seg)
                 segdat[2]=readmemw(0,addr+4);
                 segdat[3]=readmemw(0,addr+6); cpl_override=0; if (cpu_state.abrt) return;
                 type=segdat[2]&0xF00;
-                if (type==0x400) newpc=segdat[0];
-                else             newpc=segdat[0]|(segdat[3]<<16);
+                newpc=segdat[0];
+                if (type&0x800) newpc|=segdat[3]<<16;
 
                 if (csout) pclog("Code seg call - %04X - %04X %04X %04X\n",seg,segdat[0],segdat[1],segdat[2]);
                 if (segdat[2]&0x1000)
@@ -1183,7 +1184,7 @@ void loadcscall(uint16_t seg)
                                                 if (!(segdat2[2]&0x8000))
                                                 {
                                                         pclog("Call gate loading SS not present\n");
-                                                        x86np("Call gate loading SS not present\n", newss & 0xfffc);
+                                                        x86ss("Call gate loading SS not present\n", newss & 0xfffc);
                                                         return;
                                                 }
                                                 if (!stack32) oldsp &= 0xFFFF;
