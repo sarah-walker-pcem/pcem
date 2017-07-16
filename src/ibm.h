@@ -251,6 +251,7 @@ uint32_t dr[8];
 
 #define CR4_VME (1 << 0)
 #define CR4_PVI (1 << 1)
+#define CR4_PSE (1 << 4)
 
 #define IOPL ((flags>>12)&3)
 

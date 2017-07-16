@@ -52,6 +52,7 @@ enum
 {
         CPUID_FPU = (1 << 0),
         CPUID_VME = (1 << 1),
+        CPUID_PSE = (1 << 3),
         CPUID_TSC = (1 << 4),
         CPUID_MSR = (1 << 5),
         CPUID_CMPXCHG8B = (1 << 8),
@@ -978,7 +979,7 @@ void cpu_set()
                 cpu_hasMSR = 1;
                 cpu_hasCR4 = 1;
                 cpu_hasVME = 1;
-                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE | CR4_PCE;
                 codegen_timing_set(&codegen_timing_pentium);
                 break;
 
@@ -1019,7 +1020,7 @@ void cpu_set()
                 cpu_hasMSR = 1;
                 cpu_hasCR4 = 1;
                 cpu_hasVME = 1;
-                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE | CR4_PCE;
                 codegen_timing_set(&codegen_timing_pentium);
                 break;
 
@@ -1299,7 +1300,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B;
                 }
                 else
                         EAX = 0;
@@ -1317,7 +1318,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
                 }
                 else
                         EAX = 0;

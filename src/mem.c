@@ -873,6 +873,32 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 }*/
                 return -1;
         }
+        
+        if ((temp & 0x80) && (cr4 & CR4_PSE))
+        {
+                /*4MB page*/
+                if ((CPL == 3 && !(temp & 4) && !cpl_override) || (rw && !(temp & 2) && (CPL == 3 || cr0 & WP_FLAG)))
+                {
+//                        if (!nopageerrors) pclog("Page not present!  %08X   %08X   %02X %02X  %i  %08X  %04X:%08X  %04X:%08X %i  %i %i\n",addr,temp,opcode,opcode2,frame,rmdat32, CS,pc,SS,ESP,ins,CPL,rw);
+
+                        cr2 = addr;
+                        temp &= 1;
+                        if (CPL == 3)
+                                temp |= 4;
+                        if (rw)
+                                temp |= 2;
+                        cpu_state.abrt = ABRT_PF;
+                        abrt_error = temp;
+
+                        return -1;
+                }
+
+                mmu_perm = temp & 4;
+                ((uint32_t *)ram)[addr2>>2] |= 0x20;
+
+                return (temp & ~0x3fffff) + (addr & 0x3fffff);
+        }
+        
         temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
         temp3=temp&temp2;
 //        if (output == 3) pclog("Do translate %08X %08X\n", temp, temp3);
@@ -920,6 +946,15 @@ uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
 
         if (!(temp&1))
                 return -1;
+
+        if ((temp & 0x80) && (cr4 & CR4_PSE))
+        {
+                /*4MB page*/
+                if ((CPL == 3 && !(temp & 4) && !cpl_override) || (rw && !(temp & 2) && (CPL == 3 || cr0 & WP_FLAG)))
+                        return -1;
+
+                return (temp & ~0x3fffff) + (addr & 0x3fffff);
+        }
 
         temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
         temp3=temp&temp2;
