@@ -540,7 +540,6 @@ void ega_poll(void *p)
                 }
                 if (ega->vc == ega->vsyncstart)
                 {
-                        int wx = 0, wy = 0;
                         ega->dispon = 0;
 //                        printf("Vsync on at line %i %i\n",displine,vc);
                         ega->stat |= 8;
@@ -563,10 +562,9 @@ void ega_poll(void *p)
                                         
                         video_blit_memtoscreen(32, 0, ega->firstline, ega->lastline, xsize, ega->lastline - ega->firstline);
 
-                        frames++;
-                        
-                        ega->video_res_x = wx;
-                        ega->video_res_y = wy + 1;
+                        ega->frames++;
+                        ega->video_res_x = xsize;
+                        ega->video_res_y = ysize+1;
                         if (!(ega->gdcreg[6] & 1)) /*Text mode*/
                         {
                                 ega->video_res_x /= (ega->seqregs[1] & 1) ? 8 : 9;
@@ -879,6 +877,23 @@ void ega_speed_changed(void *p)
         ega_recalctimings(ega);
 }
 
+void ega_add_status_info(char *s, int max_len, void *p)
+{
+        ega_t *ega = (ega_t *)p;
+        char temps[128];
+        
+        if (!ega->video_bpp)      strcpy(temps, "EGA in text mode\n");
+        else                      sprintf(temps, "EGA colour depth : %i bpp\n", ega->video_bpp);
+        strncat(s, temps, max_len);
+        
+        sprintf(temps, "EGA resolution : %i x %i\n", ega->video_res_x, ega->video_res_y);
+        strncat(s, temps, max_len);
+        
+        sprintf(temps, "EGA refresh rate : %i Hz\n\n", ega->frames);
+        ega->frames = 0;
+        strncat(s, temps, max_len);
+}
+
 device_t ega_device =
 {
         "EGA",
@@ -888,5 +903,5 @@ device_t ega_device =
         ega_standalone_available,
         ega_speed_changed,
         NULL,
-        NULL
+        ega_add_status_info
 };
