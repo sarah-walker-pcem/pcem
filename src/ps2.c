@@ -124,7 +124,8 @@ void ps2board_init()
         io_sethandler(0x0320, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
         io_sethandler(0x0322, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
         io_sethandler(0x0324, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
-        
+
+        ps2_92 = 0;
         ps2_190 = 0;
         
         lpt1_remove();

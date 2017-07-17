@@ -289,6 +289,7 @@ void ps1mb_m2121_init()
                                 0x3ffff,
                                 0,
                                 MEM_MAPPING_EXTERNAL);
+        ps1_92 = 0;
         ps1_190 = 0;
         
         lpt1_remove();
