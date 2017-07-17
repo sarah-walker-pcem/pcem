@@ -119,7 +119,7 @@ void *pc1640_init()
 
         rom_init(&pc1640->bios_rom, "pc1640/40100", 0xc0000, 0x8000, 0x7fff, 0, 0);
         
-        ega_init(&pc1640->ega);
+        ega_init(&pc1640->ega, 9, 0);
         pc1640->cga.vram = pc1640->ega.vram;
         pc1640->cga_enabled = 1;
         cga_init(&pc1640->cga);

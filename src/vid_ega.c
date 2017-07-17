@@ -554,7 +554,7 @@ void ega_poll(void *p)
                                 ysize = ega->lastline - ega->firstline;
                                 if (xsize < 64) xsize = 656;
                                 if (ysize < 32) ysize = 200;
-                                if (ega->vres)
+                                if (ega->vres || ysize <= 200)
                                         updatewindowsize(xsize, ysize << 1);
                                 else
                                         updatewindowsize(xsize, ysize);
@@ -788,7 +788,7 @@ uint8_t ega_read(uint32_t addr, void *p)
         return ega->vram[addr | readplane];
 }
 
-void ega_init(ega_t *ega)
+void ega_init(ega_t *ega, int monitor_type, int is_mono)
 {
         int c, d, e;
         
@@ -817,22 +817,63 @@ void ega_init(ega_t *ega)
                 }
         }
 
-        for (c = 0; c < 256; c++)
+        if (is_mono)
         {
-                pallook64[c]  = makecol32(((c >> 2) & 1) * 0xaa, ((c >> 1) & 1) * 0xaa, (c & 1) * 0xaa);
-                pallook64[c] += makecol32(((c >> 5) & 1) * 0x55, ((c >> 4) & 1) * 0x55, ((c >> 3) & 1) * 0x55);
-                pallook16[c]  = makecol32(((c >> 2) & 1) * 0xaa, ((c >> 1) & 1) * 0xaa, (c & 1) * 0xaa);
-                pallook16[c] += makecol32(((c >> 4) & 1) * 0x55, ((c >> 4) & 1) * 0x55, ((c >> 4) & 1) * 0x55);
-                if ((c & 0x17) == 6) 
-                        pallook16[c] = makecol32(0xaa, 0x55, 0);
+                for (c = 0; c < 256; c++)
+                {
+                        int video = ((c & 8) ? 2 : 0) | ((c & 16) ? 1 : 0);
+                        switch (monitor_type >> 4)
+                        {
+                                case DISPLAY_GREEN:
+                                pallook64[c] = makecol32(0, video*0x55, 0);
+                                pallook16[c] = makecol32(0, video*0x55, 0);
+                                break;
+                                case DISPLAY_AMBER:
+                                switch ((c >> 3) & 3)
+                                {
+                                        case 0:
+                                        pallook64[c] = pallook16[c] = makecol32(0, 0, 0);
+                                        break;
+                                        case 2:
+                                        pallook64[c] = pallook16[c] = makecol32(0x2c, 0x08, 0x00);
+                                        break;
+                                        case 1:
+                                        pallook64[c] = pallook16[c] = makecol32(0xff, 0xae, 0x18);
+                                        break;
+                                        case 3:
+                                        pallook64[c] = pallook16[c] = makecol32(0xff, 0xe3, 0x34);
+                                        break;
+                                }
+                                break;
+                                case DISPLAY_WHITE: default:
+                                pallook64[c] = makecol32(video*0x55, video*0x55, video*0x55);
+                                pallook16[c] = makecol32(video*0x55, video*0x55, video*0x55);
+                                break;
+                        }
+                }
+        }
+        else
+        {
+                for (c = 0; c < 256; c++)
+                {
+                        pallook64[c]  = makecol32(((c >> 2) & 1) * 0xaa, ((c >> 1) & 1) * 0xaa, (c & 1) * 0xaa);
+                        pallook64[c] += makecol32(((c >> 5) & 1) * 0x55, ((c >> 4) & 1) * 0x55, ((c >> 3) & 1) * 0x55);
+                        pallook16[c]  = makecol32(((c >> 2) & 1) * 0xaa, ((c >> 1) & 1) * 0xaa, (c & 1) * 0xaa);
+                        pallook16[c] += makecol32(((c >> 4) & 1) * 0x55, ((c >> 4) & 1) * 0x55, ((c >> 4) & 1) * 0x55);
+                        if ((c & 0x17) == 6) 
+                                pallook16[c] = makecol32(0xaa, 0x55, 0);
+                }
         }
         ega->pallook = pallook16;
+
+        egaswitches = monitor_type & 0xf;
 }
 
 void *ega_standalone_init()
 {
         ega_t *ega = malloc(sizeof(ega_t));
         memset(ega, 0, sizeof(ega_t));
+        int monitor_type;
         
         rom_init(&ega->bios_rom, "ibm_6277356_ega_card_u44_27128.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
 
@@ -849,7 +890,8 @@ void *ega_standalone_init()
                 }
         }
 
-        ega_init(ega);        
+        monitor_type = device_get_config_int("monitor_type");
+        ega_init(ega, monitor_type, (monitor_type & 0xf) == 10);
 
         mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, NULL, MEM_MAPPING_EXTERNAL, ega);
         timer_add(ega_poll, &ega->vidtime, TIMER_ALWAYS_ENABLED, ega);
@@ -894,6 +936,49 @@ void ega_add_status_info(char *s, int max_len, void *p)
         strncat(s, temps, max_len);
 }
 
+static device_config_t ega_config[] =
+{
+        {
+                .name = "monitor_type",
+                .description = "Monitor type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "EGA Colour, 40x25",
+                                .value = 6
+                        },
+                        {
+                                .description = "EGA Colour, 80x25",
+                                .value = 7
+                        },
+                        {
+                                .description = "EGA Colour, ECD",
+                                .value = 9
+                        },
+                        {
+                                .description = "EGA Monochrome (white)",
+                                .value = 10 | (DISPLAY_WHITE << 4)
+                        },
+                        {
+                                .description = "EGA Monochrome (green)",
+                                .value = 10 | (DISPLAY_GREEN << 4)
+                        },
+                        {
+                                .description = "EGA Monochrome (amber)",
+                                .value = 10 | (DISPLAY_AMBER << 4)
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 9
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t ega_device =
 {
         "EGA",
@@ -903,5 +988,6 @@ device_t ega_device =
         ega_standalone_available,
         ega_speed_changed,
         NULL,
-        ega_add_status_info
+        ega_add_status_info,
+        ega_config
 };

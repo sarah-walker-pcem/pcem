@@ -62,6 +62,7 @@ typedef struct ega_t
         int vrammask;
 
         int video_res_x, video_res_y, video_bpp;
+        int frames;
 } ega_t;
 
 void   *ega_standalone_init();
@@ -71,6 +72,6 @@ void    ega_poll(void *p);
 void    ega_recalctimings(struct ega_t *ega);
 void    ega_write(uint32_t addr, uint8_t val, void *p);
 uint8_t ega_read(uint32_t addr, void *p);
-void    ega_init(ega_t *ega);
+void    ega_init(ega_t *ega, int monitor_type, int is_mono);
 
 extern device_t ega_device;
