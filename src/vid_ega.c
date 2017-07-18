@@ -910,12 +910,24 @@ void ega_init(ega_t *ega, int monitor_type, int is_mono)
         {
                 for (c = 0; c < 256; c++)
                 {
-                        int video = ((c & 8) ? 2 : 0) | ((c & 16) ? 1 : 0);
                         switch (monitor_type >> 4)
                         {
                                 case DISPLAY_GREEN:
-                                pallook64[c] = makecol32(0, video*0x55, 0);
-                                pallook16[c] = makecol32(0, video*0x55, 0);
+                                switch ((c >> 3) & 3)
+                                {
+                                        case 0:
+                                        pallook64[c] = pallook16[c] = makecol32(0, 0, 0);
+                                        break;
+                                        case 2:
+                                        pallook64[c] = pallook16[c] = makecol32(0x04, 0x8a, 0x20);
+                                        break;
+                                        case 1:
+                                        pallook64[c] = pallook16[c] = makecol32(0x08, 0xc7, 0x2c);
+                                        break;
+                                        case 3:
+                                        pallook64[c] = pallook16[c] = makecol32(0x34, 0xff, 0x5d);
+                                        break;
+                                }
                                 break;
                                 case DISPLAY_AMBER:
                                 switch ((c >> 3) & 3)
@@ -924,10 +936,10 @@ void ega_init(ega_t *ega, int monitor_type, int is_mono)
                                         pallook64[c] = pallook16[c] = makecol32(0, 0, 0);
                                         break;
                                         case 2:
-                                        pallook64[c] = pallook16[c] = makecol32(0x2c, 0x08, 0x00);
+                                        pallook64[c] = pallook16[c] = makecol32(0xb2, 0x4d, 0x00);
                                         break;
                                         case 1:
-                                        pallook64[c] = pallook16[c] = makecol32(0xff, 0xae, 0x18);
+                                        pallook64[c] = pallook16[c] = makecol32(0xef, 0x79, 0x00);
                                         break;
                                         case 3:
                                         pallook64[c] = pallook16[c] = makecol32(0xff, 0xe3, 0x34);
@@ -935,8 +947,21 @@ void ega_init(ega_t *ega, int monitor_type, int is_mono)
                                 }
                                 break;
                                 case DISPLAY_WHITE: default:
-                                pallook64[c] = makecol32(video*0x55, video*0x55, video*0x55);
-                                pallook16[c] = makecol32(video*0x55, video*0x55, video*0x55);
+                                switch ((c >> 3) & 3)
+                                {
+                                        case 0:
+                                        pallook64[c] = pallook16[c] = makecol32(0, 0, 0);
+                                        break;
+                                        case 2:
+                                        pallook64[c] = pallook16[c] = makecol32(0x7a, 0x81, 0x83);
+                                        break;
+                                        case 1:
+                                        pallook64[c] = pallook16[c] = makecol32(0xaf, 0xb3, 0xb0);
+                                        break;
+                                        case 3:
+                                        pallook64[c] = pallook16[c] = makecol32(0xff, 0xfd, 0xed);
+                                        break;
+                                }
                                 break;
                         }
                 }
