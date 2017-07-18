@@ -636,6 +636,9 @@ void ega_write(uint32_t addr, uint8_t val, void *p)
 
         addr <<= 2;
 
+        if (addr >= ega->vram_limit)
+                return;
+
         if (!(ega->gdcreg[6] & 1)) 
                 fullchange = 2;
 
@@ -766,7 +769,9 @@ uint8_t ega_read(uint32_t addr, void *p)
         }
 
         addr <<= 2;
-
+        if (addr >= ega->vram_limit)
+                return 0xff;
+                
         ega->la = ega->vram[addr];
         ega->lb = ega->vram[addr | 0x1];
         ega->lc = ega->vram[addr | 0x2];
@@ -869,6 +874,8 @@ void ega_init(ega_t *ega, int monitor_type, int is_mono)
         ega->pallook = pallook16;
 
         egaswitches = monitor_type & 0xf;
+        ega->vram_limit = 256 * 1024;
+        ega->vrammask = ega->vram_limit-1;
 }
 
 void *ega_standalone_init()
@@ -895,6 +902,9 @@ void *ega_standalone_init()
         monitor_type = device_get_config_int("monitor_type");
         ega_init(ega, monitor_type, (monitor_type & 0xf) == 10);
 
+        ega->vram_limit = device_get_config_int("memory") * 1024;
+        ega->vrammask = ega->vram_limit-1;
+        
         mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, NULL, MEM_MAPPING_EXTERNAL, ega);
         timer_add(ega_poll, &ega->vidtime, TIMER_ALWAYS_ENABLED, ega);
         io_sethandler(0x03a0, 0x0040, ega_in, NULL, NULL, ega_out, NULL, NULL, ega);
@@ -940,6 +950,30 @@ void ega_add_status_info(char *s, int max_len, void *p)
 
 static device_config_t ega_config[] =
 {
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "64 kB",
+                                .value = 64
+                        },
+                        {
+                                .description = "128 kB",
+                                .value = 128
+                        },
+                        {
+                                .description = "256 kB",
+                                .value = 256
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 256
+        },
         {
                 .name = "monitor_type",
                 .description = "Monitor type",

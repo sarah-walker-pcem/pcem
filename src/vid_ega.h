@@ -60,6 +60,7 @@ typedef struct ega_t
         
         uint8_t *vram;
         int vrammask;
+        uint32_t vram_limit;
 
         int video_res_x, video_res_y, video_bpp;
         int frames;
