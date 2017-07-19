@@ -96,12 +96,18 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                         case IDC_NEW:
                         {
                                 char s[512];
+                                int c;
                                 
                                 strcpy(s, configs_path);
                                 put_backslash(s);
-                                pclog("Dir %s\n", s);
+                                strcat(s, "*.cfg");
+                                for (c = 0; c < strlen(s); c++)
+                                {
+                                        if (s[c] == '/')
+                                                s[c] = '\\';
+                                }
 
-                                if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", "", s, "cfg"))
+                                if (!getsfile(hdlg, "Configuration (*.CFG)\0*.CFG\0All files (*.*)\0*.*\0", s, s, "cfg"))
                                 {
                                         config_open(hdlg);
                                         
