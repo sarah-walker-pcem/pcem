@@ -1938,7 +1938,7 @@ void mem_add_bios()
 }
 
 int mem_a20_key = 0, mem_a20_alt = 0;
-static int mem_a20_state = 1;
+static int mem_a20_state = 2;
 
 void mem_init()
 {
@@ -2000,6 +2000,8 @@ void mem_init()
         if (romset == ROM_IBMPS1_2011)
                 mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   romext, 0, NULL);
 //        pclog("Mem resize %i %i\n",mem_size,c);
+        mem_a20_key = 2;
+        mem_a20_alt = 0;
 }
 
 static void mem_remap_top(int max_size)
@@ -2091,6 +2093,7 @@ void mem_resize()
 
 //        pclog("Mem resize %i %i\n",mem_size,c);
         mem_a20_key = 2;
+        mem_a20_alt = 0;
         mem_a20_recalc();
 }
 
