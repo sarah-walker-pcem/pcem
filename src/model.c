@@ -317,6 +317,7 @@ void at_init()
         nvr_init();
         pic2_init();
         device_add(&gameport_device);
+        nmi_mask = 0;
 }
 
 void ibm_at_init()

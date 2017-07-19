@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "scat.h"
 #include "x86.h"
+#include "nmi.h"
 
 static uint8_t scat_regs[256];
 static int scat_index;
@@ -395,7 +396,7 @@ uint8_t scat_read(uint16_t port, void *priv)
                 switch (scat_index)
                 {
                         case SCAT_MISCELLANEOUS_STATUS:
-                        val = (scat_regs[scat_index] & 0xbf) | ((mem_a20_key & 2) << 5);
+                        val = (scat_regs[scat_index] & 0x3f) | (~nmi_mask & 0x80) | ((mem_a20_key & 2) << 5);
                         break;
                         case SCAT_DRAM_CONFIGURATION:
                         val = (scat_regs[scat_index] & 0x8f) | (cpu_waitstates == 1 ? 0 : 0x10);

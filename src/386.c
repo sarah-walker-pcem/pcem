@@ -10,6 +10,7 @@
 #include "fdc.h"
 #include "pic.h"
 #include "timer.h"
+#include "nmi.h"
 
 #include "386_common.h"
 
@@ -319,7 +320,7 @@ dontprint=0;
                                 loadcs(readmemw(0,addr+2));
                         }
                 }
-                else if (nmi && nmi_enable)
+                else if (nmi && nmi_enable && nmi_mask)
                 {
                         cpu_state.oldpc = cpu_state.pc;
                         oldcs = CS;

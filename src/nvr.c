@@ -7,6 +7,7 @@
 #include "rtc.h"
 #include "paths.h"
 #include "config.h"
+#include "nmi.h"
 
 int oldromset;
 int nvrmask=63;
@@ -176,7 +177,11 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
                         }
                 }
         }
-        else        nvraddr=val&nvrmask;
+        else
+        {
+                nvraddr=val&nvrmask;
+                nmi_mask = ~val & 0x80;
+        }
 }
 
 uint8_t readnvr(uint16_t addr, void *priv)
