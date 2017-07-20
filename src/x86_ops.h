@@ -23,6 +23,8 @@ extern OpFn *x86_dynarec_opcodes_de_a16;
 extern OpFn *x86_dynarec_opcodes_de_a32;
 extern OpFn *x86_dynarec_opcodes_df_a16;
 extern OpFn *x86_dynarec_opcodes_df_a32;
+extern OpFn *x86_dynarec_opcodes_REPE;
+extern OpFn *x86_dynarec_opcodes_REPNE;
 
 extern OpFn dynarec_ops_286[1024];
 extern OpFn dynarec_ops_286_0f[1024];
@@ -62,6 +64,9 @@ extern OpFn dynarec_ops_fpu_686_db_a32[256];
 extern OpFn dynarec_ops_fpu_686_df_a16[256];
 extern OpFn dynarec_ops_fpu_686_df_a32[256];
 
+extern OpFn dynarec_ops_REPE[1024];
+extern OpFn dynarec_ops_REPNE[1024];
+
 extern OpFn *x86_opcodes;
 extern OpFn *x86_opcodes_0f;
 extern OpFn *x86_opcodes_d8_a16;
@@ -80,6 +85,8 @@ extern OpFn *x86_opcodes_de_a16;
 extern OpFn *x86_opcodes_de_a32;
 extern OpFn *x86_opcodes_df_a16;
 extern OpFn *x86_opcodes_df_a32;
+extern OpFn *x86_opcodes_REPE;
+extern OpFn *x86_opcodes_REPNE;
 
 extern OpFn ops_286[1024];
 extern OpFn ops_286_0f[1024];
@@ -119,5 +126,8 @@ extern OpFn ops_fpu_686_db_a16[256];
 extern OpFn ops_fpu_686_db_a32[256];
 extern OpFn ops_fpu_686_df_a16[256];
 extern OpFn ops_fpu_686_df_a32[256];
+
+extern OpFn ops_REPE[1024];
+extern OpFn ops_REPNE[1024];
 
 #endif /*_X86_OPS_H*/

@@ -28,7 +28,7 @@ int checkio(int port);
 
 #define checkio_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
                         { \
-                                tempi = checkio(port); \
+                                int tempi = checkio(port); \
                                 if (cpu_state.abrt) break; \
                                 if (tempi) \
                                 { \

@@ -11,6 +11,3 @@ int x86_int_sw_rm(int num);
 
 int divl(uint32_t val);
 int idivl(int32_t val);
-
-int rep386(int fv);
-

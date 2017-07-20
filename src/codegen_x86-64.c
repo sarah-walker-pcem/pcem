@@ -1059,6 +1059,15 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         case 0xf0: /*LOCK*/
                         break;
 
+                        case 0xf2: /*REPNE*/
+                        op_table = x86_dynarec_opcodes_REPNE;
+                        recomp_op_table = recomp_opcodes_REPNE;
+                        break;
+                        case 0xf3: /*REPE*/
+                        op_table = x86_dynarec_opcodes_REPE;
+                        recomp_op_table = recomp_opcodes_REPE;
+                        break;
+
                         default:
                         goto generate_call;
                 }
@@ -1110,6 +1119,13 @@ generate_call:
                 }
 #endif
         }
+
+        if ((op_table == x86_opcodes_REPNE || op_table == x86_opcodes_REPE) && !op_table[opcode | op_32])
+        {
+                op_table = x86_dynarec_opcodes;
+                recomp_op_table = recomp_opcodes;
+        }
+
         if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff])
         {
                 uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);
