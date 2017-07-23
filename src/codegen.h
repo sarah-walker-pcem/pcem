@@ -1,4 +1,8 @@
+#ifndef _CODEGEN_H_
+#define _CODEGEN_H_
+
 #include "mem.h"
+#include "x86_ops.h"
 
 #ifdef __amd64__
 #include "codegen_x86-64.h"
@@ -358,3 +362,5 @@ extern int codegen_fpu_loaded_iq[8];
 extern int codegen_reg_loaded[8];
 
 extern int codegen_in_recompile;
+
+#endif

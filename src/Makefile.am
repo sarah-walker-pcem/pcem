@@ -11,7 +11,7 @@ amrefresh:
 
 
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c  amstrad.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
-codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
+codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dac.c dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
 joystick_tm_fcs.c keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \

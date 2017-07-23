@@ -4,7 +4,7 @@ CC   = gcc
 WXRC = wxrc
 CFLAGS = -Doff64_t=__off64_t -O3 -fomit-frame-pointer -msse2 -m64 $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl-linux.o cdrom-image.o cdrom-null.o \
-codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86-64.c compaq.o config.o cpu.o \
+codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_common.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86-64.c compaq.o config.o cpu.o \
 dac.o dells200.o device.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o \
 hdd.o hdd_esdi.o hdd_file.o headland.o i430lx.o i430fx.o i430vx.o ide.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o joystick_standard.o joystick_sw_pad.o \
 joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o \
