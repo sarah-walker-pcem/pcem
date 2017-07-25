@@ -357,9 +357,6 @@ void resetpchard()
         mouse_emu_close();
         device_init();
         
-        midi_close();
-        midi_init();
-        
         timer_reset();
         sound_reset();
         mem_resize();
