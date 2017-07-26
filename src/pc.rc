@@ -36,7 +36,7 @@ BEGIN
                 POPUP "&Video"
                 BEGIN
                         MENUITEM "&Resizeable window",IDM_VID_RESIZE
-                        MENUITEM "Force 4:3 &aspect ration",IDM_VID_ASPECT
+                        MENUITEM "Force 4:3 &aspect ratio",IDM_VID_ASPECT
                         MENUITEM "Remember size && position",IDM_VID_REMEMBER
                         MENUITEM SEPARATOR
                         MENUITEM "&DirectDraw", IDM_VID_DDRAW
