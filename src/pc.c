@@ -471,66 +471,66 @@ void runpc()
         else
                 execx86(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
         
-                keyboard_poll_host();
-                keyboard_process();
-//                checkkeys();
-                pollmouse();
-                joystick_poll();
+        keyboard_poll_host();
+        keyboard_process();
+//        checkkeys();
+        pollmouse();
+        joystick_poll();
         endblit();
 
-                framecountx++;
-                framecount++;
-                if (framecountx>=100)
-                {
-                        pclog("onesec\n");
-                        framecountx=0;
-                        mips=(float)insc/1000000.0f;
-                        insc=0;
-                        flops=(float)fpucount/1000000.0f;
-                        fpucount=0;
-                        sreadlnum=readlnum;
-                        swritelnum=writelnum;
-                        segareads=egareads;
-                        segawrites=egawrites;
-                        scycles_lost = cycles_lost;
+        framecountx++;
+        framecount++;
+        if (framecountx>=100)
+        {
+                pclog("onesec\n");
+                framecountx=0;
+                mips=(float)insc/1000000.0f;
+                insc=0;
+                flops=(float)fpucount/1000000.0f;
+                fpucount=0;
+                sreadlnum=readlnum;
+                swritelnum=writelnum;
+                segareads=egareads;
+                segawrites=egawrites;
+                scycles_lost = cycles_lost;
 
-                        cpu_recomp_blocks_latched = cpu_recomp_blocks;
-                        cpu_recomp_ins_latched = cpu_state.cpu_recomp_ins;
-                        cpu_recomp_full_ins_latched = cpu_recomp_full_ins;
-                        cpu_new_blocks_latched = cpu_new_blocks;
-                        cpu_recomp_flushes_latched = cpu_recomp_flushes;
-                        cpu_recomp_evicted_latched = cpu_recomp_evicted;
-                        cpu_recomp_reuse_latched = cpu_recomp_reuse;
-                        cpu_recomp_removed_latched = cpu_recomp_removed;
-                        cpu_reps_latched = cpu_reps;
-                        cpu_notreps_latched = cpu_notreps;
-                                                
-                        cpu_recomp_blocks = 0;
-                        cpu_state.cpu_recomp_ins = 0;
-                        cpu_recomp_full_ins = 0;
-                        cpu_new_blocks = 0;
-                        cpu_recomp_flushes = 0;
-                        cpu_recomp_evicted = 0;
-                        cpu_recomp_reuse = 0;
-                        cpu_recomp_removed = 0;
-                        cpu_reps = 0;
-                        cpu_notreps = 0;
+                cpu_recomp_blocks_latched = cpu_recomp_blocks;
+                cpu_recomp_ins_latched = cpu_state.cpu_recomp_ins;
+                cpu_recomp_full_ins_latched = cpu_recomp_full_ins;
+                cpu_new_blocks_latched = cpu_new_blocks;
+                cpu_recomp_flushes_latched = cpu_recomp_flushes;
+                cpu_recomp_evicted_latched = cpu_recomp_evicted;
+                cpu_recomp_reuse_latched = cpu_recomp_reuse;
+                cpu_recomp_removed_latched = cpu_recomp_removed;
+                cpu_reps_latched = cpu_reps;
+                cpu_notreps_latched = cpu_notreps;
 
-                        updatestatus=1;
-                        readlnum=writelnum=0;
-                        egareads=egawrites=0;
-                        cycles_lost = 0;
-                        mmuflush=0;
-                        emu_fps = frames;
-                        frames = 0;
-                }
-                if (win_title_update)
-                {
-                        win_title_update=0;
-                        sprintf(s, "PCem v12 - %i%% - %s - %s - %s", fps, model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : ((mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON) ? "Press CTRL-END to release mouse" : "Press CTRL-END or middle button to release mouse"));
-                        set_window_title(s);
-                }
-                done++;
+                cpu_recomp_blocks = 0;
+                cpu_state.cpu_recomp_ins = 0;
+                cpu_recomp_full_ins = 0;
+                cpu_new_blocks = 0;
+                cpu_recomp_flushes = 0;
+                cpu_recomp_evicted = 0;
+                cpu_recomp_reuse = 0;
+                cpu_recomp_removed = 0;
+                cpu_reps = 0;
+                cpu_notreps = 0;
+
+                updatestatus=1;
+                readlnum=writelnum=0;
+                egareads=egawrites=0;
+                cycles_lost = 0;
+                mmuflush=0;
+                emu_fps = frames;
+                frames = 0;
+        }
+        if (win_title_update)
+        {
+                win_title_update=0;
+                sprintf(s, "PCem v12 - %i%% - %s - %s - %s", fps, model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : ((mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON) ? "Press CTRL-END to release mouse" : "Press CTRL-END or middle button to release mouse"));
+                set_window_title(s);
+        }
+        done++;
 }
 
 void fullspeed()

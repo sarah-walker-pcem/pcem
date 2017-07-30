@@ -150,8 +150,8 @@ uint8_t ega_in(uint16_t addr, void *p)
 {
         ega_t *ega = (ega_t *)p;
 
-if (addr != 0x3da && addr != 0x3ba)
-        pclog("ega_in %04X\n", addr);
+        if (addr != 0x3da && addr != 0x3ba)
+                pclog("ega_in %04X\n", addr);
         if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(ega->miscout & 1)) 
                 addr ^= 0x60;
 

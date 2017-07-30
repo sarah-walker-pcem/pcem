@@ -462,7 +462,7 @@ void makeznptable()
                    znptable8[c]=0;
                 else
                    znptable8[c]=P_FLAG;
-                   if (c == 0xb1) pclog("znp8 b1 = %i %02X\n", d, znptable8[c]);
+                if (c == 0xb1) pclog("znp8 b1 = %i %02X\n", d, znptable8[c]);
                 if (!c) znptable8[c]|=Z_FLAG;
                 if (c&0x80) znptable8[c]|=N_FLAG;
         }
