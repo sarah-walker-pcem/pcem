@@ -5,6 +5,7 @@
 
 #ifdef __WINDOWS__
 #define BITMAP WINDOWS_BITMAP
+#undef UNICODE
 #include <windows.h>
 #include <windowsx.h>
 #undef BITMAP
@@ -75,6 +76,7 @@ emulation_state_t emulation_state = EMULATION_STOPPED;
 int pause = 0;
 
 int window_doreset = 0;
+int window_dosetresize = 0;
 int renderer_doreset = 0;
 int window_dofullscreen = 0;
 int window_dowindowed = 0;
@@ -91,8 +93,18 @@ int video_height = 480;
 char menuitem[60];
 
 extern int config_selection_open(void* hwnd, int inited);
+extern int shader_manager_open(void* hwnd);
 
 extern void sdl_set_window_title(const char* title);
+
+extern float gl3_shader_refresh_rate;
+extern float gl3_input_scale;
+extern int gl3_input_stretch;
+extern char gl3_shader_file[20][512];
+
+char screenshot_format[10];
+int screenshot_flash = 1;
+int take_screenshot = 0;
 
 void warning(const char *format, ...)
 {
@@ -112,6 +124,16 @@ void updatewindowsize(int x, int y)
         video_height = y;
 
         display_resize(x, y);
+}
+
+unsigned int get_ticks()
+{
+        return SDL_GetTicks();
+}
+
+void delay_ms(unsigned int ms)
+{
+        SDL_Delay(ms);
 }
 
 void startblit()
@@ -143,11 +165,8 @@ uint64_t main_time;
 
 int mainthread(void* param)
 {
-        int i;
-
         SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 
-        int t = 0;
         int frames = 0;
         uint32_t old_time, new_time;
 
@@ -210,6 +229,37 @@ void set_window_title(const char *s)
         sdl_set_window_title(s);
 }
 
+float flash_func(float x)
+{
+        return 1 - pow(x, 4);
+}
+
+float flash_failed_func(float x)
+{
+        return fabs(sin(x*3.1415926*2));
+}
+
+void screenshot_taken(unsigned char* rgb, int width, int height)
+{
+        char name[512];
+        char date[128];
+        strcpy(name, "Screenshot from ");
+        wx_date_format(date, "%Y-%m-%d %H-%M-%S");
+        strcat(name, date);
+        if (wx_image_save(screenshots_path, name, screenshot_format, rgb, width, height, 0))
+        {
+                pclog("Screenshot saved\n");
+                if (screenshot_flash)
+                        color_flash(flash_func, 500, 0xff, 0xff, 0xff, 0xff);
+        }
+        else
+        {
+                pclog("Screenshot was not saved\n");
+                if (screenshot_flash)
+                        color_flash(flash_failed_func, 500, 0xff, 0, 0, 0xff);
+        }
+}
+
 uint64_t timer_read()
 {
         return SDL_GetPerformanceCounter();
@@ -223,24 +273,69 @@ Uint32 timer_onesec(Uint32 interval, void* param)
 
 void sdl_loadconfig()
 {
-        video_fullscreen = config_get_int(CFG_GLOBAL, "SDL2", "fullscreen", video_fullscreen);
-        video_fullscreen_mode = config_get_int(CFG_GLOBAL, "SDL2", "fullscreen_mode", video_fullscreen_mode);
-        video_scale = config_get_int(CFG_GLOBAL, "SDL2", "scale", video_scale);
-        video_scale_mode = config_get_int(CFG_GLOBAL, "SDL2", "scale_mode", video_scale_mode);
-        video_vsync = config_get_int(CFG_GLOBAL, "SDL2", "vsync", video_vsync);
-        video_focus_dim = config_get_int(CFG_GLOBAL, "SDL2", "focus_dim", video_focus_dim);
-        requested_render_driver = sdl_get_render_driver_by_name(config_get_string(CFG_GLOBAL, "SDL2", "render_driver", ""), RENDERER_SOFTWARE);
+        vid_resize = config_get_int(CFG_MACHINE, NULL, "vid_resize", 0);
+        video_fullscreen_scale = config_get_int(CFG_MACHINE, NULL, "video_fullscreen_scale", 0);
+        video_fullscreen_first = config_get_int(CFG_MACHINE, NULL, "video_fullscreen_first", 1);
+
+        strcpy(screenshot_format, config_get_string(CFG_MACHINE, "SDL2", "screenshot_format", IMAGE_PNG));
+        screenshot_flash = config_get_int(CFG_MACHINE, "SDL2", "screenshot_flash", 1);
+
+        video_fullscreen = config_get_int(CFG_MACHINE, "SDL2", "fullscreen", video_fullscreen);
+        video_fullscreen_mode = config_get_int(CFG_MACHINE, "SDL2", "fullscreen_mode", video_fullscreen_mode);
+        video_scale = config_get_int(CFG_MACHINE, "SDL2", "scale", video_scale);
+        video_scale_mode = config_get_int(CFG_MACHINE, "SDL2", "scale_mode", video_scale_mode);
+        video_vsync = config_get_int(CFG_MACHINE, "SDL2", "vsync", video_vsync);
+        video_focus_dim = config_get_int(CFG_MACHINE, "SDL2", "focus_dim", video_focus_dim);
+        requested_render_driver = sdl_get_render_driver_by_name(config_get_string(CFG_MACHINE, "SDL2", "render_driver", ""), RENDERER_SOFTWARE);
+
+        gl3_input_scale = config_get_float(CFG_MACHINE, "GL3", "input_scale", gl3_input_scale);
+        gl3_input_stretch = config_get_int(CFG_MACHINE, "GL3", "input_stretch", gl3_input_stretch);
+        gl3_shader_refresh_rate = config_get_float(CFG_MACHINE, "GL3", "shader_refresh_rate", gl3_shader_refresh_rate);
+
+        memset(&gl3_shader_file, 0, sizeof(gl3_shader_file));
+        int num_shaders = config_get_int(CFG_MACHINE, "GL3 Shaders", "shaders", 0);
+        char s[20];
+        int i;
+        for (i = 0; i < num_shaders; ++i)
+        {
+                sprintf(s, "shader%d", i);
+                strncpy(gl3_shader_file[i], config_get_string(CFG_MACHINE, "GL3 Shaders", s, ""), 511);
+                gl3_shader_file[i][511] = 0;
+        }
 }
 
 void sdl_saveconfig()
 {
-        config_set_int(CFG_GLOBAL, "SDL2", "fullscreen", video_fullscreen);
-        config_set_int(CFG_GLOBAL, "SDL2", "fullscreen_mode", video_fullscreen_mode);
-        config_set_int(CFG_GLOBAL, "SDL2", "scale", video_scale);
-        config_set_int(CFG_GLOBAL, "SDL2", "scale_mode", video_scale_mode);
-        config_set_int(CFG_GLOBAL, "SDL2", "vsync", video_vsync);
-        config_set_int(CFG_GLOBAL, "SDL2", "focus_dim", video_focus_dim);
-        config_set_string(CFG_GLOBAL, "SDL2", "render_driver", (char*)requested_render_driver.sdl_id);
+        config_set_int(CFG_MACHINE, NULL, "vid_resize", vid_resize);
+        config_set_int(CFG_MACHINE, NULL, "video_fullscreen_scale", video_fullscreen_scale);
+        config_set_int(CFG_MACHINE, NULL, "video_fullscreen_first", video_fullscreen_first);
+
+        config_set_string(CFG_MACHINE, "SDL2", "screenshot_format", screenshot_format);
+        config_set_int(CFG_MACHINE, "SDL2", "screenshot_flash", screenshot_flash);
+
+        config_set_int(CFG_MACHINE, "SDL2", "fullscreen", video_fullscreen);
+        config_set_int(CFG_MACHINE, "SDL2", "fullscreen_mode", video_fullscreen_mode);
+        config_set_int(CFG_MACHINE, "SDL2", "scale", video_scale);
+        config_set_int(CFG_MACHINE, "SDL2", "scale_mode", video_scale_mode);
+        config_set_int(CFG_MACHINE, "SDL2", "vsync", video_vsync);
+        config_set_int(CFG_MACHINE, "SDL2", "focus_dim", video_focus_dim);
+        config_set_string(CFG_MACHINE, "SDL2", "render_driver", (char*)requested_render_driver.sdl_id);
+
+        config_set_float(CFG_MACHINE, "GL3", "input_scale", gl3_input_scale);
+        config_set_int(CFG_MACHINE, "GL3", "input_stretch", gl3_input_stretch);
+        config_set_float(CFG_MACHINE, "GL3", "shader_refresh_rate", gl3_shader_refresh_rate);
+
+        char s[20];
+        int i;
+        for (i = 0; i < 20; ++i)
+        {
+                sprintf(s, "shader%d", i);
+                if (strlen(gl3_shader_file[i]))
+                        config_set_string(CFG_MACHINE, "GL3 Shaders", s, gl3_shader_file[i]);
+                else
+                        break;
+        }
+        config_set_int(CFG_MACHINE, "GL3 Shaders", "shaders", i);
 }
 
 void update_cdrom_menu(void* hmenu)
@@ -260,19 +355,19 @@ void update_cdrom_menu(void* hmenu)
 
 void wx_initmenu()
 {
-        char s[32];
         menu = wx_getmenu(ghwnd);
 
         void* cdrom_submenu = wx_getsubmenu(menu, WX_ID("IDM_CDROM"));
 
 #ifdef __WINDOWS__
+        char s[32];
         int c;
         /* Loop through each Windows drive letter and test to see if
            it's a CDROM */
         for (c='A';c<='Z';c++)
         {
                 sprintf(s,"%c:\\",c);
-                if (GetDriveType(s)==DRIVE_CDROM)
+                if (GetDriveTypeA(s)==DRIVE_CDROM)
                 {
                         sprintf(s, "Host CD/DVD Drive (%c:)", c);
                         wx_appendmenu(cdrom_submenu, IDM_CDROM_REAL+(c-'A'), s, wxITEM_RADIO);
@@ -284,7 +379,7 @@ void wx_initmenu()
 
 }
 
-void wx_setupmenu()
+int wx_setupmenu(void* data)
 {
         int c;
         update_cdrom_menu(menu);
@@ -300,6 +395,9 @@ void wx_setupmenu()
         sprintf(menuitem, "IDM_SND_BUF[%d]", (int)(log(sound_buf_len/MIN_SND_BUF)/log(2)));
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
 
+        sprintf(menuitem, "IDM_SND_BUF[%d]", (int)(log(sound_buf_len/MIN_SND_BUF)/log(2)));
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+
         sprintf(menuitem, "IDM_VID_SCALE_MODE[%d]", video_scale_mode);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         sprintf(menuitem, "IDM_VID_SCALE[%d]", video_scale);
@@ -309,34 +407,54 @@ void wx_setupmenu()
         wx_checkmenuitem(menu, WX_ID("IDM_VID_VSYNC"), video_vsync);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_LOST_FOCUS_DIM"), video_focus_dim);
 
+        int format = 0;
+        if (!strcmp(screenshot_format, IMAGE_TIFF))
+                format = 1;
+        else if (!strcmp(screenshot_format, IMAGE_BMP))
+                format = 2;
+        else if (!strcmp(screenshot_format, IMAGE_JPG))
+                format = 3;
+        sprintf(menuitem, "IDM_SCREENSHOT_FORMAT[%d]", format);
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+        wx_checkmenuitem(menu, WX_ID("IDM_SCREENSHOT_FLASH"), screenshot_flash);
+
         int num_renderers;
         sdl_render_driver* drivers = sdl_get_render_drivers(&num_renderers);
         for (c = 1; c < num_renderers; ++c)
         {
                 sprintf(menuitem, "IDM_VID_RENDER_DRIVER[%d]", drivers[c].id);
-                wx_enablemenuitem(menu, WX_ID(menuitem), 0);
-        }
-        SDL_RendererInfo renderInfo;
-        for (c = 0; c < SDL_GetNumRenderDrivers(); ++c)
-        {
-                SDL_GetRenderDriverInfo(c, &renderInfo);
-                sdl_render_driver* driver = sdl_get_render_driver_by_name_ptr(renderInfo.name);
-
-                if (driver)
-                {
-                        pclog("Renderer: %s (%d)\n", renderInfo.name, driver->id);
-                        sprintf(menuitem, "IDM_VID_RENDER_DRIVER[%d]", driver->id);
-                        wx_enablemenuitem(menu, WX_ID(menuitem), 1);
-                }
+                wx_enablemenuitem(menu, WX_ID(menuitem), drivers[c].renderer_available(&drivers[c]));
         }
         sprintf(menuitem, "IDM_VID_RENDER_DRIVER[%d]", requested_render_driver.id);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+
+//        wx_enablemenuitem(menu, WX_ID("IDM_VID_SDL2"), requested_render_driver.id != RENDERER_GL3);
+        wx_enablemenuitem(menu, WX_ID("IDM_VID_GL3"), requested_render_driver.id == RENDERER_GL3);
+
+        sprintf(menuitem, "IDM_VID_GL3_INPUT_STRETCH[%d]", gl3_input_stretch);
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+        sprintf(menuitem, "IDM_VID_GL3_INPUT_SCALE[%d]", (int)((gl3_input_scale-0.5)*2));
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+        sprintf(menuitem, "IDM_VID_GL3_SHADER_REFRESH_RATE[%g]", gl3_shader_refresh_rate);
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+
+        return 1;
 }
 
 void sdl_onconfigloaded()
 {
         if (ghwnd)
-                wx_callback(ghwnd, wx_setupmenu);
+                wx_callback(ghwnd, wx_setupmenu, 0);
+
+        /* create directories */
+        if (!wx_dir_exists(configs_path))
+                wx_create_directory(configs_path);
+        if (!wx_dir_exists(nvr_path))
+                wx_create_directory(nvr_path);
+        if (!wx_dir_exists(logs_path))
+                wx_create_directory(logs_path);
+        if (!wx_dir_exists(screenshots_path))
+                wx_create_directory(screenshots_path);
 }
 
 extern void wx_loadconfig();
@@ -344,10 +462,10 @@ extern void wx_saveconfig();
 
 int pc_main(int argc, char** argv)
 {
-        char s[512];
         paths_init();
 
 #ifdef __linux__
+        char s[512];
         /* create directories if they don't exist */
         if (!wx_setup(pcem_path))
                 return FALSE;
@@ -359,6 +477,8 @@ int pc_main(int argc, char** argv)
         set_default_nvr_path(s);
         append_filename(s, pcem_path, "configs/", 511);
         set_default_configs_path(s);
+        append_filename(s, pcem_path, "screenshots/", 511);
+        set_default_screenshots_path(s);
         append_filename(s, pcem_path, "logs/", 511);
         set_default_logs_path(s);
 #endif
@@ -410,7 +530,7 @@ int wx_start(void* hwnd)
         readflash = 0;
 
         wx_initmenu();
-        wx_setupmenu();
+        wx_setupmenu(0);
 
         d = romset;
         for (c = 0; c < ROM_MAX; c++)
@@ -434,47 +554,8 @@ int wx_start(void* hwnd)
         }
 
         romset = d;
-        c = loadbios();
-
-        if (!c)
-        {
-                if (romset != -1)
-                        wx_messagebox(hwnd,
-                                        "Configured romset not available.\nDefaulting to available romset.",
-                                        "PCem error", WX_MB_OK);
-                for (c = 0; c < ROM_MAX; c++)
-                {
-                        if (romspresent[c])
-                        {
-                                romset = c;
-                                model = model_getmodel(romset);
-                                saveconfig(NULL);
-                                resetpchard();
-                                break;
-                        }
-                }
-        }
-
         for (c = 0; c < GFX_MAX; c++)
                 gfx_present[c] = video_card_available(video_old_to_new(c));
-
-        if (!video_card_available(video_old_to_new(gfxcard)))
-        {
-                if (romset != -1)
-                        wx_messagebox(hwnd,
-                                        "Configured video BIOS not available.\nDefaulting to available romset.",
-                                        "PCem error", WX_MB_OK);
-                for (c = GFX_MAX - 1; c >= 0; c--)
-                {
-                        if (gfx_present[c])
-                        {
-                                gfxcard = c;
-                                saveconfig(NULL);
-                                resetpchard();
-                                break;
-                        }
-                }
-        }
 
         return TRUE;
 }
@@ -494,6 +575,7 @@ int start_emulation(void* params)
 {
         if (resume_emulation())
                 return TRUE;
+        int c;
         pclog("Starting emulation...\n");
         loadconfig(NULL);
 
@@ -503,6 +585,40 @@ int start_emulation(void* params)
         ghMutex = SDL_CreateMutex();
         mainMutex = SDL_CreateMutex();
         mainCond = SDL_CreateCond();
+
+        if (!loadbios())
+        {
+                if (romset != -1)
+                        wx_messagebox(ghwnd,
+                                        "Configured romset not available.\nDefaulting to available romset.",
+                                        "PCem error", WX_MB_OK);
+                for (c = 0; c < ROM_MAX; c++)
+                {
+                        if (romspresent[c])
+                        {
+                                romset = c;
+                                model = model_getmodel(romset);
+                                break;
+                        }
+                }
+        }
+
+        if (!video_card_available(video_old_to_new(gfxcard)))
+        {
+                if (romset != -1)
+                        wx_messagebox(ghwnd,
+                                        "Configured video BIOS not available.\nDefaulting to available romset.",
+                                        "PCem error", WX_MB_OK);
+                for (c = GFX_MAX - 1; c >= 0; c--)
+                {
+                        if (gfx_present[c])
+                        {
+                                gfxcard = c;
+                                break;
+                        }
+                }
+        }
+
 
         loadbios();
         resetpchard();
@@ -617,7 +733,6 @@ void atapi_close(void)
 
 int wx_handle_command(void* hwnd, int wParam, int checked)
 {
-        SDL_Rect rect;
         void* hmenu;
         char temp_image_path[1024];
         int new_cdrom_drive;
@@ -690,8 +805,8 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
         }
         else if (ID_IS("IDM_BPB_DISABLE"))
         {
-                bpb_disable = checked;
-                wx_checkmenuitem(hmenu, WX_ID("IDM_BPB_DISABLE"), bpb_disable ? WX_MB_CHECKED : WX_MB_UNCHECKED);
+                bpb_disable = !bpb_disable;
+                wx_checkmenuitem(hmenu, wParam, bpb_disable);
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_MACHINE_TOGGLE"))
@@ -701,13 +816,38 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
         }
         else if (ID_IS("IDM_VID_RESIZE"))
         {
-                vid_resize = checked;
-                window_doreset = 1;
+                vid_resize = !vid_resize;
+                wx_checkmenuitem(hmenu, wParam, vid_resize);
+                window_dosetresize = 1;
+                saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_SCREENSHOT"))
+        {
+                take_screenshot = 1;
+        }
+        else if (ID_RANGE("IDM_SCREENSHOT_FORMAT[start]", "IDM_SCREENSHOT_FORMAT[end]"))
+        {
+                int format = wParam - wx_xrcid("IDM_SCREENSHOT_FORMAT[start]");
+                if (format == 0)
+                        strcpy(screenshot_format, IMAGE_PNG);
+                else if (format == 1)
+                        strcpy(screenshot_format, IMAGE_TIFF);
+                else if (format == 2)
+                        strcpy(screenshot_format, IMAGE_BMP);
+                else if (format == 3)
+                        strcpy(screenshot_format, IMAGE_JPG);
+                saveconfig(NULL);
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
+        }
+        else if (ID_IS("IDM_SCREENSHOT_FLASH"))
+        {
+                screenshot_flash = !screenshot_flash;
+                wx_checkmenuitem(hmenu, wParam, screenshot_flash);
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_VID_REMEMBER"))
         {
-                window_remember = checked;
+                window_remember = !window_remember;
                 wx_checkmenuitem(hmenu, WX_ID("IDM_VID_REMEMBER"),
                                 window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
                 window_doremember = 1;
@@ -722,7 +862,8 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                                         "Use CTRL + ALT + PAGE DOWN to return to windowed mode",
                                         "PCem", WX_MB_OK);
                 }
-                video_fullscreen = checked;
+                video_fullscreen = !video_fullscreen;
+                wx_checkmenuitem(hmenu, wParam, video_fullscreen);
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_VID_FULLSCREEN_TOGGLE"))
@@ -732,45 +873,94 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
         else if (ID_RANGE("IDM_VID_FS[start]", "IDM_VID_FS[end]"))
         {
                 video_fullscreen_scale = wParam - wx_xrcid("IDM_VID_FS[start]");
+                display_resize(video_width, video_height);
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_VID_SCALE_MODE[start]", "IDM_VID_SCALE_MODE[end]"))
         {
                 video_scale_mode = wParam - wx_xrcid("IDM_VID_SCALE_MODE[start]");
                 renderer_doreset = 1;
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_VID_SCALE[start]", "IDM_VID_SCALE[end]"))
         {
                 video_scale = wParam - wx_xrcid("IDM_VID_SCALE[start]");
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 display_resize(video_width, video_height);
                 saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_VID_FS_MODE[start]", "IDM_VID_FS_MODE[end]"))
         {
                 video_fullscreen_mode = wParam - wx_xrcid("IDM_VID_FS_MODE[start]");
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_VID_RENDER_DRIVER[start]", "IDM_VID_RENDER_DRIVER[end]"))
         {
                 requested_render_driver = sdl_get_render_driver_by_id(wParam - wx_xrcid("IDM_VID_RENDER_DRIVER[start]"), RENDERER_AUTO);
                 window_doreset = 1;
+
+                /* update enabled menu-items */
+//                wx_enablemenuitem(menu, WX_ID("IDM_VID_SDL2"), requested_render_driver.id != RENDERER_GL3);
+                wx_enablemenuitem(menu, WX_ID("IDM_VID_GL3"), requested_render_driver.id == RENDERER_GL3);
+
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_VID_VSYNC"))
         {
-                video_vsync = checked;
+                video_vsync = !video_vsync;
+                wx_checkmenuitem(menu, wParam, video_vsync);
                 renderer_doreset = 1;
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_VID_LOST_FOCUS_DIM"))
         {
-                video_focus_dim = checked;
+                video_focus_dim = !video_focus_dim;
+                wx_checkmenuitem(menu, wParam, video_focus_dim);
                 saveconfig(NULL);
+        }
+        else if (ID_RANGE("IDM_VID_GL3_INPUT_STRETCH[start]", "IDM_VID_GL3_INPUT_STRETCH[end]"))
+        {
+                gl3_input_stretch = wParam - wx_xrcid("IDM_VID_GL3_INPUT_STRETCH[start]");
+                wx_checkmenuitem(menu, wParam, WX_MB_CHECKED);
+                saveconfig(NULL);
+        }
+        else if (ID_RANGE("IDM_VID_GL3_INPUT_SCALE[start]", "IDM_VID_GL3_INPUT_SCALE[end]"))
+        {
+                int input_scale = wParam - wx_xrcid("IDM_VID_GL3_INPUT_SCALE[start]");
+                gl3_input_scale = input_scale/2.0f+0.5f;
+                wx_checkmenuitem(menu, wParam, WX_MB_CHECKED);
+                saveconfig(NULL);
+        }
+        else if (ID_RANGE("IDM_VID_GL3_SHADER_REFRESH_RATE[start]", "IDM_VID_GL3_SHADER_REFRESH_RATE[end]"))
+        {
+                gl3_shader_refresh_rate = wParam - wx_xrcid("IDM_VID_GL3_SHADER_REFRESH_RATE[start]");
+                wx_checkmenuitem(menu, wParam, WX_MB_CHECKED);
+                saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_VID_GL3_SHADER_MANAGER"))
+        {
+                if (shader_manager_open(hwnd))
+                {
+                        renderer_doreset = 1;
+                        saveconfig(NULL);
+                }
+//                if (!getfile(hwnd, "GLSL Shaders (*.glslp;*.glsl)|*.glslp;*.glsl|All files (*.*)|*.*", gl3_shader_file))
+//                {
+//                        strncpy(gl3_shader_file, openfilestring, 511);
+//                        gl3_shader_file[511] = 0;
+//                        renderer_doreset = 1;
+//                        saveconfig(NULL);
+//                }
+
         }
         else if (ID_RANGE("IDM_SND_BUF[start]", "IDM_SND_BUF[end]"))
         {
                 sound_buf_len = MIN_SND_BUF*1<<(wParam - wx_xrcid("IDM_SND_BUF[start]"));
+                wx_checkmenuitem(menu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
         else if (ID_IS("IDM_CDROM_DISABLED"))

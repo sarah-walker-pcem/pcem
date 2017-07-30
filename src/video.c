@@ -167,6 +167,8 @@ int changeframecount=2;
 uint8_t rotatevga[8][256];
 
 int frames = 0;
+int video_frames = 0;
+int video_refresh_rate = 0;
 
 int fullchange;
 
@@ -522,6 +524,7 @@ void video_wait_for_buffer()
 
 void video_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
 {
+        video_frames++;
         if (h <= 0)
                 return;
         video_wait_for_blit();

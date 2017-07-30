@@ -70,7 +70,7 @@ if test "$enable_wx" != "yes"; then
       AM_PATH_ALLEGRO(, , AC_MSG_ERROR(building PCem requires Allegro to be installed))
    fi
 else
-   SDL_VERSION=2.0.0
+   SDL_VERSION=2.0.1
    AM_PATH_SDL2($SDL_VERSION,
       :,
       AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
@@ -89,15 +89,15 @@ else
          wxWidgets version is $reqwx or above.
          ])
    fi
+   AC_CHECK_LIB([GL], [glGetError], [], \
+      [echo "You need to install the OpenGL library."
+       exit -1])
    LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 fi
 
 AC_CHECK_LIB([openal], [alGetError], [], \
 	[echo "You need to install the OpenAL library."
 	 exit -1])
-AC_CHECK_LIB([alut], [alutInit], [], \
-   [echo "You need to install the ALUT library."
-    exit -1])
 
 AC_CHECK_LIB([pthread], [pthread_create])
 

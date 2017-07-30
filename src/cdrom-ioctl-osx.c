@@ -7,6 +7,8 @@
 
 static ATAPI ioctl_atapi;
 
+int old_cdrom_drive;
+
 void ioctl_audio_callback(int16_t *output, int len)
 {
 	memset(output, 0, len * 2);

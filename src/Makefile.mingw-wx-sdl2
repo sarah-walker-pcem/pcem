@@ -1,8 +1,12 @@
 VPATH = . dosbox resid-fp
 CPP  = g++
 CC   = gcc
-WXRC = wxrc
-CFLAGS = -DRELEASE_BUILD -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign
+WINDRES = windres.exe
+WXRC = ../utils/wx/wxrc.exe
+WXVERSION = 31
+WXINCLUDE = C:/MinGW/include/wx/
+CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing -IC:\MinGW\lib\mswu
+CXXFLAGS = $(CFLAGS)
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-image.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_common.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86.o compaq.o config.o cpu.o dac.o \
 	device.o dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430lx.o i430fx.o \
@@ -18,29 +22,38 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	vid_olivetti_m24.o vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o \
 	vid_pcjr.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o \
 	vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
-	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o x86seg.o x87.o xtide.o \
-	wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o wx-sdl2-midi.o \
-	wx-sdl2.o wx-config.o wx-deviceconfig.o wx-sdl2-hdconf.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display.o
+	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o x86seg.o x87.o xtide.o win-midi.o \
+	wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o \
+	wx-sdl2.o wx-config.o wx-deviceconfig.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \
+	wx-sdl2-video-renderer.o wx-sdl2-video-gl3.o wx-glslp-parser.o wx-shader_man.o wx-shaderconfig.o wx.res
 DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
-
-LIBS = -mwindows -lopenal32 -lstdc++ -lwxbase31u -lwxmsw31u_core -lwxmsw31u_xrc -lmingw32 -lSDL2main -lSDL2  -mwindows  -Wl,--no-undefined -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static
+LIBS = -Wl,--subsystem,windows -mthreads -mwindows -lwxmsw$(WXVERSION)u_xrc -lwxmsw$(WXVERSION)u_html -lwxmsw$(WXVERSION)u_adv -lwxbase$(WXVERSION)u_xml -lwxmsw$(WXVERSION)u_core -lwxbase$(WXVERSION)u -lwxtiff -lwxjpeg -lwxpng -lwxzlib -lwxregexu -lwxexpat -lkernel32 -lcomdlg32 -lwinspool -lcomctl32 -lole32 -loleaut32 -luuid -lrpcrt4 -ladvapi32 -lmingw32 -lopengl32 -lopenal32 -lstdc++ -lSDL2main -lSDL2 -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static-libgcc
 
 PCem-wx-SDL2.exe: $(OBJ) $(DBOBJ) $(SIDOBJ)
 	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) -o "PCem-wx-SDL2.exe" $(LIBS)
+	strip -s PCem-wx-SDL2.exe
 
 all : PCem-wx-SDL2.exe
 
 clean :
-	del *.o
-	del PCem-wx-SDL2.exe
+	rm *.o
+	rm PCem-wx-SDL2.exe
+	rm *.res
+
+wx-resources.o : pc.xrc
+	$(WXRC) -c pc.xrc -o wx-resources.cpp
+	$(CPP) $(CXXFLAGS) -c wx-resources.cpp
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $<
 
 %.o : %.cc
-	$(CPP) $(CFLAGS) -c $<
+	$(CPP) $(CXXFLAGS) -c $<
 
 %.o : %.cpp
-	$(CPP) $(CFLAGS) -c $<
+	$(CPP) $(CXXFLAGS) -c $<
+
+wx.res: wx.rc
+	$(WINDRES) -I$(WXINCLUDE)/../ -i wx.rc --input-format=rc -o wx.res -O coff 

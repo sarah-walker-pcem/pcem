@@ -67,7 +67,7 @@ extern int xsize,ysize;
 
 extern float cpuclock;
 
-extern int emu_fps, frames;
+extern int emu_fps, frames, video_frames, video_refresh_rate;
 
 extern int readflash;
 

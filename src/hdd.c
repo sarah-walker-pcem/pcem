@@ -53,22 +53,27 @@ int hdd_controller_available(int hdd)
         return device_available(hdd_controllers[hdd].device);
 }
 
-int hdd_controller_current_is_mfm()
+int hdd_controller_is_mfm(char* internal_name)
 {
         int c = 0;
         
         while (hdd_controllers[c].device)
         {
-                if (!strcmp(hdd_controller_name, hdd_controllers[c].internal_name))
+                if (!strcmp(internal_name, hdd_controllers[c].internal_name))
                 {
                         hdd_controller_current = c;
-                        if (strcmp(hdd_controller_name, "none"))
+                        if (strcmp(internal_name, "none"))
                                 return hdd_controllers[c].is_mfm;
                 }
                 c++;
         }
 
         return 0;
+}
+
+int hdd_controller_current_is_mfm()
+{
+        return hdd_controller_is_mfm(hdd_controller_name);
 }
 
 void hdd_controller_init(char *internal_name)

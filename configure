@@ -4495,7 +4495,7 @@ rm -f core conftest.err conftest.$ac_objext \
 
    fi
 else
-   SDL_VERSION=2.0.0
+   SDL_VERSION=2.0.1
 
 
 
@@ -5265,6 +5265,55 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
          wxWidgets version is $reqwx or above.
          " "$LINENO" 5
    fi
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
+$as_echo_n "checking for glGetError in -lGL... " >&6; }
+if ${ac_cv_lib_GL_glGetError+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lGL  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char glGetError ();
+int
+main ()
+{
+return glGetError ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_GL_glGetError=yes
+else
+  ac_cv_lib_GL_glGetError=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_GL_glGetError" >&5
+$as_echo "$ac_cv_lib_GL_glGetError" >&6; }
+if test "x$ac_cv_lib_GL_glGetError" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGL 1
+_ACEOF
+
+  LIBS="-lGL $LIBS"
+
+else
+  \
+      echo "You need to install the OpenGL library."
+       exit -1
+fi
+
    LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 fi
 
@@ -5315,55 +5364,6 @@ else
   \
 	echo "You need to install the OpenAL library."
 	 exit -1
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for alutInit in -lalut" >&5
-$as_echo_n "checking for alutInit in -lalut... " >&6; }
-if ${ac_cv_lib_alut_alutInit+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lalut  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char alutInit ();
-int
-main ()
-{
-return alutInit ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_alut_alutInit=yes
-else
-  ac_cv_lib_alut_alutInit=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_alut_alutInit" >&5
-$as_echo "$ac_cv_lib_alut_alutInit" >&6; }
-if test "x$ac_cv_lib_alut_alutInit" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBALUT 1
-_ACEOF
-
-  LIBS="-lalut $LIBS"
-
-else
-  \
-   echo "You need to install the ALUT library."
-    exit -1
 fi
 
 

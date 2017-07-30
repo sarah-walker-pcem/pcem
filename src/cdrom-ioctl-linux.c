@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "ibm.h"
 #include "ide.h"
 #include "cdrom-ioctl.h"

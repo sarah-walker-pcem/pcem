@@ -5,6 +5,13 @@
 #include "wx-utils.h"
 #include "wx-common.h"
 
+#ifdef _WIN32
+#define BITMAP WINDOWS_BITMAP
+#include <windows.h>
+#include <windowsx.h>
+#undef BITMAP
+#endif
+
 extern "C"
 {
         int wx_load_config(void*);
@@ -29,6 +36,9 @@ wxDEFINE_EVENT(WX_STOP_EMULATION_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
+#ifdef _WIN32
+wxDEFINE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
+#endif
 
 wxBEGIN_EVENT_TABLE(Frame, wxFrame)
 wxEND_EVENT_TABLE()
@@ -80,6 +90,9 @@ Frame::Frame(App* app, const wxString& title, const wxPoint& pos,
         Bind(WX_EXIT_COMPLETE_EVENT, &Frame::OnExitCompleteEvent, this);
         Bind(WX_STOP_EMULATION_EVENT, &Frame::OnStopEmulationEvent, this);
         Bind(WX_CALLBACK_EVENT, &Frame::OnCallbackEvent, this);
+#ifdef _WIN32
+        Bind(WX_WIN_SEND_MESSAGE_EVENT, &Frame::OnWinSendMessageEvent, this);
+#endif
 
         CenterOnScreen();
 }
@@ -103,7 +116,7 @@ void Frame::ShowConfigSelection()
 void Frame::OnCallbackEvent(CallbackEvent& event)
 {
         WX_CALLBACK callback = event.GetCallback();
-        callback();
+        callback(event.GetData());
 }
 
 void Frame::OnStopEmulationEvent(wxCommandEvent& event)
@@ -227,3 +240,10 @@ wxThread::ExitCode CExitThread::Entry()
         wxQueueEvent(frame, event);
 	return 0;
 }
+
+#ifdef _WIN32
+void Frame::OnWinSendMessageEvent(WinSendMessageEvent& event)
+{
+        SendMessage((HWND)event.GetHWND(), event.GetMessage(), event.GetWParam(), event.GetLParam());
+}
+#endif

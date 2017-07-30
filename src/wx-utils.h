@@ -8,12 +8,14 @@
 #define INT_PARAM wxInt32
 #endif
 
-typedef void (*WX_CALLBACK)();
+typedef int (*WX_CALLBACK)(void* data);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
         int wx_messagebox(void* nothing, const char* message, const char* title, int style);
+        void wx_simple_messagebox(const char* title, const char *format, ...);
+
         int wx_xrcid(const char* s);
         int wx_filedialog(void* window, const char* title, const char* path, const char* extensions, const char* extension, int open, char* file);
         void wx_checkmenuitem(void* window, int id, int checked);
@@ -25,8 +27,9 @@ extern "C" {
 
         void* wx_getsubmenu(void* window, int id);
         void wx_appendmenu(void* sub_menu, int id, const char* title, enum wxItemKind type);
+        void* wx_getnativemenu(void* menu);
 
-        int wx_textentrydialog(void* window, const char* message, const char* title, const char* value, int min_length, int max_length, LONG_PARAM result);
+        int wx_textentrydialog(void* window, const char* message, const char* title, const char* value, unsigned int min_length, unsigned int max_length, LONG_PARAM result);
 
         int wx_dlgdirlist(void* window, const char* path, int id, int static_path, int file_type);
         int wx_dlgdirselectex(void* window, LONG_PARAM path, int count, int id);
@@ -37,8 +40,11 @@ extern "C" {
         void wx_setdlgitemtext(void* window, int id, char* str);
         void wx_enablewindow(void* window, int enabled);
         void wx_showwindow(void* window, int show);
-        void wx_callback(void* window, WX_CALLBACK callback);
+        int wx_iswindowvisible(void* window);
+        void* wx_getnativewindow(void* window);
+        void wx_callback(void* window, WX_CALLBACK callback, void* data);
         void wx_togglewindow(void* window);
+        int wx_progressdialogpulse(void* window, const char* title, const char* message, WX_CALLBACK callback, void* data);
 
         void wx_enddialog(void* window, int ret_code);
 
@@ -72,7 +78,30 @@ extern "C" {
         int wx_file_exists(char* path);
         int wx_dir_exists(char* path);
 
+        void wx_date_format(char* s, const char* format);
+
+        int wx_image_save(const char* path, const char* name, const char* format, unsigned char* rgba, int width, int height, int alpha);
+
+        void* wx_image_load(const char* path);
+        void wx_image_rescale(void* image, int width, int height);
+        void wx_image_get_size(void* image, int* width, int* height);
+        unsigned char* wx_image_get_data(void* image);
+        unsigned char* wx_image_get_alpha(void* image);
+        void wx_image_free(void* image);
+
+        void* wx_config_load(const char* path);
+        int wx_config_get_string(void* config, const char* name, char* dst, int size, const char* defVal);
+        int wx_config_get_int(void* config, const char* name, int* dst, int defVal);
+        int wx_config_get_float(void* config, const char* name, float* dst, float defVal);
+        int wx_config_get_bool(void* config, const char* name, int* dst, int defVal);
+        int wx_config_has_entry(void* config, const char* name);
+        void wx_config_free(void* config);
+
         int confirm();
+
+#ifdef _WIN32
+        void wx_winsendmessage(void* window, int msg, INT_PARAM wParam, LONG_PARAM lParam);
+#endif
 #ifdef __cplusplus
 }
 #endif
@@ -111,9 +140,17 @@ extern void (*wx_idle_func)(void* window, void* event);
 #define WX_LB_GETTEXT 62
 #define WX_LB_DELETESTRING 63
 #define WX_LB_INSERTSTRING 64
+#define WX_LB_RESETCONTENT 65
+#define WX_LB_SETCURSEL 66
+#define WX_LBN_DBLCLK 67
 
 #define WX_MB_OK wxOK
 #define WX_MB_OKCANCEL wxOK|wxCANCEL
 #define WX_IDOK wxOK
+
+#define IMAGE_JPG "jpg"
+#define IMAGE_PNG "png"
+#define IMAGE_BMP "bmp"
+#define IMAGE_TIFF "tiff"
 
 extern int has_been_inited;

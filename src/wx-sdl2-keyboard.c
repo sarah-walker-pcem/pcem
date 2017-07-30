@@ -18,6 +18,6 @@ void keyboard_poll_host()
         int c;
 
         for (c = 0; c < 272; ++c)
-                pcem_key[c] = rawinputkey[c];
+                pcem_key[c] = rawinputkey[c] > 0;
 }
 

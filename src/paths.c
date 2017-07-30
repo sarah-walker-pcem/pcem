@@ -9,6 +9,7 @@ char default_roms_paths[4096];
 char default_nvr_path[512];
 char default_configs_path[512];
 char default_logs_path[512];
+char default_screenshots_path[512];
 
 /* the number of roms paths */
 int num_roms_paths;
@@ -21,6 +22,8 @@ char nvr_path[512];
 char configs_path[512];
 /* this is where log-files as stored */
 char logs_path[512];
+/* this is where screenshots as stored */
+char screenshots_path[512];
 
 char get_path_separator()
 {
@@ -106,6 +109,12 @@ void set_configs_path(char *s)
         append_slash(configs_path, 512);
 }
 
+void set_screenshots_path(char *s)
+{
+        safe_strncpy(screenshots_path, s, 512);
+        append_slash(screenshots_path, 512);
+}
+
 /* set the default roms paths, this makes them permanent */
 void set_default_roms_paths(char *s)
 {
@@ -134,12 +143,20 @@ void set_default_configs_path(char *s)
         set_configs_path(s);
 }
 
+/* set the default screenshots path, this makes it permanent */
+void set_default_screenshots_path(char *s)
+{
+        safe_strncpy(default_screenshots_path, s, 512);
+        set_screenshots_path(s);
+}
+
 void paths_loadconfig()
 {
         char *cfg_roms_paths = config_get_string(CFG_GLOBAL, "Paths", "roms_paths", 0);
         char *cfg_nvr_path = config_get_string(CFG_GLOBAL, "Paths", "nvr_path", 0);
         char *cfg_configs_path = config_get_string(CFG_GLOBAL, "Paths", "configs_path", 0);
         char *cfg_logs_path = config_get_string(CFG_GLOBAL, "Paths", "logs_path", 0);
+        char *cfg_screenshots_path = config_get_string(CFG_GLOBAL, "Paths", "screenshots_path", 0);
 
         if (cfg_roms_paths)
                 safe_strncpy(default_roms_paths, cfg_roms_paths, 4096);
@@ -149,6 +166,8 @@ void paths_loadconfig()
                 safe_strncpy(default_configs_path, cfg_configs_path, 512);
         if (cfg_logs_path)
                 safe_strncpy(default_logs_path, cfg_logs_path, 512);
+        if (cfg_screenshots_path)
+                safe_strncpy(default_screenshots_path, cfg_screenshots_path, 512);
 }
 
 void paths_saveconfig()
@@ -157,6 +176,7 @@ void paths_saveconfig()
         config_set_string(CFG_GLOBAL, "Paths", "nvr_path", default_nvr_path);
         config_set_string(CFG_GLOBAL, "Paths", "configs_path", default_configs_path);
         config_set_string(CFG_GLOBAL, "Paths", "logs_path", default_logs_path);
+        config_set_string(CFG_GLOBAL, "Paths", "screenshots_path", default_screenshots_path);
 }
 
 void paths_onconfigloaded()
@@ -172,6 +192,9 @@ void paths_onconfigloaded()
 
         if (strlen(default_logs_path) > 0)
                 set_logs_path(default_logs_path);
+
+        if (strlen(default_screenshots_path) > 0)
+                set_screenshots_path(default_screenshots_path);
 
         pclog("path = %s\n", pcem_path);
 }
@@ -194,6 +217,8 @@ void paths_init()
         set_nvr_path(s);
         append_filename(s, pcem_path, "configs/", 512);
         set_configs_path(s);
+        append_filename(s, pcem_path, "screenshots/", 512);
+        set_screenshots_path(s);
         set_logs_path(pcem_path);
 
         add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);

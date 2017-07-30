@@ -98,6 +98,43 @@ void config_free(int is_global)
         }
 }
 
+int config_free_section(int is_global, char *name)
+{
+        section_t *current_section, *prev_section;
+        list_t *head = is_global ? &global_config_head : &machine_config_head;
+        current_section = (section_t *)head->next;
+        prev_section = 0;
+
+        while (current_section)
+        {
+                section_t *next_section = (section_t *)current_section->list.next;
+                if (!strcmp(current_section->name, name))
+                {
+                        entry_t *current_entry;
+
+                        current_entry = (entry_t *)current_section->entry_head.next;
+
+                        while (current_entry)
+                        {
+                                entry_t *next_entry = (entry_t *)current_entry->list.next;
+
+                                free(current_entry);
+                                current_entry = next_entry;
+                        }
+
+                        free(current_section);
+                        if (!prev_section)
+                                head->next = (list_t*)next_section;
+                        else
+                                prev_section->list.next = (list_t*)next_section;
+                        return 1;
+                }
+                prev_section = current_section;
+                current_section = next_section;
+        }
+        return 0;
+}
+
 void config_load(int is_global, char *fn)
 {
         FILE *f = fopen(fn, "rt");
@@ -279,6 +316,27 @@ int config_get_int(int is_global, char *head, char *name, int def)
         return value;
 }
 
+float config_get_float(int is_global, char *head, char *name, float def)
+{
+        section_t *section;
+        entry_t *entry;
+        float value;
+
+        section = find_section(head, is_global);
+
+        if (!section)
+                return def;
+
+        entry = find_entry(section, name);
+
+        if (!entry)
+                return def;
+
+        sscanf(entry->data, "%f", &value);
+
+        return value;
+}
+
 char *config_get_string(int is_global, char *head, char *name, char *def)
 {
         section_t *section;
@@ -313,6 +371,24 @@ void config_set_int(int is_global, char *head, char *name, int val)
                 entry = create_entry(section, name);
 
         sprintf(entry->data, "%i", val);
+}
+
+void config_set_float(int is_global, char *head, char *name, float val)
+{
+        section_t *section;
+        entry_t *entry;
+
+        section = find_section(head, is_global);
+
+        if (!section)
+                section = create_section(head, is_global);
+
+        entry = find_entry(section, name);
+
+        if (!entry)
+                entry = create_entry(section, name);
+
+        sprintf(entry->data, "%f", val);
 }
 
 void config_set_string(int is_global, char *head, char *name, char *val)

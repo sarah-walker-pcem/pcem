@@ -1,17 +1,19 @@
-#include "wx-sdl2-video.h"
-
+#include <SDL2/SDL.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "wx-sdl2.h"
 #include "video.h"
+#include "wx-sdl2-video.h"
+
+#include "wx-sdl2-video-gl3.h"
+#include "wx-sdl2-video-renderer.h"
 
 void video_blit_complete();
 
 static BITMAP *buffer32_vscale;
 BITMAP *screen;
-SDL_Texture* texture = NULL;
-SDL_Renderer* renderer = NULL;
 SDL_Rect old_screen_rect;
 SDL_Rect screen_rect;
 SDL_Rect updated_rect;
@@ -23,7 +25,6 @@ int updated = 0;
 SDL_mutex* blitMutex = NULL;
 
 static void sdl_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
-static void sdl_blit_memtoscreen_8(int x, int y, int w, int h);
 
 int video_scale_mode = 1;
 int video_vsync = 0;
@@ -31,17 +32,19 @@ int video_focus_dim = 0;
 int video_fullscreen_mode = 0;
 
 static sdl_render_driver sdl_render_drivers[] = {
-                { RENDERER_AUTO, "auto", "Auto" },
-                { RENDERER_DIRECT3D, "direct3d", "Direct3D" },
-                { RENDERER_OPENGL, "opengl", "OpenGL" },
-                { RENDERER_OPENGLES2, "opengles2", "OpenGL ES 2" },
-                { RENDERER_OPENGLES, "opengles", "OpenGL ES" },
-                { RENDERER_SOFTWARE, "software", "Software" }
+                { RENDERER_AUTO, "auto", "Auto", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_DIRECT3D, "direct3d", "Direct3D", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_OPENGL, "opengl", "OpenGL", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_OPENGLES2, "opengles2", "OpenGL ES 2", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_OPENGLES, "opengles", "OpenGL ES", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_SOFTWARE, "software", "Software", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
+                { RENDERER_GL3, "gl3", "OpenGL 3.0", SDL_WINDOW_OPENGL, gl3_renderer_create, gl3_renderer_close, gl3_renderer_available }
 };
 
 sdl_render_driver requested_render_driver;
 
 char current_render_driver_name[50];
+static sdl_renderer_t* renderer = NULL;
 
 void hline(BITMAP *b, int x1, int y, int x2, int col)
 {
@@ -70,6 +73,7 @@ void set_palette(PALETTE p)
 
 void destroy_bitmap(BITMAP *b)
 {
+        free(b);
 }
 
 BITMAP *create_bitmap(int x, int y)
@@ -221,8 +225,7 @@ static void sdl_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h)
                 return; /*Nothing to do*/
         }
 
-        int xx, yy;
-        SDL_Rect rect;
+        int yy;
         SDL_LockMutex(blitMutex);
         for (yy = y1; yy < y2; yy++)
         {
@@ -259,6 +262,8 @@ int sdl_video_init()
 
 void sdl_video_close()
 {
+        requested_render_driver.renderer_close(renderer);
+        renderer = NULL;
         destroy_bitmap(buffer32_vscale);
         destroy_bitmap(screen);
         SDL_DestroyMutex(blitMutex);
@@ -266,44 +271,15 @@ void sdl_video_close()
 
 int sdl_renderer_init(SDL_Window* window)
 {
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, video_scale_mode ? "1" : "0");
-        const char* driver = requested_render_driver.sdl_id;
-        if (!driver) driver = "0";
-        SDL_SetHint(SDL_HINT_RENDER_DRIVER, driver);
-
-        int flags = SDL_RENDERER_ACCELERATED;
-        if (video_vsync) {
-                flags |= SDL_RENDERER_PRESENTVSYNC;
-        }
-        renderer = SDL_CreateRenderer(window, -1, flags);
-
-        SDL_RendererInfo rendererInfo;
-        SDL_GetRendererInfo(renderer, &rendererInfo);
-        sdl_render_driver* d = sdl_get_render_driver_by_name_ptr(rendererInfo.name);
-        if (!d)
-                strcpy(current_render_driver_name, "Unknown");
-        else
-                strcpy(current_render_driver_name, d->name);
-
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                        SDL_TEXTUREACCESS_STREAMING,
-                        screen->w, screen->h);
-
-        return SDL_TRUE;
+        renderer = requested_render_driver.renderer_create();
+        return renderer->init(window, requested_render_driver, screen);
 }
 
 void sdl_renderer_close()
 {
-        if (texture)
-        {
-                SDL_DestroyTexture(texture);
-                texture = NULL;
-        }
         if (renderer)
-        {
-                SDL_DestroyRenderer(renderer);
-                renderer = NULL;
-        }
+                renderer->close();
+        renderer = NULL;
 }
 
 int sdl_renderer_update(SDL_Window* window)
@@ -313,32 +289,42 @@ int sdl_renderer_update(SDL_Window* window)
         if (updated)
         {
                 updated = 0;
-                SDL_UpdateTexture(texture, &updated_rect,
-                                &((uint32_t*) screen->dat)[updated_rect.y
-                                                * screen->w + updated_rect.x],
-                                screen->w * 4);
+                renderer->update(window, updated_rect, screen);
                 texture_rect.w = blit_rect.w;
                 texture_rect.h = blit_rect.h;
                 render = 1;
         }
         SDL_UnlockMutex(blitMutex);
-        return render;
+        return render || renderer->always_update;
 }
 
 void sdl_renderer_present(SDL_Window* window)
 {
+        if (flash.enabled)
+        {
+                int elapsed = SDL_GetTicks() - flash.start;
+                float a = flash.func(elapsed / (float)flash.time) * (flash.alpha&0xff);
+                flash.color[3] = (char)a;
+                if (elapsed >= flash.time)
+                        flash.enabled = 0;
+        }
+
         SDL_Rect wr;
-        int l, t, r, b;
         SDL_GetWindowSize(window, &wr.w, &wr.h);
         sdl_scale(video_fullscreen_scale, wr, &wr, texture_rect.w, texture_rect.h);
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture, &texture_rect, &wr);
-        if (video_focus_dim && !(SDL_GetWindowFlags(window)&SDL_WINDOW_INPUT_FOCUS)) {
-                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0x80);
-                SDL_RenderFillRect(renderer, NULL);
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
-                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-        }
-        SDL_RenderPresent(renderer);
+        renderer->present(window, texture_rect, wr, screen);
+
+}
+
+void color_flash(FLASH_FUNC func, int time_ms, char r, char g, char b, char a)
+{
+        flash.func = func;
+        flash.color[0] = r;
+        flash.color[1] = g;
+        flash.color[2] = b;
+        flash.color[3] = 0;
+        flash.alpha = a;
+        flash.start = SDL_GetTicks();
+        flash.time = time_ms;
+        flash.enabled = 1;
 }

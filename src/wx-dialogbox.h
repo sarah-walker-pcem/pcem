@@ -12,8 +12,11 @@ public:
 	virtual ~PCemDialogBox() {}
 	void OnInit();
 private:
-	void OnCommand(wxCommandEvent &event);
+	void OnNotebookChanged(wxCommandEvent& event);
+	void OnCommand(wxCommandEvent& event);
+	int processEvent(int message, INT_PARAM param1, LONG_PARAM param2);
 	int(*callback)(void* window, int message, INT_PARAM param1, LONG_PARAM param2);
+	bool commandActive;
 
 	DECLARE_EVENT_TABLE()
 };

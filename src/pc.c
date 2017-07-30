@@ -192,6 +192,8 @@ void onesec()
 {
         fps=framecount;
         framecount=0;
+        video_refresh_rate = video_frames;
+        video_frames = 0;
         win_title_update=1;
 }
 

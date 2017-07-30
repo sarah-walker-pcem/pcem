@@ -21,12 +21,12 @@ vid_stg_ramdac.o vid_svga.o vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui
 vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o \
 x86seg.o x87.o xtide.o sound_dbopl.o sound_resid.o \
 wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o wx-sdl2-midi.o \
-wx-sdl2.o wx-config.o wx-deviceconfig.o wx-sdl2-hdconf.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display.o
+wx-sdl2.o wx-config.o wx-deviceconfig.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display.o \
+wx-sdl2-video-renderer.o wx-sdl2-video-gl3.o wx-glslp-parser.o wx-shader_man.o wx-shaderconfig.o
 DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 
-
-LIBS = -lopenal -lstdc++ -lpthread -lm $(shell wx-config --libs) $(shell sdl2-config --libs) -L/usr/local/opt/openal-soft/lib
+LIBS = -lopenal -lstdc++ -lpthread -lm $(shell wx-config --libs) $(shell sdl2-config --libs) -L/usr/local/opt/openal-soft/lib -framework OpenGL
 
 PCem64-wx-SDL2: $(OBJ) $(DBOBJ) $(SIDOBJ)
 	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) -o "PCem64-wx-SDL2" $(LIBS)

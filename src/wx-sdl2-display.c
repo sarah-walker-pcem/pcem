@@ -1,13 +1,14 @@
 #include <SDL2/SDL.h>
+#include "video.h"
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
 #include "ibm.h"
-#include "video.h"
 #include "wx-display.h"
 #include "plat-keyboard.h"
 
 #ifdef __WINDOWS__
 #define BITMAP WINDOWS_BITMAP
+#undef UNICODE
 #include <windows.h>
 #include <windowsx.h>
 #undef BITMAP
@@ -29,6 +30,7 @@ int mousecapture = 0;
 
 extern int pause;
 extern int video_scale;
+extern int take_screenshot;
 
 void* ghwnd;
 void* menu;
@@ -44,6 +46,7 @@ void renderer_start();
 void renderer_stop(int timeout);
 
 int trigger_fullscreen = 0;
+int trigger_screenshot = 0;
 int trigger_togglewindow = 0;
 int trigger_inputrelease = 0;
 
@@ -53,27 +56,8 @@ extern void toggle_fullscreen();
 
 void display_resize(int width, int height)
 {
-        /* Video scaling-code is borrowed from 86Box */
-        switch(video_scale)
-        {
-                case 0:
-                        winsizex = width >> 1;
-                        winsizey = height >> 1;
-                        break;
-                case 2:
-                        winsizex = (width * 3) >> 1;
-                        winsizey = (height * 3) >> 1;
-                        break;
-                case 3:
-                        winsizex = width << 1;
-                        winsizey = height << 1;
-                        break;
-                case 1:
-                default:
-                        winsizex = width;
-                        winsizey = height;
-                        break;
-        }
+        winsizex = width*(video_scale+1) >> 1;
+        winsizey = height*(video_scale+1) >> 1;
 
         SDL_Rect rect;
         rect.x = rect.y = 0;
@@ -144,7 +128,7 @@ int is_fullscreen()
 }
 
 void sdl_set_window_title(const char* title) {
-        if (window)
+        if (window && !is_fullscreen())
                 SDL_SetWindowTitle(window, title);
 }
 
@@ -258,7 +242,7 @@ static const struct {
                 { SDL_SCANCODE_KP_1, 0x4f },
                 { SDL_SCANCODE_KP_2, 0x50 },
                 { SDL_SCANCODE_KP_3, 0x51 },
-                { SDL_SCANCODE_KP_4, 0x48 },
+                { SDL_SCANCODE_KP_4, 0x4b },
                 { SDL_SCANCODE_KP_5, 0x4c },
                 { SDL_SCANCODE_KP_6, 0x4d },
                 { SDL_SCANCODE_KP_7, 0x47 },
@@ -365,12 +349,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
                         if (!mousecapture)
                                 key_state = -key_state;
                         /* if key_state is 0 and modkeystate[c] is negative,
-                         an sdl_event should not generated */
+                         an sdl_event should not be generated */
                         if (key_state > 0 || modkeystate[c] > 0)
                         {
-                                steal = 1;
+                                steal = key_state != 0;
                                 SDL_Event event;
                                 event.key.keysym.scancode = s;
+                                event.key.timestamp = p->time;
 
                                 event.type = key_state ? SDL_KEYDOWN : SDL_KEYUP;
                                 SDL_PushEvent(&event);
@@ -389,7 +374,7 @@ int window_create()
 {
         window = SDL_CreateWindow("PCem Display",
                         rect.x, rect.y, rect.w, rect.h,
-                        vid_resize ? SDL_WINDOW_RESIZABLE : 0);
+                        requested_render_driver.sdl_window_params | (vid_resize ? SDL_WINDOW_RESIZABLE : 0));
         if (!window)
         {
                 char message[200];
@@ -437,6 +422,17 @@ int render()
         uint64_t start_time = timer_read();
         uint64_t end_time;
 
+        if (window_dosetresize)
+        {
+                window_dosetresize = 0;
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+                SDL_GetWindowSize(window, &rect.w, &rect.h);
+                SDL_SetWindowResizable(window, vid_resize);
+                SDL_SetWindowSize(window, rect.w, rect.h);
+#else
+                window_doreset = 1;
+#endif
+        }
         if (window_doreset)
         {
                 pclog("window_doreset\n");
@@ -463,22 +459,22 @@ int render()
                                 if (event.button.button == SDL_BUTTON_LEFT && !pause)
                                 {
                                         window_doinputgrab = 1;
-                                        if (video_fullscreen) {
+                                        if (video_fullscreen)
                                                 window_dofullscreen = 1;
-                                        }
-                                } else if (event.button.button == SDL_BUTTON_RIGHT)
-                                {
-                                        wx_popupmenu(ghwnd, menu, 0, 0);
                                 }
+                                else if (event.button.button == SDL_BUTTON_RIGHT)
+                                        wx_popupmenu(ghwnd, menu, 0, 0);
+
                         }
+                        else if (event.button.button == SDL_BUTTON_MIDDLE && !is_fullscreen())
+                                window_doinputrelease = 1;
                         break;
                 case SDL_MOUSEWHEEL:
                         if (mousecapture) mouse_wheel_update(event.wheel.y);
                         break;
                 case SDL_WINDOWEVENT:
-                        if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                        if (event.window.event == SDL_WINDOWEVENT_CLOSE)
                                 wx_stop_emulation(ghwnd);
-                        }
                         if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
                         {
                                 if (is_fullscreen())
@@ -486,14 +482,19 @@ int render()
                                 window_doinputrelease = 1;
                         }
 
-                        if (window_remember) {
+                        if (window_remember)
+                        {
                                 int flags = SDL_GetWindowFlags(window);
-                                if (!(flags&SDL_WINDOW_FULLSCREEN) && !(flags&SDL_WINDOW_FULLSCREEN_DESKTOP)) {
-                                        if (event.window.event == SDL_WINDOWEVENT_MOVED) {
-                                                get_border_size(&border_x, &border_y, 0, 0);
+                                if (!(flags&SDL_WINDOW_FULLSCREEN) && !(flags&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                                {
+                                        if (event.window.event == SDL_WINDOWEVENT_MOVED)
+                                        {
+                                                get_border_size(&border_y, &border_x, 0, 0);
                                                 window_x = event.window.data1-border_x;
                                                 window_y = event.window.data2-border_y;
-                                        } else if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                                        }
+                                        else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                                        {
                                                 window_w = event.window.data1;
                                                 window_h = event.window.data2;
                                         }
@@ -513,7 +514,7 @@ int render()
 #endif
                         int key_idx = sdl_scancode(event.key.keysym.scancode);
                         if (key_idx != -1)
-                                rawinputkey[key_idx] = 1;
+                                rawinputkey[key_idx] = event.key.timestamp;
                         break;
                 }
                 case SDL_KEYUP:
@@ -534,15 +535,15 @@ int render()
                 trigger_fullscreen = 0;
                 toggle_fullscreen();
         }
-//        if (event.key.keysym.scancode == SDL_SCANCODE_PAGEUP &&
-//                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
-//                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
-//                trigger_togglewindow = 1;
-//        else if (trigger_togglewindow)
-//        {
-//                trigger_togglewindow = 0;
-//                wx_togglewindow(ghwnd);
-//        }
+        else if (rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEUP)] &&
+                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
+                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
+                trigger_screenshot = 1;
+        else if (trigger_screenshot)
+        {
+                trigger_screenshot = 0;
+                take_screenshot = 1;
+        }
         else if (event.key.keysym.scancode == SDL_SCANCODE_END &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
                 trigger_inputrelease = 1;
@@ -552,7 +553,8 @@ int render()
                 if (!is_fullscreen())
                         window_doinputrelease = 1;
         }
-        if (window_doremember) {
+        if (window_doremember)
+        {
                 window_doremember = 0;
                 SDL_GetWindowPosition(window, &window_x, &window_y);
                 SDL_GetWindowSize(window, &window_w, &window_h);

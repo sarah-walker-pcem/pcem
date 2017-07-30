@@ -25,6 +25,7 @@ extern int video_fullscreen_mode;
 extern int win_doresize;
 
 extern int window_doreset;
+extern int window_dosetresize;
 extern int renderer_doreset;
 extern int window_dofullscreen;
 extern int window_dowindowed;

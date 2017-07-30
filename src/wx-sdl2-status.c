@@ -1,8 +1,9 @@
+#include <SDL2/SDL.h>
+#include "video.h"
 #include "wx-sdl2.h"
 #include "wx-sdl2-video.h"
 #include "ibm.h"
 #include "device.h"
-#include "video.h"
 #include "x86_ops.h"
 #include "mem.h"
 #include "codegen.h"
