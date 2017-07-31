@@ -1407,11 +1407,11 @@ void *ne2000_init()
         //0 pcap
         //1 slirp
         //
-        net_is_slirp = config_get_int(CFG_MACHINE, NULL, "net_type", 1);
-        pclog("ne2000 pcap device %s\n",config_get_string(CFG_MACHINE, NULL,"pcap_device","nothing"));
+        net_is_slirp = (config_get_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP) == NET_SLIRP) ? 1 : 0;
+        pclog("ne2000 pcap device %s\n",config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"));
     
         //Check that we have a string setup, otherwise turn pcap off
-        if (!strcmp("nothing",config_get_string(CFG_MACHINE, NULL,"pcap_device","nothing")))
+        if (!strcmp("nothing",config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing")))
         	net_is_pcap = 0;
         else if (net_is_slirp == 0)
         	net_is_pcap = 1;
@@ -1494,9 +1494,9 @@ void *ne2000_init()
                 {
                         pclog("ne2000 Pcap version [%s]\n",_pcap_lib_version());
 
-                        if ((net_pcap=_pcap_open_live(config_get_string(CFG_MACHINE, NULL,"pcap_device","nothing"),1518,1,15,errbuf))==0)
+                        if ((net_pcap=_pcap_open_live(config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"),1518,1,15,errbuf))==0)
 			{
-                                pclog("ne2000 pcap_open_live error on %s!\n",config_get_string(CFG_MACHINE, NULL,"pcap_device","whatever the ethernet is"));
+                                pclog("ne2000 pcap_open_live error on %s!\n",config_get_string(CFG_GLOBAL, NULL,"pcap_device","whatever the ethernet is"));
                                 net_is_pcap=0; return(ne2000);	//YUCK!!!
 			}
 		}

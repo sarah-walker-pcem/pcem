@@ -920,3 +920,12 @@ void saveconfig(char *fn)
 
         config_save(CFG_GLOBAL, global_config_file);
 }
+
+void saveconfig_global_only()
+{
+        char global_config_file[512];
+
+        append_filename(global_config_file, pcem_path, "pcem.cfg", 511);
+
+        config_save(CFG_GLOBAL, global_config_file);
+}

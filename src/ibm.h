@@ -576,5 +576,6 @@ void resetpchard();
 void speedchanged();
 
 void saveconfig(char *fn);
+void saveconfig_global_only();
 
 #define UNUSED(x) (void)x

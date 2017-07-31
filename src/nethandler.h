@@ -18,3 +18,9 @@ void initpcap();
 void closepcap();
 
 void vlan_reset();
+
+enum
+{
+        NET_SLIRP = 0,
+        NET_PCAP = 1
+};

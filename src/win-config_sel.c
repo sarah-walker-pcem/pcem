@@ -168,6 +168,11 @@ static BOOL CALLBACK config_selection_dlgproc(HWND hdlg, UINT message, WPARAM wP
                                 
                                 return TRUE;
                         }
+#ifdef USE_NETWORKING                        
+                        case IDC_NETWORK:
+                        networkconfig_open(hdlg);
+                        return TRUE;
+#endif
                 }
                 break;
         }

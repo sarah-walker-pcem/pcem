@@ -30,6 +30,7 @@ struct device_t;
 
 void deviceconfig_open(HWND hwnd, struct device_t *device);
 void joystickconfig_open(HWND hwnd, int joy_nr, int type);
+void networkconfig_open(HWND hwnd);
 
 extern char openfilestring[260];
 
