@@ -44,6 +44,10 @@
 #include "paths.h"
 //#include "win-opengl.h"
 
+#ifdef DRMINGW
+#include <exchndl.h>
+#endif
+
 #ifndef MAPVK_VK_TO_VSC
 #define MAPVK_VK_TO_VSC 0
 #endif
@@ -513,6 +517,10 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         WNDCLASSEX wincl;        /* Data structure for the windowclass */
         int c, d;
         LARGE_INTEGER qpc_freq;
+
+#ifdef DRMINGW
+	ExcHndlInit();
+#endif
 
         process_command_line();
         

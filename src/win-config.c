@@ -20,11 +20,17 @@
 #include "video.h"
 #include "vid_voodoo.h"
 #include "win.h"
+#ifdef USE_NETWORKING
+#include "nethandler.h"
+#endif
 
 extern int is486;
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
 static int settings_mouse_to_list[20], settings_list_to_mouse[20];
+#ifdef USE_NETWORKING
+static int settings_network_to_list[20], settings_list_to_network[20];
+#endif
 static char *hdd_names[16];
 
 int has_been_inited = 0;
@@ -114,6 +120,47 @@ static void recalc_snd_list(HWND hdlg, int model)
         SendMessage(h, CB_SETCURSEL, settings_sound_to_list[sound_card_current], 0);
 }
 
+#ifdef USE_NETWORKING
+static void recalc_net_list(HWND hdlg, int model)
+{
+        HWND h = GetDlgItem(hdlg, IDC_COMBONETCARD);
+        int c = 0, d = 0;
+        int set_zero = 0;
+
+        SendMessage(h, CB_RESETCONTENT, 0, 0);
+
+        while (1)
+        {
+                char *s = network_card_getname(c);
+
+                if (!s[0])
+                        break;
+
+                settings_network_to_list[c] = d;
+                        
+                if (network_card_available(c))
+                {
+                        device_t *network_dev = network_card_getdevice(c);
+
+                        if (!network_dev || (network_dev->flags & DEVICE_MCA) == (models[model].flags & MODEL_MCA))
+                        {
+                                SendMessage(h, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                settings_list_to_network[d] = c;
+                                d++;
+                        }
+                        else if (c == network_card_current)
+                                set_zero = 1;
+                }
+
+                c++;
+        }
+        if (set_zero)
+                SendMessage(h, CB_SETCURSEL, 0, 0);
+        else
+                SendMessage(h, CB_SETCURSEL, settings_network_to_list[network_card_current], 0);
+}
+#endif
+
 static void recalc_hdd_list(HWND hdlg, int model, int use_selected_hdd)
 {
         HWND h;
@@ -197,7 +244,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
         int cpu_type;
         int temp_mouse_type;
         int hdd_changed = 0;
-        
+#ifdef USE_NETWORKING
+        int temp_network_card;
+#endif
         UDACCEL accel;
 //        pclog("Dialog msg %i %08X\n",message,message);
         switch (message)
@@ -400,6 +449,15 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
                 recalc_hdd_list(hdlg, romstomodel[romset], 0);
 
+#ifdef USE_NETWORKING
+                recalc_net_list(hdlg, romstomodel[romset]);
+
+                h = GetDlgItem(hdlg, IDC_CONFIGURENETCARD);
+                if (network_card_has_config(network_card_current))
+                        EnableWindow(h, TRUE);
+                else
+                        EnableWindow(h, FALSE);
+#endif
                 return TRUE;
                 
                 case WM_COMMAND:
@@ -465,13 +523,20 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         c = SendMessage(h, CB_GETCURSEL, 0, 0);
                         if (hdd_names[c])
                                 hdd_changed = strncmp(hdd_names[c], hdd_controller_name, sizeof(hdd_controller_name)-1);
-                        
+#ifdef USE_NETWORKING
+                        h = GetDlgItem(hdlg, IDC_COMBONETCARD);
+                        temp_network_card = settings_list_to_network[SendMessage(h, CB_GETCURSEL, 0, 0)];
+#endif                        
                         if (temp_model != model || gfx != gfxcard || mem != mem_size ||
                             fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
                             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
                             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
 			    temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
-                            temp_mouse_type != mouse_type || hdd_changed)
+                            temp_mouse_type != mouse_type || hdd_changed
+#ifdef USE_NETWORKING
+                            || temp_network_card != network_card_current
+#endif
+                            )
                         {
                                 if (!has_been_inited || MessageBox(NULL,"This will reset PCem!\nOkay to continue?","PCem",MB_OKCANCEL)==IDOK)
                                 {
@@ -489,6 +554,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                         voodoo_enabled = temp_voodoo;
                                         cpu_use_dynarec = temp_dynarec;
                                         mouse_type = temp_mouse_type;
+#ifdef USE_NETWORKING
+                                        network_card_current = temp_network_card;
+#endif
 
 					fdd_set_type(0, temp_fda_type);
 					fdd_set_type(1, temp_fdb_type);
@@ -651,6 +719,9 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                                 recalc_hdd_list(hdlg, temp_model, 1);
 
                                 recalc_snd_list(hdlg, temp_model);
+#ifdef USE_NETWORKING
+                                recalc_net_list(hdlg, temp_model);
+#endif
                         }
                         break;
                         case IDC_COMBOCPUM:
@@ -809,6 +880,28 @@ static BOOL CALLBACK config_dlgproc(HWND hdlg, UINT message, WPARAM wParam, LPAR
                         temp_joystick_type = SendMessage(h, CB_GETCURSEL, 0, 0);
                         joystickconfig_open(hdlg, 3, temp_joystick_type);
                         break;
+#ifdef USE_NETWORKING
+                        case IDC_COMBONETCARD:
+                        if (HIWORD(wParam) == CBN_SELCHANGE)
+                        {
+                                h = GetDlgItem(hdlg, IDC_COMBONETCARD);
+                                temp_network_card = settings_list_to_network[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                                
+                                h = GetDlgItem(hdlg, IDC_CONFIGURENETCARD);
+                                if (network_card_has_config(temp_network_card))
+                                        EnableWindow(h, TRUE);
+                                else
+                                        EnableWindow(h, FALSE);
+                        }
+                        break;
+
+                        case IDC_CONFIGURENETCARD:
+                        h = GetDlgItem(hdlg, IDC_COMBONETCARD);
+                        temp_network_card = settings_list_to_network[SendMessage(h, CB_GETCURSEL, 0, 0)];
+                        
+                        deviceconfig_open(hdlg, (void *)network_card_getdevice(temp_network_card));
+                        break;
+#endif
                 }
                 break;
         }
