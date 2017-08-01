@@ -163,6 +163,7 @@ void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p);
 void mem_reset_page_blocks();
 
 extern mem_mapping_t ram_low_mapping;
+extern mem_mapping_t ram_mid_mapping;
 
 void mem_remap_top_256k();
 void mem_remap_top_384k();
