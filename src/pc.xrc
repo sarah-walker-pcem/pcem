@@ -24,6 +24,7 @@
        	</object>
     </object>
 	<ids-range name="IDM_SCREENSHOT_FORMAT" start="950" />
+	<ids-range name="IDM_VID_RESOLUTION" start="990" />
 	<ids-range name="IDM_VID_FS" start="1000" />
 	<ids-range name="IDM_VID_FS_MODE" start="1100" />
 	<ids-range name="IDM_VID_SCALE" start="1200" />
@@ -130,9 +131,24 @@
 		</object>
 		<object class="wxMenu">
 			<label>Video</label>
-			<object class="wxMenuItem" name="IDM_VID_RESIZE">
-				<label>Resizable window</label>
-				<checkable>1</checkable>
+			<object class="wxMenu">
+				<label>Resolution</label>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[0]">
+					<label>Original</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[1]">
+					<label>Resizable</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[2]">
+					<label>Custom</label>
+					<radio>1</radio>
+				</object>
+				<object class="separator"/>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION_CUSTOM">
+					<label>Set custom resolution...</label>
+				</object>
 			</object>
 			<object class="wxMenuItem" name="IDM_VID_REMEMBER">
 				<label>Remember size &amp;&amp; position</label>
@@ -220,7 +236,7 @@
 					<radio>1</radio>
 				</object>
 			</object>
-			<object class="wxMenu">
+			<object class="wxMenu" name="IDM_VID_SCALE_MENU">
 				<label>Output scale</label>
 				<object class="wxMenuItem" name="IDM_VID_SCALE[0]">
 					<label>0.5x</label>
@@ -2566,7 +2582,7 @@
 						<checked>0</checked>
 					</object>
 				</object>
-					<object class="sizeritem">
+				<object class="sizeritem">
 					<option>1</option>
 					<flag>wxEXPAND</flag>
 					<border>5</border>
@@ -2584,6 +2600,86 @@
 							<border>5</border>
 							<object class="wxButton" name="wxID_CANCEL">
 								<label>_Cancel</label>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	
+	<object class="wxDialog" name="CustomResolutionDlg">
+		<style>wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP</style>
+		<title>Custom resolution</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="ROOT_PANEL">
+			<object class="wxBoxSizer">
+				<orient>wxVERTICAL</orient>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxSpinCtrl" name="IDC_WIDTH">
+								<style>wxSP_ARROW_KEYS</style>
+								<value>640</value>
+								<min>1</min>
+								<max>16384</max>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+							<border>5</border>
+							<object class="wxStaticText">
+								<label>x</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxSpinCtrl" name="IDC_HEIGHT">
+								<style>wxSP_ARROW_KEYS</style>
+								<value>480</value>
+								<min>1</min>
+								<max>16384</max>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxEXPAND | wxALL</flag>
+					<border>5</border>
+					<object class="wxStaticLine">
+						<style>wxLI_HORIZONTAL</style>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxStdDialogButtonSizer">
+						<object class="button">
+							<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="wxID_OK">
+								<label>&amp;OK</label>
+								<default>1</default>
+							</object>
+						</object>
+						<object class="button">
+							<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="wxID_CANCEL">
+								<label>&amp;Cancel</label>
 							</object>
 						</object>
 					</object>

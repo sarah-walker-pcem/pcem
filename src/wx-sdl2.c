@@ -280,6 +280,9 @@ void sdl_loadconfig()
         strcpy(screenshot_format, config_get_string(CFG_MACHINE, "SDL2", "screenshot_format", IMAGE_PNG));
         screenshot_flash = config_get_int(CFG_MACHINE, "SDL2", "screenshot_flash", 1);
 
+        custom_resolution_width = config_get_int(CFG_MACHINE, "SDL2", "custom_width", custom_resolution_width);
+        custom_resolution_height = config_get_int(CFG_MACHINE, "SDL2", "custom_height", custom_resolution_height);
+
         video_fullscreen = config_get_int(CFG_MACHINE, "SDL2", "fullscreen", video_fullscreen);
         video_fullscreen_mode = config_get_int(CFG_MACHINE, "SDL2", "fullscreen_mode", video_fullscreen_mode);
         video_scale = config_get_int(CFG_MACHINE, "SDL2", "scale", video_scale);
@@ -312,6 +315,9 @@ void sdl_saveconfig()
 
         config_set_string(CFG_MACHINE, "SDL2", "screenshot_format", screenshot_format);
         config_set_int(CFG_MACHINE, "SDL2", "screenshot_flash", screenshot_flash);
+
+        config_set_int(CFG_MACHINE, "SDL2", "custom_width", custom_resolution_width);
+        config_set_int(CFG_MACHINE, "SDL2", "custom_height", custom_resolution_height);
 
         config_set_int(CFG_MACHINE, "SDL2", "fullscreen", video_fullscreen);
         config_set_int(CFG_MACHINE, "SDL2", "fullscreen_mode", video_fullscreen_mode);
@@ -383,8 +389,9 @@ int wx_setupmenu(void* data)
 {
         int c;
         update_cdrom_menu(menu);
-        if (vid_resize)
-                wx_checkmenuitem(menu, WX_ID("IDM_VID_RESIZE"), WX_MB_CHECKED);
+        sprintf(menuitem, "IDM_VID_RESOLUTION[%d]", vid_resize);
+        wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+        wx_enablemenuitem(menu, wx_xrcid("IDM_VID_SCALE_MENU"), !vid_resize);
         sprintf(menuitem, "IDM_VID_FS[%d]", video_fullscreen_scale);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_FULLSCREEN"), video_fullscreen);
@@ -731,6 +738,36 @@ void atapi_close(void)
         }
 }
 
+int custom_resolution_callback(void* window, int message, INT_PARAM wParam, LONG_PARAM lParam)
+{
+        switch (message)
+        {
+                case WX_INITDIALOG:
+                {
+                        wx_sendmessage(wx_getdlgitem(window, wx_xrcid("IDC_WIDTH")), WX_UDM_SETPOS, 0, custom_resolution_width);
+                        wx_sendmessage(wx_getdlgitem(window, wx_xrcid("IDC_HEIGHT")), WX_UDM_SETPOS, 0, custom_resolution_height);
+                        return TRUE;
+                }
+                case WX_COMMAND:
+                {
+                        if (wParam == wxID_OK)
+                        {
+                                custom_resolution_width = wx_sendmessage(wx_getdlgitem(window, wx_xrcid("IDC_WIDTH")), WX_UDM_GETPOS, 0, 0);
+                                custom_resolution_height = wx_sendmessage(wx_getdlgitem(window, wx_xrcid("IDC_HEIGHT")), WX_UDM_GETPOS, 0, 0);
+                                wx_enddialog(window, 1);
+                                return TRUE;
+                        }
+                        else if (wParam == wxID_CANCEL)
+                        {
+                                wx_enddialog(window, 0);
+                                return TRUE;
+                        }
+
+                }
+        }
+        return 0;
+}
+
 int wx_handle_command(void* hwnd, int wParam, int checked)
 {
         void* hmenu;
@@ -814,12 +851,26 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 if (emulation_state != EMULATION_STOPPED)
                         wx_togglewindow(hwnd);
         }
-        else if (ID_IS("IDM_VID_RESIZE"))
+        else if (ID_RANGE("IDM_VID_RESOLUTION[start]", "IDM_VID_RESOLUTION[end]"))
         {
-                vid_resize = !vid_resize;
-                wx_checkmenuitem(hmenu, wParam, vid_resize);
+                vid_resize = wParam - wx_xrcid("IDM_VID_RESOLUTION[start]");
+                wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 window_dosetresize = 1;
+                wx_enablemenuitem(hmenu, wx_xrcid("IDM_VID_SCALE_MENU"), !vid_resize);
                 saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_VID_RESOLUTION_CUSTOM"))
+        {
+                if (wx_dialogbox(hwnd, "CustomResolutionDlg", custom_resolution_callback))
+                {
+                        if (vid_resize != 2)
+                        {
+                                vid_resize = 2;
+                                wx_checkmenuitem(hmenu, wx_xrcid("IDM_VID_RESOLUTION[2]"), WX_MB_CHECKED);
+                                wx_enablemenuitem(hmenu, wx_xrcid("IDM_VID_SCALE_MENU"), !vid_resize);
+                        }
+                        window_dosetresize = 1;
+                }
         }
         else if (ID_IS("IDM_SCREENSHOT"))
         {

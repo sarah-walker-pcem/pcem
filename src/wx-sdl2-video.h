@@ -64,3 +64,6 @@ void color_flash(FLASH_FUNC func, int time_ms, char r, char g, char b, char a);
 
 extern sdl_render_driver requested_render_driver;
 extern char current_render_driver_name[50];
+
+extern int custom_resolution_width;
+extern int custom_resolution_height;

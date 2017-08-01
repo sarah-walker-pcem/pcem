@@ -49,6 +49,9 @@ SDL_Rect remembered_rect;
 int remembered_mouse_x = 0;
 int remembered_mouse_y = 0;
 
+int custom_resolution_width = 640;
+int custom_resolution_height = 480;
+
 int win_doresize = 0;
 int winsizex = 640, winsizey = 480;
 
@@ -517,6 +520,12 @@ void window_setup()
                 rect.w = 640;
                 rect.h = 480;
         }
+
+        if (vid_resize == 2)
+        {
+                rect.w = custom_resolution_width;
+                rect.h = custom_resolution_height;
+        }
 }
 
 int window_create()
@@ -692,8 +701,11 @@ int render()
         {
                 window_dosetresize = 0;
                 SDL_GetWindowSize(window, &rect.w, &rect.h);
-                SDL_SetWindowResizable(window, vid_resize);
+                SDL_SetWindowResizable(window, vid_resize == 1);
                 SDL_SetWindowSize(window, rect.w, rect.h);
+
+                if (vid_resize == 2)
+                        SDL_SetWindowSize(window, custom_resolution_width, custom_resolution_height);
         }
         if (renderer_doreset)
         {
