@@ -2,10 +2,9 @@ VPATH = . dosbox resid-fp
 CPP  = g++
 CC   = gcc
 WINDRES = windres.exe
-WXRC = ../utils/wx/wxrc.exe
 WXVERSION = 31
 WXINCLUDE = C:/MinGW/include/wx/
-CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing -IC:\MinGW\lib\mswu
+CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing
 CXXFLAGS = $(CFLAGS)
 OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-image.o \
 	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_common.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86.o compaq.o config.o cpu.o dac.o \
@@ -43,7 +42,7 @@ clean :
 	rm *.res
 
 wx-resources.o : pc.xrc
-	$(WXRC) -c pc.xrc -o wx-resources.cpp
+	-wxrc -c pc.xrc -o wx-resources.cpp
 	$(CPP) $(CXXFLAGS) -c wx-resources.cpp
 
 %.o : %.c
