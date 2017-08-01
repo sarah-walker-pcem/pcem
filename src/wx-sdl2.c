@@ -630,7 +630,7 @@ int start_emulation(void* params)
 
         updatewindowsize(640, 480);
 
-        timer_freq = timer_read();
+        timer_freq = SDL_GetPerformanceFrequency();
 
         if (show_machine_on_start)
                 wx_show_status(ghwnd);
