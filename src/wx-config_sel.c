@@ -3,6 +3,8 @@
 #include "wx-utils.h"
 #include "paths.h"
 
+static int active_config = -1;
+
 extern int config_open(void* hwnd);
 
 static void select_config(void* hdlg, char* name)
@@ -85,6 +87,8 @@ static int run(void* hdlg)
         {
                 char cfg[512];
 
+                active_config = wx_sendmessage(wx_getdlgitem(hdlg, WX_ID("IDC_LIST")), WX_LB_GETCURSEL, 0, 0);
+
                 strcpy(cfg, configs_path);
                 put_backslash(cfg);
                 strcat(cfg, s);
@@ -112,6 +116,10 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                 {
         //                pause = 1;
                         config_list_update(hdlg);
+
+                        if (active_config >= 0)
+                                wx_sendmessage(wx_getdlgitem(hdlg, WX_ID("IDC_LIST")), WX_LB_SETCURSEL, active_config, 0);
+
         //                h = wx_getdlgitem(hdlg, IDC_LIST);
         //                wx_sendmessage(h, LB_ADDSTRING, 0, (LONG_PARAM)(LPCSTR)"AAA");
         //                wx_sendmessage(h, LB_ADDSTRING, 0, (LONG_PARAM)(LPCSTR)"BBB");
