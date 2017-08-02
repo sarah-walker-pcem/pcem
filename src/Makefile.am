@@ -15,7 +15,7 @@ codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing
 dac.c dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
 joystick_tm_fcs.c keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
-laserxt.c lpt.c mca.c mcr.c mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
+laserxt.c lpt.c mca.c mcr.c mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_ps2.c mouse_serial.c mouse_msystems.c neat.c nmi.c nvr.c olivetti_m24.c \
 opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c serial.c sio.c sis496.c sound.c \
 sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \

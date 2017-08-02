@@ -1,6 +1,7 @@
 #include "ibm.h"
 #include "mouse.h"
 #include "amstrad.h"
+#include "mouse_msystems.h"
 #include "mouse_ps2.h"
 #include "mouse_serial.h"
 #include "keyboard_olim24.h"
@@ -8,6 +9,7 @@
 static mouse_t *mouse_list[] =
 {
         &mouse_serial_microsoft,
+        &mouse_serial_msystems,
         &mouse_ps2_2_button,
         &mouse_intellimouse,
         &mouse_amstrad,
