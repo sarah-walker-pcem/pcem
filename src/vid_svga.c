@@ -151,9 +151,9 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                         svga->dac_pos++; 
                         break;
                         case 2: 
-                        svga->vgapal[svga->dac_write].r = svga->dac_r; 
-                        svga->vgapal[svga->dac_write].g = svga->dac_g;
-                        svga->vgapal[svga->dac_write].b = val; 
+                        svga->vgapal[svga->dac_write].r = svga->dac_r & 0x3f; 
+                        svga->vgapal[svga->dac_write].g = svga->dac_g & 0x3f;
+                        svga->vgapal[svga->dac_write].b = val & 0x3f; 
                         if (svga->ramdac_type == RAMDAC_8BIT)
                                 svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r, svga->vgapal[svga->dac_write].g, svga->vgapal[svga->dac_write].b);
                         else
