@@ -41,7 +41,7 @@ static char* load_file(const char* fn)
 
         char* data = malloc(fsize+1);
 
-        long read = fread(data, fsize, 1, f);
+        fread(data, fsize, 1, f);
         fclose(f);
 
         data[fsize] = 0;

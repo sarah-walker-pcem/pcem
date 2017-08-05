@@ -173,7 +173,6 @@ int deviceconfig_dlgproc(void* hdlg, int message, INT_PARAM wParam,
                         {
                                 device_config_selection_t *selection = config->selection;
                                 void* h = 0;
-                                int val_int;
 
                                 switch (config->type)
                                 {

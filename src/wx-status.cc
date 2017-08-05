@@ -138,7 +138,7 @@ void StatusPane::Render(wxDC& dc)
                                 size = dc.GetTextExtent(s);
                                 dc.DrawText(s, x, height+5+(bitmap.GetHeight()-size.y)/2);
                                 width = MAX(width, x+size.x);
-                                height = MAX(height, height+5+MAX(bitmap.GetHeight(), size.y));
+                                height = height+5+MAX(bitmap.GetHeight(), size.y);
                         } else {
                                 x -= bitmap.GetWidth();
                                 dc.DrawBitmap(bitmap, x, 5);

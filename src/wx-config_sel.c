@@ -10,7 +10,7 @@ extern int config_open(void* hwnd);
 static void select_config(void* hdlg, char* name)
 {
         char s[512];
-        int num, c, p;
+        int num, c;
         void* h;
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_LIST"));

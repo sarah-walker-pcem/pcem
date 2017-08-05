@@ -23,7 +23,7 @@ static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX],
                 modeltolist[ROM_MAX];
 static int settings_sound_to_list[20], settings_list_to_sound[20];
 static int settings_mouse_to_list[20], settings_list_to_mouse[20];
-static int settings_network_to_list[20], settings_list_to_network[20];
+//static int settings_network_to_list[20], settings_list_to_network[20];
 static char *hdd_names[16];
 
 int has_been_inited = 0;
@@ -55,14 +55,14 @@ static int mouse_valid(int type, int model)
         return 1;
 }
 
-static int mpu401_available(int sound_card)
+/*static int mpu401_available(int sound_card)
 {
         char* name = sound_card_get_internal_name(sound_card);
         if (name && (!strcmp(name, "sb16") || !strcmp(name, "sbawe32")))
                 return TRUE;
 
         return FALSE;
-}
+}*/
 
 static void recalc_vid_list(void* hdlg, int model)
 {
@@ -210,17 +210,14 @@ int config_dlgsave(void* hdlg)
 {
         char temp_str[256];
         void* h;
-        int c, d;
-        int rom, gfx, fpu;
+        int c;
+        int gfx, fpu;
         int temp_cpu, temp_cpu_m, temp_model;
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
         int temp_dynarec;
-        int cpu_flags;
         int temp_fda_type, temp_fdb_type;
-        int temp_joystick_type;
-        int cpu_type;
         int temp_mouse_type;
-        int hdd_changed;
+        int hdd_changed = 0;
         char s[260];
         PcemHDC hd[4];
 
@@ -412,16 +409,13 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
         char temp_str[256];
         void* h;
         int c, d;
-        int rom, gfx, mem, fpu;
+        int gfx, mem;
         int temp_cpu, temp_cpu_m, temp_model;
-        int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
+        int temp_sound_card_current;
         int temp_dynarec;
         int cpu_flags;
-        int temp_fda_type, temp_fdb_type;
-        int temp_joystick_type;
         int cpu_type;
         int temp_mouse_type;
-        int hdd_changed;
 
         switch (message)
         {
@@ -945,6 +939,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         return 0;
                 }
         }
+        return 0;
 }
 
 static struct
@@ -1094,7 +1089,6 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
         int c;
         PcemHDC hd[4];
         FILE *f;
-        uint8_t buf[512];
         int hd_type;
 
         switch (message)
@@ -1412,7 +1406,6 @@ int hdconf_init(void* hdlg)
 int hdconf_update(void* hdlg)
 {
         char s[260];
-        void* h;
 
         int is_mfm = hdd_controller_selected_is_mfm(hdlg);
 
@@ -1896,7 +1889,6 @@ int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
 int config_dialog_proc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
-        void* h;
         switch (message)
         {
         case WX_INITDIALOG:

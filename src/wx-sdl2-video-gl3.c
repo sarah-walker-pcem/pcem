@@ -299,7 +299,7 @@ static void create_texture(struct shader_texture* tex)
         if (tex->height > max_texture_size)
                 tex->height = max_texture_size;
         pclog("Create texture with size %dx%d\n", tex->width, tex->height);
-        glGenTextures(1, &tex->id);
+        glGenTextures(1, (GLuint *)&tex->id);
         glBindTexture(GL_TEXTURE_2D, tex->id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tex->wrap_mode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tex->wrap_mode);
@@ -314,7 +314,7 @@ static void create_texture(struct shader_texture* tex)
 static void delete_texture(struct shader_texture* tex)
 {
         if (tex->id > 0)
-                glDeleteTextures(1, &tex->id);
+                glDeleteTextures(1, (GLuint *)&tex->id);
         tex->id = 0;
 }
 
@@ -322,7 +322,7 @@ static void delete_fbo(struct shader_fbo* fbo)
 {
         if (fbo->id >= 0)
         {
-                glw->glDeleteFramebuffers(1, &fbo->id);
+                glw->glDeleteFramebuffers(1, (GLuint *)&fbo->id);
                 delete_texture(&fbo->texture);
         }
 }
@@ -336,9 +336,9 @@ static void delete_program(struct shader_program* program)
 
 static void delete_vbo(struct shader_vbo* vbo)
 {
-        if (vbo->color >= 0) glw->glDeleteBuffers(1, &vbo->color);
-        glw->glDeleteBuffers(1, &vbo->vertex_coord);
-        glw->glDeleteBuffers(1, &vbo->tex_coord);
+        if (vbo->color >= 0) glw->glDeleteBuffers(1, (GLuint *)&vbo->color);
+        glw->glDeleteBuffers(1, (GLuint *)&vbo->vertex_coord);
+        glw->glDeleteBuffers(1, (GLuint *)&vbo->tex_coord);
 }
 
 static void delete_pass(struct shader_pass* pass)
@@ -346,7 +346,7 @@ static void delete_pass(struct shader_pass* pass)
         delete_fbo(&pass->fbo);
         delete_vbo(&pass->vbo);
         delete_program(&pass->program);
-        glw->glDeleteVertexArrays(1, &pass->vertex_array);
+        glw->glDeleteVertexArrays(1, (GLuint *)&pass->vertex_array);
 }
 
 static void delete_prev(struct shader_prev* prev)
@@ -387,7 +387,7 @@ static void create_fbo(struct shader_fbo* fbo)
 {
         create_texture(&fbo->texture);
 
-        glw->glGenFramebuffers(1, &fbo->id);
+        glw->glGenFramebuffers(1, (GLuint *)&fbo->id);
         glw->glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
         glw->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo->texture.id, 0);
 
@@ -435,8 +435,8 @@ static void recreate_fbo(struct shader_fbo* fbo, int width, int height)
 {
         if (width != fbo->texture.width || height != fbo->texture.height)
         {
-                glw->glDeleteFramebuffers(1, &fbo->id);
-                glDeleteTextures(1, &fbo->texture.id);
+                glw->glDeleteFramebuffers(1, (GLuint *)&fbo->id);
+                glDeleteTextures(1, (GLuint *)&fbo->texture.id);
                 fbo->texture.width = width;
                 fbo->texture.height = height;
                 create_fbo(fbo);
@@ -450,7 +450,7 @@ static int create_default_shader_tex(struct shader_pass* pass)
                         !compile_shader(GL_FRAGMENT_SHADER, 0, fragment_shader_default_tex_src, &pass->program.fragment_shader) ||
                         !create_program(&pass->program))
                 return 0;
-        glw->glGenVertexArrays(1, &pass->vertex_array);
+        glw->glGenVertexArrays(1, (GLuint *)&pass->vertex_array);
 
         struct shader_uniforms* u = &pass->uniforms;
         int p = pass->program.id;
@@ -472,7 +472,7 @@ static int create_default_shader_color(struct shader_pass* pass)
                         !compile_shader(GL_FRAGMENT_SHADER, 0, fragment_shader_default_color_src, &pass->program.fragment_shader) ||
                         !create_program(&pass->program))
                 return 0;
-        glw->glGenVertexArrays(1, &pass->vertex_array);
+        glw->glGenVertexArrays(1, (GLuint *)&pass->vertex_array);
 
         struct shader_uniforms* u = &pass->uniforms;
         int p = pass->program.id;
@@ -644,7 +644,7 @@ static glsl_t* load_glslp(glsl_t* glsl, int num_shader, const char* f)
                                 }
                                 pass->frame_count_mod = shader->frame_count_mod;
 
-                                glw->glGenVertexArrays(1, &pass->vertex_array);
+                                glw->glGenVertexArrays(1, (GLuint *)&pass->vertex_array);
                                 find_uniforms(gshader, i);
                                 setup_scale(shader, pass);
                                 if (i == p->num_shaders-1) /* last pass may or may not be an fbo depending on scale */
@@ -711,8 +711,6 @@ static glsl_t* load_shaders(int num, char shaders[MAX_USER_SHADERS][512])
                 const char* f = shaders[i];
                 if (f && strlen(f))
                 {
-                        struct glsl_shader* shader = &glsl->shaders[num-i-1];
-
                         if (!load_glslp(glsl, i, f))
                         {
                                 failed = 1;
@@ -800,9 +798,6 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
         create_texture(&scene_texture);
 
-        GLint status;
-        char buffer[512];
-
         /* load shader */
 //        const char* shaders[1];
 //        shaders[0] = gl3_shader_file;
@@ -868,12 +863,12 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
                 struct shader_vbo* vbo = &active_shader->scene.vbo;
 
-                glw->glGenBuffers(1, &vbo->vertex_coord);
+                glw->glGenBuffers(1, (GLuint *)&vbo->vertex_coord);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->vertex_coord);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(inv_vertex), inv_vertex, GL_STATIC_DRAW);
                 glw->glVertexAttribPointer(active_shader->scene.uniforms.vertex_coord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
 
-                glw->glGenBuffers(1, &vbo->tex_coord);
+                glw->glGenBuffers(1, (GLuint *)&vbo->tex_coord);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->tex_coord);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_DYNAMIC_DRAW);
                 glw->glVertexAttribPointer(active_shader->scene.uniforms.tex_coord, 2, GL_FLOAT, GL_TRUE, 2*sizeof(GLfloat), (GLvoid*)0);
@@ -891,20 +886,20 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
                         struct shader_vbo* vbo = &shader->passes[i].vbo;
 
-                        glw->glGenBuffers(1, &vbo->vertex_coord);
+                        glw->glGenBuffers(1, (GLuint *)&vbo->vertex_coord);
                         glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->vertex_coord);
                         glw->glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
 
                         glw->glVertexAttribPointer(u->vertex_coord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
 
-                        glw->glGenBuffers(1, &vbo->tex_coord);
+                        glw->glGenBuffers(1, (GLuint *)&vbo->tex_coord);
                         glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->tex_coord);
                         glw->glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_DYNAMIC_DRAW);
                         glw->glVertexAttribPointer(u->tex_coord, 2, GL_FLOAT, GL_TRUE, 2*sizeof(GLfloat), (GLvoid*)0);
 
                         if (u->color)
                         {
-                                glw->glGenBuffers(1, &vbo->color);
+                                glw->glGenBuffers(1, (GLuint *)&vbo->color);
                                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->color);
                                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
                                 glw->glVertexAttribPointer(u->color, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (GLvoid*)0);
@@ -924,12 +919,12 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
                         glw->glBindVertexArray(prev_pass->vertex_array);
 
-                        glw->glGenBuffers(1, &vbo->vertex_coord);
+                        glw->glGenBuffers(1, (GLuint *)&vbo->vertex_coord);
                         glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->vertex_coord);
                         glw->glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
                         glw->glVertexAttribPointer(prev_pass->uniforms.vertex_coord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
 
-                        glw->glGenBuffers(1, &vbo->tex_coord);
+                        glw->glGenBuffers(1, (GLuint *)&vbo->tex_coord);
                         glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->tex_coord);
                         glw->glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_DYNAMIC_DRAW);
                         glw->glVertexAttribPointer(prev_pass->uniforms.tex_coord, 2, GL_FLOAT, GL_TRUE, 2*sizeof(GLfloat), (GLvoid*)0);
@@ -939,11 +934,11 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
                                 struct shader_prev* prev = &shader->prev[j];
                                 struct shader_vbo* prev_vbo = &prev->vbo;
 
-                                glw->glGenBuffers(1, &prev_vbo->vertex_coord);
+                                glw->glGenBuffers(1, (GLuint *)&prev_vbo->vertex_coord);
                                 glw->glBindBuffer(GL_ARRAY_BUFFER, prev_vbo->vertex_coord);
                                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
 
-                                glw->glGenBuffers(1, &prev_vbo->tex_coord);
+                                glw->glGenBuffers(1, (GLuint *)&prev_vbo->tex_coord);
                                 glw->glBindBuffer(GL_ARRAY_BUFFER, prev_vbo->tex_coord);
                                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_DYNAMIC_DRAW);
                         }
@@ -960,12 +955,12 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
                 struct shader_vbo* vbo = &final_pass->vbo;
 
-                glw->glGenBuffers(1, &vbo->vertex_coord);
+                glw->glGenBuffers(1, (GLuint *)&vbo->vertex_coord);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->vertex_coord);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
                 glw->glVertexAttribPointer(final_pass->uniforms.vertex_coord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
 
-                glw->glGenBuffers(1, &vbo->tex_coord);
+                glw->glGenBuffers(1, (GLuint *)&vbo->tex_coord);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->tex_coord);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_DYNAMIC_DRAW);
                 glw->glVertexAttribPointer(final_pass->uniforms.tex_coord, 2, GL_FLOAT, GL_TRUE, 2*sizeof(GLfloat), (GLvoid*)0);
@@ -979,12 +974,12 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
                 struct shader_vbo* vbo = &color_pass->vbo;
 
-                glw->glGenBuffers(1, &vbo->vertex_coord);
+                glw->glGenBuffers(1, (GLuint *)&vbo->vertex_coord);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->vertex_coord);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
                 glw->glVertexAttribPointer(color_pass->uniforms.vertex_coord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
 
-                glw->glGenBuffers(1, &vbo->color);
+                glw->glGenBuffers(1, (GLuint *)&vbo->color);
                 glw->glBindBuffer(GL_ARRAY_BUFFER, vbo->color);
                 glw->glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
                 glw->glVertexAttribPointer(color_pass->uniforms.color, 4, GL_FLOAT, GL_TRUE, 4*sizeof(GLfloat), (GLvoid*)0);
@@ -1058,8 +1053,6 @@ struct render_data {
 static void render_pass(struct render_data* data)
 {
         int i;
-        char s[64];
-        GLint loc;
         GLuint texture_unit = 0;
 
 //        pclog("pass %d: %gx%g, %gx%g -> %gx%g, %gx%g, %gx%g\n", num_pass, pass->state.input_size[0], pass->state.input_size[1], pass->state.input_texture_size[0], pass->state.input_texture_size[1], pass->state.output_size[0], pass->state.output_size[1], pass->state.output_texture_size[0], pass->state.output_texture_size[1], output_size[0], output_size[1]);
@@ -1207,7 +1200,6 @@ void gl3_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
                 return;
 
         int s, i, j;
-        GLuint p;
 
         Uint32 ticks = SDL_GetTicks();
 
@@ -1292,7 +1284,6 @@ void gl3_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
         for (s = 0; s < active_shader->num_shaders; ++s)
         {
                 struct glsl_shader* shader = &active_shader->shaders[s];
-                int last_shader = s == active_shader->num_shaders-1;
 
 //                float refresh_rate = shader->shader_refresh_rate;
 //                if (refresh_rate < 0)

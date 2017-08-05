@@ -47,7 +47,6 @@ static void add_shader(int p, const char* s)
 
 static int shader_list_update(void* hdlg)
 {
-        char s[512];
         int c;
         void* h;
         int num = 0;
@@ -172,7 +171,6 @@ static int shader_manager_dlgproc(void* hdlg, int message, INT_PARAM wParam, LON
                         }
                         else if (wParam == WX_ID("IDC_REMOVE"))
                         {
-                                char name[64];
                                 void* h;
                                 int c;
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_LIST"));

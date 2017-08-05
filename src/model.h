@@ -15,7 +15,7 @@ typedef struct
         {
                 char name[8];
                 CPU *cpus;
-        } cpu[4];
+        } cpu[5];
         int fixed_gfxcard;
         int flags;
         int min_ram, max_ram;
