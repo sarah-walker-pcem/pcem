@@ -2,6 +2,7 @@
 #include "config.h"
 #include "wx-utils.h"
 #include "paths.h"
+#include "wx-hostconfig.h"
 
 static int active_config = -1;
 
@@ -277,6 +278,12 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                 if (lParam == WX_LBN_DBLCLK)
                                         run(hdlg);
                         }
+#ifdef USE_NETWORKING
+                        else if (wParam == WX_ID("IDC_CONFIG_HOST"))
+                        {
+                                hostconfig_open(hdlg);
+                        }
+#endif
                 }
                 break;
         }

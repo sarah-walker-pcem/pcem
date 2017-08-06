@@ -1,0 +1,62 @@
+VPATH = . dosbox resid-fp
+CPP  = g++
+CC   = gcc
+WINDRES = windres.exe
+WXVERSION = 31
+WXINCLUDE = C:/MinGW/include/wx/
+CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing -DUSE_NETWORKING
+CXXFLAGS = $(CFLAGS)
+OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad.o cdrom-ioctl.o cdrom-image.o \
+	codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_common.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86.o compaq.o config.o cpu.o dac.o \
+	device.o dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430lx.o i430fx.o \
+	i430vx.o ide.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \
+	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o laserxt.o lpt.o mca.o mcr.o mem.o mfm_at.o mfm_xebec.o model.o mouse.o mouse_msystems.o mouse_ps2.o \
+	mouse_serial.o neat.o nmi.o nvr.o olivetti_m24.o opti495.o paths.o pc.o pci.o pic.o piix.o pit.o ppi.o ps1.o ps2.o ps2_mca.o ps2_nvr.o rom.o rtc.o \
+	scat.o serial.o sio.o sis496.o sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_cms.o sound_dbopl.o \
+	sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o sound_pas16.o sound_ps1.o sound_pssj.o sound_resid.o \
+	sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o sound_ssi2001.o sound_wss.o \
+	sound_ym7128.o soundopenal.o tandy_eeprom.o tandy_rom.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o vid_ati_mach64.o vid_ati18800.o \
+	vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o vid_cl5429.o vid_colorplus.o vid_ega.o vid_et4000.o \
+	vid_et4000w32.o vid_et4000w32i.o vid_genius.o vid_hercules.o vid_icd2061.o vid_ics2595.o vid_incolor.o vid_mda.o \
+	vid_olivetti_m24.o vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o \
+	vid_pcjr.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o \
+	vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
+	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o x86seg.o x87.o xtide.o win-midi.o \
+	wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o \
+	wx-sdl2.o wx-config.o wx-deviceconfig.o wx-hostconfig.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \
+	wx-sdl2-video-renderer.o wx-sdl2-video-gl3.o wx-glslp-parser.o wx-shader_man.o wx-shaderconfig.o wx.res
+DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
+SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
+NETOBJ = ne2000.o nethandler.o
+
+LIBS = -Wl,--subsystem,windows -mthreads -mwindows -lwxmsw$(WXVERSION)u_xrc -lwxmsw$(WXVERSION)u_html -lwxmsw$(WXVERSION)u_adv -lwxbase$(WXVERSION)u_xml -lwxmsw$(WXVERSION)u_core -lwxbase$(WXVERSION)u -lwxtiff -lwxjpeg -lwxpng -lwxzlib -lwxregexu -lwxexpat -lkernel32 -lcomdlg32 -lwinspool -lcomctl32 -lole32 -loleaut32 -luuid -lrpcrt4 -ladvapi32 -lmingw32 -lopengl32 -lopenal32 -lstdc++ -lSDL2main -lSDL2 -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static-libgcc -lwsock32 -liphlpapi
+
+PCem-wx-SDL2.exe: $(OBJ) $(DBOBJ) $(SIDOBJ) $(NETOBJ) libslirp.a
+	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) $(NETOBJ) slirp/libslirp.a -o "PCem-wx-SDL2.exe" $(LIBS)
+	strip -s PCem-wx-SDL2.exe
+
+libslirp.a:
+	$(MAKE) -C slirp
+
+all : libslirp.a PCem-wx-SDL2.exe
+
+clean :
+	rm *.o
+	rm PCem-wx-SDL2.exe
+	rm *.res
+
+wx-resources.o : pc.xrc
+	-wxrc -c pc.xrc -o wx-resources.cpp
+	$(CPP) $(CXXFLAGS) -c wx-resources.cpp
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $<
+
+%.o : %.cc
+	$(CPP) $(CXXFLAGS) -c $<
+
+%.o : %.cpp
+	$(CPP) $(CXXFLAGS) -c $<
+
+wx.res: wx.rc
+	$(WINDRES) -I$(WXINCLUDE)/../ -i wx.rc --input-format=rc -o wx.res -O coff 

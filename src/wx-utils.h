@@ -154,3 +154,6 @@ extern void (*wx_idle_func)(void* window, void* event);
 #define IMAGE_TIFF "tiff"
 
 extern int has_been_inited;
+
+#define ID_IS(s) wParam == wx_xrcid(s)
+#define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)

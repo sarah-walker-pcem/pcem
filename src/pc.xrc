@@ -509,7 +509,7 @@
 										<default>0</default>
 									</object>
 								</object>
-								<object class="sizeritem">
+                                                                <object class="sizeritem">
 									<option>0</option>
 									<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
 									<border>5</border>
@@ -1873,6 +1873,51 @@
 							</object>
 						</object>
 					</object>
+					<object class="notebookpage">
+						<label></label>
+						<selected>0</selected>
+						<bitmap>icons/32x32/network_ethernet.png</bitmap>
+						<object class="wxPanel" name="m_panelnet">
+                                                        <style>wxTAB_TRAVERSAL</style>
+							<object class="wxFlexGridSizer">
+								<rows>0</rows>
+								<cols>2</cols>
+								<vgap>0</vgap>
+								<hgap>0</hgap>
+								<growablecols>1</growablecols>
+								<growablerows></growablerows>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="m_staticText70">
+										<size>80,-1</size>
+										<label>Network card :</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxComboBox" name="IDC_COMBO_NETCARD">
+												<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+												<size>350,-1</size>
+												<value></value>
+												<content />
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
 				</object>
 			</object>
 			<object class="sizeritem">
@@ -2377,7 +2422,23 @@
 									<default>0</default>
 								</object>
 							</object>
-						</object>
+                                                        <object class="spacer">
+        							<option>1</option>
+        							<flag>wxEXPAND</flag>
+        							<border>5</border>
+        							<size>0,0</size>
+        						</object>
+        						<object class="sizeritem">
+        							<option>0</option>
+        							<flag>wxALL</flag>
+        							<border>5</border>
+        							<object class="wxBitmapButton" name="IDC_CONFIG_HOST">
+        								<style>wxBU_AUTODRAW</style>
+        								<bitmap>icons/32x32/widescreen.png</bitmap>
+        								<default>0</default>
+        							</object>
+        						</object>
+                                                </object>
 					</object>
 					<object class="sizeritem">
 						<option>1</option>
@@ -2719,6 +2780,130 @@
 					<object class="wxButton" name="wxID_OK">
 						<label>_OK</label>
 						<default>1</default>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+
+	<object class="wxDialog" name="HostConfig">
+		<style>wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP</style>
+		<size>499,175</size>
+		<title>Host Configuration</title>
+		<centered>1</centered>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND | wxALL</flag>
+				<border>5</border>
+				<object class="wxPanel" name="m_panel20">
+					<style>wxTAB_TRAVERSAL</style>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>1</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols></growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxEXPAND | wxALL</flag>
+							<border>5</border>
+							<object class="wxNotebook" name="m_notebook2">
+								<object class="notebookpage">
+									<label></label>
+									<selected>0</selected>
+									<bitmap>icons/32x32/network_ethernet.png</bitmap>
+									<object class="wxPanel" name="m_panel19">
+										<style>wxTAB_TRAVERSAL</style>
+										<object class="wxFlexGridSizer">
+											<rows>0</rows>
+											<cols>2</cols>
+											<vgap>0</vgap>
+											<hgap>0</hgap>
+											<growablecols></growablecols>
+											<growablerows></growablerows>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticText72">
+													<label>Network type :</label>
+													<wrap>-1</wrap>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxComboBox" name="IDC_COMBO_NETWORK_TYPE">
+													<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+													<size>550,-1</size>
+													<value></value>
+													<content />
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticText73">
+													<label>Network device :</label>
+													<wrap>-1</wrap>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxComboBox" name="IDC_COMBO_NETWORK_DEVICE">
+													<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+													<size>550,-1</size>
+													<value>Combo!</value>
+													<content />
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxBoxSizer">
+								<orient>wxHORIZONTAL</orient>
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<size>0,0</size>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxStdDialogButtonSizer">
+										<object class="button">
+											<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="wxID_OK">
+												<label>&amp;OK</label>
+											</object>
+										</object>
+										<object class="button">
+											<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="wxID_CANCEL">
+												<label>&amp;Cancel</label>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
 					</object>
 				</object>
 			</object>
