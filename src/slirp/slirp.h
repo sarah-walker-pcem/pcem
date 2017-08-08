@@ -11,6 +11,12 @@
 #include "config.h"
 #include "slirp_config.h"
 
+#ifndef container_of
+#define container_of(address, type, field) ((type *)( \
+        (uintptr_t)(address) - \
+        (uintptr_t)(&((type *)0)->field)))
+#endif
+
 #ifdef _WIN32
 #ifdef __GNUC__		//MINGW?
 # include <inttypes.h>	
@@ -63,6 +69,7 @@ typedef int ioctlsockopt_t;
 # define ioctlsocket ioctl
 # define closesocket(s) close(s)
 # define O_BINARY 0
+typedef char *SLIRPcaddr_t;
 #endif
 
 #include <sys/types.h>
@@ -320,20 +327,6 @@ void if_start _P((struct ttys *));
 
 void lprint _P((const char *, ...));
 
-extern int do_echo;
-
-#ifdef _MSC_VER
-#define inline
-#endif
-
-#if SIZEOF_CHAR_P == 4
-# define insque_32 insque
-# define remque_32 remque
-#else
- extern inline void insque_32 _P((void *, void *));
- extern inline void remque_32 _P((void *));
-#endif
-
 #ifndef _WIN32
 #include <netdb.h>
 #endif
@@ -350,7 +343,7 @@ void if_output _P((struct SLIRPsocket *, struct SLIRPmbuf *));
 /* ip_input.c */
 void ip_init _P((void));
 void ip_input _P((struct SLIRPmbuf *));
-struct ip * ip_reass _P((register struct ipasfrag *, register struct ipq *));
+struct ip * ip_reass _P((struct ip *, struct ipq *));
 void ip_freef _P((struct ipq *));
 void ip_enq _P((register struct ipasfrag *, register struct ipasfrag *));
 void ip_deq _P((register struct ipasfrag *));

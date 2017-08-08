@@ -81,7 +81,7 @@ tcp_template(tp)
 	struct SLIRPsocket *so = tp->t_socket;
 	struct tcpiphdr *n = &tp->t_template;
 
-	n->ti_next = n->ti_prev = 0;
+	n->ti_mbuf = NULL;
 	n->ti_x1 = 0;
 	n->ti_pr = IPPROTO_TCP;
 	n->ti_len = htons(sizeof (struct tcpiphdr) - sizeof (struct ip));
@@ -164,7 +164,7 @@ tcp_respond(tp, ti, m, ack, seq, flags)
 	tlen += sizeof (struct tcpiphdr);
 	m->m_len = tlen;
 
-	ti->ti_next = ti->ti_prev = 0;
+	ti->ti_mbuf = 0;
 	ti->ti_x1 = 0;
 	ti->ti_seq = htonl(seq);
 	ti->ti_ack = htonl(ack);
@@ -204,7 +204,7 @@ tcp_newtcpcb(so)
 		return ((struct tcpcb *)0);
 	
 	memset((char *) tp, 0, sizeof(struct tcpcb));
-	tp->seg_next = tp->seg_prev = (tcpiphdrp_32)tp;
+	tp->seg_next = tp->seg_prev = (struct tcpiphdr*)tp;
 	tp->t_maxseg = tcp_mssdflt;
 	
 	tp->t_flags = tcp_do_rfc1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
@@ -280,11 +280,11 @@ tcp_close(tp)
 	DEBUG_ARG("tp = %lx", (long )tp);
 	
 	/* free the reassembly queue, if any */
-	t = (struct tcpiphdr *) tp->seg_next;
-	while (t != (struct tcpiphdr *)tp) {
-		t = (struct tcpiphdr *)t->ti_next;
-		m = (struct SLIRPmbuf *) REASS_MBUF((struct tcpiphdr *)t->ti_prev);
-		remque_32((struct tcpiphdr *) t->ti_prev);
+	t = tcpfrag_list_first(tp);
+	while (!tcpfrag_list_end(t, tp)) {
+		t = tcpiphdr_next(t);
+		m = tcpiphdr_prev(t)->ti_mbuf;
+		remque(tcpiphdr2qlink(tcpiphdr_prev(t)));
 		m_freem(m);
 	}
 	/* It's static */
@@ -1120,7 +1120,7 @@ do_prompt:
 		 * A typical packet for player version 1.0 (release version):
 		 *        
 		 * 0000:50 4E 41 00 05 
-		 * 0000:00 01 00 02 1B D7 00 00 67 E6 6C DC 63 00 12 50 .....×..gælÜc..P
+		 * 0000:00 01 00 02 1B D7 00 00 67 E6 6C DC 63 00 12 50 ..... ..g l c..P
 		 * 0010:4E 43 4C 49 45 4E 54 20 31 30 31 20 41 4C 50 48 NCLIENT 101 ALPH
 		 * 0020:41 6C 00 00 52 00 17 72 61 66 69 6C 65 73 2F 76 Al..R..rafiles/v
 		 * 0030:6F 61 2F 65 6E 67 6C 69 73 68 5F 2E 72 61 79 42 oa/english_.rayB
@@ -1132,8 +1132,8 @@ do_prompt:
 		 *
 		 * A typical packet for player version 2.0 (beta):
 		 *        
-		 * 0000:50 4E 41 00 06 00 02 00 00 00 01 00 02 1B C1 00 PNA...........Á.
-		 * 0010:00 67 75 78 F5 63 00 0A 57 69 6E 32 2E 30 2E 30 .guxõc..Win2.0.0
+		 * 0000:50 4E 41 00 06 00 02 00 00 00 01 00 02 1B C1 00 PNA........... .
+		 * 0010:00 67 75 78 F5 63 00 0A 57 69 6E 32 2E 30 2E 30 .gux c..Win2.0.0
 		 * 0020:2E 35 6C 00 00 52 00 1C 72 61 66 69 6C 65 73 2F .5l..R..rafiles/
 		 * 0030:77 65 62 73 69 74 65 2F 32 30 72 65 6C 65 61 73 website/20releas
 		 * 0040:65 2E 72 61 79 53 00 00 06 36 42                e.rayS...6B
