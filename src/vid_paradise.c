@@ -1,6 +1,6 @@
 /*Paradise VGA emulation
 
-  PC2086, PC3086 use PVGA1A
+  PC2086, PC3086, GO481 use PVGA1A
   MegaPC uses W90C11A
   */
 #include <stdlib.h>
@@ -350,6 +350,18 @@ static void *paradise_wd90c11_megapc_init()
         return paradise;
 }
 
+static void *paradise_pvga1a_oli_go481_init()
+{
+        paradise_t *paradise = paradise_pvga1a_init();
+
+        if (paradise)
+                rom_init_interleaved(&paradise->bios_rom,
+                                     "oli_go481_lo.bin",
+                                     "oli_go481_hi.bin",
+                                     0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        return paradise;
+}
+
 void paradise_close(void *p)
 {
         paradise_t *paradise = (paradise_t *)p;
@@ -407,6 +419,17 @@ device_t paradise_wd90c11_megapc_device =
         "Paradise WD90C11 (Amstrad MegaPC)",
         0,
         paradise_wd90c11_megapc_init,
+        paradise_close,
+        NULL,
+        paradise_speed_changed,
+        paradise_force_redraw,
+        paradise_add_status_info
+};
+device_t paradise_pvga1a_oli_go481_device =
+{
+        "Paradise PVGA1A (Olivetti GO481)",
+        0,
+        paradise_pvga1a_oli_go481_init,
         paradise_close,
         NULL,
         paradise_speed_changed,

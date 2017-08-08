@@ -464,6 +464,7 @@ enum
 	GFX_WY700,	/* Wyse 700 */
 	GFX_GENIUS,	/* MDSI Genius */
         GFX_MACH64VT2,  /*ATI Mach64 VT2*/
+        GFX_OLIVETTI_GO481, /*Olivetti GO481 PVGA1A*/
         GFX_MAX
 };
 
