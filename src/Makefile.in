@@ -106,6 +106,10 @@ bin_PROGRAMS = pcem$(EXEEXT)
 @CPU_I386_TRUE@am__append_3 = codegen_x86.c
 @CPU_I386_TRUE@am__append_4 = -msse2
 @CPU_X86_64_TRUE@am__append_5 = codegen_x86-64.c
+@USE_NETWORKING_TRUE@am__append_6 = -DUSE_NETWORKING
+@USE_NETWORKING_TRUE@am__append_7 = -DUSE_NETWORKING
+@USE_NETWORKING_TRUE@am__append_8 = ne2000.c nethandler.c wx-hostconfig.c
+@USE_NETWORKING_TRUE@am__append_9 = slirp/libslirp.a
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/allegro.m4 \
@@ -132,40 +136,40 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
 	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c mca.c mcr.c \
-	mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_ps2.c \
-	mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c opti495.c \
-	paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c \
-	ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c serial.c sio.c sis496.c \
-	sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c \
-	sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c \
-	sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c \
-	sound_sb_dsp.c sound_sn76489.c sound_speaker.c sound_ssi2001.c \
-	sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c \
-	tandy_rom.c timer.c um8669f.c um8881f.c vid_ati_eeprom.c \
-	vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
-	vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c \
-	vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c \
-	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
-	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
-	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c \
-	vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
-	vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_tandy.c \
-	vid_tandysl.c vid_tgui9440.c vid_tkd8001_ramdac.c vid_tvga.c \
-	vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c \
-	vid_wy700.c x86seg.c x87.c xtide.c sound_dbopl.cc \
-	sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
-	dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
-	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
-	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
-	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
-	resid-fp/wave6581_PST.cc resid-fp/wave6581_P_T.cc \
-	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
-	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
-	resid-fp/wave8580__ST.cc resid-fp/wave.cc wx-main.cc \
-	wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
-	wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c \
-	wx-sdl2-video.c wx-sdl2-midi.c wx-sdl2.c wx-config.c \
-	wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
+	mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c \
+	mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
+	opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c \
+	ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c serial.c sio.c \
+	sis496.c sound.c sound_ad1848.c sound_adlib.c \
+	sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
+	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
+	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
+	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
+	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
+	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
+	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
+	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
+	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
+	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
+	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
+	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
+	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
+	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
+	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
+	dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c \
+	resid-fp/convolve.cc resid-fp/convolve-sse.cc \
+	resid-fp/envelope.cc resid-fp/extfilt.cc resid-fp/filter.cc \
+	resid-fp/pot.cc resid-fp/sid.cc resid-fp/voice.cc \
+	resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
+	resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc \
+	resid-fp/wave8580_PS_.cc resid-fp/wave8580_PST.cc \
+	resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
+	resid-fp/wave.cc wx-main.cc wx-config_sel.c wx-dialogbox.cc \
+	wx-utils.cc wx-app.cc wx-sdl2-joystick.c wx-sdl2-mouse.c \
+	wx-sdl2-keyboard.c wx-sdl2-video.c wx-sdl2-midi.c wx-sdl2.c \
+	wx-config.c wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
 	wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c \
 	wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c wx-glslp-parser.c \
 	wx-shader_man.c wx-shaderconfig.cc allegro-gui.c \
@@ -173,7 +177,8 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	allegro-gui-deviceconfig.c allegro-gui-hdconf.c \
 	allegro-joystick.c allegro-keyboard.c allegro-main.c \
 	allegro-midi.c allegro-mouse.c allegro-video.c \
-	thread-pthread.c codegen_x86.c codegen_x86-64.c
+	thread-pthread.c codegen_x86.c codegen_x86-64.c ne2000.c \
+	nethandler.c wx-hostconfig.c
 @USE_WX_TRUE@am__objects_1 = pcem-wx-main.$(OBJEXT) \
 @USE_WX_TRUE@	pcem-wx-config_sel.$(OBJEXT) \
 @USE_WX_TRUE@	pcem-wx-dialogbox.$(OBJEXT) \
@@ -209,6 +214,9 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 @USE_WX_FALSE@	pcem-thread-pthread.$(OBJEXT)
 @CPU_I386_TRUE@am__objects_3 = pcem-codegen_x86.$(OBJEXT)
 @CPU_X86_64_TRUE@am__objects_4 = pcem-codegen_x86-64.$(OBJEXT)
+@USE_NETWORKING_TRUE@am__objects_5 = pcem-ne2000.$(OBJEXT) \
+@USE_NETWORKING_TRUE@	pcem-nethandler.$(OBJEXT) \
+@USE_NETWORKING_TRUE@	pcem-wx-hostconfig.$(OBJEXT)
 am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-386_dynarec_ops.$(OBJEXT) pcem-808x.$(OBJEXT) \
 	pcem-acer386sx.$(OBJEXT) pcem-ali1429.$(OBJEXT) \
@@ -241,9 +249,9 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-laserxt.$(OBJEXT) pcem-lpt.$(OBJEXT) pcem-mca.$(OBJEXT) \
 	pcem-mcr.$(OBJEXT) pcem-mem.$(OBJEXT) pcem-mfm_at.$(OBJEXT) \
 	pcem-mfm_xebec.$(OBJEXT) pcem-model.$(OBJEXT) \
-	pcem-mouse.$(OBJEXT) pcem-mouse_ps2.$(OBJEXT) \
-	pcem-mouse_serial.$(OBJEXT) pcem-neat.$(OBJEXT) \
-	pcem-nmi.$(OBJEXT) pcem-nvr.$(OBJEXT) \
+	pcem-mouse.$(OBJEXT) pcem-mouse_msystems.$(OBJEXT) \
+	pcem-mouse_ps2.$(OBJEXT) pcem-mouse_serial.$(OBJEXT) \
+	pcem-neat.$(OBJEXT) pcem-nmi.$(OBJEXT) pcem-nvr.$(OBJEXT) \
 	pcem-olivetti_m24.$(OBJEXT) pcem-opti495.$(OBJEXT) \
 	pcem-paths.$(OBJEXT) pcem-pc.$(OBJEXT) pcem-pci.$(OBJEXT) \
 	pcem-pic.$(OBJEXT) pcem-piix.$(OBJEXT) pcem-pit.$(OBJEXT) \
@@ -298,10 +306,12 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-wave8580_PST.$(OBJEXT) pcem-wave8580_P_T.$(OBJEXT) \
 	pcem-wave8580__ST.$(OBJEXT) pcem-wave.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4)
+	$(am__objects_4) $(am__objects_5)
 pcem_OBJECTS = $(am_pcem_OBJECTS)
 am__DEPENDENCIES_1 =
-@USE_WX_FALSE@pcem_DEPENDENCIES = $(am__DEPENDENCIES_1)
+@USE_WX_FALSE@pcem_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+@USE_WX_FALSE@	$(am__append_9)
+@USE_WX_TRUE@pcem_DEPENDENCIES = $(am__append_9)
 pcem_LINK = $(CXXLD) $(pcem_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SCRIPTS = $(noinst_SCRIPTS)
@@ -513,44 +523,48 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
 	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c mca.c mcr.c \
-	mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_ps2.c \
-	mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c opti495.c \
-	paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c \
-	ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c serial.c sio.c sis496.c \
-	sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c \
-	sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c \
-	sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c \
-	sound_sb_dsp.c sound_sn76489.c sound_speaker.c sound_ssi2001.c \
-	sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c \
-	tandy_rom.c timer.c um8669f.c um8881f.c vid_ati_eeprom.c \
-	vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
-	vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c \
-	vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c \
-	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
-	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
-	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c \
-	vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
-	vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_tandy.c \
-	vid_tandysl.c vid_tgui9440.c vid_tkd8001_ramdac.c vid_tvga.c \
-	vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c \
-	vid_wy700.c x86seg.c x87.c xtide.c sound_dbopl.cc \
-	sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
-	dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
-	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
-	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
-	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
-	resid-fp/wave6581_PST.cc resid-fp/wave6581_P_T.cc \
-	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
-	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
-	resid-fp/wave8580__ST.cc resid-fp/wave.cc $(am__append_1) \
-	$(am__append_2) $(am__append_3) $(am__append_5)
+	mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c \
+	mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
+	opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c \
+	ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c serial.c sio.c \
+	sis496.c sound.c sound_ad1848.c sound_adlib.c \
+	sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
+	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
+	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
+	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
+	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
+	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
+	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
+	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
+	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
+	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
+	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
+	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
+	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
+	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
+	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
+	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
+	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
+	dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c \
+	resid-fp/convolve.cc resid-fp/convolve-sse.cc \
+	resid-fp/envelope.cc resid-fp/extfilt.cc resid-fp/filter.cc \
+	resid-fp/pot.cc resid-fp/sid.cc resid-fp/voice.cc \
+	resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
+	resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc \
+	resid-fp/wave8580_PS_.cc resid-fp/wave8580_PST.cc \
+	resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
+	resid-fp/wave.cc $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_5) $(am__append_8)
 @USE_WX_FALSE@pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO \
-@USE_WX_FALSE@	$(am__append_4)
+@USE_WX_FALSE@	$(am__append_4) $(am__append_6)
 @USE_WX_TRUE@pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell \
-@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_4)
-@USE_WX_TRUE@pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
-@USE_WX_FALSE@pcem_LDADD = $(allegro_LIBS) -lopenal
-@USE_WX_TRUE@pcem_LDADD = @LIBS@
+@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_4) \
+@USE_WX_TRUE@	$(am__append_6)
+@USE_WX_FALSE@pcem_CXXFLAGS = $(am__append_7)
+@USE_WX_TRUE@pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell \
+@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_7)
+@USE_WX_FALSE@pcem_LDADD = $(allegro_LIBS) -lopenal $(am__append_9)
+@USE_WX_TRUE@pcem_LDADD = @LIBS@ $(am__append_9)
 all: all-am
 
 .SUFFIXES:
@@ -722,9 +736,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mfm_xebec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-model.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse_msystems.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse_ps2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-mouse_serial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ne2000.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-neat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nethandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nmi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nukedopl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-nvr.Po@am__quote@
@@ -837,6 +854,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-deviceconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-dialogbox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-glslp-parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-hostconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-resources.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-wx-sdl2-display.Po@am__quote@
@@ -1767,6 +1785,20 @@ pcem-mouse.obj: mouse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mouse.c' object='pcem-mouse.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-mouse.obj `if test -f 'mouse.c'; then $(CYGPATH_W) 'mouse.c'; else $(CYGPATH_W) '$(srcdir)/mouse.c'; fi`
+
+pcem-mouse_msystems.o: mouse_msystems.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-mouse_msystems.o -MD -MP -MF $(DEPDIR)/pcem-mouse_msystems.Tpo -c -o pcem-mouse_msystems.o `test -f 'mouse_msystems.c' || echo '$(srcdir)/'`mouse_msystems.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-mouse_msystems.Tpo $(DEPDIR)/pcem-mouse_msystems.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mouse_msystems.c' object='pcem-mouse_msystems.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-mouse_msystems.o `test -f 'mouse_msystems.c' || echo '$(srcdir)/'`mouse_msystems.c
+
+pcem-mouse_msystems.obj: mouse_msystems.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-mouse_msystems.obj -MD -MP -MF $(DEPDIR)/pcem-mouse_msystems.Tpo -c -o pcem-mouse_msystems.obj `if test -f 'mouse_msystems.c'; then $(CYGPATH_W) 'mouse_msystems.c'; else $(CYGPATH_W) '$(srcdir)/mouse_msystems.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-mouse_msystems.Tpo $(DEPDIR)/pcem-mouse_msystems.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mouse_msystems.c' object='pcem-mouse_msystems.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-mouse_msystems.obj `if test -f 'mouse_msystems.c'; then $(CYGPATH_W) 'mouse_msystems.c'; else $(CYGPATH_W) '$(srcdir)/mouse_msystems.c'; fi`
 
 pcem-mouse_ps2.o: mouse_ps2.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-mouse_ps2.o -MD -MP -MF $(DEPDIR)/pcem-mouse_ps2.Tpo -c -o pcem-mouse_ps2.o `test -f 'mouse_ps2.c' || echo '$(srcdir)/'`mouse_ps2.c
@@ -3518,6 +3550,48 @@ pcem-codegen_x86-64.obj: codegen_x86-64.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-codegen_x86-64.obj `if test -f 'codegen_x86-64.c'; then $(CYGPATH_W) 'codegen_x86-64.c'; else $(CYGPATH_W) '$(srcdir)/codegen_x86-64.c'; fi`
 
+pcem-ne2000.o: ne2000.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-ne2000.o -MD -MP -MF $(DEPDIR)/pcem-ne2000.Tpo -c -o pcem-ne2000.o `test -f 'ne2000.c' || echo '$(srcdir)/'`ne2000.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-ne2000.Tpo $(DEPDIR)/pcem-ne2000.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ne2000.c' object='pcem-ne2000.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-ne2000.o `test -f 'ne2000.c' || echo '$(srcdir)/'`ne2000.c
+
+pcem-ne2000.obj: ne2000.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-ne2000.obj -MD -MP -MF $(DEPDIR)/pcem-ne2000.Tpo -c -o pcem-ne2000.obj `if test -f 'ne2000.c'; then $(CYGPATH_W) 'ne2000.c'; else $(CYGPATH_W) '$(srcdir)/ne2000.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-ne2000.Tpo $(DEPDIR)/pcem-ne2000.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ne2000.c' object='pcem-ne2000.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-ne2000.obj `if test -f 'ne2000.c'; then $(CYGPATH_W) 'ne2000.c'; else $(CYGPATH_W) '$(srcdir)/ne2000.c'; fi`
+
+pcem-nethandler.o: nethandler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-nethandler.o -MD -MP -MF $(DEPDIR)/pcem-nethandler.Tpo -c -o pcem-nethandler.o `test -f 'nethandler.c' || echo '$(srcdir)/'`nethandler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-nethandler.Tpo $(DEPDIR)/pcem-nethandler.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nethandler.c' object='pcem-nethandler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-nethandler.o `test -f 'nethandler.c' || echo '$(srcdir)/'`nethandler.c
+
+pcem-nethandler.obj: nethandler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-nethandler.obj -MD -MP -MF $(DEPDIR)/pcem-nethandler.Tpo -c -o pcem-nethandler.obj `if test -f 'nethandler.c'; then $(CYGPATH_W) 'nethandler.c'; else $(CYGPATH_W) '$(srcdir)/nethandler.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-nethandler.Tpo $(DEPDIR)/pcem-nethandler.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nethandler.c' object='pcem-nethandler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-nethandler.obj `if test -f 'nethandler.c'; then $(CYGPATH_W) 'nethandler.c'; else $(CYGPATH_W) '$(srcdir)/nethandler.c'; fi`
+
+pcem-wx-hostconfig.o: wx-hostconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-hostconfig.o -MD -MP -MF $(DEPDIR)/pcem-wx-hostconfig.Tpo -c -o pcem-wx-hostconfig.o `test -f 'wx-hostconfig.c' || echo '$(srcdir)/'`wx-hostconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-hostconfig.Tpo $(DEPDIR)/pcem-wx-hostconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-hostconfig.c' object='pcem-wx-hostconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-hostconfig.o `test -f 'wx-hostconfig.c' || echo '$(srcdir)/'`wx-hostconfig.c
+
+pcem-wx-hostconfig.obj: wx-hostconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-wx-hostconfig.obj -MD -MP -MF $(DEPDIR)/pcem-wx-hostconfig.Tpo -c -o pcem-wx-hostconfig.obj `if test -f 'wx-hostconfig.c'; then $(CYGPATH_W) 'wx-hostconfig.c'; else $(CYGPATH_W) '$(srcdir)/wx-hostconfig.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-wx-hostconfig.Tpo $(DEPDIR)/pcem-wx-hostconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-hostconfig.c' object='pcem-wx-hostconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-hostconfig.obj `if test -f 'wx-hostconfig.c'; then $(CYGPATH_W) 'wx-hostconfig.c'; else $(CYGPATH_W) '$(srcdir)/wx-hostconfig.c'; fi`
+
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
@@ -4190,6 +4264,9 @@ uninstall-am: uninstall-binPROGRAMS
 
 ../pcem: pcem
 	cp pcem ..
+
+slirp/libslirp.a:
+	$(MAKE) -C slirp
 
 amrefresh:	
 

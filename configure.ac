@@ -33,6 +33,15 @@ else
    AC_MSG_RESULT([no])
 fi
 
+AC_MSG_CHECKING([whether to enable networking])
+AC_ARG_ENABLE(networking,
+	      AC_HELP_STRING([--enable-networking], [enable networking]))
+if test "$enable_networking" = "yes"; then
+   AC_MSG_RESULT([yes])
+else
+   AC_MSG_RESULT([no])
+fi
+
 AC_MSG_CHECKING([for cpu])
 case "${host_cpu}" in
 	i?86)
@@ -58,6 +67,7 @@ AM_CONDITIONAL(OS_WIN, test "$OS" = "win")
 AM_CONDITIONAL(OS_LINUX, test "$OS" = "linux")
 
 AM_CONDITIONAL(USE_WX, test "$enable_wx" = "yes")
+AM_CONDITIONAL(USE_NETWORKING, test "$enable_networking" = "yes")
 
 if test "$enable_wx" != "yes"; then
    # Do not run test for Allegro with Win32/MinGW version, as binary builds have

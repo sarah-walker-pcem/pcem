@@ -1,9 +1,11 @@
+#ifdef _WIN32
 #define BITMAP WINDOWS_BITMAP
 #include <windows.h>
 #include <windowsx.h>
 #undef BITMAP
 
 #include <pcap.h>
+#endif
 
 #include "wx-utils.h"
 #include "wx-sdl2.h"
@@ -13,6 +15,7 @@
 #include "config.h"
 #include "nethandler.h"
 
+#ifdef _WIN32
 static HINSTANCE net_hLib = 0;
 static char *net_lib_name = "wpcap.dll";
 static pcap_if_t *alldevs;
@@ -23,6 +26,7 @@ void    (*_pcap_freealldevs)(pcap_if_t *);
 pcap_t *(*_pcap_open_live)(const char *, int, int, int, char *);
 int     (*_pcap_datalink)(pcap_t *);
 void    (*_pcap_close)(pcap_t *);
+#endif
 
 #define ETH_DEV_NAME_MAX     256                        /* maximum device name size */
 #define ETH_DEV_DESC_MAX     256                        /* maximum device description size */
@@ -31,6 +35,7 @@ void    (*_pcap_close)(pcap_t *);
 #define ETH_MAX_PACKET      1514                        /* maximum ethernet packet size */
 #define PCAP_READ_TIMEOUT -1
 
+#ifdef _WIN32
 static int get_network_name(char *dev_name, char *regval)
 {
         if (dev_name[strlen( "\\Device\\NPF_" )] == '{')
@@ -62,12 +67,14 @@ static int get_network_name(char *dev_name, char *regval)
         }
         return -1;
 }
-
+#endif
 int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
         void *h;
+#ifdef _WIN32
         pcap_if_t *dev;
         char errbuf[PCAP_ERRBUF_SIZE];
+#endif
         
         switch (message)
         {
@@ -78,7 +85,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_DEVICE"));
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                 wx_enablewindow(h, FALSE);
-
+#ifdef _WIN32
                 net_hLib = LoadLibraryA(net_lib_name);
                 
                 if (net_hLib)
@@ -148,6 +155,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                 }
                         }
                 }
+#endif
                 return TRUE;
 
                 case WX_COMMAND:
@@ -157,6 +165,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                         
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_TYPE"));
                         type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+#ifdef _WIN32
                         if (type) /*PCAP*/
                         {
                                 int dev;
@@ -169,13 +178,16 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                         }
                         else /*SLiRP*/
                         {
+#endif
                                 config_set_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP);
                                 config_set_string(CFG_GLOBAL, NULL, "pcap_device", "nothing");
+#ifdef _WIN32
                         }
+#endif
                         saveconfig_global_only();
 
                         wx_enddialog(hdlg, 1);
-
+#ifdef _WIN32
                         if (net_hLib)
                         {
                                 _pcap_freealldevs(alldevs);
@@ -186,11 +198,13 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                 _pcap_close       = NULL;
                                 FreeLibrary(net_hLib);
                         }
+#endif
                         return TRUE;
                 }
                 else if (wParam == wxID_CANCEL)
                 {
                         wx_enddialog(hdlg, 0);
+#ifdef _WIN32
                         if (net_hLib)
                         {
                                 _pcap_freealldevs(alldevs);
@@ -201,6 +215,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                 _pcap_close       = NULL;
                                 FreeLibrary(net_hLib);
                         }
+#endif
                         return TRUE;
                 }
                 else if (ID_IS("IDC_COMBO_NETWORK_TYPE"))

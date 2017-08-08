@@ -34,7 +34,9 @@
 
 #include "slirp/slirp.h"
 #include "slirp/queue.h"
+#ifdef _WIN32
 #include <pcap.h>
+#endif
 
 #include "ibm.h"
 #include "device.h"
@@ -52,6 +54,7 @@ uint8_t maclocal[6] = {0xac, 0xde, 0x48, 0x88, 0xbb, 0xaa};
 
 #define NETBLOCKING 0		//we won't block our pcap
 
+#ifdef _WIN32
 static HINSTANCE net_hLib = 0;                      /* handle to DLL */
 static char *net_lib_name = "wpcap.dll";
 pcap_t *net_pcap;
@@ -74,6 +77,7 @@ PCAP_CLOSE		_pcap_close;
 PCAP_GETNONBLOCK	_pcap_getnonblock;
 PCAP_COMPILE		_pcap_compile;
 PCAP_SETFILTER		_pcap_setfilter;
+#endif
 
 queueADT slirpq;
 int net_slirp_inited = 0;
@@ -824,12 +828,13 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 slirp_input(&ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
                                 pclog("ne2000 slirp sending packet\n");
                         }
+#ifdef _WIN32
                         if(net_is_pcap && net_pcap!=NULL)
                         {
                                 _pcap_sendpacket(net_pcap, &ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
                                 pclog("ne2000 pcap sending packet\n");
                         }
-
+#endif
                         ne2000_tx_event(value, ne2000);
                         // Schedule a timer to trigger a tx-complete interrupt
                         // The number of microseconds is the bit-time / 10.
@@ -1350,8 +1355,9 @@ static void ne2000_poller(void *p)
         ne2000_t *ne2000 = (ne2000_t *)p;
         struct queuepacket *qp;
         const unsigned char *data;
+#ifdef _WIN32
         struct pcap_pkthdr h;
-
+#endif
         if (net_is_slirp)
         {
         	while (QueuePeek(slirpq) > 0)
@@ -1373,6 +1379,7 @@ static void ne2000_poller(void *p)
                         slirp_tic();
                 }
 	}//end slirp
+#ifdef _WIN32
         if (net_is_pcap && net_pcap!=NULL)
 	{
         	data = _pcap_next(net_pcap,&h);
@@ -1389,6 +1396,7 @@ static void ne2000_poller(void *p)
                         ne2000_rx_frame(ne2000,data,h.caplen); 
                 }
 	}
+#endif
 }
 
 
@@ -1407,6 +1415,7 @@ void *ne2000_init()
         //0 pcap
         //1 slirp
         //
+#ifdef _WIN32
         net_is_slirp = (config_get_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP) == NET_SLIRP) ? 1 : 0;
         pclog("ne2000 pcap device %s\n",config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"));
     
@@ -1415,6 +1424,10 @@ void *ne2000_init()
         	net_is_pcap = 0;
         else if (net_is_slirp == 0)
         	net_is_pcap = 1;
+#else
+	net_is_slirp = 1;
+	net_is_pcap = 0;
+#endif
 
         io_sethandler(addr, 0x0010, ne2000_read, NULL, NULL, ne2000_write, NULL, NULL, ne2000);
         io_sethandler(addr+0x10, 0x0010, ne2000_asic_read_b, ne2000_asic_read_w, NULL, ne2000_asic_write_b, ne2000_asic_write_w, NULL, ne2000);
@@ -1468,6 +1481,7 @@ void *ne2000_init()
                         net_is_slirp=0;
                 }
         }
+#ifdef _WIN32
         if (net_is_pcap)
         {	//pcap
                 char errbuf[32768];
@@ -1583,7 +1597,7 @@ void *ne2000_init()
                         pclog("ne2000 net_is_pcap is %d and net_pcap is %x\n",net_is_pcap,net_pcap);
                 }
         } //end pcap setup
-
+#endif
         pclog("ne2000 is_slirp %d is_pcap %d\n",net_is_slirp,net_is_pcap);
 
         return ne2000;
@@ -1600,12 +1614,14 @@ void ne2000_close(void *p)
         	net_slirp_inited=0;
         	pclog("ne2000 exiting slirp\n");
 	}
+#ifdef _WIN32
         if(net_is_pcap && net_pcap!=NULL)
 	{
         	_pcap_close(net_pcap);
         	FreeLibrary(net_hLib);
         	pclog("ne2000 closing pcap\n");
 	}
+#endif
         pclog("ne2000 close\n");
 }
 
