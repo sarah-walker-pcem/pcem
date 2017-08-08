@@ -697,7 +697,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, romstomodel[romset]);
 
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGURE_NETCARD"));
                         if (network_card_has_config(network_card_current))
                                 wx_enablewindow(h, TRUE);
                         else
@@ -971,11 +971,18 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
                                 temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
                                 
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGURE_NETCARD"));
                                 if (network_card_has_config(temp_network_card))
                                         wx_enablewindow(h, TRUE);
                                 else
                                         wx_enablewindow(h, FALSE);
+                        }
+                        else if (wParam == WX_ID("IDC_CONFIGURE_NETCARD"))
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
+                                temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
+                                
+                                deviceconfig_open(hdlg, (void *)network_card_getdevice(temp_network_card));
                         }
 #endif
                         //
