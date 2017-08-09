@@ -67,7 +67,7 @@ static VIDEO_CARD video_cards[] =
         {"MDSI Genius",                            "genius",         &genius_device,              GFX_GENIUS},
         {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,              GFX_N9_9FX},
         {"OAK OTI-067",                            "oti067",         &oti067_device,              GFX_OTI067},
-        {"Olivetti GO481 (Paradise PVGA1A 256Kb)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481},
+        {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481},
         {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,        GFX_BAHAMAS64},
         {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
         {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,   GFX_PHOENIX_TRIO64},
