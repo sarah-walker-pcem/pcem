@@ -4,6 +4,7 @@
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
 #include "ibm.h"
+#include "mouse.h"
 #include "wx-display.h"
 #include "plat-keyboard.h"
 
@@ -730,7 +731,7 @@ int render()
                                                 window_dofullscreen = 1;
                                 }
                         }
-                        else if (event.button.button == SDL_BUTTON_MIDDLE && !is_fullscreen())
+                        else if (event.button.button == SDL_BUTTON_MIDDLE && !is_fullscreen() && !(mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON))
                                 window_doinputrelease = 1;
                         break;
                 case SDL_MOUSEWHEEL:
