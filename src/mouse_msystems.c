@@ -18,8 +18,6 @@ static void mouse_msystems_poll(int x, int y, int z, int b, void *p)
         SERIAL *serial = mouse->serial;        
         uint8_t mousedat[4];
 
-        if (!(serial->ier & 1))
-                return;
         if (!x && !y && b == mouse->oldb)
                 return;
 
