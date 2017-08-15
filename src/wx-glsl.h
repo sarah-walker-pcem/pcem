@@ -52,6 +52,7 @@ struct shader_fbo {
         int id;
         struct shader_texture texture;
         int srgb;
+        int mipmap_input;
 };
 
 struct shader_prev {
@@ -138,6 +139,8 @@ struct glsl_shader {
         int has_prev;
 
         float shader_refresh_rate;
+
+        int input_filter_linear;
 };
 
 typedef struct glsl_t {

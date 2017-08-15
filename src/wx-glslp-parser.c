@@ -184,6 +184,8 @@ glslp_t* glslp_parse(const char* f)
 
         wx_config_get_int(cfg, "shaders", &glslp->num_shaders, 0);
 
+        wx_config_get_bool(cfg, "filter_linear0", &glslp->input_filter_linear, -1);
+
         for (i = 0; i < glslp->num_shaders; ++i)
         {
                 struct shader* shader = &glslp->shaders[i];
@@ -212,7 +214,7 @@ glslp_t* glslp_parse(const char* f)
                 snprintf(s, sizeof(s)-1, "alias%d", i);
                 wx_config_get_string(cfg, s, shader->alias, sizeof(shader->alias), 0);
 
-                snprintf(s, sizeof(s)-1, "filter_linear%d", i);
+                snprintf(s, sizeof(s)-1, "filter_linear%d", i+1);
                 wx_config_get_bool(cfg, s, &shader->filter_linear, 0);
 
                 snprintf(s, sizeof(s)-1, "wrap_mode%d", i);

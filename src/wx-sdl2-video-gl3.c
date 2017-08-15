@@ -54,6 +54,8 @@ extern int video_vsync;
 extern int video_focus_dim;
 extern int video_refresh_rate;
 
+static int glsl_version[2];
+
 const char* vertex_shader_default_tex_src =
         "#version 130\n"
         "\n"
@@ -123,25 +125,27 @@ static int next_pow2(unsigned int n)
 static int compile_shader(GLenum shader_type, const char* prepend, const char* program, int* dst)
 {
         const char* source[3];
-        source[0] = "";
-        source[1] = prepend ? prepend : "";
-        source[2] = 0;
         char version[50];
-        if (strstr(program, "#version"))
-        {
-                char* line = strchr(program, '\n');
-                int len = (line-program)+1;
-                if (len >= sizeof(version)-1) len = sizeof(version)-1;
-                strncpy(version, program, len);
-                version[len] = 0;
-                source[0] = version;
-                source[2] = line;
-        }
+        int ver = 0;
+        char *version_loc = strstr(program, "#version");
+        if (version_loc)
+                ver = (int)strtol(version_loc + 8, (char**)&program, 10);
         else
         {
-//                source[0] = "#version 130\n";
-                source[2] = program;
+                ver = glsl_version[0] * 100 + glsl_version[1] * 10;
+                if (ver == 300)
+                        ver = 130;
+                else if (ver == 310)
+                        ver = 140;
+                else if (ver == 320)
+                        ver = 150;
         }
+        sprintf(version, "#version %d\n", ver);
+        source[0] = version;
+        source[1] = prepend ? prepend : "";
+        source[2] = program;
+
+        pclog("GLSL version %d\n", ver);
 
         GLuint shader = glw->glCreateShader(shader_type);
         glw->glShaderSource(shader, 3, source, NULL);
@@ -492,6 +496,9 @@ static void create_scene_shader()
         struct shader scene_shader_conf;
         memset(&scene_shader_conf, 0, sizeof(struct shader));
         create_default_shader_tex(&active_shader->scene);
+        scene_shader_conf.filter_linear = video_scale_mode;
+        if (active_shader->num_shaders > 0 && active_shader->shaders[0].input_filter_linear >= 0)
+                scene_shader_conf.filter_linear = active_shader->shaders[0].input_filter_linear;
         setup_fbo(&scene_shader_conf, &active_shader->scene.fbo);
 
         memset(&scene_shader_conf, 0, sizeof(struct shader));
@@ -605,6 +612,8 @@ static glsl_t* load_glslp(glsl_t* glsl, int num_shader, const char* f)
 
                 if (!failed)
                 {
+                        gshader->input_filter_linear = p->input_filter_linear;
+
                         gshader->num_parameters = p->num_parameters;
                         for (j = 0; j < gshader->num_parameters; ++j)
                                 memcpy(&gshader->parameters[j], &p->parameters[j], sizeof(struct shader_parameter));
@@ -643,6 +652,7 @@ static glsl_t* load_glslp(glsl_t* glsl, int num_shader, const char* f)
                                         break;
                                 }
                                 pass->frame_count_mod = shader->frame_count_mod;
+                                pass->fbo.mipmap_input = shader->mipmap_input;
 
                                 glw->glGenVertexArrays(1, (GLuint *)&pass->vertex_array);
                                 find_uniforms(gshader, i);
@@ -663,7 +673,14 @@ static glsl_t* load_glslp(glsl_t* glsl, int num_shader, const char* f)
                                                 }
                                         }
                                         else
+                                        {
+                                                /* check if next shaders' first pass wants the input mipmapped (will this ever happen?) */
+                                                pass->fbo.texture.mipmap = glsl->shaders[num_shader+1].num_passes > 0 && glsl->shaders[num_shader+1].passes[0].fbo.mipmap_input;
+                                                /* check if next shader wants the output of this pass to be filtered */
+                                                if (glsl->shaders[num_shader+1].num_passes > 0 && glsl->shaders[num_shader+1].input_filter_linear >= 0)
+                                                        shader->filter_linear = glsl->shaders[num_shader+1].input_filter_linear;
                                                 setup_fbo(shader, &pass->fbo);
+                                        }
                                 }
                                 else
                                 {
@@ -706,7 +723,7 @@ static glsl_t* load_shaders(int num, char shaders[MAX_USER_SHADERS][512])
 
         glsl->num_shaders = num;
         int failed = 0;
-        for (i = 0; i < num; ++i)
+        for (i = num-1; i >= 0; --i)
         {
                 const char* f = shaders[i];
                 if (f && strlen(f))
@@ -752,9 +769,6 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
         strcpy(current_render_driver_name, requested_render_driver.name);
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
         context = SDL_GL_CreateContext(window);
 
@@ -767,9 +781,10 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
         SDL_GL_SetSwapInterval(video_vsync ? 1 : 0);
 
         pclog("OpenGL information: [%s] %s (%s)\n", glGetString(GL_VENDOR), glGetString(GL_RENDERER), glGetString(GL_VERSION));
-        int version = -1;
-        glGetIntegerv(GL_MAJOR_VERSION, &version);
-        if (version < 3)
+        glsl_version[0] = glsl_version[1] = -1;
+        glGetIntegerv(GL_MAJOR_VERSION, &glsl_version[0]);
+        glGetIntegerv(GL_MINOR_VERSION, &glsl_version[1]);
+        if (glsl_version[0] < 3)
         {
                 pclog("OpenGL 3.0 is not available.");
                 return SDL_FALSE;
@@ -1627,7 +1642,6 @@ int gl3_renderer_available(struct sdl_render_driver* driver)
                 {
                         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
                         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-                        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
                         SDL_GLContext context = SDL_GL_CreateContext(window);
                         if (context)

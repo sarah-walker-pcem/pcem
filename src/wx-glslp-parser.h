@@ -45,6 +45,8 @@ typedef struct glslp_t {
 
         int num_parameters;
         struct parameter parameters[MAX_PARAMETERS];
+
+        int input_filter_linear;
 } glslp_t;
 
 void get_glslp_name(const char* f, char* s, int size);
