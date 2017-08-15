@@ -7629,10 +7629,7 @@ void *voodoo_init()
                         tmuConfig = 1 | (3 << 6);
                 break;
                 case VOODOO_2:
-                if (voodoo_set->nr_cards == 2)
-                        tmuConfig = 1 | (3 << 6);
-                else
-                        tmuConfig = 1;
+                tmuConfig = 1 | (3 << 6);
                 break;
         }
         
