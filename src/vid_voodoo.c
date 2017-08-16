@@ -7390,19 +7390,19 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         {
                 sprintf(temps2, "%f%% CPU (%f%% real)\n",
                         ((double)voodoo->render_time[1] * 100.0) / timer_freq, ((double)voodoo->render_time[1] * 100.0) / status_diff);
-                strncat(temps, temps2, 512);
+                strncat(temps, temps2, sizeof(temps)-1);
         }
         if (voodoo_set->nr_cards == 2)
         {
                 sprintf(temps2, "%f%% CPU (%f%% real)\n",
                         ((double)voodoo_slave->render_time[0] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[0] * 100.0) / status_diff);
-                strncat(temps, temps2, 512);
+                strncat(temps, temps2, sizeof(temps)-1);
                         
                 if (voodoo_slave->render_threads == 2)
                 {
                         sprintf(temps2, "%f%% CPU (%f%% real)\n",
                                 ((double)voodoo_slave->render_time[1] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[1] * 100.0) / status_diff);
-                        strncat(temps, temps2, 512);
+                        strncat(temps, temps2, sizeof(temps)-1);
                 }
         }
         strncat(s, temps, max_len);
