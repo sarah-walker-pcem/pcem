@@ -6216,7 +6216,10 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 if (voodoo->initEnable & 0x01)
                 {
                         voodoo->fbiInit0 = val;
-                        svga_set_override(voodoo->svga, val & 1);
+                        if (voodoo->set->nr_cards == 2)
+                                svga_set_override(voodoo->svga, (voodoo->set->voodoos[0]->fbiInit0 | voodoo->set->voodoos[1]->fbiInit0) & 1);
+                        else
+                                svga_set_override(voodoo->svga, val & 1);
                         if (val & FBIINIT0_GRAPHICS_RESET)
                         {
                                 /*Reset display/draw buffer selection. This may not actually
@@ -7203,11 +7206,11 @@ void voodoo_callback(void *p)
                         voodoo_t *draw_voodoo;
                         int draw_line;
                         
-                        if (voodoo == voodoo->set->voodoos[1])
-                                goto skip_draw;
-                                
                         if (SLI_ENABLED)
                         {
+                                if (voodoo == voodoo->set->voodoos[1])
+                                        goto skip_draw;
+                                
                                 if (((voodoo->initEnable & INITENABLE_SLI_MASTER_SLAVE) ? 1 : 0) == (voodoo->line & 1))
                                         draw_voodoo = voodoo;
                                 else
@@ -7216,6 +7219,8 @@ void voodoo_callback(void *p)
                         }
                         else
                         {
+                                if (!(voodoo->fbiInit0 & 1))
+                                        goto skip_draw;
                                 draw_voodoo = voodoo;
                                 draw_line = voodoo->line;
                         }
