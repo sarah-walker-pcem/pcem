@@ -44,19 +44,29 @@ void wd76c10_write(uint16_t port, uint16_t val, void *priv)
                 case 0x2072:
                 wd76c10_2072 = val;
                 
-                switch ((val >> 5) & 7)
+                serial1_remove();
+                if (!(val & 0x10))
                 {
-                        case 1: serial1_set(0x3f8, 4); break;
-                        case 2: serial1_set(0x2f8, 4); break;
-                        case 3: serial1_set(0x3e8, 4); break;
-                        case 4: serial1_set(0x2e8, 4); break;
+                        switch ((val >> 5) & 7)
+                        {
+                                case 1: serial1_set(0x3f8, 4); break;
+                                case 2: serial1_set(0x2f8, 4); break;
+                                case 3: serial1_set(0x3e8, 4); break;
+                                case 4: serial1_set(0x2e8, 4); break;
+                                default: serial1_remove(); break;
+                        }
                 }
-                switch ((val >> 1) & 7)
+                serial2_remove();
+                if (!(val & 0x01))
                 {
-                        case 1: serial2_set(0x3f8, 3); break;
-                        case 2: serial2_set(0x2f8, 3); break;
-                        case 3: serial2_set(0x3e8, 3); break;
-                        case 4: serial2_set(0x2e8, 3); break;
+                        switch ((val >> 1) & 7)
+                        {
+                                case 1: serial2_set(0x3f8, 3); break;
+                                case 2: serial2_set(0x2f8, 3); break;
+                                case 3: serial2_set(0x3e8, 3); break;
+                                case 4: serial2_set(0x2e8, 3); break;
+                                default: serial2_remove(); break;
+                        }
                 }
                 break;
 
