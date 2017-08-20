@@ -297,7 +297,7 @@ void video_init()
                 return;
                         
                 case ROM_ACER386:
-                device_add(&oti067_device);
+                device_add(&oti067_acer386_device);
                 return;
                 
                 case ROM_IBMPS1_2011:

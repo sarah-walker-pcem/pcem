@@ -8,6 +8,7 @@
 #include "video.h"
 #include "vid_oti067.h"
 #include "vid_svga.h"
+#include "acer386sx.h"
 
 typedef struct oti067_t
 {
@@ -171,6 +172,21 @@ void *oti067_common_init(char *bios_fn, int vram_size)
         return oti067;
 }
 
+void oti067_enable_disable(void *p, int enable)
+{
+        oti067_t *oti067 = (oti067_t *)p;
+
+        mem_mapping_disable(&oti067->bios_rom.mapping);
+        io_removehandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
+        io_removehandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
+        if (enable)
+        {
+                mem_mapping_enable(&oti067->bios_rom.mapping);
+                io_sethandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
+                io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
+        }
+}
+
 void *oti067_init()
 {
         int vram_size = device_get_config_int("memory");
@@ -181,9 +197,8 @@ void *oti067_acer386_init()
 {
         oti067_t *oti067 = oti067_common_init("acer386/oti067.bin", 512);
         
-        if (oti067)
-                oti067->bios_rom.rom[0x5d] = 0x74;
-                
+        acer386sx_set_oti067(oti067);
+                        
         return oti067;
 }
 
