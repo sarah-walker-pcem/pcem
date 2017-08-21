@@ -16,7 +16,7 @@ extern int video_focus_dim;
 extern int take_screenshot;
 extern void screenshot_taken(unsigned char* rgb, int width, int height);
 
-int sdl_video_renderer_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITMAP* screen)
+int sdl_video_renderer_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_Rect screen)
 {
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, video_scale_mode ? "1" : "0");
         const char* driver = requested_render_driver.sdl_id;
@@ -49,7 +49,7 @@ int sdl_video_renderer_init(SDL_Window* window, sdl_render_driver requested_rend
 
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
                         SDL_TEXTUREACCESS_STREAMING,
-                        screen->w, screen->h);
+                        screen.w, screen.h);
 
         return SDL_TRUE;
 
@@ -74,7 +74,7 @@ void sdl_video_renderer_update(SDL_Window* window, SDL_Rect updated_rect, BITMAP
         SDL_UpdateTexture(texture, &updated_rect, &((uint32_t*) screen->dat)[updated_rect.y * screen->w + updated_rect.x], screen->w * 4);
 }
 
-void sdl_video_renderer_present(SDL_Window* window, SDL_Rect texture_rect, SDL_Rect window_rect, BITMAP* screen)
+void sdl_video_renderer_present(SDL_Window* window, SDL_Rect texture_rect, SDL_Rect window_rect, SDL_Rect screen)
 {
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, &texture_rect, &window_rect);

@@ -9,10 +9,10 @@
 struct sdl_render_driver;
 
 typedef struct sdl_renderer_t {
-        int (*init)(SDL_Window* window, struct sdl_render_driver driver, BITMAP* screen);
+        int (*init)(SDL_Window* window, struct sdl_render_driver driver, SDL_Rect screen);
         void (*close)();
         void (*update)(SDL_Window* window, SDL_Rect updated_rect, BITMAP* screen);
-        void (*present)(SDL_Window* window, SDL_Rect texture_rect, SDL_Rect window_rect, BITMAP* screen);
+        void (*present)(SDL_Window* window, SDL_Rect texture_rect, SDL_Rect window_rect, SDL_Rect screen);
         int always_update;
 } sdl_renderer_t;
 

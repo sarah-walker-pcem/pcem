@@ -762,7 +762,7 @@ static void read_shader_config()
         }
 }
 
-int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITMAP* screen)
+int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_Rect screen)
 {
         int i, j;
 
@@ -801,9 +801,9 @@ int gl3_init(SDL_Window* window, sdl_render_driver requested_render_driver, BITM
 
         glEnable(GL_TEXTURE_2D);
 
-        scene_texture.data = screen->dat;
-        scene_texture.width = screen->w;
-        scene_texture.height = screen->h;
+        scene_texture.data = NULL;
+        scene_texture.width = screen.w;
+        scene_texture.height = screen.h;
         scene_texture.internal_format = GL_RGBA8;
         scene_texture.format = GL_RGBA;
         scene_texture.type = GL_UNSIGNED_INT_8_8_8_8_REV;
@@ -1209,7 +1209,7 @@ static void render_pass(struct render_data* data)
         glw->glUseProgram(0);
 }
 
-void gl3_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, BITMAP* screen)
+void gl3_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, SDL_Rect screen)
 {
         if (!context)
                 return;
@@ -1265,10 +1265,10 @@ void gl3_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
                 pass->state.tex_coords[7] = maxy;
 
                 // create input tex coords
-                minx = video_rect.x/(float)screen->w;
-                miny = video_rect.y/(float)screen->h;
-                maxx = (video_rect.x+video_rect.w)/(float)screen->w;
-                maxy = (video_rect.y+video_rect.h)/(float)screen->h;
+                minx = video_rect.x/(float)screen.w;
+                miny = video_rect.y/(float)screen.h;
+                maxx = (video_rect.x+video_rect.w)/(float)screen.w;
+                maxy = (video_rect.y+video_rect.h)/(float)screen.h;
 
                 GLfloat tex_coords[] = {
                         minx, miny,

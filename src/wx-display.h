@@ -21,6 +21,7 @@ extern int video_scale_mode;
 extern int video_vsync;
 extern int video_focus_dim;
 extern int video_fullscreen_mode;
+extern int video_alternative_update_lock;
 
 extern int win_doresize;
 

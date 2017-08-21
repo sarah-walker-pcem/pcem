@@ -289,6 +289,7 @@ void sdl_loadconfig()
         video_scale_mode = config_get_int(CFG_MACHINE, "SDL2", "scale_mode", video_scale_mode);
         video_vsync = config_get_int(CFG_MACHINE, "SDL2", "vsync", video_vsync);
         video_focus_dim = config_get_int(CFG_MACHINE, "SDL2", "focus_dim", video_focus_dim);
+        video_alternative_update_lock = config_get_int(CFG_MACHINE, "SDL2", "alternative_update_lock", video_alternative_update_lock);
         requested_render_driver = sdl_get_render_driver_by_name(config_get_string(CFG_MACHINE, "SDL2", "render_driver", ""), RENDERER_SOFTWARE);
 
         gl3_input_scale = config_get_float(CFG_MACHINE, "GL3", "input_scale", gl3_input_scale);
@@ -325,6 +326,7 @@ void sdl_saveconfig()
         config_set_int(CFG_MACHINE, "SDL2", "scale_mode", video_scale_mode);
         config_set_int(CFG_MACHINE, "SDL2", "vsync", video_vsync);
         config_set_int(CFG_MACHINE, "SDL2", "focus_dim", video_focus_dim);
+        config_set_int(CFG_MACHINE, "SDL2", "alternative_update_lock", video_alternative_update_lock);
         config_set_string(CFG_MACHINE, "SDL2", "render_driver", (char*)requested_render_driver.sdl_id);
 
         config_set_float(CFG_MACHINE, "GL3", "input_scale", gl3_input_scale);
@@ -413,6 +415,7 @@ int wx_setupmenu(void* data)
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_VSYNC"), video_vsync);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_LOST_FOCUS_DIM"), video_focus_dim);
+        wx_checkmenuitem(menu, WX_ID("IDM_VID_ALTERNATIVE_UPDATE_LOCK"), video_alternative_update_lock);
 
         int format = 0;
         if (!strcmp(screenshot_format, IMAGE_TIFF))
@@ -971,6 +974,13 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
         {
                 video_focus_dim = !video_focus_dim;
                 wx_checkmenuitem(menu, wParam, video_focus_dim);
+                saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_VID_ALTERNATIVE_UPDATE_LOCK"))
+        {
+                video_alternative_update_lock = !video_alternative_update_lock;
+                wx_checkmenuitem(menu, wParam, video_alternative_update_lock);
+                renderer_doreset = 1;
                 saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_VID_GL3_INPUT_STRETCH[start]", "IDM_VID_GL3_INPUT_STRETCH[end]"))
