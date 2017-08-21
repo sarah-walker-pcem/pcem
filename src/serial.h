@@ -18,6 +18,7 @@ typedef struct
         uint8_t fcr;
         
         int irq;
+        uint16_t addr;
 
         void (*rcr_callback)(struct SERIAL *serial, void *p);
         void *rcr_callback_p;
