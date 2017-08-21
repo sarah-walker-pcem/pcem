@@ -564,6 +564,11 @@ int wx_dir_exists(char* path)
         return p.DirExists();
 }
 
+int wx_copy_file(char* from, char* to, int overwrite)
+{
+        return wxCopyFile(from, to, overwrite);
+}
+
 int wx_image_save(const char* path, const char* name, const char* format, unsigned char* rgba, int width, int height, int alpha)
 {
         int x, y;

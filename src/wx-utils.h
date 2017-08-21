@@ -77,6 +77,7 @@ extern "C" {
         int wx_setup(char* path);
         int wx_file_exists(char* path);
         int wx_dir_exists(char* path);
+        int wx_copy_file(char* from, char* to, int overwrite);
 
         void wx_date_format(char* s, const char* format);
 

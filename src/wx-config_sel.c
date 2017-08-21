@@ -248,6 +248,56 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
 
                                 return TRUE;
                         }
+                        else if (wParam == WX_ID("IDC_COPY"))
+                        {
+                                char name[64];
+                                char old_name[64];
+                                void* h;
+                                int c;
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_LIST"));
+                                c = wx_sendmessage(h, WX_LB_GETCURSEL, 0, 0);
+                                if (c >= 0)
+                                {
+                                        wx_sendmessage(h, WX_LB_GETTEXT, c, (LONG_PARAM)old_name);
+                                        strcpy(name, old_name);
+
+                                        while (!done)
+                                        {
+                                                if (wx_textentrydialog(hdlg, "Enter name:", "New name", name, 1, 64, (LONG_PARAM)name))
+                                                {
+                                                        char old_path[512];
+                                                        char new_path[512];
+
+                                                        strcpy(old_path, configs_path);
+                                                        put_backslash(old_path);
+                                                        strcat(old_path, old_name);
+                                                        strcat(old_path, ".cfg");
+
+                                                        strcpy(new_path, configs_path);
+                                                        put_backslash(new_path);
+                                                        strcat(new_path, name);
+                                                        strcat(new_path, ".cfg");
+
+                                                        pclog("Copy %s to %s\n", old_path, new_path);
+
+                                                        if (!wx_file_exists(new_path))
+                                                        {
+                                                                wx_copy_file(old_path, new_path, 1);
+
+                                                                config_list_update(hdlg);
+                                                                done = 1;
+                                                        }
+                                                        else
+                                                                wx_simple_messagebox("Already exists", "A configuration with that name already exists.");
+                                                }
+                                                else
+                                                        done = 1;
+                                        }
+                                }
+
+                                return TRUE;
+                        }
                         else if (wParam == WX_ID("IDC_DELETE"))
                         {
                                 char name[64];
