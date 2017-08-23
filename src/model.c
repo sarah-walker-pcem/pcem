@@ -7,6 +7,7 @@
 #include "acer386sx.h"
 #include "ali1429.h"
 #include "amstrad.h"
+#include "cbm_io.h"
 #include "compaq.h"
 #include "dells200.h"
 #include "device.h"
@@ -67,6 +68,7 @@ void         olim24_init();
 void             at_init();
 void         ibm_at_init();
 void         at_ide_init();
+void         at_cbm_init();
 void       dells200_init();
 void     deskpro386_init();
 void      ps1_m2011_init();
@@ -117,7 +119,7 @@ MODEL models[] =
 
         {"[286] AMI 286 clone",           ROM_AMI286,           "ami286",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             512,16384,128,      at_neat_init, NULL},
         {"[286] Award 286 clone",         ROM_AWARD286,         "award286",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             512,16384,128,      at_scat_init, NULL},
-        {"[286] Commodore PC 30 III",     ROM_CMDPC30,          "cmdpc30",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             640,16384,128,       at_ide_init, NULL},
+        {"[286] Commodore PC 30 III",     ROM_CMDPC30,          "cmdpc30",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             640,16384,128,       at_cbm_init, NULL},
         {"[286] DELL System 200",         ROM_DELL200,          "dells200",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           640,16384,128,     dells200_init, NULL},
         {"[286] IBM AT",                  ROM_IBMAT,            "ibmat",          { {"",      cpus_ibmat},       {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           256,15872,128,       ibm_at_init, NULL},
         {"[286] IBM PS/1 model 2011",     ROM_IBMPS1_2011,      "ibmps1es",       { {"",      cpus_ps1_m2011},   {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PS2,                 512,16384,512,    ps1_m2011_init, NULL},
@@ -330,6 +332,12 @@ void at_ide_init()
         at_init();
         ide_init();
         mem_remap_top_384k();
+}
+
+void at_cbm_init()
+{
+        at_ide_init();
+        cbm_io_init();
 }
 
 void deskpro386_init()
