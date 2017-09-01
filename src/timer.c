@@ -84,7 +84,7 @@ void timer_update_outstanding()
 		if (*timers[c].enable && *timers[c].count < timer_latch)
 			timer_latch = *timers[c].count;
 	}
-	timer_count = timer_latch = (timer_latch + ((1 << TIMER_SHIFT) - 1)) >> TIMER_SHIFT;
+	timer_count = timer_latch = (timer_latch + ((1 << TIMER_SHIFT) - 1));
 }
 
 void timer_reset()

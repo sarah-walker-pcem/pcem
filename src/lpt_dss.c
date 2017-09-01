@@ -29,6 +29,8 @@ static void dss_write_data(uint8_t val, void *p)
 {
         dss_t *dss = (dss_t *)p;
 
+        timer_clock();
+
         if ((dss->write_idx - dss->read_idx) < 16)
         {
                 dss->fifo[dss->write_idx & 15] = val;
