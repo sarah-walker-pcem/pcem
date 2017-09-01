@@ -279,3 +279,69 @@ static inline float adgold_pseudo_stereo_iir(float NewSample) {
     
     return y[0];
 }
+
+//fc=3.2kHz - probably incorrect
+static inline float dss_iir(float NewSample) {
+    float ACoef[NCoef+1] = {
+        0.03356837051492005100,
+        0.06713674102984010200,
+        0.03356837051492005100
+    };
+
+    float BCoef[NCoef+1] = {
+        1.00000000000000000000,
+        -1.41898265221812010000,
+        0.55326988968868285000
+    };
+    
+    static float y[NCoef+1]; //output samples
+    static float x[NCoef+1]; //input samples
+    int n;
+
+    //shift the old samples
+    for(n=NCoef; n>0; n--) {
+       x[n] = x[n-1];
+       y[n] = y[n-1];
+    }
+
+    //Calculate the new output
+    x[0] = NewSample;
+    y[0] = ACoef[0] * x[0];
+    for(n=1; n<=NCoef; n++)
+        y[0] += ACoef[n] * x[n] - BCoef[n] * y[n];
+
+    return y[0];
+}
+
+#undef NCoef
+#define NCoef 1
+/*Basic high pass to remove DC bias. fc=10Hz*/
+static float dac_iir(int i, float NewSample) {
+    float ACoef[NCoef+1] = {
+        0.99901119820285345000,
+        -0.99901119820285345000
+    };
+
+    float BCoef[NCoef+1] = {
+        1.00000000000000000000,
+        -0.99869185905052738000
+    };
+
+    static float y[2][NCoef+1]; //output samples
+    static float x[2][NCoef+1]; //input samples
+    int n;
+
+    //shift the old samples
+    for(n=NCoef; n>0; n--) {
+       x[i][n] = x[i][n-1];
+       y[i][n] = y[i][n-1];
+    }
+
+    //Calculate the new output
+    x[i][0] = NewSample;
+    y[i][0] = ACoef[0] * x[i][0];
+    for(n=1; n<=NCoef; n++)
+        y[i][0] += ACoef[n] * x[i][n] - BCoef[n] * y[i][n];
+    
+    return y[i][0];
+}

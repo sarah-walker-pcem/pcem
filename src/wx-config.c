@@ -8,6 +8,7 @@
 #include "fdd.h"
 #include "gameport.h"
 #include "hdd.h"
+#include "lpt.h"
 #include "model.h"
 #include "mouse.h"
 #include "mem.h"
@@ -261,6 +262,7 @@ int config_dlgsave(void* hdlg)
         int temp_dynarec;
         int temp_fda_type, temp_fdb_type;
         int temp_mouse_type;
+        int temp_lpt1_device;
 #ifdef USE_NETWORKING
         int temp_network_card;
 #endif
@@ -329,6 +331,9 @@ int config_dlgsave(void* hdlg)
         if (hdd_names[c])
                 hdd_changed = strncmp(hdd_names[c], hdd_controller_name, sizeof(hdd_controller_name)-1);
 
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOLPT1"));
+        temp_lpt1_device = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
 #ifdef USE_NETWORKING
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
         temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
@@ -339,7 +344,8 @@ int config_dlgsave(void* hdlg)
             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
             temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
-            temp_mouse_type != mouse_type || hdd_changed || hd_changed || cdrom_channel != new_cdrom_channel
+            temp_mouse_type != mouse_type || hdd_changed || hd_changed || cdrom_channel != new_cdrom_channel ||
+            strcmp(lpt1_device_name, lpt_device_get_internal_name(temp_lpt1_device))
 #ifdef USE_NETWORKING
                             || temp_network_card != network_card_current
 #endif
@@ -361,6 +367,7 @@ int config_dlgsave(void* hdlg)
                         voodoo_enabled = temp_voodoo;
                         cpu_use_dynarec = temp_dynarec;
                         mouse_type = temp_mouse_type;
+                        strcpy(lpt1_device_name, lpt_device_get_internal_name(temp_lpt1_device));
 #ifdef USE_NETWORKING
                         network_card_current = temp_network_card;
 #endif
@@ -686,6 +693,23 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 c++;
                         }
                         wx_sendmessage(h, WX_CB_SETCURSEL, settings_mouse_to_list[mouse_type], 0);
+
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOLPT1"));
+                        c = d = 0;
+                        while (1)
+                        {
+                                char *s = lpt_device_get_name(c);
+
+                                if (!s)
+                                        break;
+
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
+                                if (!strcmp(lpt1_device_name, lpt_device_get_internal_name(c)))
+                                        d = c;
+
+                                c++;
+                        }
+                        wx_sendmessage(h, WX_CB_SETCURSEL, d, 0);
 
                         recalc_hdd_list(hdlg, romstomodel[romset], 0);
 

@@ -899,6 +899,50 @@
 										<checked>0</checked>
 									</object>
 								</object>
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<size>0,0</size>
+								</object>
+
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<object class="wxStaticText">
+										<size>80,-1</size>
+										<label>LPT Device:</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxComboBox" name="IDC_COMBOLPT1">
+												<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+												<size>350,-1</size>
+												<value></value>
+												<content />
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<size>0,0</size>
+								</object>
+
+
 							</object>
 						</object>
 					</object>
