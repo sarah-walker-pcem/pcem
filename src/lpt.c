@@ -124,8 +124,8 @@ uint8_t lpt2_read(uint16_t port, void *priv)
 
 void lpt_init()
 {
-        io_sethandler(0x0278, 0x0003, lpt1_read, NULL, NULL, lpt1_write, NULL, NULL,  NULL);
-        io_sethandler(0x0378, 0x0003, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL,  NULL);
+        io_sethandler(0x0378, 0x0003, lpt1_read, NULL, NULL, lpt1_write, NULL, NULL,  NULL);
+        io_sethandler(0x0278, 0x0003, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL,  NULL);
 }
 
 void lpt1_init(uint16_t port)
