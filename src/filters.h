@@ -316,7 +316,7 @@ static inline float dss_iir(float NewSample) {
 #undef NCoef
 #define NCoef 1
 /*Basic high pass to remove DC bias. fc=10Hz*/
-static float dac_iir(int i, float NewSample) {
+static inline float dac_iir(int i, float NewSample) {
     float ACoef[NCoef+1] = {
         0.99901119820285345000,
         -0.99901119820285345000
