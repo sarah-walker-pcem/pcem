@@ -357,8 +357,6 @@ typedef struct emu8k_t
 
         uint16_t wc;
         
-        uint16_t c02_read;
-
         uint16_t id;
 
         /* The empty block is used to act as an unallocated memory returning zero. */
@@ -369,8 +367,6 @@ typedef struct emu8k_t
         uint32_t ram_end_addr;
 
         int cur_reg, cur_voice;
-        
-        int timer_count;
         
         int16_t out_l, out_r;
         
@@ -385,7 +381,7 @@ typedef struct emu8k_t
 
 
 
-void emu8k_init(emu8k_t *emu8k, int onboard_ram);
+void emu8k_init(emu8k_t *emu8k, uint16_t emu_addr, int onboard_ram);
 void emu8k_close(emu8k_t *emu8k);
 
 void emu8k_update(emu8k_t *emu8k);

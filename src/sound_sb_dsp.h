@@ -5,11 +5,13 @@ typedef struct sb_dsp_t
         int sb_8_length,  sb_8_format,  sb_8_autoinit,  sb_8_pause,  sb_8_enable,  sb_8_autolen,  sb_8_output;
         int sb_8_dmanum;
         int sb_16_length, sb_16_format, sb_16_autoinit, sb_16_pause, sb_16_enable, sb_16_autolen, sb_16_output;
+        int sb_16_dmanum;
         int sb_pausetime;
 
         uint8_t sb_read_data[256];
         int sb_read_wp, sb_read_rp;
         int sb_speaker;
+        int muted;
 
         int sb_data_stat;
 
@@ -56,15 +58,20 @@ typedef struct sb_dsp_t
         int asp_data_len;
         
         int wb_time, wb_full;
-        
+
+        int record_pos_read;
+        int record_pos_write;
+        int16_t record_buffer[0xFFFF];
         int16_t buffer[MAXSOUNDBUFLEN * 2];
         int pos;
 } sb_dsp_t;
 
 void sb_dsp_init(sb_dsp_t *dsp, int type);
+void sb_dsp_close(sb_dsp_t *dsp);
 
 void sb_dsp_setirq(sb_dsp_t *dsp, int irq);
 void sb_dsp_setdma8(sb_dsp_t *dsp, int dma);
+void sb_dsp_setdma16(sb_dsp_t *dsp, int dma);
 void sb_dsp_setaddr(sb_dsp_t *dsp, uint16_t addr);
 
 void sb_dsp_speed_changed(sb_dsp_t *dsp);

@@ -1396,8 +1396,8 @@ void emu8k_outw(uint16_t addr, uint16_t val, void *p)
                                 if ((val&0xFF) == 0 && the_voice->cvcf_curr_volume == 0 && the_voice->vtft_vol_target == 0 
                                     && the_voice->dcysusv == 0x80 && the_voice->ip == 0)
                                 {
-                                    // Patch to avoid some clicking noises with Impulse tracker or other software that sets different values to 0
-                                    // to set noteoff, but here, 0 means no attenuation = full volume.
+                                    // Patch to avoid some clicking noises with Impulse tracker or other software that sets 
+                                    // different values to 0 to set noteoff, but here, 0 means no attenuation = full volume.
                                     return;
                                 }
                                 the_voice->ifatn = val;
@@ -2100,7 +2100,7 @@ I've recopilated these sentences to get an idea of how to loop
         emu8k->pos = new_pos;
 }
 /* onboard_ram in kilobytes */
-void emu8k_init(emu8k_t *emu8k, int onboard_ram)
+void emu8k_init(emu8k_t *emu8k, uint16_t emu_addr, int onboard_ram)
 {
         uint32_t const BLOCK_SIZE_WORDS = 0x10000;
         FILE *f;
@@ -2160,9 +2160,9 @@ void emu8k_init(emu8k_t *emu8k, int onboard_ram)
                 
         }
 
-        io_sethandler(0x0620, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
-        io_sethandler(0x0a20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
-        io_sethandler(0x0e20, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
+        io_sethandler(emu_addr,       0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
+        io_sethandler(emu_addr+0x400, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
+        io_sethandler(emu_addr+0x800, 0x0004, emu8k_inb, emu8k_inw, NULL, emu8k_outb, emu8k_outw, NULL, emu8k);
 
         /*Create frequency table. (Convert initial pitch register value to a linear speed change)
          * The input is encoded such as 0xe000 is center note (no pitch shift)
