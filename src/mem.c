@@ -669,6 +669,13 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+				
+                case ROM_ATARIPC3:
+                f=romfopen("ataripc3/AWARD_ATARI_PC_BIOS_3.08.BIN","rb");
+                if (!f) break;
+                fread(rom+0x8000,32768,1,f);
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

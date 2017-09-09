@@ -116,6 +116,10 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                         else            
                                 temp = 0x6D;
                 }
+                else if ((romset == ROM_ATARIPC3) && (keyboard_xt.pb & 0x80))
+                {
+                        temp = 0x7f;
+                }
                 else
                 {
                         temp = keyboard_xt.pa;
@@ -143,6 +147,13 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                                 temp = ((mem_size-64) / 32) & 0xf;
                         else
                                 temp = ((mem_size-64) / 32) >> 4;
+                }
+                else if (romset == ROM_ATARIPC3)
+                {
+                        if (keyboard_xt.pb & 0x04)
+                                temp = 0xf;
+                        else
+                                temp = 4;
                 }
                 else
                 {

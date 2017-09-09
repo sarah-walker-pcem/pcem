@@ -96,6 +96,7 @@ int AMSTRAD, AT, PCI, TANDY;
 MODEL models[] =
 {
         {"[8088] AMI XT clone",           ROM_AMIXT,            "amixt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
+        {"[8088] Atari PC3",              ROM_ATARIPC3,         "ataripc3",       { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] DTK XT clone",           ROM_DTKXT,            "dtk",            { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] Generic XT clone",       ROM_GENXT,            "genxt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] IBM PC",                 ROM_IBMPC,            "ibmpc",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  32,           xt_init, NULL},
