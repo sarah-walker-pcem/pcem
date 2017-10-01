@@ -7,6 +7,7 @@
 #include "ide.h"
 #include "mfm_at.h"
 #include "mfm_xebec.h"
+#include "scsi_53c400.h"
 #include "xtide.h"
 
 char hdd_controller_name[16];
@@ -33,6 +34,9 @@ static struct
         {"[IDE] Standard IDE",                    "ide",        &ide_device,           0, 1},
         {"[IDE] XTIDE",                           "xtide",      &xtide_device,         0, 1},
         {"[IDE] XTIDE (AT)",                      "xtide_at",   &xtide_at_device,      0, 1},
+        {"[SCSI] Longshine LCS-6821N",            "lcs6821n",   &scsi_lcs6821n_device, 0, 0},
+        {"[SCSI] Rancho RT1000B",                 "rt1000b",    &scsi_rt1000b_device,  0, 0},
+        {"[SCSI] Trantor T130B",                  "t130b",      &scsi_t130b_device,    0, 0},
         {"", "", NULL, 0, 0}
 };
 
