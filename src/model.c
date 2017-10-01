@@ -67,7 +67,6 @@ void         europc_init();
 void         olim24_init();
 void             at_init();
 void         ibm_at_init();
-void         at_ide_init();
 void         at_cbm_init();
 void       dells200_init();
 void     deskpro386_init();
@@ -328,16 +327,9 @@ void ibm_at_init()
         mem_remap_top_384k();
 }
 
-void at_ide_init()
-{
-        at_init();
-        ide_init();
-        mem_remap_top_384k();
-}
-
 void at_cbm_init()
 {
-        at_ide_init();
+        at_init();
         cbm_io_init();
 }
 
@@ -360,7 +352,6 @@ void ps1_common_init()
         mem_add_bios();
         pit_set_out_func(&pit, 1, pit_refresh_timer_at);
         dma16_init();
-        ide_init();
         keyboard_at_init();
         nvr_init();
         pic2_init();
@@ -391,7 +382,6 @@ void ps2_m30_286_init()
         mem_add_bios();
         pit_set_out_func(&pit, 1, pit_refresh_timer_at);
         dma16_init();
-        ide_init();
         keyboard_at_init();
 //        mouse_ps2_init();
         nvr_init();
@@ -407,7 +397,6 @@ static void ps2_common_init()
         mem_add_bios();
         dma16_init();
         ps2_dma_init();
-        ide_init();
         keyboard_at_init();
         keyboard_at_init_ps2();
 //        mouse_ps2_init();
@@ -438,56 +427,48 @@ void ps2_model_80_init()
 void at_neat_init()
 {
         at_init();
-        ide_init();
         neat_init();
 }
 
 void at_scat_init()
 {
         at_init();
-        ide_init();
         scat_init();
 }
 
 void at_acer386sx_init()
 {
         at_init();
-        ide_init();
         acer386sx_init();
 }
 
 void at_wd76c10_init()
 {
         at_init();
-        ide_init();
         wd76c10_init();
 }
 
 void at_headland_init()
 {
         at_init();
-        ide_init();
         headland_init();
 }
 
 void at_opti495_init()
 {
         at_init();
-        ide_init();
         opti495_init();
 }
 
 void at_ali1429_init()
 {
         at_init();
-        ide_init();
         ali1429_init();
 }
 
 void at_sis496_init()
 {
         at_init();
-        ide_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xb);
         pci_slot(0xd);
@@ -498,7 +479,6 @@ void at_sis496_init()
 void at_batman_init()
 {
         at_init();
-        ide_init();
         pci_init(PCI_CONFIG_TYPE_2);
         pci_slot(0xc);
         pci_slot(0xe);
@@ -512,7 +492,6 @@ void at_batman_init()
 void at_endeavor_init()
 {
         at_init();
-        ide_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xd);
         pci_slot(0xe);
@@ -528,7 +507,6 @@ void at_endeavor_init()
 void at_i430vx_init()
 {
         at_init();
-        ide_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x11);
         pci_slot(0x12);

@@ -71,7 +71,7 @@ static void *xtide_init()
         memset(xtide, 0, sizeof(xtide_t));
 
         rom_init(&xtide->bios_rom, "ide_xt.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
-        ide_init();
+        device_add(&ide_device);
         ide_pri_disable();
         ide_sec_disable();
         io_sethandler(0x0300, 0x0010, xtide_read, NULL, NULL, xtide_write, NULL, NULL, xtide);
@@ -85,7 +85,7 @@ static void *xtide_at_init()
         memset(xtide, 0, sizeof(xtide_t));
 
         rom_init(&xtide->bios_rom, "ide_at.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
-        ide_init();
+        device_add(&ide_device);
         
         return xtide;
 }

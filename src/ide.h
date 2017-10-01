@@ -1,6 +1,8 @@
 #ifndef __IDE__
 #define __IDE__
 
+#include "device.h"
+
 struct IDE;
 
 extern void writeide(int ide_board, uint16_t addr, uint8_t val);
@@ -9,7 +11,6 @@ extern uint8_t readide(int ide_board, uint16_t addr);
 extern uint16_t readidew(int ide_board);
 extern void callbackide(int ide_board);
 extern void resetide(void);
-extern void ide_init();
 extern void ide_pri_enable();
 extern void ide_sec_enable();
 extern void ide_pri_disable();
@@ -57,5 +58,7 @@ uint32_t atapi_get_cd_channel(int channel);
 uint32_t atapi_get_cd_volume(int channel);
 
 #define CDROM_IMAGE 200
+
+extern device_t ide_device;
 
 #endif //__IDE__

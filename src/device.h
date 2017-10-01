@@ -1,3 +1,6 @@
+#ifndef _DEVICE_H_
+#define _DEVICE_H_
+
 #define CONFIG_STRING 0
 #define CONFIG_INT 1
 #define CONFIG_BINARY 2
@@ -54,3 +57,5 @@ enum
 
 int model_get_config_int(char *s);
 char *model_get_config_string(char *s);
+
+#endif
