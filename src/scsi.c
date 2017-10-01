@@ -1,7 +1,6 @@
 #include "ibm.h"
 #include "ide.h"
 #include "scsi.h"
-#include "scsi_cd.h"
 #include "scsi_hd.h"
 
 #define STATE_IDLE 0
