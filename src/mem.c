@@ -1531,13 +1531,55 @@ uint8_t mem_readb_phys(uint32_t addr)
                 
         return 0xff;
 }
+uint16_t mem_readw_phys(uint32_t addr)
+{
+        mem_logical_addr = 0xffffffff;
+        
+        if (_mem_read_w[addr >> 14] && !(addr & 1)) 
+                return _mem_read_w[addr >> 14](addr, _mem_priv_r[addr >> 14]);
+                
+        return mem_readb_phys(addr) | (mem_readb_phys(addr + 1) << 8);
+}
+uint32_t mem_readl_phys(uint32_t addr)
+{
+        mem_logical_addr = 0xffffffff;
+        
+        if (_mem_read_l[addr >> 14] && !(addr & 3)) 
+                return _mem_read_l[addr >> 14](addr, _mem_priv_r[addr >> 14]);
+                
+        return mem_readw_phys(addr) | (mem_readw_phys(addr + 2) << 16);
+}
 
 void mem_writeb_phys(uint32_t addr, uint8_t val)
 {
         mem_logical_addr = 0xffffffff;
-        
+
         if (_mem_write_b[addr >> 14]) 
                 _mem_write_b[addr >> 14](addr, val, _mem_priv_w[addr >> 14]);
+}
+void mem_writew_phys(uint32_t addr, uint16_t val)
+{
+        mem_logical_addr = 0xffffffff;
+
+        if (_mem_write_w[addr >> 14] && !(addr & 1)) 
+                _mem_write_w[addr >> 14](addr, val, _mem_priv_w[addr >> 14]);
+        else
+        {
+                mem_writeb_phys(addr, val);
+                mem_writeb_phys(addr+1, val >> 8);
+        }
+}
+void mem_writel_phys(uint32_t addr, uint32_t val)
+{
+        mem_logical_addr = 0xffffffff;
+
+        if (_mem_write_l[addr >> 14] && !(addr & 3)) 
+                _mem_write_l[addr >> 14](addr, val, _mem_priv_w[addr >> 14]);
+        else
+        {
+                mem_writew_phys(addr, val);
+                mem_writew_phys(addr+2, val >> 16);
+        }
 }
 
 uint8_t mem_read_ram(uint32_t addr, void *priv)

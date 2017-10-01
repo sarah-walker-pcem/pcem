@@ -79,7 +79,11 @@ extern int mem_a20_key;
 void mem_a20_recalc();
 
 uint8_t mem_readb_phys(uint32_t addr);
+uint16_t mem_readw_phys(uint32_t addr);
+uint32_t mem_readl_phys(uint32_t addr);
 void mem_writeb_phys(uint32_t addr, uint8_t val);
+void mem_writew_phys(uint32_t addr, uint16_t val);
+void mem_writel_phys(uint32_t addr, uint32_t val);
 
 uint8_t  mem_read_ram(uint32_t addr, void *priv);
 uint16_t mem_read_ramw(uint32_t addr, void *priv);
