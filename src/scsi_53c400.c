@@ -107,7 +107,7 @@ static void ncr53c400_dma_changed(ncr5380_t *ncr, int mode, int enable)
 
 void ncr5380_reset(ncr5380_t *ncr)
 {
-	memset(ncr, 0, sizeof(ncr));
+	memset(ncr, 0, sizeof(ncr5380_t));
 }
 
 static uint32_t get_bus_host(ncr5380_t *ncr)
