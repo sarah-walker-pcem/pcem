@@ -1,6 +1,7 @@
 #include "ibm.h"
 #include "ide.h"
 #include "scsi.h"
+#include "scsi_cd.h"
 #include "scsi_hd.h"
 
 #define STATE_IDLE 0
@@ -333,6 +334,13 @@ void scsi_bus_init(scsi_bus_t *bus)
 		if (cdrom_channel != c)
 		{
                         bus->devices[c] = &scsi_hd;
+                        bus->device_data[c] = bus->devices[c]->init(bus, c);
+                        if (!bus->device_data[c])
+                                bus->devices[c] = NULL;
+		}
+		else
+		{
+                        bus->devices[c] = &scsi_cd;
                         bus->device_data[c] = bus->devices[c]->init(bus, c);
                         if (!bus->device_data[c])
                                 bus->devices[c] = NULL;

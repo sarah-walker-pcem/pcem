@@ -16,6 +16,8 @@ typedef struct scsi_device_t
         int (*write_complete)(void *p);
 } scsi_device_t;
 
+#define CDB_MAX_LEN 20
+
 typedef struct scsi_bus_t
 {
         int state;
@@ -25,7 +27,7 @@ typedef struct scsi_bus_t
         int dev_id;
 
         int command_pos;
-        uint8_t command[20];
+        uint8_t command[CDB_MAX_LEN];
         
         scsi_device_t *devices[8];
         void *device_data[8];
