@@ -93,6 +93,8 @@ typedef struct aha154x_t
         uint8_t isr_pending;
         uint8_t status;
         
+        int mbo_irq_enable;
+        
         uint8_t cmd_data;
         uint8_t data_in;
         
@@ -118,6 +120,7 @@ typedef struct aha154x_t
         int bios_mbc;
         uint32_t bios_mba;
         int bios_mbo_req;
+        int bios_mbo_inited;
         
         cmd_state_t cmd_state;
         ccb_state_t ccb_state;
@@ -187,6 +190,8 @@ typedef struct aha154x_t
                 int scatter_gather;
                 int bytes_transferred;
         } cdb;
+        
+        int reg3_idx;
 } aha154x_t;
 
 #define STATUS_INVDCMD 0x01
@@ -206,20 +211,22 @@ typedef struct aha154x_t
 #define ISR_HACC    0x04
 #define ISR_ANYINTR 0x80
 
-#define COMMAND_NOP                    0x00
-#define COMMAND_MAILBOX_INITIALIZATION 0x01
-#define COMMAND_START_SCSI_COMMAND     0x02
-#define COMMAND_START_BIOS_COMMAND     0x03
-#define COMMAND_ADAPTER_INQUIRY        0x04
-#define COMMAND_SET_SELECTION_TIMEOUT  0x06
-#define COMMAND_SET_BUS_ON_TIME        0x07
-#define COMMAND_SET_BUS_OFF_TIME       0x08
-#define COMMAND_SET_AT_BUS_SPEED       0x09
-#define COMMAND_RETURN_CONFIG_DATA     0x0b
-#define COMMAND_RETURN_SETUP_DATA      0x0d
-#define COMMAND_WRITE_CHANNEL_2_BUF    0x1a
-#define COMMAND_READ_CHANNEL_2_BUF     0x1b
-#define COMMAND_ECHO                   0x1f
+#define COMMAND_NOP                       0x00
+#define COMMAND_MAILBOX_INITIALIZATION    0x01
+#define COMMAND_START_SCSI_COMMAND        0x02
+#define COMMAND_START_BIOS_COMMAND        0x03
+#define COMMAND_ADAPTER_INQUIRY           0x04
+#define COMMAND_MAILBOX_OUT_IRQ_ENA       0x05
+#define COMMAND_SET_SELECTION_TIMEOUT     0x06
+#define COMMAND_SET_BUS_ON_TIME           0x07
+#define COMMAND_SET_BUS_OFF_TIME          0x08
+#define COMMAND_SET_AT_BUS_SPEED          0x09
+#define COMMAND_INQUIRE_INSTALLED_DEVICES 0x0a
+#define COMMAND_RETURN_CONFIG_DATA        0x0b
+#define COMMAND_RETURN_SETUP_DATA         0x0d
+#define COMMAND_WRITE_CHANNEL_2_BUF       0x1a
+#define COMMAND_READ_CHANNEL_2_BUF        0x1b
+#define COMMAND_ECHO                      0x1f
 
 #define COMMAND_ADAPTEC_PROGRAM_EEPROM      0x22
 #define COMMAND_ADAPTEC_RETURN_EEPROM_DATA  0x23
@@ -235,6 +242,8 @@ typedef struct aha154x_t
 #define COMMAND_BUSLOGIC_81                  0x81
 #define COMMAND_BUSLOGIC_84                  0x84
 #define COMMAND_BUSLOGIC_85                  0x85
+#define COMMAND_BUSLOGIC_ADAPTER_MODEL_NR    0x8b
+#define COMMAND_BUSLOGIC_INQUIRY_SYNC_PERIOD 0x8c
 #define COMMAND_BUSLOGIC_EXTENDED_SETUP_INFO 0x8d
 #define COMMAND_BUSLOGIC_STRICT_RR           0x8f
 #define COMMAND_BUSLOGIC_SET_CCB_FORMAT      0x96
@@ -267,9 +276,7 @@ static void process_cmd(aha154x_t *scsi);
 
 static void set_irq(aha154x_t *scsi, uint8_t val)
 {
-//        pclog("set_irq %02x %02x\n", scsi->isr, val);
-        if (!scsi->isr)
-                picint(1 << scsi->irq);
+        picint(1 << scsi->irq);
         scsi->isr |= val;
 }
 
@@ -301,21 +308,20 @@ static void aha154x_out(uint16_t port, uint8_t val, void *p)
                         scsi->scsi_state = SCSI_STATE_IDLE;
                         scsi->mb_format = MB_FORMAT_4;
                         scsi->current_mbi = 0;
+                        scsi->mbo_irq_enable = 0;
                 }
                 if (val & CTRL_SRST)
                 {
                         scsi->isr = 0;
                         clear_irq(scsi);
-                        if (scsi->type == SCSI_BT545S)
-                                scsi->status = STATUS_INIT;
-                        else
-                                scsi->status = 0;
+                        scsi->status = STATUS_INIT;
 //                        pclog("software reset\n");
                         scsi->cmd_state = CMD_STATE_IDLE;
                         scsi->ccb_state = CCB_STATE_IDLE;
                         scsi->scsi_state = SCSI_STATE_IDLE;
                         scsi->mb_format = MB_FORMAT_4;
                         scsi->current_mbi = 0;
+                        scsi->mbo_irq_enable = 0;
                 }
                 if (val & CTRL_IRST)
                 {
@@ -341,7 +347,7 @@ static void aha154x_out(uint16_t port, uint8_t val, void *p)
 //                        fatal("Write command reg while full\n");
                 scsi->status |= STATUS_CDF;
                 scsi->cmd_data = val;
-                pclog("Write command %02x %04x(%08x):%08x\n", val, CS,cs,cpu_state.pc);
+//                pclog("Write command %02x %04x(%08x):%08x\n", val, CS,cs,cpu_state.pc);
                 process_cmd(scsi);
                 break;
         }        
@@ -379,7 +385,16 @@ static uint8_t aha154x_in(uint16_t port, void *p)
                 if (scsi->type == SCSI_BT545S)
                         temp = 0x29; /*BT-545S BIOS expects this to return not zero or 0xff for six consecutive reads*/
                 else
-                        temp = 0xff;
+                {
+                        scsi->reg3_idx++;
+                        switch (scsi->reg3_idx & 3)
+                        {
+                                case 0: temp = 'A'; break;
+                                case 1: temp = 'D'; break;
+                                case 2: temp = 'A'; break;
+                                case 3: temp = 'P'; break;
+                        }
+                }
                 break;
         }
         if (CS != 0xc800)
@@ -564,6 +579,7 @@ static void process_cmd(aha154x_t *scsi)
                                 case COMMAND_NOP:
                                 case COMMAND_START_SCSI_COMMAND:
                                 case COMMAND_ADAPTER_INQUIRY:
+                                case COMMAND_INQUIRE_INSTALLED_DEVICES:
                                 case COMMAND_RETURN_CONFIG_DATA:
                                 scsi->command_len = 0;
                                 break;
@@ -587,6 +603,7 @@ static void process_cmd(aha154x_t *scsi)
                                 break;
                                 
                                 case COMMAND_ECHO:
+                                case COMMAND_MAILBOX_OUT_IRQ_ENA:
                                 case COMMAND_SET_BUS_ON_TIME:
                                 case COMMAND_SET_BUS_OFF_TIME:
                                 case COMMAND_SET_AT_BUS_SPEED:
@@ -617,6 +634,8 @@ static void process_cmd(aha154x_t *scsi)
                                 case COMMAND_BUSLOGIC_SET_CCB_FORMAT:
                                 case COMMAND_BUSLOGIC_STRICT_RR:
                                 case COMMAND_BUSLOGIC_EXTENDED_SETUP_INFO:
+                                case COMMAND_BUSLOGIC_ADAPTER_MODEL_NR:
+                                case COMMAND_BUSLOGIC_INQUIRY_SYNC_PERIOD:
                                 if (scsi->type == SCSI_BT545S)
                                         scsi->command_len = 1;
                                 else
@@ -1053,6 +1072,12 @@ static void process_cmd(aha154x_t *scsi)
                         scsi->result_len = 4;
                         break;
                         
+                        case COMMAND_MAILBOX_OUT_IRQ_ENA:
+                        scsi->mbo_irq_enable = scsi->params[0];
+                        set_irq(scsi, ISR_HACC);
+                        scsi->cmd_state = CMD_STATE_IDLE;
+                        break;
+                                
                         case COMMAND_SET_SELECTION_TIMEOUT:
                         scsi->e_d = scsi->params[0];
                         scsi->to = (scsi->params[1] << 8) | scsi->params[2];
@@ -1076,6 +1101,14 @@ static void process_cmd(aha154x_t *scsi)
                         scsi->atbs = scsi->params[0];
                         set_irq(scsi, ISR_HACC);
                         scsi->cmd_state = CMD_STATE_IDLE;
+                        break;
+                        
+                        case COMMAND_INQUIRE_INSTALLED_DEVICES:
+                        for (c = 0; c < 8; c++)
+                                scsi->result[c] = scsi->bus.devices[c] ? 1 : 0;
+                        scsi->cmd_state = CMD_STATE_SEND_RESULT;
+                        scsi->result_pos = 0;
+                        scsi->result_len = 8;
                         break;
 
                         case COMMAND_RETURN_CONFIG_DATA:
@@ -1215,8 +1248,8 @@ static void process_cmd(aha154x_t *scsi)
                         case COMMAND_ADAPTEC_BIOS_MAILBOX_INIT:
                         scsi->bios_mbc = scsi->params[0];
                         scsi->bios_mba = scsi->params[3] | (scsi->params[2] << 8) | (scsi->params[1] << 16);
+                        scsi->bios_mbo_inited = 1;
                         pclog("BIOS mailbox init: MBC=%02x MBC=%06x\n", scsi->bios_mbc, scsi->bios_mba);
-                        scsi->status &= ~STATUS_INIT;
                         set_irq(scsi, ISR_HACC);
                         scsi->cmd_state = CMD_STATE_IDLE;
                         break;
@@ -1280,7 +1313,31 @@ static void process_cmd(aha154x_t *scsi)
                         scsi->result_pos = 0;
                         scsi->result_len = 1;
                         break;
-                        
+
+                        case COMMAND_BUSLOGIC_ADAPTER_MODEL_NR:
+                        scsi->result[0] = '5';
+                        scsi->result[1] = '4';
+                        scsi->result[2] = '2';
+                        scsi->result[3] = 'B';
+                        scsi->result[4] = 'H';
+                        scsi->cmd_state = CMD_STATE_SEND_RESULT;
+                        scsi->result_pos = 0;
+                        scsi->result_len = MIN(scsi->params[0], 5);
+                        for (; scsi->result_len < scsi->params[0]; scsi->result_len++)
+                                scsi->result[scsi->result_len] = 0;
+                        break;
+
+                        case COMMAND_BUSLOGIC_INQUIRY_SYNC_PERIOD:
+                        for (c = 0; c < 8; c++)
+                                scsi->result[c] = 0;
+                        scsi->cmd_state = CMD_STATE_SEND_RESULT;
+                        scsi->result_pos = 0;
+                        scsi->result_len = MIN(scsi->params[0], 8);
+                        for (; scsi->result_len < scsi->params[0]; scsi->result_len++)
+                                scsi->result[scsi->result_len] = 0;
+                        break;
+                                
+                                
                         case COMMAND_BUSLOGIC_EXTENDED_SETUP_INFO:
                         pclog("Extended setup info %i\n", scsi->params[0]);
                         scsi->result[0] = 0x41;
@@ -1359,9 +1416,7 @@ static void process_ccb(aha154x_t *scsi)
         switch (scsi->ccb_state)
         {                
                 case CCB_STATE_IDLE:
-                if (scsi->status & STATUS_INIT)
-                        break;
-                if (scsi->mbo_req)
+                if (!(scsi->status & STATUS_INIT) && scsi->mbo_req)
                 {
 //                        pclog("mbo_req %i\n", scsi->mbc);
                         for (c = 0; c < scsi->mbc; c++)
@@ -1395,7 +1450,7 @@ static void process_ccb(aha154x_t *scsi)
 
                                         scsi->mbo_req--;
                                         
-                                        set_irq(scsi, ISR_HACC);
+                                        //set_irq(scsi, ISR_HACC);
                                         break;
                                 }                                
                                 else if (command == COMMAND_ABORT_CCB)
@@ -1423,12 +1478,12 @@ static void process_ccb(aha154x_t *scsi)
                                         scsi->current_mbi++;
                                         if (scsi->current_mbi >= scsi->mbc)
                                                 scsi->current_mbi = 0;
-                                        set_irq(scsi, ISR_MBOA | ISR_MBIF | ISR_HACC);
+                                        set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF | ISR_HACC);
                                         break;
                                 }
                         }
                 }
-                if (scsi->bios_mbo_req)
+                if (scsi->bios_mbo_inited && scsi->bios_mbo_req)
                 {
                         for (c = 0; c < scsi->bios_mbc; c++)
                         {
@@ -1529,9 +1584,9 @@ static void process_ccb(aha154x_t *scsi)
                                         scsi->current_mbi++;
                                         if (scsi->current_mbi >= scsi->mbc)
                                                 scsi->current_mbi = 0;
-                                        set_irq(scsi, ISR_MBOA | ISR_MBIF);
+                                        set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
                                 }
-                                else
+                                else if (scsi->mbo_irq_enable)
                                         set_irq(scsi, ISR_MBOA);
                         }
 //                        set_irq(scsi, ISR_HACC);
@@ -1610,9 +1665,9 @@ static void process_ccb(aha154x_t *scsi)
                                         scsi->current_mbi++;
                                         if (scsi->current_mbi >= scsi->mbc)
                                                 scsi->current_mbi = 0;
-                                        set_irq(scsi, ISR_MBOA | ISR_MBIF);
+                                        set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
                                 }
-                                else
+                                else if (scsi->mbo_irq_enable)
                                         set_irq(scsi, ISR_MBOA);
                         }
                         scsi->ccb_state = CCB_STATE_IDLE;
@@ -1705,12 +1760,10 @@ static void process_ccb(aha154x_t *scsi)
                                 scsi->current_mbi++;
                                 if (scsi->current_mbi >= scsi->mbc)
                                         scsi->current_mbi = 0;
-                                set_irq(scsi, ISR_MBOA | ISR_MBIF);
+                                set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
                         }
-                        else
+                        else if (scsi->mbo_irq_enable)
                                 set_irq(scsi, ISR_MBOA);
-                                
-                        set_irq(scsi, ISR_MBOA | ISR_MBIF);
                 }
 //                pclog("CCB_STATE_WAIT_REQUEST_SENSE over %i\n", scsi->ccb.from_mailbox);
                 scsi->ccb_state = CCB_STATE_IDLE;
@@ -1783,7 +1836,7 @@ static void process_scsi(aha154x_t *scsi)
                         }
                         
                         bus_out = BUS_SETDATA(scsi->cdb.data[scsi->cdb.idx]);
-//                        pclog("  Command send %02x\n", scsi->cdb.data[scsi->cdb.idx]);
+//                        pclog("  Command send %02x %i\n", scsi->cdb.data[scsi->cdb.idx], scsi->cdb.len);
 //                        if (!scsi->cdb.idx && scsi->cdb.data[scsi->cdb.idx] == 0x25 && scsi->current_mbo == 1)
 //                                output = 3;
                         scsi->cdb.idx++;
