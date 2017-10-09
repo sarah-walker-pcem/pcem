@@ -1,5 +1,6 @@
 #include "wx-utils.h"
 #include "wx-sdl2.h"
+#include "wx-joystickconfig.h"
 
 #include "ibm.h"
 #include "ide.h"
@@ -269,6 +270,7 @@ int config_dlgsave(void* hdlg)
         int temp_fda_type, temp_fdb_type;
         int temp_mouse_type;
         int temp_lpt1_device;
+        int temp_joystick_type;
 #ifdef USE_NETWORKING
         int temp_network_card;
 #endif
@@ -327,8 +329,9 @@ int config_dlgsave(void* hdlg)
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRB"));
         temp_fdb_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
 
-        //              h = wx_getdlgitem(hdlg, ID("IDC_COMBOJOY"));
-        //              temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+        temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+        
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOMOUSE"));
         temp_mouse_type = settings_list_to_mouse[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
 
@@ -468,8 +471,8 @@ int config_dlgsave(void* hdlg)
 
         speedchanged();
 
-//                                joystick_type = temp_joystick_type;
-//                                gameport_update_joystick_type();
+        joystick_type = temp_joystick_type;
+        gameport_update_joystick_type();
 
 
         return TRUE;
@@ -640,24 +643,24 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) "KB");
 
-                        //    h = wx_getdlgitem(hdlg, ID("IDC_COMBOJOY"));
-                        //    c = 0;
-                        //    while (joystick_get_name(c))
-                        //    {
-                        //            wx_sendmessage(h, CB_ADDSTRING, 0, joystick_get_name(c));
-                        //            c++;
-                        //    }
-                        //    wx_enablewindow(h, TRUE);
-                        //    wx_sendmessage(h, CB_SETCURSEL, joystick_type, 0);
-                        //
-                        //    h = wx_getdlgitem(hdlg, ID("IDC_JOY1"));
-                        //    wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 1) ? TRUE : FALSE);
-                        //    h = wx_getdlgitem(hdlg, ID("IDC_JOY2"));
-                        //    wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 2) ? TRUE : FALSE);
-                        //    h = wx_getdlgitem(hdlg, ID("IDC_JOY3"));
-                        //    wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 3) ? TRUE : FALSE);
-                        //    h = wx_getdlgitem(hdlg, ID("IDC_JOY4"));
-                        //    wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 4) ? TRUE : FALSE);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                        c = 0;
+                        while (joystick_get_name(c))
+                        {
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)joystick_get_name(c));
+                                c++;
+                        }
+                        wx_enablewindow(h, TRUE);
+                        wx_sendmessage(h, WX_CB_SETCURSEL, joystick_type, 0);
+
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY1"));
+                        wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 1) ? TRUE : FALSE);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY2"));
+                        wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 2) ? TRUE : FALSE);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY3"));
+                        wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 3) ? TRUE : FALSE);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY4"));
+                        wx_enablewindow(h, (joystick_get_max_joysticks(joystick_type) >= 4) ? TRUE : FALSE);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOWS"));
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "System default");
@@ -1028,51 +1031,54 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 deviceconfig_open(hdlg, (void *)network_card_getdevice(temp_network_card));
                         }
 #endif
-                        //
-                        //      case IDC_COMBOJOY:
-                        //      if (HIWORD(wParam) == CBN_SELCHANGE) {
-                        //              h = wx_getdlgitem(hdlg, IDC_COMBOJOY);
-                        //              temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
-                        //
-                        //              h = wx_getdlgitem(hdlg, IDC_JOY1);
-                        //              wx_enablewindow(h,
-                        //                              (joystick_get_max_joysticks(temp_joystick_type) >= 1) ?
-                        //                                              TRUE : FALSE);
-                        //              h = wx_getdlgitem(hdlg, IDC_JOY2);
-                        //              wx_enablewindow(h,
-                        //                              (joystick_get_max_joysticks(temp_joystick_type) >= 2) ?
-                        //                                              TRUE : FALSE);
-                        //              h = wx_getdlgitem(hdlg, IDC_JOY3);
-                        //              wx_enablewindow(h,
-                        //                              (joystick_get_max_joysticks(temp_joystick_type) >= 3) ?
-                        //                                              TRUE : FALSE);
-                        //              h = wx_getdlgitem(hdlg, IDC_JOY4);
-                        //              wx_enablewindow(h,
-                        //                              (joystick_get_max_joysticks(temp_joystick_type) >= 4) ?
-                        //                                              TRUE : FALSE);
-                        //      }
-                        //      break;
-                        //
-                        //      case IDC_JOY1:
-                        //      h = wx_getdlgitem(hdlg, IDC_COMBOJOY);
-                        //      temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
-                        //      joystickconfig_open(hdlg, 0, temp_joystick_type);
-                        //      break;
-                        //      case IDC_JOY2:
-                        //      h = wx_getdlgitem(hdlg, IDC_COMBOJOY);
-                        //      temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
-                        //      joystickconfig_open(hdlg, 1, temp_joystick_type);
-                        //      break;
-                        //      case IDC_JOY3:
-                        //      h = wx_getdlgitem(hdlg, IDC_COMBOJOY);
-                        //      temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
-                        //      joystickconfig_open(hdlg, 2, temp_joystick_type);
-                        //      break;
-                        //      case IDC_JOY4:
-                        //      h = wx_getdlgitem(hdlg, IDC_COMBOJOY);
-                        //      temp_joystick_type = wx_sendmessage(h, CB_GETCURSEL, 0, 0);
-                        //      joystickconfig_open(hdlg, 3, temp_joystick_type);
-                        //      break;
+                        else if (wParam == WX_ID("IDC_COMBOJOY"))
+                        {
+                                int temp_joystick_type;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                                temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY1"));
+                                wx_enablewindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 1) ? TRUE : FALSE);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY2"));
+                                wx_enablewindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 2) ? TRUE : FALSE);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY3"));
+                                wx_enablewindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 3) ? TRUE : FALSE);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_JOY4"));
+                                wx_enablewindow(h, (joystick_get_max_joysticks(temp_joystick_type) >= 4) ? TRUE : FALSE);
+                        }
+                        else if (wParam == WX_ID("IDC_JOY1"))
+                        {
+                                int temp_joystick_type;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                                temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                joystickconfig_open(hdlg, 0, temp_joystick_type);
+                        }
+                        else if (wParam == WX_ID("IDC_JOY2"))
+                        {
+                                int temp_joystick_type;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                                temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                joystickconfig_open(hdlg, 1, temp_joystick_type);
+                        }
+                        else if (wParam == WX_ID("IDC_JOY3"))
+                        {
+                                int temp_joystick_type;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                                temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                joystickconfig_open(hdlg, 2, temp_joystick_type);
+                        }
+                        else if (wParam == WX_ID("IDC_JOY4"))
+                        {
+                                int temp_joystick_type;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
+                                temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                joystickconfig_open(hdlg, 3, temp_joystick_type);
+                        }
                         return 0;
                 }
         }

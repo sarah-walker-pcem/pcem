@@ -1943,6 +1943,102 @@
 						</object>
 					</object>
 					<object class="notebookpage">
+						<selected>0</selected>
+						<bitmap>icons/32x32/joystick.png</bitmap>
+						<object class="wxPanel">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxFlexGridSizer">
+								<rows>2</rows>
+								<cols>0</cols>
+								<vgap>0</vgap>
+								<hgap>0</hgap>
+								<growablecols></growablecols>
+								<growablerows></growablerows>
+								<object class="sizeritem">
+									<object class="wxFlexGridSizer">
+										<rows>0</rows>
+										<cols>4</cols>
+										<vgap>0</vgap>
+										<hgap>0</hgap>
+										<growablecols>1</growablecols>
+										<growablerows></growablerows>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+											<border>5</border>
+											<object class="wxStaticText">
+												<size>80,-1</size>
+												<label>Joystick:</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>1</option>
+											<flag>wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>5</border>
+													<object class="wxComboBox" name="IDC_COMBOJOY">
+														<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+														<size>350,-1</size>
+														<value></value>
+														<content />
+													</object>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<object class="wxGridSizer">
+										<rows>0</rows>
+										<cols>4</cols>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="IDC_JOY1">
+												<label>Joystick 1...</label>
+												<default>1</default>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="IDC_JOY2">
+												<label>Joystick 2...</label>
+												<default>1</default>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="IDC_JOY3">
+												<label>Joystick 3...</label>
+												<default>1</default>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="IDC_JOY4">
+												<label>Joystick 4...</label>
+												<default>1</default>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="notebookpage">
 						<label></label>
 						<selected>0</selected>
 						<bitmap>icons/32x32/network_ethernet.png</bitmap>

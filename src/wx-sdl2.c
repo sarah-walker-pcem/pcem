@@ -27,6 +27,7 @@
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
+#include "plat-joystick.h"
 #include "sound.h"
 #include "thread.h"
 #include "disc.h"
@@ -512,6 +513,7 @@ int pc_main(int argc, char** argv)
         display_init();
 #endif
         sdl_video_init();
+        joystick_init();
 
         return TRUE;
 }

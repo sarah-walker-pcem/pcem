@@ -19,8 +19,6 @@
 #include "scsi_aha1540.h"
 #include "timer.h"
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
 int primed = 0;
 typedef enum
 {
