@@ -28,6 +28,7 @@
 #include "mouse.h"
 #include "nvr.h"
 #include "plat-joystick.h"
+#include "plat-midi.h"
 #include "sound.h"
 #include "thread.h"
 #include "disc.h"
@@ -634,6 +635,7 @@ int start_emulation(void* params)
 
         loadbios();
         resetpchard();
+        midi_init();
 
         display_start(params);
         mainthreadh = SDL_CreateThread(mainthread, "Main Thread", NULL);
@@ -684,6 +686,8 @@ int stop_emulation()
         endblit();
         SDL_DestroyMutex(ghMutex);
 
+        midi_close();
+        
         pclog("Emulation stopped.\n");
 
         wx_close_status(ghwnd);
