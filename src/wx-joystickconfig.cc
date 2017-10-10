@@ -47,10 +47,10 @@ static void rebuild_axis_button_selections(void *hdlg)
                 {
                         for (d = 0; d < plat_joystick_state[joystick-1].nr_axes; d++)
                         {
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)plat_joystick_state[joystick-1].axis[d].name);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)plat_joystick_state[joystick-1].axis[d].name);
                                 if (c < AXIS_STRINGS_MAX)
                                 {
-                                        if (!stricmp(axis_strings[c], plat_joystick_state[joystick-1].axis[d].name))
+                                        if (!strcasecmp(axis_strings[c], plat_joystick_state[joystick-1].axis[d].name))
                                                 sel = d;
                                 }
                         }
@@ -59,9 +59,9 @@ static void rebuild_axis_button_selections(void *hdlg)
                                 char s[80];
                                 
                                 sprintf(s, "%s (X axis)", plat_joystick_state[joystick-1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                                 sprintf(s, "%s (Y axis)", plat_joystick_state[joystick-1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                         }
                         wx_sendmessage(h, WX_CB_SETCURSEL, sel, 0);
                         wx_enablewindow(h, TRUE);
@@ -80,7 +80,7 @@ static void rebuild_axis_button_selections(void *hdlg)
                 if (joystick)
                 {
                         for (d = 0; d < plat_joystick_state[joystick-1].nr_buttons; d++)
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)plat_joystick_state[joystick-1].button[d].name);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)plat_joystick_state[joystick-1].button[d].name);
                         wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
                         wx_enablewindow(h, TRUE);
                 }
@@ -104,13 +104,13 @@ static void rebuild_axis_button_selections(void *hdlg)
                                 char s[80];
                                 
                                 sprintf(s, "%s (X axis)", plat_joystick_state[joystick-1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                                 sprintf(s, "%s (Y axis)", plat_joystick_state[joystick-1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)s);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                         }
                         for (d = 0; d < plat_joystick_state[joystick-1].nr_axes; d++)
                         {
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LPARAM)(LPCSTR)plat_joystick_state[joystick-1].axis[d].name);
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)plat_joystick_state[joystick-1].axis[d].name);
                         }
                         wx_sendmessage(h, WX_CB_SETCURSEL, sel, 0);
                         wx_enablewindow(h, TRUE);
@@ -224,7 +224,7 @@ static int joystickconfig_dlgproc(void* hdlg, int message, INT_PARAM wParam, LON
                 return TRUE;
                 
                 case WX_COMMAND:
-                switch (LOWORD(wParam))
+                switch (wParam)
                 {
                         case IDC_CONFIG_BASE+1:
 //                        if (HIWORD(wParam) == CBN_SELCHANGE)
