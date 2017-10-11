@@ -370,6 +370,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_KMXC02:
+                f=romfopen("kmxc02/3ctm005.bin","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_AMI286:
                 f=romfopen("ami286/amic206.bin","rb");
                 if (!f) break;
@@ -385,12 +392,44 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_GW286CT:
+                f=romfopen("gw286ct/2ctc001.bin","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_SPC4200P:
                 f=romfopen("spc4200p/u8.01","rb");
                 if (!f) break;
                 fread(rom,65536,1,f);
                 fclose(f);
                 return 1;
+
+                case ROM_SPC4216P:
+                f=romfopen("spc4216p/phoenix.bin","rb");
+                if (!f)
+                {
+                        f = romfopen("spc4216p/7101.u8", "rb");
+                        ff = romfopen("spc4216p/ac64.u10","rb");
+                        if (!f || !ff) break;
+                        for (c = 0x0000; c < 0x10000; c += 2)
+                        {
+                                rom[c]     = getc(f);
+                                rom[c + 1] = getc(ff);
+                        }
+                        fclose(ff);
+                        fclose(f);
+                        return 1;
+                }
+                else
+                {
+                        fread(rom,65536,1,f);
+
+                        fclose(f);
+                        return 1;
+                }
+                break;
 
                 case ROM_EUROPC:
 //                return 0;

@@ -13,6 +13,12 @@
 #define SCAT_EXTENDED_BOUNDARY      0x4E
 #define SCAT_EMS_CONTROL            0x4F
 
+#define SCATSX_LAPTOP_FEATURES          0x60
+#define SCATSX_FAST_VIDEO_CONTROL       0x61
+#define SCATSX_FAST_VIDEORAM_ENABLE     0x62
+#define SCATSX_HIGH_PERFORMANCE_REFRESH 0x63
+#define SCATSX_CAS_TIMING_FOR_DMA       0x64
+
 typedef struct scat_t
 {
         uint8_t regs_2x8;
@@ -20,3 +26,4 @@ typedef struct scat_t
 } scat_t;
 
 void scat_init();
+void scatsx_init();
