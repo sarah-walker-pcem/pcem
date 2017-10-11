@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "nvr.h"
 #include "vid_ati_eeprom.h"
 
 enum
@@ -33,7 +34,7 @@ void ati_eeprom_load(ati_eeprom_t *eeprom, char *fn, int type)
         FILE *f;
         eeprom->type = type;
         strcpy(eeprom->fn, fn);
-        f = romfopen(eeprom->fn, "rb");
+        f = nvrfopen(eeprom->fn, "rb");
         if (!f)
         {
                 memset(eeprom->data, 0, eeprom->type ? 512 : 128);
@@ -45,7 +46,7 @@ void ati_eeprom_load(ati_eeprom_t *eeprom, char *fn, int type)
 
 void ati_eeprom_save(ati_eeprom_t *eeprom)
 {
-        FILE *f = romfopen(eeprom->fn, "wb");
+        FILE *f = nvrfopen(eeprom->fn, "wb");
         if (!f) return;
         fwrite(eeprom->data, 1, eeprom->type ? 512 : 128, f);
         fclose(f);

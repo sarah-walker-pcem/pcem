@@ -98,6 +98,9 @@ static int run(void* hdlg)
                 pclog("Config name %s\n", cfg);
 
                 strcpy(config_file_default, cfg);
+                strcpy(config_name, s);
+                if (config_name[strlen(config_name)-1] == '.')
+                        config_name[strlen(config_name)-1] = 0;
 
                 wx_enddialog(hdlg, 1);
 //                                        pause = 0;

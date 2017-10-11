@@ -5,6 +5,7 @@
 #include "config.h"
 
 char config_file_default[256];
+char config_name[256];
 
 static char config_file[256];
 

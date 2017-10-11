@@ -21,6 +21,7 @@ void config_dump(int is_global);
 void config_free(int is_global);
 
 extern char config_file_default[256];
+extern char config_name[256];
 
 #define CFG_MACHINE 0
 #define CFG_GLOBAL  1

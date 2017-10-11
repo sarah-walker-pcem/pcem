@@ -23,11 +23,32 @@ static int rtctime;
 FILE *nvrfopen(char *fn, char *mode)
 {
         char s[512];
-
+        FILE *f;
+                
         strcpy(s, nvr_path);
         put_backslash(s);
+        strcat(s, config_name);
+        strcat(s, ".");
         strcat(s, fn);
-        return fopen(s, mode);
+        pclog("NVR try opening %s\n", s);
+        f = fopen(s, mode);
+        if (f)
+                return f;
+
+        if (mode[0] == 'r')
+        {
+                strcpy(s, nvr_path);
+                put_backslash(s);
+                strcat(s, "default");
+                put_backslash(s);
+                strcat(s, fn);
+                return fopen(s, mode);
+        }
+        else
+        {
+                pclog("Failed to open file '%s' for write\n", s);
+                return NULL;
+        }
 }
 
 void getnvrtime()
