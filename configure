@@ -607,9 +607,12 @@ SDL_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+SDL2_FRAMEWORK
 allegro_LIBS
 allegro_CFLAGS
 ALLEGRO_CONFIG
+USE_ALSA_FALSE
+USE_ALSA_TRUE
 USE_NETWORKING_FALSE
 USE_NETWORKING_TRUE
 USE_WX_FALSE
@@ -727,12 +730,14 @@ enable_dependency_tracking
 enable_debug
 enable_wx
 enable_networking
+enable_alsa
 with_allegro_prefix
 with_allegro_exec_prefix
 enable_allegrotest
 with_sdl_prefix
 with_sdl_exec_prefix
 enable_sdltest
+enable_sdlframework
 with_wxdir
 with_wx_config
 with_wx_prefix
@@ -749,6 +754,7 @@ CPPFLAGS
 CXX
 CXXFLAGS
 CCC
+SDL2_FRAMEWORK
 PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
@@ -1392,8 +1398,10 @@ Optional Features:
   --enable-debug          build debug executable
   --enable-wx             use wxWidgets GUI
   --enable-networking     enable networking
+  --enable-alsa           use ALSA for MIDI
   --disable-allegrotest       Do not try to compile and run a test LIBallegro program
   --disable-sdltest       Do not try to compile and run a test SDL program
+  --disable-sdlframework Do not search for SDL2.framework
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1418,6 +1426,8 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
+  SDL2_FRAMEWORK
+              Path to SDL2.framework
   PKG_CONFIG  path to pkg-config utility
   PKG_CONFIG_PATH
               directories to add to pkg-config's search path
@@ -4177,6 +4187,21 @@ else
 $as_echo "no" >&6; }
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use ALSA for MIDI output" >&5
+$as_echo_n "checking whether to use ALSA for MIDI output... " >&6; }
+# Check whether --enable-alsa was given.
+if test "${enable_alsa+set}" = set; then :
+  enableval=$enable_alsa;
+fi
+
+if test "$enable_alsa" = "yes"; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cpu" >&5
 $as_echo_n "checking for cpu... " >&6; }
 case "${host_cpu}" in
@@ -4246,6 +4271,14 @@ fi
 else
   USE_NETWORKING_TRUE='#'
   USE_NETWORKING_FALSE=
+fi
+
+ if test "$enable_alsa" = "yes"; then
+  USE_ALSA_TRUE=
+  USE_ALSA_FALSE='#'
+else
+  USE_ALSA_TRUE='#'
+  USE_ALSA_FALSE=
 fi
 
 
@@ -4666,6 +4699,15 @@ else
   enable_sdltest=yes
 fi
 
+# Check whether --enable-sdlframework was given.
+if test "${enable_sdlframework+set}" = set; then :
+  enableval=$enable_sdlframework;
+else
+  search_sdl_framework=yes
+fi
+
+
+
 
   min_sdl_version=$SDL_VERSION
 
@@ -4807,15 +4849,39 @@ fi
 
 
     PATH="$as_save_PATH"
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL - version >= $min_sdl_version" >&5
-$as_echo_n "checking for SDL - version >= $min_sdl_version... " >&6; }
     no_sdl=""
 
-    if test "$SDL2_CONFIG" = "no" ; then
-      no_sdl=yes
-    else
-      SDL_CFLAGS=`$SDL2_CONFIG $sdl_config_args --cflags`
-      SDL_LIBS=`$SDL2_CONFIG $sdl_config_args --libs`
+    if test "$SDL2_CONFIG" = "no" -a "x$search_sdl_framework" = "xyes"; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL2.framework" >&5
+$as_echo_n "checking for SDL2.framework... " >&6; }
+      if test "x$SDL2_FRAMEWORK" != x; then
+        sdl_framework=$SDL2_FRAMEWORK
+      else
+        for d in / ~/ /System/; do
+          if test -d "$dLibrary/Frameworks/SDL2.framework"; then
+            sdl_framework="$dLibrary/Frameworks/SDL2.framework"
+          fi
+        done
+      fi
+
+      if test -d $sdl_framework; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $sdl_framework" >&5
+$as_echo "$sdl_framework" >&6; }
+        sdl_framework_dir=`dirname $sdl_framework`
+        SDL_CFLAGS="-F$sdl_framework_dir -Wl,-framework,SDL2 -I$sdl_framework/include"
+        SDL_LIBS="-F$sdl_framework_dir -Wl,-framework,SDL2"
+      else
+        no_sdl=yes
+      fi
+    fi
+
+    if test "$SDL2_CONFIG" != "no"; then
+      if test "x$sdl_pc" = "xno"; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL - version >= $min_sdl_version" >&5
+$as_echo_n "checking for SDL - version >= $min_sdl_version... " >&6; }
+        SDL_CFLAGS=`$SDL2_CONFIG $sdl_config_args --cflags`
+        SDL_LIBS=`$SDL2_CONFIG $sdl_config_args --libs`
+      fi
 
       sdl_major_version=`$SDL2_CONFIG $sdl_config_args --version | \
              sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
@@ -4907,14 +4973,17 @@ fi
         CFLAGS="$ac_save_CFLAGS"
         CXXFLAGS="$ac_save_CXXFLAGS"
         LIBS="$ac_save_LIBS"
+
       fi
-    fi
-    if test "x$no_sdl" = x ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-    else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+      if test "x$sdl_pc" = "xno"; then
+        if test "x$no_sdl" = "xyes"; then
+          { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
+        else
+          { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+        fi
+      fi
     fi
   fi
   if test "x$no_sdl" = x ; then
@@ -5394,6 +5463,57 @@ else
 fi
 
 
+if test "$enable_alsa" == "yes"; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for snd_pcm_open in -lasound" >&5
+$as_echo_n "checking for snd_pcm_open in -lasound... " >&6; }
+if ${ac_cv_lib_asound_snd_pcm_open+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lasound  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char snd_pcm_open ();
+int
+main ()
+{
+return snd_pcm_open ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_asound_snd_pcm_open=yes
+else
+  ac_cv_lib_asound_snd_pcm_open=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_asound_snd_pcm_open" >&5
+$as_echo "$ac_cv_lib_asound_snd_pcm_open" >&6; }
+if test "x$ac_cv_lib_asound_snd_pcm_open" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBASOUND 1
+_ACEOF
+
+  LIBS="-lasound $LIBS"
+
+else
+  echo "You need to install the ALSA library."
+	 exit -1
+fi
+
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
 $as_echo_n "checking for pthread_create in -lpthread... " >&6; }
 if ${ac_cv_lib_pthread_pthread_create+:} false; then :
@@ -5637,6 +5757,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${USE_NETWORKING_TRUE}" && test -z "${USE_NETWORKING_FALSE}"; then
   as_fn_error $? "conditional \"USE_NETWORKING\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${USE_ALSA_TRUE}" && test -z "${USE_ALSA_FALSE}"; then
+  as_fn_error $? "conditional \"USE_ALSA\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

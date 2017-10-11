@@ -42,10 +42,16 @@ pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 pcem_LDADD = @LIBS@
 pcem_SOURCES += wx-main.cc wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
- wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c wx-sdl2-midi.c \
+ wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c \
  wx-sdl2.c wx-config.c wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
  wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c \
  wx-glslp-parser.c wx-shader_man.c wx-shaderconfig.cc wx-joystickconfig.cc
+if USE_ALSA
+pcem_LDADD += -lasound
+pcem_SOURCES += midi_alsa.c
+else
+pcem_SOURCES += wx-sdl2-midi.c
+endif
 else
 pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO
 pcem_CXXFLAGS = 

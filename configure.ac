@@ -42,6 +42,15 @@ else
    AC_MSG_RESULT([no])
 fi
 
+AC_MSG_CHECKING([whether to use ALSA for MIDI output])
+AC_ARG_ENABLE(alsa,
+	      AC_HELP_STRING([--enable-alsa], [use ALSA for MIDI]))
+if test "$enable_alsa" = "yes"; then
+   AC_MSG_RESULT([yes])
+else
+   AC_MSG_RESULT([no])
+fi
+
 AC_MSG_CHECKING([for cpu])
 case "${host_cpu}" in
 	i?86)
@@ -68,6 +77,7 @@ AM_CONDITIONAL(OS_LINUX, test "$OS" = "linux")
 
 AM_CONDITIONAL(USE_WX, test "$enable_wx" = "yes")
 AM_CONDITIONAL(USE_NETWORKING, test "$enable_networking" = "yes")
+AM_CONDITIONAL(USE_ALSA, test "$enable_alsa" = "yes")
 
 if test "$enable_wx" != "yes"; then
    # Do not run test for Allegro with Win32/MinGW version, as binary builds have
@@ -108,6 +118,13 @@ fi
 AC_CHECK_LIB([openal], [alGetError], [], \
 	[echo "You need to install the OpenAL library."
 	 exit -1])
+
+if test "$enable_alsa" == "yes"; then
+    AC_CHECK_LIB(asound, snd_pcm_open,
+        [],
+        [echo "You need to install the ALSA library."
+	 exit -1])
+fi
 
 AC_CHECK_LIB([pthread], [pthread_create])
 
