@@ -244,6 +244,7 @@ void loadnvr()
                 case ROM_PC2086:      f = nvrfopen("pc2086.nvr",      "rb"); break;
                 case ROM_PC3086:      f = nvrfopen("pc3086.nvr",      "rb"); break;
                 case ROM_IBMAT:       f = nvrfopen("at.nvr",          "rb"); break;
+                case ROM_IBMXT286:    f = nvrfopen("ibmxt286.nvr",    "rb"); break;
                 case ROM_IBMPS1_2011: f = nvrfopen("ibmps1_2011.nvr", "rb"); /*nvrmask = 127; */break;
                 case ROM_IBMPS1_2121: f = nvrfopen("ibmps1_2121.nvr", "rb"); nvrmask = 127; break;
                 case ROM_IBMPS2_M30_286:   f = nvrfopen("ibmps2_m30_286.nvr",   "rb"); /*nvrmask = 127; */break;
@@ -311,6 +312,7 @@ void savenvr()
                 case ROM_PC2086:      f = nvrfopen("pc2086.nvr",      "wb"); break;
                 case ROM_PC3086:      f = nvrfopen("pc3086.nvr",      "wb"); break;
                 case ROM_IBMAT:       f = nvrfopen("at.nvr",          "wb"); break;
+                case ROM_IBMXT286:    f = nvrfopen("ibmxt286.nvr",    "wb"); break;
                 case ROM_IBMPS1_2011: f = nvrfopen("ibmps1_2011.nvr", "wb"); break;
                 case ROM_IBMPS1_2121: f = nvrfopen("ibmps1_2121.nvr", "wb"); break;
                 case ROM_IBMPS2_M30_286:   f = nvrfopen("ibmps2_m30_286.nvr",   "wb"); break;

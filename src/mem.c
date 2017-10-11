@@ -715,6 +715,19 @@ int loadbios()
                 fread(rom+0x8000,32768,1,f);
                 fclose(f);
                 return 1;
+
+                case ROM_IBMXT286:
+                f = romfopen("ibmxt286/BIOS_5162_21APR86_U34_78X7460_27256.BIN", "rb");
+                ff  =romfopen("ibmxt286/BIOS_5162_21APR86_U35_78X7461_27256.BIN", "rb");
+                if (!f || !ff) break;
+                for (c=0x0000;c<0x10000;c+=2)
+                {
+                        rom[c]=getc(f);
+                        rom[c+1]=getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

@@ -432,6 +432,7 @@ enum
 	ROM_IBMPS2_M55SX,
 	ROM_IBMPS2_M80,
         ROM_ATARIPC3,
+        ROM_IBMXT286,
                 	
         ROM_MAX
 };
