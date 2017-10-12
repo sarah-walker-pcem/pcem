@@ -35,6 +35,7 @@ static struct
         {"[IDE] Standard IDE",                    "ide",        &ide_device,           0, 1},
         {"[IDE] XTIDE",                           "xtide",      &xtide_device,         0, 1},
         {"[IDE] XTIDE (AT)",                      "xtide_at",   &xtide_at_device,      0, 1},
+        {"[IDE] XTIDE (PS/1)",                    "xtide_ps1",  &xtide_ps1_device,     0, 1},
         {"[SCSI] Adaptec AHA-1542C",              "aha1542c",   &scsi_aha1542c_device, 0, 0},
         {"[SCSI] BusLogic BT-545S",               "bt545s",     &scsi_bt545s_device,   0, 0},
         {"[SCSI] Longshine LCS-6821N",            "lcs6821n",   &scsi_lcs6821n_device, 0, 0},

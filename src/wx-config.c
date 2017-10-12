@@ -188,6 +188,12 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
                         c++;
                         continue;
                 }
+                if ((((hdd_controller_get_flags(c) & DEVICE_PS1) && models[model].id != ROM_IBMPS1_2011) ||
+                    (!(hdd_controller_get_flags(c) & DEVICE_PS1) && models[model].id == ROM_IBMPS1_2011)) && c)
+                {
+                        c++;
+                        continue;
+                }
                 if (!hdd_controller_available(c))
                 {
                         c++;
