@@ -130,7 +130,8 @@ void lpt_init()
 
 void lpt1_init(uint16_t port)
 {
-        io_sethandler(port, 0x0003, lpt1_read, NULL, NULL, lpt1_write, NULL, NULL,  NULL);
+        if (port)
+                io_sethandler(port, 0x0003, lpt1_read, NULL, NULL, lpt1_write, NULL, NULL,  NULL);
 }
 void lpt1_remove()
 {
@@ -140,7 +141,8 @@ void lpt1_remove()
 }
 void lpt2_init(uint16_t port)
 {
-        io_sethandler(port, 0x0003, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL,  NULL);
+        if (port)
+                io_sethandler(port, 0x0003, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL,  NULL);
 }
 void lpt2_remove()
 {
