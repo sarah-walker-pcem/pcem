@@ -6,6 +6,7 @@
 #include "x87.h"
 #include "x86_flags.h"
 #include "mem.h"
+#include "nmi.h"
 #include "pic.h"
 #include "codegen.h"
 
