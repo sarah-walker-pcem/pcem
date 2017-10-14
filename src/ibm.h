@@ -433,6 +433,9 @@ enum
 	ROM_IBMPS2_M80,
         ROM_ATARIPC3,
         ROM_IBMXT286,
+        ROM_EPSON_PCAX,
+        ROM_EPSON_PCAX2E,
+        ROM_EPSON_PCAX3,
                 	
         ROM_MAX
 };

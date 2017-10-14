@@ -714,6 +714,47 @@ int loadbios()
                 fclose(ff);
                 fclose(f);
                 return 1;
+				
+                case ROM_EPSON_PCAX:
+                f  = romfopen("epson_pcax/EVAX", "rb");
+                ff = romfopen("epson_pcax/ODAX",  "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x8000; c += 2)
+                {
+                        rom[c]     = getc(f);
+                        rom[c + 1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x7fff;
+                return 1;
+
+                case ROM_EPSON_PCAX2E:
+                f = romfopen("epson_pcax2e/EVAXE", "rb");
+                ff = romfopen("epson_pcax2e/ODAXE", "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x10000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                return 1;
+				
+                case ROM_EPSON_PCAX3:
+                f = romfopen("epson_pcax3/EVAX3", "rb");
+                ff = romfopen("epson_pcax3/ODAX3", "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x10000;c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                return 1;
+				
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

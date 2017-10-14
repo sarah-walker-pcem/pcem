@@ -275,6 +275,9 @@ void loadnvr()
                 case ROM_DTK386:      f = nvrfopen("dtk386.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_MR386DX_OPTI495:  f = nvrfopen("mr386dx_opti495.nvr",  "rb"); nvrmask = 127; break;
                 case ROM_AMI386DX_OPTI495: f = nvrfopen("ami386dx_opti495.nvr", "rb"); nvrmask = 127; break;
+                case ROM_EPSON_PCAX:       f = nvrfopen("epson_pcax.nvr",       "rb"); nvrmask = 127; break;
+                case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "rb"); nvrmask = 127; break;
+                case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "rb"); nvrmask = 127; break;
                 default: return;
         }
         if (!f)
@@ -343,6 +346,9 @@ void savenvr()
                 case ROM_DTK386:      f = nvrfopen("dtk386.nvr",      "wb"); break;
                 case ROM_MR386DX_OPTI495:  f = nvrfopen("mr386dx_opti495.nvr",  "wb"); break;
                 case ROM_AMI386DX_OPTI495: f = nvrfopen("ami386dx_opti495.nvr", "wb"); break;
+                case ROM_EPSON_PCAX:       f = nvrfopen("epson_pcax.nvr",       "wb"); break;
+                case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "wb"); break;
+                case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);
