@@ -89,6 +89,7 @@ void      at_i430vx_init();
 void      at_batman_init();
 void    at_endeavor_init();
 void     xt_laserxt_init();
+void      at_t3100e_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -132,7 +133,8 @@ MODEL models[] =
         {"[286] IBM XT Model 286",        ROM_IBMXT286,         "ibmxt286",       { {"",      cpus_ibmxt286},    {"",    NULL},         {"",      NULL}},        0, MODEL_AT,                           256,15872,128,       ibm_at_init, NULL},
         {"[286] Samsung SPC-4200P",       ROM_SPC4200P,         "spc4200p",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   512,2048, 128,      at_scat_init, NULL},
         {"[286] Samsung SPC-4216P",       ROM_SPC4216P,         "spc4216p",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,   5,   1,        at_scat_init, NULL},
-
+        {"[286] Toshiba 3100e",           ROM_T3100E,           "t3100e",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_HAS_IDE,             1024,5120,256,    at_t3100e_init, NULL},
+        
         {"[386SX] Acer 386SX25/N",        ROM_ACER386,          "acer386",        { {"Intel", cpus_acer},        {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1,   at_acer386sx_init, NULL},
         {"[386SX] AMI 386SX clone",       ROM_AMI386SX,         "ami386",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 0, MODEL_AT|MODEL_HAS_IDE,              512,16384,128, at_headland_init, NULL},
         {"[386SX] Amstrad MegaPC",        ROM_MEGAPC,           "megapc",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 1, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1,     at_wd76c10_init, NULL},

@@ -38,7 +38,7 @@ static mem_mapping_t base_mapping;
 mem_mapping_t ram_low_mapping;
 mem_mapping_t ram_high_mapping;
 mem_mapping_t ram_mid_mapping;
-static mem_mapping_t ram_remapped_mapping;
+mem_mapping_t ram_remapped_mapping;
 mem_mapping_t bios_mapping[8];
 mem_mapping_t bios_high_mapping[8];
 static mem_mapping_t romext_mapping;
@@ -755,6 +755,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 				
+                case ROM_T3100E:
+                loadfont("t3100e/t3100e_font.bin", 5);
+                f=romfopen("t3100e/t3100e.rom","rb");
+                if (!f) break;
+                fread(rom,65536,1,f);
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

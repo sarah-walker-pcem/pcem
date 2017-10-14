@@ -357,6 +357,9 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 key_ctrl_queue_start = key_ctrl_queue_end = 0;
                                 keyboard_at.status &= ~STAT_OFULL;
                         }
+			/* T3100e expects STAT_IFULL to be set immediately
+			 * after sending 0xAA */
+                        keyboard_at.status |= STAT_IFULL;
                         keyboard_at.status |= STAT_SYSFLAG;
                         keyboard_at.mem[0] |= 0x04;
                         keyboard_at_adddata(0x55);
@@ -382,6 +385,18 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         case 0xae: /*Enable keyboard*/
                         keyboard_at.mem[0] &= ~0x10;
                         break;
+
+			case 0xbb: /* Read 'Fn' key - sent by Toshiba 3100e 
+				      BIOS. Return it for right Ctrl and right
+				      Alt; on the real T3100e, these keystrokes
+	  			      could only be generated using 'Fn'. */
+			if (pcem_key[0xb8] ||	/* Right Alt */
+			    pcem_key[0x9d])	/* Right Ctrl */
+			{
+				keyboard_at_adddata(0x04);
+			} 
+			else	keyboard_at_adddata(0x00);
+			break;
                         
                         case 0xc0: /*Read input port*/
                         keyboard_at_adddata(keyboard_at.input_port | 4);
@@ -504,6 +519,7 @@ static void at_refresh(void *p)
 void keyboard_at_init()
 {
         //return;
+        memset(&keyboard_at, 0, sizeof(keyboard_at));
         io_sethandler(0x0060, 0x0005, keyboard_at_read, NULL, NULL, keyboard_at_write, NULL, NULL,  NULL);
         keyboard_at_reset();
         keyboard_send = keyboard_at_adddata_keyboard;

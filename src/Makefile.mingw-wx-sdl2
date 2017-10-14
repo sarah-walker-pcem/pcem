@@ -15,12 +15,12 @@ OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acer386sx.o ali1429.o amstrad
 	scat.o scsi.o scsi_53c400.o scsi_aha1540.o scsi_cd.o scsi_hd.o serial.o sio.o sis496.o sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_audiopci.o sound_cms.o sound_dbopl.o \
 	sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o sound_pas16.o sound_ps1.o sound_pssj.o sound_resid.o \
 	sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o sound_ssi2001.o sound_wss.o \
-	sound_ym7128.o soundopenal.o tandy_eeprom.o tandy_rom.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o vid_ati_mach64.o vid_ati18800.o \
+	sound_ym7128.o soundopenal.o t3100e.o tandy_eeprom.o tandy_rom.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o vid_ati_mach64.o vid_ati18800.o \
 	vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o vid_cl5429.o vid_colorplus.o vid_ega.o vid_et4000.o \
 	vid_et4000w32.o vid_et4000w32i.o vid_genius.o vid_hercules.o vid_icd2061.o vid_ics2595.o vid_incolor.o vid_mda.o \
 	vid_olivetti_m24.o vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o \
 	vid_pcjr.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_sdac_ramdac.o vid_stg_ramdac.o vid_svga.o \
-	vid_svga_render.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
+	vid_svga_render.o vid_t3100e.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
 	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o x86seg.o x87.o xtide.o win-midi.o \
 	wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o \
 	wx-sdl2.o wx-config.o wx-deviceconfig.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \

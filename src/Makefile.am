@@ -23,11 +23,12 @@ opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_
 serial.c sio.c sis496.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \
+t3100e.c \
 timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
 vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c \
 vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
-vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
+vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
 x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
 dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
