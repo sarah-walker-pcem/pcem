@@ -388,7 +388,7 @@ static void prefetch_flush()
 #define PREFETCH_RUN(instr_cycles, bytes, modrm, reads, reads_l, writes, writes_l, ea32) \
         do { if (cpu_prefetch_cycles) prefetch_run(instr_cycles, bytes, modrm, reads, reads_l, writes, writes_l, ea32); } while (0)
 
-#define PREFETCH_PREFIX() prefetch_prefixes++
+#define PREFETCH_PREFIX() do { if (cpu_prefetch_cycles) prefetch_prefixes++; } while (0)
 #define PREFETCH_FLUSH() prefetch_flush()
 
 
