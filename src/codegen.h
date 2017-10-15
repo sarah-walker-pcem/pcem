@@ -74,6 +74,8 @@ typedef struct codeblock_t
 /*Code block is always entered with the same FPU top-of-stack*/
 #define CODEBLOCK_STATIC_TOP 2
 
+#define BLOCK_PC_INVALID 0xffffffff
+
 static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
 {
         codeblock_t *block = pages[phys >> 12].head;

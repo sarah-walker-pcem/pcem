@@ -612,7 +612,7 @@ void exec386_dynarec(int cycs)
                         {
                                 codegen_check_flush(page, page->dirty_mask[(phys_addr >> 10) & 3], phys_addr);
                                 page->dirty_mask[(phys_addr >> 10) & 3] = 0;
-                                if (!block->pc)
+                                if (block->pc == BLOCK_PC_INVALID)
                                         valid_block = 0;
                         }
                         if (valid_block && block->page_mask2)
@@ -632,7 +632,7 @@ void exec386_dynarec(int cycs)
                                 {
                                         codegen_check_flush(page_2, page_2->dirty_mask[(phys_addr_2 >> 10) & 3], phys_addr_2);
                                         page_2->dirty_mask[(phys_addr_2 >> 10) & 3] = 0;
-                                        if (!block->pc)
+                                        if (block->pc == BLOCK_PC_INVALID)
                                                 valid_block = 0;
                                 }
                         }
