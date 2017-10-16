@@ -336,7 +336,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                         case SCATSX_FAST_VIDEORAM_ENABLE:
                         case SCATSX_HIGH_PERFORMANCE_REFRESH:
                         case SCATSX_CAS_TIMING_FOR_DMA:
-                        if((scat_regs[SCAT_VERSION] & 0xF0) == 0) scat_reg_valid = 1;
+                        if((scat_regs[SCAT_VERSION] & 0xF0) != 0) scat_reg_valid = 1;
                         break;
                         default:
                         break;
@@ -583,7 +583,6 @@ void scatsx_init()
         int i;
 
         io_sethandler(0x0022, 0x0002, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
-        io_sethandler(0x0080, 0x0001, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
         io_sethandler(0x0092, 0x0001, scat_read, NULL, NULL, scat_write, NULL, NULL,  NULL);
 
         for (i = 0; i < 256; i++)
