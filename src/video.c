@@ -420,14 +420,23 @@ void loadfont(char *s, int format)
                 }
 		break;
 		case 5: /* Toshiba 3100e */
-                for (c=0;c<512;c++)
+                for (c=0;c<256;c++)
                 {
-                        for (d=0;d<16;d++)
-                        {
-                                fontdatm[c][d]=getc(f);
-                        }
+                        fread(&fontdatm[c][8], 1, 8, f);
                 }
-		break;
+                for (c=0;c<256;c++)
+                {
+                        fread(&fontdatm[c+256][8], 1, 8, f);
+                }
+                for (c=0;c<256;c++)
+                {
+                        fread(&fontdatm[c][0], 1, 8, f);
+                }
+                for (c=0;c<256;c++)
+                {
+                        fread(&fontdatm[c+256][0], 1, 8, f);
+                }
+                break;
 
         }
         fclose(f);
