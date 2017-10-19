@@ -38,7 +38,6 @@ resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
-if USE_WX
 pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 pcem_LDADD = @LIBS@
@@ -52,15 +51,6 @@ pcem_LDADD += -lasound
 pcem_SOURCES += midi_alsa.c
 else
 pcem_SOURCES += wx-sdl2-midi.c
-endif
-else
-pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO
-pcem_CXXFLAGS = 
-pcem_LDADD = $(allegro_LIBS) -lopenal
-pcem_SOURCES += allegro-gui.c allegro-gui-config-sel.c allegro-gui-configure.c \
- allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c \
- allegro-keyboard.c allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
- thread-pthread.c
 endif
 
 if CPU_I386

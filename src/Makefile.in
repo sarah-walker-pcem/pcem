@@ -92,31 +92,19 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = pcem$(EXEEXT)
-@USE_WX_TRUE@am__append_1 = wx-main.cc wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
-@USE_WX_TRUE@ wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c \
-@USE_WX_TRUE@ wx-sdl2.c wx-config.c wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
-@USE_WX_TRUE@ wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c \
-@USE_WX_TRUE@ wx-glslp-parser.c wx-shader_man.c wx-shaderconfig.cc wx-joystickconfig.cc
-
-@USE_ALSA_TRUE@@USE_WX_TRUE@am__append_2 = -lasound
-@USE_ALSA_TRUE@@USE_WX_TRUE@am__append_3 = midi_alsa.c
-@USE_ALSA_FALSE@@USE_WX_TRUE@am__append_4 = wx-sdl2-midi.c
-@USE_WX_FALSE@am__append_5 = allegro-gui.c allegro-gui-config-sel.c allegro-gui-configure.c \
-@USE_WX_FALSE@ allegro-gui-deviceconfig.c allegro-gui-hdconf.c allegro-joystick.c \
-@USE_WX_FALSE@ allegro-keyboard.c allegro-main.c allegro-midi.c allegro-mouse.c allegro-video.c \
-@USE_WX_FALSE@ thread-pthread.c
-
-@CPU_I386_TRUE@am__append_6 = codegen_x86.c
-@CPU_I386_TRUE@am__append_7 = -msse2
-@CPU_X86_64_TRUE@am__append_8 = codegen_x86-64.c
-@USE_NETWORKING_TRUE@am__append_9 = -DUSE_NETWORKING
-@USE_NETWORKING_TRUE@am__append_10 = -DUSE_NETWORKING
-@USE_NETWORKING_TRUE@am__append_11 = ne2000.c nethandler.c wx-hostconfig.c
-@USE_NETWORKING_TRUE@am__append_12 = slirp/libslirp.a
+@USE_ALSA_TRUE@am__append_1 = -lasound
+@USE_ALSA_TRUE@am__append_2 = midi_alsa.c
+@USE_ALSA_FALSE@am__append_3 = wx-sdl2-midi.c
+@CPU_I386_TRUE@am__append_4 = codegen_x86.c
+@CPU_I386_TRUE@am__append_5 = -msse2
+@CPU_X86_64_TRUE@am__append_6 = codegen_x86-64.c
+@USE_NETWORKING_TRUE@am__append_7 = -DUSE_NETWORKING
+@USE_NETWORKING_TRUE@am__append_8 = -DUSE_NETWORKING
+@USE_NETWORKING_TRUE@am__append_9 = ne2000.c nethandler.c wx-hostconfig.c
+@USE_NETWORKING_TRUE@am__append_10 = slirp/libslirp.a
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/allegro.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -145,84 +133,46 @@ am__pcem_SOURCES_DIST = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c \
 	scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 	serial.c sio.c sis496.c sound.c sound_ad1848.c sound_adlib.c \
-	sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
-	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
-	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
-	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
-	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
-	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
-	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
-	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
-	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
-	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
-	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
-	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
-	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
-	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
-	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
-	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
-	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
-	dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c \
-	resid-fp/convolve.cc resid-fp/convolve-sse.cc \
-	resid-fp/envelope.cc resid-fp/extfilt.cc resid-fp/filter.cc \
-	resid-fp/pot.cc resid-fp/sid.cc resid-fp/voice.cc \
-	resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
-	resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc \
-	resid-fp/wave8580_PS_.cc resid-fp/wave8580_PST.cc \
-	resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
-	resid-fp/wave.cc wx-main.cc wx-config_sel.c wx-dialogbox.cc \
-	wx-utils.cc wx-app.cc wx-sdl2-joystick.c wx-sdl2-mouse.c \
-	wx-sdl2-keyboard.c wx-sdl2-video.c wx-sdl2.c wx-config.c \
-	wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
-	wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c \
-	wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c wx-glslp-parser.c \
-	wx-shader_man.c wx-shaderconfig.cc wx-joystickconfig.cc \
-	midi_alsa.c wx-sdl2-midi.c allegro-gui.c \
-	allegro-gui-config-sel.c allegro-gui-configure.c \
-	allegro-gui-deviceconfig.c allegro-gui-hdconf.c \
-	allegro-joystick.c allegro-keyboard.c allegro-main.c \
-	allegro-midi.c allegro-mouse.c allegro-video.c \
-	thread-pthread.c codegen_x86.c codegen_x86-64.c ne2000.c \
+	sound_adlibgold.c sound_audiopci.c sound_cms.c sound_emu8k.c \
+	sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c \
+	sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c \
+	sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c \
+	sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \
+	t3100e.c timer.c um8669f.c um8881f.c vid_ati_eeprom.c \
+	vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
+	vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c \
+	vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
+	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
+	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c \
+	vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
+	vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t3100e.c \
+	vid_tandy.c vid_tandysl.c vid_tgui9440.c vid_tkd8001_ramdac.c \
+	vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c \
+	wd76c10.c vid_wy700.c x86seg.c x87.c xtide.c sound_dbopl.cc \
+	sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
+	dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
+	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
+	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
+	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
+	resid-fp/wave6581_PST.cc resid-fp/wave6581_P_T.cc \
+	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
+	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
+	resid-fp/wave8580__ST.cc resid-fp/wave.cc wx-main.cc \
+	wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
+	wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c \
+	wx-sdl2-video.c wx-sdl2.c wx-config.c wx-deviceconfig.cc \
+	wx-status.cc wx-sdl2-status.c wx-resources.cpp wx-thread.c \
+	wx-common.c wx-sdl2-display.c wx-sdl2-video-renderer.c \
+	wx-sdl2-video-gl3.c wx-glslp-parser.c wx-shader_man.c \
+	wx-shaderconfig.cc wx-joystickconfig.cc midi_alsa.c \
+	wx-sdl2-midi.c codegen_x86.c codegen_x86-64.c ne2000.c \
 	nethandler.c wx-hostconfig.c
-@USE_WX_TRUE@am__objects_1 = pcem-wx-main.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-config_sel.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-dialogbox.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-utils.$(OBJEXT) pcem-wx-app.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-joystick.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-mouse.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-keyboard.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-video.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2.$(OBJEXT) pcem-wx-config.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-deviceconfig.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-status.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-status.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-resources.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-thread.$(OBJEXT) pcem-wx-common.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-display.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-video-renderer.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-sdl2-video-gl3.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-glslp-parser.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-shader_man.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-shaderconfig.$(OBJEXT) \
-@USE_WX_TRUE@	pcem-wx-joystickconfig.$(OBJEXT)
-@USE_ALSA_TRUE@@USE_WX_TRUE@am__objects_2 = pcem-midi_alsa.$(OBJEXT)
-@USE_ALSA_FALSE@@USE_WX_TRUE@am__objects_3 =  \
-@USE_ALSA_FALSE@@USE_WX_TRUE@	pcem-wx-sdl2-midi.$(OBJEXT)
-@USE_WX_FALSE@am__objects_4 = pcem-allegro-gui.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-gui-config-sel.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-gui-configure.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-gui-deviceconfig.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-gui-hdconf.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-joystick.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-keyboard.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-main.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-midi.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-mouse.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-allegro-video.$(OBJEXT) \
-@USE_WX_FALSE@	pcem-thread-pthread.$(OBJEXT)
-@CPU_I386_TRUE@am__objects_5 = pcem-codegen_x86.$(OBJEXT)
-@CPU_X86_64_TRUE@am__objects_6 = pcem-codegen_x86-64.$(OBJEXT)
-@USE_NETWORKING_TRUE@am__objects_7 = pcem-ne2000.$(OBJEXT) \
+@USE_ALSA_TRUE@am__objects_1 = pcem-midi_alsa.$(OBJEXT)
+@USE_ALSA_FALSE@am__objects_2 = pcem-wx-sdl2-midi.$(OBJEXT)
+@CPU_I386_TRUE@am__objects_3 = pcem-codegen_x86.$(OBJEXT)
+@CPU_X86_64_TRUE@am__objects_4 = pcem-codegen_x86-64.$(OBJEXT)
+@USE_NETWORKING_TRUE@am__objects_5 = pcem-ne2000.$(OBJEXT) \
 @USE_NETWORKING_TRUE@	pcem-nethandler.$(OBJEXT) \
 @USE_NETWORKING_TRUE@	pcem-wx-hostconfig.$(OBJEXT)
 am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
@@ -273,16 +223,17 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-scsi_hd.$(OBJEXT) pcem-serial.$(OBJEXT) \
 	pcem-sio.$(OBJEXT) pcem-sis496.$(OBJEXT) pcem-sound.$(OBJEXT) \
 	pcem-sound_ad1848.$(OBJEXT) pcem-sound_adlib.$(OBJEXT) \
-	pcem-sound_adlibgold.$(OBJEXT) pcem-sound_cms.$(OBJEXT) \
-	pcem-sound_emu8k.$(OBJEXT) pcem-sound_gus.$(OBJEXT) \
-	pcem-sound_mpu401_uart.$(OBJEXT) pcem-sound_opl.$(OBJEXT) \
-	pcem-sound_pas16.$(OBJEXT) pcem-sound_ps1.$(OBJEXT) \
-	pcem-sound_pssj.$(OBJEXT) pcem-sound_sb.$(OBJEXT) \
-	pcem-sound_sb_dsp.$(OBJEXT) pcem-sound_sn76489.$(OBJEXT) \
-	pcem-sound_speaker.$(OBJEXT) pcem-sound_ssi2001.$(OBJEXT) \
-	pcem-sound_wss.$(OBJEXT) pcem-sound_ym7128.$(OBJEXT) \
-	pcem-soundopenal.$(OBJEXT) pcem-tandy_eeprom.$(OBJEXT) \
-	pcem-tandy_rom.$(OBJEXT) pcem-timer.$(OBJEXT) \
+	pcem-sound_adlibgold.$(OBJEXT) pcem-sound_audiopci.$(OBJEXT) \
+	pcem-sound_cms.$(OBJEXT) pcem-sound_emu8k.$(OBJEXT) \
+	pcem-sound_gus.$(OBJEXT) pcem-sound_mpu401_uart.$(OBJEXT) \
+	pcem-sound_opl.$(OBJEXT) pcem-sound_pas16.$(OBJEXT) \
+	pcem-sound_ps1.$(OBJEXT) pcem-sound_pssj.$(OBJEXT) \
+	pcem-sound_sb.$(OBJEXT) pcem-sound_sb_dsp.$(OBJEXT) \
+	pcem-sound_sn76489.$(OBJEXT) pcem-sound_speaker.$(OBJEXT) \
+	pcem-sound_ssi2001.$(OBJEXT) pcem-sound_wss.$(OBJEXT) \
+	pcem-sound_ym7128.$(OBJEXT) pcem-soundopenal.$(OBJEXT) \
+	pcem-tandy_eeprom.$(OBJEXT) pcem-tandy_rom.$(OBJEXT) \
+	pcem-t3100e.$(OBJEXT) pcem-timer.$(OBJEXT) \
 	pcem-um8669f.$(OBJEXT) pcem-um8881f.$(OBJEXT) \
 	pcem-vid_ati_eeprom.$(OBJEXT) pcem-vid_ati_mach64.$(OBJEXT) \
 	pcem-vid_ati18800.$(OBJEXT) pcem-vid_ati28800.$(OBJEXT) \
@@ -299,13 +250,14 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-vid_ps1_svga.$(OBJEXT) pcem-vid_s3.$(OBJEXT) \
 	pcem-vid_s3_virge.$(OBJEXT) pcem-vid_sdac_ramdac.$(OBJEXT) \
 	pcem-vid_stg_ramdac.$(OBJEXT) pcem-vid_svga.$(OBJEXT) \
-	pcem-vid_svga_render.$(OBJEXT) pcem-vid_tandy.$(OBJEXT) \
-	pcem-vid_tandysl.$(OBJEXT) pcem-vid_tgui9440.$(OBJEXT) \
-	pcem-vid_tkd8001_ramdac.$(OBJEXT) pcem-vid_tvga.$(OBJEXT) \
-	pcem-vid_unk_ramdac.$(OBJEXT) pcem-vid_vga.$(OBJEXT) \
-	pcem-vid_voodoo.$(OBJEXT) pcem-video.$(OBJEXT) \
-	pcem-wd76c10.$(OBJEXT) pcem-vid_wy700.$(OBJEXT) \
-	pcem-x86seg.$(OBJEXT) pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) \
+	pcem-vid_svga_render.$(OBJEXT) pcem-vid_t3100e.$(OBJEXT) \
+	pcem-vid_tandy.$(OBJEXT) pcem-vid_tandysl.$(OBJEXT) \
+	pcem-vid_tgui9440.$(OBJEXT) pcem-vid_tkd8001_ramdac.$(OBJEXT) \
+	pcem-vid_tvga.$(OBJEXT) pcem-vid_unk_ramdac.$(OBJEXT) \
+	pcem-vid_vga.$(OBJEXT) pcem-vid_voodoo.$(OBJEXT) \
+	pcem-video.$(OBJEXT) pcem-wd76c10.$(OBJEXT) \
+	pcem-vid_wy700.$(OBJEXT) pcem-x86seg.$(OBJEXT) \
+	pcem-x87.$(OBJEXT) pcem-xtide.$(OBJEXT) \
 	pcem-sound_dbopl.$(OBJEXT) pcem-sound_resid.$(OBJEXT) \
 	pcem-cdrom_image.$(OBJEXT) pcem-dbopl.$(OBJEXT) \
 	pcem-nukedopl.$(OBJEXT) pcem-vid_cga_comp.$(OBJEXT) \
@@ -317,15 +269,25 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_dynarec.$(OBJEXT) \
 	pcem-wave6581__ST.$(OBJEXT) pcem-wave8580_PS_.$(OBJEXT) \
 	pcem-wave8580_PST.$(OBJEXT) pcem-wave8580_P_T.$(OBJEXT) \
 	pcem-wave8580__ST.$(OBJEXT) pcem-wave.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7)
+	pcem-wx-main.$(OBJEXT) pcem-wx-config_sel.$(OBJEXT) \
+	pcem-wx-dialogbox.$(OBJEXT) pcem-wx-utils.$(OBJEXT) \
+	pcem-wx-app.$(OBJEXT) pcem-wx-sdl2-joystick.$(OBJEXT) \
+	pcem-wx-sdl2-mouse.$(OBJEXT) pcem-wx-sdl2-keyboard.$(OBJEXT) \
+	pcem-wx-sdl2-video.$(OBJEXT) pcem-wx-sdl2.$(OBJEXT) \
+	pcem-wx-config.$(OBJEXT) pcem-wx-deviceconfig.$(OBJEXT) \
+	pcem-wx-status.$(OBJEXT) pcem-wx-sdl2-status.$(OBJEXT) \
+	pcem-wx-resources.$(OBJEXT) pcem-wx-thread.$(OBJEXT) \
+	pcem-wx-common.$(OBJEXT) pcem-wx-sdl2-display.$(OBJEXT) \
+	pcem-wx-sdl2-video-renderer.$(OBJEXT) \
+	pcem-wx-sdl2-video-gl3.$(OBJEXT) \
+	pcem-wx-glslp-parser.$(OBJEXT) pcem-wx-shader_man.$(OBJEXT) \
+	pcem-wx-shaderconfig.$(OBJEXT) \
+	pcem-wx-joystickconfig.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5)
 pcem_OBJECTS = $(am_pcem_OBJECTS)
 am__DEPENDENCIES_1 =
-@USE_WX_FALSE@pcem_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-@USE_WX_FALSE@	$(am__append_12)
-@USE_WX_TRUE@pcem_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-@USE_WX_TRUE@	$(am__append_12)
+pcem_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__append_10)
 pcem_LINK = $(CXXLD) $(pcem_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SCRIPTS = $(noinst_SCRIPTS)
@@ -403,7 +365,6 @@ CTAGS = ctags
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-ALLEGRO_CONFIG = @ALLEGRO_CONFIG@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AUTOCONF = @AUTOCONF@
@@ -474,8 +435,6 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-allegro_CFLAGS = @allegro_CFLAGS@
-allegro_LIBS = @allegro_LIBS@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -544,44 +503,46 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c \
 	scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 	serial.c sio.c sis496.c sound.c sound_ad1848.c sound_adlib.c \
-	sound_adlibgold.c sound_cms.c sound_emu8k.c sound_gus.c \
-	sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c \
-	sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
-	sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c \
-	soundopenal.c tandy_eeprom.c tandy_rom.c timer.c um8669f.c \
-	um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c \
-	vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c \
-	vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c \
-	vid_genius.c vid_hercules.c vid_icd2061.c vid_ics2595.c \
-	vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c \
-	vid_paradise.c vid_pc200.c vid_pc1512.c vid_pc1640.c \
-	vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c \
-	vid_sdac_ramdac.c vid_stg_ramdac.c vid_svga.c \
-	vid_svga_render.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
-	vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c \
-	vid_voodoo.c video.c wd76c10.c vid_wy700.c x86seg.c x87.c \
-	xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp \
-	dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c \
-	resid-fp/convolve.cc resid-fp/convolve-sse.cc \
-	resid-fp/envelope.cc resid-fp/extfilt.cc resid-fp/filter.cc \
-	resid-fp/pot.cc resid-fp/sid.cc resid-fp/voice.cc \
-	resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
-	resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc \
-	resid-fp/wave8580_PS_.cc resid-fp/wave8580_PST.cc \
-	resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
-	resid-fp/wave.cc $(am__append_1) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_8) $(am__append_11)
-@USE_WX_FALSE@pcem_CFLAGS = $(allegro_CFLAGS) -DPCEM_ALLEGRO \
-@USE_WX_FALSE@	$(am__append_7) $(am__append_9)
-@USE_WX_TRUE@pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell \
-@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_7) \
-@USE_WX_TRUE@	$(am__append_9)
-@USE_WX_FALSE@pcem_CXXFLAGS = $(am__append_10)
-@USE_WX_TRUE@pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell \
-@USE_WX_TRUE@	sdl2-config --cflags) $(am__append_10)
-@USE_WX_FALSE@pcem_LDADD = $(allegro_LIBS) -lopenal $(am__append_12)
-@USE_WX_TRUE@pcem_LDADD = @LIBS@ $(am__append_2) $(am__append_12)
+	sound_adlibgold.c sound_audiopci.c sound_cms.c sound_emu8k.c \
+	sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c \
+	sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c \
+	sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c \
+	sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \
+	t3100e.c timer.c um8669f.c um8881f.c vid_ati_eeprom.c \
+	vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
+	vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c \
+	vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c \
+	vid_hercules.c vid_icd2061.c vid_ics2595.c vid_incolor.c \
+	vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c \
+	vid_pc200.c vid_pc1512.c vid_pc1640.c vid_pcjr.c \
+	vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
+	vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t3100e.c \
+	vid_tandy.c vid_tandysl.c vid_tgui9440.c vid_tkd8001_ramdac.c \
+	vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c \
+	wd76c10.c vid_wy700.c x86seg.c x87.c xtide.c sound_dbopl.cc \
+	sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
+	dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc \
+	resid-fp/convolve-sse.cc resid-fp/envelope.cc \
+	resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc \
+	resid-fp/sid.cc resid-fp/voice.cc resid-fp/wave6581_PS_.cc \
+	resid-fp/wave6581_PST.cc resid-fp/wave6581_P_T.cc \
+	resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
+	resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc \
+	resid-fp/wave8580__ST.cc resid-fp/wave.cc wx-main.cc \
+	wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
+	wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c \
+	wx-sdl2-video.c wx-sdl2.c wx-config.c wx-deviceconfig.cc \
+	wx-status.cc wx-sdl2-status.c wx-resources.cpp wx-thread.c \
+	wx-common.c wx-sdl2-display.c wx-sdl2-video-renderer.c \
+	wx-sdl2-video-gl3.c wx-glslp-parser.c wx-shader_man.c \
+	wx-shaderconfig.cc wx-joystickconfig.cc $(am__append_2) \
+	$(am__append_3) $(am__append_4) $(am__append_6) \
+	$(am__append_9)
+pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config \
+	--cflags) $(am__append_5) $(am__append_7)
+pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config \
+	--cflags) $(am__append_8)
+pcem_LDADD = @LIBS@ $(am__append_1) $(am__append_10)
 all: all-am
 
 .SUFFIXES:
@@ -674,17 +635,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-808x.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-acer386sx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-ali1429.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-config-sel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-configure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-deviceconfig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui-hdconf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-gui.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-joystick.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-keyboard.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-midi.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-mouse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-allegro-video.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-amstrad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cbm_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-cdrom-image.Po@am__quote@
@@ -795,6 +745,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_ad1848.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_adlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_adlibgold.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_audiopci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_cms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_dbopl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_emu8k.Po@am__quote@
@@ -813,9 +764,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_wss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-sound_ym7128.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-soundopenal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-t3100e.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-tandy_eeprom.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-tandy_rom.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-thread-pthread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-um8669f.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-um8881f.Po@am__quote@
@@ -851,6 +802,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_stg_ramdac.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_svga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_svga_render.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_t3100e.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tandy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tandysl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-vid_tgui9440.Po@am__quote@
@@ -2316,6 +2268,20 @@ pcem-sound_adlibgold.obj: sound_adlibgold.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_adlibgold.obj `if test -f 'sound_adlibgold.c'; then $(CYGPATH_W) 'sound_adlibgold.c'; else $(CYGPATH_W) '$(srcdir)/sound_adlibgold.c'; fi`
 
+pcem-sound_audiopci.o: sound_audiopci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_audiopci.o -MD -MP -MF $(DEPDIR)/pcem-sound_audiopci.Tpo -c -o pcem-sound_audiopci.o `test -f 'sound_audiopci.c' || echo '$(srcdir)/'`sound_audiopci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_audiopci.Tpo $(DEPDIR)/pcem-sound_audiopci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sound_audiopci.c' object='pcem-sound_audiopci.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_audiopci.o `test -f 'sound_audiopci.c' || echo '$(srcdir)/'`sound_audiopci.c
+
+pcem-sound_audiopci.obj: sound_audiopci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_audiopci.obj -MD -MP -MF $(DEPDIR)/pcem-sound_audiopci.Tpo -c -o pcem-sound_audiopci.obj `if test -f 'sound_audiopci.c'; then $(CYGPATH_W) 'sound_audiopci.c'; else $(CYGPATH_W) '$(srcdir)/sound_audiopci.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_audiopci.Tpo $(DEPDIR)/pcem-sound_audiopci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sound_audiopci.c' object='pcem-sound_audiopci.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-sound_audiopci.obj `if test -f 'sound_audiopci.c'; then $(CYGPATH_W) 'sound_audiopci.c'; else $(CYGPATH_W) '$(srcdir)/sound_audiopci.c'; fi`
+
 pcem-sound_cms.o: sound_cms.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-sound_cms.o -MD -MP -MF $(DEPDIR)/pcem-sound_cms.Tpo -c -o pcem-sound_cms.o `test -f 'sound_cms.c' || echo '$(srcdir)/'`sound_cms.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-sound_cms.Tpo $(DEPDIR)/pcem-sound_cms.Po
@@ -2567,6 +2533,20 @@ pcem-tandy_rom.obj: tandy_rom.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tandy_rom.c' object='pcem-tandy_rom.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-tandy_rom.obj `if test -f 'tandy_rom.c'; then $(CYGPATH_W) 'tandy_rom.c'; else $(CYGPATH_W) '$(srcdir)/tandy_rom.c'; fi`
+
+pcem-t3100e.o: t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-t3100e.o -MD -MP -MF $(DEPDIR)/pcem-t3100e.Tpo -c -o pcem-t3100e.o `test -f 't3100e.c' || echo '$(srcdir)/'`t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-t3100e.Tpo $(DEPDIR)/pcem-t3100e.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='t3100e.c' object='pcem-t3100e.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-t3100e.o `test -f 't3100e.c' || echo '$(srcdir)/'`t3100e.c
+
+pcem-t3100e.obj: t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-t3100e.obj -MD -MP -MF $(DEPDIR)/pcem-t3100e.Tpo -c -o pcem-t3100e.obj `if test -f 't3100e.c'; then $(CYGPATH_W) 't3100e.c'; else $(CYGPATH_W) '$(srcdir)/t3100e.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-t3100e.Tpo $(DEPDIR)/pcem-t3100e.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='t3100e.c' object='pcem-t3100e.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-t3100e.obj `if test -f 't3100e.c'; then $(CYGPATH_W) 't3100e.c'; else $(CYGPATH_W) '$(srcdir)/t3100e.c'; fi`
 
 pcem-timer.o: timer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-timer.o -MD -MP -MF $(DEPDIR)/pcem-timer.Tpo -c -o pcem-timer.o `test -f 'timer.c' || echo '$(srcdir)/'`timer.c
@@ -3044,6 +3024,20 @@ pcem-vid_svga_render.obj: vid_svga_render.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_svga_render.obj `if test -f 'vid_svga_render.c'; then $(CYGPATH_W) 'vid_svga_render.c'; else $(CYGPATH_W) '$(srcdir)/vid_svga_render.c'; fi`
 
+pcem-vid_t3100e.o: vid_t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_t3100e.o -MD -MP -MF $(DEPDIR)/pcem-vid_t3100e.Tpo -c -o pcem-vid_t3100e.o `test -f 'vid_t3100e.c' || echo '$(srcdir)/'`vid_t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-vid_t3100e.Tpo $(DEPDIR)/pcem-vid_t3100e.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vid_t3100e.c' object='pcem-vid_t3100e.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_t3100e.o `test -f 'vid_t3100e.c' || echo '$(srcdir)/'`vid_t3100e.c
+
+pcem-vid_t3100e.obj: vid_t3100e.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_t3100e.obj -MD -MP -MF $(DEPDIR)/pcem-vid_t3100e.Tpo -c -o pcem-vid_t3100e.obj `if test -f 'vid_t3100e.c'; then $(CYGPATH_W) 'vid_t3100e.c'; else $(CYGPATH_W) '$(srcdir)/vid_t3100e.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-vid_t3100e.Tpo $(DEPDIR)/pcem-vid_t3100e.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vid_t3100e.c' object='pcem-vid_t3100e.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-vid_t3100e.obj `if test -f 'vid_t3100e.c'; then $(CYGPATH_W) 'vid_t3100e.c'; else $(CYGPATH_W) '$(srcdir)/vid_t3100e.c'; fi`
+
 pcem-vid_tandy.o: vid_tandy.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-vid_tandy.o -MD -MP -MF $(DEPDIR)/pcem-vid_tandy.Tpo -c -o pcem-vid_tandy.o `test -f 'vid_tandy.c' || echo '$(srcdir)/'`vid_tandy.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-vid_tandy.Tpo $(DEPDIR)/pcem-vid_tandy.Po
@@ -3491,174 +3485,6 @@ pcem-wx-sdl2-midi.obj: wx-sdl2-midi.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wx-sdl2-midi.c' object='pcem-wx-sdl2-midi.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-wx-sdl2-midi.obj `if test -f 'wx-sdl2-midi.c'; then $(CYGPATH_W) 'wx-sdl2-midi.c'; else $(CYGPATH_W) '$(srcdir)/wx-sdl2-midi.c'; fi`
-
-pcem-allegro-gui.o: allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.o `test -f 'allegro-gui.c' || echo '$(srcdir)/'`allegro-gui.c
-
-pcem-allegro-gui.obj: allegro-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui.Tpo -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui.Tpo $(DEPDIR)/pcem-allegro-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui.c' object='pcem-allegro-gui.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui.obj `if test -f 'allegro-gui.c'; then $(CYGPATH_W) 'allegro-gui.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui.c'; fi`
-
-pcem-allegro-gui-config-sel.o: allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.o `test -f 'allegro-gui-config-sel.c' || echo '$(srcdir)/'`allegro-gui-config-sel.c
-
-pcem-allegro-gui-config-sel.obj: allegro-gui-config-sel.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-config-sel.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-config-sel.Tpo $(DEPDIR)/pcem-allegro-gui-config-sel.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-config-sel.c' object='pcem-allegro-gui-config-sel.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-config-sel.obj `if test -f 'allegro-gui-config-sel.c'; then $(CYGPATH_W) 'allegro-gui-config-sel.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-config-sel.c'; fi`
-
-pcem-allegro-gui-configure.o: allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.o `test -f 'allegro-gui-configure.c' || echo '$(srcdir)/'`allegro-gui-configure.c
-
-pcem-allegro-gui-configure.obj: allegro-gui-configure.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-configure.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-configure.Tpo -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-configure.Tpo $(DEPDIR)/pcem-allegro-gui-configure.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-configure.c' object='pcem-allegro-gui-configure.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-configure.obj `if test -f 'allegro-gui-configure.c'; then $(CYGPATH_W) 'allegro-gui-configure.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-configure.c'; fi`
-
-pcem-allegro-gui-deviceconfig.o: allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.o `test -f 'allegro-gui-deviceconfig.c' || echo '$(srcdir)/'`allegro-gui-deviceconfig.c
-
-pcem-allegro-gui-deviceconfig.obj: allegro-gui-deviceconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-deviceconfig.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-deviceconfig.Tpo $(DEPDIR)/pcem-allegro-gui-deviceconfig.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-deviceconfig.c' object='pcem-allegro-gui-deviceconfig.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-deviceconfig.obj `if test -f 'allegro-gui-deviceconfig.c'; then $(CYGPATH_W) 'allegro-gui-deviceconfig.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-deviceconfig.c'; fi`
-
-pcem-allegro-gui-hdconf.o: allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.o -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.o `test -f 'allegro-gui-hdconf.c' || echo '$(srcdir)/'`allegro-gui-hdconf.c
-
-pcem-allegro-gui-hdconf.obj: allegro-gui-hdconf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-gui-hdconf.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-gui-hdconf.Tpo $(DEPDIR)/pcem-allegro-gui-hdconf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-gui-hdconf.c' object='pcem-allegro-gui-hdconf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-gui-hdconf.obj `if test -f 'allegro-gui-hdconf.c'; then $(CYGPATH_W) 'allegro-gui-hdconf.c'; else $(CYGPATH_W) '$(srcdir)/allegro-gui-hdconf.c'; fi`
-
-pcem-allegro-joystick.o: allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.o -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.o `test -f 'allegro-joystick.c' || echo '$(srcdir)/'`allegro-joystick.c
-
-pcem-allegro-joystick.obj: allegro-joystick.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-joystick.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-joystick.Tpo -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-joystick.Tpo $(DEPDIR)/pcem-allegro-joystick.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-joystick.c' object='pcem-allegro-joystick.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-joystick.obj `if test -f 'allegro-joystick.c'; then $(CYGPATH_W) 'allegro-joystick.c'; else $(CYGPATH_W) '$(srcdir)/allegro-joystick.c'; fi`
-
-pcem-allegro-keyboard.o: allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.o -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.o `test -f 'allegro-keyboard.c' || echo '$(srcdir)/'`allegro-keyboard.c
-
-pcem-allegro-keyboard.obj: allegro-keyboard.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-keyboard.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-keyboard.Tpo -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-keyboard.Tpo $(DEPDIR)/pcem-allegro-keyboard.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-keyboard.c' object='pcem-allegro-keyboard.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-keyboard.obj `if test -f 'allegro-keyboard.c'; then $(CYGPATH_W) 'allegro-keyboard.c'; else $(CYGPATH_W) '$(srcdir)/allegro-keyboard.c'; fi`
-
-pcem-allegro-main.o: allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.o -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.o `test -f 'allegro-main.c' || echo '$(srcdir)/'`allegro-main.c
-
-pcem-allegro-main.obj: allegro-main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-main.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-main.Tpo -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-main.Tpo $(DEPDIR)/pcem-allegro-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-main.c' object='pcem-allegro-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-main.obj `if test -f 'allegro-main.c'; then $(CYGPATH_W) 'allegro-main.c'; else $(CYGPATH_W) '$(srcdir)/allegro-main.c'; fi`
-
-pcem-allegro-midi.o: allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.o -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.o `test -f 'allegro-midi.c' || echo '$(srcdir)/'`allegro-midi.c
-
-pcem-allegro-midi.obj: allegro-midi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-midi.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-midi.Tpo -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-midi.Tpo $(DEPDIR)/pcem-allegro-midi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-midi.c' object='pcem-allegro-midi.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-midi.obj `if test -f 'allegro-midi.c'; then $(CYGPATH_W) 'allegro-midi.c'; else $(CYGPATH_W) '$(srcdir)/allegro-midi.c'; fi`
-
-pcem-allegro-mouse.o: allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.o -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.o `test -f 'allegro-mouse.c' || echo '$(srcdir)/'`allegro-mouse.c
-
-pcem-allegro-mouse.obj: allegro-mouse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-mouse.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-mouse.Tpo -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-mouse.Tpo $(DEPDIR)/pcem-allegro-mouse.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-mouse.c' object='pcem-allegro-mouse.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-mouse.obj `if test -f 'allegro-mouse.c'; then $(CYGPATH_W) 'allegro-mouse.c'; else $(CYGPATH_W) '$(srcdir)/allegro-mouse.c'; fi`
-
-pcem-allegro-video.o: allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.o -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.o `test -f 'allegro-video.c' || echo '$(srcdir)/'`allegro-video.c
-
-pcem-allegro-video.obj: allegro-video.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-allegro-video.obj -MD -MP -MF $(DEPDIR)/pcem-allegro-video.Tpo -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-allegro-video.Tpo $(DEPDIR)/pcem-allegro-video.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='allegro-video.c' object='pcem-allegro-video.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-allegro-video.obj `if test -f 'allegro-video.c'; then $(CYGPATH_W) 'allegro-video.c'; else $(CYGPATH_W) '$(srcdir)/allegro-video.c'; fi`
-
-pcem-thread-pthread.o: thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.o -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.o `test -f 'thread-pthread.c' || echo '$(srcdir)/'`thread-pthread.c
-
-pcem-thread-pthread.obj: thread-pthread.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-thread-pthread.obj -MD -MP -MF $(DEPDIR)/pcem-thread-pthread.Tpo -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-thread-pthread.Tpo $(DEPDIR)/pcem-thread-pthread.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='thread-pthread.c' object='pcem-thread-pthread.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-thread-pthread.obj `if test -f 'thread-pthread.c'; then $(CYGPATH_W) 'thread-pthread.c'; else $(CYGPATH_W) '$(srcdir)/thread-pthread.c'; fi`
 
 pcem-codegen_x86.o: codegen_x86.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-codegen_x86.o -MD -MP -MF $(DEPDIR)/pcem-codegen_x86.Tpo -c -o pcem-codegen_x86.o `test -f 'codegen_x86.c' || echo '$(srcdir)/'`codegen_x86.c

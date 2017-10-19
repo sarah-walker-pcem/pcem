@@ -608,9 +608,6 @@ PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
 SDL2_FRAMEWORK
-allegro_LIBS
-allegro_CFLAGS
-ALLEGRO_CONFIG
 USE_ALSA_FALSE
 USE_ALSA_TRUE
 USE_NETWORKING_FALSE
@@ -728,12 +725,8 @@ enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
 enable_debug
-enable_wx
 enable_networking
 enable_alsa
-with_allegro_prefix
-with_allegro_exec_prefix
-enable_allegrotest
 with_sdl_prefix
 with_sdl_exec_prefix
 enable_sdltest
@@ -1396,18 +1389,14 @@ Optional Features:
   --disable-dependency-tracking
                           speeds up one-time build
   --enable-debug          build debug executable
-  --enable-wx             use wxWidgets GUI
   --enable-networking     enable networking
   --enable-alsa           use ALSA for MIDI
-  --disable-allegrotest       Do not try to compile and run a test LIBallegro program
   --disable-sdltest       Do not try to compile and run a test SDL program
   --disable-sdlframework Do not search for SDL2.framework
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-allegro-prefix=PFX   Prefix where liballegro is installed (optional)
-  --with-allegro-exec-prefix=PFX Exec prefix where liballegro is installed (optional)
   --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)
   --with-sdl-exec-prefix=PFX Exec prefix where SDL is installed (optional)
   --with-wxdir=PATH       Use uninstalled version of wxWidgets in PATH
@@ -4157,21 +4146,6 @@ else
 $as_echo "no" >&6; }
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use the wxWidgets-based GUI" >&5
-$as_echo_n "checking whether to use the wxWidgets-based GUI... " >&6; }
-# Check whether --enable-wx was given.
-if test "${enable_wx+set}" = set; then :
-  enableval=$enable_wx;
-fi
-
-if test "$enable_wx" = "yes"; then
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable networking" >&5
 $as_echo_n "checking whether to enable networking... " >&6; }
 # Check whether --enable-networking was given.
@@ -4282,280 +4256,7 @@ else
 fi
 
 
-if test "$enable_wx" != "yes"; then
-   # Do not run test for Allegro with Win32/MinGW version, as binary builds have
-   # `allegro-config' missing.
-   # NOTE: For the following Autoconf macro to be supported, you need to extract
-   #       allegro.m4 from the DOS/Windows Allegro sources (the file is contained
-   #       in `misc') and copy it to this directory or MSYS's `/share/aclocal'.
-   if test "$OS" != "win"; then
-
-
-
-
-# Check whether --with-allegro-prefix was given.
-if test "${with_allegro_prefix+set}" = set; then :
-  withval=$with_allegro_prefix; ALLEGRO_CONFIG_prefix="$withval"
-else
-  ALLEGRO_CONFIG_prefix=""
-fi
-
-
-# Check whether --with-allegro-exec-prefix was given.
-if test "${with_allegro_exec_prefix+set}" = set; then :
-  withval=$with_allegro_exec_prefix; ALLEGRO_CONFIG_exec_prefix="$withval"
-else
-  ALLEGRO_CONFIG_exec_prefix=""
-fi
-
-# Check whether --enable-allegrotest was given.
-if test "${enable_allegrotest+set}" = set; then :
-  enableval=$enable_allegrotest;
-else
-  enable_allegrotest=yes
-fi
-
-
-  if test x$ALLEGRO_CONFIG_exec_prefix != x ; then
-     ALLEGRO_CONFIG_args="$ALLEGRO_CONFIG_args --exec-prefix=$ALLEGRO_CONFIG_exec_prefix"
-     if test x${ALLEGRO_CONFIG+set} != xset ; then
-        ALLEGRO_CONFIG=$ALLEGRO_CONFIG_exec_prefix/bin/allegro-config
-     fi
-  fi
-  if test x$ALLEGRO_CONFIG_prefix != x ; then
-     ALLEGRO_CONFIG_args="$ALLEGRO_CONFIG_args --prefix=$ALLEGRO_CONFIG_prefix"
-     if test x${ALLEGRO_CONFIG+set} != xset ; then
-        ALLEGRO_CONFIG=$ALLEGRO_CONFIG_prefix/bin/allegro-config
-     fi
-  fi
-
-  # Extract the first word of "allegro-config", so it can be a program name with args.
-set dummy allegro-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_ALLEGRO_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $ALLEGRO_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_ALLEGRO_CONFIG="$ALLEGRO_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_ALLEGRO_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_path_ALLEGRO_CONFIG" && ac_cv_path_ALLEGRO_CONFIG="no"
-  ;;
-esac
-fi
-ALLEGRO_CONFIG=$ac_cv_path_ALLEGRO_CONFIG
-if test -n "$ALLEGRO_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ALLEGRO_CONFIG" >&5
-$as_echo "$ALLEGRO_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  min_allegro_version=4.0.0
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Allegro - version >= $min_allegro_version" >&5
-$as_echo_n "checking for Allegro - version >= $min_allegro_version... " >&6; }
-  no_allegro=""
-  if test "$ALLEGRO_CONFIG" = "no" ; then
-    no_allegro=yes
-  else
-    allegro_CFLAGS=`$ALLEGRO_CONFIG $ALLEGRO_CONFIG_args --cflags`
-    allegro_LIBS=`$ALLEGRO_CONFIG $ALLEGRO_CONFIG_args --libs`
-    ALLEGRO_CONFIG_major_version=`$ALLEGRO_CONFIG $ALLEGRO_CONFIG_args --version | \
-           sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
-    ALLEGRO_CONFIG_minor_version=`$ALLEGRO_CONFIG $ALLEGRO_CONFIG_args --version | \
-           sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
-    ALLEGRO_CONFIG_micro_version=`$ALLEGRO_CONFIG $ALLEGRO_CONFIG_args --version | \
-           sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
-    if test "x$enable_allegrotest" = "xyes" ; then
-      ac_save_CFLAGS="$CFLAGS"
-      ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $allegro_CFLAGS"
-      LIBS="$allegro_LIBS $LIBS"
-      rm -f conf.allegrotest
-      if test "$cross_compiling" = yes; then :
-  echo $ac_n "cross compiling; assumed OK... $ac_c"
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <allegro.h>
-
-int
-main()
-{
-  int allegro_major_version, allegro_minor_version, allegro_micro_version;
-  int major, minor, micro;
-  char *tmp_version;
-  int tmp_int_version;
-
-  system("touch conf.allegrotest");
-
-  /* Capture allegro-config output via autoconf/configure variables */
-  /* HP/UX 9 (%@#!) writes to sscanf strings */
-  tmp_version = (char *)strdup("$min_allegro_version");
-  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
-     printf("%s, bad version string from allegro-config\n", "$min_allegro_version");
-     free(tmp_version);
-     exit(1);
-   }
-   free(tmp_version);
-
-   /* Capture the version information from the header files */
-   allegro_major_version = ALLEGRO_VERSION;
-   allegro_minor_version = ALLEGRO_SUB_VERSION;
-   allegro_micro_version = ALLEGRO_WIP_VERSION;
-
- /* Compare allegro-config output to the Allegro headers */
-  if ((allegro_major_version != $ALLEGRO_CONFIG_major_version) ||
-      (allegro_minor_version != $ALLEGRO_CONFIG_minor_version))
-
-    {
-      printf("*** Allegro header files (version %d.%d.%d) do not match\n",
-         allegro_major_version, allegro_minor_version, allegro_micro_version);
-      printf("*** allegro-config (version %d.%d.%d)\n",
-         $ALLEGRO_CONFIG_major_version, $ALLEGRO_CONFIG_minor_version, $ALLEGRO_CONFIG_micro_version);
-      return 1;
-    }
-/* Compare the headers to the library to make sure we match */
-  /* Less than ideal -- doesn't provide us with return value feedback,
-   * only exits if there's a serious mismatch between header and library.
-   */
-   	/* TODO:
-	 * This doesnt work!
-	 */
-    /* ALLEGRO_TEST_VERSION; */
-
-    /* Test that the library is greater than our minimum version */
-    if (($ALLEGRO_CONFIG_major_version > major) ||
-        (($ALLEGRO_CONFIG_major_version == major) && ($ALLEGRO_CONFIG_minor_version > minor)) ||
-        (($ALLEGRO_CONFIG_major_version == major) && ($ALLEGRO_CONFIG_minor_version == minor) &&
-        ($ALLEGRO_CONFIG_micro_version >= micro)))
-      {
-        return 0;
-       }
-     else
-      {
-        printf("\n*** An old version of Allegro (%d.%d.%d) was found.\n",
-               allegro_major_version, allegro_minor_version, allegro_micro_version);
-        printf("*** You need a version of Allegro newer than %d.%d.%d. The latest version of\n",
-           major, minor, micro);
-        printf("*** Allegro is always available from http://alleg.sf.net.\n");
-        printf("***\n");
-        printf("*** If you have already installed a sufficiently new version, this error\n");
-        printf("*** probably means that the wrong copy of the allegro-config shell script is\n");
-        printf("*** being found. The easiest way to fix this is to remove the old version\n");
-        printf("*** of Allegro, but you can also set the ALLEGRO_CONFIG environment to point to the\n");
-        printf("*** correct copy of allegro-config. (In this case, you will have to\n");
-        printf("*** modify your LD_LIBRARY_PATH enviroment variable, or edit /etc/ld.so.conf\n");
-        printf("*** so that the correct libraries are found at run-time))\n");
-    }
-  return 1;
-} END_OF_MAIN()
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-
-else
-  no_allegro=yes
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-       CFLAGS="$ac_save_CFLAGS"
-       LIBS="$ac_save_LIBS"
-     fi
-  fi
-
-  if test "x$no_allegro" = x ; then
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (version $ALLEGRO_CONFIG_major_version.$ALLEGRO_CONFIG_minor_version.$ALLEGRO_CONFIG_micro_version)" >&5
-$as_echo "yes (version $ALLEGRO_CONFIG_major_version.$ALLEGRO_CONFIG_minor_version.$ALLEGRO_CONFIG_micro_version)" >&6; }
-     :
-  else
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-     if test "$ALLEGRO_CONFIG" = "no" ; then
-       echo "*** The allegro-config script installed by Allegro could not be found"
-       echo "*** If Allegro was installed in PREFIX, make sure PREFIX/bin is in"
-       echo "*** your path, or set the ALLEGRO_CONFIG environment variable to the"
-       echo "*** full path to allegro-config."
-     else
-       if test -f conf.allegrotest ; then
-        :
-       else
-          echo "*** Could not run Allegro test program, checking why..."
-          CFLAGS="$CFLAGS $allegro_CFLAGS"
-          LIBS="$LIBS $allegro_LIBS"
-          cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <allegro.h>
-#include <stdio.h>
-
-int
-main ()
-{
- allegro_error; return 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-   echo "*** The test program compiled, but did not run. This usually means"
-          echo "*** that the run-time linker is not finding Allegro or finding the wrong"
-          echo "*** version of Allegro. If it is not finding Allegro, you'll need to set your"
-          echo "*** LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf to point"
-          echo "*** to the installed location  Also, make sure you have run ldconfig if that"
-          echo "*** is required on your system"
-          echo "***"
-          echo "*** If you have an old version installed, it is best to remove it, although"
-          echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"
-else
-   echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occured. This usually means Allegro was incorrectly installed"
-          echo "*** or that you have moved Allegro since it was installed. In the latter case, you"
-          echo "*** may want to edit the allegro-config script: $ALLEGRO_CONFIG"
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-          CFLAGS="$ac_save_CFLAGS"
-          LIBS="$ac_save_LIBS"
-       fi
-     fi
-
-     allegro_CFLAGS=""
-     allegro_LIBS=""
-     as_fn_error $? "building PCem requires Allegro to be installed" "$LINENO" 5
-  fi
-
-
-  rm -f conf.allegrotest
-
-   fi
-else
-   SDL_VERSION=2.0.1
+SDL_VERSION=2.0.1
 
 
 
@@ -4676,6 +4377,7 @@ $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
 fi
+
 
 # Check whether --with-sdl-prefix was given.
 if test "${with_sdl_prefix+set}" = set; then :
@@ -5055,6 +4757,7 @@ rm -f core conftest.err conftest.$ac_objext \
 
 
 
+
 # Check whether --with-wxdir was given.
 if test "${with_wxdir+set}" = set; then :
   withval=$with_wxdir;  wx_config_name="$withval/wx-config"
@@ -5084,7 +4787,7 @@ else
 fi
 
 
-   reqwx=3.0.0
+reqwx=3.0.0
 
 
     if test x${WX_CONFIG_NAME+set} != xset ; then
@@ -5350,18 +5053,19 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
 
 
 
-   if test "$wxWin" != 1; then
-      as_fn_error $? "
-         wxWidgets must be installed on your system.
+if test "$wxWin" != 1; then
+   as_fn_error $? "
+      wxWidgets must be installed on your system.
 
-         Please check that wx-config is in path, the directory
-         where wxWidgets libraries are installed (returned by
-         'wx-config --libs' or 'wx-config --static --libs' command)
-         is in LD_LIBRARY_PATH or equivalent variable and
-         wxWidgets version is $reqwx or above.
-         " "$LINENO" 5
-   fi
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
+      Please check that wx-config is in path, the directory
+      where wxWidgets libraries are installed (returned by
+      'wx-config --libs' or 'wx-config --static --libs' command)
+      is in LD_LIBRARY_PATH or equivalent variable and
+      wxWidgets version is $reqwx or above.
+      " "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
 $as_echo_n "checking for glGetError in -lGL... " >&6; }
 if ${ac_cv_lib_GL_glGetError+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5406,12 +5110,11 @@ _ACEOF
 
 else
   \
-      echo "You need to install the OpenGL library."
-       exit -1
+   echo "You need to install the OpenGL library."
+    exit -1
 fi
 
-   LIBS="$LIBS $WX_LIBS $SDL_LIBS"
-fi
+LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for alGetError in -lopenal" >&5
 $as_echo_n "checking for alGetError in -lopenal... " >&6; }

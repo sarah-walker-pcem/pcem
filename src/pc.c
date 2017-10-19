@@ -233,7 +233,6 @@ void initpc(int argc, char *argv[])
         //char *p;
 //        char *config_file = NULL;
         int c;
-//        allegro_init();
 
         for (c = 1; c < argc; c++)
         {

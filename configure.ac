@@ -24,15 +24,6 @@ else
    AC_MSG_RESULT([no])
 fi
 
-AC_MSG_CHECKING([whether to use the wxWidgets-based GUI])
-AC_ARG_ENABLE(wx,
-	      AC_HELP_STRING([--enable-wx], [use wxWidgets GUI]))
-if test "$enable_wx" = "yes"; then
-   AC_MSG_RESULT([yes])
-else
-   AC_MSG_RESULT([no])
-fi
-
 AC_MSG_CHECKING([whether to enable networking])
 AC_ARG_ENABLE(networking,
 	      AC_HELP_STRING([--enable-networking], [enable networking]))
@@ -79,41 +70,31 @@ AM_CONDITIONAL(USE_WX, test "$enable_wx" = "yes")
 AM_CONDITIONAL(USE_NETWORKING, test "$enable_networking" = "yes")
 AM_CONDITIONAL(USE_ALSA, test "$enable_alsa" = "yes")
 
-if test "$enable_wx" != "yes"; then
-   # Do not run test for Allegro with Win32/MinGW version, as binary builds have
-   # `allegro-config' missing.
-   # NOTE: For the following Autoconf macro to be supported, you need to extract
-   #       allegro.m4 from the DOS/Windows Allegro sources (the file is contained
-   #       in `misc') and copy it to this directory or MSYS's `/share/aclocal'.
-   if test "$OS" != "win"; then
-      AC_CONFIG_MACRO_DIR([./])
-      AM_PATH_ALLEGRO(, , AC_MSG_ERROR(building PCem requires Allegro to be installed))
-   fi
-else
-   SDL_VERSION=2.0.1
-   AM_PATH_SDL2($SDL_VERSION,
-      :,
-      AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
-   )
-   AM_OPTIONS_WXCONFIG
-   reqwx=3.0.0
-   AM_PATH_WXCONFIG($reqwx, wxWin=1)
-   if test "$wxWin" != 1; then
-      AC_MSG_ERROR([
-         wxWidgets must be installed on your system.
+SDL_VERSION=2.0.1
+AM_PATH_SDL2($SDL_VERSION,
+   :,
+   AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
+
+AM_OPTIONS_WXCONFIG
+reqwx=3.0.0
+AM_PATH_WXCONFIG($reqwx, wxWin=1)
+if test "$wxWin" != 1; then
+   AC_MSG_ERROR([
+      wxWidgets must be installed on your system.
  
-         Please check that wx-config is in path, the directory
-         where wxWidgets libraries are installed (returned by
-         'wx-config --libs' or 'wx-config --static --libs' command)
-         is in LD_LIBRARY_PATH or equivalent variable and
-         wxWidgets version is $reqwx or above.
-         ])
-   fi
-   AC_CHECK_LIB([GL], [glGetError], [], \
-      [echo "You need to install the OpenGL library."
-       exit -1])
-   LIBS="$LIBS $WX_LIBS $SDL_LIBS"
+      Please check that wx-config is in path, the directory
+      where wxWidgets libraries are installed (returned by
+      'wx-config --libs' or 'wx-config --static --libs' command)
+      is in LD_LIBRARY_PATH or equivalent variable and
+      wxWidgets version is $reqwx or above.
+      ])
 fi
+
+AC_CHECK_LIB([GL], [glGetError], [], \
+   [echo "You need to install the OpenGL library."
+    exit -1])
+LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 
 AC_CHECK_LIB([openal], [alGetError], [], \
 	[echo "You need to install the OpenAL library."
