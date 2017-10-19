@@ -94,6 +94,8 @@ typedef struct tgui_t
         int blitter_busy;
         uint64_t blitter_time;
         uint64_t status_time;
+        
+        volatile int write_blitter;
 } tgui_t;
 
 void tgui_recalcmapping(tgui_t *tgui);
@@ -108,7 +110,8 @@ void tgui_accel_write(uint32_t addr, uint8_t val, void *priv);
 void tgui_accel_write_w(uint32_t addr, uint16_t val, void *priv);
 void tgui_accel_write_l(uint32_t addr, uint32_t val, void *priv);
 
-
+void tgui_accel_write_fb_b(uint32_t addr, uint8_t val, void *priv);
+void tgui_accel_write_fb_w(uint32_t addr, uint16_t val, void *priv);
 void tgui_accel_write_fb_l(uint32_t addr, uint32_t val, void *priv);
 
 void tgui_out(uint16_t addr, uint8_t val, void *p)
@@ -525,7 +528,7 @@ void *tgui9440_init()
                    tgui_hwcursor_draw,
                    NULL);
 
-        mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, 0, &tgui->svga);
+        mem_mapping_add(&tgui->linear_mapping, 0,       0,      svga_read_linear, svga_readw_linear, svga_readl_linear, tgui_accel_write_fb_b, tgui_accel_write_fb_w, tgui_accel_write_fb_l, NULL, 0, &tgui->svga);
         mem_mapping_add(&tgui->accel_mapping,  0xbc000, 0x4000, tgui_accel_read,  tgui_accel_read_w, tgui_accel_read_l, tgui_accel_write,  tgui_accel_write_w, tgui_accel_write_l, NULL, 0,  tgui);
         mem_mapping_disable(&tgui->accel_mapping);
 
@@ -616,9 +619,6 @@ enum
                                         svga->changedvram[((addr) & 0xfffff) >> 11] = changeframecount;        \
                                 }
                                 
-void tgui_accel_write_fb_b(uint32_t addr, uint8_t val, void *priv);
-void tgui_accel_write_fb_w(uint32_t addr, uint16_t val, void *priv);
-
 void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 {
         svga_t *svga = &tgui->svga;
@@ -714,8 +714,9 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 			{
 //				pclog("Blit start  TGUI_SRCCPU\n");
 				if (svga->crtc[0x21] & 0x20)
-                                        mem_mapping_set_handler(&tgui->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, tgui_accel_write_fb_b, tgui_accel_write_fb_w, tgui_accel_write_fb_l);
-
+				{
+                                        tgui->write_blitter = 1;
+                                }
 				if (tgui->accel.use_src)
                                         return;
 			}
@@ -767,8 +768,7 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 					{
 						if (svga->crtc[0x21] & 0x20)
 						{
-//							pclog("Blit end\n");
-                                                        mem_mapping_set_handler(&tgui->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
+                                                        tgui->write_blitter = 0;
 						}
 						return;
 					}
@@ -784,7 +784,9 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 			{
 //				pclog("Blit start  TGUI_SRCMONO | TGUI_SRCCPU\n");
 				if (svga->crtc[0x21] & 0x20)
-                                        mem_mapping_set_handler(&tgui->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, tgui_accel_write_fb_b, tgui_accel_write_fb_w, tgui_accel_write_fb_l);
+				{
+                                        tgui->write_blitter = 1;
+                                }
 
 //                                pclog(" %i\n", tgui->accel.command);
 				if (tgui->accel.use_src)
@@ -828,8 +830,7 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 					{
 						if (svga->crtc[0x21] & 0x20)
 						{
-//							pclog("Blit end\n");
-                                                        mem_mapping_set_handler(&tgui->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear);
+                                                        tgui->write_blitter = 0;
 						}
 						return;
 					}
@@ -1245,24 +1246,33 @@ void tgui_accel_write_fb_b(uint32_t addr, uint8_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
-//	pclog("tgui_accel_write_fb_b %08X %02X\n", addr, val);
-	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_BYTE);
+
+        if (tgui->write_blitter)
+        	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_BYTE);
+        else
+                svga_write_linear(addr, val, svga);
 }
 
 void tgui_accel_write_fb_w(uint32_t addr, uint16_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
-//	pclog("tgui_accel_write_fb_w %08X %04X\n", addr, val);	
-	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_WORD);
+
+        if (tgui->write_blitter)
+        	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_WORD);
+        else
+                svga_writew_linear(addr, val, svga);
 }
 
 void tgui_accel_write_fb_l(uint32_t addr, uint32_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
         tgui_t *tgui = (tgui_t *)svga->p;
-//	pclog("tgui_accel_write_fb_l %08X %08X\n", addr, val);
-	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_LONG);
+
+        if (tgui->write_blitter)
+        	tgui_queue(tgui, addr, val, FIFO_WRITE_FB_LONG);
+        else
+                svga_writel_linear(addr, val, svga);
 }
 
 void tgui_add_status_info(char *s, int max_len, void *p)
