@@ -65,13 +65,13 @@ void oti067_out(uint16_t addr, uint8_t val, void *p)
                 switch (oti067->index)
                 {
                         case 0xD:
-                        svga->vrammask = (val & 0xc) ? oti067->vram_mask : 0x3ffff;
+                        svga->vram_display_mask = (val & 0xc) ? oti067->vram_mask : 0x3ffff;
                         if ((val & 0x80) && oti067->vram_size == 256)
                                 mem_mapping_disable(&svga->mapping);
                         else
                                 mem_mapping_enable(&svga->mapping);
                         if (!(val & 0x80))
-                                svga->vrammask = 0x3ffff;
+                                svga->vram_display_mask = 0x3ffff;
                         break;
                         case 0x11:
                         svga->read_bank = (val & 0xf) * 65536;

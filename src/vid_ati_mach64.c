@@ -468,12 +468,12 @@ void mach64_recalctimings(svga_t *svga)
                         break;
                 }
 
-                svga->vrammask = mach64->vram_mask;
+                svga->vram_display_mask = mach64->vram_mask;
 //                pclog("mach64_recalctimings : frame %i,%i disp %i,%i vsync at %i rowoffset %i pixel clock %f MA %08X\n", svga->htotal, svga->vtotal, svga->hdisp, svga->dispend, svga->vsyncstart, svga->rowoffset, svga->clock, svga->ma);
         }
         else
         {
-                svga->vrammask = (mach64->regs[0x36] & 0x01) ? mach64->vram_mask : 0x3ffff;
+                svga->vram_display_mask = (mach64->regs[0x36] & 0x01) ? mach64->vram_mask : 0x3ffff;
         }
 }
 

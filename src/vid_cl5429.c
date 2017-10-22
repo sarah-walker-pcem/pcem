@@ -350,9 +350,10 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         {
                 addr <<= 2;
         }
-        addr &= 0x7fffff;
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
 //        if (svga_output) pclog("%08X\n", addr);
         svga->changedvram[addr >> 12] = changeframecount;
         
@@ -595,16 +596,16 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         switch (gd5429->blt.mode & 0xc0)
                         {
                                 case 0x00:
-                                src = svga->vram[gd5429->blt.src_addr & svga->vrammask];
+                                src = svga->vram[gd5429->blt.src_addr & svga->vram_mask];
                                 gd5429->blt.src_addr += ((gd5429->blt.mode & 0x01) ? -1 : 1);
                                 mask = 1;
                                 break;
                                 case 0x40:
-                                src = svga->vram[(gd5429->blt.src_addr & (svga->vrammask & ~7)) | (gd5429->blt.dst_addr & 7)];
+                                src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~7)) | (gd5429->blt.dst_addr & 7)];
                                 mask = 1;
                                 break;
                                 case 0x80:
-                                mask = svga->vram[gd5429->blt.src_addr & svga->vrammask] & (0x80 >> gd5429->blt.x_count);
+                                mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> gd5429->blt.x_count);
                                 src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                 gd5429->blt.x_count++;
                                 if (gd5429->blt.x_count == 8)
@@ -614,16 +615,16 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 }
                                 break;
                                 case 0xc0:
-                                mask = svga->vram[gd5429->blt.src_addr & svga->vrammask] & (0x80 >> (gd5429->blt.dst_addr & 7));
+                                mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.dst_addr & 7));
                                 src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                 break;
                         }
                         count--;                        
                 }
-                dst = svga->vram[gd5429->blt.dst_addr & svga->vrammask];
-                svga->changedvram[(gd5429->blt.dst_addr & svga->vrammask) >> 12] = changeframecount;
+                dst = svga->vram[gd5429->blt.dst_addr & svga->vram_mask];
+                svga->changedvram[(gd5429->blt.dst_addr & svga->vram_mask) >> 12] = changeframecount;
                
-                pclog("Blit %i,%i %06X %06X  %06X %02X %02X  %02X %02X ", gd5429->blt.width, gd5429->blt.height_internal, gd5429->blt.src_addr, gd5429->blt.dst_addr, gd5429->blt.src_addr & svga->vrammask, svga->vram[gd5429->blt.src_addr & svga->vrammask], 0x80 >> (gd5429->blt.dst_addr & 7), src, dst);
+                pclog("Blit %i,%i %06X %06X  %06X %02X %02X  %02X %02X ", gd5429->blt.width, gd5429->blt.height_internal, gd5429->blt.src_addr, gd5429->blt.dst_addr, gd5429->blt.src_addr & svga->vram_mask, svga->vram[gd5429->blt.src_addr & svga->vram_mask], 0x80 >> (gd5429->blt.dst_addr & 7), src, dst);
                 switch (gd5429->blt.rop)
                 {
                         case 0x00: dst = 0;             break;
@@ -647,7 +648,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 
                 if ((gd5429->blt.width_backup - gd5429->blt.width) >= (gd5429->blt.mask & 7) &&
                     !((gd5429->blt.mode & 0x08) && !mask))
-                        svga->vram[gd5429->blt.dst_addr & svga->vrammask] = dst;
+                        svga->vram[gd5429->blt.dst_addr & svga->vram_mask] = dst;
                 
                 gd5429->blt.dst_addr += ((gd5429->blt.mode & 0x01) ? -1 : 1);
                 

@@ -818,7 +818,7 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                         s3->ma_ext = (s3->ma_ext & 0x1c) | ((val & 0x30) >> 4);
                         break;
                         case 0x32:
-                        svga->vrammask = (val & 0x40) ? 0x3ffff : s3->vram_mask;
+                        svga->vram_display_mask = (val & 0x40) ? 0x3ffff : s3->vram_mask;
                         break;
                                                 
                         case 0x50:
@@ -2222,6 +2222,29 @@ static void *s3_init(char *bios_fn, int chip)
                    s3_hwcursor_draw,
                    NULL);
 
+        svga->decode_mask = (4 << 20) - 1;
+        switch (vram)
+        {
+                case 0: /*512kb*/
+                svga->vram_mask = (1 << 19) - 1;
+                svga->vram_max = 2 << 20;
+                break;
+                case 1: /*1MB*/
+                /*VRAM in first MB, mirrored in 2nd MB, 3rd and 4th MBs are open bus*/
+                svga->vram_mask = (1 << 20) - 1;
+                svga->vram_max = 2 << 20;
+                break;
+                case 2: default: /*2MB*/
+                /*VRAM in first 2 MB, 3rd and 4th MBs are open bus*/
+                svga->vram_mask = (2 << 20) - 1;
+                svga->vram_max = 2 << 20;
+                break;
+                case 4: /*4MB*/
+                svga->vram_mask = (4 << 20) - 1;
+                svga->vram_max = 4 << 20;
+                break;
+        }
+                
         if (PCI)
                 svga->crtc[0x36] = 2 | (3 << 2) | (1 << 4) | (vram_sizes[vram] << 5);
         else

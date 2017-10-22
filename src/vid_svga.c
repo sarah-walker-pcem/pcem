@@ -483,7 +483,7 @@ void svga_poll(void *p)
                 {
                         svga->hdisp_on=1;
                         
-                        svga->ma &= svga->vrammask;
+                        svga->ma &= svga->vram_display_mask;
                         if (svga->firstline == 2000)
                         {
                                 svga->firstline = svga->displine;
@@ -561,7 +561,7 @@ void svga_poll(void *p)
                                 svga->maback += (svga->rowoffset << 3);
                                 if (svga->interlace)
                                         svga->maback += (svga->rowoffset << 3);
-                                svga->maback &= svga->vrammask;
+                                svga->maback &= svga->vram_display_mask;
                                 svga->ma = svga->maback;
                         }
                         else
@@ -594,7 +594,7 @@ void svga_poll(void *p)
                                 svga->fullchange = 2;
                         svga->blink++;
 
-                        for (x = 0; x < (svga->vram_limit >> 12); x++) 
+                        for (x = 0; x < ((svga->vram_mask+1) >> 12); x++) 
                         {
                                 if (svga->changedvram[x]) 
                                         svga->changedvram[x]--;
@@ -728,8 +728,10 @@ int svga_init(svga_t *svga, void *p, int memsize,
         svga->dispofftime = 1000 * (1 << TIMER_SHIFT);        
         svga->bpp = 8;
         svga->vram = malloc(memsize);
-        svga->vram_limit = memsize;
-        svga->vrammask = memsize - 1;
+        svga->vram_max = memsize;
+        svga->vram_display_mask = memsize - 1;
+        svga->vram_mask = memsize - 1;
+        svga->decode_mask = 0x7fffff;
         svga->changedvram = malloc(/*(memsize >> 12) << 1*/0x800000 >> 12);
         svga->recalctimings_ex = recalctimings_ex;
         svga->video_in  = video_in;
@@ -790,10 +792,12 @@ void svga_write(uint32_t addr, uint8_t val, void *p)
         {
                 addr<<=2;
         }
-        addr &= 0x7fffff;
+        addr &= svga->decode_mask;
 
-        if (addr >= svga->vram_limit)
+        if (addr >= svga->vram_max)
                 return;
+        
+        addr &= svga->vram_mask;
 
         if (svga_output) pclog("%08X (%i, %i) %02X %i %i %i %02X\n", addr, addr & 1023, addr >> 10, val, writemask2, svga->writemode, svga->chain4, svga->gdcreg[8]);
         svga->changedvram[addr >> 12] = changeframecount;
@@ -954,19 +958,20 @@ uint8_t svga_read(uint32_t addr, void *p)
         
         egareads++;
 //        pclog("Readega %06X   ",addr);
+
         addr &= svga->banked_mask;
         addr += svga->read_bank;
-
-        latch_addr = (addr << 2) & 0x7fffff;
+                
+        latch_addr = (addr << 2) & svga->decode_mask;
         
 //        pclog("%05X %i %04X:%04X %02X %02X %i\n",addr,svga->chain4,CS,pc, vram[addr & 0x7fffff], vram[(addr << 2) & 0x7fffff], svga->readmode);
 //        pclog("%i\n", svga->readmode);
         if (svga->chain4 || svga->fb_only) 
         { 
-                addr &= 0x7fffff;
-                if (addr >= svga->vram_limit)
-                   return 0xff;
-                return svga->vram[addr];
+                addr &= svga->decode_mask;
+                if (addr >= svga->vram_max)
+                        return 0xff;
+                return svga->vram[addr & svga->vram_mask];
         }
         else if (svga->chain2_read)
         {
@@ -976,22 +981,27 @@ uint8_t svga_read(uint32_t addr, void *p)
         }
         else
                 addr<<=2;
+
+        addr &= svga->decode_mask;
         
-        addr &= 0x7fffff;
-        
-        if (addr >= svga->vram_limit)
-           return 0xff;
-        
-        if (latch_addr < svga->vram_limit)
+        if (latch_addr >= svga->vram_max)
+        {
+                svga->la = svga->lb = svga->lc = svga->ld = 0xff;
+        }
+        else
         {   
+                latch_addr &= svga->vram_mask;
                 svga->la = svga->vram[latch_addr];
                 svga->lb = svga->vram[latch_addr | 0x1];
                 svga->lc = svga->vram[latch_addr | 0x2];
                 svga->ld = svga->vram[latch_addr | 0x3];
         }
-        else
-                svga->la = svga->lb = svga->lc = svga->ld = 0xff;
 
+        if (addr >= svga->vram_max)
+                return 0xff;
+        
+        addr &= svga->vram_mask;
+        
         if (svga->readmode)
         {
                 temp   = svga->la;
@@ -1009,6 +1019,7 @@ uint8_t svga_read(uint32_t addr, void *p)
                 return ~(temp | temp2 | temp3 | temp4);
         }
 //pclog("Read %02X %04X %04X\n",vram[addr|svga->readplane],addr,svga->readplane);
+
         return svga->vram[addr | readplane];
 }
 
@@ -1043,9 +1054,10 @@ void svga_write_linear(uint32_t addr, uint8_t val, void *p)
         {
                 addr<<=2;
         }
-        addr &= 0x7fffff;
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
         if (svga_output) pclog("%08X\n", addr);
         svga->changedvram[addr >> 12]=changeframecount;
         
@@ -1206,10 +1218,10 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
         
         if (svga->chain4 || svga->fb_only) 
         { 
-                addr &= 0x7fffff;
-                if (addr >= svga->vram_limit)
-                   return 0xff;
-                return svga->vram[addr & 0x7fffff]; 
+                addr &= svga->decode_mask;
+                if (addr >= svga->vram_max)
+                        return 0xff;
+                return svga->vram[addr & svga->vram_mask]; 
         }
         else if (svga->chain2_read)
         {
@@ -1220,10 +1232,12 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
         else
                 addr<<=2;
 
-        addr &= 0x7fffff;
+        addr &= svga->decode_mask;
         
-        if (addr >= svga->vram_limit)
-           return 0xff;
+        if (addr >= svga->vram_max)
+                return 0xff;
+                
+        addr &= svga->vram_mask;
 
         svga->la = svga->vram[addr];
         svga->lb = svga->vram[addr | 0x1];
@@ -1296,9 +1310,10 @@ void svga_writew(uint32_t addr, uint16_t val, void *p)
 
         if (svga_output) pclog("svga_writew: %05X ", addr);
         addr = (addr & svga->banked_mask) + svga->write_bank;
-        addr &= 0x7FFFFF;        
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
         if (svga_output) pclog("%08X (%i, %i) %04X\n", addr, addr & 1023, addr >> 10, val);
         svga->changedvram[addr >> 12] = changeframecount;
         *(uint16_t *)&svga->vram[addr] = val;
@@ -1324,9 +1339,10 @@ void svga_writel(uint32_t addr, uint32_t val, void *p)
 
         if (svga_output) pclog("svga_writel: %05X ", addr);
         addr = (addr & svga->banked_mask) + svga->write_bank;
-        addr &= 0x7FFFFF;
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
         if (svga_output) pclog("%08X (%i, %i) %08X\n", addr, addr & 1023, addr >> 10, val);
         
         svga->changedvram[addr >> 12] = changeframecount;
@@ -1347,11 +1363,12 @@ uint16_t svga_readw(uint32_t addr, void *p)
 
 //        pclog("Readw %05X ", addr);
         addr = (addr & svga->banked_mask) + svga->read_bank;
-        addr &= 0x7FFFFF;
+        addr &= svga->decode_mask;
 //        pclog("%08X %04X\n", addr, *(uint16_t *)&vram[addr]);
-        if (addr >= svga->vram_limit) return 0xffff;
+        if (addr >= svga->vram_max)
+                return 0xffff;
         
-        return *(uint16_t *)&svga->vram[addr];
+        return *(uint16_t *)&svga->vram[addr & svga->vram_mask];
 }
 
 uint32_t svga_readl(uint32_t addr, void *p)
@@ -1368,11 +1385,12 @@ uint32_t svga_readl(uint32_t addr, void *p)
 
 //        pclog("Readl %05X ", addr);
         addr = (addr & svga->banked_mask) + svga->read_bank;
-        addr &= 0x7FFFFF;
+        addr &= svga->decode_mask;
 //        pclog("%08X %08X\n", addr, *(uint32_t *)&vram[addr]);
-        if (addr >= svga->vram_limit) return 0xffffffff;
+        if (addr >= svga->vram_max)
+                return 0xffffffff;
         
-        return *(uint32_t *)&svga->vram[addr];
+        return *(uint32_t *)&svga->vram[addr & svga->vram_mask];
 }
 
 void svga_writew_linear(uint32_t addr, uint16_t val, void *p)
@@ -1392,9 +1410,10 @@ void svga_writew_linear(uint32_t addr, uint16_t val, void *p)
         cycles_lost += video_timing_w;
 
 	if (svga_output) pclog("Write LFBw %08X %04X\n", addr, val);
-        addr &= 0x7FFFFF;
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
         svga->changedvram[addr >> 12] = changeframecount;
         *(uint16_t *)&svga->vram[addr] = val;
 }
@@ -1418,9 +1437,10 @@ void svga_writel_linear(uint32_t addr, uint32_t val, void *p)
         cycles_lost += video_timing_l;
 
 	if (svga_output) pclog("Write LFBl %08X %08X\n", addr, val);
-        addr &= 0x7fffff;
-        if (addr >= svga->vram_limit)
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
                 return;
+        addr &= svga->vram_mask;
         svga->changedvram[addr >> 12] = changeframecount;
         *(uint32_t *)&svga->vram[addr] = val;
 }
@@ -1437,10 +1457,11 @@ uint16_t svga_readw_linear(uint32_t addr, void *p)
         cycles -= video_timing_w;
         cycles_lost += video_timing_w;
 
-        addr &= 0x7FFFFF;
-        if (addr >= svga->vram_limit) return 0xffff;
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return 0xffff;
         
-        return *(uint16_t *)&svga->vram[addr];
+        return *(uint16_t *)&svga->vram[addr & svga->vram_mask];
 }
 
 uint32_t svga_readl_linear(uint32_t addr, void *p)
@@ -1455,10 +1476,11 @@ uint32_t svga_readl_linear(uint32_t addr, void *p)
         cycles -= video_timing_l;
         cycles_lost += video_timing_l;
 
-        addr &= 0x7FFFFF;
-        if (addr >= svga->vram_limit) return 0xffffffff;
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return 0xffffffff;
 
-        return *(uint32_t *)&svga->vram[addr];
+        return *(uint32_t *)&svga->vram[addr & svga->vram_mask];
 }
 
 
