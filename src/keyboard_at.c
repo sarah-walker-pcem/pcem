@@ -359,7 +359,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         }
 			/* T3100e expects STAT_IFULL to be set immediately
 			 * after sending 0xAA */
-                        keyboard_at.status |= STAT_IFULL;
+                        if(romset == ROM_T3100E) keyboard_at.status |= STAT_IFULL;
                         keyboard_at.status |= STAT_SYSFLAG;
                         keyboard_at.mem[0] |= 0x04;
                         keyboard_at_adddata(0x55);
