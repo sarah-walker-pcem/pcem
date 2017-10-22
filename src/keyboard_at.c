@@ -441,7 +441,8 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         case 0xef: /*??? - sent by AMI486*/
                         break;
                         
-                        case 0xfe: /*Pulse output port - pin 0 selected - x86 reset*/
+                        case 0xf0: case 0xf2: case 0xf4: case 0xf6:
+                        case 0xf8: case 0xfa: case 0xfc: case 0xfe: /*Pulse output port - pin 0 selected - x86 reset*/
                         softresetx86(); /*Pulse reset!*/
                         cpu_set_edx();
                         break;
