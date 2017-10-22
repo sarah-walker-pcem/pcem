@@ -2496,10 +2496,6 @@ static device_config_t s3_phoenix_trio64_config[] =
                 .selection =
                 {
                         {
-                                .description = "512 KB",
-                                .value = 0
-                        },
-                        {
                                 .description = "1 MB",
                                 .value = 1
                         },
