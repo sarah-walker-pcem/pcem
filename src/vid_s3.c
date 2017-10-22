@@ -1034,7 +1034,14 @@ void s3_updatemapping(s3_t *s3)
         }
 
 //        pclog("Update mapping - bank %02X ", svga->gdcreg[6] & 0xc);
-        switch (svga->gdcreg[6] & 0xc) /*Banked framebuffer*/
+        /*Banked framebuffer*/
+        if (svga->crtc[0x31] & 0x08) /*Enhanced mode mappings*/
+        {
+                /*Enhanced mapping forces 64kb at 0xa0000*/
+                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                svga->banked_mask = 0xffff;
+        }
+        else switch (svga->gdcreg[6] & 0xc) /*VGA mapping*/
         {
                 case 0x0: /*128k at A0000*/
                 mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x20000);
