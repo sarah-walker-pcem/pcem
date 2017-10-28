@@ -48,8 +48,8 @@ extern int egareads,egawrites;
 extern int fullchange;
 extern int changeframecount;
 
-extern uint8_t fontdat[256][8];
-extern uint8_t fontdatm[512][16];
+extern uint8_t fontdat[2048][8];
+extern uint8_t fontdatm[2048][16];
 
 extern uint32_t *video_15to32, *video_16to32;
 

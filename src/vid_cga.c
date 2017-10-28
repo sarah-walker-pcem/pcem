@@ -187,12 +187,12 @@ void cga_poll(void *p)
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr + cga->fontbase][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 3) + c + 8] = cols[(fontdat[chr + cga->fontbase][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                         cga->ma++;
                                 }
@@ -221,13 +221,13 @@ void cga_poll(void *p)
                                         {
                                                 for (c = 0; c < 8; c++)
                                                         ((uint32_t *)buffer32->line[cga->displine])[(x << 4)+(c << 1) + 8] =
-                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr + cga->fontbase][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
                                                         ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 8] =
-                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t *)buffer32->line[cga->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr + cga->fontbase][cga->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                 }
                         }

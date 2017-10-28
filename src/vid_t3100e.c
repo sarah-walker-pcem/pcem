@@ -7,6 +7,7 @@
 #include "mem.h"
 #include "timer.h"
 #include "video.h"
+#include "vid_cga.h"
 #include "vid_t3100e.h"
 
 #define T3100E_XSIZE 640
@@ -29,6 +30,7 @@ void updatewindowsize(int x, int y);
 
 /* Mapping of attributes to colours */
 static uint32_t amber, black;
+static uint8_t  boldcols[256];		/* Which attributes use the bold font */
 static uint32_t blinkcols[256][2];
 static uint32_t normcols[256][2];
 
@@ -40,10 +42,16 @@ static uint32_t normcols[256][2];
  * Bits 0,1: Font set (not currently implemented) 
  */
 static uint8_t st_video_options;
+static uint8_t st_display_internal = -1;
 
 void t3100e_video_options_set(uint8_t options)
 {
 	st_video_options = options;
+}
+
+void t3100e_display_set(uint8_t internal)
+{
+	st_display_internal = internal;
 }
 
 
@@ -51,23 +59,20 @@ typedef struct t3100e_t
 {
         mem_mapping_t mapping;
 
-        uint8_t cga_crtc[32];	/* The CRTC as the host PC sees it. Most
-				 * of the registers are ignored by the plasma
-				 * display. */
-        int cga_crtcreg;	/* Current CRTC register */
-	uint8_t cga_ctrl;	/* CGA control register */
-	uint8_t cga_colour;	/* CGA colour register */
-        uint8_t cga_stat;	/* CGA status (IN 0x3DA) */
+	cga_t cga;		/* The CGA is used for the external 
+				 * display; most of its registers are
+				 * ignored by the plasma display. */
 
 	int font;		/* Current font, 0-3 */
 	int enabled;		/* Hardware enabled, 0 or 1 */
+	int internal;		/* Using internal display? */
+	uint8_t	attrmap;	/* Attribute mapping register */
 
         int dispontime, dispofftime;
-        int vidtime;
         
         int linepos, displine;
         int vc;
-        int dispon, blink;
+        int dispon;
         int vsynctime;
 	uint8_t video_options;
 
@@ -78,6 +83,7 @@ typedef struct t3100e_t
 void t3100e_recalctimings(t3100e_t *t3100e);
 void t3100e_write(uint32_t addr, uint8_t val, void *p);
 uint8_t t3100e_read(uint32_t addr, void *p);
+void t3100e_recalcattrs(t3100e_t *t3100e);
 
 
 void t3100e_out(uint16_t addr, uint8_t val, void *p)
@@ -87,23 +93,31 @@ void t3100e_out(uint16_t addr, uint8_t val, void *p)
         {
 		/* Emulated CRTC, register select */
 		case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
-                t3100e->cga_crtcreg = val & 31;
+		cga_out(addr, val, &t3100e->cga);
                 break;
 
 		/* Emulated CRTC, value */
                 case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
-	        t3100e->cga_crtc[t3100e->cga_crtcreg] = val;
+		/* Register 0x12 controls the attribute mappings for the
+		 * plasma screen. */
+		if (t3100e->cga.crtcreg == 0x12) 
+		{
+			t3100e->attrmap = val;	
+			t3100e_recalcattrs(t3100e);
+			return;
+		}	
+		cga_out(addr, val, &t3100e->cga);
 
                 t3100e_recalctimings(t3100e);
 	        return;
 
 		/* CGA control register */
                 case 0x3D8:
-               	t3100e->cga_ctrl = val;
+		cga_out(addr, val, &t3100e->cga);
               	return;
 		/* CGA colour register */
                 case 0x3D9:
-               	t3100e->cga_colour = val;
+		cga_out(addr, val, &t3100e->cga);
               	return;
         }
 }
@@ -111,20 +125,20 @@ void t3100e_out(uint16_t addr, uint8_t val, void *p)
 uint8_t t3100e_in(uint16_t addr, void *p)
 {
         t3100e_t *t3100e = (t3100e_t *)p;
+	uint8_t val;
+
         switch (addr)
         {
-                case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
-	        return t3100e->cga_crtcreg;
-		case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
-	        return t3100e->cga_crtc[t3100e->cga_crtcreg];
-		case 0x3d8:
-		return t3100e->cga_ctrl;
-		case 0x3d9:
-		return t3100e->cga_colour;
-		case 0x3da:
-		return t3100e->cga_stat;
-        }
-        return 0xff;
+                case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
+		if (t3100e->cga.crtcreg == 0x12)
+		{
+			val = t3100e->attrmap & 0x0F;
+			if (t3100e->internal) val |= 0x30; /* Plasma / CRT */
+			return val;
+		}
+	}
+	
+	return cga_in(addr, &t3100e->cga);
 }
 
 
@@ -159,6 +173,11 @@ void t3100e_recalctimings(t3100e_t *t3100e)
         double disptime;
 	double _dispontime, _dispofftime;
 
+	if (!t3100e->internal)
+	{
+		cga_recalctimings(&t3100e->cga);
+		return;
+	}
 	disptime = 651;
 	_dispontime = 640;
         _dispofftime = disptime - _dispontime;
@@ -179,42 +198,39 @@ void t3100e_text_row80(t3100e_t *t3100e)
 	int blink;
 	uint16_t addr;
 	uint8_t sc;
-	uint16_t ma = (t3100e->cga_crtc[13] | (t3100e->cga_crtc[12] << 8)) & 0x7fff;
-	uint16_t ca = (t3100e->cga_crtc[15] | (t3100e->cga_crtc[14] << 8)) & 0x7fff;
+	uint16_t ma = (t3100e->cga.crtc[13] | (t3100e->cga.crtc[12] << 8)) & 0x7fff;
+	uint16_t ca = (t3100e->cga.crtc[15] | (t3100e->cga.crtc[14] << 8)) & 0x7fff;
 
 	sc = (t3100e->displine) & 15;
 	addr = ((ma & ~1) + (t3100e->displine >> 4) * 80) * 2;
 	ma += (t3100e->displine >> 4) * 80;
 
-	if ((t3100e->cga_crtc[10] & 0x60) == 0x20)
+	if ((t3100e->cga.crtc[10] & 0x60) == 0x20)
 	{
 		cursorline = 0;
 	}
 	else
 	{
-		cursorline = ((t3100e->cga_crtc[10] & 0x0F)*2 <= sc) &&
-			     ((t3100e->cga_crtc[11] & 0x0F)*2 >= sc);
+		cursorline = ((t3100e->cga.crtc[10] & 0x0F)*2 <= sc) &&
+			     ((t3100e->cga.crtc[11] & 0x0F)*2 >= sc);
 	}
 	for (x = 0; x < 80; x++)
         {
 		chr  = t3100e->vram[(addr + 2 * x) & 0x7FFF];
 		attr = t3100e->vram[(addr + 2 * x + 1) & 0x7FFF];
                 drawcursor = ((ma == ca) && cursorline &&
-			(t3100e->cga_ctrl & 8) && (t3100e->blink & 16));
+			(t3100e->cga.cgamode & 8) && (t3100e->cga.cgablink & 16));
 
-		blink = ((t3100e->blink & 16) && (t3100e->cga_ctrl & 0x20) &&
+		blink = ((t3100e->cga.cgablink & 16) && (t3100e->cga.cgamode & 0x20) &&
 			(attr & 0x80) && !drawcursor);
 
-		/* XXX We should also be taking account of bits 0,1 of 
-		 * options to select one of the four ROM character sets;
-		 * but these are not currently emulated. */
-
 		if (t3100e->video_options & 4)
-			bold = (attr & 8) ? chr + 256 : chr;
+			bold = boldcols[attr] ? chr + 256 : chr;
 		else
-                        bold = (attr & 8) ? chr : chr + 256;
+                        bold = boldcols[attr] ? chr : chr + 256;
+		bold += 512 * (t3100e->video_options & 3);
 
-                if (t3100e->cga_ctrl & 0x20)	/* Blink */
+                if (t3100e->cga.cgamode & 0x20)	/* Blink */
                 {
 			cols[1] = blinkcols[attr][1]; 		
 			cols[0] = blinkcols[attr][0]; 		
@@ -253,37 +269,38 @@ void t3100e_text_row40(t3100e_t *t3100e)
 	int blink;
 	uint16_t addr;
 	uint8_t sc;
-	uint16_t ma = (t3100e->cga_crtc[13] | (t3100e->cga_crtc[12] << 8)) & 0x7fff;
-	uint16_t ca = (t3100e->cga_crtc[15] | (t3100e->cga_crtc[14] << 8)) & 0x7fff;
+	uint16_t ma = (t3100e->cga.crtc[13] | (t3100e->cga.crtc[12] << 8)) & 0x7fff;
+	uint16_t ca = (t3100e->cga.crtc[15] | (t3100e->cga.crtc[14] << 8)) & 0x7fff;
 
 	sc = (t3100e->displine) & 15;
 	addr = ((ma & ~1) + (t3100e->displine >> 4) * 40) * 2;
 	ma += (t3100e->displine >> 4) * 40;
 
-	if ((t3100e->cga_crtc[10] & 0x60) == 0x20)
+	if ((t3100e->cga.crtc[10] & 0x60) == 0x20)
 	{
 		cursorline = 0;
 	}
 	else
 	{
-		cursorline = ((t3100e->cga_crtc[10] & 0x0F)*2 <= sc) &&
-			     ((t3100e->cga_crtc[11] & 0x0F)*2 >= sc);
+		cursorline = ((t3100e->cga.crtc[10] & 0x0F)*2 <= sc) &&
+			     ((t3100e->cga.crtc[11] & 0x0F)*2 >= sc);
 	}
 	for (x = 0; x < 40; x++)
         {
 		chr  = t3100e->vram[(addr + 2 * x) & 0x7FFF];
 		attr = t3100e->vram[(addr + 2 * x + 1) & 0x7FFF];
                 drawcursor = ((ma == ca) && cursorline &&
-			(t3100e->cga_ctrl & 8) && (t3100e->blink & 16));
+			(t3100e->cga.cgamode & 8) && (t3100e->cga.cgablink & 16));
 
-		blink = ((t3100e->blink & 16) && (t3100e->cga_ctrl & 0x20) &&
+		blink = ((t3100e->cga.cgablink & 16) && (t3100e->cga.cgamode & 0x20) &&
 			(attr & 0x80) && !drawcursor);
 
 		if (t3100e->video_options & 4)
-			bold = (attr & 8) ? chr + 256 : chr;
-		else	bold = (attr & 8) ? chr : chr + 256;
+			bold = boldcols[attr] ? chr + 256 : chr;
+		else	bold = boldcols[attr] ? chr : chr + 256;
+		bold += 512 * (t3100e->video_options & 3);
 
-                if (t3100e->cga_ctrl & 0x20)	/* Blink */
+                if (t3100e->cga.cgamode & 0x20)	/* Blink */
                 {
 			cols[1] = blinkcols[attr][1]; 		
 			cols[0] = blinkcols[attr][0]; 		
@@ -324,12 +341,12 @@ void t3100e_cgaline6(t3100e_t *t3100e)
 	uint8_t dat;
 	uint32_t ink = 0;
 	uint16_t addr;
-	uint32_t fg = (t3100e->cga_colour & 0x0F) ? amber : black;
+	uint32_t fg = (t3100e->cga.cgacol & 0x0F) ? amber : black;
 	uint32_t bg = black;
 
-	uint16_t ma = (t3100e->cga_crtc[13] | (t3100e->cga_crtc[12] << 8)) & 0x7fff;
+	uint16_t ma = (t3100e->cga.crtc[13] | (t3100e->cga.crtc[12] << 8)) & 0x7fff;
 
-	if (t3100e->cga_crtc[9] == 3)	/* 640*400 */
+	if (t3100e->cga.crtc[9] == 3)	/* 640*400 */
 	{
 		addr = ((t3100e->displine) & 1) * 0x2000 +
 		       ((t3100e->displine >> 1) & 1) * 0x4000 +
@@ -350,7 +367,7 @@ void t3100e_cgaline6(t3100e_t *t3100e)
 		for (c = 0; c < 8; c++)
 		{
 			ink = (dat & 0x80) ? fg : bg;
-			if (!(t3100e->cga_ctrl & 8)) ink = black;
+			if (!(t3100e->cga.cgamode & 8)) ink = black;
 			((uint32_t *)buffer32->line[t3100e->displine])[x*8+c] = ink;
 			dat = dat << 1;
 		}
@@ -367,8 +384,8 @@ void t3100e_cgaline4(t3100e_t *t3100e)
 	uint32_t ink0, ink1;
 	uint16_t addr;
 
-	uint16_t ma = (t3100e->cga_crtc[13] | (t3100e->cga_crtc[12] << 8)) & 0x7fff;
-	if (t3100e->cga_crtc[9] == 3)	/* 320*400 undocumented */
+	uint16_t ma = (t3100e->cga.crtc[13] | (t3100e->cga.crtc[12] << 8)) & 0x7fff;
+	if (t3100e->cga.crtc[9] == 3)	/* 320*400 undocumented */
 	{
 		addr = ((t3100e->displine) & 1) * 0x2000 +
 		       ((t3100e->displine >> 1) & 1) * 0x4000 +
@@ -389,7 +406,7 @@ void t3100e_cgaline4(t3100e_t *t3100e)
 		for (c = 0; c < 4; c++)
 		{
 			pattern = (dat & 0xC0) >> 6;
-			if (!(t3100e->cga_ctrl & 8)) pattern = 0;
+			if (!(t3100e->cga.cgamode & 8)) pattern = 0;
 
 			switch (pattern & 3)
 			{
@@ -439,12 +456,28 @@ void t3100e_poll(void *p)
 			mem_mapping_disable(&t3100e->mapping);
 		else	mem_mapping_enable(&t3100e->mapping);
 
+		/* Set the font used for the external display */
+		t3100e->cga.fontbase = (512 * (t3100e->video_options & 3))
+				     + ((t3100e->video_options & 4) ? 256 : 0);
+
 	}
+	/* Switch between internal plasma and external CRT display. */
+	if (st_display_internal != -1 && st_display_internal != t3100e->internal)
+	{
+		t3100e->internal = st_display_internal;
+                t3100e_recalctimings(t3100e);
+	}
+	if (!t3100e->internal)
+	{
+		cga_poll(&t3100e->cga);
+		return;
+	}
+
 
         if (!t3100e->linepos)
         {
-                t3100e->vidtime += t3100e->dispofftime;
-                t3100e->cga_stat |= 1;
+                t3100e->cga.vidtime += t3100e->dispofftime;
+                t3100e->cga.cgastat |= 1;
                 t3100e->linepos = 1;
                 if (t3100e->dispon)
                 {
@@ -454,14 +487,14 @@ void t3100e_poll(void *p)
                         }
 
 			/* Graphics */
-			if (t3100e->cga_ctrl & 0x02)	
+			if (t3100e->cga.cgamode & 0x02)	
 			{
-				if (t3100e->cga_ctrl & 0x10)
+				if (t3100e->cga.cgamode & 0x10)
 					t3100e_cgaline6(t3100e);
 				else	t3100e_cgaline4(t3100e);
 			}
 			else	
-			if (t3100e->cga_ctrl & 0x01) /* High-res text */
+			if (t3100e->cga.cgamode & 0x01) /* High-res text */
 			{
 				t3100e_text_row80(t3100e); 
 			}
@@ -474,13 +507,13 @@ void t3100e_poll(void *p)
 		/* Hardcode a fixed refresh rate and VSYNC timing */
                 if (t3100e->displine == 400) /* Start of VSYNC */
                 {
-                        t3100e->cga_stat |= 8;
+                        t3100e->cga.cgastat |= 8;
 			t3100e->dispon = 0;
                 }
 		if (t3100e->displine == 416) /* End of VSYNC */
 		{
                         t3100e->displine = 0;
-                        t3100e->cga_stat &= ~8;
+                        t3100e->cga.cgastat &= ~8;
 			t3100e->dispon = 1;
 		}
         }
@@ -488,9 +521,9 @@ void t3100e_poll(void *p)
         {
 		if (t3100e->dispon)
 		{
-                	t3100e->cga_stat &= ~1;
+                	t3100e->cga.cgastat &= ~1;
 		}
-                t3100e->vidtime += t3100e->dispontime;
+                t3100e->cga.vidtime += t3100e->dispontime;
                 t3100e->linepos = 0;
 
 		if (t3100e->displine == 400)
@@ -511,55 +544,109 @@ void t3100e_poll(void *p)
 			video_res_x = T3100E_XSIZE;
 			video_res_y = T3100E_YSIZE;
 
-			if (t3100e->cga_ctrl & 0x02)	
+			if (t3100e->cga.cgamode & 0x02)	
 			{
-				if (t3100e->cga_ctrl & 0x10)
+				if (t3100e->cga.cgamode & 0x10)
 					video_bpp = 1;
 				else	video_bpp = 2;
 
 			}
 			else	 video_bpp = 0;
-                	t3100e->blink++;
+                	t3100e->cga.cgablink++;
                 }
         }
 }
 
-void *t3100e_init()
+
+
+void t3100e_recalcattrs(t3100e_t *t3100e)
 {
-        int n;
-        t3100e_t *t3100e = malloc(sizeof(t3100e_t));
-        memset(t3100e, 0, sizeof(t3100e_t));
+	int n;
 
-	/* 32k video RAM */
-        t3100e->vram = malloc(0x8000);
-
-        timer_add(t3100e_poll, &t3100e->vidtime, TIMER_ALWAYS_ENABLED, t3100e);
-
-	/* Occupy memory between 0xB8000 and 0xBFFFF */
-        mem_mapping_add(&t3100e->mapping, 0xb8000, 0x8000, t3100e_read, NULL, NULL, t3100e_write, NULL, NULL,  NULL, 0, t3100e);
-	/* Respond to CGA I/O ports */
-        io_sethandler(0x03d0, 0x000c, t3100e_in, NULL, NULL, t3100e_out, NULL, NULL, t3100e);
+	/* val behaves as follows:
+	 *     Bit 0: Attributes 01-06, 08-0E are inverse video 
+	 *     Bit 1: Attributes 01-06, 08-0E are bold 
+	 *     Bit 2: Attributes 11-16, 18-1F, 21-26, 28-2F ... F1-F6, F8-FF
+	 * 	      are inverse video 
+	 *     Bit 3: Attributes 11-16, 18-1F, 21-26, 28-2F ... F1-F6, F8-FF
+	 * 	      are bold */
 
 	/* Set up colours */
 	amber = makecol(0xf7, 0x7C, 0x34);
 	black = makecol(0x17, 0x0C, 0x00);
 
 	/* Initialise the attribute mapping. Start by defaulting everything
-	 * to black on amber */
+	 * to black on amber, and with bold set by bit 3 */
 	for (n = 0; n < 256; n++)
 	{
+		boldcols[n] = (n & 8) != 0;
 		blinkcols[n][0] = normcols[n][0] = amber; 
 		blinkcols[n][1] = normcols[n][1] = black;
 	}
-	/* Except 00-0F and 80-8F which are amber on black */
-	for (n = 0; n < 16; n++)
+
+	/* Colours 0x11-0xFF are controlled by bits 2 and 3 of the 
+	 * passed value. Exclude x0 and x8, which are always black on 
+	 * amber. */
+	for (n = 0x11; n <= 0xFF; n++)
+	{
+		if ((n & 7) == 0) continue;
+		if (t3100e->attrmap & 4)	/* Inverse */
+		{
+			blinkcols[n][0] = normcols[n][0] = amber;
+			blinkcols[n][1] = normcols[n][1] = black;
+			blinkcols[n+128][0] = normcols[n+128][0] = amber;
+			blinkcols[n+128][1] = normcols[n+128][1] = black;
+		}
+		else				/* Normal */
+		{
+			blinkcols[n][0] = normcols[n][0] = black;
+			blinkcols[n][1] = normcols[n][1] = amber;
+			blinkcols[n+128][0] = normcols[n+128][0] = black;
+			blinkcols[n+128][1] = normcols[n+128][1] = amber;
+		}
+		if (t3100e->attrmap & 8) boldcols[n] = 1;	/* Bold */
+	}
+	/* Set up the 01-0E range, controlled by bits 0 and 1 of the 
+	 * passed value. When blinking is enabled this also affects 81-8E. */
+	for (n = 0x01; n <= 0x0E; n++)
+	{
+		if (n == 7) continue;
+		if (t3100e->attrmap & 1)
+		{
+			blinkcols[n][0] = normcols[n][0] = amber;
+			blinkcols[n][1] = normcols[n][1] = black;
+			blinkcols[n+128][0] = amber;
+			blinkcols[n+128][1] = black;
+		}
+		else
+		{
+			blinkcols[n][0] = normcols[n][0] = black;
+			blinkcols[n][1] = normcols[n][1] = amber;
+			blinkcols[n+128][0] = black;
+			blinkcols[n+128][1] = amber;
+		}
+		if (t3100e->attrmap & 2) boldcols[n] = 1;
+	}
+	/* Colours 07 and 0F are always amber on black. If blinking is 
+	 * enabled so are 87 and 8F. */
+	for (n = 0x07; n <= 0x0F; n += 8)
 	{
 		blinkcols[n][0] = normcols[n][0] = black;
 		blinkcols[n][1] = normcols[n][1] = amber;
-		blinkcols[n+128][0] = normcols[n+128][0] = black;
-		blinkcols[n+128][1] = normcols[n+128][1] = amber;
+		blinkcols[n+128][0] = black;
+		blinkcols[n+128][1] = amber;
 	}
-	/* In the normal range, 00 11 22 .. FF are black */
+	/* When not blinking, colours 81-8F are always amber on black. */
+	for (n = 0x81; n <= 0x8F; n ++)
+	{
+		normcols[n][0] = black;
+		normcols[n][1] = amber;
+		boldcols[n] = (n & 0x08) != 0;
+	}
+
+
+	/* Finally do the ones which are solid black. These differ between
+	 * the normal and blinking mappings */
 	for (n = 0; n <= 0xFF; n += 0x11)
 	{
 		normcols[n][0] = normcols[n][1] = black;
@@ -570,9 +657,34 @@ void *t3100e_init()
 		blinkcols[n][0] = blinkcols[n][1] = black;
 		blinkcols[n+128][0] = blinkcols[n+128][1] = black;
 	}
+}
+
+
+void *t3100e_init()
+{
+        t3100e_t *t3100e = malloc(sizeof(t3100e_t));
+        memset(t3100e, 0, sizeof(t3100e_t));
+	cga_init(&t3100e->cga);
+
+	t3100e->internal = 1;
+
+	/* 32k video RAM */
+        t3100e->vram = malloc(0x8000);
+
+        timer_add(t3100e_poll, &t3100e->cga.vidtime, TIMER_ALWAYS_ENABLED, t3100e);
+
+	/* Occupy memory between 0xB8000 and 0xBFFFF */
+        mem_mapping_add(&t3100e->mapping, 0xb8000, 0x8000, t3100e_read, NULL, NULL, t3100e_write, NULL, NULL,  NULL, 0, t3100e);
+	/* Respond to CGA I/O ports */
+        io_sethandler(0x03d0, 0x000c, t3100e_in, NULL, NULL, t3100e_out, NULL, NULL, t3100e);
+
+	/* Default attribute mapping is 4 */
+	t3100e->attrmap = 4;
+	t3100e_recalcattrs(t3100e);
 
 /* Start off in 80x25 text mode */
-        t3100e->cga_stat   = 0xF4;
+        t3100e->cga.cgastat   = 0xF4;
+	t3100e->cga.vram = t3100e->vram;
 	t3100e->enabled    = 1;
 	t3100e->video_options = 0xFF;
         return t3100e;

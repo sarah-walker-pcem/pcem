@@ -5,6 +5,7 @@
 #include "mouse.h"
 #include "mem.h"
 #include "device.h"
+#include "t3100e.h"
 #include "vid_t3100e.h"
 
 /* The Toshiba 3100e is a 286-based portable.
@@ -156,7 +157,7 @@ struct t3100e_ems_regs
 	uint8_t	 upper_pages;	/* Pages of EMS available from upper RAM */
 	uint8_t  upper_is_ems;	/* Upper RAM is EMS? */
 	mem_mapping_t upper_mapping;
-
+	uint8_t	notify;
 } t3100e_ems;
 
 void t3100e_ems_out(uint16_t addr, uint8_t val, void *p);
@@ -335,6 +336,7 @@ void t3100e_map_ram(uint8_t val)
 					mem_size * 1024,
 					upper_len);
 		mem_mapping_enable(&t3100e_ems.upper_mapping);
+		mem_mapping_set_exec(&t3100e_ems.upper_mapping, ram + t3100e_ems.upper_base);
 	}
 	else
 	{
@@ -351,13 +353,21 @@ void t3100e_map_ram(uint8_t val)
 }
 
 
+void t3100e_notify_set(uint8_t value)
+{
+	t3100e_ems.notify = value;
+}
+
+
 uint8_t t3100e_sys_in(uint16_t addr, void *p)
 {
-//	struct t3100e_ems_regs *regs = (struct t3100e_ems_regs *)p;
+	struct t3100e_ems_regs *regs = (struct t3100e_ems_regs *)p;
 
-	/* XXX Not implemented. Seems to return 0x0C on real hardware */
+	/* The low 4 bits always seem to be 0x0C. The high 4 are a 
+	 * notification sent by the keyboard controller when it detects
+	 * an [Fn] key combination */
 	if (t3100e_log) pclog("IN 0x8084\n");
-	return 0x0C;
+	return 0x0C | (regs->notify << 4);
 }
 
 
@@ -411,6 +421,7 @@ void t3100e_ems_out(uint16_t addr, uint8_t val, void *p)
 		if (t3100e_log) pclog("Enabling EMS RAM at %05x\n",
 				page_to_addr(pg));
 		mem_mapping_enable(&regs->mapping[pg]);
+		mem_mapping_set_exec(&regs->mapping[pg], ram + regs->page_exec[pg]);
 	}
 	else
 	{

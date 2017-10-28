@@ -9,6 +9,7 @@ typedef struct cga_t
         
         uint8_t cgamode, cgacol;
 
+	int fontbase;
         int linepos, displine;
         int sc, vc;
         int cgadispon;
