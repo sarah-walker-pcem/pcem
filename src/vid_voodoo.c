@@ -7582,12 +7582,12 @@ void *voodoo_card_init()
         
         for (c = 0; c < TEX_CACHE_MAX; c++)
         {
-                voodoo->texture_cache[0][c].data = malloc((256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2 + 1*1) * 4);
+                voodoo->texture_cache[0][c].data = malloc((256*256 + 256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2) * 4);
                 voodoo->texture_cache[0][c].base = -1; /*invalid*/
                 voodoo->texture_cache[0][c].refcount = 0;
                 if (voodoo->dual_tmus)
                 {
-                        voodoo->texture_cache[1][c].data = malloc((256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2 + 1*1) * 4);
+                        voodoo->texture_cache[1][c].data = malloc((256*256 + 256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2) * 4);
                         voodoo->texture_cache[1][c].base = -1; /*invalid*/
                         voodoo->texture_cache[1][c].refcount = 0;
                 }
