@@ -109,7 +109,6 @@ MODEL models[] =
         {"[8088] Tandy 1000",             ROM_TANDY,            "tandy",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  128, 640, 128,      tandy1k_init, &tandy1000_device},
         {"[8088] Tandy 1000 HX",          ROM_TANDY1000HX,      "tandy1000hx",    { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  256, 640, 128,      tandy1k_init, &tandy1000hx_device},
         {"[8088] VTech Laser Turbo XT",   ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
-        {"[8088] VTech Laser XT3",        ROM_LXT3,             "lxt3",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
 
         {"[8086] Amstrad PC1512",         ROM_PC1512,           "pc1512",         { {"",      cpus_pc1512},      {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      512, 640, 128,          ams_init, NULL},
         {"[8086] Amstrad PC1640",         ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      640, 640,   0,          ams_init, NULL},
@@ -118,6 +117,7 @@ MODEL models[] =
         {"[8086] Olivetti M24",           ROM_OLIM24,           "olivetti_m24",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_OLIM24,       128, 640, 128,       olim24_init, NULL},
         {"[8086] Sinclair PC200",         ROM_PC200,            "pc200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      512, 640, 128,          ams_init, NULL},
         {"[8086] Tandy 1000 SL/2",        ROM_TANDY1000SL2,     "tandy1000sl2",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, 0,                  512, 768, 128,   tandy1ksl2_init, NULL},
+        {"[8086] VTech Laser XT3",        ROM_LXT3,             "lxt3",           { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        0, 0,                  512,1152, 128,   xt_laserxt_init, NULL},
 
         {"[286] AMI 286 clone",           ROM_AMI286,           "ami286",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             512,16384,128,      at_neat_init, NULL},
         {"[286] Award 286 clone",         ROM_AWARD286,         "award286",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             512,16384,128,      at_scat_init, NULL},
