@@ -1827,7 +1827,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 {
                         addbyte(0xf6); /*TEST state->tex_a, 0x80*/
                         addbyte(0x87);
-                        addbyte(0x23);
                         addlong(offsetof(voodoo_state_t, tex_a));
                         addbyte(0x80);
                         addbyte(0x74);/*JZ !cc_localselect*/
@@ -1837,7 +1836,8 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                                 addbyte(0x6e);
                                 addbyte(0x8e);
                                 addlong(offsetof(voodoo_params_t, color0));
-                                /*JMP +*/
+                                addbyte(0xeb); /*JMP +*/
+                                addbyte(8);
                         /*!cc_localselect:*/
                                 addbyte(0xf3); /*MOVDQU XMM1, ib*/ /* ir, ig and ib must be in same dqword!*/
                                 addbyte(0x0f);
