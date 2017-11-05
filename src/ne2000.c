@@ -54,6 +54,8 @@ uint8_t maclocal[6] = {0xac, 0xde, 0x48, 0x88, 0xbb, 0xaa};
 
 #define NETBLOCKING 0		//we won't block our pcap
 
+//#define NE2000_DEBUG
+
 #ifdef _WIN32
 static HINSTANCE net_hLib = 0;                      /* handle to DLL */
 static char *net_lib_name = "wpcap.dll";
@@ -438,9 +440,9 @@ uint16_t ne2000_asic_read_w(uint16_t offset, void *p)
                 retval = ne2000_chipmem_read_b(ne2000->remote_dma, ne2000);
                 ne2000_dma_read(1, ne2000);
         }
-
+#ifdef NE2000_DEBUG
         pclog("asic read val=0x%04x\n", retval);
-
+#endif
         return retval;
 }
 
@@ -471,9 +473,9 @@ void ne2000_dma_write(int io_len, void *p)
 void ne2000_asic_write_w(uint16_t offset, uint16_t value, void *p)
 {
         ne2000_t *ne2000 = (ne2000_t *)p;
-
+#ifdef NE2000_DEBUG
         pclog("asic write val=0x%04x\n", value);
-
+#endif
         if (ne2000->remote_bytes == 0)
                 return;
         if (ne2000->DCR.wdsize & 0x01) {
@@ -521,10 +523,11 @@ void ne2000_reset_write(uint16_t offset, uint8_t value, void *p)
 uint8_t ne2000_read(uint16_t address, void *p)
 {
         ne2000_t *ne2000 = (ne2000_t *)p;
-
-        pclog("read addr %x\n", address);
         int ret = 0;
-
+        
+#ifdef NE2000_DEBUG
+        pclog("read addr %x\n", address);
+#endif
         address &= 0xf;
 
         if (address == 0x00)
@@ -534,15 +537,18 @@ uint8_t ne2000_read(uint16_t address, void *p)
                         (ne2000->CR.tx_packet << 2) |
                         (ne2000->CR.start     << 1) |
                         (ne2000->CR.stop));
+#ifdef NE2000_DEBUG
                 pclog("read CR returns 0x%08x\n", ret);
+#endif
         }
         else
         {
                 switch (ne2000->CR.pgsel)
                 {
                         case 0x00:
+#ifdef NE2000_DEBUG
                         pclog("page 0 read from port %04x\n", address);
-
+#endif
                         switch (address)
                         {
                                 case 0x1:  // CLDA0
@@ -568,7 +574,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
 
                                 case 0x6:  // FIFO
                                 // reading FIFO is only valid in loopback mode
+#ifdef NE2000_DEBUG
                                 pclog("reading FIFO not supported yet\n");
+#endif
                                 return ne2000->fifo;
 
                                 case 0x7:  // ISR
@@ -588,11 +596,15 @@ uint8_t ne2000_read(uint16_t address, void *p)
                                 return ne2000->remote_dma >> 8;
 
                                 case 0xa:  // reserved
+#ifdef NE2000_DEBUG
                                 pclog("reserved read - page 0, 0xa\n");
+#endif
                                 return 0xff;
 
                                 case 0xb:  // reserved
+#ifdef NE2000_DEBUG
                                 pclog("reserved read - page 0, 0xb\n");
+#endif
                                 return 0xff;
 
                                 case 0xc:  // RSR
@@ -618,8 +630,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
                         return 0;
 
                         case 0x01:
+#ifdef NE2000_DEBUG
                         pclog("page 1 read from port %04x\n", address);
-
+#endif
                         switch (address)
                         {
                                 case 0x1:  // PAR0-5
@@ -631,7 +644,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
                                 return ne2000->physaddr[address - 1];
 
                                 case 0x7:  // CURR
+#ifdef NE2000_DEBUG
                                 pclog("returning current page: %02x\n", (ne2000->curr_page));
+#endif
                                 return ne2000->curr_page;
 
                                 case 0x8:  // MAR0-7
@@ -648,8 +663,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
                         return 0;
 
                         case 0x02:
+#ifdef NE2000_DEBUG
                         pclog("page 2 read from port %04x\n", address);
-
+#endif
                         switch (address)
                         {
                                 case 0x1:  // PSTART
@@ -677,7 +693,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
                                 case 0x9:
                                 case 0xa:
                                 case 0xb:
+#ifdef NE2000_DEBUG
                                 pclog("reserved read - page 2, 0x%02x\n", address);
+#endif
                                 break;
 
                                 case 0xc:  // RCR
@@ -729,9 +747,9 @@ uint8_t ne2000_read(uint16_t address, void *p)
 void ne2000_write(uint16_t address, uint8_t value, void *p)
 {
         ne2000_t *ne2000 = (ne2000_t *)p;
-
+#ifdef NE2000_DEBUG
         pclog("write address %x, val=%x\n", address, value);
-
+#endif
         address &= 0xf;
 
         //
@@ -742,12 +760,15 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
         //
         if (address == 0x00)
         {
+#ifdef NE2000_DEBUG
                 pclog("wrote 0x%02x to CR\n", value);
-
+#endif
                 // Validate remote-DMA
                 if ((value & 0x38) == 0x00)
                 {
+#ifdef NE2000_DEBUG
                         pclog("CR write - invalid rDMA value 0\n");
+#endif
                         value |= 0x20; /* dma_cmd == 4 is a safe default */
                         //value = 0x22; /* dma_cmd == 4 is a safe default */
                 }
@@ -779,9 +800,11 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 ne2000->bound_ptr * 256;
                         ne2000->remote_bytes = *((uint16_t*) &
                                 ne2000->mem[ne2000->bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
+#ifdef NE2000_DEBUG
                         pclog("Sending buffer #x%x length %d\n",
                                 ne2000->remote_start,
                                 ne2000->remote_bytes);
+#endif
                 }
 
                 // Check for start-tx
@@ -790,7 +813,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         // loopback mode
                         if (ne2000->TCR.loop_cntl != 1)
                         {
+#ifdef NE2000_DEBUG
         			pclog("Loop mode %d not supported.\n", ne2000->TCR.loop_cntl);
+#endif
         		}
                         else
                         {
@@ -811,12 +836,13 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                 else if (value & 0x04)
                 {
                         // start-tx and no loopback
+#ifdef NE2000_DEBUG
                         if (ne2000->CR.stop || !ne2000->CR.start)
                                 pclog("CR write - tx start, dev in reset\n");
 
                         if (ne2000->tx_bytes == 0)
                                 pclog("CR write - tx start, tx bytes == 0\n");
-
+#endif
                         // Send the packet to the system driver
                         /* TODO: Transmit packet */
                         //BX_NE2K_THIS ethdev->sendpkt(& ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
@@ -824,13 +850,17 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         if (net_is_slirp)
                         {
                                 slirp_input(&ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
+#ifdef NE2000_DEBUG
                                 pclog("ne2000 slirp sending packet\n");
+#endif
                         }
 #ifdef _WIN32
                         if(net_is_pcap && net_pcap!=NULL)
                         {
                                 _pcap_sendpacket(net_pcap, &ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
+#ifdef NE2000_DEBUG
                                 pclog("ne2000 pcap sending packet\n");
+#endif
                         }
 #endif
                         ne2000_tx_event(value, ne2000);
@@ -869,8 +899,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                 switch (ne2000->CR.pgsel)
                 {
                         case 0x00:
+#ifdef NE2000_DEBUG
                         pclog("page 0 write to port %04x\n", address);
-
+#endif
                         // It appears to be a common practice to use outw on page0 regs...
 
                         switch (address)
@@ -961,9 +992,10 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
 
                                 case 0xc:  // RCR
                                 // Check if the reserved bits are set
+#ifdef NE2000_DEBUG
                                 if (value & 0xc0)
                                         pclog("RCR write, reserved bits set\n");
-
+#endif
                                 // Set all other bit-fields
                                 ne2000->RCR.errors_ok = ((value & 0x01) == 0x01);
                                 ne2000->RCR.runts_ok  = ((value & 0x02) == 0x02);
@@ -973,20 +1005,25 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 ne2000->RCR.monitor   = ((value & 0x20) == 0x20);
 
                                 // Monitor bit is a little suspicious...
+#ifdef NE2000_DEBUG
                                 if (value & 0x20)
                                         pclog("RCR write, monitor bit set!\n");
+#endif
                                 break;
 
                                 case 0xd:  // TCR
                                 // Check reserved bits
+#ifdef NE2000_DEBUG
                                 if (value & 0xe0)
                                         pclog("TCR write, reserved bits set\n");
-
+#endif
                                 // Test loop mode (not supported)
                                 if (value & 0x06)
                                 {
                                         ne2000->TCR.loop_cntl = (value & 0x6) >> 1;
+#ifdef NE2000_DEBUG
                                         pclog("TCR write, loop mode %d not supported\n", ne2000->TCR.loop_cntl);
+#endif
                                 }
                                 else
                                         ne2000->TCR.loop_cntl = 0;
@@ -995,7 +1032,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 if (value & 0x01)
                                 {
                                         //fatal("ne2000 TCR write, inhibit-CRC not supported\n");
+#ifdef NE2000_DEBUG
                                         pclog("ne2000 TCR write, inhibit-CRC not supported\n");
+#endif
                                         return;
                                 }
 
@@ -1003,7 +1042,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 if (value & 0x08)
                                 {
                                         //fatal("ne2000 TCR write, auto transmit disable not supported\n");
+#ifdef NE2000_DEBUG
                                         pclog("ne2000 TCR write, auto transmit disable not supported\n");
+#endif
                                 }
 
                                 // Allow collision-offset to be set, although not used
@@ -1012,6 +1053,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
 
                                 case 0xe:  // DCR
                                 // the loopback mode is not suppported yet
+#ifdef NE2000_DEBUG
                                 if (!(value & 0x08))
                                         pclog("DCR write, loopback mode selected\n");
 
@@ -1021,7 +1063,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                         pclog("DCR write - LAS set ???\n");
                                 if (value & 0x10)
                                         pclog("DCR write - AR set ???\n");
-
+#endif
                                 // Set other values.
                                 ne2000->DCR.wdsize   = ((value & 0x01) == 0x01);
                                 ne2000->DCR.endian   = ((value & 0x02) == 0x02);
@@ -1033,9 +1075,10 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
 
                                 case 0xf:  // IMR
                                 // Check for reserved bit
+#ifdef NE2000_DEBUG
                                 if (value & 0x80)
                                         pclog("IMR write, reserved bit set\n");
-
+#endif
                                 // Set other values
                                 ne2000->IMR.rx_inte    = ((value & 0x01) == 0x01);
                                 ne2000->IMR.tx_inte    = ((value & 0x02) == 0x02);
@@ -1046,7 +1089,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 ne2000->IMR.rdma_inte  = ((value & 0x40) == 0x40);
                                 if (ne2000->ISR.pkt_tx && ne2000->IMR.tx_inte)
                                 {
+#ifdef NE2000_DEBUG
                                         pclog("tx irq retrigger\n");
+#endif
                                         picint(1 << ne2000->base_irq);
                                 }
                                 break;
@@ -1054,7 +1099,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         break;
 
                         case 0x01:
+#ifdef NE2000_DEBUG
                         pclog("page 1 w offset %04x\n", address);
+#endif
                         switch (address)
                         {
                                 case 0x1:  // PAR0-5
@@ -1084,9 +1131,10 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         break;
 
                         case 0x02:
+#ifdef NE2000_DEBUG
                         if (address != 0)
                                 pclog("page 2 write ?\n");
-
+#endif
                         switch (address)
                         {
                                 case 0x1:  // CLDA0
@@ -1108,7 +1156,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 case 0x4:
                                 //fatal("page 2 write to reserved offset 4\n");
                                 //OS/2 Warp can cause this to freak out.
+#ifdef NE2000_DEBUG
                                 pclog("ne2000 page 2 write to reserved offset 4\n");
+#endif
                                 break;
 
                                 case 0x5:  // Local Next-packet pointer
@@ -1136,7 +1186,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 case 0xe:
                                 case 0xf:
                                 //fatal("page 2 write to reserved offset %0x\n", address);
+#ifdef NE2000_DEBUG
                                 pclog("ne2000 page 2 write to reserved offset %0x\n", address);
+#endif
                                 default:
                                 break;
                         }
@@ -1144,7 +1196,9 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
 
                         default:
                         //fatal("ne2K: unknown value of pgsel in write - %d\n", ne2000->CR.pgsel);
+#ifdef NE2000_DEBUG
                         pclog("ne2000 unknown value of pgsel in write - %d\n", ne2000->CR.pgsel);
+#endif
                         break;
                 }
         }
@@ -1198,9 +1252,10 @@ void ne2000_rx_frame(void *p, const void *buf, int io_len)
         uint8_t *startptr;
         static uint8_t bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
+#ifdef NE2000_DEBUG
         if(io_len != 60)
                 pclog("rx_frame with length %d\n", io_len);
-
+#endif
 	//LOG_MSG("stop=%d, pagestart=%x, dcr_loop=%x, tcr_loopcntl=%x",
 	//	ne2000->CR.stop, ne2000->page_start,
 	//	ne2000->DCR.loop, ne2000->TCR.loop_cntl);
@@ -1229,13 +1284,17 @@ void ne2000_rx_frame(void *p, const void *buf, int io_len)
 #endif
                 )
         {
+#ifdef NE2000_DEBUG
                 pclog("no space\n");
+#endif
                 return;
         }
 
         if ((io_len < 40/*60*/) && !ne2000->RCR.runts_ok)
         {
+#ifdef NE2000_DEBUG
                 pclog("rejected small packet, length %d\n", io_len);
+#endif
                 return;
         }
         // some computers don't care...
@@ -1261,6 +1320,7 @@ void ne2000_rx_frame(void *p, const void *buf, int io_len)
                 else if (0 != memcmp(buf, ne2000->physaddr, 6))
                         return;
         }
+#ifdef NE2000_DEBUG
         else
                 pclog("rx_frame promiscuous receive\n");
 
@@ -1268,7 +1328,7 @@ void ne2000_rx_frame(void *p, const void *buf, int io_len)
                 io_len,
                 pktbuf[0], pktbuf[1], pktbuf[2], pktbuf[3], pktbuf[4], pktbuf[5],
                 pktbuf[6], pktbuf[7], pktbuf[8], pktbuf[9], pktbuf[10], pktbuf[11]);
-
+#endif
         nextpage = ne2000->curr_page + pages;
         if (nextpage >= ne2000->page_stop)
                 nextpage -= ne2000->page_stop - ne2000->page_start;
@@ -1326,7 +1386,9 @@ void ne2000_tx_timer(void *p)
 {
         ne2000_t *ne2000 = (ne2000_t *)p;
 
+#ifdef NE2000_DEBUG
         pclog("tx_timer\n");
+#endif
         ne2000->TSR.tx_ok = 1;
         // Generate an interrupt if not masked and not one in progress
         if (ne2000->IMR.tx_inte && !ne2000->ISR.pkt_tx)
@@ -1365,7 +1427,9 @@ static void ne2000_poller(void *p)
                                 return;
 			}
                         ne2000_rx_frame(ne2000,&qp->data,qp->len); 
+#ifdef NE2000_DEBUG
         		pclog("ne2000 inQ:%d  got a %dbyte packet @%d\n",QueuePeek(slirpq),qp->len,qp);
+#endif
         		free(qp);
 		}
                 fizz++;
@@ -1388,7 +1452,9 @@ static void ne2000_poller(void *p)
                         if((ne2000->DCR.loop == 0) || (ne2000->TCR.loop_cntl != 0))
                                 return;
 
+#ifdef NE2000_DEBUG
         		pclog("ne2000 pcap received a frame %d bytes\n",h.caplen);
+#endif
                         ne2000_rx_frame(ne2000,data,h.caplen); 
                 }
 	}
@@ -1724,7 +1790,9 @@ void slirp_output (const unsigned char *pkt, int pkt_len)
         p->len=pkt_len;
         memcpy(p->data,pkt,pkt_len);
         QueueEnter(slirpq,p);
+#ifdef NE2000_DEBUG
         pclog("ne2000 slirp_output %d @%d\n",pkt_len,p);
+#endif
 }
 
 // Instead of calling this and crashing some times
