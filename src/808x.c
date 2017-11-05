@@ -2690,9 +2690,17 @@ void execx86(int cycs)
                                 cycles-=((cpu_mod==3)?8:28);
                                 break;
                                 case 0x20: case 0x30: /*SHL b,CL*/
-                                if ((temp<<(c-1))&0x80) flags|=C_FLAG;
-                                else                    flags&=~C_FLAG;
-                                temp<<=c;
+                                if (c > 8)
+                                {
+                                        temp = 0;
+                                        flags &= ~C_FLAG;
+                                }
+                                else
+                                {
+                                        if ((temp<<(c-1))&0x80) flags|=C_FLAG;
+                                        else                    flags&=~C_FLAG;
+                                        temp<<=c;
+                                }
                                 seteab(temp);
                                 setznp8(temp);
                                 cycles-=(c*4);
@@ -2700,9 +2708,17 @@ void execx86(int cycs)
                                 flags|=A_FLAG;
                                 break;
                                 case 0x28: /*SHR b,CL*/
-                                if ((temp>>(c-1))&1) flags|=C_FLAG;
-                                else                 flags&=~C_FLAG;
-                                temp>>=c;
+                                if (c > 8)
+                                {
+                                        temp = 0;
+                                        flags &= ~C_FLAG;
+                                }
+                                else
+                                {
+                                        if ((temp>>(c-1))&1) flags|=C_FLAG;
+                                        else                 flags&=~C_FLAG;
+                                        temp>>=c;
+                                }
                                 seteab(temp);
                                 setznp8(temp);
                                 cycles-=(c*4);
@@ -2827,9 +2843,17 @@ void execx86(int cycs)
                                 break;
 
                                 case 0x28:            /*SHR w,CL*/
-                                if ((tempw>>(c-1))&1) flags|=C_FLAG;
-                                else                  flags&=~C_FLAG;
-                                tempw>>=c;
+                                if (c > 16)
+                                {
+                                        tempw = 0;
+                                        flags &= ~C_FLAG;
+                                }
+                                else
+                                {
+                                        if ((tempw>>(c-1))&1) flags|=C_FLAG;
+                                        else                  flags&=~C_FLAG;
+                                        tempw>>=c;
+                                }
                                 seteaw(tempw);
                                 setznp16(tempw);
                                 cycles-=(c*4);
