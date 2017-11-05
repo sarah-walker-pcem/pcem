@@ -151,9 +151,9 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                         svga->dac_pos++; 
                         break;
                         case 2: 
-                        svga->vgapal[svga->dac_write].r = svga->dac_r & 0x3f; 
-                        svga->vgapal[svga->dac_write].g = svga->dac_g & 0x3f;
-                        svga->vgapal[svga->dac_write].b = val & 0x3f; 
+                        svga->vgapal[svga->dac_write].r = svga->dac_r;
+                        svga->vgapal[svga->dac_write].g = svga->dac_g;
+                        svga->vgapal[svga->dac_write].b = val; 
                         if (svga->ramdac_type == RAMDAC_8BIT)
                                 svga->pallook[svga->dac_write] = makecol32(svga->vgapal[svga->dac_write].r, svga->vgapal[svga->dac_write].g, svga->vgapal[svga->dac_write].b);
                         else
@@ -243,14 +243,20 @@ uint8_t svga_in(uint16_t addr, void *p)
                 {
                         case 0: 
                         svga->dac_pos++; 
-                        return svga->vgapal[svga->dac_read].r;
+                        if (svga->ramdac_type == RAMDAC_8BIT)
+                                return svga->vgapal[svga->dac_read].r;
+                        return svga->vgapal[svga->dac_read].r & 0x3f;
                         case 1: 
                         svga->dac_pos++; 
-                        return svga->vgapal[svga->dac_read].g;
+                        if (svga->ramdac_type == RAMDAC_8BIT)
+                                return svga->vgapal[svga->dac_read].g;
+                        return svga->vgapal[svga->dac_read].g & 0x3f;
                         case 2: 
                         svga->dac_pos=0; 
                         svga->dac_read = (svga->dac_read + 1) & 255; 
-                        return svga->vgapal[(svga->dac_read - 1) & 255].b;
+                        if (svga->ramdac_type == RAMDAC_8BIT)
+                                return svga->vgapal[(svga->dac_read - 1) & 255].b;
+                        return svga->vgapal[(svga->dac_read - 1) & 255].b & 0x3f;
                 }
                 break;
                 case 0x3CC: 
