@@ -415,7 +415,6 @@ uint16_t ne2000_dma_read(int io_len, void *p)
                 if (ne2000->IMR.rdma_inte)
                 {
 			picint(1 << ne2000->base_irq);
-			picintc(1 << ne2000->base_irq);
 		}
 	}
 
@@ -465,7 +464,6 @@ void ne2000_dma_write(int io_len, void *p)
                 if (ne2000->IMR.rdma_inte)
                 {
                         picint(1 << ne2000->base_irq);
-                        picintc(1 << ne2000->base_irq);
                 }
         }
 }
@@ -862,7 +860,6 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         if (ne2000->IMR.rdma_inte)
                         {
                                 picint(1 << ne2000->base_irq);
-                                picintc(1 << ne2000->base_irq);
                                 //DEV_pic_raise_irq(ne2000->base_irq);
                         }
                 }
@@ -1051,7 +1048,6 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 {
                                         pclog("tx irq retrigger\n");
                                         picint(1 << ne2000->base_irq);
-                                        picintc(1 << ne2000->base_irq);
                                 }
                                 break;
                         }
