@@ -78,3 +78,7 @@ endif
 if OS_LINUX
 pcem_SOURCES += cdrom-ioctl-linux.c
 endif
+
+if !HAS_OFF64T
+pcem_CFLAGS += -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
+endif

@@ -106,6 +106,7 @@ bin_PROGRAMS = pcem$(EXEEXT)
 @OS_MACOSX_TRUE@am__append_12 = -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 @OS_MACOSX_TRUE@am__append_13 = -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 @OS_LINUX_TRUE@am__append_14 = cdrom-ioctl-linux.c
+@HAS_OFF64T_FALSE@am__append_15 = -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -543,9 +544,8 @@ pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c \
 	$(am__append_3) $(am__append_4) $(am__append_6) \
 	$(am__append_9) $(am__append_11) $(am__append_14)
 pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config \
-	--cflags) -Dfopen64=fopen -Dfseeko64=fseeko -Dftello64=ftello \
-	-Doff64_t=off_t $(am__append_5) $(am__append_7) \
-	$(am__append_12)
+	--cflags) $(am__append_5) $(am__append_7) $(am__append_12) \
+	$(am__append_15)
 pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config \
 	--cflags) $(am__append_8) $(am__append_13)
 pcem_LDADD = @LIBS@ $(am__append_1) $(am__append_10)

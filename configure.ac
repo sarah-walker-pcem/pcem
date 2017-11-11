@@ -60,12 +60,18 @@ esac
 AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
 AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
 
+AC_MSG_CHECKING([for off64_t])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],[[off64_t n=0;]])],[has_lfs="yes"],[has_lfs="no"])
+AC_MSG_RESULT($has_lfs)
+
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB
 
 AM_CONDITIONAL(USE_WX, test "$enable_wx" = "yes")
 AM_CONDITIONAL(USE_NETWORKING, test "$enable_networking" = "yes")
 AM_CONDITIONAL(USE_ALSA, test "$enable_alsa" = "yes")
+
+AM_CONDITIONAL(HAS_OFF64T, test "$has_lfs" = "yes")
 
 SDL_VERSION=2.0.1
 AM_PATH_SDL2($SDL_VERSION,
