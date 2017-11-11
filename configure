@@ -588,6 +588,12 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+OS_MACOSX_FALSE
+OS_MACOSX_TRUE
+OS_WINDOWS_FALSE
+OS_WINDOWS_TRUE
+OS_LINUX_FALSE
+OS_LINUX_TRUE
 WX_VERSION_MICRO
 WX_VERSION_MINOR
 WX_VERSION_MAJOR
@@ -614,10 +620,6 @@ USE_NETWORKING_FALSE
 USE_NETWORKING_TRUE
 USE_WX_FALSE
 USE_WX_TRUE
-OS_LINUX_FALSE
-OS_LINUX_TRUE
-OS_WIN_FALSE
-OS_WIN_TRUE
 CPU_X86_64_FALSE
 CPU_X86_64_TRUE
 CPU_I386_FALSE
@@ -699,7 +701,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -791,7 +792,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1044,15 +1044,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1190,7 +1181,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1343,7 +1334,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -4214,23 +4204,6 @@ fi
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB
 
- if test "$OS" = "win"; then
-  OS_WIN_TRUE=
-  OS_WIN_FALSE='#'
-else
-  OS_WIN_TRUE='#'
-  OS_WIN_FALSE=
-fi
-
- if test "$OS" = "linux"; then
-  OS_LINUX_TRUE=
-  OS_LINUX_FALSE='#'
-else
-  OS_LINUX_TRUE='#'
-  OS_LINUX_FALSE=
-fi
-
-
  if test "$enable_wx" = "yes"; then
   USE_WX_TRUE=
   USE_WX_FALSE='#'
@@ -4416,8 +4389,8 @@ fi
   if test "x$sdl_prefix$sdl_exec_prefix" = x ; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL" >&5
-$as_echo_n "checking for SDL... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sdl2 >= $min_sdl_version" >&5
+$as_echo_n "checking for sdl2 >= $min_sdl_version... " >&6; }
 
 if test -n "$SDL_CFLAGS"; then
     pkg_cv_SDL_CFLAGS="$SDL_CFLAGS"
@@ -4457,7 +4430,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -4475,7 +4448,7 @@ fi
 
 	sdl_pc=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	sdl_pc=no
 else
@@ -5065,107 +5038,6 @@ if test "$wxWin" != 1; then
       " "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
-$as_echo_n "checking for glGetError in -lGL... " >&6; }
-if ${ac_cv_lib_GL_glGetError+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lGL  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char glGetError ();
-int
-main ()
-{
-return glGetError ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_GL_glGetError=yes
-else
-  ac_cv_lib_GL_glGetError=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_GL_glGetError" >&5
-$as_echo "$ac_cv_lib_GL_glGetError" >&6; }
-if test "x$ac_cv_lib_GL_glGetError" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBGL 1
-_ACEOF
-
-  LIBS="-lGL $LIBS"
-
-else
-  \
-   echo "You need to install the OpenGL library."
-    exit -1
-fi
-
-LIBS="$LIBS $WX_LIBS $SDL_LIBS"
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for alGetError in -lopenal" >&5
-$as_echo_n "checking for alGetError in -lopenal... " >&6; }
-if ${ac_cv_lib_openal_alGetError+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lopenal  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char alGetError ();
-int
-main ()
-{
-return alGetError ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_openal_alGetError=yes
-else
-  ac_cv_lib_openal_alGetError=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_openal_alGetError" >&5
-$as_echo "$ac_cv_lib_openal_alGetError" >&6; }
-if test "x$ac_cv_lib_openal_alGetError" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBOPENAL 1
-_ACEOF
-
-  LIBS="-lopenal $LIBS"
-
-else
-  \
-	echo "You need to install the OpenAL library."
-	 exit -1
-fi
-
-
 if test "$enable_alsa" == "yes"; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for snd_pcm_open in -lasound" >&5
 $as_echo_n "checking for snd_pcm_open in -lasound... " >&6; }
@@ -5260,6 +5132,247 @@ _ACEOF
 
   LIBS="-lpthread $LIBS"
 
+fi
+
+
+build_macosx="no"
+build_linux="no"
+build_win="no"
+
+case "$host" in
+    *-*-darwin*)
+       LIBS="$LIBS -framework OpenGL"
+       LIBS="$LIBS -framework OpenAL"
+       build_macosx="yes"
+       ;;
+    *-*-cygwin* | *-*-mingw32*)
+       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
+$as_echo_n "checking for glGetError in -lGL... " >&6; }
+if ${ac_cv_lib_GL_glGetError+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lGL  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char glGetError ();
+int
+main ()
+{
+return glGetError ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_GL_glGetError=yes
+else
+  ac_cv_lib_GL_glGetError=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_GL_glGetError" >&5
+$as_echo "$ac_cv_lib_GL_glGetError" >&6; }
+if test "x$ac_cv_lib_GL_glGetError" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGL 1
+_ACEOF
+
+  LIBS="-lGL $LIBS"
+
+else
+  \
+           echo "You need to install the OpenGL library."
+           exit -1
+fi
+
+       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for alGetError in -lopenal" >&5
+$as_echo_n "checking for alGetError in -lopenal... " >&6; }
+if ${ac_cv_lib_openal_alGetError+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lopenal  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char alGetError ();
+int
+main ()
+{
+return alGetError ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_openal_alGetError=yes
+else
+  ac_cv_lib_openal_alGetError=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_openal_alGetError" >&5
+$as_echo "$ac_cv_lib_openal_alGetError" >&6; }
+if test "x$ac_cv_lib_openal_alGetError" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBOPENAL 1
+_ACEOF
+
+  LIBS="-lopenal $LIBS"
+
+else
+  \
+	   echo "You need to install the OpenAL library."
+	   exit -1
+fi
+
+       build_win="yes"
+       ;;
+    *)
+       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for glGetError in -lGL" >&5
+$as_echo_n "checking for glGetError in -lGL... " >&6; }
+if ${ac_cv_lib_GL_glGetError+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lGL  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char glGetError ();
+int
+main ()
+{
+return glGetError ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_GL_glGetError=yes
+else
+  ac_cv_lib_GL_glGetError=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_GL_glGetError" >&5
+$as_echo "$ac_cv_lib_GL_glGetError" >&6; }
+if test "x$ac_cv_lib_GL_glGetError" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGL 1
+_ACEOF
+
+  LIBS="-lGL $LIBS"
+
+else
+  \
+           echo "You need to install the OpenGL library."
+           exit -1
+fi
+
+       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for alGetError in -lopenal" >&5
+$as_echo_n "checking for alGetError in -lopenal... " >&6; }
+if ${ac_cv_lib_openal_alGetError+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lopenal  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char alGetError ();
+int
+main ()
+{
+return alGetError ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_openal_alGetError=yes
+else
+  ac_cv_lib_openal_alGetError=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_openal_alGetError" >&5
+$as_echo "$ac_cv_lib_openal_alGetError" >&6; }
+if test "x$ac_cv_lib_openal_alGetError" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBOPENAL 1
+_ACEOF
+
+  LIBS="-lopenal $LIBS"
+
+else
+  \
+	   echo "You need to install the OpenAL library."
+	   exit -1
+fi
+
+       build_linux="yes"
+       ;;
+esac
+
+LIBS="$LIBS $WX_LIBS $SDL_LIBS"
+
+ if test "$build_linux" = "yes"; then
+  OS_LINUX_TRUE=
+  OS_LINUX_FALSE='#'
+else
+  OS_LINUX_TRUE='#'
+  OS_LINUX_FALSE=
+fi
+
+ if test "$build_win" = "yes"; then
+  OS_WINDOWS_TRUE=
+  OS_WINDOWS_FALSE='#'
+else
+  OS_WINDOWS_TRUE='#'
+  OS_WINDOWS_FALSE=
+fi
+
+ if test "$build_macosx" = "yes"; then
+  OS_MACOSX_TRUE=
+  OS_MACOSX_FALSE='#'
+else
+  OS_MACOSX_TRUE='#'
+  OS_MACOSX_FALSE=
 fi
 
 
@@ -5446,14 +5559,6 @@ if test -z "${CPU_X86_64_TRUE}" && test -z "${CPU_X86_64_FALSE}"; then
   as_fn_error $? "conditional \"CPU_X86_64\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${OS_WIN_TRUE}" && test -z "${OS_WIN_FALSE}"; then
-  as_fn_error $? "conditional \"OS_WIN\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${OS_LINUX_TRUE}" && test -z "${OS_LINUX_FALSE}"; then
-  as_fn_error $? "conditional \"OS_LINUX\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${USE_WX_TRUE}" && test -z "${USE_WX_FALSE}"; then
   as_fn_error $? "conditional \"USE_WX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -5464,6 +5569,18 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${USE_ALSA_TRUE}" && test -z "${USE_ALSA_FALSE}"; then
   as_fn_error $? "conditional \"USE_ALSA\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${OS_LINUX_TRUE}" && test -z "${OS_LINUX_FALSE}"; then
+  as_fn_error $? "conditional \"OS_LINUX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${OS_WINDOWS_TRUE}" && test -z "${OS_WINDOWS_FALSE}"; then
+  as_fn_error $? "conditional \"OS_WINDOWS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${OS_MACOSX_TRUE}" && test -z "${OS_MACOSX_FALSE}"; then
+  as_fn_error $? "conditional \"OS_MACOSX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -6600,4 +6717,3 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-

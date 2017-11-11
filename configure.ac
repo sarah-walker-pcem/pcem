@@ -63,9 +63,6 @@ AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
 #AC_MSG_CHECKING([for libz])
 #AX_CHECK_ZLIB
 
-AM_CONDITIONAL(OS_WIN, test "$OS" = "win")
-AM_CONDITIONAL(OS_LINUX, test "$OS" = "linux")
-
 AM_CONDITIONAL(USE_WX, test "$enable_wx" = "yes")
 AM_CONDITIONAL(USE_NETWORKING, test "$enable_networking" = "yes")
 AM_CONDITIONAL(USE_ALSA, test "$enable_alsa" = "yes")
@@ -91,15 +88,6 @@ if test "$wxWin" != 1; then
       ])
 fi
 
-AC_CHECK_LIB([GL], [glGetError], [], \
-   [echo "You need to install the OpenGL library."
-    exit -1])
-LIBS="$LIBS $WX_LIBS $SDL_LIBS"
-
-AC_CHECK_LIB([openal], [alGetError], [], \
-	[echo "You need to install the OpenAL library."
-	 exit -1])
-
 if test "$enable_alsa" == "yes"; then
     AC_CHECK_LIB(asound, snd_pcm_open,
         [],
@@ -108,5 +96,41 @@ if test "$enable_alsa" == "yes"; then
 fi
 
 AC_CHECK_LIB([pthread], [pthread_create])
+
+build_macosx="no"
+build_linux="no"
+build_win="no"
+
+case "$host" in
+    *-*-darwin*)
+       LIBS="$LIBS -framework OpenGL"
+       LIBS="$LIBS -framework OpenAL"
+       build_macosx="yes"
+       ;;
+    *-*-cygwin* | *-*-mingw32*)
+       AC_CHECK_LIB([GL], [glGetError], [], \
+           [echo "You need to install the OpenGL library."
+           exit -1])
+       AC_CHECK_LIB([openal], [alGetError], [], \
+	   [echo "You need to install the OpenAL library."
+	   exit -1])
+       build_win="yes"
+       ;;    
+    *)
+       AC_CHECK_LIB([GL], [glGetError], [], \
+           [echo "You need to install the OpenGL library."
+           exit -1])
+       AC_CHECK_LIB([openal], [alGetError], [], \
+	   [echo "You need to install the OpenAL library."
+	   exit -1])
+       build_linux="yes"
+       ;;
+esac
+
+LIBS="$LIBS $WX_LIBS $SDL_LIBS"
+
+AM_CONDITIONAL(OS_LINUX, [test "$build_linux" = "yes"])
+AM_CONDITIONAL(OS_WINDOWS, [test "$build_win" = "yes"])
+AM_CONDITIONAL(OS_MACOSX, [test "$build_macosx" = "yes"])
 
 AC_OUTPUT([Makefile src/Makefile])

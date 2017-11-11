@@ -13,7 +13,7 @@ slirp/libslirp.a:
 amrefresh:	
 
 
-pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-ioctl-linux.c cdrom-image.cc cdrom-null.c \
+pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
 codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
@@ -67,4 +67,14 @@ pcem_CFLAGS += -DUSE_NETWORKING
 pcem_CXXFLAGS += -DUSE_NETWORKING
 pcem_SOURCES += ne2000.c nethandler.c wx-hostconfig.c
 pcem_LDADD += slirp/libslirp.a
+endif
+
+if OS_MACOSX
+pcem_SOURCES += cdrom-ioctl-osx.c
+pcem_CFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
+pcem_CXXFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
+endif
+
+if OS_LINUX
+pcem_SOURCES += cdrom-ioctl-linux.c
 endif
