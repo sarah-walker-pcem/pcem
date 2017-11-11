@@ -15,7 +15,7 @@
 #include "codegen_ops.h"
 #include "codegen_ops_x86.h"
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
@@ -1124,7 +1124,7 @@ static uint32_t gen_MEM_CHECK_WRITE_L()
 void codegen_init()
 {
         int c;
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	void *start;
 	size_t len;
 	long pagesize = sysconf(_SC_PAGESIZE);
@@ -1144,7 +1144,7 @@ void codegen_init()
         for (c = 0; c < BLOCK_SIZE; c++)
                 codeblock[c].pc = BLOCK_PC_INVALID;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	start = (void *)((long)codeblock & pagemask);
 	len = (((BLOCK_SIZE+1) * sizeof(codeblock_t)) + pagesize) & pagemask;
 	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)

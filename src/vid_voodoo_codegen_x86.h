@@ -5,7 +5,7 @@
   fbzColorPath
 */
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
@@ -3282,7 +3282,7 @@ voodoo_recomp++;
 static void voodoo_codegen_init(voodoo_t *voodoo)
 {
         int c;
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	void *start;
 	size_t len;
 	long pagesize = sysconf(_SC_PAGESIZE);
@@ -3295,7 +3295,7 @@ static void voodoo_codegen_init(voodoo_t *voodoo)
         voodoo->codegen_data = malloc(sizeof(voodoo_x86_data_t) * BLOCK_NUM*2);
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	start = (void *)((long)voodoo->codegen_data & pagemask);
 	len = ((sizeof(voodoo_x86_data_t) * BLOCK_NUM*2) + pagesize) & pagemask;
 	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
