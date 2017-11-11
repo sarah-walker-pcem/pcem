@@ -1326,7 +1326,8 @@ static void use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu)
         lod_min = (params->tLOD[tmu] >> 2) & 15;
         lod_max = (params->tLOD[tmu] >> 8) & 15;
 //        pclog("  add new texture to %i tformat=%i %08x LOD=%i-%i tmu=%i\n", c, voodoo->params.tformat[tmu], params->texBaseAddr[tmu], lod_min, lod_max, tmu);
-        
+        lod_min = MIN(lod_min, 8);
+        lod_max = MIN(lod_max, 8);
         for (lod = lod_min; lod <= lod_max; lod++)
         {
                 uint32_t *base = &voodoo->texture_cache[tmu][c].data[texture_offset[lod]];
