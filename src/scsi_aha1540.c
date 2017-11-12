@@ -1858,6 +1858,7 @@ static void process_scsi(aha154x_t *scsi)
 
                         if (bus_state & BUS_REQ)
                         {
+                                int bus_out;
 //                                pclog("SCSI next phase - %x\n", bus_state);
                                 switch (bus_state & (BUS_IO | BUS_CD | BUS_MSG))
                                 {
@@ -1879,6 +1880,13 @@ static void process_scsi(aha154x_t *scsi)
                                         case (BUS_CD | BUS_IO | BUS_MSG):
 //                                        pclog("Move to read message\n");
                                         scsi->scsi_state = SCSI_STATE_READ_MESSAGE;
+                                        break;
+                                        
+                                        case BUS_CD:
+                                        bus_out = BUS_SETDATA(0);
+                        	
+                                        scsi_bus_update(&scsi->bus, bus_out | BUS_ACK);
+                                        scsi_bus_update(&scsi->bus, bus_out & ~BUS_ACK);
                                         break;
                                         
                                         default:
