@@ -62,6 +62,7 @@
 #define WIN_READ_DMA                    0xC8
 #define WIN_WRITE_DMA                   0xCA
 #define WIN_SETIDLE1			0xE3
+#define WIN_CHECK_POWER_MODE            0xE5
 #define WIN_IDENTIFY			0xEC /* Ask drive to identify itself */
 
 /* ATAPI Commands */
@@ -1058,6 +1059,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 case WIN_SET_MULTIPLE_MODE: /*Set Multiple Mode*/
 //                output=1;
                 case WIN_SETIDLE1: /* Idle */
+                case WIN_CHECK_POWER_MODE:
                         ide->atastat = BUSY_STAT;
                         timer_process();
                         callbackide(ide_board);
@@ -1717,6 +1719,17 @@ void callbackide(int ide_board)
 //                pclog("ID callback\n");
                         ide_irq_raise(ide);
                 }
+                return;
+
+
+        case WIN_CHECK_POWER_MODE:
+		if (ide->type == IDE_NONE)
+		{
+			goto abort_cmd;
+		}
+                ide->secount = 0xff;
+                ide->atastat = READY_STAT | DSC_STAT;
+                ide_irq_raise(ide);
                 return;
 
         case WIN_PACKETCMD: /* ATAPI Packet */
