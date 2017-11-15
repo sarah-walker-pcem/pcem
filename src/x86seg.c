@@ -229,16 +229,16 @@ static void do_seg_load(x86seg *s, uint16_t *segdat)
         if (s == &_ds)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
-                        cpu_cur_status |= CPU_STATUS_FLATDS;
+                        cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
                 else
-                        cpu_cur_status &= ~CPU_STATUS_FLATDS;
+                        cpu_cur_status |= CPU_STATUS_NOTFLATDS;
         }
         if (s == &_ss)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
-                        cpu_cur_status |= CPU_STATUS_FLATSS;
+                        cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
                 else
-                        cpu_cur_status &= ~CPU_STATUS_FLATSS;
+                        cpu_cur_status |= CPU_STATUS_NOTFLATSS;
         }
 }
 
@@ -321,7 +321,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         s->access = 0;
                         s->base=-1;
                         if (s == &_ds)
-                                cpu_cur_status &= ~CPU_STATUS_FLATDS;
+                                cpu_cur_status |= CPU_STATUS_NOTFLATDS;
 //                        pclog("NULL selector %s%s%s%s %04X(%06X):%06X\n",(s==&_ds)?"DS":"",(s==&_es)?"ES":"",(s==&_fs)?"FS":"",(s==&_gs)?"GS":"",CS,cs,pc);
                         return;
                 }
@@ -452,7 +452,7 @@ void loadseg(uint16_t seg, x86seg *s)
                 s->base = seg << 4;
                 s->seg = seg;
                 if (s == &_ss)
-                        stack32 = 0;
+                        set_stack32(0);
                 s->checked = 1;
                 if (s == &_ds)
                         codegen_flat_ds = 0;
@@ -463,16 +463,16 @@ void loadseg(uint16_t seg, x86seg *s)
         if (s == &_ds)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
-                        cpu_cur_status |= CPU_STATUS_FLATDS;
+                        cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
                 else
-                        cpu_cur_status &= ~CPU_STATUS_FLATDS;
+                        cpu_cur_status |= CPU_STATUS_NOTFLATDS;
         }
         if (s == &_ss)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
-                        cpu_cur_status |= CPU_STATUS_FLATSS;
+                        cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
                 else
-                        cpu_cur_status &= ~CPU_STATUS_FLATSS;        
+                        cpu_cur_status |= CPU_STATUS_NOTFLATSS;        
         }
 }
 
@@ -1980,6 +1980,7 @@ void pmodeint(int num, int soft)
 #endif
                         
                 eflags&=~VM_FLAG;
+                cpu_cur_status &= ~CPU_STATUS_V86;
                 if (!(type&0x100))
                 {
                         flags&=~I_FLAG;
@@ -2141,11 +2142,12 @@ void pmodeiret(int is32)
                         segs[3]=POPL(); if (cpu_state.abrt) { ESP = oldsp; return; }
 //                        pclog("Pop stack %04X:%04X\n",newss,newsp);
                         eflags=tempflags>>16;
+                        cpu_cur_status |= CPU_STATUS_V86;
                         loadseg(segs[0],&_es);
                         do_seg_v86_init(&_es);
                         loadseg(segs[1],&_ds);
                         do_seg_v86_init(&_ds);
-                        cpu_cur_status &= ~CPU_STATUS_FLATDS;
+                        cpu_cur_status |= CPU_STATUS_NOTFLATDS;
                         loadseg(segs[2],&_fs);
                         do_seg_v86_init(&_fs);
                         loadseg(segs[3],&_gs);
@@ -2166,7 +2168,7 @@ void pmodeiret(int is32)
                         ESP=newsp;
                         loadseg(newss,&_ss);
                         do_seg_v86_init(&_ss);
-                        cpu_cur_status &= ~CPU_STATUS_FLATSS;
+                        cpu_cur_status |= CPU_STATUS_NOTFLATSS;
                         use32=0;
                         cpu_cur_status &= ~CPU_STATUS_USE32;
                         flags=(tempflags&0xFFD5)|2;
@@ -2562,6 +2564,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 {
                         loadcs(new_cs);
                         set_use32(0);
+                        cpu_cur_status |= CPU_STATUS_V86;
                 }
                 else
                 {
@@ -2631,6 +2634,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                         do_seg_load(&_cs, segdat2);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         set_use32(segdat2[3] & 0x40);
+                        cpu_cur_status &= ~CPU_STATUS_V86;
                 }
 
                 EAX=new_eax;
