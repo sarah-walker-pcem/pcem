@@ -493,14 +493,14 @@ void exec386_dynarec(int cycs)
         int tempi;
         int cycdiff;
         int oldcyc;
-
+        int cyc_period = cycs / 2000; /*5us*/
 //output = 3;
         cycles_main += cycs;
         while (cycles_main > 0)
         {
                 int cycles_start;
                 
-                cycles += 1000;
+                cycles += cyc_period;
                 cycles_start = cycles;
 
                 timer_start_period(cycles << TIMER_SHIFT);
