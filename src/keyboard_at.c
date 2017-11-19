@@ -211,6 +211,11 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 }                                           
                                 break;
 
+				case 0xb6: /* T3100e - set colour/mono switch */
+				if (romset == ROM_T3100E)
+        				t3100e_mono_set(val);
+				break;
+
                                 case 0xcb: /*AMI - set keyboard mode*/
                                 break;
                                 
@@ -410,20 +415,15 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         keyboard_at.mem[0] &= ~0x10;
                         break;
 
-			case 0xbb: /* Read 'Fn' key - sent by Toshiba 3100e 
-				      BIOS. Return it for right Ctrl and right
-				      Alt; on the real T3100e, these keystrokes
-	  			      could only be generated using 'Fn'. */
-			if (pcem_key[0xb8] ||	/* Right Alt */
-			    pcem_key[0x9d])	/* Right Ctrl */
-			{
-				keyboard_at_adddata(0x04);
-			} 
-			else	keyboard_at_adddata(0x00);
+			case 0xb0:	/* T3100e: Turbo on */
+			if (romset == ROM_T3100E)
+				t3100e_turbo_set(1);
 			break;
 
-			/* For the T3100e, 0xB0 is 'turbo on' and 0xB1 is
-			 * 'turbo off' */
+			case 0xb1:	/* T3100e: Turbo off */
+			if (romset == ROM_T3100E)	
+				t3100e_turbo_set(0);
+			break;	
 
 			case 0xb2:	/* T3100e: Select external display */
 			if (romset == ROM_T3100E)
@@ -435,12 +435,51 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
         			t3100e_display_set(0x01);
 			break;
 
+			case 0xb4:	/* T3100e: Get configuration / status */
+			if (romset == ROM_T3100E)
+				keyboard_at_adddata(t3100e_config_get());
+			break;
+
+			case 0xb5:	/* T3100e: Get colour / mono byte */
+			if (romset == ROM_T3100E)
+				keyboard_at_adddata(t3100e_mono_get());
+			break;
+			
+			case 0xb6:	/* T3100e: Set colour / mono byte */
+			if (romset == ROM_T3100E)
+                        	keyboard_at.want60 = 1;
+			break;
+
+			/* T3100e commands not implemented:
+			 * 0xB7: Emulate PS/2 keyboard
+			 * 0xB8: Emulate AT keyboard */ 
+
+			case 0xbb: /* T3100e: Read 'Fn' key.
+				      Return it for right Ctrl and right
+				      Alt; on the real T3100e, these keystrokes
+	  			      could only be generated using 'Fn'. */
+			if (romset == ROM_T3100E)
+			{
+				if (pcem_key[0xb8] ||	/* Right Alt */
+				    pcem_key[0x9d])	/* Right Ctrl */
+				{
+					keyboard_at_adddata(0x04);
+				} 
+				else	keyboard_at_adddata(0x00);
+			}
+			break;
+
 			case 0xbc:	/* T3100e: Reset Fn+Key notification */
 			if (romset == ROM_T3100E)
         			t3100e_notify_set(0x00);
 			break;
                         
                         case 0xc0: /*Read input port*/
+			/* The T3100e returns all bits set except bit 6 which
+			 * is set by t3100e_mono_set() */
+			if (romset == ROM_T3100E)
+				keyboard_at.input_port = (t3100e_mono_get() & 1) ? 0xFF : 0xBF;
+
                         keyboard_at_adddata(keyboard_at.input_port | 4);
                         keyboard_at.input_port = ((keyboard_at.input_port + 1) & 3) | (keyboard_at.input_port & 0xfc);
                         break;

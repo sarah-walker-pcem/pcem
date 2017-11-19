@@ -54,6 +54,11 @@ void t3100e_display_set(uint8_t internal)
 	st_display_internal = internal;
 }
 
+uint8_t t3100e_display_get()
+{
+	return st_display_internal;
+}
+
 
 typedef struct t3100e_t
 {

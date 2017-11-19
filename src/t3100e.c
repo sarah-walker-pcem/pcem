@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "model.h"
 #include "io.h"
+#include "fdd.h"
 #include "mouse.h"
 #include "mem.h"
 #include "device.h"
@@ -157,7 +158,10 @@ struct t3100e_ems_regs
 	uint8_t	 upper_pages;	/* Pages of EMS available from upper RAM */
 	uint8_t  upper_is_ems;	/* Upper RAM is EMS? */
 	mem_mapping_t upper_mapping;
-	uint8_t	notify;
+	uint8_t	notify;		/* Notification from keyboard controller */
+	uint8_t turbo;		/* 0 for 6MHz, else full speed */
+	uint8_t mono;		/* Emulates PC/AT 'mono' motherboard switch */
+				/* Bit 0 is 0 for colour, 1 for mono */
 } t3100e_ems;
 
 void t3100e_ems_out(uint16_t addr, uint8_t val, void *p);
@@ -358,6 +362,33 @@ void t3100e_notify_set(uint8_t value)
 	t3100e_ems.notify = value;
 }
 
+void t3100e_mono_set(uint8_t value)
+{
+       t3100e_ems.mono = value;
+}
+
+uint8_t t3100e_mono_get(void)
+{
+       return t3100e_ems.mono;
+}
+
+void t3100e_turbo_set(uint8_t value)
+{
+	t3100e_ems.turbo = value;
+	if (!value)
+	{
+		int c = cpu;
+		cpu = 0;	/* 286/6 */
+		cpu_set();
+		cpu = c;
+	}
+	else
+	{
+		cpu_set();
+	}
+}
+
+
 
 uint8_t t3100e_sys_in(uint16_t addr, void *p)
 {
@@ -393,6 +424,83 @@ void t3100e_sys_out(uint16_t addr, uint8_t val, void *p)
 		default: if (t3100e_log) pclog("OUT 0x8084, %02x\n", val); break;
 	}
 }
+
+
+uint8_t t3100e_config_get(void)
+{
+/* The byte returned:
+	Bit 7: Set if internal plasma display enabled
+	Bit 6: Set if running at 6MHz, clear at full speed
+	Bit 5: Always 1?
+	Bit 4: Set if the FD2MB jumper is present (internal floppy is ?tri-mode)
+	Bit 3: Clear if the FD2 jumper is present (two internal floppies)
+	Bit 2: Set if the internal drive is A:, clear if B:
+	Bit 1: Set if the parallel port is configured as a floppy connector
+               for the second drive.
+	Bit 0: Set if the F2HD jumper is present (internal floppy is 720k)
+ */
+	uint8_t value = 0x28;	/* Start with bits 5 and 3 set. */
+
+	int type_a = fdd_get_type(0);
+	int type_b = fdd_get_type(1);
+	int prt_switch;		/* External drive type: 0=> none, 1=>A, 2=>B */
+
+/* Get display setting */
+	if (t3100e_display_get()) value |= 0x80;
+	if (!t3100e_ems.turbo)	  value |= 0x40;
+
+/* Try to determine the floppy types.*/
+
+	prt_switch = (type_b ? 2 : 0);
+	switch(type_a)
+	{
+/* Since a T3100e cannot have an internal 5.25" drive, mark 5.25" A: drive as 
+ * being external, and set the internal type based on type_b. */
+		case 1:			/* 360k */
+		case 2:			/* 1.2Mb */
+		case 3:			/* 1.2Mb RPMx2*/
+			prt_switch = 1;	/* External drive is A: */
+			switch (type_b)
+			{
+				case 1:				/* 360k */
+				case 4: value |= 1;    break;	/* 720k */
+				case 6: value |= 0x10; break;	/* Tri-mode */
+				/* All others will be treated as 1.4M */
+			}
+			break;
+		case 4: value |= 0x01;	/* 720k */
+			if (type_a == type_b) 
+			{
+				value &= (~8);	/* Two internal drives */
+				prt_switch = 0;	/* No external drive */
+			}
+			break;
+		case 5:	/* 1.4M */
+		case 7:	/* 2.8M */
+			if (type_a == type_b) 
+			{
+				value &= (~8);	/* Two internal drives */
+				prt_switch = 0;	/* No external drive */
+			}
+			break;
+		case 6:	/* 3-mode */
+			value |= 0x10;
+			if (type_a == type_b) 
+			{
+				value &= (~8);	/* Two internal drives */
+				prt_switch = 0;	/* No external drive */
+			}
+			break;
+	}	/* End switch */
+	switch (prt_switch)
+	{
+		case 0:	value |= 4; break;	/* No external floppy */
+		case 1:	value |= 2; break;	/* External floppy is A: */
+		case 2:	value |= 6; break;	/* External floppy is B: */
+	}
+	return value;
+}
+
 
 /* Read EMS page register */
 uint8_t t3100e_ems_in(uint16_t addr, void *p)
