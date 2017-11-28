@@ -2236,6 +2236,8 @@ static void *s3_init(char *bios_fn, int chip)
                 break;
                 case 1: /*1MB*/
                 /*VRAM in first MB, mirrored in 2nd MB, 3rd and 4th MBs are open bus*/
+                /*This works with the #9 9FX BIOS, and matches how my real Trio64 behaves,
+                  but does not work with the Phoenix EDO BIOS. Possibly an FPM/EDO difference?*/
                 svga->vram_mask = (1 << 20) - 1;
                 svga->vram_max = 2 << 20;
                 break;
@@ -2344,6 +2346,8 @@ void *s3_phoenix_trio64_init()
         s3->id = 0xe1; /*Trio64*/
         s3->id_ext = s3->id_ext_pci = 0x11;
         s3->packed_mmio = 1;
+        if (device_get_config_int("memory") == 1)
+                s3->svga.vram_max = 1 << 20; /*Phoenix BIOS does not expect VRAM to be mirrored*/
 
         s3->getclock = s3_trio64_getclock;
         s3->getclock_p = s3;
