@@ -1803,7 +1803,11 @@ static void process_scsi(aha154x_t *scsi)
                 
                 /*Device should now be selected*/
                 if (!wait_for_bus(&scsi->bus, BUS_CD, 1))
-                        fatal("Device failed to request command\n");
+                {
+                        pclog("Device failed to request command\n");
+                        scsi->scsi_state = SCSI_STATE_SELECT_FAILED;
+                        break;
+                }
 
                 scsi->scsi_state = SCSI_STATE_SEND_COMMAND;
                 break;
