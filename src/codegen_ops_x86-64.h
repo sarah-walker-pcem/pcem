@@ -5885,9 +5885,9 @@ static inline int MEM_LOAD_ADDR_EA_L_NO_ABRT(x86seg *seg)
         addbyte(0xc1); /*SHR ESI, 12*/
         addbyte(0xe8 | REG_ESI);
         addbyte(12);
-        addbyte(0xf7); /*TEST EDI, 1*/
+        addbyte(0xf7); /*TEST EDI, 3*/
         addbyte(0xc7);
-        addlong(1);
+        addlong(3);
 	if (IS_32_ADDR(readlookup2))
 	{
 	        addbyte(0x67); /*MOV RSI, readlookup2[ESI*8]*/
