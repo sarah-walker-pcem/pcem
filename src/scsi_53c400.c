@@ -699,9 +699,6 @@ static void *scsi_53c400_init(char *bios_fn)
         lcs6821n_t *scsi = malloc(sizeof(lcs6821n_t));
         memset(scsi, 0, sizeof(lcs6821n_t));
 
-        scsi->ncr.dma_changed = ncr53c400_dma_changed;
-        scsi->ncr.p = scsi;
-
         rom_init(&scsi->bios_rom, bios_fn, 0xdc000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
         mem_mapping_disable(&scsi->bios_rom.mapping);
 
@@ -712,6 +709,9 @@ static void *scsi_53c400_init(char *bios_fn)
         
         ncr5380_reset(&scsi->ncr);
         
+        scsi->ncr.dma_changed = ncr53c400_dma_changed;
+        scsi->ncr.p = scsi;
+
         scsi->status_ctrl = STATUS_BUFFER_NOT_READY;
         scsi->buffer_host_pos = 128;
         
@@ -736,9 +736,6 @@ static void *scsi_t130b_init(char *bios_fn)
         lcs6821n_t *scsi = malloc(sizeof(lcs6821n_t));
         memset(scsi, 0, sizeof(lcs6821n_t));
 
-        scsi->ncr.dma_changed = ncr53c400_dma_changed;
-        scsi->ncr.p = scsi;
-
         rom_init(&scsi->bios_rom, "trantor_t130b_bios_v2.14.bin", 0xdc000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
 
         mem_mapping_add(&scsi->mapping, 0xdc000, 0x4000, 
@@ -752,6 +749,9 @@ static void *scsi_t130b_init(char *bios_fn)
                         
         ncr5380_reset(&scsi->ncr);
         
+        scsi->ncr.dma_changed = ncr53c400_dma_changed;
+        scsi->ncr.p = scsi;
+
         scsi->status_ctrl = STATUS_BUFFER_NOT_READY;
         scsi->buffer_host_pos = 128;
         
