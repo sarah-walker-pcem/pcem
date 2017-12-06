@@ -2870,7 +2870,6 @@ static void *ide_init()
 {
         ide_pri_enable();
         ide_sec_enable();
-        ide_bus_master_read_sector = ide_bus_master_write_sector = NULL;
         
         timer_add(ide_callback_pri, &idecallback[0], &idecallback[0],  NULL);
         timer_add(ide_callback_sec, &idecallback[1], &idecallback[1],  NULL);
