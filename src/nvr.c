@@ -7,6 +7,7 @@
 #include "rtc.h"
 #include "paths.h"
 #include "config.h"
+#include "model.h"
 #include "nmi.h"
 
 int oldromset;
@@ -201,7 +202,13 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
         else
         {
                 nvraddr=val&nvrmask;
-                nmi_mask = ~val & 0x80;
+                /*PS/2 BIOSes will disable NMIs and expect the watchdog timer to still be able
+                  to fire them. I suspect the watchdog is exempt from NMI masking. Currently NMIs
+                  are always enabled for PS/2 machines - this would mean that other peripherals
+                  could fire NMIs regardless of the mask state, but as there aren't any emulated
+                  MCA peripherals that do this it's currently a moot point.*/
+                if (!(models[model].flags & MODEL_MCA))
+                        nmi_mask = ~val & 0x80;
         }
 }
 

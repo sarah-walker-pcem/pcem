@@ -414,6 +414,8 @@ static void ps2_common_init()
         pic2_init();
 
         pit_ps2_init();
+
+	nmi_mask = 0x80;
 }
 
 void ps2_model_50_init()
