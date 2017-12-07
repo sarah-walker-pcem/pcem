@@ -165,6 +165,21 @@ static uint8_t dma_ps2_read(uint16_t addr, void *priv)
                                 temp = (dma.xfr_channel & 4) ? (dma16.cc[dma.xfr_channel & 3] & 0xff) : (dma.cc[dma.xfr_channel] & 0xff);
                         dma.byte_ptr = (dma.byte_ptr + 1) & 1;
                         break;
+                        case 6: /*Read DMA status*/
+                        if (dma.byte_ptr)
+                        {
+                                temp = dma16.stat_rq | (dma16.stat << 4);
+                                dma16.stat = 0;
+                                dma16.stat_rq = 0;
+                        }
+                        else
+                        {
+                                temp = dma.stat_rq | (dma.stat << 4);
+                                dma.stat = 0;
+                                dma.stat_rq = 0;
+                        }
+                        dma.byte_ptr = (dma.byte_ptr + 1) & 1;
+                        break;                        
                         case 7: /*Mode*/
                         temp = (dma.xfr_channel & 4) ? dma16.ps2_mode[dma.xfr_channel & 3] : dma.ps2_mode[dma.xfr_channel];
                         break;
@@ -505,6 +520,7 @@ int dma_channel_read(int channel)
                         return DMA_NODATA;
 
                 temp = _dma_read(dma.ac[channel]);
+                dma.stat_rq |= (1 << channel);
 
                 if (dma.mode[channel] & 0x20)
                 {
@@ -548,6 +564,7 @@ int dma_channel_read(int channel)
 
                 temp =  _dma_read(dma16.ac[channel]) |
                        (_dma_read(dma16.ac[channel] + 1) << 8);
+                dma16.stat_rq |= (1 << channel);
 
                 if (dma16.mode[channel] & 0x20)
                 {
@@ -600,7 +617,8 @@ int dma_channel_write(int channel, uint16_t val)
                         return DMA_NODATA;
 
                 _dma_write(dma.ac[channel], val);
-
+                dma.stat_rq |= (1 << channel);
+                
                 if (dma.mode[channel] & 0x20)
                 {
                         if (dma.is_ps2)
@@ -642,6 +660,7 @@ int dma_channel_write(int channel, uint16_t val)
 
                 _dma_write(dma16.ac[channel],     val);
                 _dma_write(dma16.ac[channel] + 1, val >> 8);                
+                dma16.stat_rq |= (1 << channel);
 
                 if (dma16.mode[channel] & 0x20)
                 {
