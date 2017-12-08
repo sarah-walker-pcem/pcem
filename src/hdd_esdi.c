@@ -110,6 +110,7 @@ typedef struct esdi_t
 #define CMD_READ_VERIFY    0x03
 #define CMD_WRITE_VERIFY   0x04
 #define CMD_SEEK           0x05
+#define CMD_GET_DEV_STATUS 0x08
 #define CMD_GET_DEV_CONFIG 0x09
 #define CMD_GET_POS_INFO   0x0a
 
@@ -613,6 +614,37 @@ static void esdi_callback(void *p)
                 }
 
                 esdi->status = STATUS_IRQ;
+                esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
+                esdi->irq_in_progress = 1;
+                esdi_set_irq(esdi);
+                break;
+
+                case CMD_GET_DEV_STATUS:
+                ESDI_DRIVE_ONLY();
+
+                if (!hdd_file->f)
+                {
+                        device_not_present(esdi);
+                        return;
+                }
+
+                if (esdi->status_pos)
+                        fatal("Status send in progress\n");
+                if ((esdi->status & STATUS_IRQ) || esdi->irq_in_progress)
+                        fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
+
+                esdi->status_len = 9;
+                esdi->status_data[0] = CMD_GET_DEV_STATUS | STATUS_LEN(9) | STATUS_DEVICE_HOST_ADAPTER;
+                esdi->status_data[1] = 0x0000; /*Error bits*/
+                esdi->status_data[2] = 0x1900; /*Device status*/
+                esdi->status_data[3] = 0; /*ESDI Standard Status*/
+                esdi->status_data[4] = 0; /*ESDI Vendor Unique Status*/
+                esdi->status_data[5] = 0;
+                esdi->status_data[6] = 0;
+                esdi->status_data[7] = 0;
+                esdi->status_data[8] = 0;
+                
+                esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
                 esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
                 esdi->irq_in_progress = 1;
                 esdi_set_irq(esdi);
