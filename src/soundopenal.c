@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #ifdef USE_OPENAL
 #ifdef __APPLE__
 #include <OpenAL/al.h>
@@ -180,6 +181,9 @@ void givealbuffer(int32_t *buf)
         {
                 int c;
                 ALuint buffer;
+                double gain = pow(10.0, (double)sound_gain / 20.0);
+                
+                alSourcef(source[0], AL_GAIN, gain);
 
                 alSourceUnqueueBuffers(source[0], 1, &buffer);
 //                printf("U ");
@@ -244,6 +248,9 @@ void givealbuffer_cd(int16_t *buf)
         if (processed>=1)
         {
                 ALuint buffer;
+                double gain = pow(10.0, (double)sound_gain / 20.0);
+                
+                alSourcef(source[1], AL_GAIN, gain);
 
                 alSourceUnqueueBuffers(source[1], 1, &buffer);
 //                printf("U ");

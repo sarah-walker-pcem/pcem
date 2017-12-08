@@ -31,5 +31,7 @@ void givealbuffer_cd(int16_t *buf);
 extern int sound_buf_len;
 void sound_update_buf_length();
 
+extern int sound_gain;
+
 extern int SOUNDBUFLEN;
 #define MAXSOUNDBUFLEN (48000 / 10)

@@ -125,6 +125,7 @@ static event_t *sound_cd_event;
 static unsigned int cd_vol_l, cd_vol_r;
 
 int sound_buf_len = 48000 / 10;
+int sound_gain = 0;
 
 void sound_update_buf_length()
 {

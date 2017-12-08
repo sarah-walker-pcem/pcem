@@ -31,6 +31,7 @@
 	<ids-range name="IDM_VID_SCALE_MODE" start="1300" />
 	<ids-range name="IDM_VID_RENDER_DRIVER" start="1400" />
 	<ids-range name="IDM_SND_BUF" start="2000" />
+	<ids-range name="IDM_SND_GAIN" start="2100" />
 	<ids-range name="IDM_VID_GL3_INPUT_STRETCH" start="3000" />
 	<ids-range name="IDM_VID_GL3_INPUT_SCALE" start="3100" />
 	<ids-range name="IDM_VID_GL3_SHADER_REFRESH_RATE" start="3200" />
@@ -394,6 +395,49 @@
 					<radio>1</radio>
 				</object>
 			</object>
+			<object class="wxMenu">
+				<label>_Output level</label>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[0]">
+					<label>_Normal</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[1]">
+					<label>+_2 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[2]">
+					<label>+_4 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[3]">
+					<label>+_6 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[4]">
+					<label>+_8 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[5]">
+					<label>+_10 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[6]">
+					<label>+12 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[7]">
+					<label>+14 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[8]">
+					<label>+16 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[9]">
+					<label>+18 dB</label>
+					<radio>1</radio>
+				</object>
+</object>
 		</object>
 		<object class="wxMenu">
 			<label>Misc</label>
