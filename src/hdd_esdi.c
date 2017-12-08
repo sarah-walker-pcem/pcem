@@ -22,7 +22,7 @@
 
 #include "hdd_esdi.h"
 
-#define ESDI_TIME (2000 * TIMER_USEC)
+#define ESDI_TIME (500 * TIMER_USEC)
 
 #define CMD_ADAPTER 0
 
