@@ -437,6 +437,7 @@ static void esdi_callback(void *p)
                                         if (esdi->rba >= hdd_file->sectors)
                                                 fatal("Read past end of drive\n");
                                         hdd_read_sectors(hdd_file, esdi->rba, 1, esdi->data);
+                                        readflash_set(READFLASH_HDC, esdi->cmd_dev == ATTN_DEVICE_0 ? 0 : 1);
                                 }
 //                                pclog("Read sector %i %i %08x\n", esdi->sector_pos, esdi->data_pos, esdi->rba*512);
                                 while (esdi->data_pos < 256)
