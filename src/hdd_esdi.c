@@ -665,7 +665,7 @@ static void esdi_callback(void *p)
                         fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
 
                 esdi->status_len = 6;
-                esdi->status_data[0] = CMD_GET_POS_INFO | STATUS_LEN(6) | STATUS_DEVICE_HOST_ADAPTER;
+                esdi->status_data[0] = CMD_GET_DEV_CONFIG | STATUS_LEN(6) | STATUS_DEVICE_HOST_ADAPTER;
                 esdi->status_data[1] = 0x10; /*Zero defect*/
                 esdi->status_data[2] = hdd_file->sectors & 0xffff;
                 esdi->status_data[3] = hdd_file->sectors >> 16;
