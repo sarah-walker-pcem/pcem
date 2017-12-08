@@ -355,6 +355,25 @@ static void device_not_present(esdi_t *esdi)
         esdi_set_irq(esdi);
 }
 
+static void rba_out_of_range(esdi_t *esdi)
+{
+        esdi->status_len = 9;
+        esdi->status_data[0] = esdi->command | STATUS_LEN(9) | esdi->cmd_dev;
+        esdi->status_data[1] = 0x0e01; /*Command block error, invalid parameter*/
+        esdi->status_data[2] = 0x0007; /*RBA out of range*/
+        esdi->status_data[3] = 0;
+        esdi->status_data[4] = 0;
+        esdi->status_data[5] = 0;
+        esdi->status_data[6] = 0;                        
+        esdi->status_data[7] = 0;                       
+        esdi->status_data[8] = 0;
+
+        esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
+        esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_FAILURE;
+        esdi->irq_in_progress = 1;
+        esdi_set_irq(esdi);
+}
+
 #define ESDI_ADAPTER_ONLY() do \
         {                                                 \
                 if (esdi->cmd_dev != ATTN_HOST_ADAPTER)   \
@@ -412,6 +431,12 @@ static void esdi_callback(void *p)
 
                         esdi->sector_pos = 0;
                         esdi->sector_count = esdi->cmd_data[1];
+                        
+                        if ((esdi->rba + esdi->sector_count) >= hdd_file->sectors)
+                        {
+                                rba_out_of_range(esdi);
+                                return;
+                        }
                                 
                         esdi->status = STATUS_IRQ | STATUS_CMD_IN_PROGRESS | STATUS_TRANSFER_REQ;
                         esdi->irq_status = esdi->cmd_dev | IRQ_DATA_TRANSFER_READY;
@@ -492,6 +517,12 @@ static void esdi_callback(void *p)
                         esdi->sector_pos = 0;
                         esdi->sector_count = esdi->cmd_data[1];
                                 
+                        if ((esdi->rba + esdi->sector_count) >= hdd_file->sectors)
+                        {
+                                rba_out_of_range(esdi);
+                                return;
+                        }
+
                         esdi->status = STATUS_IRQ | STATUS_CMD_IN_PROGRESS | STATUS_TRANSFER_REQ;
                         esdi->irq_status = esdi->cmd_dev | IRQ_DATA_TRANSFER_READY;
                         esdi->irq_in_progress = 1;
@@ -557,6 +588,12 @@ static void esdi_callback(void *p)
                 if (!hdd_file->f)
                 {
                         device_not_present(esdi);
+                        return;
+                }
+
+                if ((esdi->rba + esdi->sector_count) >= hdd_file->sectors)
+                {
+                        rba_out_of_range(esdi);
                         return;
                 }
 
