@@ -284,6 +284,7 @@ void disc_sector_poll()
                 if (writeprot[disc_sector_drive])
                 {
                         fdc_writeprotect();
+                        disc_sector_state = STATE_IDLE;
                         return;
                 }
                 if (index_count > 1)
@@ -349,6 +350,7 @@ void disc_sector_poll()
                 if (writeprot[disc_sector_drive])
                 {
                         fdc_writeprotect();
+                        disc_sector_state = STATE_IDLE;
                         return;
                 }
                 if (!index_count || fdc_get_bitcell_period() != get_bitcell_period() ||
