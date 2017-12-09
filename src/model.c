@@ -282,6 +282,7 @@ void ams_init()
         AMSTRAD = 1;
         common_init();
         mem_add_bios();
+        lpt1_remove();
         amstrad_init();
         keyboard_amstrad_init();
         nvr_init();

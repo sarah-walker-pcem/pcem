@@ -5,6 +5,9 @@ extern void lpt2_init(uint16_t port);
 extern void lpt2_remove();
 extern void lpt2_remove_ams();
 
+void lpt1_write(uint16_t port, uint8_t val, void *priv);
+uint8_t lpt1_read(uint16_t port, void *priv);
+
 void lpt1_device_init();
 void lpt1_device_close();
 

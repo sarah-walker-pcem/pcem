@@ -11,15 +11,20 @@ static uint8_t amstrad_dead;
 
 uint8_t amstrad_read(uint16_t port, void *priv)
 {
+        uint8_t temp;
+        
         pclog("amstrad_read : %04X\n",port);
         switch (port)
         {
+                case 0x378:
+                return lpt1_read(port, NULL);
                 case 0x379:
-                return 7;
+                return lpt1_read(port, NULL) | 7;
                 case 0x37a:
-                if (romset == ROM_PC1512) return 0x20;
-                if (romset == ROM_PC200)  return 0x80;
-                return 0;
+                temp = lpt1_read(port, NULL) & 0x1f;
+                if (romset == ROM_PC1512) return temp | 0x20;
+                if (romset == ROM_PC200)  return temp | 0x80;
+                return temp;
                 case 0xdead:
                 return amstrad_dead;
         }
@@ -30,6 +35,12 @@ void amstrad_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port)
         {
+                case 0x378:
+                case 0x379:
+                case 0x37a:
+                lpt1_write(port, val, NULL);
+                break;
+                
                 case 0xdead:
                 amstrad_dead = val;
                 break;
@@ -108,6 +119,6 @@ void amstrad_init()
         
         io_sethandler(0x0078, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
         io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
-        io_sethandler(0x0379, 0x0002, amstrad_read,       NULL, NULL, NULL,                NULL, NULL,  NULL);
+        io_sethandler(0x0378, 0x0003, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
 }
