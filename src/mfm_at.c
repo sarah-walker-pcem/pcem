@@ -215,7 +215,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
 //                        pclog("Restore\n");
                         mfm->command &= ~0x0f; /*Mask off step rate*/
                         mfm->status = STAT_BUSY;
-                        timer_process();
+                        timer_clock();
                         mfm->callback = 200*IDE_TIME;
                         timer_update_outstanding();
                         break;
@@ -224,7 +224,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
 //                        pclog("Seek to cylinder %i\n", mfm->cylinder);
                         mfm->command &= ~0x0f; /*Mask off step rate*/
                         mfm->status = STAT_BUSY;
-                        timer_process();
+                        timer_clock();
                         mfm->callback = 200*IDE_TIME;
                         timer_update_outstanding();
                         break;
@@ -239,7 +239,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
                                 if (val & 2)
                                         fatal("Read with ECC\n");
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 200*IDE_TIME;
                                 timer_update_outstanding();
                                 break;
@@ -258,7 +258,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
 //                                pclog("Read verify %i sectors from sector %i cylinder %i head %i\n",mfm->secount,mfm->sector,mfm->cylinder,mfm->head);
                                 mfm->command &= ~1;
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 200 * IDE_TIME;
                                 timer_update_outstanding();
                                 break;
@@ -271,14 +271,14 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
 
                                 case CMD_SET_PARAMETERS: /* Initialize Drive Parameters */
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 30*IDE_TIME;
                                 timer_update_outstanding();
                                 break;
 
                                 case CMD_DIAGNOSE: /* Execute Drive Diagnostics */
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 200*IDE_TIME;
                                 timer_update_outstanding();
                                 break;
@@ -286,7 +286,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
                                 default:
                                 pclog("Bad MFM command %02X\n", val);
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 200*IDE_TIME;
                                 timer_update_outstanding();
                                 break;
@@ -297,7 +297,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
                 case 0x3F6: /* Device control */
                 if ((mfm->fdisk & 4) && !(val & 4))
                 {
-			timer_process();
+                        timer_clock();
                         mfm->callback = 500*IDE_TIME;
                         timer_update_outstanding();
                         mfm->reset = 1;
@@ -307,7 +307,7 @@ void mfm_write(uint16_t port, uint8_t val, void *p)
                 if (val & 4)
                 {
                         /*Drive held in reset*/
-			timer_process();
+                        timer_clock();
                         mfm->callback = 0;
                         timer_update_outstanding();
                         mfm->status = STAT_BUSY;
@@ -331,7 +331,7 @@ void mfm_writew(uint16_t port, uint16_t val, void *p)
         {
                 mfm->pos = 0;
                 mfm->status = STAT_BUSY;
-                timer_process();
+                timer_clock();
               	mfm->callback = 6*IDE_TIME;
                 timer_update_outstanding();
         }
@@ -402,7 +402,7 @@ uint16_t mfm_readw(uint16_t port, void *p)
                         {
                                 mfm_next_sector(mfm);
                                 mfm->status = STAT_BUSY;
-                                timer_process();
+                                timer_clock();
                                 mfm->callback = 6*IDE_TIME;
                                 timer_update_outstanding();
                         }
