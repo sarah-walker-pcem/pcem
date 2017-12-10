@@ -392,6 +392,11 @@ void paradise_add_status_info(char *s, int max_len, void *p)
         svga_add_status_info(s, max_len, &paradise->svga);
 }
 
+static int oli_go481_available()
+{
+        return (rom_present("oli_go481_lo.bin") && rom_present("oli_go481_hi.bin"));
+}
+
 device_t paradise_pvga1a_pc2086_device =
 {
         "Paradise PVGA1A (Amstrad PC2086)",
@@ -431,7 +436,7 @@ device_t paradise_pvga1a_oli_go481_device =
         0,
         paradise_pvga1a_oli_go481_init,
         paradise_close,
-        NULL,
+        oli_go481_available,
         paradise_speed_changed,
         paradise_force_redraw,
         paradise_add_status_info
