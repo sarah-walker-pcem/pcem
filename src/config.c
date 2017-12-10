@@ -444,7 +444,10 @@ void put_backslash(char *s)
 {
         int c = strlen(s) - 1;
         if (s[c] != '/' && s[c] != '\\')
-           s[c] = '/';
+        {
+                s[c+1] = '/';
+                s[c+2] = 0;
+        }
 }
 
 char *get_extension(char *s)
