@@ -13,6 +13,16 @@ AM_PROG_CC_C_O
 
 
 
+AC_MSG_CHECKING([whether to build for release])
+AC_ARG_ENABLE(release_build,
+	      AC_HELP_STRING([--enable-release-build], [build for release]))
+if test "$enable_release_build" = "yes"; then
+   AC_MSG_RESULT([yes])
+else
+   AC_MSG_RESULT([no])
+fi
+AM_CONDITIONAL(RELEASE_BUILD, [test "$enable_release_build" = "yes"])
+
 AC_MSG_CHECKING([whether to enable debugging])
 AC_ARG_ENABLE(debug,
 	      AC_HELP_STRING([--enable-debug], [build debug executable]))
