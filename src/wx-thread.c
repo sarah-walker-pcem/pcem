@@ -77,6 +77,7 @@ typedef struct event_pthread_t
 {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
+	int state;
 } event_pthread_t;
 
 thread_t *thread_create(void (*thread_rout)(void *param), void *param)
@@ -104,6 +105,7 @@ event_t *thread_create_event()
 
 	pthread_cond_init(&event->cond, NULL);
 	pthread_mutex_init(&event->mutex, NULL);
+	event->state = 0;
 
         return (event_t *)event;
 }
@@ -113,12 +115,18 @@ void thread_set_event(event_t *handle)
 	event_pthread_t *event = (event_pthread_t *)handle;
 
 	pthread_mutex_lock(&event->mutex);
+	event->state = 1;
 	pthread_cond_broadcast(&event->cond);
 	pthread_mutex_unlock(&event->mutex);
 }
 
 void thread_reset_event(event_t *handle)
 {
+	event_pthread_t *event = (event_pthread_t *)handle;
+
+	pthread_mutex_lock(&event->mutex);
+	event->state = 0;
+	pthread_mutex_unlock(&event->mutex);
 }
 
 int thread_wait_event(event_t *handle, int timeout)
@@ -144,8 +152,11 @@ int thread_wait_event(event_t *handle, int timeout)
 
 	pthread_mutex_lock(&event->mutex);
 	if (timeout == -1)
-		pthread_cond_wait(&event->cond, &event->mutex);
-	else
+	{
+		while (!event->state)
+			pthread_cond_wait(&event->cond, &event->mutex);
+	}
+	else if (!event->state)
 		pthread_cond_timedwait(&event->cond, &event->mutex, &abstime);
 	pthread_mutex_unlock(&event->mutex);
 
