@@ -1085,6 +1085,38 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 joystickconfig_open(hdlg, 3, temp_joystick_type);
                         }
+#ifndef __WXGTK__
+                        /*Emulate spinner granularity on systems that don't implement wxSpinCtrl->SetIncrement()*/
+                        else if (wParam == WX_ID("IDC_MEMSPIN"))
+                        {
+                                int mem;
+                                int granularity;
+                                int granularity_mask;
+                                
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
+                                temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
+
+                                granularity = models[temp_model].ram_granularity;
+                                granularity_mask = granularity - 1;
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_MEMSPIN"));
+                                mem = wx_sendmessage(h, WX_UDM_GETPOS, 0, 0);
+                                if (mem & granularity_mask)
+                                {
+                                        if ((mem & granularity_mask) < (granularity / 2))
+                                        {
+                                                /*Assume increase*/
+                                                mem = (mem + granularity_mask) & ~granularity_mask;
+                                        }
+                                        else
+                                        {
+                                                /*Assumg decrease*/
+                                                mem &= ~granularity_mask;
+                                        }
+                                        mem = wx_sendmessage(h, WX_UDM_SETPOS, 0, mem);
+                                }
+                        }
+#endif
                         return 0;
                 }
         }
