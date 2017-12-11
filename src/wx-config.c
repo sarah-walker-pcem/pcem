@@ -868,7 +868,8 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                                         c++;
                                 }
-                                if (mouse_valid(temp_mouse_type, temp_model))
+
+                                if (mouse_valid(mouse_get_type(temp_mouse_type), temp_model))
                                         wx_sendmessage(h, WX_CB_SETCURSEL, settings_mouse_to_list[temp_mouse_type], 0);
                                 else
                                         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
