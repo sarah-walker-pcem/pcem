@@ -108,7 +108,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                 for (dev = alldevs; dev; dev = dev->next)
                                 {
                                         pcap_t *conn = _pcap_open_live(dev->name, ETH_MAX_PACKET, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
-                                        int datalink;
+                                        int datalink = 0;
                                         
                                         if (conn)
                                         {
