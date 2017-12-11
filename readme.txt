@@ -1,206 +1,94 @@
-PCem v12
+PCem v13
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v11:
+Changes since v12:
 
-- New machines added - AMI 386DX, MR 386DX
-- New graphics cards - Plantronics ColorPlus, Wyse WY-700, Obsidian SB50, Voodoo 2
-- CPU optimisations - up to 50% speedup seen
-- 3DFX optimisations
-- Improved joystick emulation - analogue joystick up to 8 buttons, CH Flightstick Pro, ThrustMaster FCS, SideWinder pad(s)
-- Mouse can be selected between serial, PS/2, and IntelliMouse
-- Basic 286/386 prefetch emulation - 286 & 386 performance much closer to real systems
-- Improved CGA/PCjr/Tandy composite emulation
+- New machines added - Atari PC3, Epson PC AX, Epson PC AX2e, GW-286CT GEAR, IBM PS/2 Model 30-286,
+  IBM PS/2 Model 50, IBM PS/2 Model 55SX, IBM PS/2 Model 80, IBM XT Model 286, KMX-C-02,
+  Samsung SPC-4200P, Samsung SPC-4216P, Toshiba 3100e,
+- New graphics cards - MDSI Genius, Plantronics ColorPlus
+- New sound cards added - Disney Sound Source, Ensoniq AudioPCI (ES1371), LPT DAC, Sound Blaster PCI 128
+- New hard drive controllers added - AT Fixed Disk Adapter, DTC 5150X, Fixed Disk Adapter (Xebec),
+  IBM ESDI Fixed Disk Controller, Western Digital WD1007V-SE1
+- New SCSI adapters added - Adaptec AHA-1542C, BusLogic BT-545S, Longshine LCS-6821N, Rancho RT1000B,
+  Trantor T130B
+- New network adapters added - NE2000 compatible
+- New cross-platform GUI
+- Voodoo SLI emulation
+- Improvements to Sound Blaster emulation
+- Improvements to Pentium timing
 - Various bug fixes
+- Minor optimisations
+
+Thanks to AmatCoder, basic2004, bit, dns2k, ecksemess, Greatpsycho, hOMER247, James-F, John Elliott,
+JosepMa, leilei, neozeed, ruben_balea, SA1988 and tomaszkam for contributions towards this release.
 
 
 PCem emulates the following machines:
 
-IBM 5150 PC (1981) 
-The original PC. This shipped in 1981 with a 4.77mhz 8088, 64k of RAM, and a cassette port.
-Disc drives quickly became standard, along with more memory.
-
-ROM files needed:
-
-ibmpc\pc102782.bin
-ibmpc\basicc11.f6
-ibmpc\basicc11.f8
-ibmpc\basicc11.fa
-ibmpc\basicc11.fc
-
-
-IBM 5160 XT (1983)
-From a hardware perspective, this is a minor tweak of the original PC. It originally shipped
-with 128k of RAM and a 10mb hard disc, both of which could be easily fitted to the 1981 machine.
-However, this was targetted as businesses and was more successful than the original.
-
-ROM files needed:
-
-ibmxt\5000027.u19
-ibmxt\1501512.u18
-
-
-IBM PCjr (1984)
-A home machine, which had better graphics and sound than most XTs but was not hardware compatible
-with the PC.
-
-ROM files needed:
-
-ibmpcjr\bios.rom
-
-
-IBM AT (1984)
-This was the 'next generation' PC, fully 16-bit with an 80286. The original model came with a 6mhz
-286, which ran three times as fast as the XT. This model also introduced EGA.
-
-ROM files needed:
-
-ibmat\at111585.0
-ibmat\at111585.1
-
-
-Olivetti M24 (1984)
-An enhanced XT clone, also known as the AT&T PC 6300. Has an 8086 CPU, and an unusual 'double-res'
-CGA display.
-
-ROM files needed:
-
-olivetti_m24\olivetti_m24_version_1.43_low.bin
-olivetti_m24\olivetti_m24_version_1.43_high.bin
-
-
-Tandy 1000 (1984)
-This is a clone of the unsuccessful IBM PCjr, which added better graphics and sound to the XT,
-but removed much expandability plus some other hardware (such as the DMA controller). The Tandy
-puts back the DMA controller and ISA slots, making it a much more useful machine. Many games
-from the late 80s support the Tandy.
-
-ROM files needed:
-
-tandy\tandy1t1.020
-
-
-Tandy 1000HX (1987)
-A Tandy 1000 with a faster 7.16 MHz 8088, and DOS in ROM.
-
-ROM files needed:
-
-tandy1000hx\v020000.u12
-
-
-Tandy 1000SL/2 (1989)
-An enhanced Tandy 1000 with a 9.54 MHz 8086, and enhanced graphics and sound.
-
-ROM files needed:
-
-tandy1000sl2\8079047.hu1
-tandy1000sl2\8079048.hu2
-
-
-DTK Clone XT (1986)
-A generic clone XT board.
-
-ROM files needed:
-
-dtk\dtk_erso_2.42_2764.bin
-
-
-Amstrad PC1512 (1986)
-This was Amstrad's first entry into the PC clone market (after the CPC and PCW machines), and
-was the first cheap PC available in the UK, selling for only £500. It was a 'turbo' clone, 
-having an 8mhz 8086, as opposed to an 8088, and had 512k RAM as standard. It also had a 
-perculiar modification to its onboard CGA controller - the 640x200 mode had 16 colours instead
-of the usual 2. This was put to good use by GEM, which shipped with the machine.
-
-Amstrad's CGA implementation has a few oddities, these are emulated as best as possible. This
-mainly affects games defining unusual video modes, though 160x100x16 still works (as on the real
-machine).
-
-ROM files needed:
-
-pc1512\40043.v1
-pc1512\40044.v2
-pc1512\40078.ic127
-
-
-Amstrad PC1640 (1987)
-Amstrad's followup to the PC1512, the PC1640 had 640k of RAM and onboard EGA, but was otherwise
-mostly the same.
-
-ROM files needed:
-
-pc1640\40043.v3
-pc1640\40044.v3
-pc1640\40100
-
-
-Sinclair PC200/Amstrad PC20 (1988)
-This was Amstrad's entry to the 16-bit home computer market, intended to compete with the Atari
-ST and Commodore Amiga. It's similar to the PC1512, but is based on Amstrad's portable PPC512
-system. With stock CGA and PC speaker, it couldn't compare with the ST or Amiga.
-
-ROM files needed:
-
-pc200\pc20v2.0
-pc200\pc20v2.1
-pc200\40109.bin
-
-
-Schneider Euro PC (1988)
-A German XT clone. An 'all-in-one' system like the Sinclair PC200. I don't know much about this
-machine to be honest! This doesn't appear to work with the XTIDE BIOS, so therefore this is the
-only model that does not support hard discs.
-
-ROM files needed:
-
-europc\50145
-europc\50146
-
-
-(c)Anonymous Generic Turbo XT BIOS (1988?)
-This is a BIOS whose source code was made available on Usenet in 1988. It appears to be an 
-anonymous BIOS from an XT clone board. It was then heavily modified to fix bugs. The history of
-this BIOS (and the source code) is at http://dizzie.narod.ru/bios.txt
-
-ROM files needed:
-
-genxt\pcxt.rom
-
+8088 based :
 
 AMI XT clone (1989)
 
-ROM files needed:
-
-amixt\ami_8088_bios_31jan89.bin
-
-
-DTK XT clone (1988)
+8088 at 8+ MHz, 64-640kb RAM.
 
 ROM files needed:
-
-dtk\dtk_erso_2.42_2764.bin
-
-
-VTech Laser Turbo XT (1987)
-
-ROM files needed:
-
-ltxt\27c64.bin
+ amixt\ami_8088_bios_31jan89.bin
 
 
-VTech Laser XT3 (1989)
+Atari PC3 (19xx)
+
+8088 at 8 MHz, 640kb RAM.
 
 ROM files needed:
+ ataripc3/AWARD_ATARI_PC_BIOS_3.08.BIN
 
-lxt3\27c64d.bin
 
+DTK Clone XT (1986)
 
-Phoenix XT clone (1986)
+8088 at 8/10 MHz, 64kb-640kb RAM.
 
 ROM files needed:
+ dtk/dtk_erso_2.42_2764.bin
 
-pxxt\000p001.bin
+
+(c)Anonymous Generic Turbo XT BIOS (1988?)
+
+8088 at 8+ MHz, 64-640kb RAM.
+
+ROM files needed:
+ genxt\pcxt.rom
+
+
+IBM PC (1981)
+
+8088 at 4.77 MHz, 16-640kb RAM (PCem emulates minimum 64kb)
+
+ROM files needed:
+ ibmpc\pc102782.bin
+ ibmpc\basicc11.f6
+ ibmpc\basicc11.f8
+ ibmpc\basicc11.fa
+ ibmpc\basicc11.fc
+
+
+IBM PCjr (1984)
+
+8088 at 4.77 MHz, 64-640kb RAM (PCem emulates minimum 128kb), built-in 16 colour graphics, 3 voice sound.
+Not generally PC compatible.
+
+ROM files needed:
+ ibmpcjr\bios.rom
+
+
+IBM XT (1983)
+
+8088 at 4.77 MHz, 64-640kb RAM
+
+ROM files needed:
+ ibmxt\5000027.u19
+ ibmxt\1501512.u18
 
 
 Juko XT clone (1988)
@@ -210,45 +98,130 @@ ROM files needed:
 jukopc\000o001.bin
 
 
-Commodore PC30-III (1988)
-A fairly generic 286 clone.
+Phoenix XT clone (1986)
 
 ROM files needed:
 
-cmdpc30\commodore pc 30 iii even.bin
-cmdpc30\commodore pc 30 iii odd.bin
+pxxt\000p001.bin
+
+
+Schneider Euro PC (1988)
+
+ROM files needed:
+
+europc\50145
+europc\50146
+
+
+Tandy 1000 (1984)
+
+8088 at 4.77 MHz, 128kb-640kb RAM, built-in 16 colour graphics + 3 voice sound
+
+ROM files needed:
+ tandy\tandy1t1.020
+
+
+Tandy 1000HX (1987)
+
+8088 at 7.16 MHz, 256-640kb RAM, built-in 16 colour graphics + 3 voice sound.
+Has DOS 2.11 in ROM.
+A Tandy 1000 with a faster 7.16 MHz 8088, and DOS in ROM.
+
+ROM files needed:
+ tandy1000hx\v020000.u12
+
+
+VTech Laser Turbo XT (1987)
+
+ROM files needed:
+
+ltxt\27c64.bin
+
+
+
+8086 based :
+
+
+Amstrad PC1512 (1986)
+
+8086 at 8 MHz, 512kb-640kb RAM, enhanced CGA (supports 640x200x16), custom mouse port.
+
+ROM files needed:
+ pc1512\40043.v1
+ pc1512\40044.v2
+ pc1512\40078.ic127
+
+
+Amstrad PC1640 (1987)
+
+8086 at 8 MHz, 640kb RAM, built-in Paradise EGA, custom mouse port.
+
+ROM files needed:
+ pc1640\40043.v3
+ pc1640\40044.v3
+ pc1640\40100
 
 
 Amstrad PC2086 (1989)
-The PC2086 is essentially a PC1640 with VGA and 3.5" floppy drives.
+
+8086 at 8 MHz, 640kb, built-in VGA.
 
 ROM files needed:
-
-pc2086\40179.ic129
-pc2086\40180.ic132
-pc2086\40186.ic171
+ pc2086\40179.ic129
+ pc2086\40180.ic132
+ pc2086\40186.ic171
 
 
 Amstrad PC3086 (1990)
-The PC3086 is a version of the PC2086 with a more standard case.
+
+8086 at 8 MHz, 640kb, built-in VGA.
+
+ROM files needed:
+ pc3086\fc00.bin
+ pc3086\c000.bin
+
+
+Olivetti M24 (1984)
+
+8086 at 8 MHz, 128kb-640kb RAM, built-in enhanced CGA (supports 640x400x2).
+
+ROM files needed:
+ olivetti_m24\olivetti_m24_version_1.43_low.bin
+ olivetti_m24\olivetti_m24_version_1.43_high.bin
+
+
+Sinclair PC200/Amstrad PC20 (1988)
+
+8086 at 8 MHz, 512-640kb RAM, built-in CGA.
+
+ROM files needed:
+ pc200\pc20v2.0
+ pc200\pc20v2.1
+ pc200\40109.bin
+
+
+Tandy 1000SL/2 (1989)
+
+8086 at 9.54 MHz, 512-768kb RAM, built-in 16 colour graphics + 4 voice sound.
+
+ROM files needed:
+ tandy1000sl2\8079047.hu1
+ tandy1000sl2\8079048.hu2
+
+
+VTech Laser XT3 (1989)
 
 ROM files needed:
 
-pc3086\fc00.bin
-pc3086\c000.bin
+lxt3\27c64d.bin
 
 
-Dell System 200 (1990?)
-This is a pretty generic 286 clone with a Phoenix BIOS.
 
-ROM files needed:
-
-dells200\dell0.bin
-dells200\dell1.bin
+286 based :
 
 
 AMI 286 clone (1990)
-This is a generic 286 clone with an AMI BIOS.
+286 at 8+ MHz, 512kb - 16MB RAM.
 
 ROM files needed:
 
@@ -256,71 +229,237 @@ ami286\amic206.bin
 
 
 Award 286 clone (1990)
-This is a generic 286 clone with an Award BIOS.
+286 at 8+ MHz, 512kb - 16MB RAM.
 
 ROM files needed:
 
 award286\award.bin
 
 
+Commodore PC30-III (1988)
+286 at 12 MHz, 512kb - 16MB RAM.
+
+ROM files needed:
+
+cmdpc30\commodore pc 30 iii even.bin
+cmdpc30\commodore pc 30 iii odd.bin
+
+
+Dell System 200 (1990?)
+
+286 at 12 MHz, 640kb-16MB RAM.
+
+ROM files needed:
+ dells200\dell0.bin
+ dells200\dell1.bin
+
+
+Epson PC AX (1989)
+
+286, 256kb - 16MB RAM.
+
+ROM files needed :
+ epson_pcax\EVAX
+ epson_pcax\ODAX
+
+
+Epson PC AX2e (1989)
+
+286 at 12 MHz, 256kb - 16MB RAM.
+
+ROM files needed :
+ epson_pcax2e\EVAX
+ epson_pcax2e\ODAX
+
+
+GW-286CT GEAR
+
+286 at 8+ MHz, 512kb - 16MB RAM.
+
+ROM files needed:
+
+ gw286ct/2ctc001.bin
+
+
+IBM AT (1984)
+
+286 at 6 or 8 MHz, 256kb-16mb RAM
+
+ROM files needed:
+ ibmat\at111585.0
+ ibmat\at111585.1
+
+
 IBM PS/1 Model 2011 (1990)
-This is a 286 with integrated VGA and a basic GUI and DOS 4.01 in ROM.
 
-ROM files needed:
+286 at 10 MHz, 512kb-16MB RAM, built-in VGA, DOS 4.01 + GUI menu system in ROM.
 
-ibmps1\f80000.bin
-
-
-Compaq Deskpro 386 (1989)
-An early 386 system. I don't think this BIOS is from the original 1986 version
-(the very first 386 system), but from a 1989 refresh.
-
-ROM files needed:
-
-deskpro386\109592-005.u11.bin
-deskpro386\109591-005.u13.bin
+ROM files needed :
+ ibmps1\f80000.bin
 
 
-IBM PS/1 Model 2121 (1990)
-This is a 386SX with integrated VGA.
+IBM PS/2 Model 30-286 (1988)
 
-ROM files needed:
+286 at 10 MHz, 1MB-16MB RAM, built-in VGA, MCA bus.
 
-ibmps1_2121\fc0000.bin
+ROM files needed :
+ ibmps2_m30_286\33f5381a.bin
+
+
+IBM PS/2 Model 50 (1987)
+
+286 at 10 MHz, 1MB-16MB RAM, built-in VGA, MCA bus.
+
+ROM files needed :
+ i8550021\90x7420.zm13
+ i8550021\90x7423.zm14
+ i8550021\90x7426.zm16
+ i8550021\90x7429.zm18
+
+
+IBM XT Model 286 (1986)
+
+286 at 6, 256kb-16mb RAM
+
+ROM files needed :
+ ibmxt286\BIOS_5162_21APR86_U34_78X7460_27256.BIN
+ ibmxt286\BIOS_5162_21APR86_U35_78X7461_27256.BIN
+
+
+Samsung SPC-4200P
+
+286 at 12 MHz, 512kb - 2MB RAM
+
+ROM files needed :
+spc4200p\u8.01
+
+
+Samsung SPC-4216P
+
+286 at 12 MHz, 1MB - 5MB RAM
+
+ROM files needed :
+ spc4216p\phoenix.bin
+or
+ spc4216p\7101.u8
+ spc4216p\ac64.u10
+
+
+Toshiba 3100e (1986)
+
+286 at 12 MHz, 1MB - 5MB RAM, CGA on gas-plasma display
+
+PCem maps [Fn] to right-Ctrl and right-Alt.
+
+ROM files needed :
+ t3100e\t3100e_font.bin
+ t3100e\t3100e.rom
+
+
+
+386SX based :
 
 
 Acermate 386SX/25N (1992?)
-An integrated 386SX clone, with onboard Oak SVGA and IO.
 
-ROM files needed:
+386SX at 25 MHz, 2-16MB RAM, built-in Oak SVGA.
 
-acer386\acer386.bin
-acer386\oti067.bin
+ROM files needed :
+ acer386\acer386.bin
+ acer386\oti067.bin
+
+
+AMI 386SX clone (1994)
+
+386SX at 25 MHz, 1-16MB RAM.
+
+ROM files needed :
+ ami386\ami386.bin
+
+
+Amstrad MegaPC (1992)
+
+386SX at 25 MHz, 1-16MB RAM, built-in VGA.
+
+The original machine had a built-in Sega MegaDrive. This is not emulated in PCem.
+
+ROM files needed :
+ megapc\41651-bios lo.u18
+ megapc\211253-bios hi.u19
 
 
 DTK 386SX clone (1990)
 
-ROM files needed:
+386SX, 512kb - 16MB RAM.
+
+ROM files needed :
 
 dtk386\3cto001.bin
 
 
-Amstrad MegaPC (1992)
-A 386SX clone (otherwise known as the PC7386SX) with a built-in Sega Megadrive. Only the PC section
-is emulated, obv.
+Epson PC AX3 (1989)
+
+386SX at 16 MHz, 256kb-16MB RAM.
+
+ROM files needed :
+
+ epson_pcax3\EVAX3
+ epson_pcax3\ODAX3
+
+
+IBM PS/1 Model 2121 (1990)
+
+386SX at 20 MHz, 1MB-16MB RAM, built-in VGA.
 
 ROM files needed:
-
-megapc\41651-bios lo.u18
-megapc\211253-bios hi.u19
+ ibmps1_2121\fc0000.bin
 
 
-AMI 386SX clone (1994)
-This is a generic 386SX clone with an AMI BIOS.
+IBM PS/2 Model 55SX (1989)
+
+386SX at 16 MHz, 1MB-8MB RAM, built-in VGA, MCA bus.
+
+ROM files needed :
+ i8555081\33f8146.zm41
+ i8555081\33f8145.zm40
+
+
+KMX-C-02
+
+386SX, 512kb-16MB RAM.
+
+ROM files needed :
+ kmxc02\3ctm005.bin
+
+
+
+386DX based :
+
+
+AMI 386DX clone (1994)
+
+386DX at 40 MHz, 1-32MB RAM.
 
 ROM files needed:
+ ami386dx\opt495sx.ami
 
-ami386\ami386.bin
+
+Compaq Deskpro 386 (1989)
+
+386DX at 20 MHz, 1MB-15MB RAM.
+
+ROM files needed:
+ deskpro386\109592-005.u11.bin
+ deskpro386\109591-005.u13.bin
+
+
+IBM PS/2 Model 80 (1987)
+
+386DX at 20 MHz, 1MB-12MB RAM, built-in VGA, MCA bus.
+
+ROM files needed :
+ i8580111\15f6637.bin
+ i8580111\15f6639.bin
 
 
 MR 386DX clone (1994)
@@ -331,83 +470,86 @@ ROM files needed:
 mr386dx\opt495sx.mr
 
 
-AMI 386DX clone (1994)
-This is a generic 386DX clone with an AMI BIOS. This is the only currently emulated 386DX system
-to support an external cache.
 
-ROM files needed:
-
-ami386dx\opt495sx.ami
+486 based :
 
 
 AMI 486 clone (1993)
-This is a generic 486 clone with an AMI BIOS. The BIOS came from my 486SX/25, bought in December
-1993.
+
+486 at 16-66 MHz, 1-32MB RAM.
 
 ROM files needed:
-
-ami486\ami486.bin
+ ami486\ami486.bin
 
 
 AMI WinBIOS 486 clone (1994)
-A 486 clone with a newer AMI BIOS.
+
+486 at 16-66 MHz, 1-32MB RAM.
 
 ROM files needed:
-
-win486\ali1429g.amw
+ win486\ali1429g.amw
 
 
 Award SiS 496/497 (1995)
-A 486 clone using the SiS 496/497 chipset, with PCI bus and Award BIOS.
+
+486 at 16-120 MHz, Am5x86 at 133-160 MHz, Cx5x86 at 100-133 MHz, Pentium Overdrive
+at 63-83 MHz. 1-64MB RAM.
 
 ROM files needed:
-
-sis496\sis496-1.awa
-
-
-Intel Premiere/PCI (Batman's Revenge) (1994)
-A Socket 4 based board with 430LX chipset.
-
-ROM files needed:
-
-revenge\1009af2_.bi0
-revenge\1009af2_.bi1
+ sis496\sis496-1.awa
 
 
-Intel Advanced/EV (Endeavor) (1995)
-A Socket 5/7 based board with 430FX chipset. The real board has a Sound Blaster Vibra 16 on board,
-which is not emulated - use a discrete card instead. Some Advanced/EVs also had a Trio64 on board,
-the emulated board does not have this either.
 
-ROM files needed:
-
-endeavor\1006cb0_.bi0
-endeavor\1006cb0_.bi1
+Pentium based :
 
 
 Award 430VX PCI (1996)
-A generic Socket 5/7 board with 430VX chipset.
+
+Pentium at 75-200 MHz, Pentium MMX at 166-233 MHz, Mobile Pentium MMX at 120-300 MHz,
+Cyrix 6x86 at PR90(80 MHz)-PR200(200 MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-
+PR400(285 MHz), IDT WinChip at 75-240 MHz. 1-128MB RAM (PCem allows up to 256).
 
 ROM files needed:
+ 430vx\55xwuq0e.bin
 
-430vx\55xwuq0e.bin
+
+Intel Advanced/EV (Endeavor) (1995)
+
+Pentium at 75-200 MHz, 1-128MB RAM.
+
+The real board has a Sound Blaster 16 onboard, and optionally an S3 Trio64. Neither
+are emulated as onboard devices.
+
+ROM files needed:
+ endeavor\1006cb0_.bi0
+ endeavor\1006cb0_.bi1
+
+
+Intel Premiere/PCI (Batman's Revenge) (1994)
+
+Pentium at 60-66 MHz, Pentium OverDrive at 120-133 MHz.
+
+ROM files needed:
+ revenge\1009af2_.bi0
+ revenge\1009af2_.bi1
+
 
 
 
 PCem emulates the following graphics adapters :
 
-MDA
-The original PC adapter. This displays 80x25 text in monochrome.
+
+MDA (1981)
+80x25 monochrome text.
 
 
-Hercules
-A clone of MDA, with the addition of a high-resolution 720x348 graphics mode.
+CGA (1981)
+40x25 and 80x25 text, 320x200 in 4 colours, 620x200 in 2 colours. Supports composite
+output for ~16 colours.
 
 
-CGA
-The most common of the original adapters, supporting 40x25 and 80x25 text, and 
-320x200 in 4 colours, 640x200 in 2 colours, and a composite mode giving 160x200
-in 16 colours.
+Hercules (1982)
+80x25 monochrome text, 720x348 in monochrome.
 
 
 Plantronics ColorPlus
@@ -418,100 +560,134 @@ Wyse WY-700
 A CGA-compatible board, with support for a 1280x800 mode
 
 
-IBM EGA
-The original 1984 IBM EGA card, with 256k VRAM.
+IBM EGA (1984)
+Text up to 80x43, graphics up to 640x350 in 16 colours.
 
 ROM files needed:
-ibm_6277356_ega_card_u44_27128.bin
+ ibm_6277356_ega_card_u44_27128.bin
 
 
 Hercules InColor
 An enhanced Hercules with a custom 720x350 16 colour mode.
 
 
-IBM VGA
-The original VGA card.
+Unaccelerated (S)VGA cards :
+
+
+ATI VGA Edge-16
+512kb VRAM, supports up to 8-bit colour.
 
 ROM files needed:
-ibm_vga.bin
+ vgaedge16.vbi
+
+
+ATI VGA Charger
+512kb VRAM, supports up to 8-bit colour.
+
+ROM files needed:
+ bios.bin
+
+
+IBM VGA (1987)
+256kb VRAM, Text up to 80x50, graphics up to 320x200 in 256 colours or 640x480 in 16 colours.
+
+ROM files needed:
+ ibm_vga.bin
+
+
+OAK OTI-067
+256kb-512kb VRAM, supports up to 8-bit colour.
+
+ROM files needed:
+ oti067\bios.bin
+
+
+Olivetti GO481 (Paradise PVGA1A)
+512kb VRAM, supports up to 8-bit colour.
+
+ROM files needed :
+ oli_go481_lo.bin
+ oli_go481_hi.bin
 
 
 Trident 8900D SVGA
-A low cost SVGA board circa 1992/1993. Not the greatest board in it's day, but
-it has a reasonable VESA driver and (buggy) 15/16/24-bit colour modes.
+256kb-1MB VRAM, supports up to 24-bit colour.
 
 ROM files needed:
-trident.bin
+ trident.bin
+
+
+Tseng ET4000AX SVGA
+1MB VRAM, supports up to 8-bit colour.
+
+ROM files needed:
+ et4000.bin
+
+
+2D accelerated SVGA cards :
+
+ATI Graphics Pro Turbo
+Mach64GX based. 1-4MB VRAM.
+
+ROM files needed:
+ mach64gx\bios.bin
+
+
+ATI Video Xpression
+Mach64VT2 based. 2-4MB VRAM. Has video acceleration.
+
+ROM files needed :
+ atimach64vt2pci.bin
+
+
+Diamond Stealth 32 SVGA
+ET4000/W32p based. 1-2MB VRAM.
+
+ROM files needed:
+ et4000w32.bin
+
+
+Number Nine 9FX
+S3 Trio64 based. 1-2MB VRAM.
+
+ROM files needed:
+ s3_764.bin
+
+
+Paradise Bahamas 64
+S3 Vision864 based. 1-4MB VRAM.
+
+ROM files needed:
+ bahamas64.bin
+
+
+Phoenix S3 Trio32
+S3 Trio32 based. 512kb-2MB VRAM.
+
+ROM files needed:
+ 86c732p.bin
+
+
+Phoenix S3 Trio64
+S3 Trio64 based. 1MB-4MB VRAM.
+
+ROM files needed:
+ 86c764x1.bin
 
 
 Trident TGUI9440
-A later Trident board with GUI acceleration. Windows 9x doesn't include drivers
-for this, so they have to be downloaded and installed separately.
+Trident TGUI9440 based. 1-2MB VRAM.
 
 ROM files needed:
 9440.vbi
 
 
-Tseng ET4000AX SVGA
-A somewhat better SVGA board than the Trident, here you get better compatibility
-and speed (on the real card, not the emulator) in exchange for being limited to
-8-bit colour.
 
-ROM files needed:
-et4000.bin
-
-
-Diamond Stealth 32 SVGA
-An ET4000/W32p based board, has 15/16/24-bit colour modes, plus acceleration.
-
-ROM files needed:
-et4000w32.bin
-
-
-Paradise Bahamas 64
-An S3 Vision864 based board.
-
-ROM files needed:
-bahamas64.bin
-
-
-Number Nine 9FX
-An S3 Trio64 based board.
-
-ROM files needed:
-s3_764.bin
-
-
-ATI VGA Edge-16
-A basic SVGA clone.
-
-ROM files needed:
-vgaedge16.vbi
-
-
-ATI VGA Charger
-A basic SVGA clone, similar to the Edge-16.
-
-ROM files needed:
-bios.bin
-
-
-ATI Graphics Pro Turbo
-A Mach64GX based board.
-
-ROM files needed:
-mach64gx/bios.bin
-
-
-OAK OTI-067
-A basic SVGA clone.
-
-ROM files needed:
-oti067/bios.bin
+3D accelerated SVGA cards :
 
 
 Diamond Stealth 3D 2000
-An S3 ViRGE/325 based board.
+S3 ViRGE/325 based. 2-4MB VRAM.
 
 PCem emulates the ViRGE S3D engine in software. This works with most games I tried, but
 there may be some issues. The Direct3D drivers for the /325 are fairly poor (often showing
@@ -520,17 +696,21 @@ as missing triangles), so use of the /DX instead is recommended.
 The streams processor (video overlay) is also emulated, however many features are missing.
 
 ROM files needed:
-s3virge.bin
+ s3virge.bin
 
 
 S3 ViRGE/DX
-An S3 ViRGE/DX based board. The drivers that come with Windows are similar to those for the
-/325, however better ones do exist (try the 8-21-1997 version). With the correct drivers,
-many early Direct3D games work okay (if slowly).
+S3 ViRGE/DX based. 2-4MB VRAM.
+
+The drivers that come with Windows are similar to those for the /325, however better ones
+do exist (try the 8-21-1997 version). With the correct drivers, many early Direct3D games
+work okay (if slowly).
 
 ROM files needed:
 86c375_1.bin
 
+
+3D only cards :
 
 3DFX Voodoo Graphics
 3D accelerator. Widely supported in late 90s games.
@@ -607,7 +787,7 @@ The standard beeper on all PCs. Supports samples/RealSound.
 Tandy PSG
 The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus
 noise. I reused the emulator in B-em for this (slightly modified).
-v11 now emulates the differences between the SN76496 (PCjr and Tandy 1000), and the NCR8496
+PCem emulates the differences between the SN76496 (PCjr and Tandy 1000), and the NCR8496
 (currently assigned to the Tandy 1000HX). Maniac Mansion and Zak McKraken will only sound
 correct on the latter.
 
@@ -662,6 +842,111 @@ from compatible boards with additional components (eg Turtle Beach Monte Carlo)
 Innovation SSI-2001
 SID6581. Emulated using resid-fp. Board is fixed to port 280.
 
+Ensoniq AudioPCI (ES1371) / Sound Blaster PCI 128
+Basic PCI sound card. Emulates Sound Blaster in software.
+
+
+PCem emulates the following hard drive controllers :
+
+[MFM] Fixed Disk Adapter (Xebec)
+MFM controller originally included in the IBM XT. This controller only supports HD types 0, 2, 13
+and 16.
+
+ROM files needed :
+ibm_xebec_62x0822_1985.bin
+
+
+[MFM] DTC 5150X
+8-bit MFM controller. To configure drive types, run DEBUG.EXE and enter 'g=c800:5'.
+
+ROM files needed :
+dtc_cxd21a.bin
+
+
+[MFM] AT Fixed Disk Adapter
+MFM controller originally included in the IBM AT. Supported by all AT-compatible BIOSes.
+
+
+[ESDI] Western Digital WD1007V-SE1
+16-bit ESDI controller.
+
+ROM files needed :
+62-000279-061.bin
+
+
+[ESDI] IBM ESDI Fixed Disk Controller
+MCA ESDI controller. Only supported on PS/2 models.
+
+ROM files needed :
+90x8969.bin
+90x8970.bin
+
+
+[IDE] Standard IDE
+Standard IDE controller. Supported by all AT-compatible BIOSes. Use this if in any doubt!
+
+
+[IDE] XTIDE
+8-bit IDE controller. The BIOS is available at :
+
+http://code.google.com/p/xtideuniversalbios/
+
+v2.0.0 beta 1 is the version I've mostly tested. v2.0.0 beta 3 is known to have some issues.
+
+ROM files needed :
+ide_xt.bin
+
+
+[IDE] XTIDE (AT)
+16-bit IDE controller.
+
+ROM files needed :
+ide_at.bin
+
+
+[IDE] XTIDE (PS/1)
+IDE controller for the PS/1 model 2033. For this machine you will need BIOS version v1.1.5. The
+PS/1 is a bit fussy with XTIDE, and I've found that it works best when the XTIDE configuration
+has 'Full Operating Mode' disabled.
+
+ROM files needed :
+ide_at_1_1_5.bin
+
+
+[SCSI] Longshine LCS-6821N
+8-bit SCSI controller.
+
+ROM files needed :
+Longshine LCS-6821N - BIOS version 1.04.bin
+
+
+[SCSI] Rancho RT1000B
+8-bit SCSI controller.
+
+ROM files needed :
+Rancho_RT1000_RTBios_version_8.10R.bin
+
+
+[SCSI] Trantor T130B
+8-bit SCSI controller.
+
+ROM files needed :
+trantor_t130b_bios_v2.14.bin
+
+
+[SCSI] Adaptec AHA-1542C
+16-bit SCSI controller.
+
+ROM files needed :
+adaptec_aha1542c_bios_534201-00.bin
+
+
+[SCSI] BusLogic BT-545S
+16-bit SCSI controller.
+
+ROM files needed :
+BusLogic_BT-545S_U15_27128_5002026-4.50.bin
+
 
 Other stuff emulated :
 
@@ -685,100 +970,81 @@ ATAPI CD-ROM
 Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've tried.
 
 
-XTIDE :
 
-The XTIDE board is emulated for machines that don't natively support IDE hard discs.
-
-You will need to download the XTIDE BIOS seperately. Of the various versions, ide_at.bin and ide_xt.bin
-should be placed in the ROMS directory. ide_xt is used on all XT models, and ide_at is used on the IBM AT
-and Commodore PC30-III machines.
-
-The BIOS is available at :
-
-http://code.google.com/p/xtideuniversalbios/
-
-v2.0.0 beta 1 is the version I've mostly tested. v2.0.0 beta 3 is known to have some issues.
-
-For the PS/1, you will need v1.1.5. The PS/1 is a bit fussy with XTIDE, and I've found that it works best
-when the XTIDE configuration has 'Full Operating Mode' disabled. This version must be called
-ide_at_1_1_5.bin and should also be placed in the ROMS directory.
-
-
-Notes :
-
-- The time on the PC1512 clock is wrong. The date is correct, though since the PC1512's bios isn't
-  Y2k compliant, it thinks it's 1988.
-
-- The envelope system on the Gameblaster isn't emulated. The noise may not be right either.
-
-- Some of the more unusual VGA features are not emulated. I haven't found anything that uses them yet.
-
-- On some versions of Windows the AWE32 is not set up correctly, claiming a resource conflict. To correct
-  this open the relevant item in Device Manager, choose 'Set Configuration Manually' and accept the
-  options presented.
 
 
 Software tested:
 
-MS-DOS 1.25
-MS-DOS 2.11
-MS-DOS 3.31
-Compaq DOS 3.31
+PC-DOS 1.0
+PC-DOS 2.10
+MS-DOS 3.30
 MS-DOS 5.0
+MS-DOS 6.0
 MS-DOS 6.22
 
 DR-DOS 6.0
 
 Windows 1.03
 Windows 2.03
+Windows/286 2.11
 Windows/386 2.11
 Windows 3.0
 Windows 3.1
 Windows for Workgroups 3.11
 Windows 95
-Windows 95 OSR 2
+Windows 95 OSR2
 Windows 98
 Windows 98 SE
 Windows ME
 
+Windows NT 3.1
 Windows NT 3.51
 Windows NT 4
 Windows 2000
 Windows XP
 
+OS/2 v1.0
 OS/2 v1.1
 OS/2 v1.2
 OS/2 v1.3
-OS/2 v2.1
+OS/2 v2.0
 OS/2 Warp 3
 OS/2 Warp 4
 
-GEM 3.11
+Red Hat Linux 7.1 (Seawolf)
+Ubuntu 10.04
 
-Corel Linux 1.2
-Ubuntu 10.04 (very slow, does not support serial mouse)
+BeOS 5 Personal
+BeOS 5 Professional
 
-BeOS 5.0 Professional
+DESQview/X
 
-Adobe Photoshop 3.0.4
-CorelDRAW! 2.5 (OS/2)
-CorelDRAW! 5.0
-FastTracker v2.08
-Lotus 1-2-3 2.1 (OS/2)
-Microsoft Excel 3.0 (OS/2)
-Microsoft Word 1.1 (OS/2)
-Microsoft Word for Windows 6.1
-Microsoft Works for Windows 3.0
+GEM Desktop 3.11
+
+Borland C++ v3.1
+Fasttracker v2.08
+Internet Explorer 5.0
+Microsoft Office 95
 Microsoft Visual Basic 3.0
-Microsoft Visual C++ 1.0
-Microsoft Visual C++ 6.0
-StarOffice 3.1 (OS/2)
+Microsoft Word for OS/2 1.1
+Microsoft Word for Windows 1.1
+Microsoft Works for Windows 3.0
+Micrografx Windows Draw 1.04
+PC Paintbrush for Windows v1.05
+Ventura Publisher v3.0
 
 Age of Empires
+Aladdin
 Alien vs Predator (3DFX)
+All New World of Lemmings
+Alone in the Dark
+American McGee's Alice (3DFX)
+Arkanoid
+Beasts and Bumpkins
 Blake Stone
-Breakneck (3DFX)
+BreakNeck (3DFX)
 Caesar III
+Cannon Fodder 2
 Civilization
 Civilization II
 Colin McRae Rally (3DFX)
@@ -787,108 +1053,143 @@ Command & Conquer : Red Alert
 Command & Conquer : Red Alert 2
 Commander Keen : Goodbye Galaxy
 Commander Keen : Invasion of the Vorticons
+Corridor 7
 Croc (3DFX)
 Curse of Monkey Island
 Dawn Patrol
-Deus Ex (3DFX, slow)
+Descent Freespace (3DFX)
+Deus Ex (3DFX)
 Discworld II
 Doom
 Doom II
 Duke Nukem 3D
 Dune
 Dune II
+Ecstatica
 Epic Pinball
+Expendable (3DFX)
+Final Fantasy VII (3DFX)
+Formula 1 '97 (3DFX)
+Freespace 2 (3DFX)
+G-Police (3DFX)
+Grim Fandango (3DFX)
 Grand Theft Auto (3DFX)
-GTA 2 (3DFX)
+GTA2 (3DFX)
 Half-Life (3DFX)
-Heretic
+Heartlight
+Hitchhiker's Guide to the Galaxy
+Hocus Pocus
 House of the Dead 2 (3DFX)
-Icon
 Incoming (3DFX)
-Indiana Jones and the Last Crusade
-Jetpack
-King's Quest (PCjr, Tandy)
-King's Quest II (Tandy)
-Klotz
-Lemmings
-Lemmings 2
-Little Big Adventure 2
-Lotus III
-Maniac Mansion
+International Rally Championship (3DFX)
+Interstate 76
+Jazz Jackrabbit
+Jazz Jackrabbit 2
+Jedi Knight (3DFX)
+Jill of the Jungle
+LBA 2
+Lode Runner : The Legend Returns
+Kings Quest
 Microsoft Arcade
+MiG-29 Fulcrum (3DFX)
 Monkey Island 2
+Monster Bash
+Mortal Kombat
 Mystic Towers
 Need for Speed II SE (3DFX)
 Need for Speed III (3DFX)
 Network Q RAC Rally
+No One Lives Forever (3DFX)
 Oddworld : Abe's Oddysee
-Overlord
-Populous : The Beginning (3DFX)
+Pinball Fantasies
+Police Quest
+Power Drive
+Prince of Persia
 Pro Pinball : Big Race USA
-Pro Pinball : The Web
+Pro Pinball : Timeshock!
 Psycho Pinball
-Resident Evil 2 (3DFX)
-Rollercoaster Tycoon
 Quake (3DFX)
 Quake II (3DFX)
 Quake III Arena (3DFX)
-Scorched Earth
+Railroad Tycoon II
+Rayman
+Rebel Moon Rising
+Resident Evil 2 (3DFX)
+Return Fire II (3DFX)
+Return to Castle Wolfenstein (3DFX)
+Rise of the Triad
+Rollercoaster Tycoon
+Rollercoaster Tycoon 2
+Sam & Max Hit the Road
 Screamer
 Screamer Rally (not 3DFX)
 Secret of Monkey Island
-SimCity (DOS, OS/2)
-SimCity 2000 (DOs, Windows, OS/2)
+Sensible World of Soccer        
+Sid Meier's Alpha Centauri
+SimCity 2000
 SimCity 3000
-Spear of Destiny
-Star Goose
+SiN (3DFX)
+Sonic & Knuckles Collection
+Star Wars Episode 1 Racer (3DFX)
 Stargunner
-Stunt Island
 System Shock
-System Shock 2 (3DFX)
-Terminal Velocity
+System Shock 2 (3DFX - SLOW)
+The Chaos Engine
 The Humans
+The Lion King
 Theme Hospital
-Tomb Raider (3DFX)
+Tie Fighter
+TOCA 2 (3DFX)
+Tomb Raider (3DFX, ViRGE)
+Tomb Raider II (3DFX)
 Tomb Raider III (3DFX)
 Tony Hawk's Pro Skater 2 (3DFX)
 Total Annihilation
 Transport Tycoon
+Trespasser (3DFX)
 Turok (3DFX)
 Turok 2 (3DFX)
+Turrican II
 Tyrian
-UFO : Enemy Unknown
 Unreal (3DFX)
 Unreal Tournament (3DFX)
 Wacky Wheels
 Wing Commander
+Wizkid
 Wolfenstein 3D
 World Cup 98 (3DFX)
 Worms
-Worms 2
+Worms World Party
 X-Com : Apocalypse
 X-Com : Terror From The Deep
-X-Wing
+Xenon
+Xenon 2
+Zak McKracken
 Zone 66
 
+Cascada - Cronologia
 Complex - Cyboman 2
 EMF - Verses
 Future Crew - Second Reality
 Gazebo - Cyboman!
+Hornet - Introjr
+KFMF - Dance, Move, Shake
 KFMF - Trip (3DFX)
 Logic Design - Fashion
-Orange - X14
+Orange - x14
 Renaissance - Amnesia
-Skull - Putrefaction
-Tran - Ambience (flickery with a host display at 60 Hz)
+Skull - Putre Faction
+Tran - Ambience
+Tran - Luminati
 Tran - Timeless
 Triton - Crystal Dream
-Triton - Crystal Dream II (visual artifacts in titles)
+Triton - Crystal Dream II
+Ultraforce - Coldcut
 Ultraforce - Vectdemo
-Witan - Witan House
 
 BeebInC v0.99f
 Fellow v0.33
-Kgen98 v0.4b
-PacifiST v0.48
+KGen98 v0.4b
+PaCifiST v0.45
+ZSNES v0.800
 SNES9x v0.96
-vMac v0.1.9.1
