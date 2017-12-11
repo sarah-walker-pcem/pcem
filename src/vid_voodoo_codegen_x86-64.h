@@ -2525,7 +2525,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xe4);
                         break;
                         case AFUNC_ASRC_ALPHA:
-                        fatal("dest AFUNC_ASRC_ALPHA\n");
                         addbyte(0x66); /*PMULLW XMM4, R10(alookup)[EDX*8]*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2558,7 +2557,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(8);
                         break;
                         case AFUNC_A_COLOR:
-                        fatal("dest AFUNC_A_COLOR\n");
                         addbyte(0x66); /*PMULLW XMM4, XMM0*/
                         addbyte(0x0f);
                         addbyte(0xd5);
@@ -2593,7 +2591,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         case AFUNC_AONE:
                         break;
                         case AFUNC_AOMSRC_ALPHA:
-                        //fatal("dest AFUNC_AOMSRC_ALPHA\n");
                         addbyte(0x66); /*PMULLW XMM4, R11(aminuslookup)[EDX*8]*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2626,7 +2623,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(8);
                         break;
                         case AFUNC_AOM_COLOR:
-                        fatal("dest AFUNC_AOM_COLOR\n");
                         addbyte(0xf3); /*MOVQ XMM5, XMM9(xmm_ff_w)*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2672,7 +2668,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xe4);
                         break;
                         case AFUNC_ASATURATE:
-                        fatal("dest AFUNC_ASATURATE\n");
                         addbyte(0x66); /*PMULLW XMM4, XMM11(minus_254)*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2713,7 +2708,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xc0);
                         break;
                         case AFUNC_ASRC_ALPHA:
-                        //fatal("src AFUNC_ASRC_ALPHA\n");
                         addbyte(0x66); /*PMULLW XMM0, R10(alookup)[EDX*8]*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2746,7 +2740,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(8);
                         break;
                         case AFUNC_A_COLOR:
-                        //fatal("src AFUNC_A_COLOR\n");
                         addbyte(0x66); /*PMULLW XMM0, XMM6*/
                         addbyte(0x0f);
                         addbyte(0xd5);
@@ -2781,7 +2774,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         case AFUNC_AONE:
                         break;
                         case AFUNC_AOMSRC_ALPHA:
-                        fatal("src AFUNC_AOMSRC_ALPHA\n");
                         addbyte(0x66); /*PMULLW XMM0, R11(aminuslookup)[EDX*8]*/
                         addbyte(0x41);
                         addbyte(0x0f);
@@ -2814,7 +2806,6 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(8);
                         break;
                         case AFUNC_AOM_COLOR:
-                        fatal("src AFUNC_AOM_COLOR\n");
                         addbyte(0xf3); /*MOVQ XMM5, XMM9(xmm_ff_w)*/
                         addbyte(0x41);
                         addbyte(0x0f);
