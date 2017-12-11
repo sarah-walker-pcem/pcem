@@ -16,8 +16,10 @@ static uint32_t cdrom_capacity = 0;
 static int ioctl_inited = 0;
 static char ioctl_path[8];
 static int tocvalid = 0;
-static struct cdrom_tocentry toc[100];
+static struct cdrom_tocentry toc[256];
+static int toc_tracks;
 static int first_track, last_track;
+static int ioctl_fd = 0;
 
 int old_cdrom_drive;
 
@@ -37,7 +39,6 @@ static int16_t cd_buffer[BUF_SIZE];
 static int cd_buflen = 0;
 void ioctl_audio_callback(int16_t *output, int len)
 {
-	int fd;
 	struct cdrom_read_audio read_audio;
 
 //        pclog("Audio callback %08X %08X %i %i %i %04X %i\n", ioctl_cd_pos, ioctl_cd_end, ioctl_cd_state, cd_buflen, len, cd_buffer[4], GetTickCount());
@@ -46,9 +47,8 @@ void ioctl_audio_callback(int16_t *output, int len)
                 memset(output, 0, len * 2);
                 return;
         }
-	fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
         {
                 memset(output, 0, len * 2);
                 return;
@@ -63,7 +63,7 @@ void ioctl_audio_callback(int16_t *output, int len)
 			read_audio.nframes = 1;
 			read_audio.buf = (__u8 *)&cd_buffer[cd_buflen];
 			
-        		if (ioctl(fd, CDROMREADAUDIO, &read_audio) < 0)
+        		if (ioctl(ioctl_fd, CDROMREADAUDIO, &read_audio) < 0)
         		{
 //                                pclog("DeviceIoControl returned false\n");
                                 memset(&cd_buffer[cd_buflen], 0, (BUF_SIZE - cd_buflen) * 2);
@@ -84,7 +84,7 @@ void ioctl_audio_callback(int16_t *output, int len)
                         cd_buflen = len;
                 }
         }
-	close(fd);
+
         memcpy(output, cd_buffer, len * 2);
 //        for (c = 0; c < BUF_SIZE - len; c++)
 //            cd_buffer[c] = cd_buffer[c + cd_buflen];
@@ -197,6 +197,7 @@ static int read_toc(int fd, struct cdrom_tocentry *btoc)
 {
 	struct cdrom_tochdr toc_hdr;
 	int track, err;
+	int c;
 //pclog("read_toc\n");
 	err = ioctl(fd, CDROMREADTOCHDR, &toc_hdr);
 	if (err == -1)
@@ -210,18 +211,23 @@ static int read_toc(int fd, struct cdrom_tocentry *btoc)
 //pclog("read_toc: first_track=%i last_track=%i\n", first_track, last_track);
 	memset(btoc, 0, sizeof(btoc));
 
-	for (track = toc_hdr.cdth_trk0; track <= toc_hdr.cdth_trk1; track++)
+	c = 0;
+	for (track = 0; track < 256; track++)
 	{
-		btoc[track].cdte_track = track;
-		btoc[track].cdte_format = CDROM_MSF;
-		err = ioctl(fd, CDROMREADTOCENTRY, &btoc[track]);
+		btoc[c].cdte_track = track;
+		btoc[c].cdte_format = CDROM_MSF;
+		err = ioctl(fd, CDROMREADTOCENTRY, &btoc[c]);
 		if (err == -1)
 		{
 //			pclog("read_toc: CDROMREADTOCENTRY failed on track %i\n", track);
-			return 0;
+			continue;
 		}
-//		pclog("read_toc: Track %02X - number %02X control %02X adr %02X address %02X %02X %02X %02X\n", track, toc[track].cdte_track, toc[track].cdte_ctrl, toc[track].cdte_adr, 0, toc[track].cdte_addr.msf.minute, toc[track].cdte_addr.msf.second, toc[track].cdte_addr.msf.frame);
+		c++;
+//		pclog("read_toc: %i Track %02X - number %02X control %02X adr %02X address %02X %02X %02X %02X\n", c, track, btoc[c].cdte_track, btoc[c].cdte_ctrl, btoc[c].cdte_adr, 0, btoc[c].cdte_addr.msf.minute, btoc[c].cdte_addr.msf.second, btoc[c].cdte_addr.msf.frame);
 	}
+
+	toc_tracks = c;
+
 	return 1;
 }
 
@@ -232,26 +238,28 @@ static int ioctl_ready(void)
 	struct cdrom_tochdr toc_hdr;
 	struct cdrom_tocentry toc_entry;
 	int err;
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
-	err = ioctl(fd, CDROMREADTOCHDR, &toc_hdr);
+	err = ioctl(ioctl_fd, CDROM_MEDIA_CHANGED, 0);
+	if (err)
+		tocvalid = 0;
+
+	if (tocvalid)
+		return 1;
+
+	err = ioctl(ioctl_fd, CDROMREADTOCHDR, &toc_hdr);
 	if (err == -1)
-	{
-		close(fd);
 		return 0;
-	}
+
 //	pclog("CDROMREADTOCHDR: start track=%i end track=%i\n", toc_hdr.cdth_trk0, toc_hdr.cdth_trk1);
 	toc_entry.cdte_track = toc_hdr.cdth_trk1;
 	toc_entry.cdte_format = CDROM_MSF;
-	err = ioctl(fd, CDROMREADTOCENTRY, &toc_entry);
+	err = ioctl(ioctl_fd, CDROMREADTOCENTRY, &toc_entry);
 	if (err == -1)
-	{
-		close(fd);
 		return 0;
-	}
+
 //	pclog("CDROMREADTOCENTRY: addr=%02i:%02i:%02i\n", toc_entry.cdte_addr.msf.minute, toc_entry.cdte_addr.msf.second, toc_entry.cdte_addr.msf.frame);
         if ((toc_entry.cdte_addr.msf.minute != toc[toc_hdr.cdth_trk1].cdte_addr.msf.minute) ||
             (toc_entry.cdte_addr.msf.second != toc[toc_hdr.cdth_trk1].cdte_addr.msf.second) ||
@@ -261,11 +269,9 @@ static int ioctl_ready(void)
 		int track;
                 ioctl_cd_state = CD_STOPPED;
 
-		tocvalid = read_toc(fd, toc);
-		close(fd);
-                return 1;
+		tocvalid = read_toc(ioctl_fd, toc);
         }
-	close(fd);
+
         return 1;
 }
 
@@ -275,16 +281,14 @@ static int ioctl_get_last_block(unsigned char starttrack, int msf, int maxlen, i
 	int lb = 0;
 	int tv = 0;
 	struct cdrom_tocentry lbtoc[100];
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
         ioctl_cd_state = CD_STOPPED;
 
-	tv = read_toc(fd, lbtoc);
-
-	close(fd);
+	if (!tocvalid)
+		tv = read_toc(ioctl_fd, lbtoc);
 
 	if (!tv)
 		return 0;
@@ -307,25 +311,20 @@ static int ioctl_medium_changed(void)
 	struct cdrom_tochdr toc_hdr;
 	struct cdrom_tocentry toc_entry;
 	int err;
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
-	err = ioctl(fd, CDROMREADTOCHDR, &toc_hdr);
+	err = ioctl(ioctl_fd, CDROMREADTOCHDR, &toc_hdr);
 	if (err == -1)
-	{
-		close(fd);
 		return 0;
-	}
+
 	toc_entry.cdte_track = toc_hdr.cdth_trk1;
 	toc_entry.cdte_format = CDROM_MSF;
-	err = ioctl(fd, CDROMREADTOCENTRY, &toc_entry);
+	err = ioctl(ioctl_fd, CDROMREADTOCENTRY, &toc_entry);
 	if (err == -1)
-	{
-		close(fd);
 		return 0;
-	}
+
 //	pclog("CDROMREADTOCENTRY: addr=%02i:%02i:%02i\n", toc_entry.cdte_addr.msf.minute, toc_entry.cdte_addr.msf.second, toc_entry.cdte_addr.msf.frame);
         if ((toc_entry.cdte_addr.msf.minute != toc[toc_hdr.cdth_trk1].cdte_addr.msf.minute) ||
             (toc_entry.cdte_addr.msf.second != toc[toc_hdr.cdth_trk1].cdte_addr.msf.second) ||
@@ -394,38 +393,29 @@ static uint8_t ioctl_getcurrentsubchannel(uint8_t *b, int msf)
 
 static void ioctl_eject(void)
 {
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
-
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return;
 
-	ioctl(fd, CDROMEJECT);
-
-	close(fd);
+	ioctl(ioctl_fd, CDROMEJECT);
 }
 
 static void ioctl_load(void)
 {
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
-
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return;
 
-	ioctl(fd, CDROMEJECT);
-
-	close(fd);
+	ioctl(ioctl_fd, CDROMEJECT);
 
 	cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 }
 
 static int ioctl_readsector(uint8_t *b, int sector)
 {
-	int cdrom = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
-        if (cdrom <= 0)
+        if (ioctl_fd <= 0)
 		return -1;
-        lseek(cdrom, sector*2048, SEEK_SET);
-        read(cdrom, b, 2048);
-	close(cdrom);
+
+        lseek(ioctl_fd, sector*2048, SEEK_SET);
+        read(ioctl_fd, b, 2048);
 
 	return 0;
 }
@@ -445,9 +435,8 @@ static void ioctl_readsector_raw(uint8_t *b, int sector)
 {
 	int err;
 	int imsf = lba_to_msf(sector);
-	int cdrom = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-        if (cdrom <= 0)
+        if (ioctl_fd <= 0)
 		return;
 
 	raw_read_params.msf = malloc(sizeof(struct cdrom_msf));
@@ -456,7 +445,7 @@ static void ioctl_readsector_raw(uint8_t *b, int sector)
 	raw_read_params.msf->cdmsf_min0 = (imsf >> 16) & 0xff;
 
 	/* This will read the actual raw sectors from the disc. */
-	err = ioctl(cdrom, CDROMREADRAW, (void *) &raw_read_params);
+	err = ioctl(ioctl_fd, CDROMREADRAW, (void *) &raw_read_params);
 	if (err == -1)
 	{
 		pclog("read_toc: CDROMREADTOCHDR failed\n");
@@ -464,8 +453,6 @@ static void ioctl_readsector_raw(uint8_t *b, int sector)
 	}
 
 	memcpy(b, raw_read_params.b, 2352);
-
-	close(cdrom);
 
 	free(raw_read_params.msf);
 }
@@ -476,16 +463,15 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
         long size;
         int c,d;
         uint32_t temp;
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
+	uint32_t last_address = 0;
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
         ioctl_cd_state = CD_STOPPED;
 
-	tocvalid = read_toc(fd, toc);
-
-	close(fd);
+	if (!tocvalid)
+		tocvalid = read_toc(ioctl_fd, toc);
 
 	if (!tocvalid)
 		return 4;
@@ -495,9 +481,9 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
         b[3] = last_track;
         d = 0;
 //pclog("Read TOC starttrack=%i\n", starttrack);
-        for (c = 1; c <= last_track; c++)
+        for (c = 0; c <= toc_tracks; c++)
         {
-                if (toc[c].cdte_track >= starttrack)
+                if (toc[c].cdte_track && toc[c].cdte_track >= starttrack)
                 {
                         d = c;
                         break;
@@ -505,17 +491,21 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
         }
         b[2] = toc[c].cdte_track;
         last_block = 0;
-        for (c = d; c <= last_track; c++)
+
+        for (c = d; c <= toc_tracks; c++)
         {
                 uint32_t address;
                 if ((len + 8) > maxlen)
 			break;
 //                pclog("Len %i max %i Track %02X - %02X %02X %02i:%02i:%02i %08X\n",len,maxlen,toc[c].cdte_track,toc[c].cdte_adr,toc[c].cdte_ctrl,toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame,MSFtoLBA(toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame));
+                address = MSFtoLBA(toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame);
+		if (address < last_address)
+			continue;
+		last_address = address;
                 b[len++] = 0; /*Reserved*/
                 b[len++] = (toc[c].cdte_adr << 4) | toc[c].cdte_ctrl;
                 b[len++] = toc[c].cdte_track;
                 b[len++] = 0; /*Reserved*/
-                address = MSFtoLBA(toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame);
                 if (address > last_block)
                         last_block = address;
 
@@ -537,6 +527,7 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
                 if (single)
 			break;
         }
+
         b[0] = (uint8_t)(((len-2) >> 8) & 0xff);
         b[1] = (uint8_t)((len-2) & 0xff);
 /*        pclog("Table of Contents (%i bytes) : \n", size);
@@ -554,25 +545,21 @@ static int ioctl_readtoc_session(unsigned char *b, int msf, int maxlen)
 	struct cdrom_multisession session;
         int len = 4;
 	int err;
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
 	session.addr_format = CDROM_MSF;
-	err = ioctl(fd, CDROMMULTISESSION, &session);
+	err = ioctl(ioctl_fd, CDROMMULTISESSION, &session);
 
 	if (err == -1)
-	{
-		close(fd);
 		return 0;
-	}
 
-        b[2] = 0;
-        b[3] = 0;
+        b[2] = 1;
+        b[3] = 1;
         b[len++] = 0; /*Reserved*/
-        b[len++] = (toc[0].cdte_adr << 4) | toc[0].cdte_ctrl;
-        b[len++] = toc[0].cdte_track;
+        b[len++] = (toc[first_track].cdte_adr << 4) | toc[first_track].cdte_ctrl;
+        b[len++] = toc[first_track].cdte_track;
         b[len++] = 0; /*Reserved*/
         if (msf)
         {
@@ -599,12 +586,13 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 	struct cdrom_tocentry toc2[100];
 	int track, err;
 	int len = 4;
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
+
 //pclog("read_toc\n");
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return 0;
 
-	err = ioctl(fd, CDROMREADTOCHDR, &toc_hdr);
+	err = ioctl(ioctl_fd, CDROMREADTOCHDR, &toc_hdr);
+
 	if (err == -1)
 	{
 		pclog("read_toc: CDROMREADTOCHDR failed\n");
@@ -622,19 +610,15 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 		if ((len + 11) > maxlen)
 		{
 			pclog("ioctl_readtocraw: This iteration would fill the buffer beyond the bounds, aborting...\n");
-			close(fd);
 			return len;
 		}
 
 		toc2[track].cdte_track = track;
 		toc2[track].cdte_format = CDROM_MSF;
-		err = ioctl(fd, CDROMREADTOCENTRY, &toc2[track]);
+		err = ioctl(ioctl_fd, CDROMREADTOCENTRY, &toc2[track]);
 		if (err == -1)
-		{
-//			pclog("read_toc: CDROMREADTOCENTRY failed on track %i\n", track);
-			close(fd);
 			return 0;
-		}
+
 //		pclog("read_toc: Track %02X - number %02X control %02X adr %02X address %02X %02X %02X %02X\n", track, toc[track].cdte_track, toc[track].cdte_ctrl, toc[track].cdte_adr, 0, toc[track].cdte_addr.msf.minute, toc[track].cdte_addr.msf.second, toc[track].cdte_addr.msf.frame);
 
 		b[len++] = toc2[track].cdte_track;
@@ -649,7 +633,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen)
 		b[len++] = toc2[track].cdte_addr.msf.second;
 		b[len++] = toc2[track].cdte_addr.msf.frame;
 	}
-	close(fd);
+
 	return len;
 }
 
@@ -674,31 +658,37 @@ static int ioctl_status()
 }
 void ioctl_reset()
 {
-	int fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
 //pclog("ioctl_reset: fd=%i\n", fd);
 	tocvalid = 0;
 
-	if (fd <= 0)
+	if (ioctl_fd <= 0)
 		return;
 
-	tocvalid = read_toc(fd, toc);
-
-	close(fd);
+	tocvalid = read_toc(ioctl_fd, toc);
 }
 
 void ioctl_set_drive(char d)
 {
+	ioctl_close();
 	atapi=&ioctl_atapi;
+	ioctl_open(d);
 }
 
 int ioctl_open(char d)
 {
 	atapi=&ioctl_atapi;
+	ioctl_fd = open("/dev/cdrom", O_RDONLY|O_NONBLOCK);
+
         return 0;
 }
 
 void ioctl_close(void)
 {
+	if (ioctl_fd)
+	{
+		close(ioctl_fd);
+		ioctl_fd = 0;
+	}
 }
 
 static void ioctl_exit(void)
