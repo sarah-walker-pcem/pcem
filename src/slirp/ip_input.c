@@ -40,6 +40,7 @@
 
 #include "slirp.h"
 #include "ip_icmp.h"
+#include <stdint.h>
 
 int ip_defttl;
 struct ipstat ipstat;
