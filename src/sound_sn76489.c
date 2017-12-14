@@ -92,7 +92,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0:
                         sn76489->freqlo[3] = data & 0xf;
                         sn76489->latch[3] = (sn76489->freqlo[3] | (sn76489->freqhi[3] << 4)) << 6;
-                        if (sn76489->extra_divide)
+                        if (!sn76489->extra_divide)
                                 sn76489->latch[3] &= 0x3ff;
                         if (!sn76489->latch[3])
                                 sn76489->latch[3] = (sn76489->extra_divide ? 2048 : 1024) << 6;
@@ -105,7 +105,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x20:
                         sn76489->freqlo[2] = data & 0xf;
                         sn76489->latch[2] = (sn76489->freqlo[2] | (sn76489->freqhi[2] << 4)) << 6;
-                        if (sn76489->extra_divide)
+                        if (!sn76489->extra_divide)
                                 sn76489->latch[2] &= 0x3ff;
                         if (!sn76489->latch[2])
                                 sn76489->latch[2] = (sn76489->extra_divide ? 2048 : 1024) << 6;
@@ -118,7 +118,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         case 0x40:
                         sn76489->freqlo[1] = data & 0xf;
                         sn76489->latch[1] = (sn76489->freqlo[1] | (sn76489->freqhi[1] << 4)) << 6;
-                        if (sn76489->extra_divide)
+                        if (!sn76489->extra_divide)
                                 sn76489->latch[1] &= 0x3ff;
                         if (!sn76489->latch[1])
                                 sn76489->latch[1] = (sn76489->extra_divide ? 2048 : 1024) << 6;
@@ -134,7 +134,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
-                        if (sn76489->extra_divide)
+                        if (!sn76489->extra_divide)
                                 sn76489->latch[0] &= 0x3ff;
                         if (!sn76489->latch[0])
                                 sn76489->latch[0] = (sn76489->extra_divide ? 2048 : 1024) << 6;
@@ -161,7 +161,7 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                 {
                         sn76489->freqhi[sn76489->lasttone] = data & 0x7F;
                         freq = sn76489->freqlo[sn76489->lasttone] | (sn76489->freqhi[sn76489->lasttone] << 4);
-                        if (sn76489->extra_divide)
+                        if (!sn76489->extra_divide)
                                 freq &= 0x3ff;
                         if (!freq)
                                 freq = sn76489->extra_divide ? 2048 : 1024;
