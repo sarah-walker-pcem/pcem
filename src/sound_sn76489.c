@@ -134,8 +134,6 @@ void sn76489_write(uint16_t addr, uint8_t data, void *p)
                         sn76489->noise = data & 0xf;
                         if ((data & 3) == 3) sn76489->latch[0] = sn76489->latch[1];
                         else                 sn76489->latch[0] = 0x400 << (data & 3);
-                        if (!sn76489->extra_divide)
-                                sn76489->latch[0] &= 0x3ff;
                         if (!sn76489->latch[0])
                                 sn76489->latch[0] = (sn76489->extra_divide ? 2048 : 1024) << 6;
                         break;
