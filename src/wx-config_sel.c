@@ -32,7 +32,7 @@ static void select_config(void* hdlg, char* name)
 static void config_list_update(void* hdlg)
 {
         char s[512];
-        int num, c, p;
+        int num, p;
         void* h;
 
         strcpy(s, configs_path);
@@ -46,22 +46,6 @@ static void config_list_update(void* hdlg)
         wx_dlgdirlist(hdlg, s, WX_ID("IDC_LIST"), 0, 0);
 
         num = wx_sendmessage(h, WX_LB_GETCOUNT, 0, 0);
-
-        for (c = 0; c < num; c++)
-        {
-                char *ext;
-
-                wx_sendmessage(h, WX_LB_GETTEXT, c, (LONG_PARAM)s);
-                ext = get_extension(s);
-                if (ext && ext[0])
-                {
-                        ext--;
-                        *ext = 0;
-                }
-
-                wx_sendmessage(h, WX_LB_DELETESTRING, c, 0);
-                wx_sendmessage(h, WX_LB_INSERTSTRING, c, (LONG_PARAM)s);
-        }
 
         if (num > 0)
         {

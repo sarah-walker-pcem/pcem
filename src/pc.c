@@ -249,22 +249,20 @@ void initpc(int argc, char *argv[])
                 }
                 else if (!strcasecmp(argv[c], "--config"))
                 {
-                        int d;
+                        char *ext;
                         
                         if ((c+1) == argc)
                                 break;
                         strncpy(config_file_default, argv[c+1], 256);
                         strcpy(config_name, get_filename(config_file_default));
                         
-                        for (d = 0; d < strlen(config_name); d++)
+                        ext = get_extension(config_name);
+                        if (ext && ext[0])
                         {
-                                if (config_name[d] == '.')
-                                {
-                                        config_name[d] = 0;
-                                        break;
-                                }
+                                ext--;
+                                *ext = 0;
                         }
-
+                        
                         config_override = 1;
                         c++;
                 }
