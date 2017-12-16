@@ -599,15 +599,11 @@ void t3100e_recalcattrs(t3100e_t *t3100e)
 		{
 			blinkcols[n][0] = normcols[n][0] = amber;
 			blinkcols[n][1] = normcols[n][1] = black;
-			blinkcols[n+128][0] = normcols[n+128][0] = amber;
-			blinkcols[n+128][1] = normcols[n+128][1] = black;
 		}
 		else				/* Normal */
 		{
 			blinkcols[n][0] = normcols[n][0] = black;
 			blinkcols[n][1] = normcols[n][1] = amber;
-			blinkcols[n+128][0] = normcols[n+128][0] = black;
-			blinkcols[n+128][1] = normcols[n+128][1] = amber;
 		}
 		if (t3100e->attrmap & 8) boldcols[n] = 1;	/* Bold */
 	}
