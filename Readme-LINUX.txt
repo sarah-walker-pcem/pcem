@@ -1,31 +1,31 @@
-PCem v8.1 Linux supplement
+PCem v13 Linux supplement
 
 
 You will need the following libraries :
 
-Allegro 4.x
+SDL2
+wxWidgets 3.x
 OpenAL
-ALut
 
 and their dependencies.
 
 Open a terminal window, navigate to the PCem directory then enter
 
-./configure
+./configure --enable-release
 make
 
 then ./pcem to run.
 
+The Linux version stores BIOS ROM images, configuration files, and other data in ~/.pcem
 
-The Linux port is currently entirely unpolished, and mainly exists as a starting point for 
-anyone who wants to make a better port.
+configure options are :
+  --enable-release-build : Generate release build. Recommended for regular use.
+  --enable-debug         : Compile with debugging enabled.
+  --enable-networking    : Build with networking support.
+  --enable-alsa          : Build with support for MIDI output through ALSA. Requires libasound.
 
-The menu is not available all the time. Press CTRL-ALT-PGDN to open it.
 
-The mouse does not work very well, at least on my machine. This is most likely an Allegro issue.
-
-Fullscreen mode is not present.
-
-Video acceleration is not used at all, so performance is inferior to the Windows version.
+The menu is a pop-up menu in the Linux port. Right-click on the main window when mouse is not
+captured.
 
 CD-ROM support currently only accesses /dev/cdrom. It has not been heavily tested.
