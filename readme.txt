@@ -1,6 +1,15 @@
-PCem v13
+PCem v13.1
 
 PCem is licensed under the GPL, see COPYING for more details.
+
+Changes since v13:
+
+- Minor recompiler tweak, fixed slowdown in some situations (mainly seen on Windows 9x just after booting)
+- Fixed issues with PCJr/Tandy sound on some Sierra games
+- Fixed plasma display on Toshiba 3100e
+- Fixed handling of configurations with full stops in the name
+- Fixed sound output gain when using OpenAL Soft
+- Switched to using OpenAL Soft by default
 
 Changes since v12:
 
@@ -603,7 +612,7 @@ ROM files needed:
 
 
 Olivetti GO481 (Paradise PVGA1A)
-512kb VRAM, supports up to 8-bit colour.
+256kb VRAM, supports up to 8-bit colour.
 
 ROM files needed :
  oli_go481_lo.bin
