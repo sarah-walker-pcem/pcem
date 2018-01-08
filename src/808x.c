@@ -628,7 +628,6 @@ void resetx86()
         stack32=0;
 //        i86_Reset();
 //        cs=0xFFFF0;
-        cpu_state.pc=0;
         msw=0;
         if (is486)
                 cr0 = 1 << 30;
@@ -639,8 +638,18 @@ void resetx86()
         cr4 = 0;
         eflags=0;
         cgate32=0;
-        loadcs(0xFFFF);
-        rammask = AT ? 0xFFFFFFFF : 0xfffff;
+        if (AT)
+        {
+                loadcs(0xF000);
+                cpu_state.pc = 0xFFF0;
+                rammask = cpu_16bitbus ? 0xFFFFFF : 0xFFFFFFFF;
+        }
+        else
+        {
+                loadcs(0xFFFF);
+                cpu_state.pc = 0;
+                rammask = 0xfffff;
+        }
         idt.base = 0;
         flags=2;
         makeznptable();
@@ -667,13 +676,23 @@ void softresetx86()
         cpu_cur_status = 0;
 //        i86_Reset();
 //        cs=0xFFFF0;
-        cpu_state.pc=0;
         msw=0;
         cr0=0;
         cr4 = 0;
         eflags=0;
         cgate32=0;
-        loadcs(0xFFFF);
+        if (AT)
+        {
+                loadcs(0xF000);
+                cpu_state.pc = 0xFFF0;
+                rammask = cpu_16bitbus ? 0xFFFFFF : 0xFFFFFFFF;
+        }
+        else
+        {
+                loadcs(0xFFFF);
+                cpu_state.pc = 0;
+                rammask = 0xfffff;
+        }
         //rammask=0xFFFFFFFF;
         flags=2;
         idt.base = 0;
