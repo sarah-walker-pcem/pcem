@@ -136,7 +136,7 @@ void x86_doabrt(int x86_abrt)
                 return;
         }
         
-        if (cpu_state.abrt) return;
+        if (cpu_state.abrt || x86_was_reset) return;
         
         if (intgatesize == 16)
         {
