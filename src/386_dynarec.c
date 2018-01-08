@@ -543,6 +543,7 @@ void exec386_dynarec(int cycs)
                 if (!CACHE_ON()) /*Interpret block*/
                 {
                         cpu_block_end = 0;
+                        x86_was_reset = 0;
 //                        if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
                         while (!cpu_block_end)
                         {
