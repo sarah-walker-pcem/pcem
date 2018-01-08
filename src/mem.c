@@ -2272,12 +2272,12 @@ void mem_a20_recalc()
 //        pclog("A20 recalc %i %i\n", state, mem_a20_state);
         if (state && !mem_a20_state)
         {
-                rammask = 0xffffffff;
+                rammask = (AT && cpu_16bitbus) ? 0xffffff : 0xffffffff;
                 flushmmucache();
         }
         else if (!state && mem_a20_state)
         {
-                rammask = 0xffefffff;
+                rammask = (AT && cpu_16bitbus) ? 0xefffff : 0xffefffff;
                 flushmmucache();
         }
 //        pclog("rammask now %08X\n", rammask);
