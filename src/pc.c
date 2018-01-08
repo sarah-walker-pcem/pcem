@@ -207,7 +207,6 @@ void onesec()
 
 void pc_reset()
 {
-        cpu_set();
         resetx86();
         //timer_reset();
         dma_reset();
@@ -358,6 +357,7 @@ void initpc(int argc, char *argv[])
 
 void resetpc()
 {
+        cpu_set();
         pc_reset();
 //        cpuspeed2=(AT)?2:1;
 //        atfullspeed=0;
@@ -383,6 +383,7 @@ void resetpchard()
         
         timer_reset();
         sound_reset();
+        cpu_set();
         mem_resize();
         fdc_init();
 	disc_reset();
