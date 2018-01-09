@@ -22,6 +22,7 @@
 #include "gameport.h"
 #include "sound_gus.h"
 #include "ide.h"
+#include "io.h"
 #include "keyboard.h"
 #include "keyboard_at.h"
 #include "lpt.h"
@@ -289,6 +290,7 @@ void initpc(int argc, char *argv[])
         
         timer_reset();
         sound_reset();
+        io_init();
 	fdc_init();
 	disc_init();
         fdi_init();
@@ -383,6 +385,7 @@ void resetpchard()
         
         timer_reset();
         sound_reset();
+        io_init();
         cpu_set();
         mem_resize();
         fdc_init();
