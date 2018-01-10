@@ -58,6 +58,8 @@ typedef struct sb_dsp_t
         int asp_data_len;
         
         int wb_time, wb_full;
+        
+        int busy_count;
 
         int record_pos_read;
         int record_pos_write;
