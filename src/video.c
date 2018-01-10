@@ -42,6 +42,7 @@
 #include "vid_vga.h"
 #include "vid_wy700.h"
 #include "vid_t3100e.h"
+#include "vid_t1000.h"
 
 typedef struct
 {
@@ -316,6 +317,10 @@ void video_init()
 		case ROM_T3100E:
                 device_add(&t3100e_device);
                 return;
+
+		case ROM_T1000:
+                device_add(&t1000_device);
+                return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);
 }
@@ -393,7 +398,7 @@ void loadfont(char *s, int format)
 		break;
 		default:
 		case 2:	/* CGA */
-                for (c=0;c<256;c++)
+                for (c=0;c<2048;c++)	/* Allow up to 2048 chars */
                 {
                        	for (d=0;d<8;d++)
                         {

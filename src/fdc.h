@@ -11,6 +11,7 @@ void fdc_set_dskchg_activelow();
 void fdc_3f1_enable(int enable);
 void fdc_set_ps1();
 int fdc_get_bitcell_period();
+uint8_t fdc_read(uint16_t addr, void *priv);
 
 /* A few functions to communicate between Super I/O chips and the FDC. */
 void fdc_update_is_nsc(int is_nsc);

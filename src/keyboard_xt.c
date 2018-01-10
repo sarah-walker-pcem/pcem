@@ -8,6 +8,7 @@
 #include "sound_speaker.h"
 #include "tandy_eeprom.h"
 #include "timer.h"
+#include "t1000.h"
 
 #include "keyboard.h"
 #include "keyboard_xt.h"
@@ -56,6 +57,36 @@ void keyboard_xt_poll()
 
 void keyboard_xt_adddata(uint8_t val)
 {
+	/* Test for T1000 'Fn' key (Right Alt / Right Ctrl) */
+	if (romset == ROM_T1000)
+	{
+	 	if (pcem_key[0xb8] || pcem_key[0x9D])	/* 'Fn' pressed */
+		{
+			t1000_syskey(0x00, 0x04, 0x00);	/* Set 'Fn' indicator */
+			switch (val)
+			{
+				case 0x45: /* Num Lock => toggle numpad */
+					   t1000_syskey(0x00, 0x00, 0x10); break;
+				case 0x47: /* Home => internal display */
+					   t1000_syskey(0x40, 0x00, 0x00); break;
+				case 0x49: /* PgDn => turbo on */
+					   t1000_syskey(0x80, 0x00, 0x00); break;
+				case 0x4D: /* Right => toggle LCD font */
+					   t1000_syskey(0x00, 0x00, 0x20); break;
+				case 0x4F: /* End => external display */
+					   t1000_syskey(0x00, 0x40, 0x00); break;
+				case 0x51: /* PgDn => turbo off */
+					   t1000_syskey(0x00, 0x80, 0x00); break;
+				case 0x54: /* SysRQ => toggle window */
+					   t1000_syskey(0x00, 0x00, 0x08); break;
+			}
+		}
+		else
+		{
+			t1000_syskey(0x04, 0x00, 0x00);	/* Reset 'Fn' indicator */
+		}
+	}
+
         key_queue[key_queue_end] = val;
         pclog("keyboard_xt : %02X added to key queue at %i\n", val, key_queue_end);
         key_queue_end = (key_queue_end + 1) & 0xf;

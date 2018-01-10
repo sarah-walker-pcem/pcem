@@ -762,6 +762,16 @@ int loadbios()
                 fread(rom,65536,1,f);
                 fclose(f);
                 return 1;
+
+                case ROM_T1000:
+                loadfont("t1000/t1000font.rom", 2);
+                f=romfopen("t1000/t1000.rom","rb");
+                if (!f) break;
+                fread(rom, 0x8000,1,f);
+		memcpy(rom + 0x8000, rom, 0x8000);
+                biosmask = 0x7fff;
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

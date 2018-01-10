@@ -2,6 +2,7 @@
 #include "ibm.h"
 #include "io.h"
 #include "nvr.h"
+#include "nvr_tc8521.h"
 #include "pic.h"
 #include "timer.h"
 #include "rtc.h"
@@ -9,6 +10,7 @@
 #include "config.h"
 #include "model.h"
 #include "nmi.h"
+#include "t1000.h"
 
 int oldromset;
 int nvrmask=63;
@@ -286,6 +288,10 @@ void loadnvr()
                 case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_T3100E:           f = nvrfopen("t3100e.nvr",           "rb"); break;
+                case ROM_T1000:            tc8521_loadnvr();
+					   t1000_configsys_loadnvr();
+					   t1000_emsboard_loadnvr();
+					   return;
 
                 default: return;
         }
@@ -359,6 +365,10 @@ void savenvr()
                 case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "wb"); break;
                 case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "wb"); break;
                 case ROM_T3100E:           f = nvrfopen("t3100e.nvr",           "wb"); break;
+		case ROM_T1000:		   tc8521_savenvr();
+					   t1000_configsys_savenvr();
+					   t1000_emsboard_savenvr();
+					   return;
                 default: return;
         }
         fwrite(nvrram,128,1,f);

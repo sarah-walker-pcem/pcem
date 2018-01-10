@@ -19,16 +19,16 @@ dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c f
 hdd.c hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430vx.c ide.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
 joystick_tm_fcs.c keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 laserxt.c lpt.c lpt_dac.c lpt_dss.c mca.c mcr.c mem.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
-opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c rom.c rtc.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
+opti495.c paths.c pc.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c nvr_tc8521.c rom.c rtc.c rtc_tc8521.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 serial.c sio.c sis496.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \
-t3100e.c \
+t1000.c t3100e.c \
 timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
 vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c \
 vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti067.c vid_paradise.c vid_pc200.c \
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
-vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
+vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
 x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
 dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
