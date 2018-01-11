@@ -47,10 +47,19 @@
 #include "io.h"
 #include "ne2000.h"
 #include "pic.h"
+#include "pci.h"
 #include "timer.h"
 
 //THIS IS THE DEFAULT MAC ADDRESS .... so it wont place nice with multiple VMs. YET.
 uint8_t maclocal[6] = {0xac, 0xde, 0x48, 0x88, 0xbb, 0xaa};
+
+typedef enum
+{
+        NE2000_NE2000,
+        NE2000_RTL8029AS
+} ne2000_type;
+
+#define NE2000_PCI_IRQ -1
 
 #define NETBLOCKING 0		//we won't block our pcap
 
@@ -250,6 +259,19 @@ typedef struct ne2000_t
         int    base_irq;
         int    tx_timer_index;
         int    tx_timer_active;
+        
+        ne2000_type type;
+        
+        /*PCI stuff*/
+        int is_pci;
+        int card;
+        uint32_t base_addr;
+        uint8_t pci_command;
+        uint8_t int_line;
+        
+        /*RTL8029AS registers*/
+        uint8_t config0, config2, config3;
+        uint8_t _9346cr;
 } ne2000_t;
 
 static void ne2000_tx_event(int val, void *p);
@@ -260,6 +282,23 @@ static void ne2000_setirq(ne2000_t *ne2000, int irq)
 {
         ne2000->base_irq = irq;
 }
+
+static void ne2000_raise_irq(ne2000_t *ne2000)
+{
+        if (ne2000->is_pci)
+                pci_set_irq(ne2000->card, PCI_INTA);
+        else
+                picint(1 << ne2000->base_irq);
+}
+
+static void ne2000_lower_irq(ne2000_t *ne2000)
+{
+        if (ne2000->is_pci)
+                pci_clear_irq(ne2000->card, PCI_INTA);
+        else
+                picintc(1 << ne2000->base_irq);
+}
+
 //
 // reset - restore state to power-up, cancelling all i/o
 //
@@ -328,8 +367,9 @@ static void ne2000_reset(int type, void *p)
         ne2000->CR.rdma_cmd  = 4;
         ne2000->ISR.reset    = 1;
         ne2000->DCR.longaddr = 1;
-        picint(1 << ne2000->base_irq);
-        picintc(1 << ne2000->base_irq);
+        ne2000_raise_irq(ne2000);
+        ne2000_lower_irq(ne2000);        
+        
         //DEV_pic_lower_irq(ne2000->base_irq);
 }
 
@@ -416,7 +456,7 @@ uint16_t ne2000_dma_read(int io_len, void *p)
                 ne2000->ISR.rdma_done = 1;
                 if (ne2000->IMR.rdma_inte)
                 {
-			picint(1 << ne2000->base_irq);
+			ne2000_raise_irq(ne2000);
 		}
 	}
 
@@ -465,7 +505,7 @@ void ne2000_dma_write(int io_len, void *p)
                 ne2000->ISR.rdma_done = 1;
                 if (ne2000->IMR.rdma_inte)
                 {
-                        picint(1 << ne2000->base_irq);
+                        ne2000_raise_irq(ne2000);
                 }
         }
 }
@@ -731,8 +771,35 @@ uint8_t ne2000_read(uint16_t address, void *p)
                         }
                         break;
 
-                        default:
-                        fatal("ne2000 unknown value of pgsel in read - %d\n", ne2000->CR.pgsel);
+                        case 0x03:
+                        if (ne2000->type != NE2000_RTL8029AS)
+                                fatal("ne2000 unknown value of pgsel in read - %d\n", ne2000->CR.pgsel);
+#ifdef NE2000_DEBUG
+                        pclog("page 3 read from port %04x\n", address);                        
+#endif
+                        switch (address)
+                        {
+                                case 0x1: /*9346CR*/
+                                return ne2000->_9346cr;
+                                
+                                case 0x3: /*CONFIG0*/
+                                return 0x00; /*Cable not BNC*/
+                                
+                                case 0x5: /*CONFIG2*/
+                                return ne2000->config2 & 0xe0; /*No boot ROM*/
+                                
+                                case 0x6: /*CONFIG3*/
+                                return ne2000->config3 & 0x46;
+                                
+                                case 0xe: /*8029ASID0*/
+                                return 0x29;
+                                
+                                case 0xf: /*8029ASID1*/
+                                return 0x08;
+                        }
+
+                        pclog("reserved read - page 3, 0x%02x\n", address);
+                        break;
                 }
         }
         
@@ -828,7 +895,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 if (ne2000->IMR.tx_inte && !ne2000->ISR.pkt_tx)
                                 {
                                         //LOG_MSG("tx complete interrupt");
-                                        picint(1 << ne2000->base_irq);
+                                        ne2000_raise_irq(ne2000);
                                 }
                                 ne2000->ISR.pkt_tx = 1;
                         }
@@ -889,7 +956,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         ne2000->ISR.rdma_done = 1;
                         if (ne2000->IMR.rdma_inte)
                         {
-                                picint(1 << ne2000->base_irq);
+                                ne2000_raise_irq(ne2000);
                                 //DEV_pic_raise_irq(ne2000->base_irq);
                         }
                 }
@@ -960,7 +1027,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                         (ne2000->IMR.tx_inte << 1) |
                                         (ne2000->IMR.rx_inte));
                                 if (value == 0)
-                                        picintc(1 << ne2000->base_irq);
+                                        ne2000_lower_irq(ne2000);
                                 //DEV_pic_lower_irq(ne2000->base_irq);
                                 break;
 
@@ -1092,7 +1159,7 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
 #ifdef NE2000_DEBUG
                                         pclog("tx irq retrigger\n");
 #endif
-                                        picint(1 << ne2000->base_irq);
+                                        ne2000_raise_irq(ne2000);
                                 }
                                 break;
                         }
@@ -1194,11 +1261,36 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                         }
                         break;
 
-                        default:
-                        //fatal("ne2K: unknown value of pgsel in write - %d\n", ne2000->CR.pgsel);
+                        case 0x03:
+                        if (ne2000->type != NE2000_RTL8029AS)
+                        {
+                                pclog("ne2000 unknown value of pgsel in write - %d\n", ne2000->CR.pgsel);
+                                break;
+                        }
 #ifdef NE2000_DEBUG
-                        pclog("ne2000 unknown value of pgsel in write - %d\n", ne2000->CR.pgsel);
+                        pclog("page 3 write to port %04x\n", address);
 #endif
+                        switch (address)
+                        {
+                                case 0x1: /*9346CR*/
+                                ne2000->_9346cr = value & 0xfe;
+                                break;
+                                
+                                case 0x5: /*CONFIG2*/
+                                ne2000->config2 = value & 0xe0;
+                                break;
+                                
+                                case 0x6: /*CONFIG3*/
+                                ne2000->config3 = value & 0x46;
+                                break;
+                                
+                                case 0x9: /*HLTCLK*/
+                                break;
+                                
+                                default:
+                                pclog("reserved write - page 3, 0x%02x\n", address);
+                                break;
+                        }
                         break;
                 }
         }
@@ -1376,7 +1468,7 @@ void ne2000_rx_frame(void *p, const void *buf, int io_len)
         if (ne2000->IMR.rx_inte)
         {
                 //LOG_MSG("packet rx interrupt");
-                picint(1 << ne2000->base_irq);
+                ne2000_raise_irq(ne2000);
                 //DEV_pic_raise_irq(ne2000->base_irq);
         }
         //else LOG_MSG("no packet rx interrupt");
@@ -1394,7 +1486,7 @@ void ne2000_tx_timer(void *p)
         if (ne2000->IMR.tx_inte && !ne2000->ISR.pkt_tx)
         {
 		//LOG_MSG("tx complete interrupt");
-                picint(1 << ne2000->base_irq);
+                ne2000_raise_irq(ne2000);
                 //DEV_pic_raise_irq(ne2000->base_irq);
         }
         //else 	  LOG_MSG("no tx complete interrupt");
@@ -1407,6 +1499,110 @@ static void ne2000_tx_event(int val, void *p)
         ne2000_t *ne2000 = (ne2000_t *)p;
         ne2000_tx_timer(ne2000);
 }
+
+static void ne2000_pci_add(ne2000_t *ne2000)
+{
+        io_sethandler(ne2000->base_addr,      0x0010, ne2000_read, NULL, NULL, ne2000_write, NULL, NULL, ne2000);
+        io_sethandler(ne2000->base_addr+0x10, 0x000f, ne2000_asic_read_b, ne2000_asic_read_w, NULL, ne2000_asic_write_b, ne2000_asic_write_w, NULL, ne2000);
+        io_sethandler(ne2000->base_addr+0x1f, 0x0001, ne2000_reset_read, NULL, NULL, ne2000_reset_write, NULL, NULL, ne2000);
+}
+
+static void ne2000_pci_remove(ne2000_t *ne2000)
+{
+        io_removehandler(ne2000->base_addr,      0x0010, ne2000_read, NULL, NULL, ne2000_write, NULL, NULL, ne2000);
+        io_removehandler(ne2000->base_addr+0x10, 0x000f, ne2000_asic_read_b, ne2000_asic_read_w, NULL, ne2000_asic_write_b, ne2000_asic_write_w, NULL, ne2000);
+        io_removehandler(ne2000->base_addr+0x1f, 0x0001, ne2000_reset_read, NULL, NULL, ne2000_reset_write, NULL, NULL, ne2000);
+}
+
+static uint8_t rtl8029_pci_read(int func, int addr, void *p)
+{
+        ne2000_t *ne2000 = (ne2000_t *)p;
+
+        if (func)
+                return 0;
+
+//        pclog("RTL8029 PCI read %08X PC=%08x\n", addr, cpu_state.pc);
+
+        switch (addr)
+        {
+                case 0x00: return 0xec; /*Realtek*/
+                case 0x01: return 0x10;
+                
+                case 0x02: return 0x29; /*RTL8029AS*/
+                case 0x03: return 0x80;
+                
+                case 0x04: return ne2000->pci_command;
+                
+                case 0x07: return 0x02;
+
+                case 0x08: return 0; /*Revision ID*/
+                case 0x09: return 0; /*Programming interface*/
+                case 0x0a: return 0; /*Ethernet controller*/
+                case 0x0b: return 0x02; /*Network controller*/
+                
+                case 0x10: return 0x01 | (ne2000->base_addr & 0xe0); /*memBaseAddr*/
+                case 0x11: return ne2000->base_addr >> 8;
+                case 0x12: return ne2000->base_addr >> 16;
+                case 0x13: return ne2000->base_addr >> 24;
+
+                case 0x2c: return 0xec; /*Subsystem vendor - Realtek*/
+                case 0x2d: return 0x10;
+                
+                case 0x2e: return 0x29; /*Subsystem ID - RTL8029AS*/
+                case 0x2f: return 0x80;
+
+                case 0x3c: return ne2000->int_line;
+                case 0x3d: return 0x01; /*INTA*/
+        }
+        return 0;
+}
+
+static void rtl8029_pci_write(int func, int addr, uint8_t val, void *p)
+{
+        ne2000_t *ne2000 = (ne2000_t *)p;
+        
+        if (func)
+                return;
+
+//        pclog("RTL8029 PCI write %04X %02X PC=%08x\n", addr, val, cpu_state.pc);
+
+        switch (addr)
+        {
+                case 0x04:
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_remove(ne2000);
+                ne2000->pci_command = val & 3;
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_add(ne2000);
+                break;
+
+                case 0x10:
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_remove(ne2000);
+                ne2000->base_addr = (ne2000->base_addr & 0xffffff00) | (val & 0xe0);
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_add(ne2000);
+                break;
+                case 0x11:
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_remove(ne2000);
+                ne2000->base_addr = (ne2000->base_addr & 0xffff00e0) | (val << 8);
+                if (ne2000->pci_command & PCI_COMMAND_IO)
+                        ne2000_pci_add(ne2000);
+                break;
+                case 0x12:
+                ne2000->base_addr = (ne2000->base_addr & 0xff00ffe0) | (val << 16);
+                break;
+                case 0x13:
+                ne2000->base_addr = (ne2000->base_addr & 0x00ffffe0) | (val << 24);
+                break;
+                
+                case 0x3c:
+                ne2000->int_line = val;
+                break;
+        }
+}
+
 
 static void ne2000_poller(void *p)
 {
@@ -1462,16 +1658,13 @@ static void ne2000_poller(void *p)
 }
 
 
-void *ne2000_init()
+void *ne2000_common_init()
 {
         struct in_addr myaddr; 
         int rc;
 
         ne2000_t *ne2000 = malloc(sizeof(ne2000_t));
         memset(ne2000, 0, sizeof(ne2000_t));
-
-        uint16_t addr = device_get_config_int("addr");
-        ne2000_setirq(ne2000, device_get_config_int("irq"));
 
         //net_type
         //0 pcap
@@ -1491,15 +1684,12 @@ void *ne2000_init()
 	net_is_pcap = 0;
 #endif
 
-        io_sethandler(addr, 0x0010, ne2000_read, NULL, NULL, ne2000_write, NULL, NULL, ne2000);
-        io_sethandler(addr+0x10, 0x0010, ne2000_asic_read_b, ne2000_asic_read_w, NULL, ne2000_asic_write_b, ne2000_asic_write_w, NULL, ne2000);
-        io_sethandler(addr+0x1f, 0x0001, ne2000_reset_read, NULL, NULL, ne2000_reset_write, NULL, NULL, ne2000);
         memcpy(ne2000->physaddr, maclocal, 6);
 
         ne2000_reset(BX_RESET_HARDWARE, ne2000);
         vlan_handler(ne2000_poller, ne2000);
 
-        pclog("ne2000 init 0x%X %d\tslirp is %d net_is_pcap is %d\n",addr,device_get_config_int("irq"),net_is_slirp,net_is_pcap);
+        pclog("ne2000 init\tslirp is %d net_is_pcap is %d\n",net_is_slirp,net_is_pcap);
 
         //need a switch statment for more network types.
 
@@ -1665,6 +1855,37 @@ void *ne2000_init()
         return ne2000;
 }
 
+void *ne2000_init()
+{
+        ne2000_t *ne2000 = ne2000_common_init();
+        uint16_t addr;
+
+        ne2000->type = NE2000_NE2000;
+                
+        ne2000_setirq(ne2000, device_get_config_int("irq"));
+
+        addr = device_get_config_int("addr");
+        io_sethandler(addr, 0x0010, ne2000_read, NULL, NULL, ne2000_write, NULL, NULL, ne2000);
+        io_sethandler(addr+0x10, 0x0010, ne2000_asic_read_b, ne2000_asic_read_w, NULL, ne2000_asic_write_b, ne2000_asic_write_w, NULL, ne2000);
+        io_sethandler(addr+0x1f, 0x0001, ne2000_reset_read, NULL, NULL, ne2000_reset_write, NULL, NULL, ne2000);
+        
+        return ne2000;
+}
+
+void *rtl8029_init()
+{
+        ne2000_t *ne2000 = ne2000_common_init();
+
+        ne2000->is_pci = 1;
+        ne2000->type = NE2000_RTL8029AS;
+        
+        ne2000->card = pci_add(rtl8029_pci_read, rtl8029_pci_write, ne2000);
+
+        ne2000_setirq(ne2000, NE2000_PCI_IRQ);
+        
+        return ne2000;
+}
+
 void ne2000_close(void *p)
 {
         ne2000_t *ne2000 = (ne2000_t *)p;
@@ -1774,6 +1995,19 @@ device_t ne2000_device =
         NULL,
         NULL,
         ne2000_config
+};
+
+device_t rtl8029as_device =
+{
+        "Realtek RTL8029AS",
+        DEVICE_PCI,
+        rtl8029_init,
+        ne2000_close,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
 };
 
 

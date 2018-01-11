@@ -26,8 +26,9 @@ typedef struct
 
 static NETWORK_CARD network_cards[] =
 {
-        {"None",                  "",       NULL},
-        {"Novell NE2000",         "ne2000", &ne2000_device},
+        {"None",                  "",          NULL},
+        {"Novell NE2000",         "ne2000",    &ne2000_device},
+        {"Realtek RTL8029AS",     "rtl8029as", &rtl8029as_device},
         {"", "", NULL}
 };
 

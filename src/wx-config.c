@@ -228,20 +228,24 @@ static void recalc_net_list(void *hdlg, int model)
 {
         void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
         int c = 0, d = 0;
-        int set_zero = 0;
+        int found_card = 0;
 
         wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
 
         while (1)
         {
                 char *s = network_card_getname(c);
+                device_t *dev;
 
                 if (!s[0])
                         break;
 
                 settings_network_to_list[c] = d;
-                        
-                if (network_card_available(c))
+
+                dev = network_card_getdevice(c);
+
+                if (network_card_available(c) &&
+                    (!dev || (models[model].flags & MODEL_PCI) || !(dev->flags & DEVICE_PCI)))
                 {
                         device_t *network_dev = network_card_getdevice(c);
 
@@ -249,18 +253,19 @@ static void recalc_net_list(void *hdlg, int model)
                         {
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                                 settings_list_to_network[d] = c;
+                                if (c == network_card_current)
+                                {
+                                        wx_sendmessage(h, WX_CB_SETCURSEL, d, 0);
+                                        found_card = 1;
+                                }
                                 d++;
                         }
-                        else if (c == network_card_current)
-                                set_zero = 1;
                 }
 
                 c++;
         }
-        if (set_zero)
+        if (!found_card)
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-        else
-                wx_sendmessage(h, WX_CB_SETCURSEL, settings_network_to_list[network_card_current], 0);
 }
 #endif
 
