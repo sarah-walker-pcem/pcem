@@ -500,14 +500,19 @@ static int is_track_audio(uint32_t pos)
         if (!tocvalid)
                 return 0;
 
-        for (c = toc.FirstTrack; c < toc.LastTrack; c++)
+        for (c = 0; toc.TrackData[c].TrackNumber != 0xaa; c++)
         {
                 uint32_t track_address = toc.TrackData[c].Address[3] +
                                          (toc.TrackData[c].Address[2] * 75) +
                                          (toc.TrackData[c].Address[1] * 75 * 60);
 
-                if (track_address <= pos)
+                if (toc.TrackData[c].TrackNumber >= toc.FirstTrack &&
+                                toc.TrackData[c].TrackNumber <= toc.LastTrack &&
+                                track_address >= pos)
+                {
                         control = toc.TrackData[c].Control;
+                        break;
+                }
         }
         return (control & 4) ? 0 : 1;
 }
@@ -562,7 +567,6 @@ static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
                         break;
                 }
         }
-        b[2]=toc.TrackData[c].TrackNumber;
         last_block = 0;
         for (c=d;c<=toc.LastTrack;c++)
         {

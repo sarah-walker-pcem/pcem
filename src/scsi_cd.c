@@ -355,10 +355,10 @@ static uint32_t ide_atapi_mode_sense(scsi_cd_data_t *data, uint32_t pos, uint8_t
 		}
 		else
 		{
+			buf[pos++] = 5; /* Reserved */
 			buf[pos++] = 4; /* Reserved */
 			buf[pos++] = 0; /* Reserved */
-			buf[pos++] = 0; /* Reserved */
-			buf[pos++] = 0; /* Reserved */
+			buf[pos++] = 0x80; /* Reserved */
 			buf[pos++] = 0; buf[pos++] = 75; /* Logical audio block per second */
 			buf[pos++] = 1;    /* CDDA Output Port 0 Channel Selection */
 			buf[pos++] = 0xFF; /* CDDA Output Port 0 Volume */
@@ -502,7 +502,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
 		data->data_in[0] = 0x80 | 0x70;
 
-		if ((data->sense_key > 0) || (cd_status < CD_STATUS_PLAYING))
+		if ((data->sense_key > 0) || (data->cd_status < CD_STATUS_PLAYING))
 		{
 			if (completed)
 			{
@@ -523,7 +523,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		{
 			data->data_in[2] = SENSE_ILLEGAL_REQUEST;
 			data->data_in[12] = ASC_AUDIO_PLAY_OPERATION;
-			data->data_in[13] = (cd_status == CD_STATUS_PLAYING) ? ASCQ_AUDIO_PLAY_OPERATION_IN_PROGRESS : ASCQ_AUDIO_PLAY_OPERATION_PAUSED;
+			data->data_in[13] = (data->cd_status == CD_STATUS_PLAYING) ? ASCQ_AUDIO_PLAY_OPERATION_IN_PROGRESS : ASCQ_AUDIO_PLAY_OPERATION_PAUSED;
 		}
 
 		//data->data_in[7] = 10;
@@ -895,7 +895,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		}
 
 
-		if ((cdrom_drive < 1) || (cd_status <= CD_STATUS_DATA_ONLY) ||
+		if ((cdrom_drive < 1) || (data->cd_status <= CD_STATUS_DATA_ONLY) ||
                     !atapi->is_track_audio(pos, (cdb[0] == GPCMD_PLAY_AUDIO_MSF) ? 1 : 0))
                 {
                         atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_MODE_FOR_THIS_TRACK, 0);
@@ -1002,7 +1002,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
 			data->data_in[0] = 5; /*CD-ROM*/
 			data->data_in[1] = 0x80; /*Removable*/
-			data->data_in[2] = 0;
+			data->data_in[2] = 2; /*SCSI-2 compliant*/
 			data->data_in[3] = 0x21;
 			data->data_in[4] = 31;
 			data->data_in[5] = 0;
