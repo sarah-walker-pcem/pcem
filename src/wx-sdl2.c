@@ -1087,11 +1087,6 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 atapi->exit();
                 atapi_close();
                 ioctl_set_drive(0);
-                if (cdrom_enabled)
-                {
-                        /* Signal disc change to the emulated machine. */
-                        atapi_insert_cdrom();
-                }
                 old_cdrom_drive = cdrom_drive;
                 cdrom_drive = 0;
                 saveconfig(NULL);
@@ -1133,11 +1128,6 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                         atapi->exit();
                         atapi_close();
                         image_open(temp_image_path);
-                        if (cdrom_enabled)
-                        {
-                                /* Signal disc change to the emulated machine. */
-                                atapi_insert_cdrom();
-                        }
                         cdrom_drive = CDROM_IMAGE;
                         saveconfig(NULL);
                         if (!cdrom_enabled)
@@ -1174,11 +1164,6 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 atapi->exit();
                 atapi_close();
                 ioctl_set_drive(new_cdrom_drive);
-                if (cdrom_enabled)
-                {
-                        /* Signal disc change to the emulated machine. */
-                        atapi_insert_cdrom();
-                }
                 cdrom_drive = new_cdrom_drive;
                 saveconfig(NULL);
                 if (!cdrom_enabled)

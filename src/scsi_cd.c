@@ -65,16 +65,6 @@ enum
 #define SENSE_ILLEGAL_REQUEST		5
 #define SENSE_UNIT_ATTENTION		6
 
-/* ATAPI Additional Sense Codes */
-#define ASC_AUDIO_PLAY_OPERATION	0x00
-#define ASC_ILLEGAL_OPCODE		0x20
-#define	ASC_LBA_OUT_OF_RANGE            0x21
-#define	ASC_INV_FIELD_IN_CMD_PACKET	0x24
-#define ASC_MEDIUM_MAY_HAVE_CHANGED	0x28
-#define ASC_MEDIUM_NOT_PRESENT		0x3a
-#define ASC_DATA_PHASE_ERROR		0x4b
-#define ASC_ILLEGAL_MODE_FOR_THIS_TRACK	0x64
-
 #define ASCQ_AUDIO_PLAY_OPERATION_IN_PROGRESS	0x11
 #define ASCQ_AUDIO_PLAY_OPERATION_PAUSED	0x12
 #define ASCQ_AUDIO_PLAY_OPERATION_COMPLETED	0x13
@@ -202,6 +192,7 @@ typedef struct scsi_cd_data_t
         uint8_t prefix_len;
         uint8_t page_current;
 
+        int is_atapi;
 } scsi_cd_data_t;
 
 static void scsi_add_data(scsi_cd_data_t *data, uint8_t val)
@@ -289,6 +280,15 @@ static void *scsi_cd_init(scsi_bus_t *bus, int id)
 	memset(mode_pages_in[GPMODE_CDROM_AUDIO_PAGE], 0, 256);	/* Clear the page itself. */
 	page_flags[GPMODE_CDROM_AUDIO_PAGE] &= ~PAGE_CHANGED;
                 
+        return data;
+}
+
+static void *scsi_cd_atapi_init(scsi_bus_t *bus, int id)
+{
+        scsi_cd_data_t *data = scsi_cd_init(bus, id);
+        
+        data->is_atapi = 1;
+        
         return data;
 }
 
@@ -397,6 +397,15 @@ static uint32_t ide_atapi_mode_sense(scsi_cd_data_t *data, uint32_t pos, uint8_t
 	return pos;
 }
 
+uint32_t atapi_get_cd_channel(int channel)
+{
+	return (page_flags[GPMODE_CDROM_AUDIO_PAGE] & PAGE_CHANGED) ? mode_pages_in[GPMODE_CDROM_AUDIO_PAGE][channel ? 8 : 6] : (channel + 1);
+}
+
+uint32_t atapi_get_cd_volume(int channel)
+{
+	return (page_flags[GPMODE_CDROM_AUDIO_PAGE] & PAGE_CHANGED) ? mode_pages_in[GPMODE_CDROM_AUDIO_PAGE][channel ? 9 : 7] : 0xFF;
+}
 static int scsi_cd_command(uint8_t *cdb, void *p)
 {
         scsi_cd_data_t *data = p;
@@ -417,6 +426,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 	int temp_command;
 	int alloc_length;
 	int completed;
+	int changed;
         
         if (!data->received_cdb)
                 memcpy(data->cdb, cdb, CDB_MAX_LEN);
@@ -433,11 +443,8 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
         msf = cdb[1] & 2;
 
 	is_error = 0;
+	changed = atapi->medium_changed();
 
-	if (atapi->medium_changed())
-	{
-		atapi_insert_cdrom();
-	}
 	/*If UNIT_ATTENTION is set, error out with NOT_READY.
 	  VIDE-CDD.SYS will then issue a READ_TOC, which can pass through UNIT_ATTENTION and will clear sense.
 	  NT 3.1 / AZTIDECD.SYS will then issue a REQUEST_SENSE, which can also pass through UNIT_ATTENTION but will clear sense AFTER sending it back.
@@ -469,7 +476,13 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		atapi_cmd_error(data, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 0);
 		return SCSI_PHASE_STATUS;
 	}
-
+	if ((atapi_cmd_table[cdb[0]] & CHECK_READY) && changed)
+	{
+                pclog("Medium changed\n");
+		atapi_cmd_error(data, SENSE_UNIT_ATTENTION, ASC_MEDIUM_MAY_HAVE_CHANGED, 0);
+		return SCSI_PHASE_STATUS;
+        }
+	
 	data->prev_status = data->cd_status;
 	data->cd_status = atapi->status();
 	if (((data->prev_status == CD_STATUS_PLAYING) || (data->prev_status == CD_STATUS_PAUSED)) && ((data->cd_status != CD_STATUS_PLAYING) && (data->cd_status != CD_STATUS_PAUSED)))
@@ -526,8 +539,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 			data->data_in[13] = (data->cd_status == CD_STATUS_PLAYING) ? ASCQ_AUDIO_PLAY_OPERATION_IN_PROGRESS : ASCQ_AUDIO_PLAY_OPERATION_PAUSED;
 		}
 
-		//data->data_in[7] = 10;
-		data->data_in[7] = 0;
+        	data->data_in[7] = 0;
 
 		/* Clear the sense stuff as per the spec. */
 		atapi_sense_clear(data, temp_command, 0);
@@ -1002,8 +1014,16 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
 			data->data_in[0] = 5; /*CD-ROM*/
 			data->data_in[1] = 0x80; /*Removable*/
-			data->data_in[2] = 2; /*SCSI-2 compliant*/
-			data->data_in[3] = 0x21;
+			if (data->is_atapi)
+			{
+        			data->data_in[2] = 0; /*Not ANSI compliant*/
+        			data->data_in[3] = 0x21; /*ATAPI compliant*/
+                        }
+			else
+			{
+        			data->data_in[2] = 2; /*SCSI-2 compliant*/
+        			data->data_in[3] = 0x02;
+                        }
 			data->data_in[4] = 31;
 			data->data_in[5] = 0;
 			data->data_in[6] = 0;
@@ -1125,15 +1145,45 @@ static uint8_t scsi_cd_get_status(void *p)
         return data->status;
 }
 
+static uint8_t scsi_cd_get_sense_key(void *p)
+{
+        scsi_cd_data_t *data = p;
+        
+        return data->sense_key;
+}
+
+static int scsi_cd_get_bytes_required(void *p)
+{
+        scsi_cd_data_t *data = p;
+        
+        return data->bytes_required - data->bytes_received;
+}
+
+static void scsi_cd_atapi_identify(uint16_t *buffer, void *p)
+{
+        memset(buffer, 0, 512);
+        
+        buffer[0] = 0x8000 | (5<<8) | 0x80 | (2<<5); /* ATAPI device, CD-ROM drive, removable media, accelerated DRQ */
+	ide_padstr((char *)(buffer + 10), "", 20); /* Serial Number */
+	ide_padstr((char *)(buffer + 23), "v1.0", 8); /* Firmware */
+	ide_padstr((char *)(buffer + 27), "PCemCD", 40); /* Model */
+	buffer[49] = 0x200; /* LBA supported */
+}
+
 scsi_device_t scsi_cd =
 {
         scsi_cd_init,
+        scsi_cd_atapi_init,
         scsi_cd_close,
         
         scsi_cd_start_command,
         scsi_cd_command,
         
         scsi_cd_get_status,
+        scsi_cd_get_sense_key,
+        scsi_cd_get_bytes_required,
+        
+        scsi_cd_atapi_identify,
         
         scsi_cd_read,
         scsi_cd_write,

@@ -418,6 +418,16 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
                 for (; len >= 0; len--)
                         add_data_len(0);
                 
+                len = data->data_pos_write;
+                if (cdb[0] == SCSI_MODE_SENSE_6)
+                {
+			data->data_in[0] = len - 1;
+                }
+                else
+                {
+			data->data_in[0] = (len - 2) >> 8;
+			data->data_in[1] = (len - 2) & 255;
+                }
 //                scsi_illegal_field();
                 data->cmd_pos = CMD_POS_IDLE;
                 bus_state = BUS_IO;
@@ -789,15 +799,34 @@ static uint8_t scsi_hd_get_status(void *p)
         return data->status;
 }
 
+static uint8_t scsi_hd_get_sense_key(void *p)
+{
+        scsi_hd_data *data = p;
+        
+        return data->sense_key;
+}
+
+static int scsi_hd_get_bytes_required(void *p)
+{
+        scsi_hd_data *data = p;
+        
+        return data->bytes_required - data->bytes_received;
+}
+
 scsi_device_t scsi_hd =
 {
         scsi_hd_init,
+        NULL,
         scsi_hd_close,
         
         scsi_hd_start_command,
         scsi_hd_command,
         
         scsi_hd_get_status,
+        scsi_hd_get_sense_key,
+        scsi_hd_get_bytes_required,
+        
+        NULL,
         
         scsi_hd_read,
         scsi_hd_write,

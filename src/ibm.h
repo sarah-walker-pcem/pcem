@@ -600,3 +600,5 @@ void saveconfig_global_only();
 #define UNUSED(x) (void)x
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+void ide_padstr(char *str, const char *src, int len);

@@ -1,14 +1,22 @@
+#ifndef _SCSI_H_
+#define _SCSI_H_
+
 struct scsi_bus_t;
 
 typedef struct scsi_device_t
 {
         void *(*init)(struct scsi_bus_t *bus, int id);
+        void *(*atapi_init)(struct scsi_bus_t *bus, int id);
         void (*close)(void *p);
         
         void (*start_command)(void *p);
         int (*command)(uint8_t *cdb, void *p);
         
         uint8_t (*get_status)(void *p);
+        uint8_t (*get_sense_key)(void *p);
+        int (*get_bytes_required)(void *p);
+        
+        void (*atapi_identify)(uint16_t *buffer, void *p);
         
         uint8_t (*read)(void *p);
         void (*write)(uint8_t val, void *p);
@@ -34,6 +42,8 @@ typedef struct scsi_bus_t
         
         int change_state_delay;
         int new_req_delay;
+        
+        int is_atapi;
 } scsi_bus_t;
 
 //int scsi_add_data(uint8_t val);
@@ -59,6 +69,7 @@ void scsi_set_irq(uint8_t status);
 #define SCSI_SEEK_10                      0x2b
 #define SCSI_VERIFY_10                    0x2f
 #define SCSI_READ_BUFFER                  0x3c
+#define SCSI_MODE_SENSE_10                0x5a
 
 #define SCSI_RESERVE                      0x16
 #define SCSI_RELEASE                      0x17
@@ -92,10 +103,25 @@ int scsi_bus_match(scsi_bus_t *bus, int bus_assert);
 void scsi_bus_kick(scsi_bus_t *bus);
 void scsi_bus_init(scsi_bus_t *bus);
 void scsi_bus_close(scsi_bus_t *bus);
+void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id);
 
-#define KEY_ILLEGAL_REQ 5
+#define KEY_NONE			0
+#define KEY_NOT_READY			2
+#define KEY_ILLEGAL_REQ                 5
+#define KEY_UNIT_ATTENTION		6
+#define KEY_DATA_PROTECT                7
 
-#define ASC_INVALID_LUN 0x25
+#define ASC_AUDIO_PLAY_OPERATION	0x00
+#define ASC_ILLEGAL_OPCODE		0x20
+#define	ASC_LBA_OUT_OF_RANGE            0x21
+#define	ASC_INV_FIELD_IN_CMD_PACKET	0x24
+#define ASC_INVALID_LUN                 0x25
+#define ASC_WRITE_PROTECT               0x27
+#define ASC_MEDIUM_MAY_HAVE_CHANGED	0x28
+#define ASC_MEDIUM_NOT_PRESENT		0x3a
+#define ASC_DATA_PHASE_ERROR		0x4b
+#define ASC_ILLEGAL_MODE_FOR_THIS_TRACK	0x64
+
 
 #define SCSI_PHASE_DATA_OUT    0
 #define SCSI_PHASE_DATA_IN     BUS_IO
@@ -103,3 +129,8 @@ void scsi_bus_close(scsi_bus_t *bus);
 #define SCSI_PHASE_STATUS      (BUS_CD | BUS_IO)
 #define SCSI_PHASE_MESSAGE_OUT (BUS_MSG | BUS_CD)
 #define SCSI_PHASE_MESSAGE_IN  (BUS_MSG | BUS_CD | BUS_IO)
+
+#define START_STOP_START 0x01
+#define START_STOP_LOEJ  0x02
+
+#endif /*_SCSI_H_*/

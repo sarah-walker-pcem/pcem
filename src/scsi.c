@@ -101,7 +101,7 @@ int scsi_bus_update(scsi_bus_t *bus, int bus_assert)
                         bus->new_state = bus->bus_out & (BUS_IO | BUS_CD | BUS_MSG);
                         bus->bus_out &= ~BUS_REQ;
                         
-                        if (cmd_len[bus->command[0] >> 5] == bus->command_pos)
+                        if (bus->command_pos == (bus->is_atapi ? 12 : cmd_len[bus->command[0] >> 5]))
                         {
                                 int new_state;
                                 
@@ -322,6 +322,19 @@ void scsi_bus_kick(scsi_bus_t *bus)
         scsi_bus_update(bus, 0);
 }
 
+void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id)
+{
+	memset(bus->devices, 0, sizeof(bus->devices));
+	memset(bus->device_data, 0, sizeof(bus->device_data));
+
+        bus->devices[0] = device;
+        bus->device_data[0] = bus->devices[0]->atapi_init(bus, id);
+        if (!bus->device_data[0])
+                bus->devices[0] = NULL;
+        
+        bus->is_atapi = 1;
+}
+
 void scsi_bus_init(scsi_bus_t *bus)
 {
         int c;
@@ -331,21 +344,17 @@ void scsi_bus_init(scsi_bus_t *bus)
 
 	for (c = 0; c < 4; c++)
 	{
-		if (cdrom_channel != c)
-		{
-                        bus->devices[c] = &scsi_hd;
-                        bus->device_data[c] = bus->devices[c]->init(bus, c);
-                        if (!bus->device_data[c])
-                                bus->devices[c] = NULL;
-		}
-		else
-		{
+		if (cdrom_channel == c)
                         bus->devices[c] = &scsi_cd;
-                        bus->device_data[c] = bus->devices[c]->init(bus, c);
-                        if (!bus->device_data[c])
-                                bus->devices[c] = NULL;
-		}
+		else
+                        bus->devices[c] = &scsi_hd;
+
+                bus->device_data[c] = bus->devices[c]->init(bus, c);
+                if (!bus->device_data[c])
+                        bus->devices[c] = NULL;
 	}
+
+        bus->is_atapi = 0;
 }
 
 void scsi_bus_close(scsi_bus_t *bus)
