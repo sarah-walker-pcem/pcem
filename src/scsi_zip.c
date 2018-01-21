@@ -216,7 +216,7 @@ static int scsi_add_data(uint8_t val, void *p)
 {
         scsi_zip_data *data = p;
 
-        pclog("scsi_add_data : %04x %02x\n", data->data_pos_write, val);
+//        pclog("scsi_add_data : %04x %02x\n", data->data_pos_write, val);
         
         data->data_in[data->data_pos_write++] = val;
         
@@ -678,7 +678,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->len = cdb[4];
                         if (!data->len)
                                 data->len = 256;
-                        pclog("SCSI_READ_6: addr=%08x len=%04x\n", data->addr, data->len);
+//                        pclog("SCSI_READ_6: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
                         data->callback = RW_DELAY;
@@ -738,7 +738,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         readflash_set(READFLASH_HDC, data->hd_id);
                         data->addr = cdb[5] | (cdb[4] << 8) | (cdb[3] << 16) | (cdb[2] << 24);
                         data->len = cdb[8] | (cdb[7] << 8);
-                        pclog("SCSI_READ_10: addr=%08x len=%04x\n", data->addr, data->len);
+//                        pclog("SCSI_READ_10: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
                         data->callback = RW_DELAY;
@@ -805,7 +805,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         if (!data->len)
                                 data->len = 256;
                         readflash_set(READFLASH_HDC, data->hd_id);
-                        pclog("SCSI_WRITE_6: addr=%08x len=%04x\n", data->addr, data->len);
+//                        pclog("SCSI_WRITE_6: addr=%08x len=%04x\n", data->addr, data->len);
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
@@ -872,7 +872,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->addr = cdb[5] | (cdb[4] << 8) | (cdb[3] << 16) | (cdb[2] << 24);
                         data->len = cdb[8] | (cdb[7] << 8);
                         readflash_set(READFLASH_HDC, data->hd_id);
-                        pclog("SCSI_WRITE_10: addr=%08x len=%04x\n", data->addr, data->len);
+//                        pclog("SCSI_WRITE_10: addr=%08x len=%04x\n", data->addr, data->len);
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
