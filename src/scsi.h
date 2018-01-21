@@ -67,6 +67,7 @@ void scsi_set_irq(uint8_t status);
 #define SCSI_READ_10                      0x28
 #define SCSI_WRITE_10                     0x2a
 #define SCSI_SEEK_10                      0x2b
+#define SCSI_WRITE_AND_VERIFY             0x2e
 #define SCSI_VERIFY_10                    0x2f
 #define SCSI_READ_BUFFER                  0x3c
 #define SCSI_MODE_SENSE_10                0x5a

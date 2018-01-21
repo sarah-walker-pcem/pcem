@@ -95,6 +95,7 @@ static uint8_t scsi_zip_cmd_flags[0x100] =
         [SCSI_READ_CAPACITY_10]              = CHECK_READY,
         [SCSI_WRITE_6]                       = CHECK_READY,
         [SCSI_WRITE_10]                      = CHECK_READY,
+        [SCSI_WRITE_AND_VERIFY]              = CHECK_READY,
         [SCSI_VERIFY_10]                     = CHECK_READY,
         [SCSI_FORMAT]                        = CHECK_READY,
         [SCSI_RESERVE]                       = 0,
@@ -852,6 +853,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                 break;
 
                 case SCSI_WRITE_10:
+                case SCSI_WRITE_AND_VERIFY:
                 if (data->read_only)
                 {
                         pclog("zip read only\n");
