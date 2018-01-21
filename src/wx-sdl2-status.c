@@ -13,6 +13,7 @@
 #include "hdd.h"
 #include "ide.h"
 #include "cdrom-image.h"
+#include "scsi_zip.h"
 #include "wx-common.h"
 
 drive_info_t drive_info[10];
@@ -79,7 +80,19 @@ drive_info_t* get_machine_info(char* s, int* num_drive_info) {
                         drive_info[pos].readflash = readflash_get(READFLASH_HDC, i);
                         readflash_clear(READFLASH_HDC, i);
                         pos++;
-                } else if (strlen(ide_fn[i]) > 0)
+                }
+                else if (!hdd_controller_current_is_mfm() && i == zip_channel)
+                {
+                        strcpy(drive_info[pos].fn, "");
+                        drive_info[pos].enabled = zip_loaded();
+                        drive_info[pos].drive = i;
+                        drive_info[pos].drive_letter = drive;
+                        drive_info[pos].type = DRIVE_TYPE_FDD;
+                        drive_info[pos].readflash = readflash_get(READFLASH_HDC, i);
+                        readflash_clear(READFLASH_HDC, i);
+                        pos++;
+                }
+                else if (strlen(ide_fn[i]) > 0)
                 {
                         strcpy(drive_info[pos].fn, ide_fn[i]);
                         drive_info[pos].enabled = 1;

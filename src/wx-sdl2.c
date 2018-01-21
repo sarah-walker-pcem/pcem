@@ -29,6 +29,7 @@
 #include "nvr.h"
 #include "plat-joystick.h"
 #include "plat-midi.h"
+#include "scsi_zip.h"
 #include "sound.h"
 #include "thread.h"
 #include "disc.h"
@@ -854,6 +855,21 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 bpb_disable = !bpb_disable;
                 wx_checkmenuitem(hmenu, wParam, bpb_disable);
                 saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_DISC_ZIP"))
+        {
+                char zip_fn[256] = "";
+                
+                if (!getfile(hwnd,
+                                "Disc image (*.img)|*.img|All files (*.*)|*.*",
+                                zip_fn))
+                {
+                        zip_load(openfilestring);
+                }
+        }
+        else if (ID_IS("IDM_EJECT_ZIP"))
+        {
+                zip_eject();
         }
         else if (ID_IS("IDM_MACHINE_TOGGLE"))
         {

@@ -6,16 +6,19 @@
 #include "ibm.h"
 #include "hdd_file.h"
 
-void hdd_load(hdd_file_t *hdd, int d, const char *fn)
+void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks, int read_only)
 {
 	if (hdd->f == NULL)
         {
 		/* Try to open existing hard disk image */
-		hdd->f = fopen64(fn, "rb+");
+		if (read_only)
+        		hdd->f = fopen64(fn, "rb");
+		else
+        		hdd->f = fopen64(fn, "rb+");
 		if (hdd->f == NULL)
                 {
 			/* Failed to open existing hard disk image */
-			if (errno == ENOENT)
+			if (errno == ENOENT && !read_only)
                         {
 				/* Failed because it does not exist,
 				   so try to create new file */
@@ -37,10 +40,16 @@ void hdd_load(hdd_file_t *hdd, int d, const char *fn)
 		}
 	}
 
-        hdd->spt = hdc[d].spt;
-        hdd->hpc = hdc[d].hpc;
-        hdd->tracks = hdc[d].tracks;
-        hdd->sectors = hdc[d].spt * hdc[d].hpc * hdc[d].tracks;
+        hdd->spt = spt;
+        hdd->hpc = hpc;
+        hdd->tracks = tracks;
+        hdd->sectors = spt * hpc * tracks;
+        hdd->read_only = read_only;
+}
+
+void hdd_load(hdd_file_t *hdd, int d, const char *fn)
+{
+        hdd_load_ext(hdd, fn, hdc[d].spt, hdc[d].hpc, hdc[d].tracks, 0);
 }
 
 void hdd_close(hdd_file_t *hdd)
@@ -73,6 +82,9 @@ int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
 {
         off64_t addr;
         int transfer_sectors = nr_sectors;
+        
+        if (hdd->read_only)
+                return 1;
 
         if ((hdd->sectors - offset) < transfer_sectors)
                 transfer_sectors = hdd->sectors - offset;
@@ -93,6 +105,9 @@ int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors)
         uint8_t zero_buffer[512];
         int transfer_sectors = nr_sectors;
                 
+        if (hdd->read_only)
+                return 1;
+
         memset(zero_buffer, 0, 512);
         
         if ((hdd->sectors - offset) < transfer_sectors)

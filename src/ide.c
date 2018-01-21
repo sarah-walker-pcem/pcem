@@ -27,6 +27,7 @@
         #include "hdd_file.h"
         #include "scsi.h"
         #include "scsi_cd.h"
+        #include "scsi_zip.h"
 #endif
 #include "ide.h"
 
@@ -100,6 +101,7 @@ typedef struct IDE
 } IDE;
 
 int cdrom_channel = 2;
+int zip_channel = -1;
 
 IDE ide_drives[4];
 
@@ -404,7 +406,12 @@ void resetide(void)
         			ide_drives[d].type = IDE_CDROM;
         			scsi_bus_atapi_init(&ide_drives[d].atapi.bus, &scsi_cd, d);
         		}
-        		else
+        		else if (zip_channel == d)
+        		{
+                                ide_drives[d].type = IDE_CDROM;
+                                scsi_bus_atapi_init(&ide_drives[d].atapi.bus, &scsi_zip, d);
+                        }
+                        else
         		{
         			loadhd(&ide_drives[d], d, ide_fn[d]);
         		}
@@ -732,10 +739,6 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         timer_update_outstanding();
                         
                         ide->atapi.bus_state = 0;
-/*                        timer_process();
-                        idecallback[ide_board]=1;//30*IDE_TIME;
-                        timer_update_outstanding();
-                        ide->pos=0;*/
                         return;
                         
                 case 0xF0:

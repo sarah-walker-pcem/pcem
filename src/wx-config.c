@@ -39,6 +39,7 @@ static char hd_new_name[512];
 static int hd_new_spt, hd_new_hpc, hd_new_cyl;
 static int hd_new_type;
 static int new_cdrom_channel;
+static int new_zip_channel;
 
 extern int pause;
 
@@ -365,7 +366,7 @@ int config_dlgsave(void* hdlg)
             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
             temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
             temp_mouse_type != mouse_type || hdd_changed || hd_changed || cdrom_channel != new_cdrom_channel ||
-            strcmp(lpt1_device_name, lpt_device_get_internal_name(temp_lpt1_device))
+            zip_channel != new_zip_channel || strcmp(lpt1_device_name, lpt_device_get_internal_name(temp_lpt1_device))
 #ifdef USE_NETWORKING
                             || temp_network_card != network_card_current
 #endif
@@ -454,6 +455,7 @@ int config_dlgsave(void* hdlg)
                         hdc[3] = hd[3];
 
                         cdrom_channel = new_cdrom_channel;
+                        zip_channel = new_zip_channel;
 
                         if (has_been_inited)
                         {
@@ -737,8 +739,50 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                         hd_changed = 0;
                         new_cdrom_channel = cdrom_channel;
-
+                        new_zip_channel = zip_channel;
+                        
                         hdconf_init(hdlg);
+
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[0]"));
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
+                        if (cdrom_channel == 0)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                        else if (zip_channel == 0)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                        else
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[1]"));
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
+                        if (cdrom_channel == 1)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                        else if (zip_channel == 1)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                        else
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[2]"));
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
+                        if (cdrom_channel == 2)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                        else if (zip_channel == 2)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                        else
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[3]"));
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
+                        if (cdrom_channel == 3)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                        else if (zip_channel == 3)
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                        else
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
 
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, romstomodel[romset]);
@@ -1237,13 +1281,16 @@ static void update_hdd_cdrom(void* hdlg)
 
         for (i = 0; i < 4; ++i)
         {
-                b = !is_mfm && (new_cdrom_channel == i);
-                sprintf(s, "IDC_HDD[%d]", i);
+                b = !is_mfm && ((new_cdrom_channel == i) || (new_zip_channel == i));
+                pclog("update_hdd_cdrom: i=%i b=%i new_cdrom_channel=%i new_zip_channel=%i\n", i, b, new_cdrom_channel, new_zip_channel);
+                sprintf(s, "IDC_COMBODRIVETYPE[%d]", i);
                 h = wx_getdlgitem(hdlg, WX_ID(s));
-                wx_sendmessage(h, WX_BM_SETCHECK, b ? 0 : 1, 0);
-                sprintf(s, "IDC_CDROM[%d]", i);
-                h = wx_getdlgitem(hdlg, WX_ID(s));
-                wx_sendmessage(h, WX_BM_SETCHECK, b ? 1 : 0, 0);
+                if (i == new_cdrom_channel)
+                        wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                else if (i == new_zip_channel)
+                        wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                else
+                        wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                 sprintf(s, "IDC_EDIT_FN[%d]", i);
                 wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !b);
                 sprintf(s, "IDC_FILE[%d]", i);
@@ -1612,39 +1659,14 @@ int hdconf_update(void* hdlg)
 
         update_hdd_cdrom(hdlg);
 
-        int i, j;
+        int i;
         for (i = 0; i < 4; ++i)
         {
                 sprintf(s, "IDC_HDD_LABEL[%d]", i*10);
                 wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                sprintf(s, "IDC_HDD[%d]", i);
+                sprintf(s, "IDC_COMBODRIVETYPE[%d]", i);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
                 wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                sprintf(s, "IDC_CDROM[%d]", i);
-                wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                if (i >= 2)
-                {
-                        sprintf(s, "IDC_EDIT_FN[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_FILE[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_EJECT[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_NEW[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_EDIT_SPT[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_EDIT_HPC[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_EDIT_CYL[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        sprintf(s, "IDC_TEXT_SIZE[%d]", i);
-                        wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        for (j = 1; j < 6; ++j)
-                        {
-                                sprintf(s, "IDC_HDD_LABEL[%d]", i*10+j);
-                                wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
-                        }
-                }
         }
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREHDD"));                
@@ -2036,60 +2058,122 @@ int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
                         return TRUE;
                 }
-                else if (ID_IS("IDC_HDD[0]"))
+                else if (ID_IS("IDC_COMBODRIVETYPE[0]"))
                 {
-                        if (new_cdrom_channel == 0)
-                                new_cdrom_channel = -1;
+                        int type;
+                                
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[0]"));
+                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                
+                        switch (type)
+                        {
+                                case 0: /*Hard drive*/
+                                if (new_cdrom_channel == 0)
+                                        new_cdrom_channel = -1;
+                                if (new_zip_channel == 0)
+                                        new_zip_channel = -1;
+                                break;
+                                case 1: /*CD-ROM*/
+                                new_cdrom_channel = 0;
+                                if (new_zip_channel == 0)
+                                        new_zip_channel = -1;
+                                break;
+                                case 2: /*Zip*/
+                                new_zip_channel = 0;
+                                if (new_cdrom_channel == 0)
+                                        new_cdrom_channel = -1;
+                                break;
+                        }
                         update_hdd_cdrom(hdlg);
                         return TRUE;
                 }
-                else if (ID_IS("IDC_HDD[1]"))
+                else if (ID_IS("IDC_COMBODRIVETYPE[1]"))
                 {
-                        if (new_cdrom_channel == 1)
-                                new_cdrom_channel = -1;
+                        int type;
+                                
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[1]"));
+                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                
+                        switch (type)
+                        {
+                                case 0: /*Hard drive*/
+                                if (new_cdrom_channel == 1)
+                                        new_cdrom_channel = -1;
+                                if (new_zip_channel == 1)
+                                        new_zip_channel = -1;
+                                break;
+                                case 1: /*CD-ROM*/
+                                new_cdrom_channel = 1;
+                                if (new_zip_channel == 1)
+                                        new_zip_channel = -1;
+                                break;
+                                case 2: /*Zip*/
+                                new_zip_channel = 1;
+                                if (new_cdrom_channel == 1)
+                                        new_cdrom_channel = -1;
+                                break;
+                        }
                         update_hdd_cdrom(hdlg);
                         return TRUE;
                 }
-                else if (ID_IS("IDC_HDD[2]"))
+                else if (ID_IS("IDC_COMBODRIVETYPE[2]"))
                 {
-                        if (new_cdrom_channel == 2)
-                                new_cdrom_channel = -1;
+                        int type;
+                                
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[2]"));
+                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                
+                        switch (type)
+                        {
+                                case 0: /*Hard drive*/
+                                if (new_cdrom_channel == 2)
+                                        new_cdrom_channel = -1;
+                                if (new_zip_channel == 2)
+                                        new_zip_channel = -1;
+                                break;
+                                case 1: /*CD-ROM*/
+                                new_cdrom_channel = 2;
+                                if (new_zip_channel == 2)
+                                        new_zip_channel = -1;
+                                break;
+                                case 2: /*Zip*/
+                                new_zip_channel = 2;
+                                if (new_cdrom_channel == 2)
+                                        new_cdrom_channel = -1;
+                                break;
+                        }
                         update_hdd_cdrom(hdlg);
                         return TRUE;
                 }
-                else if (ID_IS("IDC_HDD[3]"))
+                else if (ID_IS("IDC_COMBODRIVETYPE[3]"))
                 {
-                        if (new_cdrom_channel == 3)
-                                new_cdrom_channel = -1;
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-
-                }
-                else if (ID_IS("IDC_CDROM[0]"))
-                {
-                        new_cdrom_channel = 0;
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_CDROM[1]"))
-                {
-                        new_cdrom_channel = 1;
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_CDROM[2]"))
-                {
-                        new_cdrom_channel = 2;
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_CDROM[3]"))
-                {
-                        new_cdrom_channel = 3;
+                        int type;
+                                
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[3]"));
+                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                
+                        switch (type)
+                        {
+                                case 0: /*Hard drive*/
+                                if (new_cdrom_channel == 3)
+                                        new_cdrom_channel = -1;
+                                if (new_zip_channel == 3)
+                                        new_zip_channel = -1;
+                                break;
+                                case 1: /*CD-ROM*/
+                                new_cdrom_channel = 3;
+                                if (new_zip_channel == 3)
+                                        new_zip_channel = -1;
+                                break;
+                                case 2: /*Zip*/
+                                new_zip_channel = 3;
+                                if (new_cdrom_channel == 3)
+                                        new_cdrom_channel = -1;
+                                break;
+                        }
                         update_hdd_cdrom(hdlg);
                         return TRUE;
                 }
-
         }
         return FALSE;
 }

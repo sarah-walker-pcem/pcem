@@ -110,6 +110,13 @@
 				<label>Disable BPB checking</label>
 				<checkable>1</checkable>
 			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_DISC_ZIP">
+				<label>Load _ZIP drive...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_EJECT_ZIP">
+				<label>Eject ZIP drive</label>
+			</object>
 		</object>
 		<object class="wxMenu" name="IDM_CDROM">
 			<label>_CD-ROM</label>
@@ -477,8 +484,7 @@
 	</object>
 
 	<ids-range name="IDC_PANEL" start="10" />
-	<ids-range name="IDC_HDD" start="100" />
-	<ids-range name="IDC_CDROM" start="200" />
+	<ids-range name="IDC_COMBODRIVETYPE" start="100" />
 	<ids-range name="IDC_EDIT_FN" start="300" />
 	<ids-range name="IDC_FILE" start="400" />
 	<ids-range name="IDC_EJECT" start="500" />
@@ -1164,24 +1170,16 @@
 														<flag>wxEXPAND</flag>
 														<border>5</border>
 														<object class="wxBoxSizer">
-															<orient>wxHORIZONTAL</orient>
+															<orient>wxHORIZONTAL</orient>															
 															<object class="sizeritem">
 																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+																<flag>wxALL</flag>
 																<border>5</border>
-																<object class="wxRadioButton" name="IDC_HDD[0]">
-																	<style>wxRB_GROUP</style>
-																	<label>Hard drive</label>
-																	<value>0</value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxRadioButton" name="IDC_CDROM[0]">
-																	<label>CD-ROM</label>
-																	<value>0</value>
+																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[0]">
+																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+																	<size>350,-1</size>
+																	<value></value>
+																	<content />
 																</object>
 															</object>
 															<object class="spacer">
@@ -1367,21 +1365,13 @@
 															<orient>wxHORIZONTAL</orient>
 															<object class="sizeritem">
 																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+																<flag>wxALL</flag>
 																<border>5</border>
-																<object class="wxRadioButton" name="IDC_HDD[1]">
-																	<style>wxRB_GROUP</style>
-																	<label>Hard drive</label>
-																	<value>0</value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxRadioButton" name="IDC_CDROM[1]">
-																	<label>CD-ROM</label>
-																	<value>0</value>
+																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[1]">
+																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+																	<size>350,-1</size>
+																	<value></value>
+																	<content />
 																</object>
 															</object>
 															<object class="spacer">
@@ -1567,21 +1557,13 @@
 															<orient>wxHORIZONTAL</orient>
 															<object class="sizeritem">
 																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+																<flag>wxALL</flag>
 																<border>5</border>
-																<object class="wxRadioButton" name="IDC_HDD[2]">
-																	<style>wxRB_GROUP</style>
-																	<label>Hard drive</label>
-																	<value>0</value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxRadioButton" name="IDC_CDROM[2]">
-																	<label>CD-ROM</label>
-																	<value>0</value>
+																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[2]">
+																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+																	<size>350,-1</size>
+																	<value></value>
+																	<content />
 																</object>
 															</object>
 															<object class="spacer">
@@ -1767,21 +1749,13 @@
 															<orient>wxHORIZONTAL</orient>
 															<object class="sizeritem">
 																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+																<flag>wxALL</flag>
 																<border>5</border>
-																<object class="wxRadioButton" name="IDC_HDD[3]">
-																	<style>wxRB_GROUP</style>
-																	<label>Hard drive</label>
-																	<value>0</value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxRadioButton" name="IDC_CDROM[3]">
-																	<label>CD-ROM</label>
-																	<value>0</value>
+																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[3]">
+																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+																	<size>350,-1</size>
+																	<value></value>
+																	<content />
 																</object>
 															</object>
 															<object class="spacer">

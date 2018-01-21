@@ -3,6 +3,7 @@
 #include "scsi.h"
 #include "scsi_cd.h"
 #include "scsi_hd.h"
+#include "scsi_zip.h"
 
 #define STATE_IDLE 0
 #define STATE_COMMAND 1
@@ -346,6 +347,8 @@ void scsi_bus_init(scsi_bus_t *bus)
 	{
 		if (cdrom_channel == c)
                         bus->devices[c] = &scsi_cd;
+		else if (zip_channel == c)
+                        bus->devices[c] = &scsi_zip;
 		else
                         bus->devices[c] = &scsi_hd;
 

@@ -26,7 +26,7 @@ extern int idecallback[2];
 
 extern char ide_fn[4][512];
 
-extern int cdrom_channel;
+extern int cdrom_channel, zip_channel;
 
 uint32_t atapi_get_cd_channel(int channel);
 uint32_t atapi_get_cd_volume(int channel);

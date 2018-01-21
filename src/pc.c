@@ -35,6 +35,7 @@
 #include "plat-keyboard.h"
 #include "plat-midi.h"
 #include "plat-mouse.h"
+#include "scsi_zip.h"
 #include "serial.h"
 #include "sound.h"
 #include "sound_cms.h"
@@ -609,6 +610,7 @@ void closepc()
         lpt1_device_close();
         mouse_emu_close();
         device_close_all();
+        zip_eject();
 }
 
 /*int main()
@@ -726,6 +728,8 @@ void loadconfig(char *fn)
         cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
         cdrom_enabled = config_get_int(CFG_MACHINE, NULL, "cdrom_enabled", 0);
         cdrom_channel = config_get_int(CFG_MACHINE, NULL, "cdrom_channel", 2);
+        
+        zip_channel = config_get_int(CFG_MACHINE, NULL, "zip_channel", -1);
         
         p = (char *)config_get_string(CFG_MACHINE, NULL, "cdrom_path", "");
         if (p) strcpy(image_path, p);
@@ -870,7 +874,9 @@ void saveconfig(char *fn)
         config_set_int(CFG_MACHINE, NULL, "cdrom_enabled", cdrom_enabled);
         config_set_int(CFG_MACHINE, NULL, "cdrom_channel", cdrom_channel);
         config_set_string(CFG_MACHINE, NULL, "cdrom_path", image_path);
-        
+
+        config_set_int(CFG_MACHINE, NULL, "zip_channel", zip_channel);
+                
         config_set_int(CFG_MACHINE, NULL, "hdc_sectors", hdc[0].spt);
         config_set_int(CFG_MACHINE, NULL, "hdc_heads", hdc[0].hpc);
         config_set_int(CFG_MACHINE, NULL, "hdc_cylinders", hdc[0].tracks);
