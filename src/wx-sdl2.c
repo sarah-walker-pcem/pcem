@@ -42,6 +42,8 @@
 #include "wx-common.h"
 #include "wx-display.h"
 
+extern void creatediscimage_open(void *hwnd);
+
 #define ID_IS(s) wParam == wx_xrcid(s)
 #define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)
 
@@ -855,6 +857,10 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 bpb_disable = !bpb_disable;
                 wx_checkmenuitem(hmenu, wParam, bpb_disable);
                 saveconfig(NULL);
+        }
+        else if (ID_IS("IDM_DISC_CREATE"))
+        {
+                creatediscimage_open(hwnd);
         }
         else if (ID_IS("IDM_DISC_ZIP"))
         {

@@ -111,6 +111,10 @@
 				<checkable>1</checkable>
 			</object>
 			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_DISC_CREATE">
+				<label>Create blank disc image...</label>
+			</object>
+			<object class="separator"/>
 			<object class="wxMenuItem" name="IDM_DISC_ZIP">
 				<label>Load _ZIP drive...</label>
 			</object>
