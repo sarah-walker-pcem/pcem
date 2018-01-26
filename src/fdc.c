@@ -63,6 +63,8 @@ typedef struct FDC
 	int fifo, tfifo;
 	int fifobufpos;
 	uint8_t fifobuf[16];
+	
+	int int_pending;
 } FDC;
 
 static FDC fdc;
@@ -464,13 +466,24 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                 fdc.stat=0x90;
                                 break;
                                 case 8: /*Sense interrupt status*/
-//                                printf("Sense interrupt status %i\n",curdrive);
-                                fdc.lastdrive = fdc.drive;
-//                                fdc.stat = 0x10 | (fdc.stat & 0xf);
-//                                fdc_time=1024;
-                                discint = 8;
-                                fdc.pos = 0;
-                                fdc_callback();
+                                if (fdc.int_pending || fdc_reset_stat)
+                                {
+//                                        printf("Sense interrupt status %i\n",curdrive);
+                                        fdc.lastdrive = fdc.drive;
+//                                        fdc.stat = 0x10 | (fdc.stat & 0xf);
+//                                        fdc_time=1024;
+                                        discint = 8;
+                                        fdc.pos = 0;
+                                        fdc_callback();
+                                }
+                                else
+                                {
+                                        fdc.stat=0x10;
+                                        discint=0xfc;
+                			timer_process();
+                			disctime = 200 * (1 << TIMER_SHIFT);
+                			timer_update_outstanding();
+                                }
                                 break;
                                 case 10: /*Read sector ID*/
                                 fdc.pnum=0;
@@ -967,6 +980,7 @@ void fdc_callback()
                         fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 else
                         fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                fdc.int_pending = 1;
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);
@@ -987,7 +1001,7 @@ void fdc_callback()
                 if (fdc_reset_stat)
                         fdc_reset_stat--;
                 if (!fdc_reset_stat)
-                        fdc.st0 = 0x80;
+                        fdc.int_pending = 0;
 
                 paramstogo = 2;
                 discint = 0;
@@ -1053,6 +1067,7 @@ void fdc_callback()
                         fdc.st0 = 0x20 | (fdc.params[0] & 3) | (fdc.head?4:0);
                 else
                         fdc.st0 = 0x68 | (fdc.params[0] & 3) | (fdc.head?4:0);
+                fdc.int_pending = 1;
                 discint=-3;
 		timer_process();
 		disctime = 2048 * (1 << TIMER_SHIFT);
