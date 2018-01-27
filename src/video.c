@@ -44,43 +44,54 @@
 #include "vid_t3100e.h"
 #include "vid_t1000.h"
 
+enum
+{
+        VIDEO_ISA = 0,
+        VIDEO_BUS
+};
+
 typedef struct
 {
         char name[64];
         char internal_name[24];
         device_t *device;
         int legacy_id;
+        struct
+        {
+                int type;
+                int b, w, l;
+        } timing;
 } VIDEO_CARD;
 
 static VIDEO_CARD video_cards[] =
 {
-        {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,            GFX_MACH64GX},
-        {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,           GFX_MACH64VT2},
-        {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,            GFX_VGACHARGER},
-        {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,            GFX_VGAEDGE16},
-        {"CGA",                                    "cga",            &cga_device,                 GFX_CGA},
-        {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,              GFX_CL_GD5429},
-        {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,          GFX_ET4000W32},
-        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,            GFX_VIRGE},
-        {"EGA",                                    "ega",            &ega_device,                 GFX_EGA},
-        {"Hercules",                               "hercules",       &hercules_device,            GFX_HERCULES},
-        {"Hercules InColor",                       "incolor",        &incolor_device,            GFX_INCOLOR},
-        {"MDA",                                    "mda",            &mda_device,                 GFX_MDA},
-        {"MDSI Genius",                            "genius",         &genius_device,              GFX_GENIUS},
-        {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,              GFX_N9_9FX},
-        {"OAK OTI-067",                            "oti067",         &oti067_device,              GFX_OTI067},
-        {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481},
-        {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,        GFX_BAHAMAS64},
-        {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,   GFX_PHOENIX_TRIO32},
-        {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,   GFX_PHOENIX_TRIO64},
-        {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,           GFX_COLORPLUS},
-        {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,        GFX_VIRGEDX},
-        {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,           GFX_TVGA},
-        {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,              GFX_ET4000},
-        {"Trident TGUI9440",                       "tgui9440",       &tgui9440_device,            GFX_TGUI9440},
-        {"VGA",                                    "vga",            &vga_device,                 GFX_VGA},
-        {"Wyse 700",                               "wy700",          &wy700_device,               GFX_WY700},
-        {"",                                       "",               NULL,                        0}
+        {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,                  GFX_MACH64GX,        {VIDEO_BUS, 4,  8, 16}},
+        {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,                 GFX_MACH64VT2,       {VIDEO_BUS, 3,  3,  4}},
+        {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,                  GFX_VGACHARGER,      {VIDEO_ISA, 3,  3,  6}},
+        {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,                  GFX_VGAEDGE16,       {VIDEO_ISA, 3,  3,  6}},
+        {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             {VIDEO_ISA, 8, 16, 32}},
+        {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,                    GFX_CL_GD5429,       {VIDEO_ISA, 3,  3,  6}},
+        {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,                GFX_ET4000W32,       {VIDEO_BUS, 4,  5, 10}},
+        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,                  GFX_VIRGE,           {VIDEO_BUS, 3,  5, 10}},
+        {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             {VIDEO_ISA, 8, 16, 32}},
+        {"Hercules",                               "hercules",       &hercules_device,                  GFX_HERCULES,        {VIDEO_ISA, 8, 16, 32}},
+        {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         {VIDEO_ISA, 8, 16, 32}},
+        {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             {VIDEO_ISA, 8, 16, 32}},
+        {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          {VIDEO_ISA, 8, 16, 32}},
+        {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,                    GFX_N9_9FX,          {VIDEO_BUS, 3,  5, 10}},
+        {"OAK OTI-067",                            "oti067",         &oti067_device,                    GFX_OTI067,          {VIDEO_ISA, 6,  8, 16}},
+        {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481,  {VIDEO_ISA, 6,  8, 16}},
+        {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,              GFX_BAHAMAS64,       {VIDEO_BUS, 4,  5, 10}},
+        {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,         GFX_PHOENIX_TRIO32,  {VIDEO_BUS, 4,  5, 10}},
+        {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,         GFX_PHOENIX_TRIO64,  {VIDEO_BUS, 3,  5, 10}},
+        {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,                 GFX_COLORPLUS,       {VIDEO_ISA, 8, 16, 32}},
+        {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,              GFX_VIRGEDX,         {VIDEO_BUS, 2,  3,  4}},
+        {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,                 GFX_TVGA,            {VIDEO_ISA, 3,  3,  6}},
+        {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,                    GFX_ET4000,          {VIDEO_ISA, 3,  3,  6}},
+        {"Trident TGUI9440",                       "tgui9440",       &tgui9440_device,                  GFX_TGUI9440,        {VIDEO_BUS, 4,  8, 16}},
+        {"VGA",                                    "vga",            &vga_device,                       GFX_VGA,             {VIDEO_ISA, 8, 16, 32}},
+        {"Wyse 700",                               "wy700",          &wy700_device,                     GFX_WY700,           {VIDEO_ISA, 8, 16, 32}},
+        {"",                                       "",               NULL,                              0}
 };
 
 int video_card_available(int card)
@@ -210,14 +221,8 @@ Fast VLB/PCI -
         L = 4 bus clocks
 */
 
-enum
-{
-        VIDEO_ISA = 0,
-        VIDEO_BUS
-};
-
 int video_speed = 0;
-int video_timing[6][4] =
+int video_timing[7][4] =
 {
         {VIDEO_ISA, 8, 16, 32},
         {VIDEO_ISA, 6,  8, 16},
@@ -229,20 +234,42 @@ int video_timing[6][4] =
 
 void video_updatetiming()
 {
-        if (video_timing[video_speed][0] == VIDEO_ISA)
-        {
-                video_timing_b = (int)(isa_timing * video_timing[video_speed][1]);
-                video_timing_w = (int)(isa_timing * video_timing[video_speed][2]);
-                video_timing_l = (int)(isa_timing * video_timing[video_speed][3]);
+	if (video_speed == -1)
+	{
+                int new_gfxcard = video_old_to_new(gfxcard);
+                
+		if (video_cards[new_gfxcard].timing.type == VIDEO_ISA)
+	        {
+	                video_timing_b = (int)(isa_timing * video_cards[new_gfxcard].timing.b);
+	                video_timing_w = (int)(isa_timing * video_cards[new_gfxcard].timing.w);
+	                video_timing_l = (int)(isa_timing * video_cards[new_gfxcard].timing.l);
+	        }
+	        else
+	        {
+	                video_timing_b = (int)(bus_timing * video_cards[new_gfxcard].timing.b);
+	                video_timing_w = (int)(bus_timing * video_cards[new_gfxcard].timing.w);
+	                video_timing_l = (int)(bus_timing * video_cards[new_gfxcard].timing.l);
+	        }
+                if (cpu_16bitbus)
+                        video_timing_l = video_timing_w * 2;
+	}
+        else 
+	{
+                if (video_timing[video_speed][0] == VIDEO_ISA)
+                {
+                        video_timing_b = (int)(isa_timing * video_timing[video_speed][1]);
+                        video_timing_w = (int)(isa_timing * video_timing[video_speed][2]);
+                        video_timing_l = (int)(isa_timing * video_timing[video_speed][3]);
+                }
+                else
+                {
+                        video_timing_b = (int)(bus_timing * video_timing[video_speed][1]);
+                        video_timing_w = (int)(bus_timing * video_timing[video_speed][2]);
+                        video_timing_l = (int)(bus_timing * video_timing[video_speed][3]);
+                }
+                if (cpu_16bitbus)
+                        video_timing_l = video_timing_w * 2;
         }
-        else
-        {
-                video_timing_b = (int)(bus_timing * video_timing[video_speed][1]);
-                video_timing_w = (int)(bus_timing * video_timing[video_speed][2]);
-                video_timing_l = (int)(bus_timing * video_timing[video_speed][3]);
-        }
-        if (cpu_16bitbus)
-           video_timing_l = video_timing_w * 2;
 }
 
 int video_timing_b, video_timing_w, video_timing_l;

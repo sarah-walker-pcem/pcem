@@ -700,7 +700,7 @@ void loadconfig(char *fn)
                 gfxcard = video_get_video_from_internal_name(p);
         else
                 gfxcard = 0;
-        video_speed = config_get_int(CFG_MACHINE, NULL, "video_speed", 3);
+        video_speed = config_get_int(CFG_MACHINE, NULL, "video_speed", -1);
         p = (char *)config_get_string(CFG_MACHINE, NULL, "sndcard", "");
         if (p)
                 sound_card_current = sound_card_get_from_internal_name(p);

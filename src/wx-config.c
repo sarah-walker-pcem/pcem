@@ -469,7 +469,7 @@ int config_dlgsave(void* hdlg)
         }
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOSPD"));
-        video_speed = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+        video_speed = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0) - 1;
 
         cpu_manufacturer = temp_cpu_m;
         cpu = temp_cpu;
@@ -592,13 +592,14 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         || (cpu_flags & CPU_REQUIRES_DYNAREC), 0);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOSPD"));
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Default");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "8-bit");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Slow 16-bit");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Fast 16-bit");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Slow VLB/PCI");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Mid  VLB/PCI");
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM) "Fast VLB/PCI");
-                        wx_sendmessage(h, WX_CB_SETCURSEL, video_speed, 0);
+                        wx_sendmessage(h, WX_CB_SETCURSEL, video_speed+1, 0);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_MEMSPIN"));
                         printf("%d\n", models[model].ram_granularity);
