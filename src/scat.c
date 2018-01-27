@@ -243,6 +243,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                 case 0x23:
                 switch (scat_index)
                 {
+                        case SCAT_DMA_WAIT_STATE_CONTROL:
                         case SCAT_CLOCK_CONTROL:
                         case SCAT_PERIPHERAL_CONTROL:
                         scat_reg_valid = 1;
@@ -529,7 +530,7 @@ void scat_init()
         }
 
         scat_regs[SCAT_DMA_WAIT_STATE_CONTROL] = 0;
-        scat_regs[SCAT_VERSION] = 10;
+        scat_regs[SCAT_VERSION] = 4;
         scat_regs[SCAT_CLOCK_CONTROL] = 2;
         scat_regs[SCAT_PERIPHERAL_CONTROL] = 0x80;
         scat_regs[SCAT_MISCELLANEOUS_STATUS] = 0x37;
@@ -568,7 +569,7 @@ void scat_init()
         // TODO - Only normal CPU accessing address FF0000 to FFFFFF mapped to ROM. Normal CPU accessing address FC0000 to FEFFFF map to ROM should be implemented later.
         for (i = 12; i < 16; i++)
         {
-                mem_mapping_add(&scat_high_mapping[i], (i << 14) + 0xFC0000, 0x04000, mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_null, mem_write_nullw, mem_write_nulll, rom + (i << 14), 0, NULL);
+                mem_mapping_add(&scat_high_mapping[i], (i << 14) + 0xFC0000, 0x04000, mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_null, mem_write_nullw, mem_write_nulll, rom + ((i << 14) & biosmask), 0, NULL);
         }
 
         for(i=0;i<6;i++)
@@ -633,7 +634,7 @@ void scatsx_init()
         // TODO - Only normal CPU accessing address FF0000 to FFFFFF mapped to ROM. Normal CPU accessing address FC0000 to FEFFFF map to ROM should be implemented later.
         for (i = 12; i < 16; i++)
         {
-                mem_mapping_add(&scat_high_mapping[i], (i << 14) + 0xFC0000, 0x04000, mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_null, mem_write_nullw, mem_write_nulll, rom + (i << 14), 0, NULL);
+                mem_mapping_add(&scat_high_mapping[i], (i << 14) + 0xFC0000, 0x04000, mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_null, mem_write_nullw, mem_write_nulll, rom + ((i << 14) & biosmask), 0, NULL);
         }
 
         for(i=0;i<6;i++)
