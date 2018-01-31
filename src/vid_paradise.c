@@ -30,10 +30,7 @@ typedef struct paradise_t
         uint32_t read_bank[4], write_bank[4];
 } paradise_t;
 
-void    paradise_write(uint32_t addr, uint8_t val, void *p);
-uint8_t paradise_read(uint32_t addr, void *p);
 void paradise_remap(paradise_t *paradise);
-
 
 void paradise_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -236,7 +233,7 @@ void paradise_recalctimings(svga_t *svga)
                 svga->render = svga_render_8bpp_highres;
 }
 
-void paradise_write(uint32_t addr, uint8_t val, void *p)
+static void paradise_write(uint32_t addr, uint8_t val, void *p)
 {
         paradise_t *paradise = (paradise_t *)p;
 //        pclog("paradise_write : %05X %02X  ", addr, val);
@@ -244,14 +241,26 @@ void paradise_write(uint32_t addr, uint8_t val, void *p)
 //        pclog("%08X\n", addr);
         svga_write_linear(addr, val, &paradise->svga);
 }
+static void paradise_writew(uint32_t addr, uint16_t val, void *p)
+{
+        paradise_t *paradise = (paradise_t *)p;
+        addr = (addr & 0x7fff) + paradise->write_bank[(addr >> 15) & 3];
+        svga_writew_linear(addr, val, &paradise->svga);
+}
 
-uint8_t paradise_read(uint32_t addr, void *p)
+static uint8_t paradise_read(uint32_t addr, void *p)
 {
         paradise_t *paradise = (paradise_t *)p;
 //        pclog("paradise_read : %05X ", addr);
         addr = (addr & 0x7fff) + paradise->read_bank[(addr >> 15) & 3];
 //        pclog("%08X\n", addr);
         return svga_read_linear(addr, &paradise->svga);
+}
+static uint16_t paradise_readw(uint32_t addr, void *p)
+{
+        paradise_t *paradise = (paradise_t *)p;
+        addr = (addr & 0x7fff) + paradise->read_bank[(addr >> 15) & 3];
+        return svga_readw_linear(addr, &paradise->svga);
 }
 
 void *paradise_pvga1a_init()
@@ -268,7 +277,7 @@ void *paradise_pvga1a_init()
                    NULL,
                    NULL);
 
-        mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+        mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, paradise_readw, NULL, paradise_write, paradise_writew, NULL);
         mem_mapping_set_p(&paradise->svga.mapping, paradise);
         
         svga->crtc[0x31] = 'W';
@@ -299,7 +308,7 @@ void *paradise_wd90c11_init()
                    NULL,
                    NULL);
 
-        mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, NULL, NULL, paradise_write, NULL, NULL);
+        mem_mapping_set_handler(&paradise->svga.mapping, paradise_read, paradise_readw, NULL, paradise_write, paradise_writew, NULL);
         mem_mapping_set_p(&paradise->svga.mapping, paradise);
 
         svga->crtc[0x31] = 'W';
