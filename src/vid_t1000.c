@@ -18,6 +18,7 @@ static uint32_t blue, grey;
 static uint8_t  boldcols[256];		/* Which attributes use the bold font */
 static uint32_t blinkcols[256][2];
 static uint32_t normcols[256][2];
+static uint8_t  language;
 
 /* Video options set by the motherboard; they will be picked up by the card
  * on the next poll.
@@ -31,7 +32,7 @@ static uint8_t st_display_internal = -1;
 void t1000_video_options_set(uint8_t options)
 {
 	st_video_options = options & 1;
-	st_video_options |= device_get_config_int("display_language") ? 2 : 0;
+	st_video_options |= language;
 }
 
 void t1000_display_set(uint8_t internal)
@@ -638,6 +639,7 @@ static void *t1000_init()
 	t1000->cga.vram = t1000->vram;
 	t1000->enabled    = 1;
 	t1000->video_options = 0x01;
+	language = device_get_config_int("display_language") ? 2 : 0;
         return t1000;
 }
 

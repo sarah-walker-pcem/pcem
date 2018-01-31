@@ -92,6 +92,7 @@ void    at_endeavor_init();
 void     xt_laserxt_init();
 void      at_t3100e_init();
 void       xt_t1000_init();
+void       xt_t1200_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -120,6 +121,7 @@ MODEL models[] =
         {"[8086] Olivetti M24",           ROM_OLIM24,           "olivetti_m24",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_OLIM24,       128, 640, 128,       olim24_init, NULL},
         {"[8086] Sinclair PC200",         ROM_PC200,            "pc200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      512, 640, 128,          ams_init, NULL},
         {"[8086] Tandy 1000 SL/2",        ROM_TANDY1000SL2,     "tandy1000sl2",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, 0,                  512, 768, 128,   tandy1ksl2_init, NULL},
+        {"[8088] Toshiba 1200",           ROM_T1200,            "t1200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, 0,                 1024,2048,1024,     xt_t1200_init, &t1000_device},
         {"[8086] VTech Laser XT3",        ROM_LXT3,             "lxt3",           { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        0, 0,                  512,1152, 128,   xt_laserxt_init, NULL},
 
         {"[286] AMI 286 clone",           ROM_AMI286,           "ami286",         { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_HAS_IDE,             512,16384,128,      at_neat_init, NULL},

@@ -58,7 +58,7 @@ void keyboard_xt_poll()
 void keyboard_xt_adddata(uint8_t val)
 {
 	/* Test for T1000 'Fn' key (Right Alt / Right Ctrl) */
-	if (romset == ROM_T1000)
+	if (romset == ROM_T1000 || romset == ROM_T1200)
 	{
 	 	if (pcem_key[0xb8] || pcem_key[0x9D])	/* 'Fn' pressed */
 		{

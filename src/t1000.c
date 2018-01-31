@@ -27,7 +27,8 @@
  *           A ROM drive (128k, 256k or 512k) which acts as a mini hard 
  *                drive and contains a copy of DOS 2.11. 
  *           160 bytes of non-volatile RAM for the CONFIG.SYS used when 
- *                booting from the ROM drive. 
+ *                booting from the ROM drive. Possibly physically located
+ *                in the keyboard controller RAM.
  *
  * An optional memory expansion board can be fitted. This adds 768k of RAM,
  * which can be used for up to three purposes:
@@ -38,7 +39,13 @@
  * This means that there are up to three different implementations of 
  * non-volatile RAM in the same computer (52 nibbles in the TC8521, 160 
  * bytes of CONFIG.SYS, and up to 768k of HardRAM).
- *  
+ *
+ * The T1200 is a slightly upgraded version with a turbo mode (double CPU 
+ * clock, 9.54MHz) and an optional hard drive. The interface for this is
+ * proprietary both at the physical and programming level.
+ *
+ *  01F2h: If hard drive is present, low 4 bits are 0Ch [20Mb] or 0Dh [10Mb]. 
+ *
  */
 
 void common_init();
@@ -56,6 +63,7 @@ static struct t1000_system
 	/* System control registers */
 	uint8_t sys_ctl[16];
 	uint8_t syskeys;
+	uint8_t turbo;
 
 	/* NVRAM control */
 	uint8_t nvr_c0;	
@@ -375,6 +383,26 @@ static uint8_t read_t1000_ctl(uint16_t addr, void *priv)
 	}
 }
 
+static void t1200_turbo_set(uint8_t value)
+{
+	if (value == t1000.turbo)
+	{
+		return;
+	}
+	t1000.turbo = value;
+	if (!value)
+	{
+		int c = cpu;
+		cpu = 0;	/* 8088/4.77MHz */
+		cpu_set();
+		cpu = c;
+	}
+	else
+	{
+		cpu_set();
+	}
+}
+
 static void write_t1000_ctl(uint16_t addr, uint8_t val, void *priv)
 {
 	struct t1000_system *sys = (struct t1000_system *)priv;
@@ -387,6 +415,10 @@ static void write_t1000_ctl(uint16_t addr, uint8_t val, void *priv)
 			{
 				t1000_video_options_set((val & 0x20) ? 1 : 0);
 				t1000_display_set((val & 0x40) ? 0 : 1);
+				if (romset == ROM_T1200)
+				{
+					t1200_turbo_set((val & 0x80) ? 1 : 0);
+				}
 			}
 			break;
 		/* EMS control*/
@@ -526,6 +558,7 @@ void xt_t1000_init()
 	int pg;
 
 	memset(&t1000, 0, sizeof(t1000));
+	t1000.turbo = 0xff;
 	t1000.ems_port_index = 7;	/* EMS disabled */
 /* The ROM drive is optional. If the file is missing, continue to boot; the
  * BIOS will complain 'No ROM drive' but boot normally from floppy. */
@@ -577,3 +610,43 @@ void xt_t1000_init()
 	nvr_tc8521_init();
 /* No gameport, and no provision to fit one 	device_add(&gameport_device); */
 }
+
+
+void xt_t1200_init()
+{
+	int pg;
+
+	memset(&t1000, 0, sizeof(t1000));
+	t1000.ems_port_index = 7;	/* EMS disabled */
+
+	mem_mapping_add(&t1000.rom_mapping, 0xA0000, 0x10000,
+			t1000_read_rom, t1000_read_romw, t1000_read_roml,
+			NULL, NULL, NULL, NULL, MEM_MAPPING_INTERNAL, &t1000);
+	mem_mapping_disable(&t1000.rom_mapping);
+
+	/* Map the EMS page frame */
+	for (pg = 0; pg < 4; pg++)
+	{
+		mem_mapping_add(&t1000.mapping[pg], 
+			0xD0000 + (0x4000 * pg), 16384, 
+			ems_read_ram,  ems_read_ramw,  ems_read_raml,
+			ems_write_ram, ems_write_ramw, ems_write_raml,
+			NULL, MEM_MAPPING_EXTERNAL, 
+			&t1000);
+		/* Start them all off disabled */
+		mem_mapping_disable(&t1000.mapping[pg]);
+	}
+	
+	/* System control functions, and add-on memory board */
+	io_sethandler(0xE0, 0x10, read_t1000_ctl, NULL, NULL,
+			write_t1000_ctl, NULL, NULL, &t1000);
+
+	common_init();
+	mem_add_bios();
+	pit_set_out_func(&pit, 1, pit_refresh_timer_xt);
+	keyboard_xt_init();
+	nmi_init();
+	nvr_tc8521_init();
+/* No gameport, and no provision to fit one 	device_add(&gameport_device); */
+}
+

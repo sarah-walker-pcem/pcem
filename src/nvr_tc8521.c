@@ -58,6 +58,7 @@ void tc8521_loadnvr()
         switch (romset)
         {
                 case ROM_T1000: f = nvrfopen("t1000.nvr", "rb"); break;
+                case ROM_T1200: f = nvrfopen("t1200.nvr", "rb"); break;
                 default: return;
         }
         if (!f)
@@ -85,6 +86,7 @@ void tc8521_savenvr()
         switch (oldromset)
         {
                 case ROM_T1000: f = nvrfopen("t1000.nvr", "wb"); break;
+                case ROM_T1200: f = nvrfopen("t1200.nvr", "wb"); break;
                 default: return;
         }
         fwrite(nvrram,64,1,f);

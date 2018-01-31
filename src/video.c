@@ -442,6 +442,7 @@ void video_init()
                 return;
 
 		case ROM_T1000:
+		case ROM_T1200:
                 device_add(&t1000_device);
                 return;
         }

@@ -292,6 +292,9 @@ void loadnvr()
 					   t1000_configsys_loadnvr();
 					   t1000_emsboard_loadnvr();
 					   return;
+		case ROM_T1200:		   tc8521_loadnvr();
+					   t1000_emsboard_loadnvr();
+					   return;
 
                 default: return;
         }
@@ -367,6 +370,9 @@ void savenvr()
                 case ROM_T3100E:           f = nvrfopen("t3100e.nvr",           "wb"); break;
 		case ROM_T1000:		   tc8521_savenvr();
 					   t1000_configsys_savenvr();
+					   t1000_emsboard_savenvr();
+					   return;
+		case ROM_T1200:		   tc8521_savenvr();
 					   t1000_emsboard_savenvr();
 					   return;
                 default: return;
