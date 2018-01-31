@@ -67,7 +67,8 @@ void video_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h);
 
 extern void (*video_blit_memtoscreen_func)(int x, int y, int y1, int y2, int w, int h);
 
-extern int video_timing_b, video_timing_w, video_timing_l;
+extern int video_timing_read_b, video_timing_read_w, video_timing_read_l;
+extern int video_timing_write_b, video_timing_write_w, video_timing_write_l;
 extern int video_speed;
 
 extern int video_res_x, video_res_y, video_bpp;

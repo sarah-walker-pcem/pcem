@@ -333,8 +333,8 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         uint8_t vala, valb, valc, vald, wm = svga->writemask;
         int writemask2 = svga->writemask;
 
-        cycles -= video_timing_b;
-        cycles_lost += video_timing_b;
+        cycles -= video_timing_write_b;
+        cycles_lost += video_timing_write_b;
 
         egawrites++;
         
