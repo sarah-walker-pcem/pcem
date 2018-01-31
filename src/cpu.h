@@ -68,6 +68,7 @@ typedef struct
         int cpu_flags;
         int mem_read_cycles, mem_write_cycles;
         int cache_read_cycles, cache_write_cycles;
+        int atclk_div;
 } CPU;
 
 extern CPU cpus_8088[];
@@ -140,9 +141,8 @@ extern int cpu_use_dynarec;
 
 extern int xt_cpu_multi;
 
-#define ISA_CYCLES_SHIFT 6
 extern int isa_cycles;
-#define ISA_CYCLES(x) ((x * isa_cycles) >> ISA_CYCLES_SHIFT)
+#define ISA_CYCLES(x) (x * isa_cycles)
 
 void cpu_update_waitstates();
 void cpu_set();
