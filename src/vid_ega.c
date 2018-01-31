@@ -678,7 +678,7 @@ void ega_poll(void *p)
                 if (ega->vc == ega->vtotal)
                 {
                         ega->vc = 0;
-                        ega->sc = 0;
+                        ega->sc = ega->crtc[8] & 0x1f;
                         ega->dispon = 1;
                         ega->displine = 0;
                         ega->scrollcache = ega->attrregs[0x13] & 7;

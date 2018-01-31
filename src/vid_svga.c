@@ -684,7 +684,7 @@ void svga_poll(void *p)
 
 //                        printf("Frame over at line %i %i  %i %i\n",displine,vc,svga_vsyncstart,svga_dispend);
                         svga->vc = 0;
-                        svga->sc = 0;
+                        svga->sc = svga->crtc[8] & 0x1f;
                         svga->dispon = 1;
                         svga->displine = (svga->interlace && svga->oddeven) ? 1 : 0;
                         svga->scrollcache = svga->attrregs[0x13] & 7;
