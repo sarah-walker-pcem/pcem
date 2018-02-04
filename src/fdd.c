@@ -79,6 +79,9 @@ int fdd_swap = 0;
 void fdd_seek(int drive, int track_diff)
 {
         drive ^= fdd_swap;
+        
+        if (drive >= 2)
+                return;
 
         fdd[drive].track += track_diff;
         
@@ -101,12 +104,16 @@ void fdd_disc_changed(int drive)
         drive ^= fdd_swap;
         
         /*Force reload of current track data*/
-        disc_seek(drive, fdd[drive].track);
+        if (drive < 2)
+                disc_seek(drive, fdd[drive].track);
 }
 
 int fdd_track0(int drive)
 {
         drive ^= fdd_swap;
+
+        if (drive >= 2)
+                return 0;
 
 	/* If drive is disabled, TRK0 never gets set. */
 	if (!drive_types[fdd[drive].type].max_track)  return 0;
@@ -122,9 +129,14 @@ void fdd_set_densel(int densel)
 
 int fdd_getrpm(int drive)
 {
-	int hole = disc_hole(drive);
+	int hole;
 
         drive ^= fdd_swap;
+        
+        if (drive >= 2)
+                return 0;
+
+        hole = disc_hole(drive);
 
 	if (!(drive_types[fdd[drive].type].flags & FLAG_RPM_360))  return 300;
 	if (!(drive_types[fdd[drive].type].flags & FLAG_RPM_300))  return 360;
@@ -162,9 +174,14 @@ void fdd_setswap(int swap)
 
 int fdd_can_read_medium(int drive)
 {
-	int hole = disc_hole(drive);
+	int hole;
 
 	drive ^= fdd_swap;
+        
+        if (drive >= 2)
+                return 0;
+
+        hole = disc_hole(drive);
 
 	hole = 1 << (hole + 3);
 
@@ -174,25 +191,34 @@ int fdd_can_read_medium(int drive)
 
 int fdd_doublestep_40(int drive)
 {
+        if (drive >= 2)
+                return 0;
         return drive_types[fdd[drive].type].flags & FLAG_DOUBLE_STEP;
 }
 
 void fdd_set_type(int drive, int type)
 {
-	fdd[drive].type = type;
+        if (drive < 2)
+        	fdd[drive].type = type;
 }
 
 int fdd_get_type(int drive)
 {
+        if (drive >= 2)
+                return 0;
 	return fdd[drive].type;
 }
 
 int fdd_is_525(int drive)
 {
+        if (drive >= 2)
+                return 0;
         return drive_types[fdd[drive].type].flags & FLAG_525;
 }
 
 int fdd_is_ed(int drive)
 {
+        if (drive >= 2)
+                return 0;
         return drive_types[fdd[drive].type].flags & FLAG_HOLE2;
 }

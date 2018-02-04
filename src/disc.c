@@ -125,7 +125,7 @@ int disc_hole(int drive)
 {
 	drive ^= fdd_swap;
 
-	if (drives[drive].hole)
+	if (drive < 2 && drives[drive].hole)
 	{
 		return drives[drive].hole(drive);
 	}
@@ -139,7 +139,7 @@ void disc_poll()
 {
         disc_poll_time += disc_period * TIMER_USEC;
 
-        if (drives[disc_drivesel].poll)
+        if (disc_drivesel < 2 && drives[disc_drivesel].poll)
                 drives[disc_drivesel].poll();
 
         if (disc_notfound)
@@ -228,10 +228,6 @@ void disc_reset()
 
 void disc_init()
 {
-//        pclog("disc_init %p\n", drives);
-        drives[0].poll = drives[1].poll = 0;
-        drives[0].seek = drives[1].seek = 0;
-        drives[0].readsector = drives[1].readsector = 0;
         disc_reset();
 }
 
@@ -239,7 +235,7 @@ int oldtrack[2] = {0, 0};
 void disc_seek(int drive, int track)
 {
 //        pclog("disc_seek: drive=%i track=%i\n", drive, track);
-        if (drives[drive].seek)
+        if (drive < 2 && drives[drive].seek)
                 drives[drive].seek(drive, track);
 //        if (track != oldtrack[drive])
 //                fdc_discchange_clear(drive);
@@ -251,7 +247,7 @@ void disc_readsector(int drive, int sector, int track, int side, int density, in
 {
         drive ^= fdd_swap;
 
-        if (drives[drive].readsector)
+        if (drive < 2 && drives[drive].readsector)
                 drives[drive].readsector(drive, sector, track, side, density, sector_size);
         else
                 disc_notfound = 1000;
@@ -261,7 +257,7 @@ void disc_writesector(int drive, int sector, int track, int side, int density, i
 {
         drive ^= fdd_swap;
 
-        if (drives[drive].writesector)
+        if (drive < 2 && drives[drive].writesector)
                 drives[drive].writesector(drive, sector, track, side, density, sector_size);
         else
                 disc_notfound = 1000;
@@ -271,7 +267,7 @@ void disc_readaddress(int drive, int track, int side, int density)
 {
         drive ^= fdd_swap;
 
-        if (drives[drive].readaddress)
+        if (drive < 2 && drives[drive].readaddress)
                 drives[drive].readaddress(drive, track, side, density);
 }
 
@@ -279,7 +275,7 @@ void disc_format(int drive, int track, int side, int density, uint8_t fill)
 {
         drive ^= fdd_swap;
         
-        if (drives[drive].format)
+        if (drive < 2 && drives[drive].format)
                 drives[drive].format(drive, track, side, density, fill);
         else
                 disc_notfound = 1000;
@@ -289,7 +285,7 @@ void disc_stop(int drive)
 {
         drive ^= fdd_swap;
         
-        if (drives[drive].stop)
+        if (drive < 2 && drives[drive].stop)
                 drives[drive].stop(drive);
 }
 
