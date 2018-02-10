@@ -61,7 +61,7 @@ drive_info_t* get_machine_info(char* s, int* num_drive_info) {
         for (i = 0; i < num_hdds; ++i)
         {
                 drive = 'C'+i;
-                if (cdrom_enabled && !hdd_controller_current_is_mfm() && i == cdrom_channel)
+                if (!hdd_controller_current_is_mfm() && i == cdrom_channel)
                 {
                         if (cdrom_drive < 0)
                                 continue;

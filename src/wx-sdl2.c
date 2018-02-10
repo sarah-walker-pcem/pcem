@@ -353,17 +353,12 @@ void sdl_saveconfig()
 
 void update_cdrom_menu(void* hmenu)
 {
-        if (!cdrom_enabled)
-                wx_checkmenuitem(menu, WX_ID("IDM_CDROM_DISABLED"), WX_MB_CHECKED);
+        if (cdrom_drive == CDROM_IMAGE)
+                wx_checkmenuitem(menu, WX_ID("IDM_CDROM_IMAGE"), WX_MB_CHECKED);
+        else if (cdrom_drive > 0)
+                wx_checkmenuitem(menu, IDM_CDROM_REAL+cdrom_drive, WX_MB_CHECKED);
         else
-        {
-                if (cdrom_drive == CDROM_IMAGE)
-                        wx_checkmenuitem(menu, WX_ID("IDM_CDROM_IMAGE"), WX_MB_CHECKED);
-                else if (cdrom_drive > 0)
-                        wx_checkmenuitem(menu, IDM_CDROM_REAL+cdrom_drive, WX_MB_CHECKED);
-                else
-                        wx_checkmenuitem(menu, WX_ID("IDM_CDROM_EMPTY"), WX_MB_CHECKED);
-        }
+                wx_checkmenuitem(menu, WX_ID("IDM_CDROM_EMPTY"), WX_MB_CHECKED);
 }
 
 void wx_initmenu()
@@ -1058,49 +1053,9 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 wx_checkmenuitem(menu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
         }
-        else if (ID_IS("IDM_CDROM_DISABLED"))
-        {
-                if (cdrom_enabled)
-                {
-                        if (!confirm())
-                        {
-                                update_cdrom_menu(hmenu);
-                                return 0;
-                        }
-                }
-                if (!cdrom_enabled)
-                {
-                        /* Switching from disabled to disabled. Do nothing. */
-                        update_cdrom_menu(hmenu);
-                        return 0;
-                }
-                atapi->exit();
-                atapi_close();
-                ioctl_set_drive(0);
-                old_cdrom_drive = cdrom_drive;
-                cdrom_drive = 0;
-                if (cdrom_enabled)
-                {
-                        pause = 1;
-                        SDL_Delay(100);
-                        cdrom_enabled = 0;
-                        saveconfig(NULL);
-                        resetpchard();
-                        pause = 0;
-                }
-                update_cdrom_menu(hmenu);
-        }
         else if (ID_IS("IDM_CDROM_EMPTY"))
         {
-                if (!cdrom_enabled)
-                {
-                        if (!confirm())
-                        {
-                                update_cdrom_menu(hmenu);
-                                return 0;
-                        }
-                }
-                if ((cdrom_drive == 0) && cdrom_enabled)
+                if (cdrom_drive == 0)
                 {
                         update_cdrom_menu(hmenu);
                         /* Switch from empty to empty. Do nothing. */
@@ -1112,15 +1067,6 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 old_cdrom_drive = cdrom_drive;
                 cdrom_drive = 0;
                 saveconfig(NULL);
-                if (!cdrom_enabled)
-                {
-                        pause = 1;
-                        SDL_Delay(100);
-                        cdrom_enabled = 1;
-                        saveconfig(NULL);
-                        resetpchard();
-                        pause = 0;
-                }
                 update_cdrom_menu(hmenu);
         }
         else if (ID_IS("IDM_CDROM_IMAGE") || ID_IS("IDM_CDROM_IMAGE_LOAD"))
@@ -1129,19 +1075,10 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                                 "CD-ROM image (*.iso;*.cue)|*.iso;*.cue|All files (*.*)|*.*",
                                 image_path))
                 {
-                        if (!cdrom_enabled)
-                        {
-                                if (!confirm())
-                                {
-                                        update_cdrom_menu(hmenu);
-                                        return 0;
-                                }
-                        }
                         old_cdrom_drive = cdrom_drive;
                         strcpy(temp_image_path, openfilestring);
                         if ((strcmp(image_path, temp_image_path) == 0)
-                                        && (cdrom_drive == CDROM_IMAGE)
-                                        && cdrom_enabled)
+                                        && (cdrom_drive == CDROM_IMAGE))
                         {
                                 /* Switching from ISO to the same ISO. Do nothing. */
                                 update_cdrom_menu(hmenu);
@@ -1152,31 +1089,14 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                         image_open(temp_image_path);
                         cdrom_drive = CDROM_IMAGE;
                         saveconfig(NULL);
-                        if (!cdrom_enabled)
-                        {
-                                pause = 1;
-                                SDL_Delay(100);
-                                cdrom_enabled = 1;
-                                saveconfig(NULL);
-                                resetpchard();
-                                pause = 0;
-                        }
                         update_cdrom_menu(hmenu);
                 } else
                         update_cdrom_menu(hmenu);
         }
         else if (wParam >= IDM_CDROM_REAL && wParam < IDM_CDROM_REAL+100)
         {
-                if (!cdrom_enabled)
-                {
-                        if (!confirm())
-                        {
-                                update_cdrom_menu(hmenu);
-                                return 0;
-                        }
-                }
                 new_cdrom_drive = wParam-IDM_CDROM_REAL;
-                if ((cdrom_drive == new_cdrom_drive) && cdrom_enabled)
+                if (cdrom_drive == new_cdrom_drive)
                 {
                         /* Switching to the same drive. Do nothing. */
                         update_cdrom_menu(hmenu);
@@ -1188,15 +1108,6 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 ioctl_set_drive(new_cdrom_drive);
                 cdrom_drive = new_cdrom_drive;
                 saveconfig(NULL);
-                if (!cdrom_enabled)
-                {
-                        pause = 1;
-                        SDL_Delay(100);
-                        cdrom_enabled = 1;
-                        saveconfig(NULL);
-                        resetpchard();
-                        pause = 0;
-                }
                 update_cdrom_menu(hmenu);
         }
         return 0;

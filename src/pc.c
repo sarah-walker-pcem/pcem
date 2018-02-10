@@ -63,7 +63,6 @@ int window_w, window_h, window_x, window_y, window_remember;
 
 int start_in_fullscreen = 0;
 
-int cdrom_enabled;
 int CPUID;
 int vid_resize, vid_api;
 
@@ -726,7 +725,6 @@ void loadconfig(char *fn)
                 mem_size = (((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128) ? models[model].min_ram*1024 : models[model].min_ram);
 
         cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
-        cdrom_enabled = config_get_int(CFG_MACHINE, NULL, "cdrom_enabled", 0);
         cdrom_channel = config_get_int(CFG_MACHINE, NULL, "cdrom_channel", 2);
         
         zip_channel = config_get_int(CFG_MACHINE, NULL, "zip_channel", -1);
@@ -871,7 +869,6 @@ void saveconfig(char *fn)
 
         config_set_int(CFG_MACHINE, NULL, "mem_size", mem_size);
         config_set_int(CFG_MACHINE, NULL, "cdrom_drive", cdrom_drive);
-        config_set_int(CFG_MACHINE, NULL, "cdrom_enabled", cdrom_enabled);
         config_set_int(CFG_MACHINE, NULL, "cdrom_channel", cdrom_channel);
         config_set_string(CFG_MACHINE, NULL, "cdrom_path", image_path);
 

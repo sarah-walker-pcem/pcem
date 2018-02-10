@@ -128,10 +128,6 @@
 				<label>_Load image...</label>
 			</object>
 			<object class="separator"/>
-			<object class="wxMenuItem" name="IDM_CDROM_DISABLED">
-				<label>_Disabled</label>
-				<radio>1</radio>
-			</object>
 			<object class="wxMenuItem" name="IDM_CDROM_EMPTY">
 				<label>_Empty</label>
 				<radio>1</radio>

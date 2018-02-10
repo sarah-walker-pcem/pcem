@@ -271,7 +271,7 @@ void resetide(void)
         	{
         	        ide_drives[d].drive = d;
 
-        		if ((cdrom_channel == d) && cdrom_enabled)
+        		if (cdrom_channel == d)
         		{
         			ide_drives[d].type = IDE_CDROM;
         			scsi_bus_atapi_init(&ide_drives[d].atapi.bus, &scsi_cd, d);
