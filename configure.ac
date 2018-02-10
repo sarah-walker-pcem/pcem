@@ -2,7 +2,7 @@
 #
 
 AC_PREREQ([2.61])
-AC_INIT(PCem, v12, Sarah Walker <pcem@pcem-emulator.co.uk>, pcem)
+AC_INIT(PCem, v13.1, Sarah Walker <pcem@pcem-emulator.co.uk>, pcem)
 
 AC_CANONICAL_HOST
 
@@ -15,7 +15,7 @@ AM_PROG_CC_C_O
 
 AC_MSG_CHECKING([whether to build for release])
 AC_ARG_ENABLE(release_build,
-	      AC_HELP_STRING([--enable-release-build], [build for release]))
+          AC_HELP_STRING([--enable-release-build], [build for release]))
 if test "$enable_release_build" = "yes"; then
    AC_MSG_RESULT([yes])
 else
@@ -25,7 +25,7 @@ AM_CONDITIONAL(RELEASE_BUILD, [test "$enable_release_build" = "yes"])
 
 AC_MSG_CHECKING([whether to enable debugging])
 AC_ARG_ENABLE(debug,
-	      AC_HELP_STRING([--enable-debug], [build debug executable]))
+          AC_HELP_STRING([--enable-debug], [build debug executable]))
 if test "$enable_debug" = "yes"; then
    CFLAGS="-Wall -O0 -g -D_DEBUG"
    AC_MSG_RESULT([yes])
@@ -36,7 +36,7 @@ fi
 
 AC_MSG_CHECKING([whether to enable networking])
 AC_ARG_ENABLE(networking,
-	      AC_HELP_STRING([--enable-networking], [enable networking]))
+          AC_HELP_STRING([--enable-networking], [enable networking]))
 if test "$enable_networking" = "yes"; then
    AC_MSG_RESULT([yes])
 else
@@ -45,7 +45,7 @@ fi
 
 AC_MSG_CHECKING([whether to use ALSA for MIDI output])
 AC_ARG_ENABLE(alsa,
-	      AC_HELP_STRING([--enable-alsa], [use ALSA for MIDI]))
+          AC_HELP_STRING([--enable-alsa], [use ALSA for MIDI]))
 if test "$enable_alsa" = "yes"; then
    AC_MSG_RESULT([yes])
 else
@@ -54,17 +54,17 @@ fi
 
 AC_MSG_CHECKING([for cpu])
 case "${host_cpu}" in
-	i?86)
-	CPU=i386
-	AC_MSG_RESULT(${host_cpu})
-	;;
-	x86_64)
-	CPU=x86_64
-	AC_MSG_RESULT(${host_cpu})
-	;;
-	*)
-	AC_MSG_ERROR([Unsupported CPU.])
-	;;
+    i?86)
+    CPU=i386
+    AC_MSG_RESULT(${host_cpu})
+    ;;
+    x86_64)
+    CPU=x86_64
+    AC_MSG_RESULT(${host_cpu})
+    ;;
+    *)
+    AC_MSG_ERROR([Unsupported CPU.])
+    ;;
 esac
 
 AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
@@ -108,7 +108,7 @@ if test "$enable_alsa" == "yes"; then
     AC_CHECK_LIB(asound, snd_pcm_open,
         [],
         [echo "You need to install the ALSA library."
-	 exit -1])
+     exit -1])
 fi
 
 AC_CHECK_LIB([pthread], [pthread_create])
@@ -124,21 +124,22 @@ case "$host" in
        build_macosx="yes"
        ;;
     *-*-cygwin* | *-*-mingw32*)
-       AC_CHECK_LIB([GL], [glGetError], [], \
+       AC_CHECK_LIB([opengl32], [main], [], \
            [echo "You need to install the OpenGL library."
            exit -1])
        AC_CHECK_LIB([openal], [alGetError], [], \
-	   [echo "You need to install the OpenAL library."
-	   exit -1])
+          [echo "You need to install the OpenAL library."
+           exit -1])
        build_win="yes"
-       ;;    
+       AC_SUBST(SET_MAKE, 'MAKE=mingw32-make')
+       ;;
     *)
        AC_CHECK_LIB([GL], [glGetError], [], \
            [echo "You need to install the OpenGL library."
            exit -1])
        AC_CHECK_LIB([openal], [alGetError], [], \
-	   [echo "You need to install the OpenAL library."
-	   exit -1])
+           [echo "You need to install the OpenAL library."
+           exit -1])
        build_linux="yes"
        ;;
 esac

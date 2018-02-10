@@ -1,6 +1,6 @@
 #ifdef _WIN32
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #endif
 #include <stdint.h>
 #include <stdio.h>

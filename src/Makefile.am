@@ -1,18 +1,28 @@
 # Makefile.am for PCem
 
+AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = pcem
-noinst_SCRIPTS = ../pcem
-CLEANFILES = $(noinst_SCRIPTS)
+noinst_SCRIPTS =
+CLEANFILES =
 
+if !OS_WINDOWS
+CLEANFILES += $(noinst_SCRIPTS)
+noinst_SCRIPTS += ../pcem
 ../pcem: pcem
 	cp pcem ..
-
-slirp/libslirp.a:
-	$(MAKE) -C slirp
+endif
 
 amrefresh:	
 
+# Special wxWidgets files
+WINDRES = $(shell wx-config --rescomp)
+wx.res: wx.rc
+	$(WINDRES) -i wx.rc --input-format=rc -o wx.res -O coff
+ 
+wx-resources.cpp : pc.xrc
+	-wxrc -c pc.xrc -o wx-resources.cpp
 
+# PCem
 pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
 codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
@@ -30,22 +40,28 @@ vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti06
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
-x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc dosbox/cdrom_image.cpp dosbox/dbopl.cpp \
-dosbox/nukedopl.cpp dosbox/vid_cga_comp.c resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
+x86seg.c x87.c xtide.c sound_dbopl.cc sound_resid.cc
+
+# DOSBox
+pcem_SOURCES += dosbox/cdrom_image.cpp dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c
+
+# resid-fp
+pcem_SOURCES += resid-fp/convolve.cc resid-fp/convolve-sse.cc resid-fp/envelope.cc \
 resid-fp/extfilt.cc resid-fp/filter.cc resid-fp/pot.cc resid-fp/sid.cc \
 resid-fp/voice.cc resid-fp/wave6581_PS_.cc resid-fp/wave6581_PST.cc \
 resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
-pcem_CFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
+pcem_CFLAGS = $(subst -fpermissive,,$(shell wx-config --cxxflags) $(shell sdl2-config --cflags))
 pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
 pcem_LDADD = @LIBS@
 pcem_SOURCES += wx-main.cc wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
  wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c \
  wx-sdl2.c wx-config.c wx-deviceconfig.cc wx-status.cc wx-sdl2-status.c \
- wx-resources.cpp wx-thread.c wx-common.c wx-sdl2-display.c wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c \
- wx-glslp-parser.c wx-shader_man.c wx-shaderconfig.cc wx-joystickconfig.cc wx-createdisc.cc
+ wx-thread.c wx-common.c wx-sdl2-video-renderer.c wx-sdl2-video-gl3.c \
+ wx-glslp-parser.c wx-shader_man.c wx-shaderconfig.cc wx-joystickconfig.cc wx-createdisc.cc \
+ wx-resources.cpp
 if USE_ALSA
 pcem_LDADD += -lasound
 pcem_SOURCES += midi_alsa.c
@@ -66,17 +82,31 @@ if USE_NETWORKING
 pcem_CFLAGS += -DUSE_NETWORKING
 pcem_CXXFLAGS += -DUSE_NETWORKING
 pcem_SOURCES += ne2000.c nethandler.c wx-hostconfig.c
-pcem_LDADD += slirp/libslirp.a
+# SLiRP
+pcem_SOURCES += slirp/bootp.c slirp/cksum.c slirp/debug.c slirp/if.c slirp/ip_icmp.c \
+slirp/ip_input.c slirp/ip_output.c slirp/mbuf.c slirp/misc.c slirp/queue.c \
+slirp/sbuf.c slirp/slirp.c slirp/socket.c slirp/tcp_input.c slirp/tcp_output.c \
+slirp/tcp_subr.c slirp/tcp_timer.c slirp/tftp.c slirp/udp.c
+
+if OS_WINDOWS
+pcem_LDADD += -lwsock32 -liphlpapi
+endif
+endif
+
+if OS_LINUX
+pcem_SOURCES += cdrom-ioctl-linux.c wx-sdl2-display.c
 endif
 
 if OS_MACOSX
-pcem_SOURCES += cdrom-ioctl-osx.c
+pcem_SOURCES += cdrom-ioctl-osx.c wx-sdl2-display.c
 pcem_CFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 pcem_CXXFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 endif
 
-if OS_LINUX
-pcem_SOURCES += cdrom-ioctl-linux.c
+if OS_WINDOWS
+#DEFAULT_INCLUDES = -iquote .
+pcem_SOURCES += cdrom-ioctl.c wx-sdl2-display-win.c
+pcem_LDADD += wx.res
 endif
 
 if !HAS_OFF64T
