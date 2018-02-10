@@ -81,7 +81,10 @@ void fdd_seek(int drive, int track_diff)
         drive ^= fdd_swap;
         
         if (drive >= 2)
+	{
+	        disctime = 5000;
                 return;
+	}
 
         fdd[drive].track += track_diff;
         
