@@ -459,13 +459,17 @@ void svga_poll(void *p)
 //                if (!(vc & 15)) pclog("VC %i %i\n", vc, GetTickCount());
                 if (svga->displine == svga->hwcursor_latch.y && svga->hwcursor_latch.ena)
                 {
-                        svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+                        svga->hwcursor_on = svga->hwcursor.ysize - svga->hwcursor_latch.yoff;
+                        if (svga->hwcursor_on < 0)
+                                svga->hwcursor_on = 0;
                         svga->hwcursor_oddeven = 0;
                 }
 
                 if (svga->displine == svga->hwcursor_latch.y+1 && svga->hwcursor_latch.ena && svga->interlace)
                 {
-                        svga->hwcursor_on = 64 - svga->hwcursor_latch.yoff;
+                        svga->hwcursor_on = svga->hwcursor.ysize - svga->hwcursor_latch.yoff;
+                        if (svga->hwcursor_on < 0)
+                                svga->hwcursor_on = 0;
                         svga->hwcursor_oddeven = 1;
                 }
 
@@ -744,6 +748,7 @@ int svga_init(svga_t *svga, void *p, int memsize,
         svga->video_out = video_out;
         svga->hwcursor_draw = hwcursor_draw;
         svga->overlay_draw = overlay_draw;
+        svga->hwcursor.ysize = 64;
 //        _svga_recalctimings(svga);
 
         mem_mapping_add(&svga->mapping, 0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, NULL, MEM_MAPPING_EXTERNAL, svga);

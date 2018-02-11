@@ -331,7 +331,11 @@ void tgui_out(uint16_t addr, uint8_t val, void *p)
 			
 			case 0x50:
                         if (tgui->type >= TGUI_9440)
+                        {
         			svga->hwcursor.ena = val & 0x80;
+        			svga->hwcursor.xsize = (val & 1) ? 64 : 32;
+        			svga->hwcursor.ysize = (val & 1) ? 64 : 32;
+                        }
 			break;
 		}
                 return;
