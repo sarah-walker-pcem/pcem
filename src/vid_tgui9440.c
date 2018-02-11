@@ -642,6 +642,9 @@ void tgui_hwcursor_draw(svga_t *svga, int displine)
         int xx;
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
         
+        if (svga->interlace && svga->hwcursor_oddeven)
+                svga->hwcursor_latch.addr += 8;
+
         dat[0] = (svga->vram[svga->hwcursor_latch.addr]     << 24) | (svga->vram[svga->hwcursor_latch.addr + 1] << 16) | (svga->vram[svga->hwcursor_latch.addr + 2] << 8) | svga->vram[svga->hwcursor_latch.addr + 3];
         dat[1] = (svga->vram[svga->hwcursor_latch.addr + 4] << 24) | (svga->vram[svga->hwcursor_latch.addr + 5] << 16) | (svga->vram[svga->hwcursor_latch.addr + 6] << 8) | svga->vram[svga->hwcursor_latch.addr + 7];
         for (xx = 0; xx < 32; xx++)
@@ -660,6 +663,9 @@ void tgui_hwcursor_draw(svga_t *svga, int displine)
                 dat[1] <<= 1;
         }
         svga->hwcursor_latch.addr += 8;
+        
+        if (svga->interlace && !svga->hwcursor_oddeven)
+                svga->hwcursor_latch.addr += 8;
 }
 
 uint8_t tgui_pci_read(int func, int addr, void *p)
