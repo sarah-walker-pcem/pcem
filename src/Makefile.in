@@ -118,8 +118,7 @@ bin_PROGRAMS = pcem$(EXEEXT)
 @OS_MACOSX_TRUE@am__append_14 = cdrom-ioctl-osx.c wx-sdl2-display.c
 @OS_MACOSX_TRUE@am__append_15 = -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 @OS_MACOSX_TRUE@am__append_16 = -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
-
-#DEFAULT_INCLUDES = -iquote .
+DEFAULT_INCLUDES = -I.@am__isrc@
 @OS_WINDOWS_TRUE@am__append_17 = cdrom-ioctl.c wx-sdl2-display-win.c
 @OS_WINDOWS_TRUE@am__append_18 = wx.res
 @HAS_OFF64T_FALSE@am__append_19 = -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
@@ -371,7 +370,6 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -623,6 +621,7 @@ pcem_CFLAGS = $(subst -fpermissive,,$(shell wx-config --cxxflags) \
 pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config \
 	--cflags) $(am__append_10) $(am__append_16) $(am__append_21)
 pcem_LDADD = @LIBS@ $(am__append_3) $(am__append_12) $(am__append_18)
+@OS_WINDOWS_TRUE@DEFAULT_INCLUDES = -iquote .
 all: all-am
 
 .SUFFIXES:

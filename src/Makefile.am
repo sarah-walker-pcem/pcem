@@ -104,7 +104,7 @@ pcem_CXXFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
 endif
 
 if OS_WINDOWS
-#DEFAULT_INCLUDES = -iquote .
+DEFAULT_INCLUDES = -iquote .
 pcem_SOURCES += cdrom-ioctl.c wx-sdl2-display-win.c
 pcem_LDADD += wx.res
 endif
