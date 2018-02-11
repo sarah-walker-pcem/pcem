@@ -1068,7 +1068,7 @@ void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)
 	if (tgui->accel.bpp == 0)
                 trans_col &= 0xff;
 	
-	if (count != -1 && !tgui->accel.x)
+	if (count != -1 && !tgui->accel.x && (tgui->accel.flags & TGUI_SRCMONO))
 	{
 		count -= tgui->accel.offset;
 		cpu_dat <<= tgui->accel.offset;
