@@ -6,10 +6,12 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 #include "ibm.h"
 
 
 #include "dma.h"
+#include "filters.h"
 #include "io.h"
 #include "pic.h"
 #include "sound.h"
@@ -107,6 +109,42 @@ uint16_t sb_dsp_versions[] = {0, 0, 0x105, 0x200, 0x201, 0x300, 0x302, 0x405, 0x
 		252, 4, 252, 4, 252, 4, 252, 4,
 		252, 0, 252, 0
 	};
+
+float low_fir_sb16_coef[SB16_NCoef];
+
+static inline double sinc(double x)
+{
+	return sin(M_PI * x) / (M_PI * x);
+}
+
+static void recalc_sb16_filter(int playback_freq)
+{
+        /*Cutoff frequency = playback / 2*/
+        float fC = ((float)playback_freq / 2.0) / 48000.0;
+        float gain;
+        int n;
+        
+        for (n = 0; n < SB16_NCoef; n++)
+        {
+                /*Blackman window*/
+                double w = 0.42 - (0.5 * cos((2.0*n*M_PI)/(double)(SB16_NCoef-1))) + (0.08 * cos((4.0*n*M_PI)/(double)(SB16_NCoef-1)));
+                /*Sinc filter*/
+                double h = sinc(2.0 * fC * ((double)n - ((double)(SB16_NCoef-1) / 2.0)));
+                
+                /*Create windowed-sinc filter*/
+                low_fir_sb16_coef[n] = w * h;
+        }
+        
+        low_fir_sb16_coef[(SB16_NCoef - 1) / 2] = 1.0;
+
+        gain = 0.0;
+        for (n = 0; n < SB16_NCoef; n++)
+                gain += low_fir_sb16_coef[n];
+
+        /*Normalise filter, to produce unity gain*/
+        for (n = 0; n < SB16_NCoef; n++)
+                low_fir_sb16_coef[n] /= gain;
+}        
 
 
 
@@ -399,6 +437,8 @@ void sb_exec_command(sb_dsp_t *dsp)
                 temp = 256 - dsp->sb_data[0];
                 temp = 1000000 / temp;
 //                pclog("Sample rate - %ihz (%i)\n",temp, dsp->sblatcho);
+                if (dsp->sb_freq != temp && dsp->sb_type >= SB16)
+                        recalc_sb16_filter(temp);
                 dsp->sb_freq = temp;
                 break;
                 case 0x41: /*Set output sampling rate*/
@@ -406,10 +446,13 @@ void sb_exec_command(sb_dsp_t *dsp)
                 if (dsp->sb_type < SB16) break;
                 dsp->sblatcho = (int)(TIMER_USEC * (1000000.0f / (float)(dsp->sb_data[1] + (dsp->sb_data[0] << 8))));
 //                pclog("Sample rate - %ihz (%i)\n",dsp->sb_data[1]+(dsp->sb_data[0]<<8), dsp->sblatcho);
+                temp = dsp->sb_freq;
                 dsp->sb_freq = dsp->sb_data[1] + (dsp->sb_data[0] << 8);
                 dsp->sb_timeo = 256 + dsp->sb_freq;
                 dsp->sblatchi = dsp->sblatcho;
                 dsp->sb_timei = dsp->sb_timeo;
+                if (dsp->sb_freq != temp && dsp->sb_type >= SB16)
+                        recalc_sb16_filter(dsp->sb_freq);
                 break;
                 case 0x48: /*Set DSP block transfer size*/
                 dsp->sb_8_autolen = dsp->sb_data[0] + (dsp->sb_data[1] << 8);

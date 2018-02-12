@@ -261,9 +261,8 @@ static void sb_get_buffer_sb16(int32_t *buffer, int len, void *p)
                 in_l = (mixer->input_selector_left&INPUT_MIDI_L) ? out_l : 0 + (mixer->input_selector_left&INPUT_MIDI_R) ? out_r : 0;
                 in_r = (mixer->input_selector_right&INPUT_MIDI_L) ? out_l : 0 + (mixer->input_selector_right&INPUT_MIDI_R) ? out_r : 0;
         
-                /*TODO: CT1745 features dynamic filtering. https://www.vogons.org/viewtopic.php?f=62&t=51514 */
-                out_l += ((int32_t)(sb->dsp.buffer[c]     * mixer->voice_l) / 3) >> 15;
-                out_r += ((int32_t)(sb->dsp.buffer[c + 1] * mixer->voice_r) / 3) >> 15;
+                out_l += ((int32_t)(low_fir_sb16(0, (float)sb->dsp.buffer[c])     * mixer->voice_l) / 3) >> 15;
+                out_r += ((int32_t)(low_fir_sb16(1, (float)sb->dsp.buffer[c + 1]) * mixer->voice_r) / 3) >> 15;
                 
                 out_l = (out_l * mixer->master_l) >> 15;
                 out_r = (out_r * mixer->master_r) >> 15;
@@ -341,10 +340,8 @@ static void sb_get_buffer_emu8k(int32_t *buffer, int len, void *p)
                 in_l = (mixer->input_selector_left&INPUT_MIDI_L) ? out_l : 0 + (mixer->input_selector_left&INPUT_MIDI_R) ? out_r : 0;
                 in_r = (mixer->input_selector_right&INPUT_MIDI_L) ? out_l : 0 + (mixer->input_selector_right&INPUT_MIDI_R) ? out_r : 0;
                 
-
-                /*TODO: CT1745 features dynamic filtering. https://www.vogons.org/viewtopic.php?f=62&t=51514 */
-                out_l += ((int32_t)(sb->dsp.buffer[c]     * mixer->voice_l) / 3) >> 15;
-                out_r += ((int32_t)(sb->dsp.buffer[c + 1] * mixer->voice_r) / 3) >> 15;
+                out_l += ((int32_t)(low_fir_sb16(0, (float)sb->dsp.buffer[c])     * mixer->voice_l) / 3) >> 15;
+                out_r += ((int32_t)(low_fir_sb16(1, (float)sb->dsp.buffer[c + 1]) * mixer->voice_r) / 3) >> 15;
 
                 out_l = (out_l * mixer->master_l) >> 15;
                 out_r = (out_r * mixer->master_r) >> 15;
