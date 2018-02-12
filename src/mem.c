@@ -799,6 +799,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 				
+                case ROM_NCR_PC4I:
+                f=romfopen("ncr_pc4i/NCR_PC4i_BIOSROM_1985.BIN" ,"rb");
+                if (!f) break;
+                romfread(rom, 0x4000, 1, f);
+                fclose(f);
+                biosmask = 0x3fff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
