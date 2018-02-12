@@ -4,6 +4,7 @@
 #include "io.h"
 #include "mouse.h"
 
+#include "acc2036.h"
 #include "acer386sx.h"
 #include "ali1429.h"
 #include "amstrad.h"
@@ -498,6 +499,7 @@ void at_ali1429_init()
 void pb_l300sx_init()
 {
         at_init();
+        acc2036_init();
 }
 
 void at_sis496_init()
