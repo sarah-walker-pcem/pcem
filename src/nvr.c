@@ -297,6 +297,7 @@ void loadnvr()
 		case ROM_T1200:		   tc8521_loadnvr();
 					   t1000_emsboard_loadnvr();
 					   return;
+		case ROM_ELX_PC425X:       f = nvrfopen("elx_pc425.nvr",       "rb"); nvrmask = 127; break;
 
                 default: return;
         }
@@ -379,6 +380,7 @@ void savenvr()
 		case ROM_T1200:		   tc8521_savenvr();
 					   t1000_emsboard_savenvr();
 					   return;
+		case ROM_ELX_PC425X:       f = nvrfopen("elx_pc425.nvr",       "wb"); break;
                 default: return;
         }
         fwrite(nvrram,128,1,f);

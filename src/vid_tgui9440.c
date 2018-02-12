@@ -735,12 +735,15 @@ void tgui_pci_write(int func, int addr, uint8_t val, void *p)
         }
 }
 
-static void *tgui_init(char *bios_fn, int type)
+static void *tgui_init(char *bios_fn, int type, int mem_size)
 {
         tgui_t *tgui = malloc(sizeof(tgui_t));
         memset(tgui, 0, sizeof(tgui_t));
         
-        tgui->vram_size = device_get_config_int("memory") << 20;
+        if (mem_size)
+                tgui->vram_size = mem_size;
+        else
+                tgui->vram_size = device_get_config_int("memory") << 20;
         tgui->vram_mask = tgui->vram_size - 1;
         
         tgui->type = type;
@@ -773,12 +776,25 @@ static void *tgui_init(char *bios_fn, int type)
 
 static void *tgui9400cxi_init()
 {
-        return tgui_init("9400CXI.vbi", TGUI_9400CXI);
+        return tgui_init("9400CXI.vbi", TGUI_9400CXI, 0);
+}
+
+static void *tgui9400cxi_elx_init()
+{
+        /*Try combined ROM dump first. If not present, use seperated dump*/
+        FILE *f = romfopen("elx_pc425x/elx_pc425x.bin", "rb");
+        if (f)
+        {
+                fclose(f);
+                return tgui_init("elx_pc425x/elx_pc425x.bin", TGUI_9400CXI, 512 << 10);
+        }
+
+        return tgui_init("elx_pc425x/elx_pc425x_vbios.bin", TGUI_9400CXI, 512 << 10);
 }
 
 static void *tgui9440_init()
 {
-        return tgui_init("9440.vbi", TGUI_9440);
+        return tgui_init("9440.vbi", TGUI_9440, 0);
 }
 
 static int tgui9400cxi_available()
@@ -1767,6 +1783,19 @@ device_t tgui9400cxi_device =
         "Trident TGUI 9400CXi",
         0,
         tgui9400cxi_init,
+        tgui_close,
+        tgui9400cxi_available,
+        tgui_speed_changed,
+        tgui_force_redraw,
+        tgui_add_status_info,
+        tgui9440_config
+};
+
+device_t tgui9400cxi_elx_device =
+{
+        "Trident TGUI 9400CXi (Elonex PC-425X)",
+        0,
+        tgui9400cxi_elx_init,
         tgui_close,
         tgui9400cxi_available,
         tgui_speed_changed,

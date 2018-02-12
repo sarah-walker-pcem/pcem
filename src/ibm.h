@@ -451,6 +451,7 @@ enum
 	ROM_NCR_PC4I,
 	ROM_TO16_PC,
 	ROM_COMPAQ_PII,
+	ROM_ELX_PC425X,
                 	
         ROM_MAX
 };

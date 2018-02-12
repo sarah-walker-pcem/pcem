@@ -49,6 +49,7 @@
 #include "serial.h"
 #include "sio.h"
 #include "sis496.h"
+#include "sl82c460.h"
 #include "sound_ps1.h"
 #include "sound_pssj.h"
 #include "sound_sn76489.h"
@@ -95,6 +96,7 @@ void     xt_laserxt_init();
 void      at_t3100e_init();
 void       xt_t1000_init();
 void       xt_t1200_init();
+void    at_sl82c460_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -163,6 +165,7 @@ MODEL models[] =
         {"[486] AMI 486 clone",           ROM_AMI486,           "ami486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
         {"[486] AMI WinBIOS 486",         ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_ali1429_init, NULL},
         {"[486] Award SiS 496/497",       ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  0, MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,             1, 256,   1,      at_sis496_init, NULL},
+        {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  1, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,    at_sl82c460_init, NULL},
 
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
 
@@ -510,6 +513,12 @@ void at_sis496_init()
         pci_slot(0xd);
         pci_slot(0xf);
         device_add(&sis496_device);
+}
+
+void at_sl82c460_init()
+{
+        at_init();
+        sl82c460_init();
 }
 
 void at_batman_init()

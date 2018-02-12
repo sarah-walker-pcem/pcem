@@ -110,6 +110,7 @@ static video_timings_t timing_vga      = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_ps1_svga = {VIDEO_ISA, 6, 8,16, 6, 8,16};
 static video_timings_t timing_t3100e   = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_t1000    = {VIDEO_ISA, 8,16,32, 8,16,32};
+static video_timings_t timing_pc425x   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
 
 int video_card_available(int card)
 {
@@ -314,6 +315,11 @@ void video_updatetiming()
                         timing = &timing_t1000;
                         break;
                         
+                        case ROM_ELX_PC425X:
+                        timing = &timing_pc425x;
+                        pclog("PC425 timing\n");
+                        break;
+                        
                         default:
                         new_gfxcard = video_old_to_new(gfxcard);
                         timing = &video_cards[new_gfxcard].timing;
@@ -361,6 +367,7 @@ void video_updatetiming()
                         video_timing_write_l = (int)(bus_timing * video_timing[video_speed][3]);
                 }
         }
+        pclog("Video timing %i %i %i\n",video_timing_write_b, video_timing_write_w,video_timing_write_l);
         if (cpu_16bitbus)
         {
                 video_timing_read_l = video_timing_read_w * 2;
@@ -445,6 +452,10 @@ void video_init()
 		case ROM_T1000:
 		case ROM_T1200:
                 device_add(&t1000_device);
+                return;
+                
+                case ROM_ELX_PC425X:
+                device_add(&tgui9400cxi_elx_device);
                 return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);
