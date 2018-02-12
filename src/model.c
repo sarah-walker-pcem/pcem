@@ -71,6 +71,7 @@ void         ibm_at_init();
 void         at_cbm_init();
 void       dells200_init();
 void     deskpro386_init();
+void      pb_l300sx_init();
 void      ps1_m2011_init();
 void      ps1_m2121_init();
 void    ps2_m30_286_init();
@@ -148,6 +149,7 @@ MODEL models[] =
         {"[386SX] IBM PS/1 model 2121",   ROM_IBMPS1_2121,      "ibmps1_2121",    { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 1, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1,      ps1_m2121_init, NULL},
         {"[386SX] IBM PS/2 Model 55SX",   ROM_IBMPS2_M55SX,     "ibmps2_m55sx",   { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 1, MODEL_AT|MODEL_PS2|MODEL_MCA,       1,   8,   1, ps2_model_55sx_init, NULL},
         {"[386SX] KMX-C-02",              ROM_KMXC02,           "kmxc02",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 0, MODEL_AT              ,             512,16384,512,    at_scatsx_init, NULL},
+        {"[386SX] Packard Bell Legend 300SX", ROM_PB_L300SX,    "pb_l300sx",      { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, 0, MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,   1,  16,   1,      pb_l300sx_init, NULL},
 
         {"[386DX] AMI 386DX clone",       ROM_AMI386DX_OPTI495, "ami386dx",       { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, 0, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,     at_opti495_init, NULL},
         {"[386DX] Compaq Deskpro 386",    ROM_DESKPRO_386,      "deskpro386",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, 0, MODEL_AT,                           1,  15,   1,     deskpro386_init, NULL},
@@ -488,6 +490,11 @@ void at_ali1429_init()
 {
         at_init();
         ali1429_init();
+}
+
+void pb_l300sx_init()
+{
+        at_init();
 }
 
 void at_sis496_init()

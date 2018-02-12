@@ -791,6 +791,14 @@ int loadbios()
                 biosmask = 0x7fff;
                 fclose(f);
                 return 1;
+				
+		case ROM_PB_L300SX:
+                f = romfopen("pb_l300sx/pb_l300sx.bin", "rb");
+                if (!f) break;
+                romfread(rom, 65536, 1, f);
+                fclose(f);
+                return 1;
+				
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

@@ -447,6 +447,7 @@ enum
         ROM_T3100E,
 	ROM_T1000,
 	ROM_T1200,
+	ROM_PB_L300SX,
                 	
         ROM_MAX
 };
