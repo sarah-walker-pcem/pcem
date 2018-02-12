@@ -806,6 +806,13 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x3fff;
                 return 1;
+				
+                case ROM_TO16_PC:
+                f=romfopen("to16_pc/TO16_103.bin","rb");
+                if (!f) break;
+                romfread(rom+0x8000,32768,1,f);
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

@@ -113,6 +113,7 @@ MODEL models[] =
         {"[8088] Schneider EuroPC",       ROM_EUROPC,           "europc",         { {"",      cpus_europc},      {"",    NULL},         {"",      NULL}},        0, 0,                  512, 640, 128,       europc_init, NULL},
         {"[8088] Tandy 1000",             ROM_TANDY,            "tandy",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  128, 640, 128,      tandy1k_init, &tandy1000_device},
         {"[8088] Tandy 1000 HX",          ROM_TANDY1000HX,      "tandy1000hx",    { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  256, 640, 128,      tandy1k_init, &tandy1000hx_device},
+        {"[8088] Thomson TO16 PC",        ROM_TO16_PC,          "to16_pc",        { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                  512, 640, 128,           xt_init, NULL},
         {"[8088] Toshiba 1000",           ROM_T1000,            "t1000",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  512,1280, 768,     xt_t1000_init, &t1000_device},
         {"[8088] VTech Laser Turbo XT",   ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
 
