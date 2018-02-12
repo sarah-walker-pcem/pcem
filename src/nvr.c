@@ -288,6 +288,7 @@ void loadnvr()
                 case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_PB_L300SX:        f = nvrfopen("pb_l300sx.nvr",        "rb"); nvrmask = 127; break;
                 case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_COMPAQ_PII:       f = nvrfopen("compaq_pii.nvr",       "rb"); break;
                 case ROM_T3100E:           f = nvrfopen("t3100e.nvr",           "rb"); break;
                 case ROM_T1000:            tc8521_loadnvr();
 					   t1000_configsys_loadnvr();
@@ -368,6 +369,7 @@ void savenvr()
                 case ROM_EPSON_PCAX:       f = nvrfopen("epson_pcax.nvr",       "wb"); break;
                 case ROM_EPSON_PCAX2E:     f = nvrfopen("epson_pcax2e.nvr",     "wb"); break;
                 case ROM_EPSON_PCAX3:      f = nvrfopen("epson_pcax3.nvr",      "wb"); break;
+                case ROM_COMPAQ_PII:       f = nvrfopen("compaq_pii.nvr",       "wb"); break;
                 case ROM_PB_L300SX:        f = nvrfopen("pb_l300sx.nvr",        "wb"); break;
                 case ROM_T3100E:           f = nvrfopen("t3100e.nvr",           "wb"); break;
 		case ROM_T1000:		   tc8521_savenvr();

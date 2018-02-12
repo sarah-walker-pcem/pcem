@@ -813,6 +813,20 @@ int loadbios()
                 romfread(rom+0x8000,32768,1,f);
                 fclose(f);
                 return 1;
+                
+                case ROM_COMPAQ_PII:
+                f  = romfopen("compaq_pii/109740-001.rom", "rb");
+                ff = romfopen("compaq_pii/109739-001.rom", "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x8000; c += 2)
+                {
+                         rom[c]     = getc(f);
+                         rom[c + 1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x7fff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
