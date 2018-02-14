@@ -361,7 +361,7 @@ static inline float low_fir_sb16(int i, float NewSample)
         //Calculate the new output
         x[i][pos] = NewSample;
 
-        for (n = 0; n < ((SB16_NCoef+1)-pos); n++)
+        for (n = 0; n < ((SB16_NCoef+1)-pos) && n < SB16_NCoef; n++)
                 out += low_fir_sb16_coef[n] * x[i][n+pos];
         for (; n < SB16_NCoef; n++)
                 out += low_fir_sb16_coef[n] * x[i][(n+pos) - (SB16_NCoef+1)];
