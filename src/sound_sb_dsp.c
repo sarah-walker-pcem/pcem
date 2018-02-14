@@ -777,6 +777,10 @@ void sb_dsp_init(sb_dsp_t *dsp, int type)
         timer_add(pollsb, &dsp->sbcount, &dsp->sbenable, dsp);
         timer_add(sb_poll_i, &dsp->sb_count_i, &dsp->sb_enable_i, dsp);
         timer_add(sb_wb_clear, &dsp->wb_time, &dsp->wb_time, dsp);
+
+        /*Initialise SB16 filter to same cutoff as 8-bit SBs (3.2 kHz). This will be recalculated when
+          a set frequency command is sent.*/
+        recalc_sb16_filter(3200*2);
 }
 
 void sb_dsp_setaddr(sb_dsp_t *dsp, uint16_t addr)
