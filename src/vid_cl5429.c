@@ -107,6 +107,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                         else
                                 svga->writemode = svga->gdcreg[5] & 3;
                         svga->readmode = val & 8;
+                        svga->chain2_read = val & 0x10;
 //                        pclog("writemode = %i\n", svga->writemode);
                         return;
                 }
@@ -341,10 +342,18 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
 //        if (svga_output) pclog("Write LFB %08X %02X ", addr, val);
         if (!(svga->gdcreg[6] & 1)) 
                 svga->fullchange = 2;
-        if (svga->chain4 && (svga->writemode < 4))
+        if ((svga->chain4 || svga->fb_only) && (svga->writemode < 4))
         {
                 writemask2 = 1 << (addr & 3);
                 addr &= ~3;
+        }
+        else if (svga->chain2_write)
+        {
+                writemask2 &= ~0xa;
+                if (addr & 1)
+                        writemask2 <<= 1;
+                addr &= ~1;
+                addr <<= 2;
         }
         else
         {
