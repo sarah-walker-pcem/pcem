@@ -501,7 +501,7 @@ void svga_poll(void *p)
                         }
                         
                         if (svga->hwcursor_on || svga->overlay_on)
-                                svga->changedvram[svga->ma >> 12] = svga->changedvram[(svga->ma >> 12) + 1] = 2;
+                                svga->changedvram[svga->ma >> 12] = svga->changedvram[(svga->ma >> 12) + 1] = svga->interlace ? 3 : 2;
                       
                         if (!svga->override)
                                 svga->render(svga);
