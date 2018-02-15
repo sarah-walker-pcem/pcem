@@ -358,6 +358,9 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
 void gd5429_recalctimings(svga_t *svga)
 {
         gd5429_t *gd5429 = (gd5429_t *)svga->p;
+        int clock = (svga->miscout >> 2) & 3;
+        int n, d, p;
+        double vclk;
         
         if (!svga->rowoffset)
                 svga->rowoffset = 0x100;
@@ -396,6 +399,22 @@ void gd5429_recalctimings(svga_t *svga)
                 else
                         svga->render = svga_render_15bpp_highres; 
         }
+        
+        n = svga->seqregs[0xb + clock] & 0x7f;
+        d = (svga->seqregs[0x1b + clock] >> 1) & 0x1f;
+        p = svga->seqregs[0x1b + clock] & 1;
+        
+        vclk = (14318184.0 * ((float)n / (float)d)) / (float)(1 + p);
+        switch (svga->seqregs[7] & 6)
+        {
+                case 2:
+                vclk /= 2.0;
+                break;
+                case 4:
+                vclk /= 3.0;
+                break;
+        }
+        svga->clock = cpuclock / vclk;
 }
 
 void gd5429_hwcursor_draw(svga_t *svga, int displine)
@@ -1105,6 +1124,17 @@ void *gd5429_init()
         svga->hwcursor.xoff = 0;
 
         gd5429->bank[1] = 0x8000;
+
+        /*Default VCLK values*/
+        svga->seqregs[0xb] = 0x66;
+        svga->seqregs[0xc] = 0x5b;
+        svga->seqregs[0xd] = 0x45;
+        svga->seqregs[0xe] = 0x7e;
+        svga->seqregs[0x1b] = 0x3b;
+        svga->seqregs[0x1c] = 0x2f;
+        svga->seqregs[0x1d] = 0x30;
+        svga->seqregs[0x1e] = 0x33;
+
         
         return gd5429;
 }
