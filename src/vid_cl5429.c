@@ -527,42 +527,42 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                         addr <<= 2;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
-                        if (val & 0x80)
+                        if (val & svga->seqregs[2] & 0x80)
                         {
                                 svga->vram[addr + 0] = svga->gdcreg[1];
                                 svga->vram[addr + 1] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x40)
+                        if (val & svga->seqregs[2] & 0x40)
                         {
                                 svga->vram[addr + 2] = svga->gdcreg[1];
                                 svga->vram[addr + 3] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x20)
+                        if (val & svga->seqregs[2] & 0x20)
                         {
                                 svga->vram[addr + 4] = svga->gdcreg[1];
                                 svga->vram[addr + 5] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x10)
+                        if (val & svga->seqregs[2] & 0x10)
                         {
                                 svga->vram[addr + 6] = svga->gdcreg[1];
                                 svga->vram[addr + 7] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x08)
+                        if (val & svga->seqregs[2] & 0x08)
                         {
                                 svga->vram[addr + 8] = svga->gdcreg[1];
                                 svga->vram[addr + 9] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x04)
+                        if (val & svga->seqregs[2] & 0x04)
                         {
                                 svga->vram[addr + 10] = svga->gdcreg[1];
                                 svga->vram[addr + 11] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x02)
+                        if (val & svga->seqregs[2] & 0x02)
                         {
                                 svga->vram[addr + 12] = svga->gdcreg[1];
                                 svga->vram[addr + 13] = svga->gdcreg[0x11];
                         }
-                        if (val & 0x01)
+                        if (val & svga->seqregs[2] & 0x01)
                         {
                                 svga->vram[addr + 14] = svga->gdcreg[1];
                                 svga->vram[addr + 15] = svga->gdcreg[0x11];
@@ -574,21 +574,21 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                         addr <<= 1;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
-                        if (val & 0x80)
+                        if (val & svga->seqregs[2] & 0x80)
                                 svga->vram[addr + 0] = svga->gdcreg[1];
-                        if (val & 0x40)
+                        if (val & svga->seqregs[2] & 0x40)
                                 svga->vram[addr + 1] = svga->gdcreg[1];
-                        if (val & 0x20)
+                        if (val & svga->seqregs[2] & 0x20)
                                 svga->vram[addr + 2] = svga->gdcreg[1];
-                        if (val & 0x10)
+                        if (val & svga->seqregs[2] & 0x10)
                                 svga->vram[addr + 3] = svga->gdcreg[1];
-                        if (val & 0x08)
+                        if (val & svga->seqregs[2] & 0x08)
                                 svga->vram[addr + 4] = svga->gdcreg[1];
-                        if (val & 0x04)
+                        if (val & svga->seqregs[2] & 0x04)
                                 svga->vram[addr + 5] = svga->gdcreg[1];
-                        if (val & 0x02)
+                        if (val & svga->seqregs[2] & 0x02)
                                 svga->vram[addr + 6] = svga->gdcreg[1];
-                        if (val & 0x01)
+                        if (val & svga->seqregs[2] & 0x01)
                                 svga->vram[addr + 7] = svga->gdcreg[1];
                 }
                 break;
@@ -600,22 +600,46 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                         addr <<= 2;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
-                        svga->vram[addr +  0] = (val & 0x80) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr +  1] = (val & 0x80) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr +  2] = (val & 0x40) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr +  3] = (val & 0x40) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr +  4] = (val & 0x20) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr +  5] = (val & 0x20) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr +  6] = (val & 0x10) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr +  7] = (val & 0x10) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr +  8] = (val & 0x08) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr +  9] = (val & 0x08) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr + 10] = (val & 0x04) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 11] = (val & 0x04) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr + 12] = (val & 0x02) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 13] = (val & 0x02) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
-                        svga->vram[addr + 14] = (val & 0x01) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 15] = (val & 0x01) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        if (svga->seqregs[2] & 0x80)
+                        {
+                                svga->vram[addr +  0] = (val & 0x80) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr +  1] = (val & 0x80) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x40)
+                        {
+                                svga->vram[addr +  2] = (val & 0x40) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr +  3] = (val & 0x40) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x20)
+                        {
+                                svga->vram[addr +  4] = (val & 0x20) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr +  5] = (val & 0x20) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x10)
+                        {
+                                svga->vram[addr +  6] = (val & 0x10) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr +  7] = (val & 0x10) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x08)
+                        {
+                                svga->vram[addr +  8] = (val & 0x08) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr +  9] = (val & 0x08) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x04)
+                        {
+                                svga->vram[addr + 10] = (val & 0x04) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr + 11] = (val & 0x04) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x02)
+                        {
+                                svga->vram[addr + 12] = (val & 0x02) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr + 13] = (val & 0x02) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
+                        if (svga->seqregs[2] & 0x01)
+                        {
+                                svga->vram[addr + 14] = (val & 0x01) ? svga->gdcreg[1] : svga->gdcreg[0];
+                                svga->vram[addr + 15] = (val & 0x01) ? svga->gdcreg[0x11] : svga->gdcreg[0x10];
+                        }
                 }
                 else
                 {
@@ -623,14 +647,22 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                         addr <<= 1;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
-                        svga->vram[addr + 0] = (val & 0x80) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 1] = (val & 0x40) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 2] = (val & 0x20) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 3] = (val & 0x10) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 4] = (val & 0x08) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 5] = (val & 0x04) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 6] = (val & 0x02) ? svga->gdcreg[1] : svga->gdcreg[0];
-                        svga->vram[addr + 7] = (val & 0x01) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x80)
+                                svga->vram[addr + 0] = (val & 0x80) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x40)
+                                svga->vram[addr + 1] = (val & 0x40) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x20)
+                                svga->vram[addr + 2] = (val & 0x20) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x10)
+                                svga->vram[addr + 3] = (val & 0x10) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x08)
+                                svga->vram[addr + 4] = (val & 0x08) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x04)
+                                svga->vram[addr + 5] = (val & 0x04) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x02)
+                                svga->vram[addr + 6] = (val & 0x02) ? svga->gdcreg[1] : svga->gdcreg[0];
+                        if (svga->seqregs[2] & 0x01)
+                                svga->vram[addr + 7] = (val & 0x01) ? svga->gdcreg[1] : svga->gdcreg[0];
                 }
                 break;
                 
