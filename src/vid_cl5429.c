@@ -792,9 +792,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 gd5429->blt.src_addr_backup = gd5429->blt.src_addr;
                 gd5429->blt.width_backup    = gd5429->blt.width;
                 gd5429->blt.height_internal = gd5429->blt.height;
-                gd5429->blt.x_count         = gd5429->blt.mask & 7;
-                if (gd5429->blt.mode & 0x10)
-                        gd5429->blt.x_count *= 2;
+                gd5429->blt.x_count         = 0;
 //                pclog("gd5429_start_blit : size %i, %i %i\n", gd5429->blt.width, gd5429->blt.height, gd5429->blt.x_count);
                 
                 if (gd5429->blt.mode & 0x04)
@@ -862,30 +860,17 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                                 src = mask ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
                                         else
                                                 src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
-//                                        pclog("  src=%02x mask=%i fg_col=%04x bg_col=%04x %i %08x\n", src, mask, gd5429->blt.fg_col, gd5429->blt.bg_col, gd5429->blt.x_count, gd5429->blt.src_addr);
-                                        gd5429->blt.x_count++;
-                                        if (gd5429->blt.x_count == 16)
-                                        {
-                                                gd5429->blt.x_count = 0;
-                                                gd5429->blt.src_addr++;
-                                        }
                                 }
                                 else
                                 {
                                         mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> gd5429->blt.x_count);
                                         src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
-                                        gd5429->blt.x_count++;
-                                        if (gd5429->blt.x_count == 8)
-                                        {
-                                                gd5429->blt.x_count = 0;
-                                                gd5429->blt.src_addr++;
-                                        }
                                 }
                                 break;
                                 case 0xc0:                                
                                 if (gd5429->blt.mode & 0x10)
                                 {
-                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> ((gd5429->blt.dst_addr >> 1) & 7));
+                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.x_count >> 1));
                                         if (gd5429->blt.dst_addr & 1)
                                                 src = mask ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
                                         else
@@ -893,7 +878,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 }
                                 else
                                 {
-                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.dst_addr & 7));
+                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> gd5429->blt.x_count);
                                         src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                 }
                                 break;
@@ -930,6 +915,14 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         svga->vram[gd5429->blt.dst_addr & svga->vram_mask] = dst;
                 
                 gd5429->blt.dst_addr += ((gd5429->blt.mode & 0x01) ? -1 : 1);
+
+                gd5429->blt.x_count++;
+                if (gd5429->blt.x_count == ((gd5429->blt.mode & 0x10) ? 16 : 8))
+                {
+                        gd5429->blt.x_count = 0;
+                        if ((gd5429->blt.mode & 0xc0) == 0x80)
+                                gd5429->blt.src_addr++;
+                }
                 
                 gd5429->blt.width--;
                 
@@ -952,15 +945,14 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 break;
                                 case 0x80:
                                 if (gd5429->blt.x_count != 0)
-                                {
-                                        gd5429->blt.x_count = 0;
                                         gd5429->blt.src_addr++;
-                                }
                                 break;
                                 case 0xc0:
                                 gd5429->blt.src_addr = ((gd5429->blt.src_addr + ((gd5429->blt.mode & 0x01) ? -1 : 1)) & 7) | (gd5429->blt.src_addr & ~7);
                                 break;
                         }
+
+                        gd5429->blt.x_count = 0;
                         
                         gd5429->blt.height_internal--;
                         if (gd5429->blt.height_internal == 0xffff)
