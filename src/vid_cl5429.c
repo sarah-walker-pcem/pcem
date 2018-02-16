@@ -90,7 +90,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
 //                                pclog("svga->hwcursor.ena = %i\n", svga->hwcursor.ena);
                                 break;                               
                                 case 0x13:
-                                svga->hwcursor.addr = 0x1fc000 + ((val & 0x3f) * 256);
+                                svga->hwcursor.addr = (0x1fc000 + ((val & 0x3f) * 256)) & svga->vram_mask;
 //                                pclog("svga->hwcursor.addr = %x\n", svga->hwcursor.addr);
                                 break;                                
                                 
@@ -1103,11 +1103,14 @@ void *gd5429_init()
 {
         gd5429_t *gd5429 = malloc(sizeof(gd5429_t));
         svga_t *svga = &gd5429->svga;
+        int vram_size;
         memset(gd5429, 0, sizeof(gd5429_t));
+        
+        vram_size = device_get_config_int("memory");
 
         rom_init(&gd5429->bios_rom, "5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
-        svga_init(&gd5429->svga, gd5429, 1 << 21, /*2mb*/
+        svga_init(&gd5429->svga, gd5429, vram_size << 20,
                    gd5429_recalctimings,
                    gd5429_in, gd5429_out,
                    gd5429_hwcursor_draw,
@@ -1174,6 +1177,33 @@ void gd5429_add_status_info(char *s, int max_len, void *p)
         svga_add_status_info(s, max_len, &gd5429->svga);
 }
 
+static device_config_t gd5429_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "1 MB",
+                                .value = 1
+                        },
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t gd5429_device =
 {
         "Cirrus Logic GD5429",
@@ -1183,5 +1213,6 @@ device_t gd5429_device =
         gd5429_available,
         gd5429_speed_changed,
         gd5429_force_redraw,
-        gd5429_add_status_info
+        gd5429_add_status_info,
+        gd5429_config
 };
