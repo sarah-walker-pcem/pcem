@@ -529,7 +529,7 @@ static uint32_t gd5429_readl(uint32_t addr, void *p)
 
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
-        return svga_readw_linear(addr, &gd5429->svga);
+        return svga_readl_linear(addr, &gd5429->svga);
 }
 
 void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
