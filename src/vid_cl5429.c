@@ -21,6 +21,8 @@ typedef struct gd5429_t
         
         uint32_t bank[2];
         uint32_t mask;
+        
+        uint32_t vram_mask;
 
         struct
         {
@@ -415,6 +417,8 @@ void gd5429_recalctimings(svga_t *svga)
                 break;
         }
         svga->clock = cpuclock / vclk;
+        
+        svga->vram_display_mask = (svga->crtc[0x1b] & 2) ? gd5429->vram_mask : 0x3ffff;
 }
 
 void gd5429_hwcursor_draw(svga_t *svga, int displine)
@@ -1131,6 +1135,7 @@ void *gd5429_init()
         memset(gd5429, 0, sizeof(gd5429_t));
         
         vram_size = device_get_config_int("memory");
+        gd5429->vram_mask = (vram_size << 20) - 1;
 
         rom_init(&gd5429->bios_rom, "5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
