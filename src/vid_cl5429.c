@@ -1284,7 +1284,7 @@ static device_config_t gd5429_config[] =
 device_t gd5429_device =
 {
         "Cirrus Logic GD5429",
-        DEVICE_NOT_WORKING,
+        0,
         gd5429_init,
         gd5429_close,
         gd5429_available,
