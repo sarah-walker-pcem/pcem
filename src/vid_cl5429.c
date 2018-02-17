@@ -34,7 +34,7 @@ typedef struct gd5429_t
                 
                 uint32_t dst_addr_backup, src_addr_backup;
                 uint16_t width_backup, height_internal;
-                int x_count;
+                int x_count, y_count;
         } blt;
 
         uint8_t hidden_dac_reg;
@@ -878,6 +878,10 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 gd5429->blt.width_backup    = gd5429->blt.width;
                 gd5429->blt.height_internal = gd5429->blt.height;
                 gd5429->blt.x_count         = 0;
+                if ((gd5429->blt.mode & 0xc0) == 0xc0)
+                        gd5429->blt.y_count = gd5429->blt.src_addr & 7;
+                else
+                        gd5429->blt.y_count = 0;
 //                pclog("gd5429_start_blit : size %i, %i %i\n", gd5429->blt.width, gd5429->blt.height, gd5429->blt.x_count);
                 
                 if (gd5429->blt.mode & 0x04)
@@ -932,9 +936,9 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 break;
                                 case 0x40:
                                 if (gd5429->blt.mode & 0x10)
-                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~15)) | (gd5429->blt.dst_addr & 15)];
+                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~3)) + (gd5429->blt.y_count << 4) + (gd5429->blt.x_count & 15)];
                                 else
-                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~7)) | (gd5429->blt.dst_addr & 7)];
+                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~7)) + (gd5429->blt.y_count << 3) + (gd5429->blt.x_count & 7)];
                                 mask = 1;
                                 break;
                                 case 0x80:
@@ -955,7 +959,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 case 0xc0:                                
                                 if (gd5429->blt.mode & 0x10)
                                 {
-                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.x_count >> 1));
+                                        mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> (gd5429->blt.x_count >> 1));
                                         if (gd5429->blt.dst_addr & 1)
                                                 src = mask ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
                                         else
@@ -963,7 +967,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 }
                                 else
                                 {
-                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> gd5429->blt.x_count);
+                                        mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> gd5429->blt.x_count);
                                         src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                 }
                                 break;
@@ -1022,22 +1026,17 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 case 0x00:
                                 gd5429->blt.src_addr = gd5429->blt.src_addr_backup = gd5429->blt.src_addr_backup + ((gd5429->blt.mode & 0x01) ? -gd5429->blt.src_pitch : gd5429->blt.src_pitch);
                                 break;
-                                case 0x40:
-                                if (gd5429->blt.mode & 0x10)
-                                        gd5429->blt.src_addr = ((gd5429->blt.src_addr + ((gd5429->blt.mode & 0x01) ? -16 : 16)) & 0x70) | (gd5429->blt.src_addr & ~0x70);
-                                else
-                                        gd5429->blt.src_addr = ((gd5429->blt.src_addr + ((gd5429->blt.mode & 0x01) ? -8 : 8)) & 0x38) | (gd5429->blt.src_addr & ~0x38);
-                                break;
                                 case 0x80:
                                 if (gd5429->blt.x_count != 0)
                                         gd5429->blt.src_addr++;
                                 break;
-                                case 0xc0:
-                                gd5429->blt.src_addr = ((gd5429->blt.src_addr + ((gd5429->blt.mode & 0x01) ? -1 : 1)) & 7) | (gd5429->blt.src_addr & ~7);
-                                break;
                         }
 
                         gd5429->blt.x_count = 0;
+                        if (gd5429->blt.mode & 0x10)
+                                gd5429->blt.y_count = (gd5429->blt.y_count - 1) & 7;
+                        else
+                                gd5429->blt.y_count = (gd5429->blt.y_count + 1) & 7;
                         
                         gd5429->blt.height_internal--;
                         if (gd5429->blt.height_internal == 0xffff)
