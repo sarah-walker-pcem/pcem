@@ -41,9 +41,6 @@ typedef struct gd5429_t
         int dac_3c6_count;
 } gd5429_t;
 
-void gd5429_write(uint32_t addr, uint8_t val, void *p);
-uint8_t gd5429_read(uint32_t addr, void *p);
-
 void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
 uint8_t gd5429_mmio_read(uint32_t addr, void *p);
 
@@ -459,7 +456,7 @@ void gd5429_hwcursor_draw(svga_t *svga, int displine)
 
 void gd5429_write_linear(uint32_t addr, uint8_t val, void *p);
 
-void gd5429_write(uint32_t addr, uint8_t val, void *p)
+static void gd5429_write(uint32_t addr, uint8_t val, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
@@ -469,8 +466,42 @@ void gd5429_write(uint32_t addr, uint8_t val, void *p)
 //        pclog("%08X\n", addr);
         gd5429_write_linear(addr, val, p);
 }
+static void gd5429_writew(uint32_t addr, uint16_t val, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
 
-uint8_t gd5429_read(uint32_t addr, void *p)
+        addr &= svga->banked_mask;
+        addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
+
+        if (svga->writemode < 4)
+                svga_writew_linear(addr, val, svga);
+        else
+        {
+                gd5429_write_linear(addr, val, p);
+                gd5429_write_linear(addr+1, val >> 8, p);
+        }
+}
+static void gd5429_writel(uint32_t addr, uint32_t val, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        addr &= svga->banked_mask;
+        addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
+
+        if (svga->writemode < 4)
+                svga_writel_linear(addr, val, svga);
+        else
+        {
+                gd5429_write_linear(addr, val, p);
+                gd5429_write_linear(addr+1, val >> 8, p);
+                gd5429_write_linear(addr+2, val >> 16, p);
+                gd5429_write_linear(addr+3, val >> 24, p);
+        }
+}
+
+static uint8_t gd5429_read(uint32_t addr, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
@@ -481,6 +512,24 @@ uint8_t gd5429_read(uint32_t addr, void *p)
         ret = svga_read_linear(addr, &gd5429->svga);
 //        pclog("%08X %02X\n", addr, ret);  
         return ret;      
+}
+static uint16_t gd5429_readw(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        addr &= svga->banked_mask;
+        addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
+        return svga_readw_linear(addr, &gd5429->svga);
+}
+static uint32_t gd5429_readl(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        addr &= svga->banked_mask;
+        addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
+        return svga_readw_linear(addr, &gd5429->svga);
 }
 
 void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
@@ -1145,7 +1194,7 @@ void *gd5429_init()
                    gd5429_hwcursor_draw,
                    NULL);
 
-        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
+        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, gd5429_readw, gd5429_readl, gd5429_write, gd5429_writew, gd5429_writel);
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
 
         mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  NULL, 0, gd5429);
