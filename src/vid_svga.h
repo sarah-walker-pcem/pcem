@@ -46,6 +46,8 @@ typedef struct svga_t
         int chain4, chain2_write, chain2_read;
         uint8_t writemask;
         uint32_t charseta, charsetb;
+
+        int set_reset_disabled;
         
         uint8_t egapal[16];
         uint32_t pallook[256];

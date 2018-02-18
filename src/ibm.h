@@ -490,6 +490,7 @@ enum
         GFX_MACH64VT2,  /*ATI Mach64 VT2*/
         GFX_OLIVETTI_GO481, /*Olivetti GO481 PVGA1A*/
         GFX_TGUI9400CXI,
+        GFX_CL_GD5430,  /*Cirrus Logic CL-GD5430*/
         GFX_MAX
 };
 

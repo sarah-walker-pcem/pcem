@@ -4,6 +4,7 @@
 #include "device.h"
 #include "io.h"
 #include "mem.h"
+#include "pci.h"
 #include "rom.h"
 #include "video.h"
 #include "vid_cl5429.h"
@@ -11,9 +12,16 @@
 #include "vid_svga_render.h"
 #include "vid_unk_ramdac.h"
 
+enum
+{
+        CL_TYPE_GD5429 = 0,
+        CL_TYPE_GD5430
+};
+
 typedef struct gd5429_t
 {
         mem_mapping_t mmio_mapping;
+        mem_mapping_t linear_mapping;
         
         svga_t svga;
         
@@ -24,6 +32,8 @@ typedef struct gd5429_t
         
         uint32_t vram_mask;
 
+        int type;
+        
         struct
         {
                 uint16_t bg_col, fg_col;                
@@ -39,6 +49,12 @@ typedef struct gd5429_t
 
         uint8_t hidden_dac_reg;
         int dac_3c6_count;
+        
+        uint8_t pci_regs[256];
+        uint8_t int_line;
+        int card;
+        
+        uint32_t lfb_base;
 } gd5429_t;
 
 void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
@@ -93,6 +109,8 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
 //                                pclog("svga->hwcursor.addr = %x\n", svga->hwcursor.addr);
                                 break;                                
                                 
+                                case 0x07:
+                                svga->set_reset_disabled = svga->seqregs[7] & 1;
                                 case 0x17:
                                 gd5429_recalc_mapping(gd5429);
                                 break;
@@ -296,7 +314,18 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                 switch (svga->crtcreg)
                 {
                         case 0x27: /*ID*/
-                        return 0x9c; /*GD5429*/
+                        switch (gd5429->type)
+                        {
+                                case CL_TYPE_GD5429:
+                                return 0x9c; /*GD5429*/
+                                case CL_TYPE_GD5430:
+                                return 0xa0; /*GD5430*/
+                        }
+                        break;
+                        case 0x28: /*Class ID*/
+                        if (gd5429->type == CL_TYPE_GD5430)
+                                return 0xff; /*Standard CL-GD5430*/
+                        break;
                 }
                 return svga->crtc[svga->crtcreg];
         }
@@ -327,31 +356,73 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
 {
         svga_t *svga = &gd5429->svga;
         
-//        pclog("Write mapping %02X %i\n", svga->gdcreg[6], svga->seqregs[0x17] & 0x04);
-        switch (svga->gdcreg[6] & 0x0C)
+        if (PCI && !(gd5429->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_MEM))
         {
-                case 0x0: /*128k at A0000*/
-                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                mem_mapping_disable(&svga->mapping);
+                mem_mapping_disable(&gd5429->linear_mapping);
                 mem_mapping_disable(&gd5429->mmio_mapping);
-                svga->banked_mask = 0xffff;
-                break;
-                case 0x4: /*64k at A0000*/
-                mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                return;
+        }
+        
+//        pclog("Write mapping %02X %i\n", svga->gdcreg[6], svga->seqregs[0x17] & 0x04);
+        if (!(svga->seqregs[7] & 0xf0))
+        {
+                mem_mapping_disable(&gd5429->linear_mapping);
+                switch (svga->gdcreg[6] & 0x0C)
+                {
+                        case 0x0: /*128k at A0000*/
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        mem_mapping_disable(&gd5429->mmio_mapping);
+                        svga->banked_mask = 0xffff;
+                        break;
+                        case 0x4: /*64k at A0000*/
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
+                        if (svga->seqregs[0x17] & 0x04)
+                                mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
+                        svga->banked_mask = 0xffff;
+                        break;
+                        case 0x8: /*32k at B0000*/
+                        mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
+                        mem_mapping_disable(&gd5429->mmio_mapping);
+                        svga->banked_mask = 0x7fff;
+                        break;
+                        case 0xC: /*32k at B8000*/
+                        mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
+                        mem_mapping_disable(&gd5429->mmio_mapping);
+                        svga->banked_mask = 0x7fff;
+                        break;
+                }
+        }
+        else
+        {
+                uint32_t base, size;
+                
+                if (gd5429->type <= CL_TYPE_GD5429)
+                {
+                        base = (svga->seqregs[7] & 0xf0) << 16;
+                        if (svga->gdcreg[0xb] & 0x20)
+                                size = 1 * 1024 * 1024;
+                        else
+                                size = 2 * 1024 * 1024;
+                }
+                else if (PCI)
+                {
+                        base = gd5429->lfb_base;
+                        size = 4 * 1024 * 1024;
+                }
+                else
+                {
+                        base = 128*1024*1024;
+                        size = 4 * 1024 * 1024;
+                }
+                        
+                mem_mapping_disable(&svga->mapping);
+                mem_mapping_set_addr(&gd5429->linear_mapping, base, size);
                 if (svga->seqregs[0x17] & 0x04)
                         mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
-                svga->banked_mask = 0xffff;
-                break;
-                case 0x8: /*32k at B0000*/
-                mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
-                mem_mapping_disable(&gd5429->mmio_mapping);
-                svga->banked_mask = 0x7fff;
-                break;
-                case 0xC: /*32k at B8000*/
-                mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
-                mem_mapping_disable(&gd5429->mmio_mapping);
-                svga->banked_mask = 0x7fff;
-                break;
-        }
+                else
+                        mem_mapping_disable(&gd5429->mmio_mapping);
+        }        
 }
         
 void gd5429_recalctimings(svga_t *svga)
@@ -728,7 +799,7 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 case 0:
                 if (svga->gdcreg[3] & 7) 
                         val = svga_rotate[svga->gdcreg[3] & 7][val];
-                if (svga->gdcreg[8] == 0xff && !(svga->gdcreg[3] & 0x18) && (!svga->gdcreg[1] || (svga->seqregs[7] & 1)))
+                if (svga->gdcreg[8] == 0xff && !(svga->gdcreg[3] & 0x18) && (!svga->gdcreg[1] || svga->set_reset_disabled))
                 {
                         if (writemask2 & 1) svga->vram[addr]       = val;
                         if (writemask2 & 2) svga->vram[addr | 0x1] = val;
@@ -861,6 +932,49 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         }
 }
 
+static void gd5429_writeb_linear(uint32_t addr, uint8_t val, void *p)
+{
+        svga_t *svga = (svga_t *)p;
+        gd5429_t *gd5429 = (gd5429_t *)svga->p;
+
+//        pclog("gd5429_writeb : %08X %02X\n", addr, val);
+        if (svga->writemode < 4)
+                svga_write_linear(addr, val, svga);
+        else
+                gd5429_write_linear(addr, val & 0xff, gd5429);
+}
+static void gd5429_writew_linear(uint32_t addr, uint16_t val, void *p)
+{
+        svga_t *svga = (svga_t *)p;
+        gd5429_t *gd5429 = (gd5429_t *)svga->p;
+
+//        pclog("gd5429_writew : %08X %04X\n", addr, val);
+        if (svga->writemode < 4)
+                svga_writew_linear(addr, val, svga);
+        else
+        {
+                gd5429_write_linear(addr, val & 0xff, gd5429);
+                gd5429_write_linear(addr+1, val >> 8, gd5429);
+        }
+}
+static void gd5429_writel_linear(uint32_t addr, uint32_t val, void *p)
+{
+        svga_t *svga = (svga_t *)p;
+        gd5429_t *gd5429 = (gd5429_t *)svga->p;
+
+//        pclog("gd5429_writel : %08X %08X %i\n", addr, val, svga->writemode);
+        if (svga->writemode < 4)
+                svga_writel_linear(addr, val, svga);
+        else
+        {
+                gd5429_write_linear(addr, val & 0xff, gd5429);
+                gd5429_write_linear(addr+1, val >> 8, gd5429);
+                gd5429_write_linear(addr+2, val >> 16, gd5429);
+                gd5429_write_linear(addr+3, val >> 24, gd5429);
+        }
+}
+        
+
 void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
@@ -887,14 +1001,31 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 if (gd5429->blt.mode & 0x04)
                 {
 //                        pclog("blt.mode & 0x04\n");
-                        mem_mapping_set_handler(&svga->mapping, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l);
-                        mem_mapping_set_p(&svga->mapping, gd5429);
+                        if (!(svga->seqregs[7] & 0xf0))
+                        {
+                                mem_mapping_set_handler(&svga->mapping, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l);
+                                mem_mapping_set_p(&svga->mapping, gd5429);
+                        }
+                        else
+                        {
+                                mem_mapping_set_handler(&gd5429->linear_mapping, NULL, NULL, NULL, NULL, gd5429_blt_write_w, gd5429_blt_write_l);
+                                mem_mapping_set_p(&gd5429->linear_mapping, gd5429);
+                        }
+                        gd5429_recalc_mapping(gd5429);
                         return;
                 }
                 else
                 {
-                        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
-                        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
+                        if (!(svga->seqregs[7] & 0xf0))
+                        {
+                                mem_mapping_set_handler(&svga->mapping, gd5429_read, gd5429_readw, gd5429_readl, gd5429_write, gd5429_writew, gd5429_writel);
+                                mem_mapping_set_p(&svga->mapping, gd5429);
+                        }
+                        else
+                        {
+                                mem_mapping_set_handler(&gd5429->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear);
+                                mem_mapping_set_p(&gd5429->linear_mapping, svga);
+                        }
                         gd5429_recalc_mapping(gd5429);
                 }                
         }
@@ -910,12 +1041,16 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 {
                         if (gd5429->blt.mode & 0x80)
                         {
-                                if (gd5429->blt.mode & 0x10)
-                                        fatal("Here blt.mode & 0x10\n");
-                                src = (cpu_dat & 0x80) ? gd5429->blt.fg_col : gd5429->blt.bg_col;
+                                if ((gd5429->blt.mode & 0x10) && (gd5429->blt.x_count & 1))
+                                        src = (cpu_dat & 0x80) ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
+                                else    
+                                        src = (cpu_dat & 0x80) ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                 mask = cpu_dat & 0x80;
-                                cpu_dat <<= 1;
-                                count--;
+                                if (!(gd5429->blt.mode & 0x10) || (gd5429->blt.x_count & 1))
+                                {
+                                        cpu_dat <<= 1;
+                                        count--;
+                                }
                         }
                         else
                         {
@@ -1043,8 +1178,18 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         {
                                 if (gd5429->blt.mode & 0x04)
                                 {
-                                        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
-                                        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
+                                        if (!(svga->seqregs[7] & 0xf0))
+                                        {
+                                                mem_mapping_set_handler(&svga->mapping, gd5429_read, gd5429_readw, gd5429_readl, gd5429_write, gd5429_writew, gd5429_writel);
+                                                mem_mapping_set_p(&svga->mapping, gd5429);
+                                        }
+                                        else
+                                        {
+                                                mem_mapping_set_handler(&gd5429->linear_mapping, svga_read_linear, svga_readw_linear, svga_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear);
+                                                mem_mapping_set_p(&gd5429->linear_mapping, svga);
+                                        }
+//                                        mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, NULL, NULL, gd5429_write, NULL, NULL);
+//                                        mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
                                         gd5429_recalc_mapping(gd5429);
                                 }
                                 return;
@@ -1175,7 +1320,90 @@ void gd5429_blt_write_l(uint32_t addr, uint32_t val, void *p)
                 gd5429_start_blit(val, 32, p);
 }
 
-void *gd5429_init()
+static uint8_t cl_pci_read(int func, int addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+
+//        pclog("CL PCI read %08X\n", addr);
+        switch (addr)
+        {
+                case 0x00: return 0x13; /*Cirrus Logic*/
+                case 0x01: return 0x10;
+                
+                case 0x02:
+                switch (gd5429->type)
+                {
+                        case CL_TYPE_GD5430:
+                        return 0xa0;
+                }
+                return 0xff;
+                case 0x03: return 0x00;
+                
+                case PCI_REG_COMMAND:
+                return gd5429->pci_regs[PCI_REG_COMMAND]; /*Respond to IO and memory accesses*/
+
+                case 0x07: return 0 << 1; /*Fast DEVSEL timing*/
+                
+                case 0x08: return 0; /*Revision ID*/
+                case 0x09: return 0; /*Programming interface*/
+                
+                case 0x0a: return 0x00; /*Supports VGA interface*/
+                case 0x0b: return 0x03;
+                
+                case 0x10: return 0x08; /*Linear frame buffer address*/
+                case 0x11: return 0x00;
+                case 0x12: return 0x00;
+                case 0x13: return gd5429->lfb_base >> 24;
+
+                case 0x30: return gd5429->pci_regs[0x30] & 0x01; /*BIOS ROM address*/
+                case 0x31: return 0x00;
+                case 0x32: return gd5429->pci_regs[0x32];
+                case 0x33: return gd5429->pci_regs[0x33];
+                
+                case 0x3c: return gd5429->int_line;
+                case 0x3d: return PCI_INTA;
+        }
+        return 0;
+}
+
+static void cl_pci_write(int func, int addr, uint8_t val, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+
+//        pclog("cl_pci_write: addr=%02x val=%02x\n", addr, val);
+        switch (addr)
+        {
+                case PCI_REG_COMMAND:
+                gd5429->pci_regs[PCI_REG_COMMAND] = val & 0x23;
+                io_removehandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
+                if (val & PCI_COMMAND_IO)
+                        io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
+                gd5429_recalc_mapping(gd5429);
+                break;
+                
+                case 0x13: 
+                gd5429->lfb_base = val << 24;
+                gd5429_recalc_mapping(gd5429); 
+                break;                
+
+                case 0x30: case 0x32: case 0x33:
+                gd5429->pci_regs[addr] = val;
+                if (gd5429->pci_regs[0x30] & 0x01)
+                {
+                        uint32_t addr = (gd5429->pci_regs[0x32] << 16) | (gd5429->pci_regs[0x33] << 24);
+                        mem_mapping_set_addr(&gd5429->bios_rom.mapping, addr, 0x8000);
+                }
+                else
+                        mem_mapping_disable(&gd5429->bios_rom.mapping);
+                return;
+                
+                case 0x3c:
+                gd5429->int_line = val;
+                return;
+        }
+}
+
+static void *cl_init(int type, char *fn)
 {
         gd5429_t *gd5429 = malloc(sizeof(gd5429_t));
         svga_t *svga = &gd5429->svga;
@@ -1184,8 +1412,10 @@ void *gd5429_init()
         
         vram_size = device_get_config_int("memory");
         gd5429->vram_mask = (vram_size << 20) - 1;
+        
+        gd5429->type = type;
 
-        rom_init(&gd5429->bios_rom, "5429.vbi", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&gd5429->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&gd5429->svga, gd5429, vram_size << 20,
                    gd5429_recalctimings,
@@ -1197,6 +1427,7 @@ void *gd5429_init()
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
 
         mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  NULL, 0, gd5429);
+        mem_mapping_add(&gd5429->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear,  NULL, 0, svga);
 
         io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
 
@@ -1215,8 +1446,28 @@ void *gd5429_init()
         svga->seqregs[0x1d] = 0x30;
         svga->seqregs[0x1e] = 0x33;
 
+        if (PCI && type >= CL_TYPE_GD5430)
+        {
+                gd5429->card = pci_add(cl_pci_read, cl_pci_write, gd5429);
+
+                gd5429->pci_regs[0x04] = 7;
+        
+                gd5429->pci_regs[0x30] = 0x00;
+                gd5429->pci_regs[0x32] = 0x0c;
+                gd5429->pci_regs[0x33] = 0x00;
+        }
         
         return gd5429;
+}
+
+
+static void *gd5429_init()
+{
+        return cl_init(CL_TYPE_GD5429, "5429.vbi");
+}
+static void *gd5430_init()
+{
+        return cl_init(CL_TYPE_GD5430, "gd5430/pci.bin");
 }
 
 static int gd5429_available()
@@ -1286,6 +1537,19 @@ device_t gd5429_device =
         "Cirrus Logic GD5429",
         0,
         gd5429_init,
+        gd5429_close,
+        gd5429_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        gd5429_config
+};
+
+device_t gd5430_device =
+{
+        "Cirrus Logic GD5430",
+        0,
+        gd5430_init,
         gd5429_close,
         gd5429_available,
         gd5429_speed_changed,
