@@ -49,24 +49,12 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         card_piix_ide[0x40] = val;
                         break;
                         case 0x41:
-                        if ((val ^ card_piix_ide[0x41]) & 0x80)
-                        {
-                                ide_pri_disable();
-                                if (val & 0x80)
-                                        ide_pri_enable();
-                        }
                         card_piix_ide[0x41] = val;
                         break;
                         case 0x42:
                         card_piix_ide[0x42] = val;
                         break;
                         case 0x43:
-                        if ((val ^ card_piix_ide[0x43]) & 0x80)
-                        {
-                                ide_sec_disable();
-                                if (val & 0x80)
-                                   ide_sec_enable();                                  
-                        }
                         card_piix_ide[0x43] = val;
                         break;
                 }
@@ -76,6 +64,18 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         io_removehandler(0, 0x10000, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
                         if (card_piix_ide[0x04] & 1)
                                 io_sethandler(base, 0x10, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
+                }
+                if (addr == 4 || addr == 0x41 || addr == 0x43)
+                {
+                        ide_pri_disable();
+                        ide_sec_disable();
+                        if (card_piix_ide[0x04] & 1)
+                        {
+                                if (card_piix_ide[0x41] & 0x80)
+                                        ide_pri_enable();
+                                if (card_piix_ide[0x43] & 0x80)
+                                        ide_sec_enable();
+                        }
                 }
 //                pclog("PIIX write %02X %02X\n", addr, val);
         }
@@ -367,7 +367,7 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
 
         card_piix_ide[0x00] = 0x86; card_piix_ide[0x01] = 0x80; /*Intel*/
         card_piix_ide[0x02] = 0x30; card_piix_ide[0x03] = 0x12; /*82371FB (PIIX)*/
-        card_piix_ide[0x04] = 0x00; card_piix_ide[0x05] = 0x00;
+        card_piix_ide[0x04] = 0x02; card_piix_ide[0x05] = 0x00;
         card_piix_ide[0x06] = 0x80; card_piix_ide[0x07] = 0x02;
         card_piix_ide[0x08] = 0x00;
         card_piix_ide[0x09] = 0x80; card_piix_ide[0x0a] = 0x01; card_piix_ide[0x0b] = 0x01;
@@ -383,4 +383,7 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
         pci_set_card_routing(pci_b, PCI_INTB);
         pci_set_card_routing(pci_c, PCI_INTC);
         pci_set_card_routing(pci_d, PCI_INTD);
+        
+        ide_pri_disable();
+        ide_sec_disable();
 }
