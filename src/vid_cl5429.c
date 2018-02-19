@@ -1469,10 +1469,18 @@ static void *gd5430_init()
 {
         return cl_init(CL_TYPE_GD5430, "gd5430/pci.bin");
 }
+static void *gd5430_pb570_init()
+{
+        return cl_init(CL_TYPE_GD5430, "pb570/gd5430.bin");
+}
 
 static int gd5429_available()
 {
         return rom_present("5429.vbi");
+}
+static int gd5430_available()
+{
+        return rom_present("gd5430/pci.bin");
 }
 
 void gd5429_close(void *p)
@@ -1551,7 +1559,20 @@ device_t gd5430_device =
         0,
         gd5430_init,
         gd5429_close,
-        gd5429_available,
+        gd5430_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        gd5429_config
+};
+
+device_t gd5430_pb570_device =
+{
+        "Cirrus Logic GD5430 (PB570)",
+        0,
+        gd5430_pb570_init,
+        gd5429_close,
+        gd5430_available,
         gd5429_speed_changed,
         gd5429_force_redraw,
         gd5429_add_status_info,
