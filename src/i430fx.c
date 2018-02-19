@@ -143,7 +143,7 @@ void i430fx_init()
         
         memset(card_i430fx, 0, 256);
         card_i430fx[0x00] = 0x86; card_i430fx[0x01] = 0x80; /*Intel*/
-        card_i430fx[0x02] = 0x22; card_i430fx[0x03] = 0x01; /*SB82437FX-66*/
+        card_i430fx[0x02] = 0x2d; card_i430fx[0x03] = 0x12; /*SB82437FX-66*/
         card_i430fx[0x04] = 0x06; card_i430fx[0x05] = 0x00;
         card_i430fx[0x06] = 0x00; card_i430fx[0x07] = 0x82;
         card_i430fx[0x08] = 0x00; /*A0 stepping*/
