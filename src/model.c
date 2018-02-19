@@ -38,6 +38,7 @@
 #include "nvr.h"
 #include "olivetti_m24.h"
 #include "opti495.h"
+#include "pc87306.h"
 #include "pci.h"
 #include "pic.h"
 #include "piix.h"
@@ -544,7 +545,7 @@ void at_endeavor_init()
         pci_slot(0x10);
         i430fx_init();
         piix_init(7, 0xd, 0xe, 0xf, 0x10);
-        um8669f_init();
+        pc87306_init(0x2e);
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
 }
