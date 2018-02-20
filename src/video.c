@@ -75,6 +75,7 @@ static VIDEO_CARD video_cards[] =
         {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,                    GFX_CL_GD5429,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Cirrus Logic CL-GD5430",                 "cl_gd5430",      &gd5430_device,                    GFX_CL_GD5430,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
+        {"Cirrus Logic CL-GD5434",                 "cl_gd5434",      &gd5434_device,                    GFX_CL_GD5434,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,                GFX_ET4000W32,       {VIDEO_BUS, 4,  4,  4,  10, 10, 10}},
         {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,                  GFX_VIRGE,           {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
         {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},

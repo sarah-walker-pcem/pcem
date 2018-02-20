@@ -15,9 +15,13 @@
 enum
 {
         CL_TYPE_GD5429 = 0,
-        CL_TYPE_GD5430
+        CL_TYPE_GD5430,
+        CL_TYPE_GD5434
 };
 
+#define BLIT_DEPTH_8  0
+#define BLIT_DEPTH_16 1
+#define BLIT_DEPTH_32 3
 typedef struct gd5429_t
 {
         mem_mapping_t mmio_mapping;
@@ -36,7 +40,7 @@ typedef struct gd5429_t
         
         struct
         {
-                uint16_t bg_col, fg_col;                
+                uint32_t bg_col, fg_col;                
                 uint16_t width, height;
                 uint16_t dst_pitch, src_pitch;               
                 uint32_t dst_addr, src_addr;
@@ -45,6 +49,7 @@ typedef struct gd5429_t
                 uint32_t dst_addr_backup, src_addr_backup;
                 uint16_t width_backup, height_internal;
                 int x_count, y_count;
+                int depth;
         } blt;
 
         uint8_t hidden_dac_reg;
@@ -105,7 +110,7 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
 //                                pclog("svga->hwcursor.ena = %i\n", svga->hwcursor.ena);
                                 break;                               
                                 case 0x13:
-                                svga->hwcursor.addr = (0x1fc000 + ((val & 0x3f) * 256)) & svga->vram_mask;
+                                svga->hwcursor.addr = (0x3fc000 + ((val & 0x3f) * 256)) & svga->vram_mask;
 //                                pclog("svga->hwcursor.addr = %x\n", svga->hwcursor.addr);
                                 break;                                
                                 
@@ -177,6 +182,18 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 break;
                                 case 0x11:
                                 gd5429_mmio_write(0x05, val, gd5429);
+                                break;
+                                case 0x12:
+                                gd5429_mmio_write(0x02, val, gd5429);
+                                break;
+                                case 0x13:
+                                gd5429_mmio_write(0x06, val, gd5429);
+                                break;
+                                case 0x14:
+                                gd5429_mmio_write(0x03, val, gd5429);
+                                break;
+                                case 0x15:
+                                gd5429_mmio_write(0x07, val, gd5429);
                                 break;
 
                                 case 0x20:
@@ -320,6 +337,8 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                                 return 0x9c; /*GD5429*/
                                 case CL_TYPE_GD5430:
                                 return 0xa0; /*GD5430*/
+                                case CL_TYPE_GD5434:
+                                return 0xa8; /*GD5434*/
                         }
                         break;
                         case 0x28: /*Class ID*/
@@ -337,14 +356,14 @@ void gd5429_recalc_banking(gd5429_t *gd5429)
         svga_t *svga = &gd5429->svga;
         
         if (svga->gdcreg[0xb] & 0x20)
-                gd5429->bank[0] = (svga->gdcreg[0x09] & 0x7f) << 14;
+                gd5429->bank[0] = (svga->gdcreg[0x09] & 0xff) << 14;
         else
                 gd5429->bank[0] = svga->gdcreg[0x09] << 12;
                                 
         if (svga->gdcreg[0xb] & 0x01)
         {
                 if (svga->gdcreg[0xb] & 0x20)
-                        gd5429->bank[1] = (svga->gdcreg[0x0a] & 0x7f) << 14;
+                        gd5429->bank[1] = (svga->gdcreg[0x0a] & 0xff) << 14;
                 else
                         gd5429->bank[1] = svga->gdcreg[0x0a] << 12;
         }
@@ -415,7 +434,6 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
                         base = 128*1024*1024;
                         size = 4 * 1024 * 1024;
                 }
-                        
                 mem_mapping_disable(&svga->mapping);
                 mem_mapping_set_addr(&gd5429->linear_mapping, base, size);
                 if (svga->seqregs[0x17] & 0x04)
@@ -431,7 +449,10 @@ void gd5429_recalctimings(svga_t *svga)
         int clock = (svga->miscout >> 2) & 3;
         int n, d, p;
         double vclk;
-        
+
+        if (svga->crtc[0x1b] & 0x10)
+                svga->rowoffset |= 0x100;
+                        
         if (!svga->rowoffset)
                 svga->rowoffset = 0x100;
         
@@ -461,13 +482,25 @@ void gd5429_recalctimings(svga_t *svga)
                                 svga->bpp = 16;
                                 break;
                                 case 0x5:
-                                svga->render = svga_render_24bpp_highres;
-                                svga->bpp = 24;
+                                if (gd5429->type >= CL_TYPE_GD5434 && (svga->seqregs[7] & 8))
+                                {
+                                        svga->render = svga_render_32bpp_highres;
+                                        svga->bpp = 32;
+                                        svga->rowoffset *= 2;
+                                }
+                                else
+                                {
+                                        svga->render = svga_render_24bpp_highres;
+                                        svga->bpp = 24;
+                                }
                                 break;
                         }
                 }
                 else
+                {
                         svga->render = svga_render_15bpp_highres; 
+                        svga->bpp = 15;
+                }
         }
         
         n = svga->seqregs[0xb + clock] & 0x7f;
@@ -475,7 +508,7 @@ void gd5429_recalctimings(svga_t *svga)
         p = svga->seqregs[0x1b + clock] & 1;
         
         vclk = (14318184.0 * ((float)n / (float)d)) / (float)(1 + p);
-        switch (svga->seqregs[7] & 6)
+        switch (svga->seqregs[7] & ((gd5429->type >= CL_TYPE_GD5434) ? 0xe : 0x6))
         {
                 case 2:
                 vclk /= 2.0;
@@ -980,9 +1013,22 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
         int blt_mask = gd5429->blt.mask & 7;
+        int x_max = 0;
 
-        if (gd5429->blt.mode & 0x10)
+        switch (gd5429->blt.depth)
+        {
+                case BLIT_DEPTH_8:
+                x_max = 8;
+                break;
+                case BLIT_DEPTH_16:
+                x_max = 16;
                 blt_mask *= 2;
+                break;
+                case BLIT_DEPTH_32:
+                x_max = 32;
+                blt_mask *= 4;
+                break;
+        }
                 
 //        pclog("gd5429_start_blit %i\n", count);
         if (count == -1)
@@ -1036,20 +1082,44 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
         {
                 uint8_t src = 0, dst;
                 int mask = 0;
+                int shift;
+                
+                if (gd5429->blt.depth == BLIT_DEPTH_32)
+                        shift = (gd5429->blt.x_count & 3) * 8;
+                else if (gd5429->blt.depth == BLIT_DEPTH_8)
+                        shift = 0;
+                else
+                        shift = (gd5429->blt.x_count & 1) * 8;
                 
                 if (gd5429->blt.mode & 0x04)
                 {
                         if (gd5429->blt.mode & 0x80)
-                        {
-                                if ((gd5429->blt.mode & 0x10) && (gd5429->blt.x_count & 1))
-                                        src = (cpu_dat & 0x80) ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
-                                else    
-                                        src = (cpu_dat & 0x80) ? gd5429->blt.fg_col : gd5429->blt.bg_col;
+                        {                                
                                 mask = cpu_dat & 0x80;
-                                if (!(gd5429->blt.mode & 0x10) || (gd5429->blt.x_count & 1))
+                                
+                                switch (gd5429->blt.depth)
                                 {
+                                        case BLIT_DEPTH_8:
+                                        src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
                                         cpu_dat <<= 1;
                                         count--;
+                                        break;
+                                        case BLIT_DEPTH_16:
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        if (gd5429->blt.x_count & 1)
+                                        {
+                                                cpu_dat <<= 1;
+                                                count--;
+                                        }
+                                        break;
+                                        case BLIT_DEPTH_32:
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        if ((gd5429->blt.x_count & 3) == 3)
+                                        {
+                                                cpu_dat <<= 1;
+                                                count--;
+                                        }
+                                        break;
                                 }
                         }
                         else
@@ -1070,40 +1140,52 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                                 mask = 1;
                                 break;
                                 case 0x40:
-                                if (gd5429->blt.mode & 0x10)
-                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~3)) + (gd5429->blt.y_count << 4) + (gd5429->blt.x_count & 15)];
-                                else
+                                switch (gd5429->blt.depth)
+                                {
+                                        case BLIT_DEPTH_8:
                                         src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~7)) + (gd5429->blt.y_count << 3) + (gd5429->blt.x_count & 7)];
+                                        break;
+                                        case BLIT_DEPTH_16:
+                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~3)) + (gd5429->blt.y_count << 4) + (gd5429->blt.x_count & 15)];
+                                        break;
+                                        case BLIT_DEPTH_32:
+                                        src = svga->vram[(gd5429->blt.src_addr & (svga->vram_mask & ~3)) + (gd5429->blt.y_count << 5) + (gd5429->blt.x_count & 31)];
+                                        break;
+                                }
                                 mask = 1;
                                 break;
                                 case 0x80:
-                                if (gd5429->blt.mode & 0x10)
+                                switch (gd5429->blt.depth)
                                 {
-                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.x_count >> 1));
-                                        if (gd5429->blt.dst_addr & 1)
-                                                src = mask ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
-                                        else
-                                                src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
-                                }
-                                else
-                                {
+                                        case BLIT_DEPTH_8:
                                         mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> gd5429->blt.x_count);
                                         src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
+                                        break;
+                                        case BLIT_DEPTH_16:
+                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.x_count >> 1));
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        break;
+                                        case BLIT_DEPTH_32:
+                                        mask = svga->vram[gd5429->blt.src_addr & svga->vram_mask] & (0x80 >> (gd5429->blt.x_count >> 2));
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        break;
                                 }
                                 break;
                                 case 0xc0:                                
-                                if (gd5429->blt.mode & 0x10)
+                                switch (gd5429->blt.depth)
                                 {
-                                        mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> (gd5429->blt.x_count >> 1));
-                                        if (gd5429->blt.dst_addr & 1)
-                                                src = mask ? (gd5429->blt.fg_col >> 8) : (gd5429->blt.bg_col >> 8);
-                                        else
-                                                src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
-                                }
-                                else
-                                {
+                                        case BLIT_DEPTH_8:
                                         mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> gd5429->blt.x_count);
                                         src = mask ? gd5429->blt.fg_col : gd5429->blt.bg_col;
+                                        break;
+                                        case BLIT_DEPTH_16:
+                                        mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> (gd5429->blt.x_count >> 1));
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        break;
+                                        case BLIT_DEPTH_32:
+                                        mask = svga->vram[(gd5429->blt.src_addr & svga->vram_mask & ~7) | gd5429->blt.y_count] & (0x80 >> (gd5429->blt.x_count >> 2));
+                                        src = mask ? (gd5429->blt.fg_col >> shift) : (gd5429->blt.bg_col >> shift);
+                                        break;
                                 }
                                 break;
                         }
@@ -1141,7 +1223,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                 gd5429->blt.dst_addr += ((gd5429->blt.mode & 0x01) ? -1 : 1);
 
                 gd5429->blt.x_count++;
-                if (gd5429->blt.x_count == ((gd5429->blt.mode & 0x10) ? 16 : 8))
+                if (gd5429->blt.x_count == x_max)
                 {
                         gd5429->blt.x_count = 0;
                         if ((gd5429->blt.mode & 0xc0) == 0x80)
@@ -1168,7 +1250,7 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
                         }
 
                         gd5429->blt.x_count = 0;
-                        if (gd5429->blt.mode & 0x10)
+                        if (gd5429->blt.mode & 0x01)
                                 gd5429->blt.y_count = (gd5429->blt.y_count - 1) & 7;
                         else
                                 gd5429->blt.y_count = (gd5429->blt.y_count + 1) & 7;
@@ -1209,17 +1291,45 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
         switch (addr & 0xff)
         {
                 case 0x00:
-                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00) | val;
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffffff00) | val;
+                else
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00) | val;
                 break;
                 case 0x01:
-                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ff) | (val << 8);
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffff00ff) | (val << 8);
+                else
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ff) | (val << 8);
+                break;
+                case 0x02:
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00ffff) | (val << 16);
+                break;
+                case 0x03:
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ffffff) | (val << 24);
                 break;
 
                 case 0x04:
-                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00) | val;
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffffff00) | val;
+                else
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00) | val;
                 break;
                 case 0x05:
-                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ff) | (val << 8);
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffff00ff) | (val << 8);
+                else
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ff) | (val << 8);
+                break;
+                case 0x06:
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00ffff) | (val << 16);
+                break;
+                case 0x07:
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ffffff) | (val << 24);
                 break;
 
                 case 0x08:
@@ -1227,12 +1337,17 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0x09:
                 gd5429->blt.width = (gd5429->blt.width & 0x00ff) | (val << 8);
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.width &= 0x1fff;
+                else
+                        gd5429->blt.width &= 0x07ff;
                 break;
                 case 0x0a:
                 gd5429->blt.height = (gd5429->blt.height & 0xff00) | val;
                 break;
                 case 0x0b:
                 gd5429->blt.height = (gd5429->blt.height & 0x00ff) | (val << 8);
+                gd5429->blt.height &= 0x03ff;
                 break;
                 case 0x0c:
                 gd5429->blt.dst_pitch = (gd5429->blt.dst_pitch & 0xff00) | val;
@@ -1255,6 +1370,10 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0x12:
                 gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0x00ffff) | (val << 16);
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.dst_addr &= 0x3fffff;
+                else
+                        gd5429->blt.dst_addr &= 0x1fffff;
                 break;
 
                 case 0x14:
@@ -1265,6 +1384,10 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0x16:
                 gd5429->blt.src_addr = (gd5429->blt.src_addr & 0x00ffff) | (val << 16);
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.src_addr &= 0x3fffff;
+                else
+                        gd5429->blt.src_addr &= 0x1fffff;
                 break;
 
                 case 0x17:
@@ -1272,6 +1395,10 @@ void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 0x18:
                 gd5429->blt.mode = val;
+                if (gd5429->type >= CL_TYPE_GD5434)
+                        gd5429->blt.depth = (val >> 4) & 3;
+                else
+                        gd5429->blt.depth = (val >> 4) & 1;
                 break;
                 
                 case 0x1a:
@@ -1335,6 +1462,8 @@ static uint8_t cl_pci_read(int func, int addr, void *p)
                 {
                         case CL_TYPE_GD5430:
                         return 0xa0;
+                        case CL_TYPE_GD5434:
+                        return 0xa8;
                 }
                 return 0xff;
                 case 0x03: return 0x00;
@@ -1473,6 +1602,10 @@ static void *gd5430_pb570_init()
 {
         return cl_init(CL_TYPE_GD5430, "pb570/gd5430.bin");
 }
+static void *gd5434_init()
+{
+        return cl_init(CL_TYPE_GD5434, "gd5434.bin");
+}
 
 static int gd5429_available()
 {
@@ -1481,6 +1614,10 @@ static int gd5429_available()
 static int gd5430_available()
 {
         return rom_present("gd5430/pci.bin");
+}
+static int gd5434_available()
+{
+        return rom_present("gd5434.bin");
 }
 
 void gd5429_close(void *p)
@@ -1539,6 +1676,32 @@ static device_config_t gd5429_config[] =
                 .type = -1
         }
 };
+static device_config_t gd5434_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "2 MB",
+                                .value = 2
+                        },
+                        {
+                                .description = "4 MB",
+                                .value = 4
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 4
+        },
+        {
+                .type = -1
+        }
+};
 
 device_t gd5429_device =
 {
@@ -1577,4 +1740,17 @@ device_t gd5430_pb570_device =
         gd5429_force_redraw,
         gd5429_add_status_info,
         gd5429_config
+};
+
+device_t gd5434_device =
+{
+        "Cirrus Logic GD5434",
+        0,
+        gd5434_init,
+        gd5429_close,
+        gd5434_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        gd5434_config
 };
