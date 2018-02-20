@@ -164,6 +164,9 @@ void *intel_flash_init(uint8_t type)
 		case ROM_REVENGE:
 		strcpy(flash_path, "revenge/");
 		break;
+		case ROM_PB520R:
+		strcpy(flash_path, "pb520r/");
+		break;
 		case ROM_ENDEAVOR:
 		strcpy(flash_path, "endeavor/");
 		break;

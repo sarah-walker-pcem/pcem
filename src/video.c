@@ -114,6 +114,7 @@ static video_timings_t timing_t3100e   = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_t1000    = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_pc425x   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
 static video_timings_t timing_pb570    = {VIDEO_BUS, 4, 4, 8, 10,10,20};
+static video_timings_t timing_pb520r   = {VIDEO_BUS, 4, 4, 8, 10,10,20};
 
 int video_card_available(int card)
 {
@@ -325,6 +326,10 @@ void video_updatetiming()
                         case ROM_PB570:
                         timing = &timing_pb570;
                         break;
+
+                        case ROM_PB520R:
+                        timing = &timing_pb520r;
+                        break;
                         
                         default:
                         new_gfxcard = video_old_to_new(gfxcard);
@@ -466,6 +471,10 @@ void video_init()
 
                 case ROM_PB570:
                 device_add(&gd5430_pb570_device);
+                return;
+                
+                case ROM_PB520R:
+                device_add(&gd5434_pb520r_device);
                 return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);

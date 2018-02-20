@@ -9,6 +9,7 @@
 #include "ali1429.h"
 #include "amstrad.h"
 #include "cbm_io.h"
+#include "cmd640.h"
 #include "compaq.h"
 #include "dells200.h"
 #include "device.h"
@@ -99,6 +100,7 @@ void       xt_t1000_init();
 void       xt_t1200_init();
 void    at_sl82c460_init();
 void       at_zappa_init();
+void      at_pb520r_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -170,6 +172,7 @@ MODEL models[] =
         {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  1, MODEL_AT|MODEL_HAS_IDE,             1, 256,   1,    at_sl82c460_init, NULL},
 
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
+        {"[Socket 4] Packard Bell PB520R",ROM_PB520R,           "pb520r",         { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        1, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_pb520r_init, NULL},
 
         {"[Socket 5] Intel Advanced/EV",  ROM_ENDEAVOR,         "endeavor",       { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
         {"[Socket 5] Intel Advanced/ZP",  ROM_ZAPPA,            "zappa",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_zappa_init,    NULL},
@@ -535,6 +538,19 @@ void at_batman_init()
         i430lx_init();
         sio_init(2, 0xc, 0xe, 0x6, 0);
         fdc37c665_init();
+        intel_batman_init();
+        device_add(&intel_flash_bxt_ami_device);
+}
+void at_pb520r_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_2);
+        pci_slot(0xc);
+        pci_slot(0xe);
+        pci_slot(0x6);
+        i430lx_init();
+        sio_init(2, 0xc, 0xe, 0x6, 0);
+        cmd640b_init(1);
         intel_batman_init();
         device_add(&intel_flash_bxt_ami_device);
 }

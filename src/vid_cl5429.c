@@ -1606,6 +1606,10 @@ static void *gd5434_init()
 {
         return cl_init(CL_TYPE_GD5434, "gd5434.bin");
 }
+static void *gd5434_pb520r_init()
+{
+        return cl_init(CL_TYPE_GD5434, "pb520r/gd5434.bin");
+}
 
 static int gd5429_available()
 {
@@ -1747,6 +1751,19 @@ device_t gd5434_device =
         "Cirrus Logic GD5434",
         0,
         gd5434_init,
+        gd5429_close,
+        gd5434_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        gd5434_config
+};
+
+device_t gd5434_pb520r_device =
+{
+        "Cirrus Logic GD5434 (PB520r)",
+        0,
+        gd5434_pb520r_init,
         gd5429_close,
         gd5434_available,
         gd5429_speed_changed,

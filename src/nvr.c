@@ -300,7 +300,8 @@ void loadnvr()
 		case ROM_ELX_PC425X:       f = nvrfopen("elx_pc425.nvr",       "rb"); nvrmask = 127; break;
 		case ROM_PB570:            f = nvrfopen("pb570.nvr",           "rb"); nvrmask = 127; break;
 		case ROM_ZAPPA:            f = nvrfopen("zappa.nvr",           "rb"); nvrmask = 127; break;
-                		
+		case ROM_PB520R:           f = nvrfopen("pb520r.nvr",          "rb"); nvrmask = 127; break;
+                                		
                 default: return;
         }
         if (!f)
@@ -385,6 +386,7 @@ void savenvr()
 		case ROM_ELX_PC425X:       f = nvrfopen("elx_pc425.nvr",       "wb"); break;
 		case ROM_PB570:            f = nvrfopen("pb570.nvr",           "wb"); break;
 		case ROM_ZAPPA:            f = nvrfopen("zappa.nvr",           "wb"); break;
+		case ROM_PB520R:           f = nvrfopen("pb520r.nvr",          "wb"); break;
 		
                 default: return;
         }

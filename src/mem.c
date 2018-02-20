@@ -875,6 +875,21 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+
+                case ROM_PB520R:
+                f = romfopen("pb520r/1009bc0r.bio", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                romfread(rom + 0x10000, 0x10000, 1, f);                
+                fclose(f);
+                f = romfopen("pb520r/1009bc0r.bi1", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                romfread(rom, 0xc000, 1, f);
+                romfread(rom+0xc000, 0x1000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
