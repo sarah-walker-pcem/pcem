@@ -453,6 +453,7 @@ enum
 	ROM_COMPAQ_PII,
 	ROM_ELX_PC425X,
 	ROM_PB570,
+	ROM_ZAPPA,
                 	
         ROM_MAX
 };

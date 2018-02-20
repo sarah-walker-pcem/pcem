@@ -106,3 +106,19 @@ void intel_endeavor_init()
 {
         io_sethandler(0x0079, 0x0001, endeavor_brdconfig, NULL, NULL, NULL, NULL, NULL, NULL);
 }
+
+static uint8_t zappa_brdconfig(uint16_t port, void *p)
+{
+//        pclog("zappa_brdconfig read port=%04x\n", port);
+        switch (port)
+        {
+                case 0x79:
+                return 0xff;
+        }
+        return 0;
+}
+
+void intel_zappa_init()
+{
+        io_sethandler(0x0079, 0x0001, zappa_brdconfig, NULL, NULL, NULL, NULL, NULL, NULL);
+}

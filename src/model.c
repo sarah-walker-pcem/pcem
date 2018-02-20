@@ -98,6 +98,7 @@ void      at_t3100e_init();
 void       xt_t1000_init();
 void       xt_t1200_init();
 void    at_sl82c460_init();
+void       at_zappa_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -171,6 +172,7 @@ MODEL models[] =
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,      at_batman_init, NULL},
 
         {"[Socket 5] Intel Advanced/EV",  ROM_ENDEAVOR,         "endeavor",       { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
+        {"[Socket 5] Intel Advanced/ZP",  ROM_ZAPPA,            "zappa",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_zappa_init,    NULL},
         {"[Socket 5] Packard Bell PB570", ROM_PB570,            "pb570",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   1, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 128,   1,    at_endeavor_init, NULL},
 
         {"[Socket 7] Award 430VX PCI",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   0, MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1, 256,   1,      at_i430vx_init, NULL},
@@ -548,6 +550,20 @@ void at_endeavor_init()
         piix_init(7, 0xd, 0xe, 0xf, 0x10);
         pc87306_init(0x2e);
         intel_endeavor_init();
+        device_add(&intel_flash_bxt_ami_device);
+}
+void at_zappa_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0xd);
+        pci_slot(0xe);
+        pci_slot(0xf);
+        pci_slot(0x10);
+        i430fx_init();
+        piix_init(7, 0xd, 0xe, 0xf, 0x10);
+        pc87306_init(0x2e);
+        intel_zappa_init();
         device_add(&intel_flash_bxt_ami_device);
 }
 
