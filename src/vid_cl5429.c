@@ -60,10 +60,16 @@ typedef struct gd5429_t
         int card;
         
         uint32_t lfb_base;
+        
+        int mmio_vram_overlap;
 } gd5429_t;
 
-void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
-uint8_t gd5429_mmio_read(uint32_t addr, void *p);
+static void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
+static void gd5429_mmio_writew(uint32_t addr, uint16_t val, void *p);
+static void gd5429_mmio_writel(uint32_t addr, uint32_t val, void *p);
+static uint8_t gd5429_mmio_read(uint32_t addr, void *p);
+static uint16_t gd5429_mmio_readw(uint32_t addr, void *p);
+static uint32_t gd5429_mmio_readl(uint32_t addr, void *p);
 
 void gd5429_blt_write_w(uint32_t addr, uint16_t val, void *p);
 void gd5429_blt_write_l(uint32_t addr, uint32_t val, void *p);
@@ -383,6 +389,8 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
                 return;
         }
         
+        gd5429->mmio_vram_overlap = 0;
+        
 //        pclog("Write mapping %02X %i\n", svga->gdcreg[6], svga->seqregs[0x17] & 0x04);
         if (!(svga->seqregs[7] & 0xf0))
         {
@@ -390,27 +398,27 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
                 switch (svga->gdcreg[6] & 0x0C)
                 {
                         case 0x0: /*128k at A0000*/
-                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
-                        mem_mapping_disable(&gd5429->mmio_mapping);
+                        mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);                        
                         svga->banked_mask = 0xffff;
                         break;
                         case 0x4: /*64k at A0000*/
                         mem_mapping_set_addr(&svga->mapping, 0xa0000, 0x10000);
-                        if (svga->seqregs[0x17] & 0x04)
-                                mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
                         svga->banked_mask = 0xffff;
                         break;
                         case 0x8: /*32k at B0000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb0000, 0x08000);
-                        mem_mapping_disable(&gd5429->mmio_mapping);
                         svga->banked_mask = 0x7fff;
                         break;
                         case 0xC: /*32k at B8000*/
                         mem_mapping_set_addr(&svga->mapping, 0xb8000, 0x08000);
-                        mem_mapping_disable(&gd5429->mmio_mapping);
                         svga->banked_mask = 0x7fff;
+                        gd5429->mmio_vram_overlap = 1;
                         break;
                 }
+                if (svga->seqregs[0x17] & 0x04)
+                        mem_mapping_set_addr(&gd5429->mmio_mapping, 0xb8000, 0x00100);
+                else
+                        mem_mapping_disable(&gd5429->mmio_mapping);
         }
         else
         {
@@ -1283,146 +1291,201 @@ void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
         }
 }
 
-void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
+static void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
 
-//        pclog("MMIO write %08X %02X\n", addr, val);
-        switch (addr & 0xff)
+        if ((addr & ~0xff) == 0xb8000)
         {
-                case 0x00:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffffff00) | val;
-                else
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00) | val;
-                break;
-                case 0x01:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffff00ff) | (val << 8);
-                else
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ff) | (val << 8);
-                break;
-                case 0x02:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00ffff) | (val << 16);
-                break;
-                case 0x03:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ffffff) | (val << 24);
-                break;
+        //        pclog("MMIO write %08X %02X\n", addr, val);
+                switch (addr & 0xff)
+                {
+                        case 0x00:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffffff00) | val;
+                        else
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00) | val;
+                        break;
+                        case 0x01:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xffff00ff) | (val << 8);
+                        else
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ff) | (val << 8);
+                        break;
+                        case 0x02:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0xff00ffff) | (val << 16);
+                        break;
+                        case 0x03:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.bg_col = (gd5429->blt.bg_col & 0x00ffffff) | (val << 24);
+                        break;
 
-                case 0x04:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffffff00) | val;
-                else
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00) | val;
-                break;
-                case 0x05:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffff00ff) | (val << 8);
-                else
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ff) | (val << 8);
-                break;
-                case 0x06:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00ffff) | (val << 16);
-                break;
-                case 0x07:
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ffffff) | (val << 24);
-                break;
+                        case 0x04:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffffff00) | val;
+                        else
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00) | val;
+                        break;
+                        case 0x05:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xffff00ff) | (val << 8);
+                        else
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ff) | (val << 8);
+                        break;
+                        case 0x06:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0xff00ffff) | (val << 16);
+                        break;
+                        case 0x07:
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.fg_col = (gd5429->blt.fg_col & 0x00ffffff) | (val << 24);
+                        break;
 
-                case 0x08:
-                gd5429->blt.width = (gd5429->blt.width & 0xff00) | val;
-                break;
-                case 0x09:
-                gd5429->blt.width = (gd5429->blt.width & 0x00ff) | (val << 8);
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.width &= 0x1fff;
-                else
-                        gd5429->blt.width &= 0x07ff;
-                break;
-                case 0x0a:
-                gd5429->blt.height = (gd5429->blt.height & 0xff00) | val;
-                break;
-                case 0x0b:
-                gd5429->blt.height = (gd5429->blt.height & 0x00ff) | (val << 8);
-                gd5429->blt.height &= 0x03ff;
-                break;
-                case 0x0c:
-                gd5429->blt.dst_pitch = (gd5429->blt.dst_pitch & 0xff00) | val;
-                break;
-                case 0x0d:
-                gd5429->blt.dst_pitch = (gd5429->blt.dst_pitch & 0x00ff) | (val << 8);
-                break;
-                case 0x0e:
-                gd5429->blt.src_pitch = (gd5429->blt.src_pitch & 0xff00) | val;
-                break;
-                case 0x0f:
-                gd5429->blt.src_pitch = (gd5429->blt.src_pitch & 0x00ff) | (val << 8);
-                break;
+                        case 0x08:
+                        gd5429->blt.width = (gd5429->blt.width & 0xff00) | val;
+                        break;
+                        case 0x09:
+                        gd5429->blt.width = (gd5429->blt.width & 0x00ff) | (val << 8);
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.width &= 0x1fff;
+                        else
+                                gd5429->blt.width &= 0x07ff;
+                        break;
+                        case 0x0a:
+                        gd5429->blt.height = (gd5429->blt.height & 0xff00) | val;
+                        break;
+                        case 0x0b:
+                        gd5429->blt.height = (gd5429->blt.height & 0x00ff) | (val << 8);
+                        gd5429->blt.height &= 0x03ff;
+                        break;
+                        case 0x0c:
+                        gd5429->blt.dst_pitch = (gd5429->blt.dst_pitch & 0xff00) | val;
+                        break;
+                        case 0x0d:
+                        gd5429->blt.dst_pitch = (gd5429->blt.dst_pitch & 0x00ff) | (val << 8);
+                        break;
+                        case 0x0e:
+                        gd5429->blt.src_pitch = (gd5429->blt.src_pitch & 0xff00) | val;
+                        break;
+                        case 0x0f:
+                        gd5429->blt.src_pitch = (gd5429->blt.src_pitch & 0x00ff) | (val << 8);
+                        break;
                 
-                case 0x10:
-                gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0xffff00) | val;
-                break;
-                case 0x11:
-                gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0xff00ff) | (val << 8);
-                break;
-                case 0x12:
-                gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0x00ffff) | (val << 16);
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.dst_addr &= 0x3fffff;
-                else
-                        gd5429->blt.dst_addr &= 0x1fffff;
-                break;
+                        case 0x10:
+                        gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0xffff00) | val;
+                        break;
+                        case 0x11:
+                        gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0xff00ff) | (val << 8);
+                        break;
+                        case 0x12:
+                        gd5429->blt.dst_addr = (gd5429->blt.dst_addr & 0x00ffff) | (val << 16);
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.dst_addr &= 0x3fffff;
+                        else
+                                gd5429->blt.dst_addr &= 0x1fffff;
+                        break;
 
-                case 0x14:
-                gd5429->blt.src_addr = (gd5429->blt.src_addr & 0xffff00) | val;
-                break;
-                case 0x15:
-                gd5429->blt.src_addr = (gd5429->blt.src_addr & 0xff00ff) | (val << 8);
-                break;
-                case 0x16:
-                gd5429->blt.src_addr = (gd5429->blt.src_addr & 0x00ffff) | (val << 16);
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.src_addr &= 0x3fffff;
-                else
-                        gd5429->blt.src_addr &= 0x1fffff;
-                break;
+                        case 0x14:
+                        gd5429->blt.src_addr = (gd5429->blt.src_addr & 0xffff00) | val;
+                        break;
+                        case 0x15:
+                        gd5429->blt.src_addr = (gd5429->blt.src_addr & 0xff00ff) | (val << 8);
+                        break;
+                        case 0x16:
+                        gd5429->blt.src_addr = (gd5429->blt.src_addr & 0x00ffff) | (val << 16);
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.src_addr &= 0x3fffff;
+                        else
+                                gd5429->blt.src_addr &= 0x1fffff;
+                        break;
 
-                case 0x17:
-                gd5429->blt.mask = val;
-                break;
-                case 0x18:
-                gd5429->blt.mode = val;
-                if (gd5429->type >= CL_TYPE_GD5434)
-                        gd5429->blt.depth = (val >> 4) & 3;
-                else
-                        gd5429->blt.depth = (val >> 4) & 1;
-                break;
+                        case 0x17:
+                        gd5429->blt.mask = val;
+                        break;
+                        case 0x18:
+                        gd5429->blt.mode = val;
+                        if (gd5429->type >= CL_TYPE_GD5434)
+                                gd5429->blt.depth = (val >> 4) & 3;
+                        else
+                                gd5429->blt.depth = (val >> 4) & 1;
+                        break;
                 
-                case 0x1a:
-                gd5429->blt.rop = val;
-                break;
+                        case 0x1a:
+                        gd5429->blt.rop = val;
+                        break;
                 
-                case 0x40:
-                if (val & 0x02)
-                        gd5429_start_blit(0, -1, gd5429);
-                break;
+                        case 0x40:
+                        if (val & 0x02)
+                                gd5429_start_blit(0, -1, gd5429);
+                        break;
+                }
         }
+        else if (gd5429->mmio_vram_overlap)
+                gd5429_write(addr, val, gd5429);
+}
+static void gd5429_mmio_writew(uint32_t addr, uint16_t val, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+
+        if ((addr & ~0xff) == 0xb8000)
+        {
+                gd5429_mmio_write(addr,     val & 0xff, gd5429);
+                gd5429_mmio_write(addr + 1, val >> 8, gd5429);
+        }
+        else if (gd5429->mmio_vram_overlap)
+                gd5429_writew(addr, val, gd5429);
+}
+static void gd5429_mmio_writel(uint32_t addr, uint32_t val, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+
+        if ((addr & ~0xff) == 0xb8000)
+        {
+                gd5429_mmio_writew(addr,     val & 0xffff, gd5429);
+                gd5429_mmio_writew(addr + 2, val >> 16, gd5429);
+        }
+        else if (gd5429->mmio_vram_overlap)
+                gd5429_writel(addr, val, gd5429);
 }
 
-uint8_t gd5429_mmio_read(uint32_t addr, void *p)
+static uint8_t gd5429_mmio_read(uint32_t addr, void *p)
 {
-//        gd5429_t *gd5429 = (gd5429_t *)p;
-
-//        pclog("MMIO read %08X\n", addr);
-        switch (addr & 0xff)
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        
+        if ((addr & ~0xff) == 0xb8000)
         {
-                case 0x40: /*BLT status*/
-                return 0;
+//        pclog("MMIO read %08X\n", addr);
+                switch (addr & 0xff)
+                {
+                        case 0x40: /*BLT status*/
+                        return 0;
+                }
+                return 0xff; /*All other registers read-only*/
         }
-        return 0xff; /*All other registers read-only*/
+        if (gd5429->mmio_vram_overlap)
+                return gd5429_read(addr, gd5429);
+        return 0xff;
+}
+static uint16_t gd5429_mmio_readw(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        
+        if ((addr & ~0xff) == 0xb8000)
+                return gd5429_mmio_read(addr, gd5429) | (gd5429_mmio_read(addr+1, gd5429) << 8);
+        if (gd5429->mmio_vram_overlap)
+                return gd5429_readw(addr, gd5429);
+        return 0xffff;
+}
+static uint32_t gd5429_mmio_readl(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        
+        if ((addr & ~0xff) == 0xb8000)
+                return gd5429_mmio_readw(addr, gd5429) | (gd5429_mmio_readw(addr+2, gd5429) << 16);
+        if (gd5429->mmio_vram_overlap)
+                return gd5429_readl(addr, gd5429);
+        return 0xffffffff;
 }
 
 void gd5429_blt_write_w(uint32_t addr, uint16_t val, void *p)
@@ -1555,7 +1618,7 @@ static void *cl_init(int type, char *fn)
         mem_mapping_set_handler(&gd5429->svga.mapping, gd5429_read, gd5429_readw, gd5429_readl, gd5429_write, gd5429_writew, gd5429_writel);
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
 
-        mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, NULL, NULL, gd5429_mmio_write, NULL, NULL,  NULL, 0, gd5429);
+        mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, gd5429_mmio_readw, gd5429_mmio_readl, gd5429_mmio_write, gd5429_mmio_writew, gd5429_mmio_writel,  NULL, 0, gd5429);
         mem_mapping_add(&gd5429->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear,  NULL, 0, svga);
 
         io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
