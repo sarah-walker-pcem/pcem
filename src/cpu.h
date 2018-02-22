@@ -148,4 +148,6 @@ void cpu_update_waitstates();
 void cpu_set();
 void cpu_set_edx();
 
+extern int has_vlb;
+
 #endif

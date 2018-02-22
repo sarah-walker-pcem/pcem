@@ -1,6 +1,7 @@
 /*Cirrus Logic CL-GD5429 emulation*/
 #include <stdlib.h>
 #include "ibm.h"
+#include "cpu.h"
 #include "device.h"
 #include "io.h"
 #include "mem.h"
@@ -22,6 +23,14 @@ enum
 #define BLIT_DEPTH_8  0
 #define BLIT_DEPTH_16 1
 #define BLIT_DEPTH_32 3
+
+#define CL_GD5429_SYSTEM_BUS_VESA 5
+#define CL_GD5429_SYSTEM_BUS_ISA  7
+
+#define CL_GD543X_SYSTEM_BUS_PCI  4
+#define CL_GD543X_SYSTEM_BUS_VESA 6
+#define CL_GD543X_SYSTEM_BUS_ISA  7
+
 typedef struct gd5429_t
 {
         mem_mapping_t mmio_mapping;
@@ -305,10 +314,33 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                 case 0x3c5:
                 if (svga->seqaddr > 5)
                 {
+                        uint8_t temp;
+                        
                         switch (svga->seqaddr)
                         {
                                 case 6:
                                 return ((svga->seqregs[6] & 0x17) == 0x12) ? 0x12 : 0x0f;
+
+                                case 0x17:
+                                temp = svga->gdcreg[0x17];
+                                temp &= ~(7 << 3);
+                                if (gd5429->type == CL_TYPE_GD5429)
+                                {
+                                        if (has_vlb)
+                                                temp |= (CL_GD5429_SYSTEM_BUS_VESA << 3);
+                                        else
+                                                temp |= (CL_GD5429_SYSTEM_BUS_ISA << 3);
+                                }
+                                else
+                                {
+                                        if (PCI)
+                                                temp |= (CL_GD543X_SYSTEM_BUS_PCI << 3);
+                                        else if (has_vlb)
+                                                temp |= (CL_GD543X_SYSTEM_BUS_VESA << 3);
+                                        else
+                                                temp |= (CL_GD543X_SYSTEM_BUS_ISA << 3);
+                                }
+                                return temp;                                
                         }
                         return svga->seqregs[svga->seqaddr & 0x3f];
                 }
@@ -424,7 +456,7 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
         {
                 uint32_t base, size;
                 
-                if (gd5429->type <= CL_TYPE_GD5429)
+                if (gd5429->type <= CL_TYPE_GD5429 || (!PCI && !has_vlb))
                 {
                         base = (svga->seqregs[7] & 0xf0) << 16;
                         if (svga->gdcreg[0xb] & 0x20)
@@ -437,7 +469,7 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
                         base = gd5429->lfb_base;
                         size = 4 * 1024 * 1024;
                 }
-                else
+                else /*VLB*/
                 {
                         base = 128*1024*1024;
                         size = 4 * 1024 * 1024;

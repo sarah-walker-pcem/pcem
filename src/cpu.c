@@ -8,6 +8,7 @@
 #include "codegen.h"
 
 int isa_cycles;
+int has_vlb;
 static uint8_t ccr0, ccr1, ccr2, ccr3, ccr4, ccr5, ccr6;
 
 OpFn *x86_dynarec_opcodes;
@@ -500,6 +501,7 @@ void cpu_set()
         cpu_hasMSR = 0;
         cpu_hasCR4 = 0;
         ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = 0;
+        has_vlb = (cpu_s->cpu_type >= CPU_i486SX) && (cpu_s->cpu_type <= CPU_Cx5x86);
 
         cpu_update_waitstates();
   
