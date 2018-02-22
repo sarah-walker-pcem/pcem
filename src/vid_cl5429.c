@@ -145,9 +145,9 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3cf:
 //                pclog("Write GDC %02x %02x\n", svga->gdcaddr, val);
                 if (svga->gdcaddr == 0)
-                        gd5429_mmio_write(0x00, val, gd5429);
+                        gd5429_mmio_write(0xb8000, val, gd5429);
                 if (svga->gdcaddr == 1)
-                        gd5429_mmio_write(0x04, val, gd5429);
+                        gd5429_mmio_write(0xb8004, val, gd5429);
                 if (svga->gdcaddr == 5)
                 {
                         svga->gdcreg[5] = val;
@@ -184,82 +184,82 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 break;
 
                                 case 0x10:
-                                gd5429_mmio_write(0x01, val, gd5429);
+                                gd5429_mmio_write(0xb8001, val, gd5429);
                                 break;
                                 case 0x11:
-                                gd5429_mmio_write(0x05, val, gd5429);
+                                gd5429_mmio_write(0xb8005, val, gd5429);
                                 break;
                                 case 0x12:
-                                gd5429_mmio_write(0x02, val, gd5429);
+                                gd5429_mmio_write(0xb8002, val, gd5429);
                                 break;
                                 case 0x13:
-                                gd5429_mmio_write(0x06, val, gd5429);
+                                gd5429_mmio_write(0xb8006, val, gd5429);
                                 break;
                                 case 0x14:
-                                gd5429_mmio_write(0x03, val, gd5429);
+                                gd5429_mmio_write(0xb8003, val, gd5429);
                                 break;
                                 case 0x15:
-                                gd5429_mmio_write(0x07, val, gd5429);
+                                gd5429_mmio_write(0xb8007, val, gd5429);
                                 break;
 
                                 case 0x20:
-                                gd5429_mmio_write(0x08, val, gd5429);
+                                gd5429_mmio_write(0xb8008, val, gd5429);
                                 break;
                                 case 0x21:
-                                gd5429_mmio_write(0x09, val, gd5429);
+                                gd5429_mmio_write(0xb8009, val, gd5429);
                                 break;
                                 case 0x22:
-                                gd5429_mmio_write(0x0a, val, gd5429);
+                                gd5429_mmio_write(0xb800a, val, gd5429);
                                 break;
                                 case 0x23:
-                                gd5429_mmio_write(0x0b, val, gd5429);
+                                gd5429_mmio_write(0xb800b, val, gd5429);
                                 break;
                                 case 0x24:
-                                gd5429_mmio_write(0x0c, val, gd5429);
+                                gd5429_mmio_write(0xb800c, val, gd5429);
                                 break;
                                 case 0x25:
-                                gd5429_mmio_write(0x0d, val, gd5429);
+                                gd5429_mmio_write(0xb800d, val, gd5429);
                                 break;
                                 case 0x26:
-                                gd5429_mmio_write(0x0e, val, gd5429);
+                                gd5429_mmio_write(0xb800e, val, gd5429);
                                 break;
                                 case 0x27:
-                                gd5429_mmio_write(0x0f, val, gd5429);
+                                gd5429_mmio_write(0xb800f, val, gd5429);
                                 break;
                 
                                 case 0x28:
-                                gd5429_mmio_write(0x10, val, gd5429);
+                                gd5429_mmio_write(0xb8010, val, gd5429);
                                 break;
                                 case 0x29:
-                                gd5429_mmio_write(0x11, val, gd5429);
+                                gd5429_mmio_write(0xb8011, val, gd5429);
                                 break;
                                 case 0x2a:
-                                gd5429_mmio_write(0x12, val, gd5429);
+                                gd5429_mmio_write(0xb8012, val, gd5429);
                                 break;
 
                                 case 0x2c:
-                                gd5429_mmio_write(0x14, val, gd5429);
+                                gd5429_mmio_write(0xb8014, val, gd5429);
                                 break;
                                 case 0x2d:
-                                gd5429_mmio_write(0x15, val, gd5429);
+                                gd5429_mmio_write(0xb8015, val, gd5429);
                                 break;
                                 case 0x2e:
-                                gd5429_mmio_write(0x16, val, gd5429);
+                                gd5429_mmio_write(0xb8016, val, gd5429);
                                 break;
 
                                 case 0x2f:
-                                gd5429_mmio_write(0x17, val, gd5429);
+                                gd5429_mmio_write(0xb8017, val, gd5429);
                                 break;
                                 case 0x30:
-                                gd5429_mmio_write(0x18, val, gd5429);
+                                gd5429_mmio_write(0xb8018, val, gd5429);
                                 break;
                 
                                 case 0x32:
-                                gd5429_mmio_write(0x1a, val, gd5429);
+                                gd5429_mmio_write(0xb801a, val, gd5429);
                                 break;
                 
                                 case 0x31:
-                                gd5429_mmio_write(0x40, val, gd5429);
+                                gd5429_mmio_write(0xb8040, val, gd5429);
                                 break;
                         }                        
                         return;
