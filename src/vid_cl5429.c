@@ -1627,7 +1627,7 @@ static void cl_pci_write(int func, int addr, uint8_t val, void *p)
         }
 }
 
-static void *cl_init(int type, char *fn)
+static void *cl_init(int type, char *fn, int pci_card)
 {
         gd5429_t *gd5429 = malloc(sizeof(gd5429_t));
         svga_t *svga = &gd5429->svga;
@@ -1672,7 +1672,13 @@ static void *cl_init(int type, char *fn)
 
         if (PCI && type >= CL_TYPE_GD5430)
         {
-                gd5429->card = pci_add(cl_pci_read, cl_pci_write, gd5429);
+                if (pci_card != -1)
+                {
+                        pci_add_specific(pci_card, cl_pci_read, cl_pci_write, gd5429);
+                        gd5429->card = pci_card;
+                }
+                else
+                        gd5429->card = pci_add(cl_pci_read, cl_pci_write, gd5429);
 
                 gd5429->pci_regs[0x04] = 7;
         
@@ -1687,23 +1693,23 @@ static void *cl_init(int type, char *fn)
 
 static void *gd5429_init()
 {
-        return cl_init(CL_TYPE_GD5429, "5429.vbi");
+        return cl_init(CL_TYPE_GD5429, "5429.vbi", -1);
 }
 static void *gd5430_init()
 {
-        return cl_init(CL_TYPE_GD5430, "gd5430/pci.bin");
+        return cl_init(CL_TYPE_GD5430, "gd5430/pci.bin", -1);
 }
 static void *gd5430_pb570_init()
 {
-        return cl_init(CL_TYPE_GD5430, "pb570/gd5430.bin");
+        return cl_init(CL_TYPE_GD5430, "pb570/gd5430.bin", 8);
 }
 static void *gd5434_init()
 {
-        return cl_init(CL_TYPE_GD5434, "gd5434.bin");
+        return cl_init(CL_TYPE_GD5434, "gd5434.bin", -1);
 }
 static void *gd5434_pb520r_init()
 {
-        return cl_init(CL_TYPE_GD5434, "pb520r/gd5434.bin");
+        return cl_init(CL_TYPE_GD5434, "pb520r/gd5434.bin", 3);
 }
 
 static int gd5429_available()
