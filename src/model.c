@@ -577,7 +577,7 @@ void at_zappa_init()
         pci_slot(0xf);
         pci_slot(0x10);
         i430fx_init();
-        piix_init(7, 0xd, 0xe, 0xf, 0x10);
+        piix_init(7, 0xd, 0xf, 0xe, 0x10);
         pc87306_init(0x2e);
         intel_zappa_init();
         device_add(&intel_flash_bxt_ami_device);
