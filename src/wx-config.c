@@ -81,6 +81,16 @@ static void recalc_vid_list(void* hdlg, int model)
 
         wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+        
+        if (models[model].fixed_gfxcard)
+        {
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Built-in video");
+                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                wx_enablewindow(h, FALSE);
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREVID"));
+                wx_enablewindow(h, FALSE);
+                return;
+        }
 
         while (1)
         {
@@ -106,7 +116,13 @@ static void recalc_vid_list(void* hdlg, int model)
         }
         if (!found_card)
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-        wx_enablewindow(h, models[model].fixed_gfxcard ? FALSE : TRUE);
+        wx_enablewindow(h, TRUE);
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREVID"));
+        if (video_card_has_config(video_old_to_new(gfxcard)))
+                wx_enablewindow(h, TRUE);
+        else
+                wx_enablewindow(h, FALSE);
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECKVOODOO"));
         wx_enablewindow(h, (models[model].flags & MODEL_PCI) ? TRUE : FALSE);
@@ -619,7 +635,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 wx_enablewindow(h, FALSE);
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREVID"));
-                        if (video_card_has_config(video_old_to_new(gfxcard)))
+                        if (video_card_has_config(video_old_to_new(gfxcard)) && !models[romstomodel[romset]].fixed_gfxcard)
                                 wx_enablewindow(h, TRUE);
                         else
                                 wx_enablewindow(h, FALSE);
@@ -1027,13 +1043,16 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         }
                         else if (wParam == WX_ID("IDC_COMBOVID"))
                         {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
+                                temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOVID"));
                                 wx_sendmessage(h, WX_CB_GETLBTEXT, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0),
                                 (LONG_PARAM) temp_str);
                                 gfx = video_card_getid(temp_str);
 
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREVID"));
-                                if (video_card_has_config(gfx))
+                                if (video_card_has_config(gfx) && !models[temp_model].fixed_gfxcard)
                                         wx_enablewindow(h, TRUE);
                                 else
                                         wx_enablewindow(h, FALSE);
