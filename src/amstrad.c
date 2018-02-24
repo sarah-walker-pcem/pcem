@@ -4,10 +4,12 @@
 #include "keyboard.h"
 #include "lpt.h"
 #include "mouse.h"
+#include "video.h"
 
 #include "amstrad.h"
 
 static uint8_t amstrad_dead;
+int amstrad_latch = 0;
 
 uint8_t amstrad_read(uint16_t port, void *priv)
 {
@@ -23,8 +25,38 @@ uint8_t amstrad_read(uint16_t port, void *priv)
                 case 0x37a:
                 temp = lpt1_read(port, NULL) & 0x1f;
                 if (romset == ROM_PC1512) return temp | 0x20;
-                if (romset == ROM_PC200)  return temp | 0x80;
+                if (romset == ROM_PC200)
+                {
+                        if (video_is_cga())
+                                temp |= 0x80;
+                        else if (video_is_mda())
+                                temp |= 0xc0;
+                        return temp;
+                }
+                if (romset == ROM_PC1640)
+                {
+                        if (video_is_cga())
+                                temp |= 0x80;                        
+                        else if (video_is_mda())
+                                temp |= 0xc0;
+
+                        switch (amstrad_latch)
+                        {
+                                case AMSTRAD_NOLATCH:
+                                temp &= ~0x20;
+                                break;
+                                case AMSTRAD_SW9:
+                                temp &= ~0x20;
+                                break;
+                                case AMSTRAD_SW10:
+                                temp |= 0x20;
+                                break;
+                        }
+                }
                 return temp;
+                case 0x3de:
+                return 0x20; /*PC200 - use external video. If internal video is being used
+                               then this port is handled in vid_pc200.c*/
                 case 0xdead:
                 return amstrad_dead;
         }
@@ -121,4 +153,6 @@ void amstrad_init()
         io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
         io_sethandler(0x0378, 0x0003, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
+        if (romset == ROM_PC200 && gfxcard != GFX_BUILTIN)        
+                io_sethandler(0x03de, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
 }

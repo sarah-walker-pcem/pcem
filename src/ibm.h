@@ -465,6 +465,7 @@ int romset;
 
 enum
 {
+        GFX_BUILTIN = -1,
         GFX_CGA = 0,
         GFX_MDA,
         GFX_HERCULES,

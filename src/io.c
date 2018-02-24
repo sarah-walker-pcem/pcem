@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "amstrad.h"
 #include "ide.h"
 #include "io.h"
 #include "video.h"
@@ -135,6 +136,13 @@ uint8_t inb(uint16_t port)
         if (port_inb[port][1])
            temp &= port_inb[port][1](port, port_priv[port][1]);
            
+        if (port & 0x80)
+                amstrad_latch = AMSTRAD_NOLATCH;
+        else if (port & 0x4000)   
+                amstrad_latch = AMSTRAD_SW10;
+        else
+                amstrad_latch = AMSTRAD_SW9;
+
 /*           if (!port_inb[port][0] && !port_inb[port][1])
            	pclog("Bad INB %04X %04X:%04X\n", port, CS, pc);*/
            	

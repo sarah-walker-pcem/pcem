@@ -129,6 +129,9 @@ static video_timings_t timing_pb520r   = {VIDEO_BUS, 4, 4, 8, 10,10,20};
 
 int video_card_available(int card)
 {
+        if (card == GFX_BUILTIN)
+                return 1;
+                
         if (video_cards[card].device)
                 return device_available(video_cards[card].device);
 
@@ -137,16 +140,90 @@ int video_card_available(int card)
 
 char *video_card_getname(int card)
 {
+        if (card == GFX_BUILTIN)
+                return "Built-in video";
         return video_cards[card].name;
 }
 
 device_t *video_card_getdevice(int card)
 {
+        switch (romset)
+        {
+                case ROM_IBMPCJR:
+                return &pcjr_video_device;
+                
+                case ROM_TANDY:
+                case ROM_TANDY1000HX:
+                return &tandy_device;
+
+                case ROM_TANDY1000SL2:
+                return &tandysl_device;
+
+                case ROM_PC1512:
+                return &pc1512_device;
+                
+                case ROM_PC1640:
+                if (gfxcard == GFX_BUILTIN)
+                        return &pc1640_device;
+                break;
+                
+                case ROM_PC200:
+                if (gfxcard == GFX_BUILTIN)
+                        return &pc200_device;
+                break;
+                
+                case ROM_OLIM24:
+                return &m24_device;
+
+                case ROM_PC2086:
+                if (gfxcard == GFX_BUILTIN)
+                        return &paradise_pvga1a_pc2086_device;
+                break;
+
+                case ROM_PC3086:
+                if (gfxcard == GFX_BUILTIN)
+                        return &paradise_pvga1a_pc3086_device;
+                break;
+
+                case ROM_MEGAPC:
+                return &paradise_wd90c11_megapc_device;
+                        
+                case ROM_ACER386:
+                return &oti067_acer386_device;
+                
+                case ROM_IBMPS1_2011:
+                case ROM_IBMPS2_M30_286:
+                case ROM_IBMPS2_M50:
+                case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M80:
+                return &ps1vga_device;
+
+                case ROM_IBMPS1_2121:
+                return &ps1_m2121_svga_device;
+
+		case ROM_T3100E:
+                return &t3100e_device;
+
+		case ROM_T1000:
+		case ROM_T1200:
+                return &t1000_device;
+                
+                case ROM_ELX_PC425X:
+                return &tgui9400cxi_elx_device;
+
+                case ROM_PB570:
+                return &gd5430_pb570_device;
+                
+                case ROM_PB520R:
+                return &gd5434_pb520r_device;
+        }
         return video_cards[card].device;
 }
 
 int video_card_has_config(int card)
 {
+        if (card == GFX_BUILTIN)
+                return 0;
         return video_cards[card].device->config ? 1 : 0;
 }
 
@@ -161,12 +238,18 @@ int video_card_getid(char *s)
                 c++;
         }
         
+        if (!strcmp(s, "Built-in video"))
+                return GFX_BUILTIN;
+        
         return 0;
 }
 
 int video_old_to_new(int card)
 {
         int c = 0;
+        
+        if (card == GFX_BUILTIN)
+                return GFX_BUILTIN;
         
         while (video_cards[c].device)
         {
@@ -180,11 +263,17 @@ int video_old_to_new(int card)
 
 int video_new_to_old(int card)
 {
+        if (card == GFX_BUILTIN)
+                return GFX_BUILTIN;
+
         return video_cards[card].legacy_id;
 }
 
 char *video_get_internal_name(int card)
 {
+        if (card == GFX_BUILTIN)
+                return "builtin";
+
         return video_cards[card].internal_name;
 }
 
@@ -192,6 +281,9 @@ int video_get_video_from_internal_name(char *s)
 {
 	int c = 0;
 	
+        if (!strcmp(s, "builtin"))
+                return GFX_BUILTIN;
+
 	while (video_cards[c].legacy_id != -1)
 	{
 		if (!strcmp(video_cards[c].internal_name, s))
@@ -206,18 +298,20 @@ int video_is_mda()
 {
         switch (romset)
         {
+                case ROM_PC1640:
+                case ROM_PC200:
+                case ROM_PC2086:
+                case ROM_PC3086:
+                case ROM_MEGAPC:
+                case ROM_ACER386:
+                if (gfxcard != GFX_BUILTIN)
+                        break;
                 case ROM_IBMPCJR:
                 case ROM_TANDY:
                 case ROM_TANDY1000HX:
                 case ROM_TANDY1000SL2:
                 case ROM_PC1512:
-                case ROM_PC1640:
-                case ROM_PC200:
                 case ROM_OLIM24:
-                case ROM_PC2086:
-                case ROM_PC3086:
-                case ROM_MEGAPC:
-                case ROM_ACER386:
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
@@ -237,12 +331,14 @@ int video_is_cga()
 {
         switch (romset)
         {
+                case ROM_PC200:
+                if (gfxcard != GFX_BUILTIN)
+                        break;
                 case ROM_IBMPCJR:
                 case ROM_TANDY:
                 case ROM_TANDY1000HX:
                 case ROM_TANDY1000SL2:
                 case ROM_PC1512:
-                case ROM_PC200:
                 case ROM_OLIM24:
         	case ROM_T3100E:
         	case ROM_T1000:
@@ -253,6 +349,8 @@ int video_is_cga()
                 case ROM_PC3086:
                 case ROM_MEGAPC:
                 case ROM_ACER386:
+                if (gfxcard != GFX_BUILTIN)
+                        break;
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
@@ -370,6 +468,9 @@ void video_updatetiming()
                 video_timings_t *timing;
                 int new_gfxcard = 0;
                 
+                new_gfxcard = video_old_to_new(gfxcard);
+                timing = &video_cards[new_gfxcard].timing;
+
                 switch (romset)
                 {
                         case ROM_IBMPCJR:
@@ -384,11 +485,13 @@ void video_updatetiming()
                         break;
                 
                         case ROM_PC1640:
-                        timing = &timing_pc1640;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_pc1640;
                         break;
                 
                         case ROM_PC200:
-                        timing = &timing_pc200;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_pc200;
                         break;
                 
                         case ROM_OLIM24:
@@ -397,15 +500,18 @@ void video_updatetiming()
 
                         case ROM_PC2086:
                         case ROM_PC3086:
-                        timing = &timing_pvga1a;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_pvga1a;
                         break;
 
                         case ROM_MEGAPC:
-                        timing = &timing_wd90c11;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_wd90c11;
                         break;
                         
                         case ROM_ACER386:
-                        timing = &timing_oti067;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_oti067;
                         break;
                 
                         case ROM_IBMPS1_2011:
@@ -438,11 +544,6 @@ void video_updatetiming()
 
                         case ROM_PB520R:
                         timing = &timing_pb520r;
-                        break;
-                        
-                        default:
-                        new_gfxcard = video_old_to_new(gfxcard);
-                        timing = &video_cards[new_gfxcard].timing;
                         break;
                 }
                 
@@ -526,32 +627,56 @@ void video_init()
                 return;
                 
                 case ROM_PC1640:
-                device_add(&pc1640_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&pc1640_device);
+                        return;
+                }
+                break;
                 
                 case ROM_PC200:
-                device_add(&pc200_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&pc200_device);
+                        return;
+                }
+                break;
                 
                 case ROM_OLIM24:
                 device_add(&m24_device);
                 return;
 
                 case ROM_PC2086:
-                device_add(&paradise_pvga1a_pc2086_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&paradise_pvga1a_pc2086_device);
+                        return;
+                }
+                break;
 
                 case ROM_PC3086:
-                device_add(&paradise_pvga1a_pc3086_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&paradise_pvga1a_pc3086_device);
+                        return;
+                }
+                break;
 
                 case ROM_MEGAPC:
-                device_add(&paradise_wd90c11_megapc_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&paradise_wd90c11_megapc_device);
+                        return;
+                }
+                break;
                         
                 case ROM_ACER386:
-                device_add(&oti067_acer386_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&oti067_acer386_device);
+                        return;
+                }
+                break;
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:

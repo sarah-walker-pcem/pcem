@@ -6,6 +6,16 @@
 #define MODEL_MCA     0x20
 #define MODEL_PCI     0x40
 
+/*Machine has no integrated graphics*/
+#define MODEL_GFX_NONE       0x000
+/*Machine has integrated graphics that can not be disabled*/
+#define MODEL_GFX_FIXED      0x100
+/*Machine has integrated graphics that can be disabled by jumpers or switches*/
+#define MODEL_GFX_DISABLE_HW 0x200
+/*Machine has integrated graphics that can be disabled through software*/
+#define MODEL_GFX_DISABLE_SW 0x300
+#define MODEL_GFX_MASK       0x300
+
 typedef struct
 {
         char name[64];
@@ -16,7 +26,6 @@ typedef struct
                 char name[8];
                 CPU *cpus;
         } cpu[5];
-        int fixed_gfxcard;
         int flags;
         int min_ram, max_ram;
         int ram_granularity;
@@ -36,3 +45,5 @@ char *model_get_internal_name();
 int model_get_model_from_internal_name(char *s);
 void model_init();
 struct device_t *model_getdevice(int model);
+int model_has_fixed_gfx(int model);
+int model_has_optional_gfx(int model);
