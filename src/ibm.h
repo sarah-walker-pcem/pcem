@@ -453,6 +453,7 @@ enum
 	ROM_ZAPPA,
 	ROM_PB520R,
 	ROM_COMPAQ_PIP,
+	ROM_XI8088,
                 	
         ROM_MAX
 };

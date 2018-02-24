@@ -62,6 +62,7 @@
 #include "vid_tandy.h"
 #include "vid_t1000.h"
 #include "wd76c10.h"
+#include "xi8088.h"
 
 void             xt_init();
 void           pcjr_init();
@@ -103,6 +104,7 @@ void       at_zappa_init();
 void      at_pb520r_init();
 void       at_pb570_init();
 void     compaq_pip_init();
+void      xt_xi8088_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -126,6 +128,7 @@ MODEL models[] =
         {"[8088] Thomson TO16 PC",        ROM_TO16_PC,          "to16_pc",        { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                  512, 640, 128,           xt_init, NULL},
         {"[8088] Toshiba 1000",           ROM_T1000,            "t1000",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        1, 0,                  512,1280, 768,     xt_t1000_init, &t1000_device},
         {"[8088] VTech Laser Turbo XT",   ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64,1152,  64,   xt_laserxt_init, NULL},
+        {"[8088] Xi8088",                 ROM_XI8088,           "xi8088",         { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, MODEL_AT|MODEL_PS2,  64,1024, 128,    xt_xi8088_init, NULL},
 
         {"[8086] Amstrad PC1512",         ROM_PC1512,           "pc1512",         { {"",      cpus_pc1512},      {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      512, 640, 128,          ams_init, NULL},
         {"[8086] Amstrad PC1640",         ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        1, MODEL_AMSTRAD,      640, 640,   0,          ams_init, NULL},
@@ -348,6 +351,20 @@ void xt_laserxt_init()
 {
         xt_init();
         laserxt_init();
+}
+
+void xt_xi8088_init()
+{
+        /* TODO: set UMBs? See if PCem always sets when we have > 640KB ram and avoids conflicts when a peripheral uses the same memory space */
+        common_init();
+        mem_add_bios();
+        keyboard_at_init();
+        keyboard_at_init_ps2();
+        nmi_init();
+        nvr_init();
+        pic2_init();
+        device_add(&gameport_device);
+        xi8088_init();
 }
 
 void at_init()

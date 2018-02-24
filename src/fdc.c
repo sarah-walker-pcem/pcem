@@ -87,7 +87,7 @@ void fdc_reset()
         fdc.lock = 0;
         fdc.head = 0;
         fdc.abort = 0;
-        if (!AT)
+        if (!AT && romset != ROM_XI8088)
         {
                 fdc.rate = 2;
                 // fdc_update_rate();
@@ -672,7 +672,8 @@ bad_command:
                 }
                 return;
                 case 7:
-                        if (!AT) return;
+                if (!AT && romset != ROM_XI8088)
+                        return;
                 fdc.rate=val&3;
 
                 disc_3f7=val;

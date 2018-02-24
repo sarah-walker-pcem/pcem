@@ -866,12 +866,12 @@ int loadbios()
                 f = romfopen("zappa/1006bs0_.bio", "rb");
                 if (!f) break;
                 fseek(f, 0x80, SEEK_SET);
-                fread(rom + 0x10000, 0x10000, 1, f);                
+                romfread(rom + 0x10000, 0x10000, 1, f);
                 fclose(f);
                 f = romfopen("zappa/1006bs0_.bi1", "rb");
                 if (!f) break;
                 fseek(f, 0x80, SEEK_SET);
-                fread(rom, 0xd000, 1, f);
+                romfread(rom, 0xd000, 1, f);
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
@@ -898,6 +898,15 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_XI8088:
+                f = romfopen("xi8088/bios-xi8088.bin", "rb"); /* use the bios without xt-ide because it's configurable in pcem */
+                if (!f) break;
+                /* high bit is flipped in xi8088 */
+                romfread(rom + 0x10000, 0x10000, 1, f);
+                romfread(rom, 0x10000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

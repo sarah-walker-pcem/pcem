@@ -301,6 +301,7 @@ void loadnvr()
 		case ROM_PB570:            f = nvrfopen("pb570.nvr",           "rb"); nvrmask = 127; break;
 		case ROM_ZAPPA:            f = nvrfopen("zappa.nvr",           "rb"); nvrmask = 127; break;
 		case ROM_PB520R:           f = nvrfopen("pb520r.nvr",          "rb"); nvrmask = 127; break;
+		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "rb"); nvrmask = 127; break;
                                 		
                 default: return;
         }
@@ -387,6 +388,7 @@ void savenvr()
 		case ROM_PB570:            f = nvrfopen("pb570.nvr",           "wb"); break;
 		case ROM_ZAPPA:            f = nvrfopen("zappa.nvr",           "wb"); break;
 		case ROM_PB520R:           f = nvrfopen("pb520r.nvr",          "wb"); break;
+		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "wb"); break;
 		
                 default: return;
         }

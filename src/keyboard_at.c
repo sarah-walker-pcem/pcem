@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "video.h"
 #include "x86.h"
+#include "xi8088.h"
 
 #include "keyboard.h"
 #include "keyboard_at.h"
@@ -180,6 +181,8 @@ void keyboard_at_adddata_mouse(uint8_t val)
 void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 {
 //        pclog("keyboard_at : write %04X %02X %i  %02X\n", port, val, keyboard_at.key_wantdata, ram[8]);
+        if (romset == ROM_XI8088 && port == 0x63)
+                port = 0x61;
 /*        if (ram[8] == 0xc3) 
         {
                 output = 3;
@@ -335,6 +338,14 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                 if (speaker_enable) 
                         was_speaker_enable = 1;
                 pit_set_gate(&pit, 2, val & 1);
+
+                if (romset == ROM_XI8088)
+                {
+                        if (val & 0x04)
+                                xi8088_turbo_set(1);
+                        else
+                                xi8088_turbo_set(0);
+                }
                 break;
                 
                 case 0x64:
@@ -544,6 +555,8 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
 {
         uint8_t temp = 0xff;
 //        if (port != 0x61) pclog("keyboard_at : read %04X ", port);
+        if (romset == ROM_XI8088 && port == 0x63)
+                port = 0x61;
         switch (port)
         {
                 case 0x60:
@@ -563,6 +576,13 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
                                 temp |= 0x10;
                         else
                                 temp &= ~0x10;
+                }
+                if (romset == ROM_XI8088)
+                {
+                        if (xi8088_turbo_get())
+                                temp |= 0x04;
+                        else
+                                temp &= ~0x04;
                 }
                 break;
                 
