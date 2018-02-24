@@ -378,7 +378,7 @@ char discfns[2][256];
 int driveempty[2];
 
 #define MDA ((gfxcard==GFX_MDA || gfxcard==GFX_HERCULES || gfxcard==GFX_INCOLOR || gfxcard==GFX_GENIUS) && (romset<ROM_TANDY || romset>=ROM_IBMAT))
-#define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && gfxcard!=GFX_COLORPLUS && gfxcard!=GFX_INCOLOR && gfxcard!=GFX_WY700 && gfxcard!=GFX_GENIUS && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200 && romset != ROM_T3100E && romset != ROM_T1000 && romset != ROM_T1200)
+#define VGA ((gfxcard>=GFX_TVGA || romset==ROM_ACER386) && gfxcard!=GFX_COLORPLUS && gfxcard!=GFX_INCOLOR && gfxcard!=GFX_WY700 && gfxcard!=GFX_GENIUS && gfxcard != GFX_COMPAQ_CGA && romset!=ROM_PC1640 && romset!=ROM_PC1512 && romset!=ROM_TANDY && romset!=ROM_PC200 && romset != ROM_T3100E)
 #define PCJR (romset == ROM_IBMPCJR)
 #define AMIBIOS (romset==ROM_AMI386SX || romset==ROM_AMI486 || romset == ROM_WIN486)
 
@@ -496,6 +496,7 @@ enum
         GFX_CL_GD5430,  /*Cirrus Logic CL-GD5430*/
         GFX_CL_GD5434,  /*Cirrus Logic CL-GD5434*/
         GFX_OTI037,     /*Oak OTI-037*/
+        GFX_COMPAQ_CGA,	/*Compaq CGA*/
         GFX_MAX
 };
 

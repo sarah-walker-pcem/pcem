@@ -476,7 +476,7 @@ void cga_speed_changed(void *p)
         cga_recalctimings(cga);
 }
 
-static device_config_t cga_config[] =
+device_config_t cga_config[] =
 {
         {
                 .name = "display_type",

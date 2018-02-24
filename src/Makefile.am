@@ -35,7 +35,7 @@ sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.
 sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \
 t1000.c t3100e.c \
 timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
-vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c \
+vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_compaq_cga.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c \
 vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti037.c vid_oti067.c vid_paradise.c vid_pc200.c \
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
