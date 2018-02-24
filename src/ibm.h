@@ -378,7 +378,6 @@ char discfns[2][256];
 int driveempty[2];
 
 #define PCJR (romset == ROM_IBMPCJR)
-#define AMIBIOS (romset==ROM_AMI386SX || romset==ROM_AMI486 || romset == ROM_WIN486)
 
 int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
 extern int AMSTRAD, AT, is386, PCI, TANDY;

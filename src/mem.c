@@ -1920,12 +1920,6 @@ void mem_write_remappedl(uint32_t addr, uint32_t val, void *priv)
 
 uint8_t mem_read_bios(uint32_t addr, void *priv)
 {
-                        if (AMIBIOS && (addr&0xFFFFF)==0xF8281) /*This is read constantly during AMIBIOS POST, but is never written to. It's clearly a status register of some kind, but for what?*/
-                        {
-//                                pclog("Read magic addr %04X(%06X):%04X\n",CS,cs,pc);
-//                                if (pc==0x547D) output=3;
-                                return 0x40;
-                        }
 //        pclog("Read BIOS %08X %02X %04X:%04X\n", addr, rom[addr & biosmask], CS, pc);
         return rom[addr & biosmask];
 }
