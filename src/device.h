@@ -44,6 +44,8 @@ void device_speed_changed();
 void device_force_redraw();
 void device_add_status_info(char *s, int max_len);
 
+extern char *current_device_name;
+
 int device_get_config_int(char *name);
 char *device_get_config_string(char *name);
 

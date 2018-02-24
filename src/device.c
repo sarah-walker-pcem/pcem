@@ -9,6 +9,7 @@ static void *device_priv[256];
 static device_t *devices[256];
 
 static device_t *current_device;
+char *current_device_name = NULL;
 
 void device_init()
 {
@@ -27,6 +28,7 @@ void device_add(device_t *d)
                 fatal("device_add : too many devices\n");
         
         current_device = d;
+        current_device_name = d->name;
         
         if (d->init != NULL)
         {
@@ -37,6 +39,7 @@ void device_add(device_t *d)
         
         devices[c] = d;
         device_priv[c] = priv;        
+        current_device_name = NULL;
 }
 
 void device_close_all()

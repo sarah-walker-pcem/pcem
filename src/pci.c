@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "mem.h"
 #include "pic.h"
@@ -218,5 +219,9 @@ int pci_add(uint8_t (*read)(int func, int addr, void *priv), void (*write)(int f
                 }
         }
         
+        if (current_device_name)
+                warning("Failed to initialise PCI device '%s' due to insufficient available slots", current_device_name);
+        else
+                warning("Failed to initialise PCI device due to insufficient available slots");
         return -1;
 }
