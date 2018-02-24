@@ -310,7 +310,7 @@ static int pit_read_timer(PIT *pit, int t)
 {
         timer_clock();
 //        pclog("pit_read_timer: t=%i using_timer=%i m=%i\n", t, pit.using_timer[t], pit.m[t]);
-        if (pit->using_timer[t])
+        if (pit->using_timer[t] && !(pit->m[t] == 3 && !pit->gate[t]))
         {
                 int read = (int)((pit->c[t] + ((1 << TIMER_SHIFT) - 1)) / PITCONST) >> TIMER_SHIFT;
                 if (pit->m[t] == 2)
