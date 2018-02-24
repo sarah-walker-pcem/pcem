@@ -26,6 +26,7 @@
 #include "vid_colorplus.h"
 #include "vid_mda.h"
 #include "vid_olivetti_m24.h"
+#include "vid_oti037.h"
 #include "vid_oti067.h"
 #include "vid_paradise.h"
 #include "vid_pc1512.h"
@@ -84,6 +85,7 @@ static VIDEO_CARD video_cards[] =
         {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,                    GFX_N9_9FX,          {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
+        {"OAK OTI-037",                            "oti037",         &oti037_device,                    GFX_OTI037,          {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
         {"OAK OTI-067",                            "oti067",         &oti067_device,                    GFX_OTI067,          {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
         {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481,  {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
         {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,              GFX_BAHAMAS64,       {VIDEO_BUS, 4,  4,  5,  20, 20, 35}},

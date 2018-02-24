@@ -495,6 +495,7 @@ enum
         GFX_TGUI9400CXI, /*Trident TGUI9440CXi*/
         GFX_CL_GD5430,  /*Cirrus Logic CL-GD5430*/
         GFX_CL_GD5434,  /*Cirrus Logic CL-GD5434*/
+        GFX_OTI037,     /*Oak OTI-037*/
         GFX_MAX
 };
 
