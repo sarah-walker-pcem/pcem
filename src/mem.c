@@ -890,6 +890,14 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+				
+                case ROM_COMPAQ_PIP:
+                f=romfopen("compaq_pip/Compaq Portable Plus 100666-001 Rev C.bin","rb");
+                if (!f) break;
+                romfread(rom + 0xE000, 8192, 1, f);
+                fclose(f);
+                return 1;
+
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

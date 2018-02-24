@@ -455,6 +455,7 @@ enum
 	ROM_PB570,
 	ROM_ZAPPA,
 	ROM_PB520R,
+	ROM_COMPAQ_PIP,
                 	
         ROM_MAX
 };

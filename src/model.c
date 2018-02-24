@@ -102,6 +102,7 @@ void    at_sl82c460_init();
 void       at_zappa_init();
 void      at_pb520r_init();
 void       at_pb570_init();
+void     compaq_pip_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -110,6 +111,7 @@ MODEL models[] =
 {
         {"[8088] AMI XT clone",           ROM_AMIXT,            "amixt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] Atari PC3",              ROM_ATARIPC3,         "ataripc3",       { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
+        {"[8088] Compaq Portable Plus",   ROM_COMPAQ_PIP,       "compaq_pip",     { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                  128, 640,  64,   compaq_pip_init, NULL},
         {"[8088] DTK XT clone",           ROM_DTKXT,            "dtk",            { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] Generic XT clone",       ROM_GENXT,            "genxt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  64,           xt_init, NULL},
         {"[8088] IBM PC",                 ROM_IBMPC,            "ibmpc",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        0, 0,                   64, 640,  32,           xt_init, NULL},
@@ -256,6 +258,14 @@ void xt_init()
         keyboard_xt_init();
 	nmi_init();
         device_add(&gameport_device);
+}
+
+void compaq_pip_init()
+{
+        xt_init();
+        lpt1_remove();
+        lpt2_remove();
+        lpt1_init(0x3bc);
 }
 
 void pcjr_init()
