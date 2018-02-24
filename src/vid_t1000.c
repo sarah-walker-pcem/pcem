@@ -27,12 +27,18 @@ static uint8_t  language;
  * Bit  0:   Thin font
  */
 static uint8_t st_video_options;
+static uint8_t st_enabled = 1;
 static uint8_t st_display_internal = -1;
 
 void t1000_video_options_set(uint8_t options)
 {
 	st_video_options = options & 1;
 	st_video_options |= language;
+}
+
+void t1000_video_enable(uint8_t enabled)
+{
+	st_enabled = enabled;
 }
 
 void t1000_display_set(uint8_t internal)
@@ -413,12 +419,18 @@ static void t1000_poll(void *p)
 {
         t1000_t *t1000 = (t1000_t *)p;
 
-	if (t1000->video_options != st_video_options)
+	if (t1000->video_options != st_video_options ||
+	    t1000->enabled != st_enabled)
 	{
 		t1000->video_options = st_video_options;
+		t1000->enabled = st_enabled;
 
 		/* Set the font used for the external display */
 		t1000->cga.fontbase = ((t1000->video_options & 3) * 256);
+
+                if (t1000->enabled) /* Disable internal chipset */
+                        mem_mapping_enable(&t1000->mapping);
+                else    mem_mapping_disable(&t1000->mapping);
 	}
 	/* Switch between internal plasma and external CRT display. */
 	if (st_display_internal != -1 && st_display_internal != t1000->internal)

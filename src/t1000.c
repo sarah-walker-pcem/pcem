@@ -210,7 +210,7 @@ static void ems_set_hardram(struct t1000_system *sys, uint8_t val)
 		sys->ems_base = 0;
 	}
 /*	pclog("EMS base set to %02x\n", val); */
-	sys->ems_pages = 48 - 4 * sys->ems_base;
+	sys->ems_pages = ((mem_size - 512) / 16) - 4 * sys->ems_base;
 	if (sys->ems_pages < 0) sys->ems_pages = 0;
 	/* Recalculate EMS mappings */
 	for (n = 0; n < 4; n++)
@@ -419,6 +419,14 @@ static void write_t1000_ctl(uint16_t addr, uint8_t val, void *priv)
 				{
 					t1200_turbo_set((val & 0x80) ? 1 : 0);
 				}
+			}
+			break;
+		/* It looks as if the T1200, like the T3100, can disable
+		 * its builtin video chipset if it detects the presence of
+		 * another video card. */
+		case 6: if (romset == ROM_T1200)
+			{
+				t1000_video_enable(val & 0x01 ? 0 : 1);
 			}
 			break;
 		/* EMS control*/
