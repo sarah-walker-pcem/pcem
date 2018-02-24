@@ -52,6 +52,12 @@ enum
         VIDEO_BUS
 };
 
+#define VIDEO_FLAG_TYPE_CGA     0
+#define VIDEO_FLAG_TYPE_MDA     1
+#define VIDEO_FLAG_TYPE_SPECIAL 2
+#define VIDEO_FLAG_TYPE_MASK    3
+
+
 typedef struct
 {
         int type;
@@ -65,42 +71,43 @@ typedef struct
         char internal_name[24];
         device_t *device;
         int legacy_id;
+        int flags;
         video_timings_t timing;
 } VIDEO_CARD;
 
 static VIDEO_CARD video_cards[] =
 {
-        {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,                  GFX_MACH64GX,        {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
-        {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,                 GFX_MACH64VT2,       {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
-        {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,                  GFX_VGACHARGER,      {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
-        {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,                  GFX_VGAEDGE16,       {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,                    GFX_CL_GD5429,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
-        {"Cirrus Logic CL-GD5430",                 "cl_gd5430",      &gd5430_device,                    GFX_CL_GD5430,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
-        {"Cirrus Logic CL-GD5434",                 "cl_gd5434",      &gd5434_device,                    GFX_CL_GD5434,       {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
-        {"Compaq CGA",                             "compaq_cga",     &compaq_cga_device,                GFX_COMPAQ_CGA,      {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,                GFX_ET4000W32,       {VIDEO_BUS, 4,  4,  4,  10, 10, 10}},
-        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,                  GFX_VIRGE,           {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
-        {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Hercules",                               "hercules",       &hercules_device,                  GFX_HERCULES,        {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,                    GFX_N9_9FX,          {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
-        {"OAK OTI-037",                            "oti037",         &oti037_device,                    GFX_OTI037,          {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
-        {"OAK OTI-067",                            "oti067",         &oti067_device,                    GFX_OTI067,          {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
-        {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481,  {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
-        {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,              GFX_BAHAMAS64,       {VIDEO_BUS, 4,  4,  5,  20, 20, 35}},
-        {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,         GFX_PHOENIX_TRIO32,  {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
-        {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,         GFX_PHOENIX_TRIO64,  {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
-        {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,                 GFX_COLORPLUS,       {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,              GFX_VIRGEDX,         {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
-        {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,                 GFX_TVGA,            {VIDEO_ISA, 3,  3,  6,   8,  8, 12}},
-        {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,                    GFX_ET4000,          {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
-        {"Trident TGUI9400CXi",                    "tgui9400cxi",    &tgui9400cxi_device,               GFX_TGUI9400CXI,     {VIDEO_BUS, 4,  8, 16,   4,  8, 16}},
-        {"Trident TGUI9440",                       "tgui9440",       &tgui9440_device,                  GFX_TGUI9440,        {VIDEO_BUS, 4,  8, 16,   4,  8, 16}},
-        {"VGA",                                    "vga",            &vga_device,                       GFX_VGA,             {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Wyse 700",                               "wy700",          &wy700_device,                     GFX_WY700,           {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,                  GFX_MACH64GX,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
+        {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,                 GFX_MACH64VT2,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
+        {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,                  GFX_VGACHARGER,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
+        {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,                  GFX_VGAEDGE16,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,                    GFX_CL_GD5429,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
+        {"Cirrus Logic CL-GD5430",                 "cl_gd5430",      &gd5430_device,                    GFX_CL_GD5430,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
+        {"Cirrus Logic CL-GD5434",                 "cl_gd5434",      &gd5434_device,                    GFX_CL_GD5434,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
+        {"Compaq CGA",                             "compaq_cga",     &compaq_cga_device,                GFX_COMPAQ_CGA,      VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32",      &et4000w32p_device,                GFX_ET4000W32,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  4,  10, 10, 10}},
+        {"Diamond Stealth 3D 2000 (S3 ViRGE)",     "stealth3d_2000", &s3_virge_device,                  GFX_VIRGE,           VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
+        {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Hercules",                               "hercules",       &hercules_device,                  GFX_HERCULES,        VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,                    GFX_N9_9FX,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
+        {"OAK OTI-037",                            "oti037",         &oti037_device,                    GFX_OTI037,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
+        {"OAK OTI-067",                            "oti067",         &oti067_device,                    GFX_OTI067,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
+        {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
+        {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,              GFX_BAHAMAS64,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  5,  20, 20, 35}},
+        {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,         GFX_PHOENIX_TRIO32,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
+        {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,         GFX_PHOENIX_TRIO64,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
+        {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,                 GFX_COLORPLUS,       VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,              GFX_VIRGEDX,         VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
+        {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,                 GFX_TVGA,            VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   8,  8, 12}},
+        {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,                    GFX_ET4000,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
+        {"Trident TGUI9400CXi",                    "tgui9400cxi",    &tgui9400cxi_device,               GFX_TGUI9400CXI,     VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  8, 16,   4,  8, 16}},
+        {"Trident TGUI9440",                       "tgui9440",       &tgui9440_device,                  GFX_TGUI9440,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  8, 16,   4,  8, 16}},
+        {"VGA",                                    "vga",            &vga_device,                       GFX_VGA,             VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Wyse 700",                               "wy700",          &wy700_device,                     GFX_WY700,           VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"",                                       "",               NULL,                              0}
 };
 
@@ -193,6 +200,104 @@ int video_get_video_from_internal_name(char *s)
 	}
 	
 	return 0;
+}
+
+int video_is_mda()
+{
+        switch (romset)
+        {
+                case ROM_IBMPCJR:
+                case ROM_TANDY:
+                case ROM_TANDY1000HX:
+                case ROM_TANDY1000SL2:
+                case ROM_PC1512:
+                case ROM_PC1640:
+                case ROM_PC200:
+                case ROM_OLIM24:
+                case ROM_PC2086:
+                case ROM_PC3086:
+                case ROM_MEGAPC:
+                case ROM_ACER386:
+                case ROM_IBMPS1_2011:
+                case ROM_IBMPS2_M30_286:
+                case ROM_IBMPS2_M50:
+                case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M80:
+                case ROM_IBMPS1_2121:
+        	case ROM_T3100E:
+        	case ROM_T1000:
+                case ROM_ELX_PC425X:
+                case ROM_PB570:
+                case ROM_PB520R:
+                return 0;
+        }
+        return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_MDA;
+}
+int video_is_cga()
+{
+        switch (romset)
+        {
+                case ROM_IBMPCJR:
+                case ROM_TANDY:
+                case ROM_TANDY1000HX:
+                case ROM_TANDY1000SL2:
+                case ROM_PC1512:
+                case ROM_PC200:
+                case ROM_OLIM24:
+        	case ROM_T3100E:
+        	case ROM_T1000:
+                return 1;
+                
+                case ROM_PC1640:
+                case ROM_PC2086:
+                case ROM_PC3086:
+                case ROM_MEGAPC:
+                case ROM_ACER386:
+                case ROM_IBMPS1_2011:
+                case ROM_IBMPS2_M30_286:
+                case ROM_IBMPS2_M50:
+                case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M80:
+                case ROM_IBMPS1_2121:
+                case ROM_ELX_PC425X:
+                case ROM_PB570:
+                case ROM_PB520R:
+                return 0;
+        }
+        return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_CGA;
+}
+int video_is_ega_vga()
+{
+        switch (romset)
+        {
+                case ROM_IBMPCJR:
+                case ROM_TANDY:
+                case ROM_TANDY1000HX:
+                case ROM_TANDY1000SL2:
+                case ROM_PC1512:
+                case ROM_PC200:
+                case ROM_OLIM24:
+        	case ROM_T3100E:
+        	case ROM_T1000:
+                return 0;
+                
+                case ROM_PC1640:
+                case ROM_PC2086:
+                case ROM_PC3086:
+                case ROM_MEGAPC:
+                case ROM_ACER386:
+                case ROM_IBMPS1_2011:
+                case ROM_IBMPS2_M30_286:
+                case ROM_IBMPS2_M50:
+                case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M80:
+                case ROM_IBMPS1_2121:
+                case ROM_ELX_PC425X:
+                case ROM_PB570:
+                case ROM_PB520R:
+                return 1;
+        }
+        return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_SPECIAL;
 }
 
 int video_fullscreen = 0, video_fullscreen_scale, video_fullscreen_first;

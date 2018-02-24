@@ -7,6 +7,7 @@
 #include "sound_speaker.h"
 #include "t3100e.h"
 #include "timer.h"
+#include "video.h"
 #include "x86.h"
 
 #include "keyboard.h"
@@ -583,7 +584,7 @@ void keyboard_at_reset()
         keyboard_at.mem[0] = 0x11;
         keyboard_at.wantirq = 0;
         keyboard_at.output_port = 0xcf;
-        keyboard_at.input_port = (MDA) ? 0xf0 : 0xb0;
+        keyboard_at.input_port = (video_is_mda()) ? 0xf0 : 0xb0;
         keyboard_at.out_new = -1;
         keyboard_at.last_irq = 0;
         
