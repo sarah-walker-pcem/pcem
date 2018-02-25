@@ -136,7 +136,7 @@ MODEL models[] =
         {"[8086] Amstrad PC3086",         ROM_PC3086,           "pc3086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, NULL},
         {"[8086] Olivetti M24",           ROM_OLIM24,           "olivetti_m24",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_OLIM24,                                    128,  640, 128,         olim24_init, NULL},
         {"[8086] Sinclair PC200",         ROM_PC200,            "pc200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              512,  640, 128,            ams_init, NULL},
-        {"[8086] Tandy 1000 SL/2",        ROM_TANDY1000SL2,     "tandy1000sl2",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_SW,                                            512,  768, 128,     tandy1ksl2_init, NULL},
+        {"[8086] Tandy 1000 SL/2",        ROM_TANDY1000SL2,     "tandy1000sl2",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED,                                                 512,  768, 128,     tandy1ksl2_init, NULL},
         {"[8088] Toshiba 1200",           ROM_T1200,            "t1200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED,                                                1024, 2048,1024,       xt_t1200_init, &t1000_device},
         {"[8086] VTech Laser XT3",        ROM_LXT3,             "lxt3",           { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  512, 1152, 128,     xt_laserxt_init, NULL},
 
@@ -246,14 +246,14 @@ int model_has_fixed_gfx(int model)
 {
         int gfx_flags = models[model].flags & MODEL_GFX_MASK;
         
-        return (gfx_flags == MODEL_GFX_FIXED || gfx_flags == MODEL_GFX_DISABLE_SW);
+        return (gfx_flags == MODEL_GFX_FIXED);
 }
 
 int model_has_optional_gfx(int model)
 {
         int gfx_flags = models[model].flags & MODEL_GFX_MASK;
         
-        return (gfx_flags == MODEL_GFX_DISABLE_HW);
+        return (gfx_flags == MODEL_GFX_DISABLE_HW || gfx_flags == MODEL_GFX_DISABLE_SW);
 }
 
 void common_init()

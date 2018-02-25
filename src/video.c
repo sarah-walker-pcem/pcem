@@ -671,12 +671,13 @@ void video_init()
                 break;
                         
                 case ROM_ACER386:
-                if (gfxcard == GFX_BUILTIN)
+                device_add(&oti067_acer386_device);
+                if (gfxcard != GFX_BUILTIN)
                 {
-                        device_add(&oti067_acer386_device);
-                        return;
+                        svga_set_override(svga_get_pri(), 1);
+                        break;
                 }
-                break;
+                return;
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
@@ -705,10 +706,20 @@ void video_init()
 
                 case ROM_PB570:
                 device_add(&gd5430_pb570_device);
+                if (gfxcard != GFX_BUILTIN)
+                {
+                        svga_set_override(svga_get_pri(), 1);
+                        break;
+                }
                 return;
                 
                 case ROM_PB520R:
                 device_add(&gd5434_pb520r_device);
+                if (gfxcard != GFX_BUILTIN)
+                {
+                        svga_set_override(svga_get_pri(), 1);
+                        break;
+                }
                 return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);

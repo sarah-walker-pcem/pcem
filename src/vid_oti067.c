@@ -179,11 +179,13 @@ void oti067_enable_disable(void *p, int enable)
         mem_mapping_disable(&oti067->bios_rom.mapping);
         io_removehandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
         io_removehandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
+        mem_mapping_disable(&oti067->svga.mapping);
         if (enable)
         {
                 mem_mapping_enable(&oti067->bios_rom.mapping);
                 io_sethandler(0x03c0, 0x0020, oti067_in, NULL, NULL, oti067_out, NULL, NULL, oti067);
                 io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
+                mem_mapping_enable(&oti067->svga.mapping);
         }
 }
 
