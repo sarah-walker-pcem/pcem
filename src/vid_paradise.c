@@ -14,6 +14,7 @@
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 #include "vid_unk_ramdac.h"
+#include "wd76c10.h"
 
 typedef struct paradise_t
 {
@@ -31,6 +32,9 @@ typedef struct paradise_t
 } paradise_t;
 
 void paradise_remap(paradise_t *paradise);
+
+void paradise_out(uint16_t addr, uint8_t val, void *p);
+uint8_t paradise_in(uint16_t addr, void *p);
 
 void paradise_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -130,6 +134,16 @@ void paradise_out(uint16_t addr, uint8_t val, void *p)
                                 svga->fullchange = changeframecount;
                                 svga_recalctimings(&paradise->svga);
                         }
+                }
+                break;
+                
+                case 0x46e8:
+                io_removehandler(0x03c0, 0x0020, paradise_in, NULL, NULL, paradise_out, NULL, NULL, paradise);
+                mem_mapping_disable(&paradise->svga.mapping);
+                if (val & 8)
+                {
+                        io_sethandler(0x03c0, 0x0020, paradise_in, NULL, NULL, paradise_out, NULL, NULL, paradise);
+                        mem_mapping_enable(&paradise->svga.mapping);
                 }
                 break;
         }
@@ -356,6 +370,8 @@ static void *paradise_wd90c11_megapc_init()
                                      "megapc/211253-bios hi.u19",
                                      0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
+        wd76c10_set_bios_rom(&paradise->bios_rom);
+        
         return paradise;
 }
 
@@ -368,6 +384,9 @@ static void *paradise_pvga1a_oli_go481_init()
                                      "oli_go481_lo.bin",
                                      "oli_go481_hi.bin",
                                      0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+
+        io_sethandler(0x46e8, 0x0001, paradise_in, NULL, NULL, paradise_out, NULL, NULL, paradise);
+
         return paradise;
 }
 

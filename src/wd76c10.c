@@ -2,6 +2,7 @@
 #include "fdc.h"
 #include "io.h"
 #include "mem.h"
+#include "rom.h"
 #include "serial.h"
 #include "wd76c10.h"
 
@@ -9,6 +10,13 @@ static uint16_t wd76c10_0092;
 static uint16_t wd76c10_2072;
 static uint16_t wd76c10_2872;
 static uint16_t wd76c10_5872;
+static uint16_t wd76c10_6072;
+static rom_t *video_bios_rom = NULL;
+
+void wd76c10_set_bios_rom(rom_t *rom)
+{
+        video_bios_rom = rom;
+}
 
 uint16_t wd76c10_read(uint16_t port, void *priv)
 {
@@ -25,6 +33,9 @@ uint16_t wd76c10_read(uint16_t port, void *priv)
                 
                 case 0x5872:
                 return wd76c10_5872;
+
+                case 0x6072:
+                return wd76c10_6072;
         }
         return 0;
 }
@@ -81,6 +92,13 @@ void wd76c10_write(uint16_t port, uint16_t val, void *priv)
                 case 0x5872:
                 wd76c10_5872 = val;
                 break;
+                
+                case 0x6072:
+                wd76c10_6072 = val;
+                mem_mapping_disable(&video_bios_rom->mapping);
+                if ((val & 0xc) == 8)
+                        mem_mapping_enable(&video_bios_rom->mapping);
+                break;
         }
 }
 
@@ -106,4 +124,5 @@ void wd76c10_init()
         io_sethandler(0x2072, 0x0002, wd76c10_readb, wd76c10_read, NULL, wd76c10_writeb, wd76c10_write, NULL,  NULL);
         io_sethandler(0x2872, 0x0002, wd76c10_readb, wd76c10_read, NULL, wd76c10_writeb, wd76c10_write, NULL,  NULL);
         io_sethandler(0x5872, 0x0002, wd76c10_readb, wd76c10_read, NULL, wd76c10_writeb, wd76c10_write, NULL,  NULL);
+        io_sethandler(0x6072, 0x0002, wd76c10_readb, wd76c10_read, NULL, wd76c10_writeb, wd76c10_write, NULL,  NULL);
 }

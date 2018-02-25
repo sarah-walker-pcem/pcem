@@ -1,3 +1,6 @@
+#ifndef _ROM_H_
+#define _ROM_H_
+
 FILE *romfopen(char *fn, char *mode);
 int rom_present(char *fn);
 
@@ -14,3 +17,5 @@ int rom_init_interleaved(rom_t *rom, char *fn_low, char *fn_high, uint32_t addre
 uint8_t rom_read(uint32_t addr, void *p);
 uint16_t rom_readw(uint32_t addr, void *p);
 uint32_t rom_readl(uint32_t addr, void *p);
+
+#endif
