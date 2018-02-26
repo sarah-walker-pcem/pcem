@@ -663,13 +663,12 @@ void video_init()
                 break;
 
                 case ROM_MEGAPC:
-                device_add(&paradise_wd90c11_megapc_device);
-                if (gfxcard != GFX_BUILTIN)
+                if (gfxcard == GFX_BUILTIN)
                 {
-                        svga_set_override(svga_get_pri(), 1);
-                        break;
+                        device_add(&paradise_wd90c11_megapc_device);
+                        return;
                 }
-                return;
+                break;
                         
                 case ROM_ACER386:
                 device_add(&oti067_acer386_device);

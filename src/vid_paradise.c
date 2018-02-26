@@ -370,8 +370,6 @@ static void *paradise_wd90c11_megapc_init()
                                      "megapc/211253-bios hi.u19",
                                      0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
-        wd76c10_set_bios_rom(&paradise->bios_rom);
-        
         return paradise;
 }
 

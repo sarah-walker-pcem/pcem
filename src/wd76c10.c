@@ -11,12 +11,6 @@ static uint16_t wd76c10_2072;
 static uint16_t wd76c10_2872;
 static uint16_t wd76c10_5872;
 static uint16_t wd76c10_6072;
-static rom_t *video_bios_rom = NULL;
-
-void wd76c10_set_bios_rom(rom_t *rom)
-{
-        video_bios_rom = rom;
-}
 
 uint16_t wd76c10_read(uint16_t port, void *priv)
 {
@@ -95,9 +89,6 @@ void wd76c10_write(uint16_t port, uint16_t val, void *priv)
                 
                 case 0x6072:
                 wd76c10_6072 = val;
-                mem_mapping_disable(&video_bios_rom->mapping);
-                if ((val & 0xc) == 8)
-                        mem_mapping_enable(&video_bios_rom->mapping);
                 break;
         }
 }
