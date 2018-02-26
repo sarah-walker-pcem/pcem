@@ -154,6 +154,8 @@ void nvr_onesec(void *p)
 void writenvr(uint16_t addr, uint8_t val, void *priv)
 {
         int c, old;
+        
+        cycles -= ISA_CYCLES(8);
 //        printf("Write NVR %03X %02X %02X %04X:%04X %i\n",addr,nvraddr,val,cs>>4,pc,ins);
         if (addr&1)
         {
@@ -218,6 +220,7 @@ uint8_t readnvr(uint16_t addr, void *priv)
 {
         uint8_t temp;
 //        printf("Read NVR %03X %02X %02X %04X:%04X\n",addr,nvraddr,nvrram[nvraddr],cs>>4,pc);
+        cycles -= ISA_CYCLES(8);
         if (addr&1)
         {
                 if (nvraddr == RTC_REGA)
