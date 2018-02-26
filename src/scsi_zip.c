@@ -1077,6 +1077,7 @@ static void scsi_zip_atapi_identify(uint16_t *buffer, void *p)
 	ide_padstr((char *)(buffer + 23), "E.08", 8); /* Firmware */
 	ide_padstr((char *)(buffer + 27), "IOMEGA ZIP 100 ATAPI", 40); /* Model */
 	buffer[49] = 0x200; /* LBA supported */
+	buffer[126] = 0xfffe; /* Interpret zero byte count limit as maximum length */
 }
 
 scsi_device_t scsi_zip =

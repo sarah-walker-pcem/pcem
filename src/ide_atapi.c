@@ -142,6 +142,8 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                 case ATAPI_STATE_COMMAND:
                 *atapi_dev->atastat = READY_STAT | (*atapi_dev->atastat & ERR_STAT);
                 atapi_dev->max_transfer_len = (*atapi_dev->cylinder) & ~1;
+                if (!atapi_dev->max_transfer_len)
+                        atapi_dev->max_transfer_len = 0xfffe;
                 atapi_dev->bus_state = BUS_CD | BUS_REQ;
                 break;
 

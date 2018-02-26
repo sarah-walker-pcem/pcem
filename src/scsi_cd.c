@@ -1174,6 +1174,7 @@ static void scsi_cd_atapi_identify(uint16_t *buffer, void *p)
 	ide_padstr((char *)(buffer + 23), "v1.0", 8); /* Firmware */
 	ide_padstr((char *)(buffer + 27), "PCemCD", 40); /* Model */
 	buffer[49] = 0x200; /* LBA supported */
+	buffer[126] = 0xfffe; /* Interpret zero byte count limit as maximum length */
 }
 
 scsi_device_t scsi_cd =
