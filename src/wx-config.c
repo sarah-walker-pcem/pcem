@@ -19,6 +19,8 @@
 #include "video.h"
 #include "vid_voodoo.h"
 
+//#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
+#define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/
 extern int pause;
 
 extern int is486;
@@ -1435,9 +1437,11 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                                 wx_messagebox(hdlg, "Drive has too many heads (maximum is 16)", "PCem error", WX_MB_OK);
                                 return TRUE;
                         }
-                        if (hd_new_cyl > 16383)
+                        if (hd_new_cyl > MAX_CYLINDERS)
                         {
-                                wx_messagebox(hdlg, "Drive has too many cylinders (maximum is 16383)", "PCem error", WX_MB_OK);
+                                char s[256];
+                                sprintf(s, "Drive has too many cylinders (maximum is %i)", MAX_CYLINDERS);
+                                wx_messagebox(hdlg, s, "PCem error", WX_MB_OK);
                                 return TRUE;
                         }
 
@@ -1577,9 +1581,11 @@ static int hdsize_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM 
                                 wx_messagebox(hdlg,"Drive has too many heads (maximum is 16)","PCem error",WX_MB_OK);
                                 return TRUE;
                         }
-                        if (hd_new_cyl > 16383)
+                        if (hd_new_cyl > MAX_CYLINDERS)
                         {
-                                wx_messagebox(hdlg,"Drive has too many cylinders (maximum is 16383)","PCem error",WX_MB_OK);
+                                char s[256];
+                                sprintf(s, "Drive has too many cylinders (maximum is %i)", MAX_CYLINDERS);
+                                wx_messagebox(hdlg,s,"PCem error",WX_MB_OK);
                                 return TRUE;
                         }
 

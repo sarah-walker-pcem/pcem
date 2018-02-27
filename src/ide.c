@@ -164,7 +164,10 @@ static void ide_identify(IDE *ide)
 
 	//ide->buffer[1] = 101; /* Cylinders */
 
-	ide->buffer[1] = hdc[cur_ide[ide->board]].tracks; /* Cylinders */
+        if ((hdc[cur_ide[ide->board]].tracks * hdc[cur_ide[ide->board]].hpc * hdc[cur_ide[ide->board]].spt) >= 16514064)
+                ide->buffer[1] = 16383;
+        else
+        	ide->buffer[1] = hdc[cur_ide[ide->board]].tracks; /* Cylinders */
 	ide->buffer[3] = hdc[cur_ide[ide->board]].hpc;  /* Heads */
 	ide->buffer[6] = hdc[cur_ide[ide->board]].spt;  /* Sectors */
 
