@@ -44,7 +44,7 @@ extern "C" {
         void* wx_getnativewindow(void* window);
         void wx_callback(void* window, WX_CALLBACK callback, void* data);
         void wx_togglewindow(void* window);
-        int wx_progressdialogpulse(void* window, const char* title, const char* message, WX_CALLBACK callback, void* data);
+        int wx_progressdialog(void* window, const char* title, const char* message, WX_CALLBACK callback, void* data, int range, volatile int *pos);
 
         void wx_enddialog(void* window, int ret_code);
 

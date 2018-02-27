@@ -749,7 +749,7 @@ static void progress_callback(void* data)
         d->active = 0;
 }
 
-int wx_progressdialogpulse(void* window, const char* title, const char* message, WX_CALLBACK callback, void* data)
+int wx_progressdialog(void* window, const char* title, const char* message, WX_CALLBACK callback, void* data, int range, volatile int *pos)
 {
         struct progress_data_t pdata;
         pdata.callback = callback;
@@ -759,10 +759,10 @@ int wx_progressdialogpulse(void* window, const char* title, const char* message,
 
         thread_t* t = thread_create(progress_callback, &pdata);
 
-        wxProgressDialog dlg(title, message, 100, (wxWindow*)window, wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_AUTO_HIDE);
+        wxProgressDialog dlg(title, message, range, (wxWindow*)window, wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_AUTO_HIDE);
         while (pdata.active)
         {
-                dlg.Pulse();
+                dlg.Update(*pos);
                 wxMilliSleep(50);
         }
         thread_kill(t);

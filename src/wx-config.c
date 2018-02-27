@@ -1348,6 +1348,7 @@ static void update_hdd_cdrom(void* hdlg)
         }
 }
 
+static volatile int create_drive_pos;
 static int create_drive(void* data)
 {
         int c;
@@ -1355,7 +1356,10 @@ static int create_drive(void* data)
         FILE* f = (FILE*)data;
         memset(buf, 0, 512);
         for (c = 0; c < (hd_new_cyl * hd_new_hpc * hd_new_spt); c++)
-            fwrite(buf, 512, 1, f);
+        {
+                create_drive_pos = c;
+                fwrite(buf, 512, 1, f);
+        }
 
         fclose(f);
 
@@ -1443,7 +1447,7 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                                 wx_messagebox(hdlg, "Can't open file for write", "PCem error", WX_MB_OK);
                                 return TRUE;
                         }
-                        wx_progressdialogpulse(hdlg, "PCem", "Creating drive, please wait...", create_drive, f);
+                        wx_progressdialog(hdlg, "PCem", "Creating drive, please wait...", create_drive, f, hd_new_cyl * hd_new_hpc * hd_new_spt, &create_drive_pos);
 
                         wx_messagebox(hdlg, "Drive created, remember to partition and format the new drive.", "PCem", WX_MB_OK);
 
