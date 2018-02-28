@@ -2274,7 +2274,7 @@
 									<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
 									<border>5</border>
 									<object class="wxStaticText">
-										<label>Size:</label>
+										<label>Size (MB):</label>
 										<wrap>-1</wrap>
 									</object>
 								</object>
@@ -2282,9 +2282,8 @@
 									<option>0</option>
 									<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
 									<border>5</border>
-									<object class="wxStaticText" name="IDC_TEXT1">
-										<label>0mb</label>
-										<wrap>-1</wrap>
+									<object class="wxTextCtrl" name="IDC_EDIT4">
+										<value></value>
 									</object>
 								</object>
 							</object>

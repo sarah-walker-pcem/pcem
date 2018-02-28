@@ -1376,6 +1376,7 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
         PcemHDC hd[4];
         FILE *f;
         int hd_type;
+        int size;
 
         switch (message)
         {
@@ -1393,8 +1394,8 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                 h = wx_getdlgitem(hdlg, WX_ID("IDC_EDITC"));
                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"");
 
-                h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT1"));
-                sprintf(s, "%imb", (((511*16*63)*512)/1024)/1024);
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                sprintf(s, "%i", (((511*16*63)*512)/1024)/1024);
                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
 
 //                hd_type = 0;
@@ -1481,8 +1482,8 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                         pclog("EDIT3: %s\n", s);
                         sscanf(s, "%i", &hd[0].tracks);
 
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT1"));
-                        sprintf(s, "%imb", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                        sprintf(s, "%i", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
                         wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
 
                         hd_type = 0;
@@ -1499,7 +1500,29 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                         wx_sendmessage(h, WX_CB_SETCURSEL, hd_type, 0);
 
                         return TRUE;
-                } else if (ID_IS("IDC_HDTYPE")) {
+                }
+                else if (ID_IS("IDC_EDIT4"))
+                {
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+                        pclog("EDIT4: %s\n", s);
+                        sscanf(s, "%i", &size);
+
+                        hd[0].spt = 63;
+                        hd[0].hpc = 16;
+                        hd[0].tracks = (int)(((int64_t)size * 1024 * 1024) / (16 * 63 * 512));
+
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT1"));
+                        sprintf(s, "%i", 63);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT2"));
+                        sprintf(s, "%i", 16);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT3"));
+                        sprintf(s, "%i", hd[0].tracks);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                }
+                else if (ID_IS("IDC_HDTYPE")) {
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_HDTYPE"));
                         hd_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                         if (hd_type)
@@ -1513,8 +1536,8 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT1"));
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"17");
 
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT1"));
-                                sprintf(s, "%imb", (int)(((uint64_t)hd_types[hd_type-1].cylinders*hd_types[hd_type-1].heads*17*512)/1024)/1024);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                                sprintf(s, "%i", (int)(((uint64_t)hd_types[hd_type-1].cylinders*hd_types[hd_type-1].heads*17*512)/1024)/1024);
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
                         }
                         return TRUE;
