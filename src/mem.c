@@ -17,6 +17,7 @@
 #include "rom.h"
 #include "x86_ops.h"
 #include "codegen.h"
+#include "xi8088.h"
 
 page_t *pages;
 page_t **page_lookup;
@@ -901,11 +902,19 @@ int loadbios()
                 case ROM_XI8088:
                 f = romfopen("xi8088/bios-xi8088.bin", "rb"); /* use the bios without xt-ide because it's configurable in pcem */
                 if (!f) break;
-                /* high bit is flipped in xi8088 */
-                romfread(rom + 0x10000, 0x10000, 1, f);
-                romfread(rom, 0x10000, 1, f);
+                if (xi8088_bios_128kb())
+                {
+                        /* high bit is flipped in xi8088 */
+                        romfread(rom + 0x10000, 0x10000, 1, f);
+                        romfread(rom, 0x10000, 1, f);
+                        biosmask = 0x1ffff;
+                }
+                else
+                {
+                        /* smaller bios, more UMBs */
+                        romfread(rom, 0x10000, 1, f);
+                }
                 fclose(f);
-                biosmask = 0x1ffff;
                 return 1;
         }
         printf("Failed to load ROM!\n");
@@ -2189,7 +2198,7 @@ void mem_set_mem_state(uint32_t base, uint32_t size, int state)
 
 void mem_add_bios()
 {
-        if (AT)
+        if (AT || (romset == ROM_XI8088 && xi8088_bios_128kb()))
         {
                 mem_mapping_add(&bios_mapping[0], 0xe0000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_null, mem_write_nullw, mem_write_nulll, rom,                        MEM_MAPPING_EXTERNAL, 0);
                 mem_mapping_add(&bios_mapping[1], 0xe4000, 0x04000, mem_read_bios,   mem_read_biosw,   mem_read_biosl,   mem_write_null, mem_write_nullw, mem_write_nulll, rom + (0x4000  & biosmask), MEM_MAPPING_EXTERNAL, 0);

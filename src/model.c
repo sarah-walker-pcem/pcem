@@ -128,7 +128,7 @@ MODEL models[] =
         {"[8088] Thomson TO16 PC",        ROM_TO16_PC,          "to16_pc",        { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  512,  640, 128,             xt_init, NULL},
         {"[8088] Toshiba 1000",           ROM_T1000,            "t1000",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED,                                                 512, 1280, 768,       xt_t1000_init, &t1000_device},
         {"[8088] VTech Laser Turbo XT",   ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64, 1152,  64,     xt_laserxt_init, NULL},
-        {"[8088] Xi8088",                 ROM_XI8088,           "xi8088",         { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2,                                64, 1024, 128,      xt_xi8088_init, NULL},
+        {"[8088] Xi8088",                 ROM_XI8088,           "xi8088",         { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2,                                64, 1024, 128,      xt_xi8088_init, &xi8088_device},
 
         {"[8086] Amstrad PC1512",         ROM_PC1512,           "pc1512",         { {"",      cpus_pc1512},      {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AMSTRAD,                                   512,  640, 128,            ams_init, NULL},
         {"[8086] Amstrad PC1640",         ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, NULL},
@@ -378,7 +378,6 @@ void xt_xi8088_init()
         nvr_init();
         pic2_init();
         device_add(&gameport_device);
-        xi8088_init();
 }
 
 void at_init()
