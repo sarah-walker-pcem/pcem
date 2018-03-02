@@ -207,7 +207,10 @@ void pci_add_specific(int card, uint8_t (*read)(int func, int addr, void *priv),
 int pci_add(uint8_t (*read)(int func, int addr, void *priv), void (*write)(int func, int addr, uint8_t val, void *priv), void *priv)
 {
         int c;
-        
+
+        if (!PCI)
+                return -1;
+
         for (c = 0; c < 32; c++)
         {
                 if (pci_card_valid[c] && !pci_card_read[c] && !pci_card_write[c])
