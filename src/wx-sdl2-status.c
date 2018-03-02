@@ -57,7 +57,7 @@ drive_info_t* get_machine_info(char* s, int* num_drive_info) {
                         pos++;
                 }
         }
-        int num_hdds = hdd_controller_current_is_mfm() ? 2 : 4;
+        int num_hdds = hdd_controller_current_is_mfm() ? 2 : (hdd_controller_current_is_scsi() ? 7 : 4);
         for (i = 0; i < num_hdds; ++i)
         {
                 drive = 'C'+i;

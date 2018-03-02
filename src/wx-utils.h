@@ -145,6 +145,14 @@ extern void (*wx_idle_func)(void* window, void* event);
 #define WX_LB_SETCURSEL 66
 #define WX_LBN_DBLCLK 67
 
+#define WX_CHB_SETPAGETEXT 68
+#define WX_CHB_ADDPAGE 69
+#define WX_CHB_REMOVEPAGE 70
+#define WX_CHB_GETPAGECOUNT 71
+
+#define WX_REPARENT 72
+
+
 #define WX_MB_OK wxOK
 #define WX_MB_OKCANCEL wxOK|wxCANCEL
 #define WX_IDOK wxOK

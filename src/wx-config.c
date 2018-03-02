@@ -185,6 +185,7 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
         int valid = 0;
         char old_name[16];
         int c, d;
+        int hdd_type;
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOHDD"));
 
@@ -248,11 +249,80 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
 
         wx_enablewindow(h, TRUE);
 
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREHDD"));                
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREHDD"));
         if (hdd_controller_selected_has_config(hdlg))
                 wx_enablewindow(h, TRUE);
         else
                 wx_enablewindow(h, FALSE);
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOHDD"));
+        hdd_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDCBOOK"));
+        
+        while (wx_sendmessage(h, WX_CHB_GETPAGECOUNT, 0, 0))
+                wx_sendmessage(h, WX_CHB_REMOVEPAGE, 0, 0);
+
+        for (c = 0; c < 7; c++)
+        {
+                void *page;
+                char s[80];
+                        
+                sprintf(s, "IDC_HDPANEL[%i]", c);
+                        
+                page = wx_getdlgitem(hdlg, WX_ID(s));
+                wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
+                wx_sendmessage(h, WX_CHB_ADDPAGE, (LONG_PARAM)page, (LONG_PARAM)"dummy name");
+        }                
+        if (hdd_controller_is_scsi(hdd_names[hdd_type]))
+        {                
+                for (c = 0; c < 7; c++)
+                {
+                        void *page;
+                        char s[80];
+                        
+                        sprintf(s, "IDC_HDPANEL[%i]", c);
+                        page = wx_getdlgitem(hdlg, WX_ID(s));
+                        wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
+                        sprintf(s, "SCSI ID %i (%c:)", c, 'C'+c);
+                        wx_sendmessage(h, WX_CHB_SETPAGETEXT, c, (LONG_PARAM)s);
+                }
+        }
+        else if (hdd_controller_is_ide(hdd_names[hdd_type]))
+        {
+                for (c = 0; c < 4; c++)
+                {
+                        void *page;
+                        char s[80];
+
+                        sprintf(s, "IDC_HDPANEL[%i]", c);
+                        page = wx_getdlgitem(hdlg, WX_ID(s));
+                        wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
+                        sprintf(s, "Drive %i %s %s (%c:)", c, (c & 2) ? "Secondary" : "Primary", (c & 1) ? "Slave" : "Master", 'C'+c);
+                        wx_sendmessage(h, WX_CHB_SETPAGETEXT, c, (LONG_PARAM)s);
+                }
+                for (c = 6; c >= 4; c--)
+                {
+                        wx_sendmessage(h, WX_CHB_REMOVEPAGE, c, 0);
+                }
+        }
+        else
+        {
+                for (c = 0; c < 2; c++)
+                {
+                        void *page;
+                        char s[80];
+                        
+                        sprintf(s, "IDC_HDPANEL[%i]", c);
+                        page = wx_getdlgitem(hdlg, WX_ID(s));
+                        wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
+                        sprintf(s, "Drive %i %s (%c:)", c, (c & 1) ? "Secondary" : "Primary", 'C'+c);
+                        wx_sendmessage(h, WX_CHB_SETPAGETEXT, c, (LONG_PARAM)s);
+                }
+                for (c = 6; c >= 2; c--)
+                {
+                        wx_sendmessage(h, WX_CHB_REMOVEPAGE, c, 0);
+                }
+        }
 }
 
 #ifdef USE_NETWORKING
@@ -319,7 +389,7 @@ int config_dlgsave(void* hdlg)
 #endif
         int hdd_changed = 0;
         char s[260];
-        PcemHDC hd[4];
+        PcemHDC hd[7];
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
         temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
@@ -432,58 +502,26 @@ int config_dlgsave(void* hdlg)
                         else
                                 strcpy(hdd_controller_name, "none");
 
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].tracks);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 511, (LONG_PARAM)ide_fn[0]);
+                        for (c = 0; c < 7; c++)
+                        {
+                                sprintf(s, "IDC_EDIT_SPT[%i]", c);
+                                h = wx_getdlgitem(hdlg, WX_ID(s));
+                                wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+                                sscanf(s, "%i", &hd[c].spt);
+                                sprintf(s, "IDC_EDIT_HPC[%i]", c);
+                                h = wx_getdlgitem(hdlg, WX_ID(s));
+                                wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+                                sscanf(s, "%i", &hd[c].hpc);
+                                sprintf(s, "IDC_EDIT_CYL[%i]", c);
+                                h = wx_getdlgitem(hdlg, WX_ID(s));
+                                wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+                                sscanf(s, "%i", &hd[c].tracks);
+                                sprintf(s, "IDC_EDIT_FN[%i]", c);
+                                h = wx_getdlgitem(hdlg, WX_ID(s));
+                                wx_sendmessage(h, WX_WM_GETTEXT, 511, (LONG_PARAM)ide_fn[c]);
 
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].tracks);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 511, (LONG_PARAM)ide_fn[1]);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].tracks);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 511, (LONG_PARAM)ide_fn[2]);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].tracks);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 511, (LONG_PARAM)ide_fn[3]);
-
-                        hdc[0] = hd[0];
-                        hdc[1] = hd[1];
-                        hdc[2] = hd[2];
-                        hdc[3] = hd[3];
+                                hdc[c] = hd[c];
+                        }
 
                         cdrom_channel = new_cdrom_channel;
                         zip_channel = new_zip_channel;
@@ -768,47 +806,23 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         new_zip_channel = zip_channel;
                         
                         hdconf_init(hdlg);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[0]"));
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
-                        if (cdrom_channel == 0)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
-                        else if (zip_channel == 0)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
-                        else
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[1]"));
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
-                        if (cdrom_channel == 1)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
-                        else if (zip_channel == 1)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
-                        else
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[2]"));
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
-                        if (cdrom_channel == 2)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
-                        else if (zip_channel == 2)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
-                        else
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[3]"));
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
-                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
-                        if (cdrom_channel == 3)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
-                        else if (zip_channel == 3)
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
-                        else
-                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                        
+                        for (c = 0; c < 7; c++)
+                        {
+                                char s[80];
+                                
+                                sprintf(s, "IDC_COMBODRIVETYPE[%i]", c);
+                                h = wx_getdlgitem(hdlg, WX_ID(s));
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"CD-ROM");
+                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Iomega Zip");
+                                if (cdrom_channel == c)
+                                        wx_sendmessage(h, WX_CB_SETCURSEL, 1, 0);
+                                else if (zip_channel == c)
+                                        wx_sendmessage(h, WX_CB_SETCURSEL, 2, 0);
+                                else
+                                        wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                        }
 
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, romstomodel[romset]);
@@ -1097,6 +1111,10 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else if (wParam == WX_ID("IDC_COMBOHDD"))
                         {
                                 hdconf_update(hdlg);
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
+                                temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
+                                recalc_hdd_list(hdlg, temp_model, 1, 0);
                         }
                         else if (wParam == WX_ID("IDC_CONFIGUREHDD"))
                         {
@@ -1314,7 +1332,7 @@ static void update_hdd_cdrom(void* hdlg)
 
         int is_mfm = hdd_controller_selected_is_mfm(hdlg);
 
-        for (i = 0; i < 4; ++i)
+        for (i = 0; i < 7; ++i)
         {
                 b = !is_mfm && ((new_cdrom_channel == i) || (new_zip_channel == i));
                 pclog("update_hdd_cdrom: i=%i b=%i new_cdrom_channel=%i new_zip_channel=%i\n", i, b, new_cdrom_channel, new_zip_channel);
@@ -1373,7 +1391,7 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
         char s[260];
         void* h;
         int c;
-        PcemHDC hd[4];
+        PcemHDC hd[7];
         FILE *f;
         int hd_type;
         int size;
@@ -1640,78 +1658,35 @@ static int hdsize_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM 
 
 int hdconf_init(void* hdlg)
 {
-        char s[260];
-        void* h;
-        PcemHDC hd[4];
+        int c;
+        
+        for (c = 0; c < 7; c++)
+        {
+                char s[260];
+                void *h;
+                
+                sprintf(s, "IDC_EDIT_SPT[%i]", c);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
+                sprintf(s, "%i", hdc[c].spt);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(s, "IDC_EDIT_HPC[%i]", c);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
+                sprintf(s, "%i", hdc[c].hpc);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(s, "IDC_EDIT_CYL[%i]", c);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
+                sprintf(s, "%i", hdc[c].tracks);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(s, "IDC_EDIT_FN[%i]", c);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)ide_fn[c]);
 
-        hd[0] = hdc[0];
-        hd[1] = hdc[1];
-        hd[2] = hdc[2];
-        hd[3] = hdc[3];
+                sprintf(s, "IDC_TEXT_SIZE[%i]", c);
+                h = wx_getdlgitem(hdlg, WX_ID(s));
+                sprintf(s, "%imb", (int)(((((uint64_t)hdc[c].tracks*(uint64_t)hdc[c].hpc)*(uint64_t)hdc[c].spt)*512)/1024)/1024);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
 
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[0]"));
-        sprintf(s, "%i", hdc[0].spt);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[0]"));
-        sprintf(s, "%i", hdc[0].hpc);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[0]"));
-        sprintf(s, "%i", hdc[0].tracks);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[0]"));
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)ide_fn[0]);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[1]"));
-        sprintf(s, "%i", hdc[1].spt);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[1]"));
-        sprintf(s, "%i", hdc[1].hpc);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[1]"));
-        sprintf(s, "%i", hdc[1].tracks);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h=  wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[1]"));
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)ide_fn[1]);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[2]"));
-        sprintf(s, "%i", hdc[2].spt);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[2]"));
-        sprintf(s, "%i", hdc[2].hpc);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[2]"));
-        sprintf(s, "%i", hdc[2].tracks);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h=  wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[2]"));
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)ide_fn[2]);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[3]"));
-        sprintf(s, "%i", hdc[3].spt);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[3]"));
-        sprintf(s, "%i", hdc[3].hpc);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[3]"));
-        sprintf(s, "%i", hdc[3].tracks);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        h=  wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[3]"));
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)ide_fn[3]);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[0]"));
-        sprintf(s, "%imb", (int)(((((uint64_t)hd[0].tracks*(uint64_t)hd[0].hpc)*(uint64_t)hd[0].spt)*512)/1024)/1024);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[1]"));
-        sprintf(s, "%imb", (int)(((((uint64_t)hd[1].tracks*(uint64_t)hd[1].hpc)*(uint64_t)hd[1].spt)*512)/1024)/1024);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[2]"));
-        sprintf(s, "%imb", (int)(((((uint64_t)hd[2].tracks*(uint64_t)hd[2].hpc)*(uint64_t)hd[2].spt)*512)/1024)/1024);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[3]"));
-        sprintf(s, "%imb", (int)(((((uint64_t)hd[3].tracks*(uint64_t)hd[3].hpc)*(uint64_t)hd[3].spt)*512)/1024)/1024);
-        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+        }
 
         return hdconf_update(hdlg);
 }
@@ -1726,7 +1701,7 @@ int hdconf_update(void* hdlg)
         update_hdd_cdrom(hdlg);
 
         int i;
-        for (i = 0; i < 4; ++i)
+        for (i = 0; i < 7; ++i)
         {
                 sprintf(s, "IDC_HDD_LABEL[%d]", i*10);
                 wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
@@ -1744,13 +1719,170 @@ int hdconf_update(void* hdlg)
         return TRUE;
 }
 
+static int hd_eject(void *hdlg, int drive)
+{
+        char s[80];
+        
+        ide_fn[drive][0] = 0;
+        sprintf(s, "IDC_EDIT_SPT[%i]", drive);
+        wx_setdlgitemtext(hdlg, WX_ID(s), "0");
+        sprintf(s, "IDC_EDIT_HPC[%i]", drive);
+        wx_setdlgitemtext(hdlg, WX_ID(s), "0");
+        sprintf(s, "IDC_EDIT_CYL[%i]", drive);
+        wx_setdlgitemtext(hdlg, WX_ID(s), "0");
+        sprintf(s, "IDC_EDIT_FN[%i]", drive);
+        wx_setdlgitemtext(hdlg, WX_ID(s), "");
+        hd_changed = 1;
+        
+        return TRUE;
+}
+
+static int hd_new(void *hdlg, int drive)
+{
+        if (wx_dialogbox(hdlg, "HdNewDlg", hdnew_dlgproc) == 1)
+        {
+                char s[80];
+                char id[80];
+                void *h;
+                
+                sprintf(id, "IDC_EDIT_SPT[%i]", drive);
+                h = wx_getdlgitem(hdlg, WX_ID(id));
+                sprintf(s, "%i", hd_new_spt);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(id, "IDC_EDIT_HPC[%i]", drive);
+                h = wx_getdlgitem(hdlg, WX_ID(id));
+                sprintf(s, "%i", hd_new_hpc);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(id, "IDC_EDIT_CYL[%i]", drive);
+                h = wx_getdlgitem(hdlg, WX_ID(id));
+                sprintf(s, "%i", hd_new_cyl);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                sprintf(id, "IDC_EDIT_FN[%i]", drive);
+                h = wx_getdlgitem(hdlg, WX_ID(id));
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)hd_new_name);
+
+                sprintf(id, "IDC_TEXT_SIZE[%i]", drive);
+                h = wx_getdlgitem(hdlg, WX_ID(id));
+                sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+
+                hd_changed = 1;
+        }
+        return TRUE;
+}
+
+static int hd_file(void *hdlg, int drive)
+{
+        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
+        {
+                off64_t sz;
+                FILE *f = fopen64(openfilestring, "rb");
+                if (!f)
+                {
+                        wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
+                        return TRUE;
+                }
+                fseeko64(f, -1, SEEK_END);
+                sz = ftello64(f) + 1;
+                fclose(f);
+                check_hd_type(hdlg, sz);
+
+                if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
+                {
+                        char s[80];
+                        char id[80];
+                        void *h;
+                        
+                        sprintf(id, "IDC_EDIT_SPT[%i]", drive);
+                        h = wx_getdlgitem(hdlg, WX_ID(id));
+                        sprintf(s, "%i", hd_new_spt);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                        sprintf(id, "IDC_EDIT_HPC[%i]", drive);
+                        h = wx_getdlgitem(hdlg, WX_ID(id));
+                        sprintf(s, "%i", hd_new_hpc);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                        sprintf(id, "IDC_EDIT_CYL[%i]", drive);
+                        h = wx_getdlgitem(hdlg, WX_ID(id));
+                        sprintf(s, "%i", hd_new_cyl);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+                        sprintf(id, "IDC_EDIT_FN[%i]", drive);
+                        h = wx_getdlgitem(hdlg, WX_ID(id));
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)openfilestring);
+
+                        sprintf(id, "IDC_TEXT_SIZE[%i]", drive);
+                        h = wx_getdlgitem(hdlg, WX_ID(id));
+                        sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
+                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+
+                        hd_changed = 1;
+                }
+        }
+        return TRUE;
+}
+
+static int hd_edit(void *hdlg, int drive)
+{
+        char s[80];
+        char id[80];
+        void *h;
+        int spt, hpc, tracks;
+        
+        sprintf(id, "IDC_EDIT_SPT[%i]", drive);
+        h = wx_getdlgitem(hdlg, WX_ID(id));
+        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+        sscanf(s, "%i", &spt);
+        sprintf(id, "IDC_EDIT_HPC[%i]", drive);
+        h = wx_getdlgitem(hdlg, WX_ID(id));
+        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+        sscanf(s, "%i", &hpc);
+        sprintf(id, "IDC_EDIT_CYL[%i]", drive);
+        h = wx_getdlgitem(hdlg, WX_ID(id));
+        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+        sscanf(s, "%i", &tracks);
+
+        sprintf(id, "IDC_TEXT_SIZE[%i]", drive);
+        h = wx_getdlgitem(hdlg, WX_ID(id));
+        sprintf(s, "%imb", ((((tracks*hpc)*spt)*512)/1024)/1024);
+        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
+        
+        return TRUE;
+}
+
+static int hd_combodrivetype(void *hdlg, int drive)
+{
+        int type;
+        char id[80];
+        void *h;
+
+        sprintf(id, "IDC_COMBODRIVETYPE[%i]", drive);
+        h = wx_getdlgitem(hdlg, WX_ID(id));
+        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
+        switch (type)
+        {
+                case 0: /*Hard drive*/
+                if (new_cdrom_channel == drive)
+                        new_cdrom_channel = -1;
+                if (new_zip_channel == drive)
+                        new_zip_channel = -1;
+                break;
+                case 1: /*CD-ROM*/
+                new_cdrom_channel = drive;
+                if (new_zip_channel == drive)
+                        new_zip_channel = -1;
+                break;
+                case 2: /*Zip*/
+                new_zip_channel = drive;
+                if (new_cdrom_channel == drive)
+                        new_cdrom_channel = -1;
+                break;
+        }
+        update_hdd_cdrom(hdlg);
+        return TRUE;
+}
+
 int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
-        char s[260];
-        void* h;
-        PcemHDC hd[4];
-        FILE *f;
-        off64_t sz;
         switch (message)
         {
                 case WX_INITDIALOG:
@@ -1759,487 +1891,75 @@ int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                 case WX_COMMAND:
                 if (ID_IS("IDC_EJECT[0]"))
-                {
-                        hd[0].spt = 0;
-                        hd[0].hpc = 0;
-                        hd[0].tracks = 0;
-                        ide_fn[0][0] = 0;
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_SPT[0]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_HPC[0]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_CYL[0]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_FN[0]"), "");
-                        hd_changed = 1;
-                        return TRUE;
-                } else if (ID_IS("IDC_EJECT[1]"))
-                {
-                        hd[1].spt = 0;
-                        hd[1].hpc = 0;
-                        hd[1].tracks = 0;
-                        ide_fn[1][0] = 0;
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_SPT[1]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_HPC[1]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_CYL[1]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_FN[1]"), "");
-                        hd_changed = 1;
-                        return TRUE;
-                } else if (ID_IS("IDC_EJECT[2]"))
-                {
-                        hd[2].spt = 0;
-                        hd[2].hpc = 0;
-                        hd[2].tracks = 0;
-                        ide_fn[2][0] = 0;
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_SPT[2]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_HPC[2]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_CYL[2]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_FN[2]"), "");
-                        hd_changed = 1;
-                        return TRUE;
-                } else if (ID_IS("IDC_EJECT[3]"))
-                {
-                        hd[3].spt = 0;
-                        hd[3].hpc = 0;
-                        hd[3].tracks = 0;
-                        ide_fn[3][0] = 0;
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_SPT[3]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_HPC[3]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_CYL[3]"), "0");
-                        wx_setdlgitemtext(hdlg, WX_ID("IDC_EDIT_FN[3]"), "");
-                        hd_changed = 1;
-                        return TRUE;
-                }
+                        return hd_eject(hdlg, 0);
+                else if (ID_IS("IDC_EJECT[1]"))
+                        return hd_eject(hdlg, 1);
+                else if (ID_IS("IDC_EJECT[2]"))
+                        return hd_eject(hdlg, 2);
+                else if (ID_IS("IDC_EJECT[3]"))
+                        return hd_eject(hdlg, 3);
+                else if (ID_IS("IDC_EJECT[4]"))
+                        return hd_eject(hdlg, 4);
+                else if (ID_IS("IDC_EJECT[5]"))
+                        return hd_eject(hdlg, 5);
+                else if (ID_IS("IDC_EJECT[6]"))
+                        return hd_eject(hdlg, 6);
                 else if (ID_IS("IDC_NEW[0]"))
-                {
-                        if (wx_dialogbox(hdlg, "HdNewDlg", hdnew_dlgproc) == 1)
-                        {
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[0]"));
-                                sprintf(s, "%i", hd_new_spt);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[0]"));
-                                sprintf(s, "%i", hd_new_hpc);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[0]"));
-                                sprintf(s, "%i", hd_new_cyl);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[0]"));
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)hd_new_name);
-
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[0]"));
-                                sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                hd_changed = 1;
-                        }
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_FILE[0]"))
-                {
-                        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                check_hd_type(hdlg, sz);
-
-                                if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
-                                {
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[0]"));
-                                        sprintf(s, "%i", hd_new_spt);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[0]"));
-                                        sprintf(s, "%i", hd_new_hpc);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[0]"));
-                                        sprintf(s, "%i", hd_new_cyl);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[0]"));
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)openfilestring);
-
-                                        h=  wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[0]"));
-                                        sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-
-                }
+                        return hd_new(hdlg, 0);
                 else if (ID_IS("IDC_NEW[1]"))
-                {
-                        if (wx_dialogbox(hdlg, "HdNewDlg", hdnew_dlgproc) == 1)
-                        {
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[1]"));
-                                sprintf(s, "%i", hd_new_spt);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[1]"));
-                                sprintf(s, "%i", hd_new_hpc);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[1]"));
-                                sprintf(s, "%i", hd_new_cyl);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[1]"));
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)hd_new_name);
-
-                                h=  wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[1]"));
-                                sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                hd_changed = 1;
-                        }
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_FILE[1]"))
-                {
-                        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                check_hd_type(hdlg, sz);
-
-                                if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
-                                {
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[1]"));
-                                        sprintf(s, "%i", hd_new_spt);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[1]"));
-                                        sprintf(s, "%i", hd_new_hpc);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[1]"));
-                                        sprintf(s, "%i", hd_new_cyl);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[1]"));
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)openfilestring);
-
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[1]"));
-                                        sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-                }
+                        return hd_new(hdlg, 1);
                 else if (ID_IS("IDC_NEW[2]"))
-                {
-                        if (wx_dialogbox(hdlg, "HdNewDlg", hdnew_dlgproc) == 1)
-                        {
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[2]"));
-                                sprintf(s, "%i", hd_new_spt);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[2]"));
-                                sprintf(s, "%i", hd_new_hpc);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[2]"));
-                                sprintf(s, "%i", hd_new_cyl);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[2]"));
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)hd_new_name);
-
-                                h=  wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[2]"));
-                                sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                hd_changed = 1;
-                        }
-                        return TRUE;
-                }
-                else if (ID_IS("IDC_FILE[2]"))
-                {
-                        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                check_hd_type(hdlg, sz);
-
-                                if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
-                                {
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[2]"));
-                                        sprintf(s, "%i", hd_new_spt);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[2]"));
-                                        sprintf(s, "%i", hd_new_hpc);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[2]"));
-                                        sprintf(s, "%i", hd_new_cyl);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[2]"));
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)openfilestring);
-
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[2]"));
-                                        sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-                }
+                        return hd_new(hdlg, 2);
                 else if (ID_IS("IDC_NEW[3]"))
-                {
-                        if (wx_dialogbox(hdlg, "HdNewDlg", hdnew_dlgproc) == 1)
-                        {
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[3]"));
-                                sprintf(s, "%i", hd_new_spt);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[3]"));
-                                sprintf(s, "%i", hd_new_hpc);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[3]"));
-                                sprintf(s, "%i", hd_new_cyl);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[3]"));
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)hd_new_name);
-
-                                h=  wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[3]"));
-                                sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                hd_changed = 1;
-                        }
-                        return TRUE;
-                }
+                        return hd_new(hdlg, 3);
+                else if (ID_IS("IDC_NEW[4]"))
+                        return hd_new(hdlg, 4);
+                else if (ID_IS("IDC_NEW[5]"))
+                        return hd_new(hdlg, 5);
+                else if (ID_IS("IDC_NEW[6]"))
+                        return hd_new(hdlg, 6);
+                else if (ID_IS("IDC_FILE[0]"))
+                        return hd_file(hdlg, 0);
+                else if (ID_IS("IDC_FILE[1]"))
+                        return hd_file(hdlg, 1);
+                else if (ID_IS("IDC_FILE[2]"))
+                        return hd_file(hdlg, 2);
                 else if (ID_IS("IDC_FILE[3]"))
-                {
-                        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
-                        {
-                                f = fopen64(openfilestring, "rb");
-                                if (!f)
-                                {
-                                        wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
-                                        return TRUE;
-                                }
-                                fseeko64(f, -1, SEEK_END);
-                                sz = ftello64(f) + 1;
-                                fclose(f);
-                                check_hd_type(hdlg, sz);
-
-                                if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
-                                {
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[3]"));
-                                        sprintf(s, "%i", hd_new_spt);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[3]"));
-                                        sprintf(s, "%i", hd_new_hpc);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[3]"));
-                                        sprintf(s, "%i", hd_new_cyl);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_FN[3]"));
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)openfilestring);
-
-                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[3]"));
-                                        sprintf(s, "%imb", (int)(((((uint64_t)hd_new_cyl*(uint64_t)hd_new_hpc)*(uint64_t)hd_new_spt)*512)/1024)/1024);
-                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-
-                                        hd_changed = 1;
-                                }
-                        }
-                        return TRUE;
-                }
+                        return hd_file(hdlg, 3);
+                else if (ID_IS("IDC_FILE[4]"))
+                        return hd_file(hdlg, 4);
+                else if (ID_IS("IDC_FILE[5]"))
+                        return hd_file(hdlg, 5);
+                else if (ID_IS("IDC_FILE[6]"))
+                        return hd_file(hdlg, 6);
                 else if (ID_IS("IDC_EDIT_SPT[0]") || ID_IS("IDC_EDIT_HPC[0]") || ID_IS("IDC_EDIT_CYL[0]"))
-                {
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[0]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[0].tracks);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[0]"));
-                        sprintf(s, "%imb", ((((hd[0].tracks*hd[0].hpc)*hd[0].spt)*512)/1024)/1024);
-                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                        return TRUE;
-                }
+                        return hd_edit(hdlg, 0);
                 else if (ID_IS("IDC_EDIT_SPT[1]") || ID_IS("IDC_EDIT_HPC[1]") || ID_IS("IDC_EDIT_CYL[1]"))
-                {
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[1]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[1].tracks);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[1]"));
-                        sprintf(s, "%imb", ((((hd[1].tracks*hd[1].hpc)*hd[1].spt)*512)/1024)/1024);
-                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                        return TRUE;
-                }
+                        return hd_edit(hdlg, 1);
                 else if (ID_IS("IDC_EDIT_SPT[2]") || ID_IS("IDC_EDIT_HPC[2]") || ID_IS("IDC_EDIT_CYL[2]"))
-                {
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[2]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[2].tracks);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[2]"));
-                        sprintf(s, "%imb", ((((hd[2].tracks*hd[2].hpc)*hd[2].spt)*512)/1024)/1024);
-                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                        return TRUE;
-                }
+                        return hd_edit(hdlg, 2);
                 else if (ID_IS("IDC_EDIT_SPT[3]") || ID_IS("IDC_EDIT_HPC[3]") || ID_IS("IDC_EDIT_CYL[3]"))
-                {
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_SPT[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].spt);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_HPC[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].hpc);
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_CYL[3]"));
-                        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
-                        sscanf(s, "%i", &hd[3].tracks);
-
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_TEXT_SIZE[3]"));
-                        sprintf(s, "%imb", ((((hd[3].tracks*hd[3].hpc)*hd[3].spt)*512)/1024)/1024);
-                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-                        return TRUE;
-                }
+                        return hd_edit(hdlg, 3);
+                else if (ID_IS("IDC_EDIT_SPT[4]") || ID_IS("IDC_EDIT_HPC[4]") || ID_IS("IDC_EDIT_CYL[4]"))
+                        return hd_edit(hdlg, 4);
+                else if (ID_IS("IDC_EDIT_SPT[5]") || ID_IS("IDC_EDIT_HPC[5]") || ID_IS("IDC_EDIT_CYL[5]"))
+                        return hd_edit(hdlg, 5);
+                else if (ID_IS("IDC_EDIT_SPT[6]") || ID_IS("IDC_EDIT_HPC[6]") || ID_IS("IDC_EDIT_CYL[6]"))
+                        return hd_edit(hdlg, 6);
                 else if (ID_IS("IDC_COMBODRIVETYPE[0]"))
-                {
-                        int type;
-                                
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[0]"));
-                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-                                
-                        switch (type)
-                        {
-                                case 0: /*Hard drive*/
-                                if (new_cdrom_channel == 0)
-                                        new_cdrom_channel = -1;
-                                if (new_zip_channel == 0)
-                                        new_zip_channel = -1;
-                                break;
-                                case 1: /*CD-ROM*/
-                                new_cdrom_channel = 0;
-                                if (new_zip_channel == 0)
-                                        new_zip_channel = -1;
-                                break;
-                                case 2: /*Zip*/
-                                new_zip_channel = 0;
-                                if (new_cdrom_channel == 0)
-                                        new_cdrom_channel = -1;
-                                break;
-                        }
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
+                        return hd_combodrivetype(hdlg, 0);
                 else if (ID_IS("IDC_COMBODRIVETYPE[1]"))
-                {
-                        int type;
-                                
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[1]"));
-                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-                                
-                        switch (type)
-                        {
-                                case 0: /*Hard drive*/
-                                if (new_cdrom_channel == 1)
-                                        new_cdrom_channel = -1;
-                                if (new_zip_channel == 1)
-                                        new_zip_channel = -1;
-                                break;
-                                case 1: /*CD-ROM*/
-                                new_cdrom_channel = 1;
-                                if (new_zip_channel == 1)
-                                        new_zip_channel = -1;
-                                break;
-                                case 2: /*Zip*/
-                                new_zip_channel = 1;
-                                if (new_cdrom_channel == 1)
-                                        new_cdrom_channel = -1;
-                                break;
-                        }
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
+                        return hd_combodrivetype(hdlg, 1);
                 else if (ID_IS("IDC_COMBODRIVETYPE[2]"))
-                {
-                        int type;
-                                
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[2]"));
-                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-                                
-                        switch (type)
-                        {
-                                case 0: /*Hard drive*/
-                                if (new_cdrom_channel == 2)
-                                        new_cdrom_channel = -1;
-                                if (new_zip_channel == 2)
-                                        new_zip_channel = -1;
-                                break;
-                                case 1: /*CD-ROM*/
-                                new_cdrom_channel = 2;
-                                if (new_zip_channel == 2)
-                                        new_zip_channel = -1;
-                                break;
-                                case 2: /*Zip*/
-                                new_zip_channel = 2;
-                                if (new_cdrom_channel == 2)
-                                        new_cdrom_channel = -1;
-                                break;
-                        }
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
+                        return hd_combodrivetype(hdlg, 2);
                 else if (ID_IS("IDC_COMBODRIVETYPE[3]"))
-                {
-                        int type;
-                                
-                        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBODRIVETYPE[3]"));
-                        type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-                                
-                        switch (type)
-                        {
-                                case 0: /*Hard drive*/
-                                if (new_cdrom_channel == 3)
-                                        new_cdrom_channel = -1;
-                                if (new_zip_channel == 3)
-                                        new_zip_channel = -1;
-                                break;
-                                case 1: /*CD-ROM*/
-                                new_cdrom_channel = 3;
-                                if (new_zip_channel == 3)
-                                        new_zip_channel = -1;
-                                break;
-                                case 2: /*Zip*/
-                                new_zip_channel = 3;
-                                if (new_cdrom_channel == 3)
-                                        new_cdrom_channel = -1;
-                                break;
-                        }
-                        update_hdd_cdrom(hdlg);
-                        return TRUE;
-                }
+                        return hd_combodrivetype(hdlg, 3);
+                else if (ID_IS("IDC_COMBODRIVETYPE[4]"))
+                        return hd_combodrivetype(hdlg, 4);
+                else if (ID_IS("IDC_COMBODRIVETYPE[5]"))
+                        return hd_combodrivetype(hdlg, 5);
+                else if (ID_IS("IDC_COMBODRIVETYPE[6]"))
+                        return hd_combodrivetype(hdlg, 6);
         }
         return FALSE;
 }

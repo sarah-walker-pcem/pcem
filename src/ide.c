@@ -87,11 +87,11 @@ typedef struct IDE
 int cdrom_channel = 2;
 int zip_channel = -1;
 
-IDE ide_drives[4];
+IDE ide_drives[7];
 
 IDE *ext_ide;
 
-char ide_fn[4][512];
+char ide_fn[7][512];
 
 int (*ide_bus_master_read_sector)(int channel, uint8_t *data);
 int (*ide_bus_master_write_sector)(int channel, uint8_t *data);

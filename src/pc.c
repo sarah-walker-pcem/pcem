@@ -757,6 +757,24 @@ void loadconfig(char *fn)
         p = (char *)config_get_string(CFG_MACHINE, NULL, "hdf_fn", "");
         if (p) strcpy(ide_fn[3], p);
         else   strcpy(ide_fn[3], "");
+        hdc[4].spt = config_get_int(CFG_MACHINE, NULL, "hdg_sectors", 0);
+        hdc[4].hpc = config_get_int(CFG_MACHINE, NULL, "hdg_heads", 0);
+        hdc[4].tracks = config_get_int(CFG_MACHINE, NULL, "hdg_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdg_fn", "");
+        if (p) strcpy(ide_fn[4], p);
+        else   strcpy(ide_fn[4], "");
+        hdc[5].spt = config_get_int(CFG_MACHINE, NULL, "hdh_sectors", 0);
+        hdc[5].hpc = config_get_int(CFG_MACHINE, NULL, "hdh_heads", 0);
+        hdc[5].tracks = config_get_int(CFG_MACHINE, NULL, "hdh_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdh_fn", "");
+        if (p) strcpy(ide_fn[5], p);
+        else   strcpy(ide_fn[5], "");
+        hdc[6].spt = config_get_int(CFG_MACHINE, NULL, "hdi_sectors", 0);
+        hdc[6].hpc = config_get_int(CFG_MACHINE, NULL, "hdi_heads", 0);
+        hdc[6].tracks = config_get_int(CFG_MACHINE, NULL, "hdi_cylinders", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "hdi_fn", "");
+        if (p) strcpy(ide_fn[6], p);
+        else   strcpy(ide_fn[6], "");
 
         fdd_set_type(0, config_get_int(CFG_MACHINE, NULL, "drive_a_type", 7));
         fdd_set_type(1, config_get_int(CFG_MACHINE, NULL, "drive_b_type", 7));
@@ -890,6 +908,18 @@ void saveconfig(char *fn)
         config_set_int(CFG_MACHINE, NULL, "hdf_heads", hdc[3].hpc);
         config_set_int(CFG_MACHINE, NULL, "hdf_cylinders", hdc[3].tracks);
         config_set_string(CFG_MACHINE, NULL, "hdf_fn", ide_fn[3]);
+        config_set_int(CFG_MACHINE, NULL, "hdg_sectors", hdc[4].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdg_heads", hdc[4].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdg_cylinders", hdc[4].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdg_fn", ide_fn[4]);
+        config_set_int(CFG_MACHINE, NULL, "hdh_sectors", hdc[5].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdh_heads", hdc[5].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdh_cylinders", hdc[5].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdh_fn", ide_fn[5]);
+        config_set_int(CFG_MACHINE, NULL, "hdi_sectors", hdc[6].spt);
+        config_set_int(CFG_MACHINE, NULL, "hdi_heads", hdc[6].hpc);
+        config_set_int(CFG_MACHINE, NULL, "hdi_cylinders", hdc[6].tracks);
+        config_set_string(CFG_MACHINE, NULL, "hdi_fn", ide_fn[6]);
 
         config_set_int(CFG_MACHINE, NULL, "drive_a_type", fdd_get_type(0));
         config_set_int(CFG_MACHINE, NULL, "drive_b_type", fdd_get_type(1));

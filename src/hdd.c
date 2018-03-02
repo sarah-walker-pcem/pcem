@@ -24,23 +24,24 @@ static struct
         device_t *device;
         int is_mfm;
         int is_ide;
+        int is_scsi;
 } hdd_controllers[] = 
 {
-        {"None",                                  "none",       &null_hdd_device,      0, 0},
-        {"[MFM] AT Fixed Disk Adapter",           "mfm_at",     &mfm_at_device,        1, 0},
-        {"[MFM] DTC 5150X",                       "dtc5150x",   &dtc_5150x_device,     1, 0},
-        {"[MFM] Fixed Disk Adapter (Xebec)",      "mfm_xebec",  &mfm_xebec_device,     1, 0},
-        {"[ESDI] IBM ESDI Fixed Disk Controller", "esdi_mca",   &hdd_esdi_device,      1, 0},
-        {"[ESDI] Western Digital WD1007V-SE1",    "wd1007vse1", &wd1007vse1_device,    0, 0},
-        {"[IDE] Standard IDE",                    "ide",        &ide_device,           0, 1},
-        {"[IDE] XTIDE",                           "xtide",      &xtide_device,         0, 1},
-        {"[IDE] XTIDE (AT)",                      "xtide_at",   &xtide_at_device,      0, 1},
-        {"[IDE] XTIDE (PS/1)",                    "xtide_ps1",  &xtide_ps1_device,     0, 1},
-        {"[SCSI] Adaptec AHA-1542C",              "aha1542c",   &scsi_aha1542c_device, 0, 0},
-        {"[SCSI] BusLogic BT-545S",               "bt545s",     &scsi_bt545s_device,   0, 0},
-        {"[SCSI] Longshine LCS-6821N",            "lcs6821n",   &scsi_lcs6821n_device, 0, 0},
-        {"[SCSI] Rancho RT1000B",                 "rt1000b",    &scsi_rt1000b_device,  0, 0},
-        {"[SCSI] Trantor T130B",                  "t130b",      &scsi_t130b_device,    0, 0},
+        {"None",                                  "none",       &null_hdd_device,      0, 0, 0},
+        {"[MFM] AT Fixed Disk Adapter",           "mfm_at",     &mfm_at_device,        1, 0, 0},
+        {"[MFM] DTC 5150X",                       "dtc5150x",   &dtc_5150x_device,     1, 0, 0},
+        {"[MFM] Fixed Disk Adapter (Xebec)",      "mfm_xebec",  &mfm_xebec_device,     1, 0, 0},
+        {"[ESDI] IBM ESDI Fixed Disk Controller", "esdi_mca",   &hdd_esdi_device,      1, 0, 0},
+        {"[ESDI] Western Digital WD1007V-SE1",    "wd1007vse1", &wd1007vse1_device,    0, 0, 0},
+        {"[IDE] Standard IDE",                    "ide",        &ide_device,           0, 1, 0},
+        {"[IDE] XTIDE",                           "xtide",      &xtide_device,         0, 1, 0},
+        {"[IDE] XTIDE (AT)",                      "xtide_at",   &xtide_at_device,      0, 1, 0},
+        {"[IDE] XTIDE (PS/1)",                    "xtide_ps1",  &xtide_ps1_device,     0, 1, 0},
+        {"[SCSI] Adaptec AHA-1542C",              "aha1542c",   &scsi_aha1542c_device, 0, 0, 1},
+        {"[SCSI] BusLogic BT-545S",               "bt545s",     &scsi_bt545s_device,   0, 0, 1},
+        {"[SCSI] Longshine LCS-6821N",            "lcs6821n",   &scsi_lcs6821n_device, 0, 0, 1},
+        {"[SCSI] Rancho RT1000B",                 "rt1000b",    &scsi_rt1000b_device,  0, 0, 1},
+        {"[SCSI] Trantor T130B",                  "t130b",      &scsi_t130b_device,    0, 0, 1},
         {"", "", NULL, 0, 0}
 };
 
@@ -98,6 +99,23 @@ int hdd_controller_is_ide(char *internal_name)
 
         return 0;
 }
+int hdd_controller_is_scsi(char *internal_name)
+{
+        int c = 0;
+        
+        while (hdd_controllers[c].device)
+        {
+                if (!strcmp(internal_name, hdd_controllers[c].internal_name))
+                {
+                        hdd_controller_current = c;
+                        if (strcmp(internal_name, "none"))
+                                return hdd_controllers[c].is_scsi;
+                }
+                c++;
+        }
+
+        return 0;
+}
 int hdd_controller_has_config(char *internal_name)
 {
         int c = 0;
@@ -141,6 +159,10 @@ int hdd_controller_current_is_mfm()
 int hdd_controller_current_is_ide()
 {
         return hdd_controller_is_ide(hdd_controller_name);
+}
+int hdd_controller_current_is_scsi()
+{
+        return hdd_controller_is_scsi(hdd_controller_name);
 }
 
 void hdd_controller_init(char *internal_name)

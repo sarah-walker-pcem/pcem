@@ -444,7 +444,7 @@
 					<label>+18 dB</label>
 					<radio>1</radio>
 				</object>
-</object>
+			</object>
 		</object>
 		<object class="wxMenu">
 			<label>Misc</label>
@@ -483,7 +483,7 @@
 		</object>
 	</object>
 
-	<ids-range name="IDC_PANEL" start="10" />
+	<ids-range name="IDC_HDPANEL" start="10" />
 	<ids-range name="IDC_COMBODRIVETYPE" start="100" />
 	<ids-range name="IDC_EDIT_FN" start="300" />
 	<ids-range name="IDC_FILE" start="400" />
@@ -1141,776 +1141,8 @@
 									<option>1</option>
 									<flag>wxEXPAND | wxALL</flag>
 									<border>5</border>
-									<object class="wxChoicebook">
+									<object class="wxChoicebook" name="IDC_HDCBOOK">
 										<style>wxCHB_DEFAULT</style>
-										<object class="choicebookpage">
-											<label>Drive 1 (C:)</label>
-											<selected>1</selected>
-											<object class="wxPanel" name="IDC_PANEL[0]">
-												<style>wxTAB_TRAVERSAL</style>
-												<object class="wxFlexGridSizer">
-													<rows>0</rows>
-													<cols>3</cols>
-													<vgap>0</vgap>
-													<hgap>0</hgap>
-													<growablecols>2</growablecols>
-													<growablerows></growablerows>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[0]">
-															<size>75,-1</size>
-															<label>Type:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxBoxSizer">
-															<orient>wxHORIZONTAL</orient>															
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[0]">
-																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
-																	<size>350,-1</size>
-																	<value></value>
-																	<content />
-																</object>
-															</object>
-															<object class="spacer">
-																<option>1</option>
-																<flag>wxEXPAND</flag>
-																<border>5</border>
-																<size>0,0</size>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxBitmapButton" name="IDC_NEW[0]">
-																	<tooltip>New</tooltip>
-																	<bitmap>icons/16x16/drive_add.png</bitmap>
-																	<default>0</default>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_FILE[0]">
-															<tooltip>Browse</tooltip>
-															<bitmap>icons/16x16/folder.png</bitmap>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[1]">
-															<label>File:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxALL|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxTextCtrl" name="IDC_EDIT_FN[0]">
-															<style>wxTE_READONLY</style>
-															<size>350,-1</size>
-															<value></value>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_EJECT[0]">
-															<bitmap>icons/16x16/control_eject.png</bitmap>
-															<tooltip>Eject</tooltip>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxFlexGridSizer">
-															<rows>0</rows>
-															<cols>4</cols>
-															<vgap>0</vgap>
-															<hgap>0</hgap>
-															<growablecols>1,3</growablecols>
-															<growablerows></growablerows>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[2]">
-																	<label>Sectors:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_SPT[0]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[3]">
-																	<label>Heads:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_HPC[0]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[4]">
-																	<label>Cylinder:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_CYL[0]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[5]">
-																	<label>Size:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_TEXT_SIZE[0]">
-																	<value></value>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-												</object>
-											</object>
-										</object>
-										<object class="choicebookpage">
-											<label>Drive 2 (D:)</label>
-											<selected>0</selected>
-											<object class="wxPanel" name="IDC_PANEL[1]">
-												<style>wxTAB_TRAVERSAL</style>
-												<object class="wxFlexGridSizer">
-													<rows>0</rows>
-													<cols>3</cols>
-													<vgap>0</vgap>
-													<hgap>0</hgap>
-													<growablecols>2</growablecols>
-													<growablerows></growablerows>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[10]">
-															<size>75,-1</size>
-															<label>Type:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxBoxSizer">
-															<orient>wxHORIZONTAL</orient>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[1]">
-																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
-																	<size>350,-1</size>
-																	<value></value>
-																	<content />
-																</object>
-															</object>
-															<object class="spacer">
-																<option>1</option>
-																<flag>wxEXPAND</flag>
-																<border>5</border>
-																<size>0,0</size>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxBitmapButton" name="IDC_NEW[1]">
-																	<tooltip>New</tooltip>
-																	<bitmap>icons/16x16/drive_add.png</bitmap>
-																	<default>0</default>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_FILE[1]">
-															<tooltip>Browse</tooltip>
-															<bitmap>icons/16x16/folder.png</bitmap>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[11]">
-															<label>File:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxALL|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxTextCtrl" name="IDC_EDIT_FN[1]">
-															<style>wxTE_READONLY</style>
-															<size>350,-1</size>
-															<value></value>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_EJECT[1]">
-															<bitmap>icons/16x16/control_eject.png</bitmap>
-															<tooltip>Eject</tooltip>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxFlexGridSizer">
-															<rows>0</rows>
-															<cols>4</cols>
-															<vgap>0</vgap>
-															<hgap>0</hgap>
-															<growablecols>1,3</growablecols>
-															<growablerows></growablerows>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[12]">
-																	<label>Sectors:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_SPT[1]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[13]">
-																	<label>Heads:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_HPC[1]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[14]">
-																	<label>Cylinder:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_CYL[1]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[15]">
-																	<label>Size:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_TEXT_SIZE[1]">
-																	<value></value>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-												</object>
-											</object>
-										</object>
-										<object class="choicebookpage">
-											<label>Drive 3 (E:)</label>
-											<selected>0</selected>
-											<object class="wxPanel" name="IDC_PANEL[2]">
-												<style>wxTAB_TRAVERSAL</style>
-												<object class="wxFlexGridSizer">
-													<rows>0</rows>
-													<cols>3</cols>
-													<vgap>0</vgap>
-													<hgap>0</hgap>
-													<growablecols>2</growablecols>
-													<growablerows></growablerows>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[20]">
-															<size>75,-1</size>
-															<label>Type:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxBoxSizer">
-															<orient>wxHORIZONTAL</orient>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[2]">
-																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
-																	<size>350,-1</size>
-																	<value></value>
-																	<content />
-																</object>
-															</object>
-															<object class="spacer">
-																<option>1</option>
-																<flag>wxEXPAND</flag>
-																<border>5</border>
-																<size>0,0</size>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxBitmapButton" name="IDC_NEW[2]">
-																	<tooltip>New</tooltip>
-																	<bitmap>icons/16x16/drive_add.png</bitmap>
-																	<default>0</default>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_FILE[2]">
-															<tooltip>Browse</tooltip>
-															<bitmap>icons/16x16/folder.png</bitmap>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[21]">
-															<label>File:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxALL|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxTextCtrl" name="IDC_EDIT_FN[2]">
-															<style>wxTE_READONLY</style>
-															<size>350,-1</size>
-															<value></value>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_EJECT[2]">
-															<bitmap>icons/16x16/control_eject.png</bitmap>
-															<tooltip>Eject</tooltip>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxFlexGridSizer">
-															<rows>0</rows>
-															<cols>4</cols>
-															<vgap>0</vgap>
-															<hgap>0</hgap>
-															<growablecols>1,3</growablecols>
-															<growablerows></growablerows>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[22]">
-																	<label>Sectors:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_SPT[2]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[23]">
-																	<label>Heads:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_HPC[2]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[24]">
-																	<label>Cylinder:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_CYL[2]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[25]">
-																	<label>Size:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_TEXT_SIZE[2]">
-																	<value></value>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-												</object>
-											</object>
-										</object>
-										<object class="choicebookpage">
-											<label>Drive 4 (F:)</label>
-											<selected>0</selected>
-											<object class="wxPanel" name="IDC_PANEL[3]">
-												<style>wxTAB_TRAVERSAL</style>
-												<object class="wxFlexGridSizer">
-													<rows>0</rows>
-													<cols>3</cols>
-													<vgap>0</vgap>
-													<hgap>0</hgap>
-													<growablecols>2</growablecols>
-													<growablerows></growablerows>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[30]">
-															<size>75,-1</size>
-															<label>Type:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxBoxSizer">
-															<orient>wxHORIZONTAL</orient>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxComboBox" name="IDC_COMBODRIVETYPE[3]">
-																	<style>wxCB_DROPDOWN|wxCB_READONLY</style>
-																	<size>350,-1</size>
-																	<value></value>
-																	<content />
-																</object>
-															</object>
-															<object class="spacer">
-																<option>1</option>
-																<flag>wxEXPAND</flag>
-																<border>5</border>
-																<size>0,0</size>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL</flag>
-																<border>5</border>
-																<object class="wxBitmapButton" name="IDC_NEW[3]">
-																	<tooltip>New</tooltip>
-																	<bitmap>icons/16x16/drive_add.png</bitmap>
-																	<default>0</default>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_FILE[3]">
-															<tooltip>Browse</tooltip>
-															<bitmap>icons/16x16/folder.png</bitmap>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="IDC_HDD_LABEL[31]">
-															<label>File:</label>
-															<wrap>-1</wrap>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxALL|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxTextCtrl" name="IDC_EDIT_FN[3]">
-															<style>wxTE_READONLY</style>
-															<size>350,-1</size>
-															<value></value>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxALL</flag>
-														<border>5</border>
-														<object class="wxBitmapButton" name="IDC_EJECT[3]">
-															<bitmap>icons/16x16/control_eject.png</bitmap>
-															<tooltip>Eject</tooltip>
-															<default>0</default>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxFlexGridSizer">
-															<rows>0</rows>
-															<cols>4</cols>
-															<vgap>0</vgap>
-															<hgap>0</hgap>
-															<growablecols>1,3</growablecols>
-															<growablerows></growablerows>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[32]">
-																	<label>Sectors:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_SPT[3]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[33]">
-																	<label>Heads:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_HPC[3]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[34]">
-																	<label>Cylinder:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_EDIT_CYL[3]">
-																	<value></value>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_HDD_LABEL[35]">
-																	<label>Size:</label>
-																	<wrap>-1</wrap>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>0</option>
-																<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-																<border>5</border>
-																<object class="wxStaticText" name="IDC_TEXT_SIZE[3]">
-																	<value></value>
-																</object>
-															</object>
-														</object>
-													</object>
-													<object class="spacer">
-														<option>1</option>
-														<flag>wxEXPAND</flag>
-														<border>5</border>
-														<size>0,0</size>
-													</object>
-												</object>
-											</object>
-										</object>
 									</object>
 								</object>
 							</object>
@@ -2146,6 +1378,1323 @@
 				</object>
 			</object>
 		</object>
+	</object>
+
+		<object class="wxPanel" name="IDC_HDPANEL[0]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[0]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[0]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[0]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[0]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[1]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[0]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[0]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[2]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[0]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[3]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[0]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[4]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[0]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[5]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[0]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[1]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[10]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[1]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[1]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[1]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[11]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[1]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[1]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[12]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[1]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[13]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[1]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[14]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[1]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[15]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[1]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[2]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[20]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[2]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[2]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[2]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[21]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[2]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[2]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[22]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[2]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[23]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[2]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[24]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[2]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[25]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[2]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[3]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[30]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[3]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[3]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[3]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[31]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[3]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[3]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[32]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[3]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[33]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[3]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[34]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[3]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[35]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[3]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[4]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[40]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[4]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[4]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[4]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[41]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[4]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[4]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[42]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[4]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[43]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[4]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[44]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[4]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[45]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[4]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[5]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[50]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[5]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[5]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[5]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[51]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[5]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[5]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[52]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[5]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[53]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[5]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[54]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[5]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[55]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[5]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
+		</object>
+		<object class="wxPanel" name="IDC_HDPANEL[6]">
+			<style>wxTAB_TRAVERSAL</style>
+			<object class="wxFlexGridSizer">
+				<rows>0</rows>
+				<cols>3</cols>
+				<vgap>0</vgap>
+				<hgap>0</hgap>
+				<growablecols>2</growablecols>
+				<growablerows></growablerows>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[60]">
+						<size>75,-1</size>
+						<label>Type:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>															
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_COMBODRIVETYPE[6]">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxBitmapButton" name="IDC_NEW[6]">
+								<tooltip>New</tooltip>
+								<bitmap>icons/16x16/drive_add.png</bitmap>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_FILE[6]">
+						<tooltip>Browse</tooltip>
+						<bitmap>icons/16x16/folder.png</bitmap>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="IDC_HDD_LABEL[61]">
+						<label>File:</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxALL|wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxTextCtrl" name="IDC_EDIT_FN[6]">
+						<style>wxTE_READONLY</style>
+						<size>350,-1</size>
+						<value></value>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBitmapButton" name="IDC_EJECT[6]">
+						<bitmap>icons/16x16/control_eject.png</bitmap>
+						<tooltip>Eject</tooltip>
+						<default>0</default>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxFlexGridSizer">
+						<rows>0</rows>
+						<cols>4</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>1,3</growablecols>
+						<growablerows></growablerows>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[62]">
+								<label>Sectors:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_SPT[6]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[63]">
+								<label>Heads:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_HPC[6]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[64]">
+								<label>Cylinder:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_EDIT_CYL[6]">
+								<value></value>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDD_LABEL[65]">
+								<label>Size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_TEXT_SIZE[6]">
+								<value></value>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="spacer">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<size>0,0</size>
+				</object>
+			</object>
 		</object>
 	</object>
 	

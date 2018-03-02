@@ -11,6 +11,7 @@
 #include <wx/fileconf.h>
 #include <wx/wfstream.h>
 #include <wx/progdlg.h>
+#include <wx/choicebk.h>
 
 #include "wx-dialogbox.h"
 #include "wx-app.h"
@@ -374,6 +375,30 @@ int wx_sendmessage(void* window, int type, INT_PARAM param1, LONG_PARAM param2)
         case WX_LB_RESETCONTENT:
         {
                 ((wxListBox*) window)->Clear();
+                break;
+        }
+        case WX_CHB_SETPAGETEXT:
+        {
+                ((wxChoicebook*)window)->SetPageText(param1, (char *)param2);
+                break;
+        }
+        case WX_CHB_ADDPAGE:
+        {
+                ((wxChoicebook*)window)->AddPage((wxWindow *)param1, (char *)param2);
+                break;
+        }
+        case WX_CHB_REMOVEPAGE:
+        {
+                ((wxChoicebook*)window)->RemovePage(param1);
+                break;
+        }
+        case WX_CHB_GETPAGECOUNT:
+        {
+                return ((wxChoicebook*)window)->GetPageCount();
+        }
+        case WX_REPARENT:
+        {
+                ((wxWindow *)window)->Reparent((wxWindow *)param1);
                 break;
         }
         }

@@ -343,7 +343,7 @@ void scsi_bus_init(scsi_bus_t *bus)
 	memset(bus->devices, 0, sizeof(bus->devices));
 	memset(bus->device_data, 0, sizeof(bus->device_data));
 
-	for (c = 0; c < 4; c++)
+	for (c = 0; c < 7; c++)
 	{
 		if (cdrom_channel == c)
                         bus->devices[c] = &scsi_cd;
