@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 extern "C" void pclog(const char *format, ...);
 
 #include "wx-createdisc.h"
