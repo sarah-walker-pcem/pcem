@@ -193,6 +193,7 @@ typedef struct scsi_cd_data_t
         uint8_t page_current;
 
         int is_atapi;
+        atapi_device_t *atapi_dev;
 } scsi_cd_data_t;
 
 static void scsi_add_data(scsi_cd_data_t *data, uint8_t val)
@@ -283,11 +284,12 @@ static void *scsi_cd_init(scsi_bus_t *bus, int id)
         return data;
 }
 
-static void *scsi_cd_atapi_init(scsi_bus_t *bus, int id)
+static void *scsi_cd_atapi_init(scsi_bus_t *bus, int id, atapi_device_t *atapi_dev)
 {
         scsi_cd_data_t *data = scsi_cd_init(bus, id);
         
         data->is_atapi = 1;
+        data->atapi_dev = atapi_dev;
         
         return data;
 }
@@ -625,6 +627,10 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
                 	data->cmd_pos = CMD_POS_TRANSFER;
                 	data->bytes_expected = data->cdlen * ((rcdmode == 0x10) ? 2048 : 2352);
+                	if (rcdmode == 0x10)
+                	       atapi_set_transfer_granularity(data->atapi_dev, 2048);
+                	else
+                	       atapi_set_transfer_granularity(data->atapi_dev, 2352);
                 }
                 if (!data->cdlen)
                 {
@@ -689,6 +695,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 	
                 	data->cmd_pos = CMD_POS_TRANSFER;
                 	data->bytes_expected = data->cdlen * 2048;
+                        atapi_set_transfer_granularity(data->atapi_dev, 2048);
                 }
 
                 if (!data->cdlen)

@@ -2,11 +2,12 @@
 #define _SCSI_H_
 
 struct scsi_bus_t;
+struct atapi_device_t;
 
 typedef struct scsi_device_t
 {
         void *(*init)(struct scsi_bus_t *bus, int id);
-        void *(*atapi_init)(struct scsi_bus_t *bus, int id);
+        void *(*atapi_init)(struct scsi_bus_t *bus, int id, struct atapi_device_t *atapi_dev);
         void (*close)(void *p);
         
         void (*start_command)(void *p);
@@ -104,7 +105,8 @@ int scsi_bus_match(scsi_bus_t *bus, int bus_assert);
 void scsi_bus_kick(scsi_bus_t *bus);
 void scsi_bus_init(scsi_bus_t *bus);
 void scsi_bus_close(scsi_bus_t *bus);
-void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id);
+
+void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id, struct atapi_device_t *atapi_dev);
 
 #define KEY_NONE			0
 #define KEY_NOT_READY			2

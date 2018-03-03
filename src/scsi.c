@@ -1,5 +1,6 @@
 #include "ibm.h"
 #include "ide.h"
+#include "ide_atapi.h"
 #include "scsi.h"
 #include "scsi_cd.h"
 #include "scsi_hd.h"
@@ -323,13 +324,13 @@ void scsi_bus_kick(scsi_bus_t *bus)
         scsi_bus_update(bus, 0);
 }
 
-void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id)
+void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id, atapi_device_t *atapi_dev)
 {
 	memset(bus->devices, 0, sizeof(bus->devices));
 	memset(bus->device_data, 0, sizeof(bus->device_data));
 
         bus->devices[0] = device;
-        bus->device_data[0] = bus->devices[0]->atapi_init(bus, id);
+        bus->device_data[0] = bus->devices[0]->atapi_init(bus, id, atapi_dev);
         if (!bus->device_data[0])
                 bus->devices[0] = NULL;
         

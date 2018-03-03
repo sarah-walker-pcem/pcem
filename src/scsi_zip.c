@@ -4,6 +4,7 @@
 #include <string.h>
 #include "ibm.h"
 #include "hdd_file.h"
+#include "ide_atapi.h"
 #include "scsi.h"
 #include "scsi_zip.h"
 #include "timer.h"
@@ -69,6 +70,7 @@ typedef struct scsi_zip_data
         scsi_bus_t *bus;
         
         int is_atapi;
+        atapi_device_t *atapi_dev;
         
         int read_only;
 } scsi_zip_data;
@@ -193,11 +195,12 @@ static void *scsi_zip_init(scsi_bus_t *bus, int id)
         return data;
 }
 
-static void *scsi_zip_atapi_init(scsi_bus_t *bus, int id)
+static void *scsi_zip_atapi_init(scsi_bus_t *bus, int id, atapi_device_t *atapi_dev)
 {
         scsi_zip_data *data = scsi_zip_init(bus, id);
         
         data->is_atapi = 1;
+        data->atapi_dev = atapi_dev;
         
         return data;
 }
@@ -686,6 +689,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->sector_pos = 0;
                         
                         bus_state = BUS_CD;
+                        atapi_set_transfer_granularity(data->atapi_dev, 512);
                         break;
                 }
 //                else
@@ -746,6 +750,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->sector_pos = 0;
                         
                         bus_state = BUS_CD;
+                        atapi_set_transfer_granularity(data->atapi_dev, 512);
                         break;
                 }
 //                else
@@ -814,6 +819,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->sector_pos = 0;
                         
                         bus_state = BUS_CD;
+                        atapi_set_transfer_granularity(data->atapi_dev, 512);
                         break;
                 }
                 if (data->cmd_pos == CMD_POS_TRANSFER && data->bytes_received != data->bytes_required)
@@ -881,6 +887,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->sector_pos = 0;
                         
                         bus_state = BUS_CD;
+                        atapi_set_transfer_granularity(data->atapi_dev, 512);
                         break;
                 }
                 if (data->cmd_pos == CMD_POS_TRANSFER && data->bytes_received != data->bytes_required)

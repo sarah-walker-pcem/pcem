@@ -61,5 +61,6 @@ void atapi_command_start(atapi_device_t *atapi);
 uint8_t atapi_read_iir(atapi_device_t *atapi_dev);
 uint8_t atapi_read_drq(atapi_device_t *atapi_dev);
 void atapi_process_packet(atapi_device_t *atapi_dev);
+void atapi_set_transfer_granularity(atapi_device_t *atapi_dev, int size);
 
 #endif

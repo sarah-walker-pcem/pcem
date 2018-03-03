@@ -134,6 +134,12 @@ uint8_t atapi_read_drq(atapi_device_t *atapi_dev)
         return atapi_dev->bus_state & BUS_REQ;
 }
 
+void atapi_set_transfer_granularity(atapi_device_t *atapi_dev, int size)
+{
+        if (atapi_dev->max_transfer_len > size)
+                atapi_dev->max_transfer_len -= (atapi_dev->max_transfer_len % size);
+}
+
 void atapi_process_packet(atapi_device_t *atapi_dev)
 {
 //        pclog("atapi_process_packet: state=%i\n", atapi_dev->state);
