@@ -626,6 +626,7 @@ void resetx86()
         use32=0;
         cpu_cur_status = 0;
         stack32=0;
+        cpu_hasCX8 = 0;
 //        i86_Reset();
 //        cs=0xFFFF0;
         msw=0;
@@ -682,6 +683,7 @@ void softresetx86()
         cr4 = 0;
         eflags=0;
         cgate32=0;
+        cpu_hasCX8 = 0;
         if (AT)
         {
                 loadcs(0xF000);
