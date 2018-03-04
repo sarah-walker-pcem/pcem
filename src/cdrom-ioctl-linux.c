@@ -409,13 +409,13 @@ static void ioctl_load(void)
 	cdrom_capacity = ioctl_get_last_block(0, 0, 4096, 0);
 }
 
-static int ioctl_readsector(uint8_t *b, int sector)
+static int ioctl_readsector(uint8_t *b, int sector, int count)
 {
         if (ioctl_fd <= 0)
 		return -1;
 
         lseek(ioctl_fd, sector*2048, SEEK_SET);
-        read(ioctl_fd, b, 2048);
+        read(ioctl_fd, b, count*2048);
 
 	return 0;
 }

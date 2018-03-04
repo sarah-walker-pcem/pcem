@@ -12,7 +12,7 @@
 
 #define BUFFER_SIZE (256*1024)
 
-#define MAX_NR_SECTORS 2
+#define MAX_NR_SECTORS 16
 
 enum
 {
@@ -638,28 +638,32 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                         return SCSI_PHASE_STATUS;
                 }
 
-                for (c = 0; c < MAX_NR_SECTORS; c++)
-                {
-        		if (rcdmode == 0x10)
-        		{
-                                if (atapi->readsector(&data->data_in[c*2048], data->cdpos))
-                                {
-//                                        pclog("Read sector failed\n");
-                                        atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_LBA_OUT_OF_RANGE, 0);
-                                        data->cmd_pos = CMD_POS_IDLE;
-                                        return SCSI_PHASE_STATUS;
-                                }
-                        }
-        		else
-        		{
-        	                atapi->readsector_raw(&data->data_in[c*2352], data->cdpos);
-                        }
-                        data->cdpos++;
-                        data->cdlen--;
-                        if (!data->cdlen)
+        	if (rcdmode == 0x10)
+        	{
+                        c = MIN(data->cdlen, MAX_NR_SECTORS);
+                        if (atapi->readsector(data->data_in, data->cdpos, c))
                         {
-                                c++;
-                                break;
+//                                pclog("Read sector failed\n");
+                                atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_LBA_OUT_OF_RANGE, 0);
+                                data->cmd_pos = CMD_POS_IDLE;
+                                return SCSI_PHASE_STATUS;
+                        }
+                        data->cdpos += c;
+                        data->cdlen -= c;
+                }
+                else
+                {
+                        for (c = 0; c < MAX_NR_SECTORS; c++)
+                        {
+        	                atapi->readsector_raw(&data->data_in[c*2352], data->cdpos);
+
+                                data->cdpos++;
+                                data->cdlen--;
+                                if (!data->cdlen)
+                                {
+                                        c++;
+                                        break;
+                                }
                         }
                 }
                 readflash_set(READFLASH_HDC, data->id);
@@ -704,23 +708,16 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                         return SCSI_PHASE_STATUS;
                 }
                 readflash_set(READFLASH_HDC, data->id);
-                for (c = 0; c < MAX_NR_SECTORS; c++)
+                c = MIN(data->cdlen, MAX_NR_SECTORS);
+                if (atapi->readsector(data->data_in, data->cdpos, c))
                 {
-                        if (atapi->readsector(&data->data_in[c*2048], data->cdpos))
-                        {
-                                pclog("Read sector failed\n");
-                                atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_LBA_OUT_OF_RANGE, 0);
-                                data->cmd_pos = CMD_POS_IDLE;
-                                return SCSI_PHASE_STATUS;
-                        }
-                        data->cdpos++;
-                        data->cdlen--;
-                        if (!data->cdlen)
-                        {
-                                c++;
-                                break;
-                        }
+//                        pclog("Read sector failed\n");
+                        atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_LBA_OUT_OF_RANGE, 0);
+                        data->cmd_pos = CMD_POS_IDLE;
+                        return SCSI_PHASE_STATUS;
                 }
+                data->cdpos += c;
+                data->cdlen -= c;
 
                 data->data_pos_read = 0;
                 data->data_pos_write = c * 2048;

@@ -432,11 +432,11 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
 	UCHAR SenseBuf[32];
 } SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 
-static int ioctl_readsector(uint8_t *b, int sector)
+static int ioctl_readsector(uint8_t *b, int sector, int count)
 {
         LARGE_INTEGER pos;
         BOOL status;
-        long size;
+        long size = 0;
 
         if (!cdrom_drive)
                 return -1;
@@ -448,16 +448,18 @@ static int ioctl_readsector(uint8_t *b, int sector)
         pos.QuadPart=sector*2048;
         ioctl_open(0);
         SetFilePointer(hIOCTL,pos.LowPart,&pos.HighPart,FILE_BEGIN);
-        status = ReadFile(hIOCTL,b,2048,(LPDWORD)&size,NULL);
+        status = ReadFile(hIOCTL, b, count*2048, (LPDWORD)&size, NULL);
         ioctl_close();
 
         /*If the read failed, try again using SPTI*/
-        if (!status || size != 2048)
+        if (!status || size != count*2048)
         {
                 uint8_t cmd[12] = { 0xbe, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 };
                 SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb;
                 DWORD returned;
-                uint8_t data_buffer[IOCTL_DATA_BUFFER];
+                uint8_t *data_buffer;//[IOCTL_DATA_BUFFER];
+
+                data_buffer = malloc(count * IOCTL_DATA_BUFFER);
                 
                 ioctl_open(0);
                 
@@ -466,6 +468,9 @@ static int ioctl_readsector(uint8_t *b, int sector)
                 cmd[3] = (uint8_t)(sector >> 16);
         	cmd[4] = (uint8_t)(sector >> 8);
                 cmd[5] = (uint8_t)(sector >> 0);
+                cmd[6] = (uint8_t)(count >> 16);
+        	cmd[7] = (uint8_t)(count >> 8);
+                cmd[8] = (uint8_t)(count >> 0);
                 
                 memset(&swb, 0, sizeof (swb));
         	memcpy(swb.spt.Cdb, cmd, 12);
@@ -473,9 +478,9 @@ static int ioctl_readsector(uint8_t *b, int sector)
         	swb.spt.Length = sizeof (SCSI_PASS_THROUGH);
         	swb.spt.CdbLength = 12;
         	swb.spt.DataIn = SCSI_IOCTL_DATA_IN;
-        	swb.spt.DataTransferLength = IOCTL_DATA_BUFFER;
+        	swb.spt.DataTransferLength = count*IOCTL_DATA_BUFFER;
         	swb.spt.DataBuffer = data_buffer;
-        	memset(data_buffer, 0, IOCTL_DATA_BUFFER);
+        	memset(data_buffer, 0, count*IOCTL_DATA_BUFFER);
         	swb.spt.TimeOutValue = 80 * 60;
         	swb.spt.SenseInfoOffset = (uintptr_t)&swb.SenseBuf - (uintptr_t)&swb;//offsetof(swb, SenseBuf);
         	swb.spt.SenseInfoLength = 32;
@@ -484,9 +489,16 @@ static int ioctl_readsector(uint8_t *b, int sector)
         		&swb, sizeof (SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER),
         		&swb, sizeof (SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER),
                         &returned, NULL))
-                        memcpy(b, data_buffer, 2048);
+                {
+                        memcpy(b, data_buffer, count*2048);
+                        status = 1;
+                }
+                else
+                        status = 0;
 
                 ioctl_close();
+                
+                free(data_buffer);
         }
 
         return !status;

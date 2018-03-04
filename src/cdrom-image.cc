@@ -284,10 +284,10 @@ static void image_load(void)
 {
 }
 
-static int image_readsector(uint8_t *b, int sector)
+static int image_readsector(uint8_t *b, int sector, int count)
 {
         if (!cdrom) return -1;
-        return !cdrom->ReadSector(b, false, sector);
+        return !cdrom->ReadSectors((PhysPt)b, false, sector, count);
 }
 
 static void image_readsector_raw(uint8_t *b, int sector)

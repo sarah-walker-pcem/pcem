@@ -86,7 +86,7 @@ static void ioctl_load(void)
 {
 }
 
-static int ioctl_readsector(uint8_t *b, int sector)
+static int ioctl_readsector(uint8_t *b, int sector, int count)
 {
 	return 0;
 }
