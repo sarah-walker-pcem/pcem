@@ -273,7 +273,7 @@ int wx_dlgdirselectex(void* window, LONG_PARAM path, int count, int id)
         return FALSE;
 }
 
-int wx_sendmessage(void* window, int type, INT_PARAM param1, LONG_PARAM param2)
+int wx_sendmessage(void* window, int type, LONG_PARAM param1, LONG_PARAM param2)
 {
         switch (type)
         {

@@ -35,7 +35,7 @@ extern "C" {
         int wx_dlgdirselectex(void* window, LONG_PARAM path, int count, int id);
 
         void wx_setwindowtitle(void* window, char* s);
-        int wx_sendmessage(void* window, int type, INT_PARAM param1, LONG_PARAM param2);
+        int wx_sendmessage(void* window, int type, LONG_PARAM param1, LONG_PARAM param2);
         void* wx_getdlgitem(void* window, int id);
         void wx_setdlgitemtext(void* window, int id, char* str);
         void wx_enablewindow(void* window, int enabled);
