@@ -4169,10 +4169,12 @@ fi
 
 if test "$enable_debug" = "yes"; then
    CFLAGS="-Wall -O0 -g -D_DEBUG"
+   CXXFLAGS="-Wall -O0 -g -D_DEBUG"
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
    CFLAGS="-O3"
+   CXXFLAGS="-O3"
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi

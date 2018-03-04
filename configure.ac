@@ -28,9 +28,11 @@ AC_ARG_ENABLE(debug,
           AC_HELP_STRING([--enable-debug], [build debug executable]))
 if test "$enable_debug" = "yes"; then
    CFLAGS="-Wall -O0 -g -D_DEBUG"
+   CXXFLAGS="-Wall -O0 -g -D_DEBUG"
    AC_MSG_RESULT([yes])
 else
    CFLAGS="-O3"
+   CXXFLAGS="-O3"
    AC_MSG_RESULT([no])
 fi
 
