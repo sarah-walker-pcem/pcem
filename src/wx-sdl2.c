@@ -42,6 +42,14 @@
 #include "wx-common.h"
 #include "wx-display.h"
 
+#if __APPLE__
+#define pause __pause
+#include <util.h>
+#include <fcntl.h>
+#include <unistd.h>
+#undef pause
+#endif
+
 extern void creatediscimage_open(void *hwnd);
 
 #define ID_IS(s) wParam == wx_xrcid(s)
@@ -383,8 +391,27 @@ void wx_initmenu()
         }
 #elif __linux__
         wx_appendmenu(cdrom_submenu, IDM_CDROM_REAL+1, "Host CD/DVD Drive (/dev/cdrom)", wxITEM_RADIO);
+#elif __APPLE__
+        int c;
+        
+        for (c = 1; c < 99; c++)
+        {
+                char s[80];
+                int fd;
+                
+                sprintf(s, "disk%i", c);
+                fd = opendev(s, O_RDONLY, 0, NULL);
+                if (fd > 0)
+                {
+                        char name[255];
+                        
+                        close(fd);
+                        
+                        sprintf(name, "Host CD/DVD Drive (/dev/disk%i)", c);
+                        wx_appendmenu(cdrom_submenu, IDM_CDROM_REAL+c, name, wxITEM_RADIO);
+                }
+        }
 #endif
-
 }
 
 int wx_setupmenu(void* data)
