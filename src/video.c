@@ -79,6 +79,7 @@ static VIDEO_CARD video_cards[] =
 {
         {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,                  GFX_MACH64GX,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,                 GFX_MACH64VT2,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
+        {"ATI Korean VGA (ATI-28800)",             "ati28800k",      &ati28800k_device,                 GFX_ATIKOREANVGA,    VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,                  GFX_VGACHARGER,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,                  GFX_VGAEDGE16,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
@@ -744,6 +745,7 @@ uint8_t fontdat[2048][8];
 uint8_t fontdatm[2048][16];
 uint8_t fontdatw[512][32];	/* Wyse700 font */
 uint8_t fontdat8x12[256][16];	/* MDSI Genius font */
+uint8_t fontdatksc5601[16384][32]; /* Korean KSC-5601 font */
 
 int xsize=1,ysize=1;
 
@@ -865,6 +867,15 @@ void loadfont(char *s, int format)
                         	fread(&fontdat[c][0], 1, 8, f);
                 	}
 		}
+                break;
+		case 6: /* Korean KSC-5601 */
+                for (c=0;c<16384;c++)
+                {
+                       	for (d=0;d<32;d++)
+                        {
+                                fontdatksc5601[c][d]=getc(f);
+                        }
+                }
                 break;
 
         }

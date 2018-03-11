@@ -158,14 +158,125 @@ void svga_render_text_80(svga_t *svga)
         }
 }
 
+void svga_render_text_80_ksc5601(svga_t *svga)
+{
+        if (svga->firstline_draw == 2000) 
+                svga->firstline_draw = svga->displine;
+        svga->lastline_draw = svga->displine;
+        
+        if (svga->fullchange)
+        {
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[32];
+                int x, xx;
+                int drawcursor;
+                uint8_t chr, attr, dat, nextchr;
+                uint32_t charaddr;
+                int fg, bg;
+                int xinc = (svga->seqregs[1] & 1) ? 8 : 9;
+
+                for (x = 0; x < svga->hdisp; x += xinc)
+                {
+                        drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
+                        chr  = svga->vram[(svga->ma << 1) & svga->vram_display_mask];
+                        nextchr = svga->vram[((svga->ma + 4) << 1) & svga->vram_display_mask];
+                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vram_display_mask];
+
+                        if (drawcursor) 
+                        { 
+                                bg = svga->pallook[svga->egapal[attr & 15]]; 
+                                fg = svga->pallook[svga->egapal[attr >> 4]]; 
+                        }
+                        else
+                        {
+                                fg = svga->pallook[svga->egapal[attr & 15]];
+                                bg = svga->pallook[svga->egapal[attr >> 4]];
+                                if (attr & 0x80 && svga->attrregs[0x10] & 8)
+                                {
+                                        bg = svga->pallook[svga->egapal[(attr >> 4) & 7]];
+                                        if (svga->blink & 16) 
+                                                fg = bg;
+                                }
+                        }
+
+                        if(x + xinc < svga->hdisp && (chr & nextchr & 0x80))
+                        {
+                                dat = fontdatksc5601[((chr & 0x7F) << 7) | (nextchr & 0x7F)][svga->sc];
+                        }
+                        else
+                        {
+                                if (attr & 8) charaddr = svga->charsetb + (chr * 128);
+                                else          charaddr = svga->charseta + (chr * 128);
+
+                                dat = svga->vram[charaddr + (svga->sc << 2)];
+                        }
+                        if (svga->seqregs[1] & 1) 
+                        { 
+                                for (xx = 0; xx < 8; xx++) 
+                                        p[xx] = (dat & (0x80 >> xx)) ? fg : bg;
+                        }
+                        else
+                        {
+                                for (xx = 0; xx < 8; xx++) 
+                                        p[xx] = (dat & (0x80 >> xx)) ? fg : bg;
+                                if ((chr & ~0x1F) != 0xC0 || !(svga->attrregs[0x10] & 4)) 
+                                        p[8] = bg;
+                                else                  
+                                        p[8] = (dat & 1) ? fg : bg;
+                        }
+                        svga->ma += 4; 
+                        p += xinc;
+
+                        if(x + xinc < svga->hdisp && (chr & nextchr & 0x80))
+                        {
+                                attr = svga->vram[((svga->ma << 1) + 1) & svga->vram_display_mask];
+
+                                if (drawcursor) 
+                                { 
+                                        bg = svga->pallook[svga->egapal[attr & 15]]; 
+                                        fg = svga->pallook[svga->egapal[attr >> 4]]; 
+                                }
+                                else
+                                {
+                                        fg = svga->pallook[svga->egapal[attr & 15]];
+                                        bg = svga->pallook[svga->egapal[attr >> 4]];
+                                        if (attr & 0x80 && svga->attrregs[0x10] & 8)
+                                        {
+                                                bg = svga->pallook[svga->egapal[(attr >> 4) & 7]];
+                                                if (svga->blink & 16) 
+                                                        fg = bg;
+                                        }
+                                }
+
+                                dat = fontdatksc5601[((chr & 0x7F) << 7) | (nextchr & 0x7F)][svga->sc + 16];
+                                if (svga->seqregs[1] & 1) 
+                                { 
+                                        for (xx = 0; xx < 8; xx++) 
+                                                p[xx] = (dat & (0x80 >> xx)) ? fg : bg;
+                                }
+                                else
+                                {
+                                        for (xx = 0; xx < 8; xx++) 
+                                                p[xx] = (dat & (0x80 >> xx)) ? fg : bg;
+                                        if ((chr & ~0x1F) != 0xC0 || !(svga->attrregs[0x10] & 4)) 
+                                                p[8] = bg;
+                                        else                  
+                                                p[8] = (dat & 1) ? fg : bg;
+                                }
+
+                                svga->ma += 4; 
+                                p += xinc;
+                                x += xinc;
+                        }
+                }
+                svga->ma &= svga->vram_display_mask;
+        }
+}
+
 void svga_render_2bpp_lowres(svga_t *svga)
 {
         int changed_offset;
         
-        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
-                changed_offset = (svga->ma << 1) >> 12;
-        else
-                changed_offset = ((svga->ma << 1) + 0x8000) >> 12;
+        changed_offset = ((svga->ma << 1) + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
                 
         if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
         {
@@ -181,16 +292,8 @@ void svga_render_2bpp_lowres(svga_t *svga)
                 {
                         uint8_t dat[2];
                         
-                        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
-                        {
-                                dat[0] = svga->vram[(svga->ma << 1) + 0x8000];
-                                dat[1] = svga->vram[(svga->ma << 1) + 0x8001];
-                        }
-                        else
-                        {
-                                dat[0] = svga->vram[(svga->ma << 1)];
-                                dat[1] = svga->vram[(svga->ma << 1) + 1];
-                        }
+                        dat[0] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000];
+                        dat[1] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000 + 1];
                         svga->ma += 4; 
                         svga->ma &= svga->vram_display_mask;
 
@@ -212,10 +315,7 @@ void svga_render_2bpp_highres(svga_t *svga)
 {
         int changed_offset;
         
-        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
-                changed_offset = ((svga->ma << 1) | 0x8000) >> 12;
-        else
-                changed_offset = (svga->ma << 1) >> 12;
+        changed_offset = ((svga->ma << 1) + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
                                 
         if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
         {
@@ -231,16 +331,8 @@ void svga_render_2bpp_highres(svga_t *svga)
                 {
                         uint8_t dat[2];
                         
-                        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
-                        {
-                                dat[0] = svga->vram[(svga->ma << 1) + 0x8000];
-                                dat[1] = svga->vram[(svga->ma << 1) + 0x8001];
-                        }
-                        else
-                        {
-                                dat[0] = svga->vram[(svga->ma << 1)];
-                                dat[1] = svga->vram[(svga->ma << 1) + 1];
-                        }
+                        dat[0] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000];
+                        dat[1] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000 + 1];
                         svga->ma += 4; 
                         svga->ma &= svga->vram_display_mask;
 
@@ -301,10 +393,7 @@ void svga_render_4bpp_highres(svga_t *svga)
 {
         int changed_offset;
         
-        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))
-                changed_offset = (svga->ma | 0x8000) >> 12;
-        else
-                changed_offset = svga->ma >> 12;
+        changed_offset = (svga->ma + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
                 
         if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
         {
@@ -321,10 +410,7 @@ void svga_render_4bpp_highres(svga_t *svga)
                         uint8_t edat[4];
                         uint8_t dat;
 
-                        if (svga->sc & 1 && !(svga->crtc[0x17] & 1))                       
-                                *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[svga->ma | 0x8000]);
-                        else
-                                *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[svga->ma]);
+                        *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[svga->ma | ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000]);
                         svga->ma += 4;
                         svga->ma &= svga->vram_display_mask;
 

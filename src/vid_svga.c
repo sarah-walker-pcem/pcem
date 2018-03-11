@@ -372,7 +372,7 @@ void svga_recalctimings(svga_t *svga)
         svga->render = svga_render_blank;
         if (!svga->scrblank && svga->attr_palette_enable)
         {
-                if (!(svga->gdcreg[6] & 1)) /*Text mode*/
+                if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) /*Text mode*/
                 {
                         if (svga->seqregs[1] & 8) /*40 column*/
                         {
@@ -680,7 +680,7 @@ void svga_poll(void *p)
                         svga->video_res_x = wx;
                         svga->video_res_y = wy + 1;
 //                        pclog("%i %i %i\n", svga->video_res_x, svga->video_res_y, svga->lowres);
-                        if (!(svga->gdcreg[6] & 1)) /*Text mode*/
+                        if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) /*Text mode*/
                         {
                                 svga->video_res_x /= (svga->seqregs[1] & 1) ? 8 : 9;
                                 svga->video_res_y /= (svga->crtc[9] & 31) + 1;
@@ -690,7 +690,9 @@ void svga_poll(void *p)
                         {
                                 if (svga->crtc[9] & 0x80)
                                    svga->video_res_y /= 2;
-                                if (!(svga->crtc[0x17] & 1))
+                                if (!(svga->crtc[0x17] & 2))
+                                   svga->video_res_y *= 4;
+                                else if (!(svga->crtc[0x17] & 1))
                                    svga->video_res_y *= 2;
                                 svga->video_res_y /= (svga->crtc[9] & 31) + 1;                                   
                                 if (svga->lowres)

@@ -12,6 +12,7 @@ extern uint8_t edatlookup[4][4];
 void svga_render_blank(svga_t *svga);
 void svga_render_text_40(svga_t *svga);
 void svga_render_text_80(svga_t *svga);
+void svga_render_text_80_ksc5601(svga_t *svga);
 
 void svga_render_2bpp_lowres(svga_t *svga);
 void svga_render_2bpp_highres(svga_t *svga);

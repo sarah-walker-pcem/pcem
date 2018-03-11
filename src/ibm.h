@@ -478,6 +478,7 @@ enum
         GFX_TGUI9440,   /*Trident TGUI9440*/
         GFX_VGA,        /*IBM VGA*/        
         GFX_VGAEDGE16,  /*ATI VGA Edge-16 (18800-1)*/
+        GFX_ATIKOREANVGA, /*ATI Korean VGA (28800-5)*/
         GFX_VGACHARGER, /*ATI VGA Charger (28800-5)*/
         GFX_OTI067,     /*Oak OTI-067*/
         GFX_MACH64GX,   /*ATI Graphics Pro Turbo (Mach64)*/
