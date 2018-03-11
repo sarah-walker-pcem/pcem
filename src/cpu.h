@@ -123,7 +123,7 @@ extern uint64_t cpu_CR4_mask;
 #define CPU_REQUIRES_DYNAREC 2
 
 extern int cpu_cycles_read, cpu_cycles_read_l, cpu_cycles_write, cpu_cycles_write_l;
-extern int cpu_prefetch_cycles, cpu_prefetch_width;
+extern int cpu_prefetch_cycles, cpu_prefetch_width, cpu_mem_prefetch_cycles, cpu_rom_prefetch_cycles;
 extern int cpu_waitstates;
 extern int cpu_cache_int_enabled, cpu_cache_ext_enabled;
 

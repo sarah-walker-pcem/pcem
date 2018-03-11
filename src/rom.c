@@ -79,7 +79,7 @@ int rom_init(rom_t *rom, char *fn, uint32_t address, int size, int mask, int fil
                                                       mem_write_nullw,
                                                       mem_write_nulll,
                                                       rom->rom,
-                                                      flags,
+                                                      flags | MEM_MAPPING_ROM,
                                                       rom);
 
         return 0;
@@ -124,7 +124,7 @@ int rom_init_interleaved(rom_t *rom, char *fn_low, char *fn_high, uint32_t addre
                                                       mem_write_nullw,
                                                       mem_write_nulll,
                                                       rom->rom,
-                                                      flags,
+                                                      flags | MEM_MAPPING_ROM,
                                                       rom);
 
         return 0;
