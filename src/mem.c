@@ -916,6 +916,36 @@ int loadbios()
                 }
                 fclose(f);
                 return 1;
+
+                case ROM_IBMPS2_M70_TYPE3:
+                f = romfopen("ibmps2_m70_type3/70-a_even.bin","rb");
+                ff = romfopen("ibmps2_m70_type3/70-a_odd.bin","rb");
+                if (!f || !ff)
+                        break;
+                for (c = 0x0000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+
+                case ROM_IBMPS2_M70_TYPE4:
+                f = romfopen("ibmps2_m70_type4/70-b_even.bin","rb");
+                ff = romfopen("ibmps2_m70_type4/70-b_odd.bin","rb");
+                if (!f || !ff)
+                        break;
+                for (c = 0x0000; c < 0x20000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

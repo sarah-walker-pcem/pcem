@@ -82,6 +82,7 @@ void      ps1_m2121_init();
 void    ps2_m30_286_init();
 void   ps2_model_50_init();
 void ps2_model_55sx_init();
+void   ps2_model_70_init();
 void   ps2_model_80_init();
 void        at_neat_init();
 void        at_scat_init();
@@ -169,6 +170,7 @@ MODEL models[] =
 
         {"[386DX] AMI 386DX clone",       ROM_AMI386DX_OPTI495, "ami386dx",       { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
         {"[386DX] Compaq Deskpro 386",    ROM_DESKPRO_386,      "deskpro386",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT,                                           1,   15,   1,     deskpro386_init, NULL},
+        {"[386DX] IBM PS/2 Model 70 (type 3)", ROM_IBMPS2_M70_TYPE3, "ibmps2_m70_type3", { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,               2,   16,   2,   ps2_model_70_init, NULL},
         {"[386DX] IBM PS/2 Model 80",     ROM_IBMPS2_M80,       "ibmps2_m80",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,                      1,   12,   1,   ps2_model_80_init, NULL},
         {"[386DX] MR 386DX clone",        ROM_MR386DX_OPTI495,  "mr386dx",        { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
 
@@ -176,7 +178,8 @@ MODEL models[] =
         {"[486] AMI WinBIOS 486",         ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_ali1429_init, NULL},
         {"[486] Award SiS 496/497",       ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,                   1,  256,   1,      at_sis496_init, NULL},
         {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_HAS_IDE,                            1,  256,   1,    at_sl82c460_init, NULL},
-
+        {"[486] IBM PS/2 Model 70 (type 4)",   ROM_IBMPS2_M70_TYPE4, "ibmps2_m70_type4", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,               2,   16,   2,   ps2_model_70_init, NULL},
+        
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,      at_batman_init, NULL},
         {"[Socket 4] Packard Bell PB520R",ROM_PB520R,           "pb520r",         { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1,  128,   1,      at_pb520r_init, NULL},
 
@@ -491,6 +494,12 @@ void ps2_model_55sx_init()
 {
         ps2_common_init();
         ps2_mca_board_model_55sx_init();
+}
+
+void ps2_model_70_init()
+{
+        ps2_common_init();
+        ps2_mca_board_model_70_type34_init(romset == ROM_IBMPS2_M70_TYPE4);
 }
 
 void ps2_model_80_init()

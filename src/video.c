@@ -195,6 +195,8 @@ device_t *video_card_getdevice(int card)
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M70_TYPE3:
+                case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 return &ps1vga_device;
 
@@ -316,6 +318,8 @@ int video_is_mda()
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M70_TYPE3:
+                case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
         	case ROM_T3100E:
@@ -355,6 +359,8 @@ int video_is_cga()
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M70_TYPE3:
+                case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
                 case ROM_ELX_PC425X:
@@ -388,6 +394,8 @@ int video_is_ega_vga()
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M70_TYPE3:
+                case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
                 case ROM_ELX_PC425X:
@@ -518,6 +526,8 @@ void video_updatetiming()
                         case ROM_IBMPS2_M30_286:
                         case ROM_IBMPS2_M50:
                         case ROM_IBMPS2_M55SX:
+                        case ROM_IBMPS2_M70_TYPE3:
+                        case ROM_IBMPS2_M70_TYPE4:
                         case ROM_IBMPS2_M80:
                         timing = &timing_vga;
                         break;
@@ -683,6 +693,8 @@ void video_init()
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
+                case ROM_IBMPS2_M70_TYPE3:
+                case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 device_add(&ps1vga_device);
                 return;

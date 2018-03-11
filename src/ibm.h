@@ -451,6 +451,8 @@ enum
 	ROM_PB520R,
 	ROM_COMPAQ_PIP,
 	ROM_XI8088,
+	ROM_IBMPS2_M70_TYPE3,
+	ROM_IBMPS2_M70_TYPE4,
                 	
         ROM_MAX
 };
