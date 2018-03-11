@@ -3175,6 +3175,7 @@
         							<border>5</border>
         							<object class="wxBitmapButton" name="IDC_CONFIG_HOST">
         								<style>wxBU_AUTODRAW</style>
+               								<tooltip>Configure Host</tooltip>
         								<bitmap>icons/32x32/widescreen.png</bitmap>
         								<default>0</default>
         							</object>
