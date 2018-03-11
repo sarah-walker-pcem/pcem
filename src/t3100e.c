@@ -376,16 +376,9 @@ void t3100e_turbo_set(uint8_t value)
 {
 	t3100e_ems.turbo = value;
 	if (!value)
-	{
-		int c = cpu;
-		cpu = 0;	/* 286/6 */
-		cpu_set();
-		cpu = c;
-	}
+	       cpu_set_turbo(0);
 	else
-	{
-		cpu_set();
-	}
+	       cpu_set_turbo(1);
 }
 
 

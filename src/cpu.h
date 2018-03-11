@@ -148,6 +148,8 @@ extern int isa_cycles;
 void cpu_update_waitstates();
 void cpu_set();
 void cpu_set_edx();
+void cpu_set_turbo(int turbo);
+int cpu_get_speed();
 
 extern int has_vlb;
 

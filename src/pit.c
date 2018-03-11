@@ -41,7 +41,7 @@ void setpitclock(float clock)
 //        pclog("PITCONST=%f CGACONST=%f\n", PITCONST, CGACONST);
 //        pclog("CPUMULTI=%g\n", ((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed));
         
-        xt_cpu_multi = (int)((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+        xt_cpu_multi = (int)((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)cpu_get_speed());
 //        pclog("egacycles %i egacycles2 %i temp %f clock %f\n",egacycles,egacycles2,temp,clock);
 /*        if (video_recalctimings)
                 video_recalctimings();*/

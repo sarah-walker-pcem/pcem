@@ -391,16 +391,9 @@ static void t1200_turbo_set(uint8_t value)
 	}
 	t1000.turbo = value;
 	if (!value)
-	{
-		int c = cpu;
-		cpu = 0;	/* 8088/4.77MHz */
-		cpu_set();
-		cpu = c;
-	}
+                cpu_set_turbo(0);
 	else
-	{
-		cpu_set();
-	}
+                cpu_set_turbo(1);
 }
 
 static void write_t1000_ctl(uint16_t addr, uint8_t val, void *priv)

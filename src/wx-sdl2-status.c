@@ -145,7 +145,7 @@ int get_status(char* machine, char* device)
         #endif*/
                 segareads,
                 segawrites,
-                clockrate - scycles_lost,
+                cpu_get_speed() - scycles_lost,
                 pit_timer0_freq(),
                 ((double)main_time * 100.0) / status_diff,
                 ((double)main_time * 100.0) / timer_freq,

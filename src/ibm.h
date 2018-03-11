@@ -273,7 +273,6 @@ extern uint8_t opcode;
 extern int insc;
 extern int fpucount;
 extern float mips,flops;
-extern int clockrate;
 extern int cgate16;
 extern int CPUID;
 

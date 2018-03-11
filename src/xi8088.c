@@ -29,15 +29,12 @@ void xi8088_turbo_set(uint8_t value)
         if (!value)
         {
                 pclog("Xi8088 turbo off\n");
-                int c = cpu;
-                cpu = 0;        /* 8088/4.77 */
-                cpu_set();
-                cpu = c;
+                cpu_set_turbo(0);
         }
         else
         {
                 pclog("Xi8088 turbo on\n");
-                cpu_set();
+                cpu_set_turbo(1);
         }
 }
 

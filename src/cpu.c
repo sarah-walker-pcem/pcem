@@ -7,6 +7,9 @@
 #include "pci.h"
 #include "codegen.h"
 
+static int cpu_turbo_speed, cpu_nonturbo_speed;
+static int cpu_turbo = 1;
+
 int isa_cycles;
 int has_vlb;
 static uint8_t ccr0, ccr1, ccr2, ccr3, ccr4, ccr5, ccr6;
@@ -504,6 +507,14 @@ void cpu_set()
         cpu_hasCX8 = 0;
         ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = 0;
         has_vlb = (cpu_s->cpu_type >= CPU_i486SX) && (cpu_s->cpu_type <= CPU_Cx5x86);
+
+        cpu_turbo_speed = cpu_s->rspeed;
+        if (cpu_s->cpu_type < CPU_286)
+                cpu_nonturbo_speed = 4772728;
+        else if (cpu_s->rspeed < 8000000)
+                cpu_nonturbo_speed = cpu_s->rspeed;
+        else
+                cpu_nonturbo_speed = 8000000;
 
         cpu_update_waitstates();
   
@@ -1669,4 +1680,30 @@ void cpu_update_waitstates()
         if (is486)
                 cpu_prefetch_cycles *= 4;
         cpu_mem_prefetch_cycles = cpu_prefetch_cycles;
+}
+
+void cpu_set_turbo(int turbo)
+{
+        if (cpu_turbo != turbo)
+        {
+                cpu_turbo = turbo;
+
+                cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+                if (cpu_s->cpu_type >= CPU_286)
+                {
+                        if (cpu_turbo)
+                                setpitclock(cpu_turbo_speed);
+                        else
+                                setpitclock(cpu_nonturbo_speed);
+                }
+                else
+                        setpitclock(14318184.0);
+        }
+}
+
+int cpu_get_speed()
+{
+        if (cpu_turbo)
+                return cpu_turbo_speed;
+        return cpu_nonturbo_speed;
 }

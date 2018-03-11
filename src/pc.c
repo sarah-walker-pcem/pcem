@@ -70,7 +70,6 @@ int cycles_lost = 0;
 
 int config_override = 0;
 
-int clockrate;
 int insc=0;
 float mips,flops;
 extern int mmuflush;
@@ -361,6 +360,7 @@ void resetpc()
 {
         cpu_set();
         pc_reset();
+        cpu_set_turbo(1);
 //        cpuspeed2=(AT)?2:1;
 //        atfullspeed=0;
 ///*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
@@ -467,6 +467,7 @@ void resetpchard()
 	}
 
         sound_update_buf_length();
+        cpu_set_turbo(1);
 }
 
 char romsets[17][40]={"IBM PC","IBM XT","Generic Turbo XT","Euro PC","Tandy 1000","Amstrad PC1512","Sinclair PC200","Amstrad PC1640","IBM AT","AMI 286 clone","Dell System 200","Misc 286","IBM AT 386","Misc 386","386 clone","486 clone","486 clone 2"};
@@ -490,21 +491,21 @@ void runpc()
 {
         char s[200];
         int done=0;
+        int cycles_to_run = cpu_get_speed() / 100;
 
         startblit();
-        clockrate = models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed;
         
         if (is386)   
         {
                 if (cpu_use_dynarec)
-                        exec386_dynarec(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                        exec386_dynarec(cycles_to_run);
                 else
-                        exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                        exec386(cycles_to_run);
         }
         else if (AT)
-                exec386(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                exec386(cycles_to_run);
         else
-                execx86(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed / 100);
+                execx86(cycles_to_run);
         
         keyboard_poll_host();
         keyboard_process();
