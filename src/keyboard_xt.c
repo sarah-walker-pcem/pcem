@@ -32,6 +32,7 @@ struct
         uint8_t pb;
         
         int tandy;
+        int pb2_turbo;
 } keyboard_xt;
 
 static uint8_t key_queue[16];
@@ -115,6 +116,9 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
 
                 timer_process();
                 timer_update_outstanding();
+                
+                if (keyboard_xt.pb2_turbo)
+                        cpu_set_turbo((val & 4) ? 0 : 1);
         
                 speaker_update();
                 speaker_gated = val & 1;
@@ -230,6 +234,7 @@ void keyboard_xt_init()
         keyboard_send = keyboard_xt_adddata;
         keyboard_poll = keyboard_xt_poll;
         keyboard_xt.tandy = 0;
+        keyboard_xt.pb2_turbo = (romset == ROM_GENXT || romset == ROM_DTKXT || romset == ROM_AMIXT || romset == ROM_PXXT) ? 1 : 0;
 
         timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
 }
