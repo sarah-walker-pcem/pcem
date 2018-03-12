@@ -35,7 +35,7 @@ struct
         uint8_t status;
         uint8_t mem[0x20];
         uint8_t out;
-        int out_new;
+        int out_new, out_delayed;
         
         uint8_t input_port;
         uint8_t output_port;
@@ -86,7 +86,7 @@ void keyboard_at_poll()
                 {
                         if (keyboard_at.mem[0] & 0x01)
                                 picint(2);
-                        keyboard_at.out = keyboard_at.out_new;
+                        keyboard_at.out = keyboard_at.out_new & 0xff;
                         keyboard_at.out_new = -1;
                         keyboard_at.status |=  STAT_OFULL;
                         keyboard_at.status &= ~STAT_IFULL;
@@ -99,9 +99,21 @@ void keyboard_at_poll()
         if (keyboard_at.out_new == -1 && !(keyboard_at.status & STAT_OFULL) && 
             key_ctrl_queue_start != key_ctrl_queue_end)
         {
-                keyboard_at.out_new = key_ctrl_queue[key_ctrl_queue_start];
+                keyboard_at.out_new = key_ctrl_queue[key_ctrl_queue_start] | 0x200;
                 key_ctrl_queue_start = (key_ctrl_queue_start + 1) & 0xf;
         }                
+        else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 && 
+                keyboard_at.out_delayed != -1)
+        {
+                keyboard_at.out_new = keyboard_at.out_delayed;
+                keyboard_at.out_delayed = -1;
+        }
+        else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 &&
+                 !(keyboard_at.mem[0] & 0x10) && keyboard_at.out_delayed != -1)
+        {
+                keyboard_at.out_new = keyboard_at.out_delayed;
+                keyboard_at.out_delayed = -1;
+        }
         else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 && /*!(keyboard_at.mem[0] & 0x20) &&*/
             mouse_queue_start != mouse_queue_end)
         {
@@ -118,19 +130,14 @@ void keyboard_at_poll()
 
 void keyboard_at_adddata(uint8_t val)
 {
-//        if (keyboard_at.status & STAT_OFULL)
-//        {
-                key_ctrl_queue[key_ctrl_queue_end] = val;
-                key_ctrl_queue_end = (key_ctrl_queue_end + 1) & 0xf;
-//                pclog("keyboard_at : %02X added to queue\n", val);                
-/*                return;
+        key_ctrl_queue[key_ctrl_queue_end] = val;
+        key_ctrl_queue_end = (key_ctrl_queue_end + 1) & 0xf;
+        
+        if (!(keyboard_at.out_new & 0x300))
+        {
+                keyboard_at.out_delayed = keyboard_at.out_new;
+                keyboard_at.out_new = -1;
         }
-        keyboard_at.out = val;
-        keyboard_at.status |=  STAT_OFULL;
-        keyboard_at.status &= ~STAT_IFULL;
-        if (keyboard_at.mem[0] & 0x01)
-           keyboard_at.wantirq = 1;        
-        pclog("keyboard_at : output %02X (IRQ %i)\n", val, keyboard_at.wantirq);*/
 }
 
 void keyboard_at_adddata_keyboard(uint8_t val)
