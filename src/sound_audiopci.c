@@ -1224,6 +1224,54 @@ static void es1371_speed_changed(void *p)
         es1371->dac[1].latch = (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
 }
 
+void es1371_add_status_info_dac(es1371_t *es1371, char *s, int max_len, int dac_nr)
+{
+        int ena = dac_nr ? INT_DAC2_EN : INT_DAC1_EN;
+        char *dac_name = dac_nr ? "DAC2 (Wave)" : "DAC1 (MIDI)";
+        char temps[128];
+
+        if (es1371->int_ctrl & ena)
+        {
+                int format = dac_nr ? ((es1371->si_cr >> 2) & 3) : (es1371->si_cr & 3);
+                double freq = 48000.0 * ((double)es1371->dac[dac_nr].vf / (32768.0 * 16.0));
+
+                switch (format)
+                {
+                        case FORMAT_MONO_8:
+                        snprintf(temps, 128, "%s format : 8-bit mono\n", dac_name);
+                        break;
+                        case FORMAT_STEREO_8:
+                        snprintf(temps, 128, "%s format : 8-bit stereo\n", dac_name);
+                        break;
+                        case FORMAT_MONO_16:
+                        snprintf(temps, 128, "%s format : 16-bit mono\n", dac_name);
+                        break;
+                        case FORMAT_STEREO_16:
+                        snprintf(temps, 128, "%s format : 16-bit stereo\n", dac_name);
+                        break;
+                }
+                
+                strncat(s, temps, max_len);
+                max_len -= strlen(temps);
+
+                snprintf(temps, 128, "Playback frequency : %i Hz\n", (int)freq);
+                strncat(s, temps, max_len);
+        }
+        else
+        {
+                snprintf(temps, max_len, "%s stopped\n", dac_name);
+                strncat(s, temps, max_len);
+        }
+}
+
+void es1371_add_status_info(char *s, int max_len, void *p)
+{
+        es1371_t *es1371 = (es1371_t *)p;
+        
+        es1371_add_status_info_dac(es1371, s, max_len, 0);
+        es1371_add_status_info_dac(es1371, s, max_len, 1);
+}
+
 device_t es1371_device =
 {
         "Ensoniq AudioPCI (ES1371)",
@@ -1233,6 +1281,6 @@ device_t es1371_device =
         NULL,
         es1371_speed_changed,
         NULL,
-        NULL,
+        es1371_add_status_info,
         NULL
 };
