@@ -1,11 +1,18 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "ibm.h"
 #include "device.h"
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
 #include "sound.h"
+
+#define N 16
+
+#define ES1371_NCoef 91
+
+static float low_fir_es1371_coef[ES1371_NCoef];
 
 typedef struct es1371_t
 {
@@ -48,6 +55,9 @@ typedef struct es1371_t
                 
                 int16_t buffer_l[64], buffer_r[64];
                 int buffer_pos, buffer_pos_end;
+                
+                int filtered_l[32], filtered_r[32];
+                int f_pos;
                 
                 int16_t out_l, out_r;
                 
@@ -462,6 +472,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void *p)
                                 case 0x71:
                                 es1371->dac[0].vf = (es1371->dac[0].vf & ~0x1f8000) | ((val & 0xfc00) << 5);
                                 es1371->dac[0].ac = (es1371->dac[0].ac & ~0x7f8000) | ((val & 0x00ff) << 15);
+                                es1371->dac[0].f_pos = 0;
                                 break;
                                 case 0x72:
                                 es1371->dac[0].ac = (es1371->dac[0].ac & ~0x7fff) | (val & 0x7fff);
@@ -473,6 +484,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void *p)
                                 case 0x75:
                                 es1371->dac[1].vf = (es1371->dac[1].vf & ~0x1f8000) | ((val & 0xfc00) << 5);
                                 es1371->dac[1].ac = (es1371->dac[1].ac & ~0x7f8000) | ((val & 0x00ff) << 15);
+                                es1371->dac[1].f_pos = 0;
                                 break;
                                 case 0x76:
                                 es1371->dac[1].ac = (es1371->dac[1].ac & ~0x7fff) | (val & 0x7fff);
@@ -968,15 +980,60 @@ static void es1371_fetch(es1371_t *es1371, int dac_nr)
         }
 }
 
-static void es1371_next_sample(es1371_t *es1371, int dac_nr)
+static inline float low_fir_es1371(int dac_nr, int i, float NewSample)
 {
+        static float x[2][2][128]; //input samples
+        static int x_pos[2] = {0, 0};
+        float out = 0.0;
+	int read_pos;
+	int n_coef;
+	int pos = x_pos[dac_nr];
+
+        x[dac_nr][i][pos] = NewSample;
+
+        /*Since only 1/16th of input samples are non-zero, only filter those that
+          are valid.*/
+	read_pos = (pos + 15) & (127 & ~15);
+	n_coef = (16 - pos) & 15;
+
+	while (n_coef < ES1371_NCoef)
+	{
+		out += low_fir_es1371_coef[n_coef] * x[dac_nr][i][read_pos];
+		read_pos = (read_pos + 16) & (127 & ~15);
+		n_coef += 16;
+	}
+
+        if (i == 1)
+        {
+        	x_pos[dac_nr] = (x_pos[dac_nr] + 1) & 127;
+        	if (x_pos[dac_nr] > 127)
+        		x_pos[dac_nr] = 0;
+        }
+
+        return out;
+}
+
+static void es1371_next_sample_filtered(es1371_t *es1371, int dac_nr, int out_idx)
+{
+        int out_l, out_r;
+        int c;
+        
         if ((es1371->dac[dac_nr].buffer_pos - es1371->dac[dac_nr].buffer_pos_end) >= 0)
         {
                 es1371_fetch(es1371, dac_nr);
         }
 
-        es1371->dac[dac_nr].out_l = es1371->dac[dac_nr].buffer_l[es1371->dac[dac_nr].buffer_pos & 63];
-        es1371->dac[dac_nr].out_r = es1371->dac[dac_nr].buffer_r[es1371->dac[dac_nr].buffer_pos & 63];
+        out_l = es1371->dac[dac_nr].buffer_l[es1371->dac[dac_nr].buffer_pos & 63];
+        out_r = es1371->dac[dac_nr].buffer_r[es1371->dac[dac_nr].buffer_pos & 63];
+        
+        es1371->dac[dac_nr].filtered_l[out_idx] = (int)low_fir_es1371(dac_nr, 0, (float)out_l);
+        es1371->dac[dac_nr].filtered_r[out_idx] = (int)low_fir_es1371(dac_nr, 1, (float)out_r);
+        for (c = 1; c < 16; c++)
+        {
+                es1371->dac[dac_nr].filtered_l[out_idx+c] = (int)low_fir_es1371(dac_nr, 0, 0);
+                es1371->dac[dac_nr].filtered_r[out_idx+c] = (int)low_fir_es1371(dac_nr, 1, 0);
+        }
+        
 //        pclog("Use %02x %04x %04x\n", es1371->dac[dac_nr].buffer_pos & 63, es1371->dac[dac_nr].out_l, es1371->dac[dac_nr].out_r);
         
         es1371->dac[dac_nr].buffer_pos++;
@@ -1026,12 +1083,22 @@ static void es1371_poll(void *p)
         
         if (es1371->int_ctrl & INT_DAC1_EN)
         {
+                int frac = es1371->dac[0].ac & 0x7fff;
+                int idx = es1371->dac[0].ac >> 15;
+                int samp1_l = es1371->dac[0].filtered_l[idx];
+                int samp1_r = es1371->dac[0].filtered_r[idx];
+                int samp2_l = es1371->dac[0].filtered_l[(idx + 1) & 31];
+                int samp2_r = es1371->dac[0].filtered_r[(idx + 1) & 31];
+                
+                es1371->dac[0].out_l = ((samp1_l * (0x8000 - frac)) + (samp2_l * frac)) >> 15;
+                es1371->dac[0].out_r = ((samp1_r * (0x8000 - frac)) + (samp2_r * frac)) >> 15;
 //                pclog("1Samp %i %i  %08x\n", es1371->dac[0].curr_samp_ct, es1371->dac[0].samp_ct, es1371->dac[0].ac);
                 es1371->dac[0].ac += es1371->dac[0].vf;
-                if (es1371->dac[0].ac & (~0 << (15+4)))
+                es1371->dac[0].ac &= ((32 << 15) - 1);
+                if ((es1371->dac[0].ac >> (15+4)) != es1371->dac[0].f_pos)
                 {
-                        es1371->dac[0].ac &= ~(~0 << (15+4));
-                        es1371_next_sample(es1371, 0);
+                        es1371_next_sample_filtered(es1371, 0, es1371->dac[0].f_pos ? 16 : 0);
+                        es1371->dac[0].f_pos = (es1371->dac[0].f_pos + 1) & 1;
 
                         es1371->dac[0].curr_samp_ct++;
                         if (es1371->dac[0].curr_samp_ct == es1371->dac[0].samp_ct)
@@ -1049,21 +1116,33 @@ static void es1371_poll(void *p)
 
         if (es1371->int_ctrl & INT_DAC2_EN)
         {
+                int frac = es1371->dac[1].ac & 0x7fff;
+                int idx = es1371->dac[1].ac >> 15;
+                int samp1_l = es1371->dac[1].filtered_l[idx];
+                int samp1_r = es1371->dac[1].filtered_r[idx];
+                int samp2_l = es1371->dac[1].filtered_l[(idx + 1) & 31];
+                int samp2_r = es1371->dac[1].filtered_r[(idx + 1) & 31];
+                
+                es1371->dac[1].out_l = ((samp1_l * (0x8000 - frac)) + (samp2_l * frac)) >> 15;
+                es1371->dac[1].out_r = ((samp1_r * (0x8000 - frac)) + (samp2_r * frac)) >> 15;
 //                pclog("2Samp %i %i  %08x\n", es1371->dac[1].curr_samp_ct, es1371->dac[1].samp_ct, es1371->dac[1].ac);
                 es1371->dac[1].ac += es1371->dac[1].vf;
-                if (es1371->dac[1].ac & (~0 << (15+4)))
+                es1371->dac[1].ac &= ((32 << 15) - 1);
+                if ((es1371->dac[1].ac >> (15+4)) != es1371->dac[1].f_pos)
                 {
-                        es1371->dac[1].ac &= ~(~0 << (15+4));
-                        es1371_next_sample(es1371, 1);
+                        es1371_next_sample_filtered(es1371, 1, es1371->dac[1].f_pos ? 16 : 0);
+                        es1371->dac[1].f_pos = (es1371->dac[1].f_pos + 1) & 1;
 
                         es1371->dac[1].curr_samp_ct++;
-                        if (es1371->dac[1].curr_samp_ct > es1371->dac[1].samp_ct)
+                        if (es1371->dac[1].curr_samp_ct == es1371->dac[1].samp_ct)
                         {
-                                es1371->dac[1].curr_samp_ct = 0;
+//                                es1371->dac[1].curr_samp_ct = 0;
 //                                pclog("DAC2 IRQ\n");
                                 es1371->int_status |= INT_STATUS_DAC2;
                                 es1371_update_irqs(es1371);
                         }
+                        if (es1371->dac[1].curr_samp_ct > es1371->dac[1].samp_ct)
+                                es1371->dac[1].curr_samp_ct = 0;
                 }
         }
 }
@@ -1081,6 +1160,40 @@ static void es1371_get_buffer(int32_t *buffer, int len, void *p)
         es1371->pos = 0;
 }
 
+static inline double sinc(double x)
+{
+	return sin(M_PI * x) / (M_PI * x);
+}
+
+static void generate_es1371_filter()
+{
+        /*Cutoff frequency = 1 / 32*/
+        float fC = 1.0 / 32.0;
+        float gain;
+        int n;
+        
+        for (n = 0; n < ES1371_NCoef; n++)
+        {
+                /*Blackman window*/
+                double w = 0.42 - (0.5 * cos((2.0*n*M_PI)/(double)(ES1371_NCoef-1))) + (0.08 * cos((4.0*n*M_PI)/(double)(ES1371_NCoef-1)));
+                /*Sinc filter*/
+                double h = sinc(2.0 * fC * ((double)n - ((double)(ES1371_NCoef-1) / 2.0)));
+                
+                /*Create windowed-sinc filter*/
+                low_fir_es1371_coef[n] = w * h;
+        }
+        
+        low_fir_es1371_coef[(ES1371_NCoef - 1) / 2] = 1.0;
+
+        gain = 0.0;
+        for (n = 0; n < ES1371_NCoef; n++)
+                gain += low_fir_es1371_coef[n] / (float)N;
+
+        /*Normalise filter, to produce unity gain*/
+        for (n = 0; n < ES1371_NCoef; n++)
+                low_fir_es1371_coef[n] /= gain;
+}        
+
 static void *es1371_init()
 {
         es1371_t *es1371 = malloc(sizeof(es1371_t));
@@ -1091,6 +1204,8 @@ static void *es1371_init()
         es1371->card = pci_add(es1371_pci_read, es1371_pci_write, es1371);
 
         timer_add(es1371_poll, &es1371->dac[1].time, TIMER_ALWAYS_ENABLED, es1371);
+        
+        generate_es1371_filter();
                 
         return es1371;
 }
