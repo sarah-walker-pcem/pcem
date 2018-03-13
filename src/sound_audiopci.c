@@ -984,11 +984,45 @@ static void es1371_next_sample(es1371_t *es1371, int dac_nr)
 }
 
 //static FILE *es1371_f;//,*es1371_f2;
+
+static void es1371_update(es1371_t *es1371)
+{
+        int32_t l, r;
+                                
+        l = (es1371->dac[0].out_l * es1371->dac[0].vol_l) >> 12;
+        l += ((es1371->dac[1].out_l * es1371->dac[1].vol_l) >> 12);
+        r = (es1371->dac[0].out_r * es1371->dac[0].vol_r) >> 12;
+        r += ((es1371->dac[1].out_r * es1371->dac[1].vol_r) >> 12);
+                
+        l >>= 1;
+        r >>= 1;
+                
+        l = (l * es1371->master_vol_l) >> 15;
+        r = (r * es1371->master_vol_r) >> 15;
+                                
+        if (l < -32768)
+                l = -32768;
+        else if (l > 32767)
+                l = 32767;
+        if (r < -32768)
+                r = -32768;
+        else if (r > 32767)
+                r = 32767;
+
+        for (; es1371->pos < sound_pos_global; es1371->pos++)
+        {                                        
+                es1371->buffer[es1371->pos*2]     = l;
+                es1371->buffer[es1371->pos*2 + 1] = r;
+        }
+}
+
 static void es1371_poll(void *p)
 {
         es1371_t *es1371 = (es1371_t *)p;
         
         es1371->dac[1].time += es1371->dac[1].latch;
+        
+        es1371_update(es1371);
         
         if (es1371->int_ctrl & INT_DAC1_EN)
         {
@@ -1032,34 +1066,6 @@ static void es1371_poll(void *p)
                         }
                 }
         }
-
-        for (; es1371->pos < sound_pos_global; es1371->pos++)
-        {
-                int32_t l, r;
-                
-                l = (es1371->dac[0].out_l * es1371->dac[0].vol_l) >> 12;
-                l += ((es1371->dac[1].out_l * es1371->dac[1].vol_l) >> 12);
-                r = (es1371->dac[0].out_r * es1371->dac[0].vol_r) >> 12;
-                r += ((es1371->dac[1].out_r * es1371->dac[1].vol_r) >> 12);
-                
-                l >>= 1;
-                r >>= 1;
-                
-                l = (l * es1371->master_vol_l) >> 15;
-                r = (r * es1371->master_vol_r) >> 15;
-                                
-                if (l < -32768)
-                        l = -32768;
-                else if (l > 32767)
-                        l = 32767;
-                if (r < -32768)
-                        r = -32768;
-                else if (r > 32767)
-                        r = 32767;
-                                        
-                es1371->buffer[es1371->pos*2]     = l;
-                es1371->buffer[es1371->pos*2 + 1] = r;
-        }
 }
 
 static void es1371_get_buffer(int32_t *buffer, int len, void *p)
@@ -1067,6 +1073,8 @@ static void es1371_get_buffer(int32_t *buffer, int len, void *p)
         es1371_t *es1371 = (es1371_t *)p;
         int c;
 
+        es1371_update(es1371);
+        
         for (c = 0; c < len * 2; c++)
                 buffer[c] += (es1371->buffer[c] / 2);
         
