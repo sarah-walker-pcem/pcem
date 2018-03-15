@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ibm.h"
+#include "ide.h"
 #include "ide_atapi.h"
 #include "scsi.h"
 #include "scsi_cd.h"
@@ -194,6 +195,8 @@ typedef struct scsi_cd_data_t
 
         int is_atapi;
         atapi_device_t *atapi_dev;
+                
+        int pio_mode, mdma_mode;
 } scsi_cd_data_t;
 
 static void scsi_add_data(scsi_cd_data_t *data, uint8_t val)
@@ -1171,14 +1174,70 @@ static int scsi_cd_get_bytes_required(void *p)
 
 static void scsi_cd_atapi_identify(uint16_t *buffer, void *p)
 {
+        scsi_cd_data_t *data = p;
+
         memset(buffer, 0, 512);
         
         buffer[0] = 0x8000 | (5<<8) | 0x80 | (2<<5); /* ATAPI device, CD-ROM drive, removable media, accelerated DRQ */
 	ide_padstr((char *)(buffer + 10), "", 20); /* Serial Number */
 	ide_padstr((char *)(buffer + 23), "v1.0", 8); /* Firmware */
 	ide_padstr((char *)(buffer + 27), "PCemCD", 40); /* Model */
-	buffer[49] = 0x200; /* LBA supported */
+	buffer[49] = 0x300; /*DMA and LBA supported*/
+	buffer[51] = 120;
+	buffer[52] = 120;
+	buffer[53] = 2; /*Words 64-70 are valid*/
+	buffer[62] = 0x0000;
+	buffer[63] = 0x0007 | (0x100 << data->mdma_mode); /*Multi-word DMA 0, 1 & 2*/
+	buffer[64] = 0x0003;  /*PIO Modes 3 & 4*/
+	if (data->pio_mode >= 3)
+        	buffer[64] |= (0x100 << (data->pio_mode - 3));
+	buffer[65] = 120; /*Minimum multi-word cycle time*/
+	buffer[66] = 120; /*Recommended multi-word cycle time*/
+	buffer[67] = 120; /*Minimum PIO cycle time*/
 	buffer[126] = 0xfffe; /* Interpret zero byte count limit as maximum length */
+}
+
+static int scsi_cd_atapi_set_feature(uint8_t feature, uint8_t val, void *p)
+{
+        scsi_cd_data_t *data = p;
+        
+        switch (feature)
+        {
+                case FEATURE_SET_TRANSFER_MODE:
+                if (!(val & 0xfe))
+                {
+                        /*Default transfer mode*/
+                        data->pio_mode = 0;
+                        return 1;
+                }
+                else if ((val & 0xf8) == 0x08)
+                {
+                        /*PIO transfer mode*/
+                        if ((val & 7) > 4)
+                                return 0;
+                        data->pio_mode = (val & 7);
+                        return 1;
+                }                
+                else if ((val & 0xf8) == 0x20)
+                {
+                        /*Multi-word DMA transfer mode*/
+                        if ((val & 7) > 2)
+                                return 0;
+                        data->mdma_mode = (val & 7);
+                        return 1;
+                }
+                return 0; /*Invalid data*/
+                
+                case FEATURE_ENABLE_IRQ_OVERLAPPED:
+                case FEATURE_ENABLE_IRQ_SERVICE:
+                case FEATURE_DISABLE_REVERT:
+                case FEATURE_DISABLE_IRQ_OVERLAPPED:
+                case FEATURE_DISABLE_IRQ_SERVICE:
+                case FEATURE_ENABLE_REVERT:
+                return 1;
+        }
+        
+        return 0; /*Feature not supported*/
 }
 
 scsi_device_t scsi_cd =
@@ -1195,6 +1254,7 @@ scsi_device_t scsi_cd =
         scsi_cd_get_bytes_required,
         
         scsi_cd_atapi_identify,
+        scsi_cd_atapi_set_feature,
         
         scsi_cd_read,
         scsi_cd_write,

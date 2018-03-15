@@ -45,6 +45,7 @@
 #define WIN_SETIDLE1			0xE3
 #define WIN_CHECK_POWER_MODE            0xE5
 #define WIN_IDENTIFY			0xEC /* Ask drive to identify itself */
+#define WIN_SET_FEATURES                0xEF
 
 /** Evaluate to non-zero if the currently selected drive is an ATAPI device */
 #define IDE_DRIVE_IS_CDROM(ide)  (ide->type == IDE_CDROM)
@@ -93,8 +94,8 @@ IDE *ext_ide;
 
 char ide_fn[7][512];
 
-int (*ide_bus_master_read_sector)(int channel, uint8_t *data);
-int (*ide_bus_master_write_sector)(int channel, uint8_t *data);
+int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size);
+int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size);
 void (*ide_bus_master_set_irq)(int channel);
 
 int idecallback[2] = {0, 0};
@@ -582,7 +583,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                         return;
 
                 case WIN_IDENTIFY: /* Identify Device */
-                case 0xEF:
+                case WIN_SET_FEATURES:
 //                        output=3;
 //                        timetolive=500;
                         ide->atastat = BUSY_STAT;
@@ -593,7 +594,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 
                 case WIN_PACKETCMD: /* ATAPI Packet */
                         if (ide->type == IDE_CDROM)
-                                atapi_command_start(&ide->atapi);
+                                atapi_command_start(&ide->atapi, ide->cylprecomp);
 
                         ide->atastat = BUSY_STAT;
                         timer_process();
@@ -932,9 +933,9 @@ void callbackide(int ide_board)
                 }                        
                 ide->pos=0;
                 
-                if (ide_bus_master_read_sector)
+                if (ide_bus_master_read_data)
                 {
-                        if (ide_bus_master_read_sector(ide_board, &ide->sector_buffer[ide->sector_pos*512]))
+                        if (ide_bus_master_read_data(ide_board, &ide->sector_buffer[ide->sector_pos*512], 512))
                                 idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
                         else
                         {
@@ -1010,9 +1011,9 @@ void callbackide(int ide_board)
                         goto abort_cmd;
                 }
 
-                if (ide_bus_master_write_sector)
+                if (ide_bus_master_write_data)
                 {
-                        if (ide_bus_master_write_sector(ide_board, (uint8_t *)ide->buffer))
+                        if (ide_bus_master_write_data(ide_board, (uint8_t *)ide->buffer, 512))
                            idecallback[ide_board]=6*IDE_TIME;           /*DMA not performed, try again later*/
                         else
                         {
@@ -1138,7 +1139,6 @@ void callbackide(int ide_board)
                 return;
                 
         case WIN_SETIDLE1: /* Idle */
-        case 0xEF:
                 goto abort_cmd;
 
         case WIN_IDENTIFY: /* Identify Device */
@@ -1161,7 +1161,18 @@ void callbackide(int ide_board)
                 }
                 return;
 
+        case WIN_SET_FEATURES:
+		if (ide->type == IDE_NONE)
+			goto abort_cmd;
+                if (!IDE_DRIVE_IS_CDROM(ide))
+			goto abort_cmd;
 
+                if (!atapi_dev->bus.devices[0]->atapi_set_feature(ide->cylprecomp, ide->secount, atapi_dev->bus.device_data[0]))
+                        goto abort_cmd;
+                ide->atastat = READY_STAT | DSC_STAT;
+                ide_irq_raise(ide);
+                return;
+                
         case WIN_CHECK_POWER_MODE:
 		if (ide->type == IDE_NONE)
 		{
@@ -1291,10 +1302,10 @@ static void ide_close(void *p)
 {
 }
 
-void ide_set_bus_master(int (*read_sector)(int channel, uint8_t *data), int (*write_sector)(int channel, uint8_t *data), void (*set_irq)(int channel))
+void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size), int (*write_data)(int channel, uint8_t *data, int size), void (*set_irq)(int channel))
 {
-        ide_bus_master_read_sector = read_sector;
-        ide_bus_master_write_sector = write_sector;
+        ide_bus_master_read_data = read_data;
+        ide_bus_master_write_data = write_data;
         ide_bus_master_set_irq = set_irq;
 }
 

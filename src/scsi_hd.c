@@ -827,6 +827,7 @@ scsi_device_t scsi_hd =
         scsi_hd_get_bytes_required,
         
         NULL,
+        NULL,
         
         scsi_hd_read,
         scsi_hd_write,

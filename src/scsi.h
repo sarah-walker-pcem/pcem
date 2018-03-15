@@ -18,6 +18,7 @@ typedef struct scsi_device_t
         int (*get_bytes_required)(void *p);
         
         void (*atapi_identify)(uint16_t *buffer, void *p);
+        int (*atapi_set_feature)(uint8_t feature, uint8_t val, void *p);
         
         uint8_t (*read)(void *p);
         void (*write)(uint8_t val, void *p);

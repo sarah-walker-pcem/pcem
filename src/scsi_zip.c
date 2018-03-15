@@ -4,6 +4,7 @@
 #include <string.h>
 #include "ibm.h"
 #include "hdd_file.h"
+#include "ide.h"
 #include "ide_atapi.h"
 #include "scsi.h"
 #include "scsi_zip.h"
@@ -73,6 +74,8 @@ typedef struct scsi_zip_data
         atapi_device_t *atapi_dev;
         
         int read_only;
+
+        int pio_mode, mdma_mode;
 } scsi_zip_data;
 
 static scsi_zip_data *zip_data;
@@ -1077,14 +1080,70 @@ static int scsi_zip_get_bytes_required(void *p)
 
 static void scsi_zip_atapi_identify(uint16_t *buffer, void *p)
 {
+        scsi_zip_data *data = p;
+        
         memset(buffer, 0, 512);
         
         buffer[0] = 0x8000 | (0<<8) | 0x80 | (2<<5); /* ATAPI device, direct-access device, removable media, accelerated DRQ */
 	ide_padstr((char *)(buffer + 10), "", 20); /* Serial Number */
 	ide_padstr((char *)(buffer + 23), "E.08", 8); /* Firmware */
 	ide_padstr((char *)(buffer + 27), "IOMEGA ZIP 100 ATAPI", 40); /* Model */
-	buffer[49] = 0x200; /* LBA supported */
+	buffer[49] = 0x300; /*DMA and LBA supported*/
+	buffer[51] = 120;
+	buffer[52] = 120;
+	buffer[53] = 2; /*Words 64-70 are valid*/
+	buffer[62] = 0x0000;
+	buffer[63] = 0x0003 | (0x100 << data->mdma_mode); /*Multi-word DMA 0 & 1*/
+	buffer[64] = 0x0001;  /*PIO Mode 3*/
+	if (data->pio_mode >= 3)
+        	buffer[64] |= (0x100 << (data->pio_mode - 3));
+	buffer[65] = 120; /*Minimum multi-word cycle time*/
+	buffer[66] = 120; /*Recommended multi-word cycle time*/
+	buffer[67] = 120; /*Minimum PIO cycle time*/
 	buffer[126] = 0xfffe; /* Interpret zero byte count limit as maximum length */
+}
+
+static int scsi_zip_atapi_set_feature(uint8_t feature, uint8_t val, void *p)
+{
+        scsi_zip_data *data = p;
+        
+        switch (feature)
+        {
+                case FEATURE_SET_TRANSFER_MODE:
+                if (!(val & 0xfe))
+                {
+                        /*Default transfer mode*/
+                        data->pio_mode = 0;
+                        return 1;
+                }
+                else if ((val & 0xf8) == 0x08)
+                {
+                        /*PIO transfer mode*/
+                        if ((val & 7) > 3)
+                                return 0;
+                        data->pio_mode = (val & 7);
+                        return 1;
+                }                
+                else if ((val & 0xf8) == 0x20)
+                {
+                        /*Multi-word DMA transfer mode*/
+                        if ((val & 7) > 1)
+                                return 0;
+                        data->mdma_mode = (val & 7);
+                        return 1;
+                }
+                return 0; /*Invalid data*/
+                
+                case FEATURE_ENABLE_IRQ_OVERLAPPED:
+                case FEATURE_ENABLE_IRQ_SERVICE:
+                case FEATURE_DISABLE_REVERT:
+                case FEATURE_DISABLE_IRQ_OVERLAPPED:
+                case FEATURE_DISABLE_IRQ_SERVICE:
+                case FEATURE_ENABLE_REVERT:
+                return 1;
+        }
+        
+        return 0; /*Feature not supported*/
 }
 
 scsi_device_t scsi_zip =
@@ -1101,6 +1160,7 @@ scsi_device_t scsi_zip =
         scsi_zip_get_bytes_required,
         
         scsi_zip_atapi_identify,
+        scsi_zip_atapi_set_feature,
         
         scsi_zip_read,
         scsi_zip_write,

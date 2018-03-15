@@ -15,8 +15,12 @@ extern void ide_pri_enable();
 extern void ide_sec_enable();
 extern void ide_pri_disable();
 extern void ide_sec_disable();
-extern void ide_set_bus_master(int (*read_sector)(int channel, uint8_t *data), int (*write_sector)(int channel, uint8_t *data), void (*set_irq)(int channel));
+extern void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size), int (*write_data)(int channel, uint8_t *data, int size), void (*set_irq)(int channel));
 void ide_irq_raise(struct IDE *ide);
+
+extern int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size);
+extern int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size);
+extern void (*ide_bus_master_set_irq)(int channel);
 
 #include "ide_atapi.h"
 
@@ -47,4 +51,12 @@ extern device_t ide_device;
 #define ABRT_ERR		0x04 /* Command aborted */
 #define MCR_ERR			0x08 /* Media change request */
 
+#define FEATURE_SET_TRANSFER_MODE      0x03
+#define FEATURE_ENABLE_IRQ_OVERLAPPED  0x5d
+#define FEATURE_ENABLE_IRQ_SERVICE     0x5e
+#define FEATURE_DISABLE_REVERT         0x66
+#define FEATURE_ENABLE_REVERT          0xcc
+#define FEATURE_DISABLE_IRQ_OVERLAPPED 0xdd
+#define FEATURE_DISABLE_IRQ_SERVICE    0xde
+                        
 #endif //__IDE__

@@ -53,11 +53,13 @@ typedef struct atapi_device_t
         uint8_t *atastat;
         uint8_t *error;
         int *cylinder;
+        
+        int use_dma;
 } atapi_device_t;
 
 void atapi_data_write(atapi_device_t *atapi_dev, uint16_t val);
 uint16_t atapi_data_read(atapi_device_t *atapi_dev);
-void atapi_command_start(atapi_device_t *atapi);
+void atapi_command_start(atapi_device_t *atapi, uint8_t features);
 uint8_t atapi_read_iir(atapi_device_t *atapi_dev);
 uint8_t atapi_read_drq(atapi_device_t *atapi_dev);
 void atapi_process_packet(atapi_device_t *atapi_dev);
