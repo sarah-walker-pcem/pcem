@@ -264,8 +264,8 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                                                         idecallback[atapi_dev->board] = 1*IDE_TIME;
                                                                 }
                                                                 else
-
-                                                                        atapi_dev->data_write_pos = atapi_dev->data_read_pos;                                                                {
+                                                                {
+                                                                        atapi_dev->data_write_pos = atapi_dev->data_read_pos;
                                                                         atapi_dev->bus_state = 0;
                                                                         atapi_dev->state = ATAPI_STATE_WRITE_DATA;
                                                                         idecallback[atapi_dev->board] = 6 * IDE_TIME;
