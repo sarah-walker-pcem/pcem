@@ -522,6 +522,65 @@ static uint32_t ide_atapi_mode_sense(scsi_cd_data_t *data, uint32_t pos, uint8_t
 	return pos;
 }
 
+static void cdrom_mode_select(scsi_cd_data_t *data, int data_len)
+{
+        int len = data->data_out[1] | (data->data_out[0] << 8);
+        int pos = 8 + len; /*Skip over mode parameter header*/
+        
+        while (pos < data_len)
+        {
+                int page_code = data->data_out[pos] & 0x3f;
+                len = data->data_out[pos+1];
+                
+                pos += 2;
+                
+                switch (page_code)
+                {
+                        case GPMODE_CDROM_AUDIO_PAGE:
+                        if (len != 0xe)
+                        {
+                                atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                                return;
+                        }
+                        memcpy(mode_pages_in[GPMODE_CDROM_AUDIO_PAGE], &data->data_out[pos], 0xe);
+                        page_flags[GPMODE_CDROM_AUDIO_PAGE] |= PAGE_CHANGED;
+                        pos += len;
+                        break;
+                        
+                        case GPMODE_R_W_ERROR_PAGE:
+                        if (len != 0x6)
+                        {
+                                atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                                return;
+                        }
+                        pos += len;
+                        break;
+                        
+                        case GPMODE_CDROM_PAGE:
+                        if (len != 0x6)
+                        {
+                                atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                                return;
+                        }
+                        pos += len;
+                        break;
+                        
+                        case GPMODE_CAPABILITIES_PAGE:
+                        if (len != 0x12)
+                        {
+                                atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                                return;
+                        }
+                        pos += len;
+                        break;
+                        
+                        default:
+                        atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                        return;
+                }
+        }
+}
+
 uint32_t atapi_get_cd_channel(int channel)
 {
 	return (page_flags[GPMODE_CDROM_AUDIO_PAGE] & PAGE_CHANGED) ? mode_pages_in[GPMODE_CDROM_AUDIO_PAGE][channel ? 8 : 6] : (channel + 1);
@@ -1030,18 +1089,18 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 				len = (cdb[7]<<8) | cdb[8];
 				data->prefix_len = 10;
 			}
-			data->page_current = cdb[2];
-			if (page_flags[data->page_current] & PAGE_CHANGEABLE)
-                                page_flags[GPMODE_CDROM_AUDIO_PAGE] |= PAGE_CHANGED;
                         
                         data->cmd_pos = CMD_POS_TRANSFER;
                         data->bytes_required = len;
-                        pclog("MODE_SELECT len=%i\n", len);
                         return SCSI_PHASE_DATA_OUT;
                 }
-                pclog("MODE_SELECT complete\n");
-                data->cmd_pos = CMD_POS_IDLE;
-                return SCSI_PHASE_STATUS;
+                if (data->bytes_received == data->bytes_required)
+                {
+                        cdrom_mode_select(data, data->bytes_required);
+                        data->cmd_pos = CMD_POS_IDLE;
+                        return SCSI_PHASE_STATUS;
+                }
+                return SCSI_PHASE_DATA_OUT;
 
                 case GPCMD_GET_EVENT_STATUS_NOTIFICATION: /*0x4a*/
                 temp_command = cdb[0];
