@@ -506,10 +506,10 @@ static uint32_t ide_atapi_mode_sense(scsi_cd_data_t *data, uint32_t pos, uint8_t
         	buf[pos++] = 1; /* Supports audio play, not multisession */
         	buf[pos++] = 0; /* Some other stuff not supported */
         	buf[pos++] = 0; /* Some other stuff not supported (lock state + eject) */
-        	buf[pos++] = 0; /* Some other stuff not supported */
+        	buf[pos++] = 0x03; /* Some other stuff not supported */
         	buf[pos++] = (uint8_t) ((data->max_speed * 176) >> 8);
         	buf[pos++] = (uint8_t) (data->max_speed * 176); /* Maximum speed */
-        	buf[pos++] = 0; buf[pos++] = 2; /* Number of audio levels - on and off only */
+        	buf[pos++] = 1; buf[pos++] = 0; /* Number of audio levels - on and off only */
         	buf[pos++] = 0; buf[pos++] = 0; /* Buffer size - none */
         	buf[pos++] = (uint8_t) ((data->cur_speed * 176) >> 8);
         	buf[pos++] = (uint8_t) (data->cur_speed * 176); /* Current speed */
