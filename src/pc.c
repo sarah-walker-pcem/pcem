@@ -35,6 +35,7 @@
 #include "plat-keyboard.h"
 #include "plat-midi.h"
 #include "plat-mouse.h"
+#include "scsi_cd.h"
 #include "scsi_zip.h"
 #include "serial.h"
 #include "sound.h"
@@ -781,6 +782,8 @@ void loadconfig(char *fn)
         fdd_set_type(1, config_get_int(CFG_MACHINE, NULL, "drive_b_type", 7));
         bpb_disable = config_get_int(CFG_MACHINE, NULL, "bpb_disable", 0);
 
+        cd_speed = config_get_int(CFG_MACHINE, NULL, "cd_speed", 24);
+        
         joystick_type = config_get_int(CFG_MACHINE, NULL, "joystick_type", 0);
         mouse_type = config_get_int(CFG_MACHINE, NULL, "mouse_type", 0);
         
@@ -926,6 +929,8 @@ void saveconfig(char *fn)
         config_set_int(CFG_MACHINE, NULL, "drive_b_type", fdd_get_type(1));
         config_set_int(CFG_MACHINE, NULL, "bpb_disable", bpb_disable);
 
+        config_set_int(CFG_MACHINE, NULL, "cd_speed", cd_speed);
+        
         config_set_int(CFG_MACHINE, NULL, "joystick_type", joystick_type);
         config_set_int(CFG_MACHINE, NULL, "mouse_type", mouse_type);
                 

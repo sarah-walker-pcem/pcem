@@ -438,7 +438,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                         else
                                         {
                                                 atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                                                idecallback[atapi_dev->board] = 6*IDE_TIME;
+                                                idecallback[atapi_dev->board] = 1*IDE_TIME;
                                         }
                                 }
                                 else
@@ -490,7 +490,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                         }
                                 
                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        idecallback[atapi_dev->board] = 1 * IDE_TIME;
                 }
                 break;
                         

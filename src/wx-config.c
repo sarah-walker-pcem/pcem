@@ -15,6 +15,7 @@
 #include "mem.h"
 #include "nethandler.h"
 #include "nvr.h"
+#include "scsi_cd.h"
 #include "sound.h"
 #include "video.h"
 #include "vid_voodoo.h"
@@ -325,6 +326,30 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
         }
 }
 
+static void recalc_cd_list(void *hdlg, int cur_speed)
+{
+        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+        int c = 0;
+        
+        wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
+        while (1)
+        {
+                char s[8];
+                int speed;
+                
+                speed = cd_get_speed(c);
+                sprintf(s, "%iX", speed);
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
+                
+                if (speed == cur_speed)
+                        wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
+                
+                c++;
+                if (speed >= MAX_CD_SPEED)
+                        break;
+        }
+}
+
 #ifdef USE_NETWORKING
 static void recalc_net_list(void *hdlg, int model)
 {
@@ -547,6 +572,10 @@ int config_dlgsave(void* hdlg)
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOWS"));
         cpu_waitstates = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
         cpu_update_waitstates();
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+        cd_speed = cd_get_speed(wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
+        cd_set_speed(cd_speed);
 
         if (has_been_inited)
                 saveconfig(NULL);
@@ -823,6 +852,8 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 else
                                         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                         }
+                        
+                        recalc_cd_list(hdlg, cd_speed);
 
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, romstomodel[romset]);

@@ -7,8 +7,10 @@
 #include "ide_atapi.h"
 #include "scsi.h"
 #include "scsi_cd.h"
+#include "timer.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define ABS(x) ((x) > 0 ? (x) : -(x))
 
 
 #define BUFFER_SIZE (256*1024)
@@ -20,7 +22,8 @@ enum
         CMD_POS_IDLE = 0,
         CMD_POS_WAIT,
         CMD_POS_START_SECTOR,
-        CMD_POS_TRANSFER
+        CMD_POS_TRANSFER,
+        CMD_POS_COMPLETE
 };
 
 /* ATAPI Commands */
@@ -162,7 +165,10 @@ typedef struct scsi_cd_data_t
 
         int blocks;
         
-        int cmd_pos;
+        int cmd_pos, new_cmd_pos;
+        int callback;
+        int wait_time;
+        scsi_bus_t *bus;
         
         int addr, len;
         int sector_pos;
@@ -197,7 +203,114 @@ typedef struct scsi_cd_data_t
         atapi_device_t *atapi_dev;
                 
         int pio_mode, mdma_mode;
+        
+        int short_seek, long_seek;
+        int max_speed, cur_speed;
 } scsi_cd_data_t;
+
+static scsi_cd_data_t *cd_data = NULL;
+
+/*Note - all transfer speeds currently assume CAV behaviour. Drives above about 8x
+  should use CLV instead, but this is not currently supported.*/
+static struct
+{
+        int speed;
+        int short_seek;
+        int long_seek;
+} cd_speeds[] =
+{
+        {1, 240, 1446},
+        {2, 160, 1000},
+        {3, 150, 900},
+        {4, 112, 675},
+        {6, 112, 675},
+        {8, 112, 675},
+        {12,  75, 400},
+        {16,  58, 350},
+        {20,  50, 300},
+        {24,  45, 270},
+        {32,  45, 270},
+        {40,  50, 300},
+        {44,  50, 300},
+        {48,  50, 300},
+        {52,  45, 270},
+        {72,  45, 270},
+};
+
+int cd_speed;
+
+int cd_get_speed(int i)
+{
+        return cd_speeds[i].speed;
+}
+
+void cd_set_speed(int speed)
+{
+        if (cd_data)
+        {
+                int c = 0;
+                
+                while (1)
+                {
+                        if (cd_speeds[c].speed == speed)
+                                break;
+                        if (cd_speeds[c].speed >= MAX_CD_SPEED)
+                                break;
+                        
+                        c++;
+                }
+                
+                cd_data->max_speed = speed;
+                cd_data->cur_speed = speed;
+                cd_data->short_seek = cd_speeds[c].short_seek;
+                cd_data->long_seek = cd_speeds[c].long_seek;
+        }
+}
+
+static void scsi_cd_callback(void *p)
+{
+        scsi_cd_data_t *data = p;
+        
+        if (data->cmd_pos == CMD_POS_WAIT)
+        {
+                data->wait_time--;
+                if (!data->wait_time)
+                {
+                        data->callback = 0;
+                        data->cmd_pos = data->new_cmd_pos;
+                        scsi_bus_kick(data->bus);
+                }
+                else
+                        data->callback = 1000 * TIMER_USEC;
+        }
+        else
+                data->callback = 0;
+}
+
+//#define SECTOR_TIME 13333 /*Time between sectors on 1x drive*/
+#define SECTOR_TIME 12000 /*Adjusted from above value to account for transfer time on current SCSI/ATAPI code*/
+
+/*The seek model is currently very basic. Seeks of less than MIN_SEEK sectors are treated as
+  immediate. Seeks between MIN_SEEK and MAX_SEEK sectors scale linearly between short_seek and
+  long seek.
+  
+  This really shouldn't be a linear scale, but this is a good enough approximation for now.*/
+#define MIN_SEEK   2000
+#define MAX_SEEK 333000
+
+static int get_seek_time(scsi_cd_data_t *data, uint32_t start, uint32_t dest)
+{
+        uint32_t diff = ABS((int)(start - dest));
+
+        if (diff < MIN_SEEK)
+                return 0;
+        if (diff > MAX_SEEK)
+                diff = MAX_SEEK;
+        
+        diff -= MIN_SEEK;
+        
+        return data->short_seek + ((data->long_seek * diff) / (MAX_SEEK - MIN_SEEK));
+}
 
 static void scsi_add_data(scsi_cd_data_t *data, uint8_t val)
 {
@@ -278,11 +391,17 @@ static void *scsi_cd_init(scsi_bus_t *bus, int id)
         scsi_cd_data_t *data = malloc(sizeof(scsi_cd_data_t));
         memset(data, 0, sizeof(scsi_cd_data_t));
 
+        data->bus = bus;
         data->id = id;
 
 	page_flags[GPMODE_CDROM_AUDIO_PAGE] &= 0xFD;		/* Clear changed flag for CDROM AUDIO mode page. */
 	memset(mode_pages_in[GPMODE_CDROM_AUDIO_PAGE], 0, 256);	/* Clear the page itself. */
 	page_flags[GPMODE_CDROM_AUDIO_PAGE] &= ~PAGE_CHANGED;
+
+        timer_add(scsi_cd_callback, &data->callback, &data->callback, data);
+        
+        cd_data = data;
+        cd_set_speed(cd_speed);
                 
         return data;
 }
@@ -301,6 +420,7 @@ static void scsi_cd_close(void *p)
 {
         scsi_cd_data_t *data = p;
         
+        cd_data = NULL;
         free(data);
 }
 
@@ -387,12 +507,12 @@ static uint32_t ide_atapi_mode_sense(scsi_cd_data_t *data, uint32_t pos, uint8_t
         	buf[pos++] = 0; /* Some other stuff not supported */
         	buf[pos++] = 0; /* Some other stuff not supported (lock state + eject) */
         	buf[pos++] = 0; /* Some other stuff not supported */
-        	buf[pos++] = (uint8_t) (CDROM_SPEED >> 8);
-        	buf[pos++] = (uint8_t) CDROM_SPEED; /* Maximum speed */
+        	buf[pos++] = (uint8_t) ((data->max_speed * 176) >> 8);
+        	buf[pos++] = (uint8_t) (data->max_speed * 176); /* Maximum speed */
         	buf[pos++] = 0; buf[pos++] = 2; /* Number of audio levels - on and off only */
         	buf[pos++] = 0; buf[pos++] = 0; /* Buffer size - none */
-        	buf[pos++] = (uint8_t) (CDROM_SPEED >> 8);
-        	buf[pos++] = (uint8_t) CDROM_SPEED; /* Current speed */
+        	buf[pos++] = (uint8_t) ((data->cur_speed * 176) >> 8);
+        	buf[pos++] = (uint8_t) (data->cur_speed * 176); /* Current speed */
         	buf[pos++] = 0; /* Reserved */
         	buf[pos++] = 0; /* Drive digital format */
         	buf[pos++] = 0; /* Reserved */
@@ -506,6 +626,23 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 return SCSI_PHASE_STATUS;
 
                 case SCSI_REZERO_UNIT:
+                if (data->cmd_pos == CMD_POS_IDLE)
+                {
+                        uint32_t old_pos = data->cdpos;
+                        int seek_time;
+                        
+                	data->cdpos = 0;
+
+                        seek_time = get_seek_time(data, old_pos, data->cdpos);
+                        if (seek_time)
+                        {
+                                data->cmd_pos = CMD_POS_WAIT;
+                                data->new_cmd_pos = CMD_POS_COMPLETE;
+                                data->wait_time = seek_time;
+                                data->callback = 1000 * TIMER_USEC;
+                                return SCSI_PHASE_COMMAND;
+                        }
+                }
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_STATUS;
 
@@ -553,10 +690,32 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		return SCSI_PHASE_DATA_IN;
 
                 case SCSI_SEEK_6:
+                if (data->cmd_pos == CMD_POS_IDLE)
+                {
+                        uint32_t old_pos = data->cdpos;
+                        int seek_time;
+                        
+                	data->cdpos = (((uint32_t)cdb[1] & 0x1f) << 16) | ((uint32_t)cdb[2] << 8) | (uint32_t)cdb[3];
+
+                        seek_time = get_seek_time(data, old_pos, data->cdpos);
+                        if (seek_time)
+                        {
+                                data->cmd_pos = CMD_POS_WAIT;
+                                data->new_cmd_pos = CMD_POS_COMPLETE;
+                                data->wait_time = seek_time;
+                                data->callback = 1000 * TIMER_USEC;
+                                return SCSI_PHASE_COMMAND;
+                        }
+                }
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_STATUS;
 
                 case GPCMD_SET_SPEED:
+                data->cur_speed = (cdb[3] | (cdb[2] << 8)) / 176;
+                if (data->cur_speed < 1)
+                        data->cur_speed = 1;
+                else if (data->cur_speed > data->max_speed)
+                        data->cur_speed = data->max_speed;
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_STATUS;
 
@@ -625,20 +784,59 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
                 if (data->cmd_pos == CMD_POS_IDLE)
                 {
+                        uint32_t old_pos = data->cdpos;
+                        int seek_time;
+                        
                         data->cdlen = (cdb[6] << 16) | (cdb[7] << 8) | cdb[8];
                         data->cdpos = (cdb[2] << 24) | (cdb[3] << 16) | (cdb[4] << 8) | cdb[5];
 
-                	data->cmd_pos = CMD_POS_TRANSFER;
+                	data->cmd_pos = CMD_POS_START_SECTOR;
                 	data->bytes_expected = data->cdlen * ((rcdmode == 0x10) ? 2048 : 2352);
-                	if (rcdmode == 0x10)
-                	       atapi_set_transfer_granularity(data->atapi_dev, 2048);
-                	else
-                	       atapi_set_transfer_granularity(data->atapi_dev, 2352);
+                	if (data->is_atapi)
+                	{
+                        	if (rcdmode == 0x10)
+                        	       atapi_set_transfer_granularity(data->atapi_dev, 2048);
+                        	else
+                        	       atapi_set_transfer_granularity(data->atapi_dev, 2352);
+                        }
+
+                        seek_time = get_seek_time(data, old_pos, data->cdpos);
+                        if (seek_time)
+                        {
+                                data->cmd_pos = CMD_POS_WAIT;
+                                data->new_cmd_pos = CMD_POS_START_SECTOR;
+                                data->wait_time = seek_time;
+                                data->callback = 1000 * TIMER_USEC;
+                                return SCSI_PHASE_COMMAND;
+                        }
                 }
+                if (data->cmd_pos == CMD_POS_WAIT)
+                        return SCSI_PHASE_COMMAND;
                 if (!data->cdlen)
                 {
                         data->cmd_pos = CMD_POS_IDLE;
                         return SCSI_PHASE_STATUS;
+                }
+                if (data->cmd_pos == CMD_POS_START_SECTOR)
+                {
+                        uint64_t time = (((uint64_t)SECTOR_TIME * (uint64_t)TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
+
+                        data->cmd_pos = CMD_POS_WAIT;
+                        data->new_cmd_pos = CMD_POS_TRANSFER;
+                        
+                        if (time > 0x7fffffffull)
+                        {
+                                data->wait_time = (int)(time / ((uint64_t)TIMER_USEC * 1000ull));
+                                data->callback = (int)(time % ((uint64_t)TIMER_USEC * 1000ull));;
+                        }
+                        else
+                        {
+                                data->callback = time;
+                                data->wait_time = 1;
+                        }
+                        if (data->callback == 0)
+                                data->callback = 1;
+                        return SCSI_PHASE_COMMAND;
                 }
 
         	if (rcdmode == 0x10)
@@ -683,6 +881,9 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 //		readcdmode = 0;
                 if (data->cmd_pos == CMD_POS_IDLE)
                 {
+                        uint32_t old_pos = data->cdpos;
+                        int seek_time;
+                        
                 	if (cdb[0] == GPCMD_READ_6)
                 	{
                 		data->cdlen = cdb[4];
@@ -700,16 +901,51 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                		}
 //                	pclog("cdpos=%08x cdlen=%08x\n", data->cdpos, data->cdlen);
                 	
-                	data->cmd_pos = CMD_POS_TRANSFER;
+                	data->cmd_pos = CMD_POS_START_SECTOR;
                 	data->bytes_expected = data->cdlen * 2048;
-                        atapi_set_transfer_granularity(data->atapi_dev, 2048);
-                }
+                	if (data->is_atapi)
+                                atapi_set_transfer_granularity(data->atapi_dev, 2048);
+                        
+                        seek_time = get_seek_time(data, old_pos, data->cdpos);
 
+                        if (seek_time)
+                        {
+                                data->cmd_pos = CMD_POS_WAIT;
+                                data->new_cmd_pos = CMD_POS_START_SECTOR;
+                                data->wait_time = seek_time;
+                                data->callback = 1000 * TIMER_USEC;
+                                return SCSI_PHASE_COMMAND;
+                        }
+                }
+                if (data->cmd_pos == CMD_POS_WAIT)
+                        return SCSI_PHASE_COMMAND;
                 if (!data->cdlen)
                 {
                         data->cmd_pos = CMD_POS_IDLE;
                         return SCSI_PHASE_STATUS;
                 }
+                if (data->cmd_pos == CMD_POS_START_SECTOR)
+                {
+                        uint64_t time = (((uint64_t)SECTOR_TIME * (uint64_t)TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
+
+                        data->cmd_pos = CMD_POS_WAIT;
+                        data->new_cmd_pos = CMD_POS_TRANSFER;
+                        
+                        if (time > 0x7fffffffull)
+                        {
+                                data->wait_time = (int)(time / ((uint64_t)TIMER_USEC * 1000ull));
+                                data->callback = (int)(time % ((uint64_t)TIMER_USEC * 1000ull));;
+                        }
+                        else
+                        {
+                                data->callback = time;
+                                data->wait_time = 1;
+                        }
+                        if (data->callback == 0)
+                                data->callback = 1;
+                        return SCSI_PHASE_COMMAND;
+                }
+                
                 readflash_set(READFLASH_HDC, data->id);
                 c = MIN(data->cdlen, MAX_NR_SECTORS);
                 if (atapi->readsector(data->data_in, data->cdpos, c))
@@ -1066,8 +1302,25 @@ atapi_out:
                 return SCSI_PHASE_STATUS;
 
                 case GPCMD_SEEK:
-                pos = (cdb[3] << 16) | (cdb[4] << 8) | cdb[5];
-                atapi->seek(pos);
+                if (data->cmd_pos == CMD_POS_IDLE)
+                {
+                        uint32_t old_pos = data->cdpos;
+                        int seek_time;
+                        
+                	data->cdpos = (cdb[3] << 16) | (cdb[4] << 8) | cdb[5];
+                	
+                	atapi->seek(data->cdpos);
+
+                        seek_time = get_seek_time(data, old_pos, data->cdpos);
+                        if (seek_time)
+                        {
+                                data->cmd_pos = CMD_POS_WAIT;
+                                data->new_cmd_pos = CMD_POS_COMPLETE;
+                                data->wait_time = seek_time;
+                                data->callback = 1000 * TIMER_USEC;
+                                return SCSI_PHASE_COMMAND;
+                        }
+                }
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_STATUS;
 
