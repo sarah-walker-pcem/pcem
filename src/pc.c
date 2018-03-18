@@ -64,6 +64,8 @@ int window_w, window_h, window_x, window_y, window_remember;
 
 int start_in_fullscreen = 0;
 
+static int override_drive_a = 0, override_drive_b = 0;
+
 int CPUID;
 int vid_resize, vid_api;
 
@@ -241,6 +243,8 @@ void initpc(int argc, char *argv[])
                         printf("PCem command line options :\n\n");
                         printf("--config file.cfg - use given config file as initial configuration\n");
                         printf("--fullscreen      - start in fullscreen mode\n");
+                        printf("--load_drive_a file.img - load drive A: with the given disc image\n");
+                        printf("--load_drive_b file.img - load drive B: with the given disc image\n");
                         exit(-1);
                 }
                 else if (!strcasecmp(argv[c], "--fullscreen"))
@@ -265,6 +269,24 @@ void initpc(int argc, char *argv[])
                         
                         config_override = 1;
                         c++;
+                }
+                else if (!strcasecmp(argv[c], "--load_drive_a"))
+                {
+                        if ((c+1) == argc)
+                                break;
+
+                        strncpy(discfns[0], argv[c+1], 260);
+                        c++;
+                        override_drive_a = 1;
+                }
+                else if (!strcasecmp(argv[c], "--load_drive_b"))
+                {
+                        if ((c+1) == argc)
+                                break;
+
+                        strncpy(discfns[1], argv[c+1], 260);
+                        c++;
+                        override_drive_b = 1;
                 }
         }
 
@@ -493,6 +515,8 @@ void runpc()
         char s[200];
         int done=0;
         int cycles_to_run = cpu_get_speed() / 100;
+        
+        override_drive_a = override_drive_b = 0;
 
         startblit();
         
@@ -708,13 +732,19 @@ void loadconfig(char *fn)
         else
                 sound_card_current = 0;
 
-        p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_a", "");
-        if (p) strcpy(discfns[0], p);
-        else   strcpy(discfns[0], "");
+        if (!override_drive_a)
+        {
+                p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_a", "");
+                if (p) strcpy(discfns[0], p);
+                else   strcpy(discfns[0], "");
+        }
 
-        p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_b", "");
-        if (p) strcpy(discfns[1], p);
-        else   strcpy(discfns[1], "");
+        if (!override_drive_b)
+        {
+                p = (char *)config_get_string(CFG_MACHINE, NULL, "disc_b", "");
+                if (p) strcpy(discfns[1], p);
+                else   strcpy(discfns[1], "");
+        }
 
         p = (char *)config_get_string(CFG_MACHINE, NULL, "hdd_controller", "");
         if (p)
