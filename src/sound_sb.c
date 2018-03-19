@@ -772,7 +772,7 @@ uint8_t sb_ct1745_mixer_read(uint16_t addr, void *p)
                 case 0x04:
                 return ((mixer->regs[0x33] >> 4) & 0x0f) | (mixer->regs[0x32] & 0xf0);
                 case 0x0a:
-                return (mixer->regs[0x2a] - 10) / 3;
+                return (mixer->regs[0x3a] - 10) / 3;
                 case 0x22:
                 return ((mixer->regs[0x31] >> 4) & 0x0f) | (mixer->regs[0x30] & 0xf0);
                 case 0x26:
