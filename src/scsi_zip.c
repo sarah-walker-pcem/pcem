@@ -31,6 +31,8 @@
                 /*cmd[1] = mode
                   cmd[6-x] = password*/
 
+#define ATAPI_READ_FORMAT_CAPACITIES      0x23
+
 enum
 {
         CMD_POS_IDLE = 0,
@@ -1004,6 +1006,50 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         scsi_zip_illegal(data);
                 
                 bus_state = BUS_CD | BUS_IO;
+                break;
+                
+                case ATAPI_READ_FORMAT_CAPACITIES:
+                if (data->is_atapi)
+                {
+                        len = cdb[8] | (cdb[7] << 8);
+                        
+                        /*List header*/
+                        scsi_add_data(0, data);
+                        scsi_add_data(0, data);
+                        scsi_add_data(0, data);
+                        scsi_add_data(16, data); /*list length*/
+                        
+                        /*Current/Maximum capacity header*/
+                        scsi_add_data((ZIP_SECTORS >> 24) & 0xff, data);
+                        scsi_add_data((ZIP_SECTORS >> 16) & 0xff, data);
+                        scsi_add_data((ZIP_SECTORS >> 8)  & 0xff, data);
+                        scsi_add_data( ZIP_SECTORS        & 0xff, data);
+                        if (data->disc_loaded)
+                                scsi_add_data(2, data); /*Formatted media - current media capacity*/
+                        else
+                                scsi_add_data(3, data); /*Maximum formattable capacity*/
+                        scsi_add_data(512 >> 16, data);
+                        scsi_add_data(512 >> 8, data);
+                        scsi_add_data(512 & 0xff, data);
+
+                        /*Formattable capacity descriptor*/
+                        scsi_add_data((ZIP_SECTORS >> 24) & 0xff, data);
+                        scsi_add_data((ZIP_SECTORS >> 16) & 0xff, data);
+                        scsi_add_data((ZIP_SECTORS >> 8)  & 0xff, data);
+                        scsi_add_data( ZIP_SECTORS        & 0xff, data);
+                        scsi_add_data(0, data);
+                        scsi_add_data(512 >> 16, data);
+                        scsi_add_data(512 >> 8, data);
+                        scsi_add_data(512 & 0xff, data);
+
+                        data->cmd_pos = CMD_POS_IDLE;
+                        bus_state = BUS_IO;
+                }
+                else
+                {
+                        scsi_zip_illegal(data);                
+                        bus_state = BUS_CD | BUS_IO;
+                }
                 break;
 
                 default:
