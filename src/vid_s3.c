@@ -801,7 +801,12 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                 if (s3->chip == S3_TRIO32 || s3->chip == S3_TRIO64)
                         svga_out(addr, val, svga);
                 else
-                        sdac_ramdac_out(addr, val, &s3->ramdac, svga);
+                {
+                        if ((svga->crtc[0x55] & 1) || (svga->crtc[0x43] & 2))
+                                sdac_ramdac_out((addr & 3) | 4, val, &s3->ramdac, svga);
+                        else
+                                sdac_ramdac_out(addr & 3, val, &s3->ramdac, svga);
+                }
                 return;
 
                 case 0x3D4:
@@ -938,7 +943,9 @@ uint8_t s3_in(uint16_t addr, void *p)
 //                pclog("Read RAMDAC %04X  %04X:%04X\n", addr, CS, pc);
                 if (s3->chip == S3_TRIO32 || s3->chip == S3_TRIO64)
                         return svga_in(addr, svga);
-                return sdac_ramdac_in(addr, &s3->ramdac, svga);
+                if ((svga->crtc[0x55] & 1) || (svga->crtc[0x43] & 2))
+                        return sdac_ramdac_in((addr & 3) | 4, &s3->ramdac, svga);
+                return sdac_ramdac_in(addr & 3, &s3->ramdac, svga);
 
                 case 0x3d4:
                 return svga->crtcreg;
@@ -2291,6 +2298,7 @@ void *s3_bahamas64_init()
         
         s3->getclock = sdac_getclock;
         s3->getclock_p = &s3->ramdac;
+        sdac_init(&s3->ramdac);
 
         return s3;
 }

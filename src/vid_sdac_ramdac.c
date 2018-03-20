@@ -1,76 +1,108 @@
 /*87C716 'SDAC' true colour RAMDAC emulation*/
-/*Misidentifies as AT&T 21C504*/
 #include "ibm.h"
 #include "mem.h"
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_sdac_ramdac.h"
 
+static void sdac_control_write(sdac_ramdac_t *ramdac, svga_t *svga, uint8_t val)
+{
+        ramdac->command = val;
+//        pclog("RAMDAC command reg now %02X\n", val);
+        switch (val >> 4)
+        {
+                case 0x2: case 0x3: case 0xa: svga->bpp = 15; break;
+                case 0x4: case 0xe:           svga->bpp = 24; break;
+                case 0x5: case 0x6: case 0xc: svga->bpp = 16; break;
+                case 0x7:                     svga->bpp = 32; break;
+
+                case 0: case 1: default: svga->bpp = 8; break;
+        }
+}
+
+static void sdac_reg_write(sdac_ramdac_t *ramdac, int reg, uint8_t val)
+{
+        if ((reg >= 2 && reg <= 7) || (reg == 0xa) || (reg == 0xe))
+        {
+                if (!ramdac->reg_ff)
+                        ramdac->regs[reg] = (ramdac->regs[reg] & 0xff00) | val;
+                else
+                        ramdac->regs[reg] = (ramdac->regs[reg] & 0x00ff) | (val << 8);
+        }
+        ramdac->reg_ff = !ramdac->reg_ff;
+        if (!ramdac->reg_ff)
+                ramdac->windex++;
+}
+
+static uint8_t sdac_reg_read(sdac_ramdac_t *ramdac, int reg)
+{
+        uint8_t temp;
+        
+        if (!ramdac->reg_ff)
+                temp = ramdac->regs[reg] & 0xff;
+        else
+                temp = ramdac->regs[reg] >> 8;
+        ramdac->reg_ff = !ramdac->reg_ff;
+        if (!ramdac->reg_ff)
+                ramdac->rindex++;
+
+        return temp;
+}
+
 void sdac_ramdac_out(uint16_t addr, uint8_t val, sdac_ramdac_t *ramdac, svga_t *svga)
 {
-//        /*if (CS!=0xC000) */pclog("OUT RAMDAC %04X %02X %i %04X:%04X  %i\n",addr,val,sdac_ramdac.magic_count,CS,pc, sdac_ramdac.rs2);
+//        /*if (CS!=0xC000) */pclog("OUT RAMDAC %04X %02X %i %04X:%04X  %i  %i %i\n",addr,val,ramdac->magic_count,CS,cpu_state.pc, ramdac->rs2, ramdac->rindex, ramdac->windex);
         switch (addr)
-        {
-                case 0x3C6:
-                if (val == 0xff)
-                {
-                        ramdac->rs2 = 0;
-                        ramdac->magic_count = 0;
-                        break;
-                }
-                if (ramdac->magic_count < 4) break;
+        {               
+                case 2:
                 if (ramdac->magic_count == 4)
-                {
-                        ramdac->command = val;
-//                        pclog("RAMDAC command reg now %02X\n", val);
-                        switch (val >> 4)
-                        {
-                                case 0x2: case 0x3: case 0xa: svga->bpp = 15; break;
-                                case 0x4: case 0xe:           svga->bpp = 24; break;
-                                case 0x5: case 0x6: case 0xc: svga->bpp = 16; break;
-                                case 0x7:                     svga->bpp = 32; break;
-
-                                case 0: case 1: default: svga->bpp = 8; break;
-                        }
-                }
-                //ramdac->magic_count = 0;
+                        sdac_control_write(ramdac, svga, val);
+                ramdac->magic_count = 0;
                 break;
                 
-                case 0x3C7:
+                case 3:
                 ramdac->magic_count = 0;
-                if (ramdac->rs2)
-                   ramdac->rindex = val;
                 break;
-                case 0x3C8:
+                case 0:
                 ramdac->magic_count = 0;
-                if (ramdac->rs2)
-                   ramdac->windex = val;
                 break;
-                case 0x3C9:
+                case 1:
                 ramdac->magic_count = 0;
-                if (ramdac->rs2)
-                {
-                        if (!ramdac->reg_ff) ramdac->regs[ramdac->windex & 0xff] = (ramdac->regs[ramdac->windex & 0xff] & 0xff00) | val;
-                        else                 ramdac->regs[ramdac->windex & 0xff] = (ramdac->regs[ramdac->windex & 0xff] & 0x00ff) | (val << 8);
-                        ramdac->reg_ff = !ramdac->reg_ff;
-//                        pclog("RAMDAC reg %02X now %04X\n", ramdac->windex, ramdac->regs[ramdac->windex]);
-                        if (!ramdac->reg_ff) ramdac->windex++;
-                }
+                break;
+
+                case 4:
+                ramdac->windex = val;
+                ramdac->reg_ff = 0;
+                break;
+                case 5:
+                sdac_reg_write(ramdac, ramdac->windex & 0xff, val);
+                break;
+                case 6:
+                sdac_control_write(ramdac, svga, val);
+                break;
+                case 7:
+                ramdac->rindex = val;
+                ramdac->reg_ff = 0;
                 break;
         }
-        svga_out(addr, val, svga);
+        if (!(addr & 4))
+        {
+                if (addr < 2)
+                        svga_out(addr + 0x3c8, val, svga);
+                else
+                        svga_out(addr + 0x3c4, val, svga);
+        }
 }
 
 uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga)
 {
         uint8_t temp;
-//        /*if (CS!=0xC000) */pclog("IN RAMDAC %04X %04X:%04X %i\n",addr,CS,pc, ramdac->rs2);
+//        /*if (CS!=0xC000) */pclog("IN RAMDAC %04X %04X:%04X %i  %i %i\n",addr,CS,cpu_state.pc, ramdac->rs2, ramdac->rindex, ramdac->windex);
         switch (addr)
         {
-                case 0x3C6:
-                ramdac->reg_ff = 0;
+                case 2:
                 if (ramdac->magic_count < 5)
-                   ramdac->magic_count++;
+                        ramdac->magic_count++;
                 if (ramdac->magic_count == 4)
                 {
                         temp = 0x70; /*SDAC ID*/
@@ -82,43 +114,33 @@ uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga)
                         ramdac->magic_count = 0;
                 }
                 return temp;
-                case 0x3C7:
-//                if (ramdac->magic_count < 4)
-//                {
-                        ramdac->magic_count=0;
-//                        break;
-//                }
-                if (ramdac->rs2) return ramdac->rindex;
+                case 3:
+                ramdac->magic_count=0;
                 break;
-                case 0x3C8:
-//                if (ramdac->magic_count < 4)
-//                {
-                        ramdac->magic_count=0;
-//                        break;
-//                }
-                if (ramdac->rs2) return ramdac->windex;
+                case 0:
+                ramdac->magic_count=0;
                 break;
-                case 0x3C9:
-//                if (ramdac->magic_count < 4)
-//                {
-                        ramdac->magic_count=0;
-//                        break;
-//                }
-                if (ramdac->rs2)
-                {
-                        if (!ramdac->reg_ff) temp = ramdac->regs[ramdac->rindex & 0xff] & 0xff;
-                        else                 temp = ramdac->regs[ramdac->rindex & 0xff] >> 8;
-                        ramdac->reg_ff = !ramdac->reg_ff;
-                        if (!ramdac->reg_ff)
-                        {
-                                ramdac->rindex++;
-                                ramdac->magic_count = 0;
-                        }
-                        return temp;
-                }
+                case 1:
+                ramdac->magic_count=0;
                 break;
+
+                case 4:
+                return ramdac->windex;
+                case 5:
+                return sdac_reg_read(ramdac, ramdac->rindex & 0xff);
+                case 6:
+                return ramdac->command;
+                case 7:
+                return ramdac->rindex;
         }
-        return svga_in(addr, svga);
+        if (!(addr & 4))
+        {
+                if (addr < 2)
+                        return svga_in(addr + 0x3c8, svga);
+                else
+                        return svga_in(addr + 0x3c4, svga);
+        }
+        return 0xff;
 }
 
 float sdac_getclock(int clock, void *p)
@@ -136,4 +158,10 @@ float sdac_getclock(int clock, void *p)
         t = (14318184.0 * ((float)m / (float)n1)) / (float)(1 << n2);
 //        pclog("SDAC clock %i %i %i %f %04X  %f %i\n", m, n1, n2, t, ramdac->regs[2], 14318184.0 * ((float)m / (float)n1), 1 << n2);
         return t;
+}
+
+void sdac_init(sdac_ramdac_t *ramdac)
+{
+        ramdac->regs[0] = 0x6128;
+        ramdac->regs[1] = 0x623d;
 }
