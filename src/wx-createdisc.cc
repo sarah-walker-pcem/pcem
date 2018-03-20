@@ -8,6 +8,7 @@ extern "C" void pclog(const char *format, ...);
 #include "wx/wxprec.h"
 
 #include "wx-dialogbox.h"
+#include <stdint.h>
 
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
