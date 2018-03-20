@@ -140,19 +140,31 @@ void ati28800k_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3DE:
 //                pclog("ati28800k_out : set port 03DE to %02X at %04X:%04X\n", val, CS, cpu_state.oldpc);
                 ati28800->in_get_korean_font_kind_set = 0;
-                switch (ati28800->port_03dd_val)
+                if(ati28800->get_korean_font_enabled && (ati28800->regs[0xBF] & 0x20))
                 {
-                        case 0x10:
-                        ati28800->get_korean_font_base = ((val & 0x7F) << 7) | (ati28800->get_korean_font_base & 0x7F);
-                        break;
-                        case 8:
-                        ati28800->get_korean_font_base = (ati28800->get_korean_font_base & 0x3F80) | (val & 0x7F);
-                        break;
-                        case 1:
-                        ati28800->get_korean_font_kind = (ati28800->get_korean_font_kind & 0xFF00) | val;
-                        if (val & 2)
-                                ati28800->in_get_korean_font_kind_set = 1;
-                        break;
+                        if((ati28800->get_korean_font_base & 0x7F) > 0x20 && (ati28800->get_korean_font_base & 0x7F) < 0x7F)
+                                fontdatksc5601_user[(ati28800->get_korean_font_kind & 4) * 24 + (ati28800->get_korean_font_base & 0x7F) - 0x20][ati28800->get_korean_font_index] = val;
+                        ati28800->get_korean_font_index++;
+                        ati28800->get_korean_font_index &= 0x1F;
+                }
+                else
+                {
+                        switch (ati28800->port_03dd_val)
+                        {
+                                case 0x10:
+                                ati28800->get_korean_font_base = ((val & 0x7F) << 7) | (ati28800->get_korean_font_base & 0x7F);
+                                break;
+                                case 8:
+                                ati28800->get_korean_font_base = (ati28800->get_korean_font_base & 0x3F80) | (val & 0x7F);
+                                break;
+                                case 1:
+                                ati28800->get_korean_font_kind = (ati28800->get_korean_font_kind & 0xFF00) | val;
+                                if (val & 2)
+                                        ati28800->in_get_korean_font_kind_set = 1;
+                                break;
+                                default:
+                                break;
+                        }
                 }
                 break;
                 default:
@@ -232,8 +244,12 @@ uint8_t ati28800k_in(uint16_t addr, void *p)
                                 case 4: /* ROM font */
                                 temp = fontdatksc5601[ati28800->get_korean_font_base][ati28800->get_korean_font_index++];
                                 break;
-                                case 2: /* User defined font - TODO : Should be implemented later */
-                                temp = 0;
+                                case 2: /* User defined font */
+                                if((ati28800->get_korean_font_base & 0x7F) > 0x20 && (ati28800->get_korean_font_base & 0x7F) < 0x7F)
+                                        temp = fontdatksc5601_user[(ati28800->get_korean_font_kind & 4) * 24 + (ati28800->get_korean_font_base & 0x7F) - 0x20][ati28800->get_korean_font_index];
+                                else
+                                        temp = 0xFF;
+                                ati28800->get_korean_font_index++;
                                 break;
                                 default:
                                 break;
@@ -411,7 +427,7 @@ void ati28800k_add_status_info(char *s, int max_len, void *p)
         ati28800_t *ati28800 = (ati28800_t *)p;
         char temps[128];
         
-        svga_add_status_info(s, max_len, &ati28800->svga);
+        ati28800_add_status_info(s, max_len, p);
 
         sprintf(temps, "Korean SVGA mode enabled : %s\n\n", ati28800->ksc5601_mode_enabled ? "Yes" : "No");
         strncat(s, temps, max_len);

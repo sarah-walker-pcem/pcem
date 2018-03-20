@@ -54,6 +54,7 @@ extern int changeframecount;
 extern uint8_t fontdat[2048][8];
 extern uint8_t fontdatm[2048][16];
 extern uint8_t fontdatksc5601[16384][32];
+extern uint8_t fontdatksc5601_user[192][32];
 
 extern uint32_t *video_15to32, *video_16to32;
 
