@@ -50,7 +50,8 @@
 
 void common_init();
 
-uint8_t config_sys[160];
+uint8_t t1000_nvram[160];
+uint8_t t1200_nvram[2048];
 
 static struct t1000_system
 {
@@ -70,6 +71,7 @@ static struct t1000_system
 	uint8_t nvr_tick;	
 	int     nvr_addr;
 	uint8_t nvr_active;
+	mem_mapping_t nvr_mapping;	/* T1200 NVRAM mapping */
 
 	/* EMS data */
 	uint8_t ems_reg[4];
@@ -91,14 +93,28 @@ void t1000_configsys_loadnvr()
 {
 	FILE *f;
 
-	memset(config_sys, 0x1A, sizeof(config_sys));
+	memset(t1000_nvram, 0x1A, sizeof(t1000_nvram));
 	f = nvrfopen("t1000_config.nvr", "rb");
 	if (f)
 	{
-		fread(config_sys, sizeof(config_sys), 1, f);
+		fread(t1000_nvram, sizeof(t1000_nvram), 1, f);
 		fclose(f);
 	}
 }
+
+void t1200_state_loadnvr()
+{
+	FILE *f;
+
+	memset(t1200_nvram, 0, sizeof(t1200_nvram));
+	f = nvrfopen("t1200_state.nvr", "rb");
+	if (f)
+	{
+		fread(t1200_nvram, sizeof(t1200_nvram), 1, f);
+		fclose(f);
+	}
+}
+
 
 /* All RAM beyond 512k is non-volatile */
 void t1000_emsboard_loadnvr()
@@ -124,10 +140,24 @@ void t1000_configsys_savenvr()
 	f = nvrfopen("t1000_config.nvr", "wb");
 	if (f)
 	{
-		fwrite(config_sys, sizeof(config_sys), 1, f);
+		fwrite(t1000_nvram, sizeof(t1000_nvram), 1, f);
 		fclose(f);
 	}
 }
+
+void t1200_state_savenvr()
+{
+	FILE *f;
+
+	f = nvrfopen("t1200_state.nvr", "wb");
+	if (f)
+	{
+		fwrite(t1200_nvram, sizeof(t1200_nvram), 1, f);
+		fclose(f);
+	}
+}
+
+
 
 
 void t1000_emsboard_savenvr()
@@ -452,7 +482,7 @@ static uint8_t read_t1000_nvram(uint16_t addr, void *priv)
 		case 0xC2: /* Read next byte from NVRAM */
 		tmp = 0xFF;
 		if (sys->nvr_addr >= 0 && sys->nvr_addr < 160)
-		tmp = config_sys[sys->nvr_addr];
+		tmp = t1000_nvram[sys->nvr_addr];
 		++sys->nvr_addr;
 		return tmp;
 
@@ -481,9 +511,9 @@ static void write_t1000_nvram(uint16_t addr, uint8_t val, void *priv)
 /* Write next byte to NVRAM */
 		case 0xC1: if (sys->nvr_addr >= 0 && sys->nvr_addr < 160)
 			   {
-				if (config_sys[sys->nvr_addr] != val) 
+				if (t1000_nvram[sys->nvr_addr] != val) 
 					nvr_dosave = 1;
-			   	config_sys[sys->nvr_addr] = val;
+			   	t1000_nvram[sys->nvr_addr] = val;
 			   }
 			   ++sys->nvr_addr;
 			   break;
@@ -552,6 +582,19 @@ static uint32_t t1000_read_roml(uint32_t addr, void *priv)
 	return *(uint32_t *)(&sys->romdrive[sys->rom_offset + (addr & 0xFFFF)]);
 }
 
+static uint8_t read_t1200_nvram(uint32_t addr, void *priv)
+{
+	return t1200_nvram[addr & 0x7FF];
+}
+
+static void write_t1200_nvram(uint32_t addr, uint8_t value, void *priv)
+{
+	if (t1200_nvram[addr & 0x7FF] != value) 
+	{
+		nvr_dosave = 1;
+	}
+	t1200_nvram[addr & 0x7FF] = value;
+}
 
 void xt_t1000_init()
 {
@@ -644,6 +687,10 @@ void xt_t1200_init()
 
 	common_init();
 	mem_add_bios();
+	mem_mapping_add(&t1000.nvr_mapping,
+			0xF0000, 2048, read_t1200_nvram, NULL, NULL,
+					write_t1200_nvram, NULL, NULL, 
+					NULL, 0, &t1000);
 	pit_set_out_func(&pit, 1, pit_refresh_timer_xt);
 	keyboard_xt_init();
 	nmi_init();
