@@ -1826,20 +1826,20 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 switch (bpp)                                                                    \
                 {                                                                               \
                         case 0: /*8 bpp*/                                                       \
-                        val = vram[addr & 0x3fffff];                                            \
+                        val = vram[addr & svga->vram_mask];                                            \
                         break;                                                                  \
                         case 1: /*16 bpp*/                                                      \
-                        val = *(uint16_t *)&vram[addr & 0x3fffff];                              \
+                        val = *(uint16_t *)&vram[addr & svga->vram_mask];                              \
                         break;                                                                  \
                         case 2: /*24 bpp*/                                                      \
-                        val = (*(uint32_t *)&vram[addr & 0x3fffff]) & 0xffffff;                 \
+                        val = (*(uint32_t *)&vram[addr & svga->vram_mask]) & 0xffffff;                 \
                         break;                                                                  \
                 }                                                                               \
         } while (0)
 
-#define Z_READ(addr) *(uint16_t *)&vram[addr & 0x3fffff]
+#define Z_READ(addr) *(uint16_t *)&vram[addr & svga->vram_mask]
 
-#define Z_WRITE(addr, val) if (!(s3d_tri->cmd_set & CMD_SET_ZB_MODE)) *(uint16_t *)&vram[addr & 0x3fffff] = val
+#define Z_WRITE(addr, val) if (!(s3d_tri->cmd_set & CMD_SET_ZB_MODE)) *(uint16_t *)&vram[addr & svga->vram_mask] = val
 
 #define CLIP(x, y)                                              \
         do                                                      \
@@ -1899,23 +1899,24 @@ static void s3_virge_mmio_write_l(uint32_t addr, uint32_t val, void *p)
                 switch (bpp)                                                                    \
                 {                                                                               \
                         case 0: /*8 bpp*/                                                       \
-                        vram[addr & 0x3fffff] = val;                                            \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
+                        vram[addr & svga->vram_mask] = val;                                            \
+                        virge->svga.changedvram[(addr & svga->vram_mask) >> 12] = changeframecount;    \
                         break;                                                                  \
                         case 1: /*16 bpp*/                                                      \
-                        *(uint16_t *)&vram[addr & 0x3fffff] = val;                              \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
+                        *(uint16_t *)&vram[addr & svga->vram_mask] = val;                              \
+                        virge->svga.changedvram[(addr & svga->vram_mask) >> 12] = changeframecount;    \
                         break;                                                                  \
                         case 2: /*24 bpp*/                                                      \
-                        *(uint32_t *)&vram[addr & 0x3fffff] = (val & 0xffffff) |                \
-                                                              (vram[(addr + 3) & 0x3fffff] << 24);  \
-                        virge->svga.changedvram[(addr & 0x3fffff) >> 12] = changeframecount;    \
+                        *(uint32_t *)&vram[addr & svga->vram_mask] = (val & 0xffffff) |                \
+                                                              (vram[(addr + 3) & svga->vram_mask] << 24);  \
+                        virge->svga.changedvram[(addr & svga->vram_mask) >> 12] = changeframecount;    \
                         break;                                                                  \
                 }                                                                               \
         } while (0)
 
 static void s3_virge_bitblt(virge_t *virge, int count, uint32_t cpu_dat)
 {
+        svga_t *svga = &virge->svga;
         uint8_t *vram = virge->svga.vram;
         uint32_t mono_pattern[64];
         int count_mask;
@@ -2930,6 +2931,7 @@ static void dest_pixel_lit_texture_modulate(s3d_state_t *state)
 
 static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int32_t dx1, int32_t dx2)
 {
+        svga_t *svga = &virge->svga;
         uint8_t *vram = virge->svga.vram;
 
         int x_dir = s3d_tri->tlr ? 1 : -1;
@@ -3061,7 +3063,7 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                                 }
                         }
 
-                        virge->svga.changedvram[(dest_offset & 0x3fffff) >> 12] = changeframecount;
+                        virge->svga.changedvram[(dest_offset & svga->vram_mask) >> 12] = changeframecount;
 
                         dest_addr = dest_offset + (x * (bpp + 1));
                         z_addr = z_offset + (x << 1);
@@ -3095,11 +3097,11 @@ static void tri(virge_t *virge, s3d_t *s3d_tri, s3d_state_t *state, int yc, int3
                                                         /*Not implemented yet*/
                                                         break;
                                                         case 1: /*16 bpp*/
-                                                        src_col = *(uint16_t *)&vram[dest_addr & 0x3fffff];
+                                                        src_col = *(uint16_t *)&vram[dest_addr & svga->vram_mask];
                                                         RGB15_TO_24(src_col, src_r, src_g, src_b);
                                                         break;
                                                         case 2: /*24 bpp*/
-                                                        src_col = (*(uint32_t *)&vram[dest_addr & 0x3fffff]) & 0xffffff;
+                                                        src_col = (*(uint32_t *)&vram[dest_addr & svga->vram_mask]) & 0xffffff;
                                                         RGB24_TO_24(src_col, src_r, src_g, src_b);
                                                         break;
                                                 }
