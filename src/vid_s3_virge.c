@@ -119,8 +119,6 @@ typedef struct virge_t
         
         uint8_t bank;
         uint8_t ma_ext;
-        int width;
-        int bpp;
 
         uint8_t virge_id, virge_id_high, virge_id_low, virge_rev;
 
@@ -374,18 +372,6 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         s3_virge_update_irqs(virge);
                         break;
                         
-                        case 0x50:
-                        switch (svga->crtc[0x50] & 0xc1)
-                        {
-                                case 0x00: virge->width = (svga->crtc[0x31] & 2) ? 2048 : 1024; break;
-                                case 0x01: virge->width = 1152; break;
-                                case 0x40: virge->width = 640;  break;
-                                case 0x80: virge->width = 800;  break;
-                                case 0x81: virge->width = 1600; break;
-                                case 0xc0: virge->width = 1280; break;
-                        }
-                        virge->bpp = (svga->crtc[0x50] >> 4) & 3;
-                        break;
                         case 0x69:
                         virge->ma_ext = val & 0x1f;
                         break;
