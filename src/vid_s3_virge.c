@@ -140,8 +140,8 @@ typedef struct virge_t
         event_t *wake_main_thread;
         event_t *not_full_event;
         
-        uint32_t hwcursor_col[2];
-        int hwcursor_col_pos;
+        uint32_t hwc_fg_col, hwc_bg_col;
+        int hwc_col_stack_pos;
                         
         struct
         {
@@ -410,16 +410,34 @@ static void s3_virge_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         
                         case 0x4a:
-                        virge->hwcursor_col[1] = (virge->hwcursor_col[1] & ~(0xff << (virge->hwcursor_col_pos * 8))) |
-                                                 (val << (virge->hwcursor_col_pos * 8));
-                        virge->hwcursor_col_pos++;
-                        virge->hwcursor_col_pos &= 3;
+                        switch (virge->hwc_col_stack_pos)
+                        {
+                                case 0:
+                                virge->hwc_fg_col = (virge->hwc_fg_col & 0xffff00) | val;
+                                break;
+                                case 1:
+                                virge->hwc_fg_col = (virge->hwc_fg_col & 0xff00ff) | (val << 8);
+                                break;
+                                case 2:
+                                virge->hwc_fg_col = (virge->hwc_fg_col & 0x00ffff) | (val << 16);
+                                break;
+                        }
+                        virge->hwc_col_stack_pos = (virge->hwc_col_stack_pos + 1) & 3;
                         break;
                         case 0x4b:
-                        virge->hwcursor_col[0] = (virge->hwcursor_col[0] & ~(0xff << (virge->hwcursor_col_pos * 8))) |
-                                                 (val << (virge->hwcursor_col_pos * 8));
-                        virge->hwcursor_col_pos++;
-                        virge->hwcursor_col_pos &= 3;
+                        switch (virge->hwc_col_stack_pos)
+                        {
+                                case 0:
+                                virge->hwc_bg_col = (virge->hwc_bg_col & 0xffff00) | val;
+                                break;
+                                case 1:
+                                virge->hwc_bg_col = (virge->hwc_bg_col & 0xff00ff) | (val << 8);
+                                break;
+                                case 2:
+                                virge->hwc_bg_col = (virge->hwc_bg_col & 0x00ffff) | (val << 16);
+                                break;
+                        }
+                        virge->hwc_col_stack_pos = (virge->hwc_col_stack_pos + 1) & 3;
                         break;
 
                         case 0x53:
@@ -498,7 +516,7 @@ static uint8_t s3_virge_in(uint16_t addr, void *p)
                         case 0x31: ret = (svga->crtc[0x31] & 0xcf) | ((virge->ma_ext & 3) << 4); break;
                         case 0x35: ret = (svga->crtc[0x35] & 0xf0) | (virge->bank & 0xf); break;
                         case 0x36: ret = (svga->crtc[0x36] & 0xfc) | 2; break; /*PCI bus*/
-                        case 0x45: virge->hwcursor_col_pos = 0; ret = svga->crtc[0x45]; break;
+                        case 0x45: virge->hwc_col_stack_pos = 0; ret = svga->crtc[0x45]; break;
                         case 0x51: ret = (svga->crtc[0x51] & 0xf0) | ((virge->bank >> 2) & 0xc) | ((virge->ma_ext >> 2) & 3); break;
                         case 0x69: ret = virge->ma_ext; break;
                         case 0x6a: ret = virge->bank; break;
@@ -3359,8 +3377,32 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
         uint16_t dat[2];
         int xx;
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
+        uint32_t fg, bg;
         
-//        pclog("HWcursor %i %i\n", svga->hwcursor_latch.x, svga->hwcursor_latch.y);
+//        pclog("HWcursor %i %i  %08x %08x\n", svga->hwcursor_latch.x, svga->hwcursor_latch.y, virge->hwcursor_col[0],virge->hwcursor_col[1]);
+        switch (svga->bpp)
+        {               
+                case 15:
+                fg = video_15to32[virge->hwc_fg_col & 0xffff];
+                bg = video_15to32[virge->hwc_bg_col & 0xffff];
+                break;
+                
+                case 16:
+                fg = video_16to32[virge->hwc_fg_col & 0xffff];
+                bg = video_16to32[virge->hwc_bg_col & 0xffff];
+                break;
+                
+                case 24: case 32:
+                fg = virge->hwc_fg_col;
+                bg = virge->hwc_bg_col;
+                break;
+
+                default:
+                fg = svga->pallook[virge->hwc_fg_col & 0xff];
+                bg = svga->pallook[virge->hwc_bg_col & 0xff];
+                break;
+        }
+
         for (x = 0; x < 64; x += 16)
         {
                 dat[0] = (svga->vram[svga->hwcursor_latch.addr]     << 8) | svga->vram[svga->hwcursor_latch.addr + 1];
@@ -3373,7 +3415,7 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
                                 if (offset >= svga->hwcursor_latch.x)
                                 {
                                         if (dat[0] & 0x8000)
-                                                ((uint32_t *)buffer32->line[displine])[offset + 32]  = virge->hwcursor_col[dat[1] >> 15];
+                                                ((uint32_t *)buffer32->line[displine])[offset + 32]  = (dat[1] & 0x8000) ? fg : bg;
                                 }
                            
                                 offset++;
@@ -3389,7 +3431,7 @@ static void s3_virge_hwcursor_draw(svga_t *svga, int displine)
                                 if (offset >= svga->hwcursor_latch.x)
                                 {
                                         if (!(dat[0] & 0x8000))
-                                           ((uint32_t *)buffer32->line[displine])[offset + 32]  = virge->hwcursor_col[dat[1] >> 15];
+                                           ((uint32_t *)buffer32->line[displine])[offset + 32]  = (dat[1] & 0x8000) ? fg : bg;
                                         else if (dat[1] & 0x8000)
                                            ((uint32_t *)buffer32->line[displine])[offset + 32] ^= 0xffffff;
 //                                pclog("Plot %i, %i (%i %i) %04X %04X\n", offset, displine, x+xx, svga->hwcursor_on, dat[0], dat[1]);
