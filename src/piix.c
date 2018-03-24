@@ -10,6 +10,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
+#include "pic.h"
 
 #include "piix.h"
 
@@ -386,4 +387,6 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
         
         ide_pri_disable();
         ide_sec_disable();
+        
+        pic_init_elcrx();
 }

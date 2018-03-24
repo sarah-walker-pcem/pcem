@@ -1,5 +1,6 @@
 void pic_init();
 void pic2_init();
+void pic_init_elcrx();
 void pic_reset();
 
 void picint(uint16_t num);

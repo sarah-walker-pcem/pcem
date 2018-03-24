@@ -4,6 +4,7 @@
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
+#include "pic.h"
 
 #include "sis496.h"
 
@@ -137,6 +138,8 @@ void *sis496_init()
         pci_set_card_routing(13, PCI_INTD);
         pci_set_card_routing(11, PCI_INTC);
 
+        pic_init_elcrx();
+        
 	return sis496;
 }
 

@@ -363,6 +363,7 @@ typedef struct PIC
         int icw;
         uint8_t vector;
         int read;
+        uint8_t level_sensitive;
 } PIC;
 
 PIC pic,pic2;

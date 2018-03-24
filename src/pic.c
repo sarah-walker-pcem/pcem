@@ -36,6 +36,8 @@ void pic_reset()
         pic.mask2=0;
         pic2.pend=pic2.ins=0;
         pic_intpending = 0;
+        pic.level_sensitive = 0;
+        pic2.level_sensitive = 0;
 }
 
 void pic_update_mask(uint8_t *mask, uint8_t ins)
@@ -275,6 +277,41 @@ void pic2_init()
         io_sethandler(0x00a0, 0x0002, pic2_read, NULL, NULL, pic2_write, NULL, NULL, NULL);
 }
 
+static uint8_t pic_elcrx_read(uint16_t addr, void *p)
+{
+        uint8_t temp = 0xff;
+
+        switch (addr)
+        {
+                case 0x4d0:
+                temp = pic.level_sensitive;
+                break;
+                case 0x4d1:
+                temp = pic2.level_sensitive;
+                break;
+        }
+        
+        return temp;
+}
+
+static void pic_elcrx_write(uint16_t addr, uint8_t val, void *p)
+{
+//        pclog("pic_elcrx_write: addr=%04x val=%02x\n", addr, val);
+        switch (addr)
+        {
+                case 0x4d0:
+                pic.level_sensitive = val & 0xf8;
+                break;
+                case 0x4d1:
+                pic2.level_sensitive = val & 0xde;
+                break;
+        }
+}
+
+void pic_init_elcrx()
+{
+        io_sethandler(0x04d0, 0x0002, pic_elcrx_read, NULL, NULL, pic_elcrx_write, NULL, NULL, NULL);
+}
 
 void clearpic()
 {
@@ -364,7 +401,8 @@ uint8_t picinterrupt()
         {
                 if (temp & (1 << c))
                 {
-                        pic.pend &= ~(1 << c);
+                        if (!(pic.level_sensitive & (1 << c)))
+                                pic.pend &= ~(1 << c);
                         pic.ins |= (1 << c);
                         pic_update_mask(&pic.mask2, pic.ins);                      
                    
@@ -385,11 +423,13 @@ uint8_t picinterrupt()
                 {
                         if (temp2 & (1 << c))
                         {
-                                pic2.pend &= ~(1 << c);
+                                if (!(pic2.level_sensitive & (1 << c)))
+                                        pic2.pend &= ~(1 << c);
                                 pic2.ins |= (1 << c);
                                 pic_update_mask(&pic2.mask2, pic2.ins);
                         
-                                pic.pend &= ~(1 << c);
+                                if (!(pic2.level_sensitive & (1 << c)))
+                                        pic.pend &= ~(1 << c);
                                 pic.ins |= (1 << 2); /*Cascade IRQ*/
                                 pic_update_mask(&pic.mask2, pic.ins);
 
@@ -406,7 +446,8 @@ uint8_t picinterrupt()
         {
                 if (temp & (1 << c))
                 {
-                        pic.pend &= ~(1 << c);
+                        if (!(pic.level_sensitive & (1 << c)))
+                                pic.pend &= ~(1 << c);
                         pic.ins |= (1 << c);
                         pic_update_mask(&pic.mask2, pic.ins);                      
                         pic_updatepending();
