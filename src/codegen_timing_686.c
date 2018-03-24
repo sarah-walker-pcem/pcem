@@ -56,6 +56,7 @@ static uint32_t prev_regmask;
 static uint64_t *prev_deps;
 static uint32_t prev_fetchdat;
 
+static uint32_t last_regmask_modified;
 static uint32_t regmask_modified;
 
 static uint32_t opcode_timings[256] =
@@ -773,7 +774,7 @@ static inline int COUNT(uint32_t c, int op_32)
 void codegen_timing_686_block_start()
 {
         prev_full = decode_delay = 0;
-        regmask_modified = 0;
+        regmask_modified = last_regmask_modified = 0;
 }
 
 void codegen_timing_686_start()
@@ -798,7 +799,16 @@ static int check_agi(uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int op_3
         if (addr_regmask & IMPL_ESP)
                 addr_regmask |= (1 << REG_ESP);
 
-        return regmask_modified & addr_regmask;
+        if (regmask_modified & addr_regmask)
+        {
+                regmask_modified = 0;
+                return 2;
+        }
+
+        if (last_regmask_modified & addr_regmask)
+                return 1;
+        
+        return 0;
 }
 
 void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
@@ -940,8 +950,7 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                 if (regmask & IMPL_ESP)
                         regmask |= SRCDEP_ESP | DSTDEP_ESP;
 
-                if (check_agi(prev_deps, prev_opcode, prev_fetchdat, prev_op_32))
-                        agi_stall = 2;
+                agi_stall = check_agi(prev_deps, prev_opcode, prev_fetchdat, prev_op_32);
 
                 /*Second instruction in the pair*/
                 if ((timings[opcode] & PAIR_MASK) == PAIR_NP)
@@ -951,6 +960,7 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         codegen_block_cycles += COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay + agi_stall;
                         decode_delay = (-COUNT(prev_timings[prev_opcode], prev_op_32)) + 1 + agi_stall;
                         prev_full = 0;
+                        last_regmask_modified = regmask_modified;
                         regmask_modified = prev_regmask;
 //                        pclog("Not pairable %i\n", COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay);
                 }
@@ -962,6 +972,7 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         codegen_block_cycles += COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay + agi_stall;
                         decode_delay = (-COUNT(prev_timings[prev_opcode], prev_op_32)) + 1 + agi_stall;
                         prev_full = 0;
+                        last_regmask_modified = regmask_modified;
                         regmask_modified = prev_regmask;
 //                        pclog("Not pairable %i\n", COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay);
                 }
@@ -972,6 +983,7 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         codegen_block_cycles += COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay + agi_stall;
                         decode_delay = (-COUNT(prev_timings[prev_opcode], prev_op_32)) + 1 + agi_stall;
                         prev_full = 0;
+                        last_regmask_modified = regmask_modified;
                         regmask_modified = prev_regmask;
 //                        pclog("Not pairable %i\n", COUNT(prev_timings[prev_opcode], prev_op_32) + decode_delay);
                 }
@@ -984,12 +996,12 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         if (!t_pair)
                                 fatal("Pairable 0 cycles! %02x %02x\n", opcode, prev_opcode);
 
-                        if (check_agi(deps, opcode, fetchdat, op_32))
-                                agi_stall = 2;
+                        agi_stall = check_agi(deps, opcode, fetchdat, op_32);
 
                         codegen_block_cycles += t_pair + agi_stall;
                         decode_delay = (-t_pair) + 1 + agi_stall;
                         
+                        last_regmask_modified = regmask_modified;
                         regmask_modified = get_dstdep_mask(deps[opcode], fetchdat, bit8) | prev_regmask;
                         prev_full = 0;
 //                        pclog("Pairable %i  %i %i  %02x %02x\n", t_pair, t1, t2, opcode, prev_opcode);
@@ -1005,11 +1017,11 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         /*Instruction not pairable*/
                         int agi_stall = 0;
                 
-                        if (check_agi(deps, opcode, fetchdat, op_32))
-                                agi_stall = 2;
+                        agi_stall = check_agi(deps, opcode, fetchdat, op_32);
                                 
                         codegen_block_cycles += COUNT(timings[opcode], op_32) + decode_delay + agi_stall;
                         decode_delay = (-COUNT(timings[opcode], op_32)) + 1 + agi_stall;
+                        last_regmask_modified = regmask_modified;
                         regmask_modified = get_dstdep_mask(deps[opcode], fetchdat, bit8);
 //                        pclog("Not pairable %i\n", COUNT(timings[opcode], op_32) + decode_delay);
                 }
