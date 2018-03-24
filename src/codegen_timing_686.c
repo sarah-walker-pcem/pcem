@@ -785,6 +785,18 @@ void codegen_timing_686_start()
 
 void codegen_timing_686_prefix(uint8_t prefix, uint32_t fetchdat)
 {
+        if ((prefix & 0xf8) == 0xd8)
+        {
+                last_prefix = prefix;
+                return;
+        }
+        if (prefix == 0x0f && (fetchdat & 0xf0) == 0x80)
+        {
+                /*0fh prefix is 'free' when used on conditional jumps*/
+                last_prefix = prefix;
+                return;
+        }
+
         /*6x86 can decode 1 prefix per instruction per clock with no penalty. If
           either instruction has more than one prefix then decode is delayed by
           one cycle for each additional prefix*/
@@ -938,7 +950,9 @@ void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
                         break;
                 }
         }
-        
+
+        /*One prefix per instruction is free*/        
+        decode_delay--;
         if (decode_delay < 0)
                 decode_delay = 0;
                 
