@@ -115,6 +115,7 @@ typedef struct esdi_t
 #define CMD_GET_POS_INFO   0x0a
 
 #define STATUS_LEN(x) ((x) << 8)
+#define STATUS_DEVICE(x) ((x) << 5)
 #define STATUS_DEVICE_HOST_ADAPTER (7 << 5)
 
 static inline void esdi_set_irq(esdi_t *esdi)
@@ -182,6 +183,7 @@ static void esdi_write(uint16_t port, uint8_t val, void *p)
                                 esdi->cmd_dev = ATTN_HOST_ADAPTER;
                                 esdi->status |= STATUS_BUSY;
                                 esdi->cmd_pos = 0;
+                                esdi->status_pos = 0;
                                 break;
                                 
                                 case ATTN_EOI:
@@ -212,6 +214,7 @@ static void esdi_write(uint16_t port, uint8_t val, void *p)
                                 esdi->cmd_dev = ATTN_DEVICE_0;
                                 esdi->status |= STATUS_BUSY;
                                 esdi->cmd_pos = 0;
+                                esdi->status_pos = 0;
                                 break;
                                 
                                 case ATTN_EOI:
@@ -235,6 +238,7 @@ static void esdi_write(uint16_t port, uint8_t val, void *p)
                                 esdi->cmd_dev = ATTN_DEVICE_1;
                                 esdi->status |= STATUS_BUSY;
                                 esdi->cmd_pos = 0;
+                                esdi->status_pos = 0;
                                 break;
                                 
                                 case ATTN_EOI:
@@ -268,7 +272,7 @@ static uint16_t esdi_readw(uint16_t port, void *p)
                 case 0x3510: /*Status Interface Register*/
                 if (esdi->status_pos >= esdi->status_len)
                         return 0;
-                temp = esdi->status_data[esdi->status_pos++];
+                temp = esdi->status_data[esdi->status_pos++];                
                 if (esdi->status_pos >= esdi->status_len)
                 {
                         esdi->status &= ~STATUS_STATUS_OUT_FULL;
@@ -373,6 +377,21 @@ static void rba_out_of_range(esdi_t *esdi)
         esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_FAILURE;
         esdi->irq_in_progress = 1;
         esdi_set_irq(esdi);
+}
+
+static void complete_command_status(esdi_t *esdi)
+{
+        esdi->status_len = 7;
+        if (esdi->cmd_dev == ATTN_DEVICE_0)
+                esdi->status_data[0] = CMD_READ | STATUS_LEN(7) | STATUS_DEVICE(0);
+        else
+                esdi->status_data[0] = CMD_READ | STATUS_LEN(7) | STATUS_DEVICE(1);
+        esdi->status_data[1] = 0x0000; /*Error bits*/
+        esdi->status_data[2] = 0x1900; /*Device status*/
+        esdi->status_data[3] = 0; /*Number of blocks left to do*/
+        esdi->status_data[4] = (esdi->rba-1) & 0xffff; /*Last RBA processed*/
+        esdi->status_data[5] = (esdi->rba-1) >> 8;
+        esdi->status_data[6] = 0; /*Number of blocks requiring error recovery*/
 }
 
 #define ESDI_ADAPTER_ONLY() do \
@@ -492,7 +511,9 @@ static void esdi_callback(void *p)
                         
                         case 2:
 //                        pclog("Read sector complete\n");
-                        esdi->status = STATUS_IRQ;
+                        complete_command_status(esdi);
+
+                        esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
                         esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
                         esdi->irq_in_progress = 1;
                         esdi_set_irq(esdi);
@@ -575,7 +596,9 @@ static void esdi_callback(void *p)
                         
                         case 2:
 //                        pclog("Write sector complete\n");
-                        esdi->status = STATUS_IRQ;
+                        complete_command_status(esdi);
+
+                        esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
                         esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
                         esdi->irq_in_progress = 1;
                         esdi_set_irq(esdi);
@@ -597,8 +620,9 @@ static void esdi_callback(void *p)
                         rba_out_of_range(esdi);
                         return;
                 }
-
-                esdi->status = STATUS_IRQ;
+                esdi->rba += esdi->sector_count;
+                complete_command_status(esdi);
+                esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
                 esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
                 esdi->irq_in_progress = 1;
                 esdi_set_irq(esdi);
@@ -613,7 +637,8 @@ static void esdi_callback(void *p)
                         return;
                 }
 
-                esdi->status = STATUS_IRQ;
+                complete_command_status(esdi);
+                esdi->status = STATUS_IRQ | STATUS_STATUS_OUT_FULL;
                 esdi->irq_status = esdi->cmd_dev | IRQ_CMD_COMPLETE_SUCCESS;
                 esdi->irq_in_progress = 1;
                 esdi_set_irq(esdi);
@@ -628,8 +653,6 @@ static void esdi_callback(void *p)
                         return;
                 }
 
-                if (esdi->status_pos)
-                        fatal("Status send in progress\n");
                 if ((esdi->status & STATUS_IRQ) || esdi->irq_in_progress)
                         fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
 
@@ -659,8 +682,6 @@ static void esdi_callback(void *p)
                         return;
                 }
 
-                if (esdi->status_pos)
-                        fatal("Status send in progress\n");
                 if ((esdi->status & STATUS_IRQ) || esdi->irq_in_progress)
                         fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
 
@@ -685,8 +706,7 @@ static void esdi_callback(void *p)
                         
                 case CMD_GET_POS_INFO:
                 ESDI_ADAPTER_ONLY();
-                if (esdi->status_pos)
-                        fatal("Status send in progress\n");
+
                 if ((esdi->status & STATUS_IRQ) || esdi->irq_in_progress)
                         fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
                 
@@ -832,8 +852,7 @@ static void esdi_callback(void *p)
                         
                 case 0x12:
                 ESDI_ADAPTER_ONLY();
-                if (esdi->status_pos)
-                        fatal("Status send in progress\n");
+
                 if ((esdi->status & STATUS_IRQ) || esdi->irq_in_progress)
                         fatal("IRQ in progress %02x %i\n", esdi->status, esdi->irq_in_progress);
                 
