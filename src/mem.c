@@ -1116,6 +1116,16 @@ int pctrans=0;
 
 extern uint32_t testr[9];
 
+static inline uint32_t mmu_readl(uint32_t addr)
+{
+        return *(uint32_t *)&_mem_exec[addr >> 14][addr & 0x3fff];
+}
+
+static inline void mmu_writel(uint32_t addr, uint32_t val)
+{
+        *(uint32_t *)&_mem_exec[addr >> 14][addr & 0x3fff] = val;
+}
+
 uint32_t mmutranslatereal(uint32_t addr, int rw)
 {
         uint32_t addr2;
@@ -1131,7 +1141,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 if (addr==0x77f62000) { dumpregs(); exit(-1); }
                 if (addr==0x77f9a000) { dumpregs(); exit(-1); }*/
         addr2 = ((cr3 & ~0xfff) + ((addr >> 20) & 0xffc));
-        temp=temp2=((uint32_t *)ram)[addr2>>2];
+        temp = temp2 = mmu_readl(addr2);
 //        if (output == 3) pclog("Do translate %08X %i %08X\n", addr, rw, temp);
         if (!(temp&1))// || (CPL==3 && !(temp&4) && !cpl_override) || (rw && !(temp&2) && (CPL==3 || cr0&WP_FLAG)))
         {
@@ -1176,7 +1186,7 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 return (temp & ~0x3fffff) + (addr & 0x3fffff);
         }
         
-        temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
+        temp = mmu_readl((temp & ~0xfff) + ((addr >> 10) & 0xffc));
         temp3=temp&temp2;
 //        if (output == 3) pclog("Do translate %08X %08X\n", temp, temp3);
         if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && ((CPL == 3 && !cpl_override) || cr0&WP_FLAG)))
@@ -1203,8 +1213,8 @@ uint32_t mmutranslatereal(uint32_t addr, int rw)
                 return -1;
         }
         mmu_perm=temp&4;
-        ((uint32_t *)ram)[addr2>>2]|=0x20;
-        ((uint32_t *)ram)[((temp2&~0xFFF)+((addr>>10)&0xFFC))>>2]|=(rw?0x60:0x20);
+        mmu_writel(addr2, temp2 | 0x20);
+        mmu_writel((temp2 & ~0xfff) + ((addr >> 10) & 0xffc), temp | (rw ? 0x60 : 0x20));
 //        /*if (output) */pclog("Translate %08X %08X %08X  %08X:%08X  %08X\n",addr,(temp&~0xFFF)+(addr&0xFFF),temp,cs,pc,EDI);
 
         return (temp&~0xFFF)+(addr&0xFFF);
@@ -1219,7 +1229,7 @@ uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
                 return -1;
 
         addr2 = ((cr3 & ~0xfff) + ((addr >> 20) & 0xffc));
-        temp=temp2=((uint32_t *)ram)[addr2>>2];
+        temp = temp2 = mmu_readl(addr2);
 
         if (!(temp&1))
                 return -1;
@@ -1233,7 +1243,7 @@ uint32_t mmutranslate_noabrt(uint32_t addr, int rw)
                 return (temp & ~0x3fffff) + (addr & 0x3fffff);
         }
 
-        temp=((uint32_t *)ram)[((temp&~0xFFF)+((addr>>10)&0xFFC))>>2];
+        temp = mmu_readl((temp & ~0xfff) + ((addr >> 10) & 0xffc));
         temp3=temp&temp2;
 
         if (!(temp&1) || (CPL==3 && !(temp3&4) && !cpl_override) || (rw && !(temp3&2) && (CPL==3 || cr0&WP_FLAG)))
