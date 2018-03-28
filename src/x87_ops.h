@@ -43,6 +43,21 @@ static inline void x87_push(double i)
         cpu_state.tag[cpu_state.TOP&7] = (i == 0.0) ? 1 : 0;
 }
 
+static inline void x87_push_u64(uint64_t i)
+{
+        union
+        {
+                double d;
+                uint64_t ll;
+        } td;
+                
+        td.ll = i;
+
+        cpu_state.TOP=(cpu_state.TOP-1)&7;
+        cpu_state.ST[cpu_state.TOP] = td.d;
+        cpu_state.tag[cpu_state.TOP&7] = (td.d == 0.0) ? 1 : 0;
+}
+
 static inline double x87_pop()
 {
         double t = cpu_state.ST[cpu_state.TOP];
