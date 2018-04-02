@@ -1154,13 +1154,24 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 ne2000->IMR.overw_inte = ((value & 0x10) == 0x10);
                                 ne2000->IMR.cofl_inte  = ((value & 0x20) == 0x20);
                                 ne2000->IMR.rdma_inte  = ((value & 0x40) == 0x40);
-                                if (ne2000->ISR.pkt_tx && ne2000->IMR.tx_inte)
-                                {
-#ifdef NE2000_DEBUG
-                                        pclog("tx irq retrigger\n");
-#endif
+                                value = ((ne2000->ISR.rdma_done << 6) |
+                                        (ne2000->ISR.cnt_oflow << 5) |
+                                        (ne2000->ISR.overwrite << 4) |
+                                        (ne2000->ISR.tx_err    << 3) |
+                                        (ne2000->ISR.rx_err    << 2) |
+                                        (ne2000->ISR.pkt_tx    << 1) |
+                                        (ne2000->ISR.pkt_rx));
+                                value &= ((ne2000->IMR.rdma_inte << 6) |
+                                        (ne2000->IMR.cofl_inte << 5) |
+                                        (ne2000->IMR.overw_inte << 4) |
+                                        (ne2000->IMR.txerr_inte << 3) |
+                                        (ne2000->IMR.rxerr_inte << 2) |
+                                        (ne2000->IMR.tx_inte << 1) |
+                                        (ne2000->IMR.rx_inte));
+                                if (value)
                                         ne2000_raise_irq(ne2000);
-                                }
+                                else
+                                        ne2000_lower_irq(ne2000);
                                 break;
                         }
                         break;
