@@ -1833,11 +1833,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                         s3->accel.sy--;
         
                                         if (s3->accel.sy < 0)
-                                        {
-                                                s3->accel.cur_x = s3->accel.cx;
-                                                s3->accel.cur_y = s3->accel.cy;
                                                 return;
-                                        }
                                 }
                         }
                 }
@@ -1926,11 +1922,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
 
                                         if (cpu_input/* && (s3->accel.multifunc[0xa] & 0xc0) == 0x80*/) return;
                                         if (s3->accel.sy < 0)
-                                        {
-//                                                s3->accel.cur_x = s3->accel.cx;
-//                                                s3->accel.cur_y = s3->accel.cy;
                                                 return;
-                                        }
                                 }
                         }
                 }
