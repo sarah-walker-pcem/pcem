@@ -139,6 +139,8 @@ typedef struct s3_t
         
         uint32_t hwc_fg_col, hwc_bg_col;
         int hwc_col_stack_pos;
+        
+        volatile int force_busy;
 } s3_t;
 
 #define INT_VSY      (1 << 0)
@@ -1282,10 +1284,11 @@ uint8_t s3_accel_in(uint16_t port, void *p)
                 if (!s3->blitter_busy)
                         wake_fifo_thread(s3);
                 temp = 0;
-                if (!FIFO_EMPTY)
+                if (!FIFO_EMPTY || s3->force_busy)
                         temp |= 0x02; /*Hardware busy*/
                 else
                         temp |= 0x04; /*FIFO empty*/
+                s3->force_busy = 0;
                 if (FIFO_FULL)
                         temp |= 0xf8; /*FIFO full*/
                 return temp;
@@ -1498,6 +1501,8 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
         uint32_t *vram_l = (uint32_t *)svga->vram;
         uint32_t compare = s3->accel.color_cmp;
         int compare_mode = (s3->accel.multifunc[0xe] >> 7) & 3;
+        
+        s3->force_busy = 1;
 //return;
 //        if (!cpu_input) pclog("Start S3 command %i  %i, %i  %i, %i (clip %i, %i to %i, %i  %i)\n", s3->accel.cmd >> 13, s3->accel.cur_x, s3->accel.cur_y, s3->accel.maj_axis_pcnt & 0xfff, s3->accel.multifunc[0]  & 0xfff, clip_l, clip_t, clip_r, clip_b, s3->accel.multifunc[0xe] & 0x20);
 //        else            pclog("      S3 command %i, %i, %08x %08x\n", s3->accel.cmd >> 13, count, mix_dat, cpu_dat);
