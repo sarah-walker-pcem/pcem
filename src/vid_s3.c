@@ -1433,28 +1433,37 @@ uint8_t s3_accel_read(uint32_t addr, void *p)
         return 0;
 }
 
-#define READ(addr, dat) if (s3->bpp == 0)      dat = svga->vram[  (addr) & s3->vram_mask]; \
-                        else if (s3->bpp == 1) dat = vram_w[(addr) & (s3->vram_mask >> 1)]; \
-                        else                   dat = vram_l[(addr) & (s3->vram_mask >> 2)];
+#define READ_SRC(addr, dat) if (s3->bpp == 0)      dat = svga->vram[  (addr) & s3->vram_mask]; \
+                            else if (s3->bpp == 1) dat = vram_w[(addr) & (s3->vram_mask >> 1)]; \
+                            else                   dat = vram_l[(addr) & (s3->vram_mask >> 2)]; \
+                            dat &= s3->accel.rd_mask;
 
-#define MIX     switch ((mix_dat & mix_mask) ? (s3->accel.frgd_mix & 0xf) : (s3->accel.bkgd_mix & 0xf))   \
-                {                                                                                       \
-                        case 0x0: dest_dat =             ~dest_dat;  break;                             \
-                        case 0x1: dest_dat =  0;                     break;                             \
-                        case 0x2: dest_dat = ~0;                     break;                             \
-                        case 0x3: dest_dat =              dest_dat;  break;                             \
-                        case 0x4: dest_dat =  ~src_dat;              break;                             \
-                        case 0x5: dest_dat =   src_dat ^  dest_dat;  break;                             \
-                        case 0x6: dest_dat = ~(src_dat ^  dest_dat); break;                             \
-                        case 0x7: dest_dat =   src_dat;              break;                             \
-                        case 0x8: dest_dat = ~(src_dat &  dest_dat); break;                             \
-                        case 0x9: dest_dat =  ~src_dat |  dest_dat;  break;                             \
-                        case 0xa: dest_dat =   src_dat | ~dest_dat;  break;                             \
-                        case 0xb: dest_dat =   src_dat |  dest_dat;  break;                             \
-                        case 0xc: dest_dat =   src_dat &  dest_dat;  break;                             \
-                        case 0xd: dest_dat =   src_dat & ~dest_dat;  break;                             \
-                        case 0xe: dest_dat =  ~src_dat &  dest_dat;  break;                             \
-                        case 0xf: dest_dat = ~(src_dat |  dest_dat); break;                             \
+#define READ_DST(addr, dat) if (s3->bpp == 0)      dat = svga->vram[  (addr) & s3->vram_mask]; \
+                            else if (s3->bpp == 1) dat = vram_w[(addr) & (s3->vram_mask >> 1)]; \
+                            else                   dat = vram_l[(addr) & (s3->vram_mask >> 2)];
+
+#define MIX     {                                                                                               \
+                        uint32_t old_dest_dat = dest_dat;                                                       \
+                        switch ((mix_dat & mix_mask) ? (s3->accel.frgd_mix & 0xf) : (s3->accel.bkgd_mix & 0xf)) \
+                        {                                                                                       \
+                                case 0x0: dest_dat =             ~dest_dat;  break;                             \
+                                case 0x1: dest_dat =  0;                     break;                             \
+                                case 0x2: dest_dat = ~0;                     break;                             \
+                                case 0x3: dest_dat =              dest_dat;  break;                             \
+                                case 0x4: dest_dat =  ~src_dat;              break;                             \
+                                case 0x5: dest_dat =   src_dat ^  dest_dat;  break;                             \
+                                case 0x6: dest_dat = ~(src_dat ^  dest_dat); break;                             \
+                                case 0x7: dest_dat =   src_dat;              break;                             \
+                                case 0x8: dest_dat = ~(src_dat &  dest_dat); break;                             \
+                                case 0x9: dest_dat =  ~src_dat |  dest_dat;  break;                             \
+                                case 0xa: dest_dat =   src_dat | ~dest_dat;  break;                             \
+                                case 0xb: dest_dat =   src_dat |  dest_dat;  break;                             \
+                                case 0xc: dest_dat =   src_dat &  dest_dat;  break;                             \
+                                case 0xd: dest_dat =   src_dat & ~dest_dat;  break;                             \
+                                case 0xe: dest_dat =  ~src_dat &  dest_dat;  break;                             \
+                                case 0xf: dest_dat = ~(src_dat |  dest_dat); break;                             \
+                        }                                                                                       \
+                        dest_dat = (dest_dat & s3->accel.wrt_mask) | (old_dest_dat & ~s3->accel.wrt_mask);      \
                 }
 
 
@@ -1560,7 +1569,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                             (compare_mode == 3 && src_dat == compare) ||
                                              compare_mode < 2)
                                         {
-                                                READ((s3->accel.cy * s3->width) + s3->accel.cx, dest_dat);
+                                                READ_DST((s3->accel.cy * s3->width) + s3->accel.cx, dest_dat);
 
                                                 MIX
 
@@ -1610,7 +1619,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                             (compare_mode == 3 && src_dat == compare) ||
                                              compare_mode < 2)
                                         {
-                                                READ((s3->accel.cy * s3->width) + s3->accel.cx, dest_dat);
+                                                READ_DST((s3->accel.cy * s3->width) + s3->accel.cx, dest_dat);
 
 //                                        pclog("Line : %04i, %04i (%06X) - %02X (%02X %04X %05X) %02X (%02X %02X)  ", s3->accel.cx, s3->accel.cy, s3->accel.dest + s3->accel.cx, src_dat, vram[s3->accel.src + s3->accel.cx], mix_dat & mix_mask, s3->accel.src + s3->accel.cx, dest_dat, s3->accel.frgd_color, s3->accel.bkgd_color);
                                         
@@ -1708,7 +1717,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                     (compare_mode == 3 && src_dat == compare) ||
                                      compare_mode < 2)
                                 {
-                                        READ(s3->accel.dest + s3->accel.cx, dest_dat);
+                                        READ_DST(s3->accel.dest + s3->accel.cx, dest_dat);
                                 
 
 //                                if (CS != 0xc000) pclog("Write %05X  %02X %02X  %04X (%02X %02X)  ", s3->accel.dest + s3->accel.cx, src_dat, dest_dat, mix_dat, s3->accel.frgd_mix, s3->accel.bkgd_mix);
@@ -1793,9 +1802,10 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                 if (s3->accel.dx >= clip_l && s3->accel.dx <= clip_r &&
                                     s3->accel.dy >= clip_t && s3->accel.dy <= clip_b)
                                 {
-                                        READ(s3->accel.src + s3->accel.cx, src_dat);
-        
-                                        dest_dat = src_dat;
+                                        READ_SRC(s3->accel.src + s3->accel.cx, src_dat);
+                                        READ_DST(s3->accel.dest + s3->accel.dx, dest_dat);  
+                                        
+                                        dest_dat = (src_dat & s3->accel.wrt_mask) | (dest_dat & ~s3->accel.wrt_mask);
                                         
                                         WRITE(s3->accel.dest + s3->accel.dx);
                                 }
@@ -1835,7 +1845,8 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                 {
                                         if (vram_mask)
                                         {
-                                                READ(s3->accel.src + s3->accel.cx, mix_dat)
+                                                READ_SRC(s3->accel.src + s3->accel.cx, mix_dat)
+
                                                 mix_dat = mix_dat ? mix_mask : 0;
                                         }
                                         switch ((mix_dat & mix_mask) ? frgd_mix : bkgd_mix)
@@ -1843,14 +1854,14 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                                 case 0: src_dat = s3->accel.bkgd_color;                  break;
                                                 case 1: src_dat = s3->accel.frgd_color;                  break;
                                                 case 2: src_dat = cpu_dat;                              break;
-                                                case 3: READ(s3->accel.src + s3->accel.cx, src_dat);      break;
+                                                case 3: READ_SRC(s3->accel.src + s3->accel.cx, src_dat);      break;
                                         }
 
                                         if ((compare_mode == 2 && src_dat != compare) ||
                                             (compare_mode == 3 && src_dat == compare) ||
                                              compare_mode < 2)
                                         {
-                                                READ(s3->accel.dest + s3->accel.dx, dest_dat);
+                                                READ_DST(s3->accel.dest + s3->accel.dx, dest_dat);
                                                                                 
 //                                pclog("BitBlt : %04i, %04i (%06X) - %02X (%02X %04X %05X) %02X   ", s3->accel.dx, s3->accel.dy, s3->accel.dest + s3->accel.dx, src_dat, vram[s3->accel.src + s3->accel.cx], mix_dat, s3->accel.src + s3->accel.cx, dest_dat);
                                 
@@ -1966,7 +1977,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                         {
                                 if (vram_mask)
                                 {
-                                        READ(s3->accel.src + s3->accel.cx, mix_dat)
+                                        READ_SRC(s3->accel.src + s3->accel.cx, mix_dat)
                                         mix_dat = mix_dat ? mix_mask : 0;
                                 }
                                 switch ((mix_dat & mix_mask) ? frgd_mix : bkgd_mix)
@@ -1974,14 +1985,14 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                                         case 0: src_dat = s3->accel.bkgd_color;                  break;
                                         case 1: src_dat = s3->accel.frgd_color;                  break;
                                         case 2: src_dat = cpu_dat;                              break;
-                                        case 3: READ(s3->accel.src + s3->accel.cx, src_dat);      break;
+                                        case 3: READ_SRC(s3->accel.src + s3->accel.cx, src_dat);      break;
                                 }
 
                                 if ((compare_mode == 2 && src_dat != compare) ||
                                     (compare_mode == 3 && src_dat == compare) ||
                                      compare_mode < 2)
                                 {
-                                        READ(s3->accel.dest + s3->accel.dx, dest_dat);
+                                        READ_DST(s3->accel.dest + s3->accel.dx, dest_dat);
                                 
 //                                pclog("Pattern fill : %04i, %04i (%06X) - %02X (%02X %04X %05X) %02X   ", s3->accel.dx, s3->accel.dy, s3->accel.dest + s3->accel.dx, src_dat, vram[s3->accel.src + s3->accel.cx], mix_dat, s3->accel.src + s3->accel.cx, dest_dat);
 
