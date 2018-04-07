@@ -1053,7 +1053,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                 break;
 
                 default:
-                fatal("Bad SCSI ZIP command %02x\n", cdb[0]);
+                pclog("Bad SCSI ZIP command %02x\n", cdb[0]);
                 scsi_zip_illegal(data);
                 bus_state = BUS_CD | BUS_IO;
                 break;
