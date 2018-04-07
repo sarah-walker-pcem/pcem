@@ -327,7 +327,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                           makes disc health read as 'marginal'*/
                         for (c = 2; c < 0x58; c++)
                                 add_data_len(0xff);
-                        for (; i < len; i++)
+                        while (i < len)
                                 add_data_len(0);
                         data->cmd_pos = CMD_POS_IDLE;
                         bus_state = BUS_IO;
@@ -345,7 +345,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                                 add_data_len(0);
                         for (c = 0; c < 39; c++)
                                 add_data_len(0);
-                        for (; i < len; i++)
+                        while (i < len)
                                 add_data_len(0);
                         data->cmd_pos = CMD_POS_IDLE;
                         bus_state = BUS_IO;
@@ -565,7 +565,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                 }
                 else
                 {
-                        len = cdb[8] | (cdb[9] << 8);
+                        len = cdb[8] | (cdb[7] << 8);
 
                         add_data_len(0);
                         add_data_len(0);
@@ -638,7 +638,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         add_data_len(0x0f);
                 }
                 
-                for (; i < len; i++)
+                while (i < len)
                         add_data_len(0);
 
                 len = data->data_pos_write;
