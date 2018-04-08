@@ -1239,7 +1239,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU; /*FPU*/
                 }
                 else
-                   EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
                 case CPU_iDX4:
@@ -1257,7 +1257,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_VME;
                 }
                 else
-                   EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
                 case CPU_Am486SX:
@@ -1274,7 +1274,7 @@ void cpu_CPUID()
                         EBX = ECX = EDX = 0; /*No FPU*/
                 }
                 else
-                   EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
                 case CPU_Am486DX:
@@ -1292,7 +1292,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU; /*FPU*/
                 }
                 else
-                   EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
                 
                 case CPU_WINCHIP:
@@ -1323,7 +1323,7 @@ void cpu_CPUID()
                                 EDX |= CPUID_MMX;
                 }
                 else
-                   EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
                 case CPU_PENTIUM:
@@ -1341,7 +1341,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
                 case CPU_PENTIUMMMX:
@@ -1359,7 +1359,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
 
@@ -1378,7 +1378,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
 
@@ -1397,7 +1397,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_CMPXCHG8B;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
 
@@ -1416,7 +1416,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
 
@@ -1436,7 +1436,7 @@ void cpu_CPUID()
                         EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX;
                 }
                 else
-                        EAX = 0;
+                        EAX = EBX = ECX = EDX = 0;
                 break;
 
         }
