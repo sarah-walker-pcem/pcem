@@ -598,7 +598,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
 
                         ide->atastat = BUSY_STAT;
                         timer_process();
-                        idecallback[ide_board]=200*IDE_TIME;
+                        idecallback[ide_board] = IDE_TIME;
                         timer_update_outstanding();
                         
                         ide->atapi.bus_state = 0;
