@@ -796,7 +796,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		// len = 8;
 			
                 data->data_pos_read = 0;
-                data->bytes_expected = data->data_pos_write = alloc_length;
+                data->bytes_expected = data->data_pos_write = MIN(alloc_length, 8);
                 return SCSI_PHASE_DATA_IN;
 
                 case GPCMD_READ_TOC_PMA_ATIP:
@@ -804,24 +804,22 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		toc_format = cdb[2] & 0xf;
 		if (toc_format == 0)
 			toc_format = (cdb[9] >> 6) & 3;
+		alloc_length = cdb[8] + (cdb[7] << 8);
                 switch (toc_format)
                 {
                         case 0: /*Normal*/
 //			pclog("ATAPI: READ TOC type requested: Normal\n");
-                        len = cdb[8] + (cdb[7] << 8);
-                        len = atapi->readtoc(data->data_in, cdb[6], msf, len, 0);
+                        len = atapi->readtoc(data->data_in, cdb[6], msf, alloc_length, 0);
                         break;
                         case 1: /*Multi session*/
 //			pclog("ATAPI: READ TOC type requested: Multi-session\n");
-                        len = cdb[8] + (cdb[7] << 8);
-                        len = atapi->readtoc_session(data->data_in, msf, len);
+                        len = atapi->readtoc_session(data->data_in, msf, alloc_length);
                         data->data_in[0] = 0;
                         data->data_in[1] = 0xA;
                         break;
 			case 2: /*Raw*/
 //			pclog("ATAPI: READ TOC type requested: Raw TOC\n");
-			len = cdb[8] + (cdb[7] << 8);
-			len = atapi->readtoc_raw(data->data_in, len);
+			len = atapi->readtoc_raw(data->data_in, alloc_length);
 			break;
                         default:
                         atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_LBA_OUT_OF_RANGE, 0);
@@ -829,7 +827,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                         return SCSI_PHASE_STATUS;
                 }
                 data->data_pos_read = 0;
-                data->bytes_expected = data->data_pos_write = len;
+                data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
                 return SCSI_PHASE_DATA_IN;
 
                 case GPCMD_READ_CD:
@@ -1023,6 +1021,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 return SCSI_PHASE_DATA_IN;
 
                 case GPCMD_READ_HEADER:
+                alloc_length = cdb[8] | (cdb[7] << 8);
                 if (msf)
                 {
                         atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
@@ -1033,7 +1032,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 data->data_in[0] = 1; /*2048 bytes user data*/
                 data->data_in[1] = data->data_in[2] = data->data_in[3] = 0;
                 
-                data->bytes_expected = data->data_pos_write = 6;
+                data->bytes_expected = data->data_pos_write = MIN(6, alloc_length);
                 return SCSI_PHASE_DATA_IN;
 
 		case GPCMD_MODE_SENSE_6:
@@ -1070,7 +1069,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 			data->data_in[2] = 3; /*120mm data CD-ROM*/
 		}				
 
-                data->bytes_expected = data->data_pos_write = len;
+                data->bytes_expected = data->data_pos_write = MIN(len, alloc_length);
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_DATA_IN;
 
@@ -1176,11 +1175,13 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                         gesn_event_header->len = used_len - sizeof(*gesn_event_header);
                 }
 
-                data->bytes_expected = data->data_pos_write = len;
+                data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_DATA_IN;
 
 		case GPCMD_READ_DISC_INFORMATION:
+                alloc_length = cdb[8] | (cdb[7] << 8);
+                
 		data->data_in[1] = 32;
 		data->data_in[2] = 0xe; /* last session complete, disc finalized */
 		data->data_in[3] = 1; /* first track on disc */
@@ -1190,7 +1191,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		data->data_in[7] = 0x20; /* unrestricted use */
 		data->data_in[8] = 0x00; /* CD-ROM */
 			
-                data->bytes_expected = data->data_pos_write = 34;
+                data->bytes_expected = data->data_pos_write = MIN(alloc_length, 34);
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_DATA_IN;
 
@@ -1228,6 +1229,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 return SCSI_PHASE_STATUS;
                 
                 case GPCMD_READ_SUBCHANNEL:
+                alloc_length = cdb[8] | (cdb[7] << 8);
                 if (cdb[3] != 1)
                 {
                         atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
@@ -1243,7 +1245,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 len = 11+5;
                 if (!(cdb[2] & 0x40)) len=4;
 
-		data->bytes_expected = data->data_pos_write = len;
+		data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
 		return SCSI_PHASE_DATA_IN;
 
                 case GPCMD_START_STOP_UNIT:
