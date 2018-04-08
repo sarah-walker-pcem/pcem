@@ -499,14 +499,12 @@ void gd5429_recalctimings(svga_t *svga)
         svga->interlace = svga->crtc[0x1a] & 1;
         
         if (svga->seqregs[7] & 0x01)
-        {
                 svga->render = svga_render_8bpp_highres;
-                svga->bpp = 8;
-        }
         
         svga->ma_latch |= ((svga->crtc[0x1b] & 0x01) << 16) | ((svga->crtc[0x1b] & 0xc) << 15);
 //        pclog("MA now %05X %02X\n", svga->ma_latch, svga->crtc[0x1b]);
         
+        svga->bpp = 8;
         if (gd5429->hidden_dac_reg & 0x80)
         {
                 if (gd5429->hidden_dac_reg & 0x40)
