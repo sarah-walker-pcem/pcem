@@ -1514,7 +1514,8 @@ uint8_t s3_accel_read(uint32_t addr, void *p)
 #define READ_SRC(addr, dat) if (s3->bpp == 0)      dat = svga->vram[  (addr) & s3->vram_mask]; \
                             else if (s3->bpp == 1) dat = vram_w[(addr) & (s3->vram_mask >> 1)]; \
                             else                   dat = vram_l[(addr) & (s3->vram_mask >> 2)]; \
-                            dat &= s3->accel.rd_mask;
+                            if (vram_mask)                                           \
+                                    dat = ((dat & rd_mask) == rd_mask);
 
 #define READ_DST(addr, dat) if (s3->bpp == 0)      dat = svga->vram[  (addr) & s3->vram_mask]; \
                             else if (s3->bpp == 1) dat = vram_w[(addr) & (s3->vram_mask >> 1)]; \
@@ -1576,6 +1577,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
         uint32_t *vram_l = (uint32_t *)svga->vram;
         uint32_t compare = s3->accel.color_cmp;
         int compare_mode = (s3->accel.multifunc[0xe] >> 7) & 3;
+        uint32_t rd_mask = s3->accel.rd_mask;
         
         s3->force_busy = 1;
 //return;
@@ -1602,6 +1604,11 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                 if (s3->bpp == 1) count >>= 1;
                 if (s3->bpp == 3) count >>= 2;
         }
+
+        if (s3->bpp == 0)
+                rd_mask &= 0xff;
+        else if (s3->bpp == 1)
+                rd_mask &= 0xffff;
         
         switch (s3->accel.cmd & 0x600)
         {
