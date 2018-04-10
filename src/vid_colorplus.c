@@ -336,15 +336,21 @@ void colorplus_poll(void *p)
 
 void *colorplus_init()
 {
+        int display_type, contrast;
         colorplus_t *colorplus = malloc(sizeof(colorplus_t));
         memset(colorplus, 0, sizeof(colorplus_t));
 
         colorplus->cga.vram = malloc(0x8000);
         colorplus->cga.composite = colorplus->cga.snow_enabled = 0;
+
+        display_type = device_get_config_int("display_type");
+        contrast = device_get_config_int("contrast");
                 
         timer_add(colorplus_poll, &colorplus->cga.vidtime, TIMER_ALWAYS_ENABLED, colorplus);
         mem_mapping_add(&colorplus->cga.mapping, 0xb8000, 0x08000, colorplus_read, NULL, NULL, colorplus_write, NULL, NULL,  NULL, 0, colorplus);
         io_sethandler(0x03d0, 0x0010, colorplus_in, NULL, NULL, colorplus_out, NULL, NULL, colorplus);
+        
+        cgapal_rebuild(display_type, contrast);
 		
         return colorplus;
 }
@@ -364,6 +370,51 @@ void colorplus_speed_changed(void *p)
         cga_recalctimings(&colorplus->cga);
 }
 
+device_config_t colorplus_config[] =
+{
+        {
+                .name = "display_type",
+                .description = "Display type",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "RGB",
+                                .value = DISPLAY_RGB
+                        },
+                        {
+                                .description = "RGB (no brown)",
+                                .value = DISPLAY_RGB_NO_BROWN
+                        },
+                        {
+                                .description = "Green Monochrome",
+                                .value = DISPLAY_GREEN
+                        },
+                        {
+                                .description = "Amber Monochrome",
+                                .value = DISPLAY_AMBER
+                        },
+                        {
+                                .description = "White Monochrome",
+                                .value = DISPLAY_WHITE
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = DISPLAY_RGB
+        },
+        {
+                .name = "contrast",
+                .description = "Alternate monochrome contrast",
+                .type = CONFIG_BINARY,
+                .default_int = 0
+        },
+        {
+                .type = -1
+        }
+};
+
 device_t colorplus_device =
 {
         "Colorplus",
@@ -374,5 +425,5 @@ device_t colorplus_device =
         colorplus_speed_changed,
         NULL,
         NULL,
-        NULL
+        colorplus_config
 };
