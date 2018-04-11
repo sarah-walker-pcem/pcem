@@ -110,12 +110,11 @@ void paradise_out(uint16_t addr, uint8_t val, void *p)
                 break;
                 
                 case 0x3D4:
-                if (paradise->type == PVGA1A)
-                   svga->crtcreg = val & 0x1f;
-                else
-                   svga->crtcreg = val & 0x3f;
+                svga->crtcreg = val & 0x3f;
                 return;
                 case 0x3D5:
+                if ((paradise->type == PVGA1A) && (svga->crtcreg & 0x20))
+                        return;
                 if ((svga->crtcreg < 7) && (svga->crtc[0x11] & 0x80))
                         return;
                 if ((svga->crtcreg == 7) && (svga->crtc[0x11] & 0x80))
@@ -191,6 +190,8 @@ uint8_t paradise_in(uint16_t addr, void *p)
                 case 0x3D4:
                 return svga->crtcreg;
                 case 0x3D5:
+                if ((paradise->type == PVGA1A) && (svga->crtcreg & 0x20))
+                        return 0xff;
                 if (svga->crtcreg > 0x29 && svga->crtcreg < 0x30 && (svga->crtc[0x29] & 0x88) != 0x80)
                    return 0xff;
                 return svga->crtc[svga->crtcreg];
