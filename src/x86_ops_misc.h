@@ -52,6 +52,10 @@ static int opF6_a16(uint32_t fetchdat)
         int8_t temps;
         
         fetch_ea_16(fetchdat);
+        if (cpu_mod != 3)
+        {
+                CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
+        }
         dst = geteab();                 if (cpu_state.abrt) return 1;
         switch (rmdat & 0x38)
         {
