@@ -2076,6 +2076,7 @@ static void mem_mapping_recalc(uint64_t base, uint64_t size)
                 _mem_read_l[c >> 14] = NULL;
                 _mem_priv_r[c >> 14] = NULL;
                 _mem_mapping_r[c >> 14] = NULL;
+                _mem_exec[c >> 14] = NULL;
                 _mem_write_b[c >> 14] = NULL;
                 _mem_write_w[c >> 14] = NULL;
                 _mem_write_l[c >> 14] = NULL;
