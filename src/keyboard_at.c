@@ -65,7 +65,7 @@ int mouse_queue_start = 0, mouse_queue_end = 0;
 
 void keyboard_at_poll()
 {
-	keybsenddelay += (1000 * TIMER_USEC);
+	keybsenddelay += (100 * TIMER_USEC);
 
         if (keyboard_at.out_new != -1 && !keyboard_at.last_irq)
         {
