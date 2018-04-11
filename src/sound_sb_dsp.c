@@ -499,19 +499,19 @@ void sb_exec_command(sb_dsp_t *dsp)
                 timer_update_outstanding();
                 break;
                 case 0x90: /*High speed 8-bit autoinit DMA output*/
-                if (dsp->sb_type < SB2 || dsp->sb_type > SBPRO2) break;
+                if (dsp->sb_type < SB2) break;
                 sb_start_dma(dsp, 1, 1, 0, dsp->sb_8_autolen);
                 break;
                 case 0x91: /*High speed 8-bit single cycle DMA output*/
-                if (dsp->sb_type < SB2 || dsp->sb_type > SBPRO2) break;
+                if (dsp->sb_type < SB2) break;
                 sb_start_dma(dsp, 1, 0, 0, dsp->sb_8_autolen);
                 break;
                 case 0x98: /*High speed 8-bit autoinit DMA input*/
-                if (dsp->sb_type < SB2 || dsp->sb_type > SBPRO2) break;
+                if (dsp->sb_type < SB2) break;
                 sb_start_dma_i(dsp, 1, 1, 0, dsp->sb_8_autolen);
                 break;
                 case 0x99: /*High speed 8-bit single cycle DMA input*/
-                if (dsp->sb_type < SB2 || dsp->sb_type > SBPRO2) break;
+                if (dsp->sb_type < SB2) break;
                 sb_start_dma_i(dsp, 1, 0, 0, dsp->sb_8_autolen);
                 break;
                 case 0xA0: /*Set input mode to mono*/
