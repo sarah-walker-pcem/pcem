@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+
+#ifdef ABS
+#undef ABS
+#endif
+
+#define ABS(x) ((x) > 0 ? (x) : -(x))
+
 #define printf pclog
 
 #define READFLASH_FDC 0

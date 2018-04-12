@@ -15,9 +15,6 @@
 #ifdef MIN
 #undef MIN
 #endif
-#ifdef ABS
-#undef ABS
-#endif
 #ifdef CLAMP
 #undef CLAMP
 #endif
@@ -3961,8 +3958,6 @@ enum
                 case 0xe: dst_dat = src_dat | dst_dat; break;           \
                 case 0xf: dst_dat = 0xffff; break;                      \
         }
-
-#define ABS(x) ((x) > 0 ? (x) : -(x))
 
 static void blit_start(voodoo_t *voodoo)
 {
