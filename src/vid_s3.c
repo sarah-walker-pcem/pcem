@@ -557,7 +557,14 @@ static void s3_accel_out_fifo(s3_t *s3, uint16_t port, uint8_t val)
                 break;
                 case 0xe2eb:
                 s3->accel.pix_trans[3] = val;
-                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
+                if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x600) == 0x600 && (s3->accel.cmd & 0x100) && s3->chip == S3_TRIO32)
+                {
+                        s3_accel_start(8, 1, s3->accel.pix_trans[3], 0, s3);
+                        s3_accel_start(8, 1, s3->accel.pix_trans[2], 0, s3);
+                        s3_accel_start(8, 1, s3->accel.pix_trans[1], 0, s3);
+                        s3_accel_start(8, 1, s3->accel.pix_trans[0], 0, s3);
+                }
+                else if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80 && (s3->accel.cmd & 0x400) == 0x400 && (s3->accel.cmd & 0x100))
                         s3_accel_start(32, 1, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), 0, s3);
                 else if ((s3->accel.cmd & 0x600) == 0x400 && (s3->accel.cmd & 0x100))
                         s3_accel_start(4, 1, 0xffffffff, s3->accel.pix_trans[0] | (s3->accel.pix_trans[1] << 8) | (s3->accel.pix_trans[2] << 16) | (s3->accel.pix_trans[3] << 24), s3);
@@ -574,6 +581,11 @@ static void s3_accel_out_fifo_w(s3_t *s3, uint16_t port, uint16_t val)
                 {
                         if (s3->accel.cmd & 0x1000)
                                 val = (val >> 8) | (val << 8);
+                        if ((s3->accel.cmd & 0x600) == 0x600 && s3->chip == S3_TRIO32)
+                        {
+                                s3_accel_start(8, 1, (val >> 8) & 0xff, 0, s3);
+                                s3_accel_start(8, 1,  val       & 0xff, 0, s3);
+                        }
                         if ((s3->accel.cmd & 0x600) == 0x000)
                                 s3_accel_start(8, 1, val | (val << 16), 0, s3);
                         else
@@ -596,7 +608,16 @@ static void s3_accel_out_fifo_l(s3_t *s3, uint16_t port, uint32_t val)
         {
                 if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
                 {
-                        if (s3->accel.cmd & 0x400)
+                        if ((s3->accel.cmd & 0x600) == 0x600 && s3->chip == S3_TRIO32)
+                        {
+                                if (s3->accel.cmd & 0x1000)
+                                        val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
+                                s3_accel_start(8, 1, (val >> 24) & 0xff, 0, s3);
+                                s3_accel_start(8, 1, (val >> 16) & 0xff, 0, s3);
+                                s3_accel_start(8, 1, (val >> 8)  & 0xff, 0, s3);
+                                s3_accel_start(8, 1,  val        & 0xff, 0, s3);
+                        }
+                        else if (s3->accel.cmd & 0x400)
                         {
                                 if (s3->accel.cmd & 0x1000)
                                         val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
@@ -757,7 +778,12 @@ static void s3_accel_write_fifo_w(s3_t *s3, uint32_t addr, uint16_t val)
                         {
                                 if (s3->accel.cmd & 0x1000)
                                         val = (val >> 8) | (val << 8);
-                                if ((s3->accel.cmd & 0x600) == 0x000)
+                                if ((s3->accel.cmd & 0x600) == 0x600 && s3->chip == S3_TRIO32)
+                                {
+                                        s3_accel_start(8, 1, (val >> 8) & 0xff, 0, s3);
+                                        s3_accel_start(8, 1,  val       & 0xff, 0, s3);
+                                }
+                                else if ((s3->accel.cmd & 0x600) == 0x000)
                                         s3_accel_start(8, 1, val | (val << 16), 0, s3);
                                 else
                                         s3_accel_start(16, 1, val | (val << 16), 0, s3);
@@ -789,7 +815,16 @@ static void s3_accel_write_fifo_l(s3_t *s3, uint32_t addr, uint32_t val)
                 {
                         if ((s3->accel.multifunc[0xa] & 0xc0) == 0x80)
                         {
-                                if (s3->accel.cmd & 0x400)
+                                if ((s3->accel.cmd & 0x600) == 0x600 && s3->chip == S3_TRIO32)
+                                {
+                                        if (s3->accel.cmd & 0x1000)
+                                                val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
+                                        s3_accel_start(8, 1, (val >> 24) & 0xff, 0, s3);
+                                        s3_accel_start(8, 1, (val >> 16) & 0xff, 0, s3);
+                                        s3_accel_start(8, 1, (val >> 8)  & 0xff, 0, s3);
+                                        s3_accel_start(8, 1,  val        & 0xff, 0, s3);
+                                }
+                                else if (s3->accel.cmd & 0x400)
                                 {
                                         if (s3->accel.cmd & 0x1000)
                                                 val = ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) | ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
@@ -1727,7 +1762,7 @@ void s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat
                 case 0x000: mix_mask = 0x80; break;
                 case 0x200: mix_mask = 0x8000; break;
                 case 0x400: mix_mask = 0x80000000; break;
-                case 0x600: mix_mask = 0x80000000; break;
+                case 0x600: mix_mask = (s3->chip == S3_TRIO32) ? 0x80 : 0x80000000; break;
         }
 
         if (s3->bpp == 0) compare &=   0xff;
