@@ -340,7 +340,7 @@ void sb_8_write_dma(sb_dsp_t *dsp, uint8_t val)
         fwrite(&val,1,1,soundf);
 #endif
 }
-uint16_t sb_16_read_dma(sb_dsp_t *dsp)
+int sb_16_read_dma(sb_dsp_t *dsp)
 {
         return dma_channel_read(dsp->sb_16_dmanum);
 }
@@ -977,26 +977,42 @@ void pollsb(void *p)
         }
         if (dsp->sb_16_enable && !dsp->sb_16_pause && dsp->sb_pausetime < 0 && dsp->sb_16_output)
         {
+                int data[2];
+                
                 sb_dsp_update(dsp);
                 
                 switch (dsp->sb_16_format)
                 {
                         case 0x00: /*Mono unsigned*/
-                        dsp->sbdatl = dsp->sbdatr = sb_16_read_dma(dsp) ^ 0x8000;
+                        data[0] = sb_16_read_dma(dsp);
+                        if (data[0] == DMA_NODATA)
+                                break;
+                        dsp->sbdatl = dsp->sbdatr = data[0] ^ 0x8000;
                         dsp->sb_16_length--;
                         break;
                         case 0x10: /*Mono signed*/
-                        dsp->sbdatl = dsp->sbdatr = sb_16_read_dma(dsp);
+                        data[0] = sb_16_read_dma(dsp);
+                        if (data[0] == DMA_NODATA)
+                                break;
+                        dsp->sbdatl = dsp->sbdatr = data[0];
                         dsp->sb_16_length--;
                         break;
                         case 0x20: /*Stereo unsigned*/
-                        dsp->sbdatl = sb_16_read_dma(dsp) ^ 0x8000;
-                        dsp->sbdatr = sb_16_read_dma(dsp) ^ 0x8000;
+                        data[0] = sb_16_read_dma(dsp);
+                        data[1] = sb_16_read_dma(dsp);
+                        if (data[0] == DMA_NODATA || data[1] == DMA_NODATA)
+                                break;
+                        dsp->sbdatl = data[0] ^ 0x8000;
+                        dsp->sbdatr = data[1] ^ 0x8000;
                         dsp->sb_16_length -= 2;
                         break;
                         case 0x30: /*Stereo signed*/
-                        dsp->sbdatl = sb_16_read_dma(dsp);
-                        dsp->sbdatr = sb_16_read_dma(dsp);
+                        data[0] = sb_16_read_dma(dsp);
+                        data[1] = sb_16_read_dma(dsp);
+                        if (data[0] == DMA_NODATA || data[1] == DMA_NODATA)
+                                break;
+                        dsp->sbdatl = data[0];
+                        dsp->sbdatr = data[1];
                         dsp->sb_16_length -= 2;
                         break;
 //                        default:
