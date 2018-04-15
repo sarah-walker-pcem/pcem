@@ -1619,7 +1619,8 @@ static void process_ccb(aha154x_t *scsi)
                                 
 //                                pclog("Residue=%08x %x %x    %i MBI=%i\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred, scsi->ccb.residual, scsi->current_mbi);
                                 mem_writeb_phys(scsi->ccb.addr + 0xe, HOST_STATUS_COMMAND_COMPLETE);
-
+                                mem_writeb_phys(scsi->ccb.addr + 0xf, scsi->ccb.status);
+                                
                                 if (scsi->mb_format == MB_FORMAT_4)
                                 {
                                         if (scsi->ccb.residual)
@@ -1665,7 +1666,7 @@ static void process_ccb(aha154x_t *scsi)
                                         if (scsi->ccb.status == STATUS_GOOD)
                                                 mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, MBI_CCB_COMPLETE << 24);
                                         else
-                                                mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, MBI_CCB_COMPLETE_WITH_ERROR << 24);
+                                                mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, (MBI_CCB_COMPLETE_WITH_ERROR << 24) | (scsi->ccb.status << 8));
                                 }
                                 
                                 if (!scsi->current_mbo_is_bios)
@@ -1713,6 +1714,7 @@ static void process_ccb(aha154x_t *scsi)
                         uint32_t residue = scsi->ccb.total_data_len - scsi->ccb.bytes_transferred;
 //                        pclog("residue=%x %x %x\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred);
                         mem_writeb_phys(scsi->ccb.addr + 0xe, HOST_STATUS_COMMAND_COMPLETE);
+                        mem_writeb_phys(scsi->ccb.addr + 0xf, scsi->ccb.status);
 
                         if (scsi->mb_format == MB_FORMAT_4)
                         {                                
@@ -1760,7 +1762,7 @@ static void process_ccb(aha154x_t *scsi)
                                 if (scsi->ccb.status == STATUS_GOOD)
                                         mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, MBI_CCB_COMPLETE << 24);
                                 else
-                                        mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, MBI_CCB_COMPLETE_WITH_ERROR << 24);
+                                        mem_writel_phys(scsi->mba_i + scsi->current_mbi*8 + 4, (MBI_CCB_COMPLETE_WITH_ERROR << 24) | (scsi->ccb.status << 8));
                         }
                         
                         if (!scsi->current_mbo_is_bios)
