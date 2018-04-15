@@ -746,6 +746,8 @@ static void process_cmd(aha154x_t *scsi)
                         scsi->mba = scsi->params[3] | (scsi->params[2] << 8) | (scsi->params[1] << 16);
                         scsi->mba_i = scsi->mba + scsi->mbc*4;
                         scsi->mb_format = MB_FORMAT_4;
+                        scsi->current_mbo = 0;
+                        scsi->current_mbi = 0;
                         pclog("Mailbox init: MBC=%02x MBC=%06x\n", scsi->mbc, scsi->mba);
                         scsi->status &= ~STATUS_INIT;
                         set_irq(scsi, ISR_HACC);
@@ -1292,6 +1294,8 @@ static void process_cmd(aha154x_t *scsi)
                         scsi->mba = scsi->params[1] | (scsi->params[2] << 8) | (scsi->params[3] << 16) | (scsi->params[4] << 24);
                         scsi->mba_i = scsi->mba + scsi->mbc*8;
                         scsi->mb_format = MB_FORMAT_8;
+                        scsi->current_mbo = 0;
+                        scsi->current_mbi = 0;
                         pclog("Mailbox init: MBC=%02x MBC=%08x\n", scsi->mbc, scsi->mba);
                         scsi->status &= ~STATUS_INIT;
                         set_irq(scsi, ISR_HACC);
