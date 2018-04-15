@@ -275,7 +275,7 @@ static void process_cmd(aha154x_t *scsi);
 static void set_irq(aha154x_t *scsi, uint8_t val)
 {
         picint(1 << scsi->irq);
-        scsi->isr |= val;
+        scsi->isr |= val | ISR_ANYINTR;
 }
 
 static void clear_irq(aha154x_t *scsi)
@@ -348,6 +348,11 @@ static void aha154x_out(uint16_t port, uint8_t val, void *p)
 //                pclog("Write command %02x %04x(%08x):%08x\n", val, CS,cs,cpu_state.pc);
                 process_cmd(scsi);
                 break;
+                
+                case 2:
+                if (scsi->type == SCSI_BT545S)
+                        scsi->isr = val;
+                break;
         }        
 }
 
@@ -374,9 +379,10 @@ static uint8_t aha154x_in(uint16_t port, void *p)
                 break;
 
                 case 2: /*Interrupt status register*/
-                temp = scsi->isr & ~0x70;
-                if (scsi->isr)
-                        temp |= ISR_ANYINTR;
+                if (scsi->type == SCSI_BT545S)
+                        temp = scsi->isr;
+                else
+                        temp = scsi->isr & ~0x70;
                 break;
                 
                 case 3: /*???*/
