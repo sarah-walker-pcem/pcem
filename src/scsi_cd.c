@@ -1247,14 +1247,9 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		return SCSI_PHASE_DATA_IN;
 
                 case GPCMD_START_STOP_UNIT:
-                if (cdb[4] != 2 && cdb[4] != 3 && cdb[4])
-                {
-			atapi_cmd_error(data, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
-                        return SCSI_PHASE_STATUS;
-                }
                 if (!cdb[4])          atapi->stop();
                 else if (cdb[4] == 2) atapi->eject();
-                else                  atapi->load();
+                else if (cdb[4] == 3) atapi->load();
                 data->cmd_pos = CMD_POS_IDLE;
                 return SCSI_PHASE_STATUS;
 
