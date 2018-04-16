@@ -443,6 +443,8 @@ int render()
 #endif
                 if (vid_resize == 2)
                         SDL_SetWindowSize(window, custom_resolution_width, custom_resolution_height);
+
+                device_force_redraw();
         }
         if (window_doreset)
         {
@@ -486,6 +488,8 @@ int render()
                 case SDL_WINDOWEVENT:
                         if (event.window.event == SDL_WINDOWEVENT_CLOSE)
                                 wx_stop_emulation(ghwnd);
+                        if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                                device_force_redraw();
                         if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
                         {
                                 if (is_fullscreen())
@@ -605,6 +609,7 @@ int render()
                 remembered_rect.y -= border_y;
                 SDL_GetWindowSize(window, &remembered_rect.w, &remembered_rect.h);
                 SDL_SetWindowFullscreen(window, video_fullscreen_mode == 0 ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
+                device_force_redraw();
         }
         if (window_doinputgrab) {
                 window_doinputgrab = 0;
@@ -629,6 +634,7 @@ int render()
 #if SDL_VERSION_ATLEAST(2, 0, 4)
                 SDL_WarpMouseGlobal(remembered_mouse_x, remembered_mouse_y);
 #endif
+                device_force_redraw();
         }
 
         if (win_doresize)
