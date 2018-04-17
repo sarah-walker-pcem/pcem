@@ -4129,15 +4129,29 @@ static void blit_data(voodoo_t *voodoo, uint32_t data)
 {
         int src_bits = 32;
         uint32_t base_addr = (voodoo->bltCommand & BLTCMD_DST_TILED) ? ((voodoo->bltDstBaseAddr & 0x3ff) << 12) : (voodoo->bltDstBaseAddr & 0x3ffff8);
+        uint32_t addr;
         uint16_t *dst;
        
         if ((voodoo->bltCommand & BLIT_COMMAND_MASK) != BLIT_COMMAND_CPU_TO_SCREEN)
                 return;
 
         if (SLI_ENABLED)
-                dst = (uint16_t *)&voodoo->fb_mem[base_addr + (voodoo->blt.dst_y >> 1) * voodoo->blt.dst_stride];
+        {
+                addr = base_addr + (voodoo->blt.dst_y >> 1) * voodoo->blt.dst_stride;
+                dst = (uint16_t *)&voodoo->fb_mem[addr];
+        }
         else
-                dst = (uint16_t *)&voodoo->fb_mem[base_addr + voodoo->blt.dst_y*voodoo->blt.dst_stride];
+        {
+                addr = base_addr + voodoo->blt.dst_y*voodoo->blt.dst_stride;
+                dst = (uint16_t *)&voodoo->fb_mem[addr];
+        }
+
+        if (addr >= voodoo->front_offset && voodoo->row_width)
+        {
+                int y = (addr - voodoo->front_offset) / voodoo->row_width;
+                if (y < voodoo->v_disp)
+                        voodoo->dirty_line[y] = 2;
+        }
 
         while (src_bits && voodoo->blt.cur_x <= voodoo->blt.size_x)
         {
