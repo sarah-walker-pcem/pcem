@@ -1,5 +1,6 @@
 #include "ibm.h"
 #include "device.h"
+#include "fdd.h"
 #include "io.h"
 #include "mem.h"
 #include "pic.h"
@@ -31,6 +32,8 @@ struct
         uint8_t pa;        
         uint8_t pb;
         
+        int shift_full;
+        
         int tandy;
         int pb2_turbo;
 } keyboard_xt;
@@ -41,14 +44,17 @@ static int key_queue_start = 0, key_queue_end = 0;
 void keyboard_xt_poll()
 {
         keybsenddelay += (1000 * TIMER_USEC);
+        if (!(keyboard_xt.pb & 0x40) && romset != ROM_TANDY)
+                return;
         if (keyboard_xt.wantirq)
         {
                 keyboard_xt.wantirq = 0;
                 keyboard_xt.pa = keyboard_xt.key_waiting;
+                keyboard_xt.shift_full = 1;
                 picint(2);
                 pclog("keyboard_xt : take IRQ\n");
         }
-        if (key_queue_start != key_queue_end && !keyboard_xt.pa)
+        if (key_queue_start != key_queue_end && !keyboard_xt.shift_full)
         {
                 keyboard_xt.key_waiting = key_queue[key_queue_start];
                 pclog("Reading %02X from the key queue at %i\n", keyboard_xt.key_waiting, key_queue_start);
@@ -109,6 +115,9 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
                 if (!(keyboard_xt.pb & 0x40) && (val & 0x40)) /*Reset keyboard*/
                 {
                         pclog("keyboard_xt : reset keyboard\n");
+                        key_queue_start = key_queue_end = 0;
+                        keyboard_xt.wantirq = 0;
+                        keyboard_xt.shift_full = 0;
                         keyboard_xt_adddata(0xaa);
                 }
                 keyboard_xt.pb = val;
@@ -130,6 +139,7 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
                 if (val & 0x80)
                 {
                         keyboard_xt.pa = 0;
+                        keyboard_xt.shift_full = 0;
                         picintc(2);
                 }
                 break;
@@ -159,16 +169,6 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                 else
                 {
                         temp = keyboard_xt.pa;
-                        if (key_queue_start == key_queue_end)
-                        {
-                                keyboard_xt.wantirq = 0;
-                        }
-                        else
-                        {
-                                keyboard_xt.key_waiting = key_queue[key_queue_start];
-                                key_queue_start = (key_queue_start + 1) & 0xf;
-                                keyboard_xt.wantirq = 1;        
-                        }
                 }        
                 break;
                 
