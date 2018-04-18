@@ -1013,6 +1013,12 @@ void *sb_2_init()
         "CD version" also uses 250h or 260h for
           2x0 to 2x3 -> CDROM interface
           2x4 to 2x5 -> Mixer interface*/
+        /*My SB 2.0 mirrors the OPL2 at ports 2x0/2x1. Presumably this mirror is
+          disabled when the CMS chips are present.
+          This mirror may also exist on SB 1.5 & MCV, however I am unable to
+          test this. It shouldn't exist on SB 1.0 as the CMS chips are always
+          present there.
+          Syndicate requires this mirror for music to play.*/
         sb_t *sb = malloc(sizeof(sb_t));
         uint16_t addr = device_get_config_int("addr");
         memset(sb, 0, sizeof(sb_t));
@@ -1025,6 +1031,8 @@ void *sb_2_init()
         sb_ct1335_mixer_reset(sb);
         /* CMS I/O handler is activated on the dedicated sound_cms module
            DSP I/O handler is activated in sb_dsp_setaddr */
+        if (!GAMEBLASTER)
+                io_sethandler(addr, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(addr+8, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         io_sethandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &sb->opl);
         
