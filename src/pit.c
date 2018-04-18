@@ -332,7 +332,6 @@ void pit_write(uint16_t addr, uint8_t val, void *p)
 {
         PIT *pit = (PIT *)p;
         int t;
-        cycles -= (int)PITCONST;
 //        /*if (val != 0x40) */pclog("Write PIT %04X %02X %04X:%08X %i %i\n",addr,val,CS,pc,ins, pit->gate[0]);
         
         switch (addr&3)
@@ -457,7 +456,6 @@ uint8_t pit_read(uint16_t addr, void *p)
         PIT *pit = (PIT *)p;
         int t;
         uint8_t temp = 0xff;
-        cycles -= (int)PITCONST;        
 //        printf("Read PIT %04X ",addr);
         switch (addr&3)
         {
