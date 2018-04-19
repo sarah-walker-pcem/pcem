@@ -106,6 +106,7 @@ static int opF6_a16(uint32_t fetchdat)
                         {
                                 flags_rebuild();
                                 flags |= 0x8D5; /*Not a Cyrix*/
+                                flags &= ~1;
                         }
                 }
                 else
@@ -128,6 +129,7 @@ static int opF6_a16(uint32_t fetchdat)
                         {
                                 flags_rebuild();
                                 flags|=0x8D5; /*Not a Cyrix*/
+                                flags &= ~1;
                         }
                 }
                 else
@@ -204,6 +206,7 @@ static int opF6_a32(uint32_t fetchdat)
                         {
                                 flags_rebuild();
                                 flags |= 0x8D5; /*Not a Cyrix*/
+                                flags &= ~1;
                         }
                 }
                 else
@@ -226,6 +229,7 @@ static int opF6_a32(uint32_t fetchdat)
                         {
                                 flags_rebuild();
                                 flags|=0x8D5; /*Not a Cyrix*/
+                                flags &= ~1;
                         }
                 }
                 else
