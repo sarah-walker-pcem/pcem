@@ -836,6 +836,8 @@ int loadbios()
                 f = romfopen("elx_pc425x/elx_pc425x.bin", "rb");
                 if (!f)
                 {
+                        if (!rom_present("elx_pc425x/elx_pc425x_vbios.bin"))
+                                break;
                         f = romfopen("elx_pc425x/elx_pc425x_bios.bin", "rb");
                         if (!f)
                                 break;
@@ -847,7 +849,7 @@ int loadbios()
                 return 1;
 
                 case ROM_PB570:
-                if (!rom_present("gd5430/pci.bin"))
+                if (!rom_present("pb570/gd5430.bin"))
                         break;
                 f = romfopen("pb570/1007by0r.bio", "rb");
                 if (!f) break;
@@ -878,6 +880,8 @@ int loadbios()
                 return 1;
 
                 case ROM_PB520R:
+                if (!rom_present("pb520r/gd5434.bin"))
+                        break;
                 f = romfopen("pb520r/1009bc0r.bio", "rb");
                 if (!f) break;
                 fseek(f, 0x80, SEEK_SET);
