@@ -54,6 +54,14 @@ ROM files needed:
  ataripc3/AWARD_ATARI_PC_BIOS_3.08.BIN
 
 
+Compaq Portable Plus (1983)
+
+8088 at 4.77 MHz, 128-640kb RAM.
+
+ROM files needed:
+ compaq_pip/Compaq Portable Plus 100666-001 Rev C.bin
+
+
 DTK Clone XT (1986)
 
 8088 at 8/10 MHz, 64kb-640kb RAM.
@@ -107,19 +115,29 @@ ROM files needed:
 jukopc\000o001.bin
 
 
-Phoenix XT clone (1986)
+NCR PC4i (1985)
+
+8088 at 4.77 MHz, 256-640kb RAM
 
 ROM files needed:
+ ncr_pc4i/NCR_PC4i_BIOSROM_1985.BIN
 
-pxxt\000p001.bin
+
+Phoenix XT clone (1986)
+
+8088 at 8/10 MHz, 64kb-640kb RAM.
+
+ROM files needed:
+ pxxt\000p001.bin
 
 
 Schneider Euro PC (1988)
 
-ROM files needed:
+8088 at 9.54 MHz, 512-640kb RAM.
 
-europc\50145
-europc\50146
+ROM files needed:
+ europc\50145
+ europc\50146
 
 
 Tandy 1000 (1984)
@@ -140,12 +158,46 @@ ROM files needed:
  tandy1000hx\v020000.u12
 
 
+Thomson TO16 PC (1987)
+
+8088 at 9.54 MHz, 512-640kb RAM.
+
+ROM files needed:
+ to16_pc/TO16_103.bin
+
+
+Toshiba T1000 (1987)
+
+8088 at 4.77 MHz, 512-1024 kb RAM, CGA on built-in LCD.
+
+PCem maps [Fn] to right-Ctrl and right-Alt. The following functions are supported :
+	Fn + Num Lock  - toggle numpad
+	Fn + Home      - Internal LCD display
+	Fn + Page Down - Turbo on
+	Fn + Right     - Toggle LCD font
+	Fn + End       - External CRT display
+	Fn + SysRQ     - Toggle window
+
+ROM files needed:
+ t1000/t1000.rom
+ t1000/t1000font.rom
+
+
 VTech Laser Turbo XT (1987)
+
+8088 at 10 MHz, 640kb RAM
 
 ROM files needed:
 
 ltxt\27c64.bin
 
+
+Xi8088 (2015)
+
+8088 at 4.77 - 13.33 MHz, 640kb RAM
+
+ROM files needed:
+ xi8088/bios-xi8088.bin
 
 
 8086 based :
@@ -218,11 +270,29 @@ ROM files needed:
  tandy1000sl2\8079048.hu2
 
 
-VTech Laser XT3 (1989)
+Toshiba T1200 (1987)
+
+8086 at 9.54 MHz, 1-2 MB RAM, CGA on built-in LCD.
+
+PCem maps [Fn] to right-Ctrl and right-Alt. The following functions are supported :
+	Fn + Num Lock  - toggle numpad
+	Fn + Home      - Internal LCD display
+	Fn + Page Down - Turbo on
+	Fn + Right     - Toggle LCD font
+	Fn + End       - External CRT display
+	Fn + SysRQ     - Toggle window
 
 ROM files needed:
+ t1200/t1200_019e.ic15.bin
+ t1200/t1000font.rom
 
-lxt3\27c64d.bin
+
+VTech Laser XT3 (1988)
+
+8086 at 10 MHz, 512-1152kb RAM.
+
+ROM files needed:
+ lxt3\27c64d.bin
 
 
 
@@ -230,28 +300,37 @@ lxt3\27c64d.bin
 
 
 AMI 286 clone (1990)
+
 286 at 8+ MHz, 512kb - 16MB RAM.
 
 ROM files needed:
-
-ami286\amic206.bin
+ ami286\amic206.bin
 
 
 Award 286 clone (1990)
+
 286 at 8+ MHz, 512kb - 16MB RAM.
 
 ROM files needed:
-
-award286\award.bin
+ award286\award.bin
 
 
 Commodore PC30-III (1988)
+
 286 at 12 MHz, 512kb - 16MB RAM.
 
 ROM files needed:
+ cmdpc30\commodore pc 30 iii even.bin
+ cmdpc30\commodore pc 30 iii odd.bin
 
-cmdpc30\commodore pc 30 iii even.bin
-cmdpc30\commodore pc 30 iii odd.bin
+
+Compaq Portable II (1986)
+
+286 at 8 MHz, 256kb-15MB RAM.
+
+ROM files needed:
+ compaq_pii/109739-001.rom
+ compaq_pii/109740-001.rom
 
 
 Dell System 200 (1990?)
@@ -328,7 +407,7 @@ ROM files needed :
 
 IBM XT Model 286 (1986)
 
-286 at 6, 256kb-16mb RAM
+286 at 6 MHz, 256kb-16mb RAM
 
 ROM files needed :
  ibmxt286\BIOS_5162_21APR86_U34_78X7460_27256.BIN
@@ -354,7 +433,7 @@ or
  spc4216p\ac64.u10
 
 
-Toshiba 3100e (1986)
+Toshiba T3100e (1986)
 
 286 at 12 MHz, 1MB - 5MB RAM, CGA on gas-plasma display
 
@@ -402,8 +481,7 @@ DTK 386SX clone (1990)
 386SX, 512kb - 16MB RAM.
 
 ROM files needed :
-
-dtk386\3cto001.bin
+ dtk386\3cto001.bin
 
 
 Epson PC AX3 (1989)
@@ -411,7 +489,6 @@ Epson PC AX3 (1989)
 386SX at 16 MHz, 256kb-16MB RAM.
 
 ROM files needed :
-
  epson_pcax3\EVAX3
  epson_pcax3\ODAX3
 
@@ -441,6 +518,14 @@ ROM files needed :
  kmxc02\3ctm005.bin
 
 
+Packard Bell Legend 300SX (1992)
+
+386 SX at 16 MHz, 1-16MB RAM
+
+ROM files needed :
+ pb_l300sx/pb_l300sx.bin
+
+
 
 386DX based :
 
@@ -460,6 +545,15 @@ Compaq Deskpro 386 (1989)
 ROM files needed:
  deskpro386\109592-005.u11.bin
  deskpro386\109591-005.u13.bin
+
+
+IBM PS/2 Model 70 (type 3) (1989)
+
+386DX at 25 MHz, 2-16MB RAM, built-in VGA, MCA bus.
+
+ROM files needed :
+ ibmps2_m70_type3/70-a_even.bin
+ ibmps2_m70_type3/70-a_odd.bin
 
 
 IBM PS/2 Model 80 (1987)
@@ -508,6 +602,29 @@ ROM files needed:
  sis496\sis496-1.awa
 
 
+Elonex PC-425X (1993)
+
+486SX at 25 MHz, 1-256MB RAM, built-in Trident TGUI9440CXi
+
+ROM files needed:
+ elx_pc425x/elx_pc425x.bin
+or
+ elx_pc425x/elx_pc425x_bios.bin
+ elx_pc425x/elx_pc425x_vbios.bin
+
+
+IBM PS/2 Model 70 (type 4) (1990)
+
+486DX at 25 MHz, 2-16MB RAM, built-in VGA, MCA bus.
+
+PCem's FPU emulation is not bit accurate and can not pass IBM's floating point tests. As a result,
+this machine will always print 12903 and 162 errors on bootup. These can be ignored - F1 will boot
+the machine.
+
+ROM files needed :
+ ibmps2_m70_type3/70-a_even.bin
+ ibmps2_m70_type3/70-a_odd.bin
+
 
 Pentium based :
 
@@ -524,14 +641,23 @@ ROM files needed:
 
 Intel Advanced/EV (Endeavor) (1995)
 
-Pentium at 75-200 MHz, 1-128MB RAM.
+Pentium at 75-133 MHz, Pentium Overdrive at 125-200 MHz, 1-128MB RAM.
 
-The real board has a Sound Blaster 16 onboard, and optionally an S3 Trio64. Neither
+The real board has a Sound Blaster 16 onboard, and optionally an S3 Trio64V+. Neither
 are emulated as onboard devices.
 
 ROM files needed:
  endeavor\1006cb0_.bi0
  endeavor\1006cb0_.bi1
+
+
+Intel Advanced/ZP (Zappa) (1995)
+
+Pentium at 75-133 MHz, Pentium Overdrive at 125-200 MHz, 1-128MB RAM.
+
+ROM files needed:
+ zappa/1006bs0_.bio
+ zappa/1006bs0_.bi1
 
 
 Intel Premiere/PCI (Batman's Revenge) (1994)
@@ -543,6 +669,26 @@ ROM files needed:
  revenge\1009af2_.bi1
 
 
+Packard Bell PB520R (Robin LC) (1995)
+
+Pentium at 60-66 MHz, Pentium OverDrive at 120-133 MHz, 1-128MB RAM, built-in Cirrus
+Logic GD-5434.
+
+ROM files needed:
+ pb520r/1009bc0r.bio
+ pb520r/1009bc0r.bi1
+ pb520r/gd5434.bin
+
+
+Packard Bell PB570 (Hillary) (1995)
+
+Pentium at 75-133 MHz, Pentium Overdrive at 125-200 MHz, 1-128MB RAM, built-in Cirrus
+Logic GD-5430.
+
+ROM files needed:
+ pb570/1007by0r.bio
+ pb570/1007by0r.bi1
+ pb570/gd5430.bin
 
 
 PCem emulates the following graphics adapters :
@@ -626,6 +772,13 @@ ROM files needed:
  trident.bin
 
 
+Trident TGUI9400CXi
+1-2MB VRAM, supports up to 24-bit colour.
+
+ROM files needed:
+9440.vbi
+
+
 Tseng ET4000AX SVGA
 1MB VRAM, supports up to 8-bit colour.
 
@@ -647,6 +800,28 @@ Mach64VT2 based. 2-4MB VRAM. Has video acceleration.
 
 ROM files needed :
  atimach64vt2pci.bin
+
+
+Cirrus Logic GD-5429
+1-2MB VRAM.
+
+ROM files needed:
+ 5429.vbi
+
+
+Cirrus Logic GD-5430
+1-2MB VRAM.
+
+ROM files needed:
+ gd5430/pci.bin
+
+
+Cirrus Logic GD-5434
+2-4MB VRAM. Real chip also supports 1MB configurations, however this is not currently
+supported in PCem.
+
+ROM files needed:
+ gd5434.bin
 
 
 Diamond Stealth 32 SVGA
@@ -751,28 +926,26 @@ systems.
 
 Some models have fixed graphics adapters :
 
-IBM PCjr
-CGA with various new modes - 160x200x16, 320x200x16, 640x200x4.
+Amstrad MegaPC
+Paradise 90C11. A development of the PVGA1, with 512kb VRAM. Can use external video card.
 
-Olivetti M24
-CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
-ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
-as it is 14-line instead of 16-line.
-
-Tandy 1000
-Clone of PCjr video. Widely supported in 80s games.
-
-Tandy 1000 SL/2
-Improvement of Tandy 1000, with support for 640x200x16.
+Acer 386SX/25N
+Oak OTI-067. Another 512kb SVGA clone. Can use external video card.
 
 Amstrad PC1512
-CGA with a new mode (640x200x16). Only supported in GEM to my knowledge.
+CGA with a new mode (640x200x16).
 
 Amstrad PC1640
-Paradise EGA.
+Paradise EGA. Can use external video card.
 
 Amstrad PC2086/PC3086
-Paradise PVGA1. An early SVGA clone with 256kb VRAM.
+Paradise PVGA1. An early SVGA clone with 256kb VRAM. Can use external video card.
+
+Elonex PC-425X
+Trident TGUI9400CXi with 512kb VRAM.
+
+IBM PCjr
+CGA with various new modes - 160x200x16, 320x200x16, 640x200x4.
 
 IBM PS/1 Model 2011
 Stock VGA with 256kb VRAM.
@@ -780,11 +953,31 @@ Stock VGA with 256kb VRAM.
 IBM PS/1 Model 2121
 Basic (and unknown) SVGA with 256kb VRAM.
 
-Amstrad MegaPC
-Paradise 90C11. A development of the PVGA1, with 512kb VRAM.
+IBM PS/2 machines
+Stock VGA with 256kb VRAM.
 
-Acer 386SX/25N
-Oak OTI-067. Another 512kb SVGA clone.
+Olivetti M24
+CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the font
+ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
+as it is 14-line instead of 16-line.
+
+Packard Bell PB520R
+Cirrus Logic GD-5434. Can use external video card.
+
+Packard Bell PB570
+Cirrus Logic GD-5430. Can use external video card.
+
+Sinclair PC200
+CGA. Can use external video card.
+
+Tandy 1000
+Clone of PCjr video. Widely supported in 80s games.
+
+Tandy 1000 SL/2
+Improvement of Tandy 1000, with support for 640x200x16.
+
+Toshiba T-series
+CGA on built-in LCD or plasma display.
 
 
 
