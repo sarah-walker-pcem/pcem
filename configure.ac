@@ -2,7 +2,7 @@
 #
 
 AC_PREREQ([2.61])
-AC_INIT(PCem, v13.1, Sarah Walker <pcem@pcem-emulator.co.uk>, pcem)
+AC_INIT(PCem, v14, Sarah Walker <pcem@pcem-emulator.co.uk>, pcem)
 
 AC_CANONICAL_HOST
 
