@@ -1,37 +1,34 @@
-PCem v13.1
+PCem v14
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v13:
+Changes since v13.1:
 
-- Minor recompiler tweak, fixed slowdown in some situations (mainly seen on Windows 9x just after booting)
-- Fixed issues with PCJr/Tandy sound on some Sierra games
-- Fixed plasma display on Toshiba 3100e
-- Fixed handling of configurations with full stops in the name
-- Fixed sound output gain when using OpenAL Soft
-- Switched to using OpenAL Soft by default
+- New machines added - Compaq Portable Plus, Compaq Portable II, Elonex PC-425X,
+  IBM PS/2 Model 70 (types 3 & 4), Intel Advanced/ZP, NCR PC4i, Packard Bell Legend 300SX,
+  Packard Bell PB520R, Packard Bell PB570, Thomson TO16 PC, Toshiba T1000, Toshiba T1200, Xi8088
+- New graphics cards added - ATI Korean VGA, Cirrus Logic CL-GD5429, Cirrus Logic CL-GD5430,
+  Cirrus Logic CL-GD5435, OAK OTI-037, Trident TGUI9400CXi
+- New network adapters added - Realtek RTL8029AS
+- Iomega Zip drive emulation
+- Added option for default video timing
+- Added dynamic low-pass filter for SB16/AWE32 DSP playback
+- Can select external video card on some systems with built-in video
+- Can use IDE hard drives up to 127 GB
+- Can now use 7 SCSI devices
+- Implemented CMPXCHG8B on Winchip. Can now boot Windows XP on Winchip processors
+- CD-ROM emulation on OS X
+- Tweaks to Pentium and 6x86 timing
+- Numerous bug fixes - fixes Wing Commander : Privateer, Wing Commander III, Wings of Fury,
+  Zone Raiders, NFL Blitz 2000, Joe Montana Football, SB16 with Earthworm Jim, SB16 with SimCity
+  2000, SB16 with Visual Player 2.0, AHA-1542C with Solaris 2.4, Voodoo 2 with FMV in Urban Chaos,
+  SB2.0 with Syndicate, floppy on early Linux kernels, clicking ADPCM sound playback, varying speed
+  in Desert Strike, keyboard hang on KMX-C-02, S3 video cards with Linux and OS/2 Warp, AudioPCI
+  hangs on Windows 2000/XP, OS/2 v2.0 on machines with remapped memory (eg PS/2), OS/2 v2.0 IO
+  performance with PS/2 ESDI, etc etc
 
-Changes since v12:
-
-- New machines added - Atari PC3, Epson PC AX, Epson PC AX2e, GW-286CT GEAR, IBM PS/2 Model 30-286,
-  IBM PS/2 Model 50, IBM PS/2 Model 55SX, IBM PS/2 Model 80, IBM XT Model 286, KMX-C-02,
-  Samsung SPC-4200P, Samsung SPC-4216P, Toshiba 3100e,
-- New graphics cards - MDSI Genius, Plantronics ColorPlus
-- New sound cards added - Disney Sound Source, Ensoniq AudioPCI (ES1371), LPT DAC, Sound Blaster PCI 128
-- New hard drive controllers added - AT Fixed Disk Adapter, DTC 5150X, Fixed Disk Adapter (Xebec),
-  IBM ESDI Fixed Disk Controller, Western Digital WD1007V-SE1
-- New SCSI adapters added - Adaptec AHA-1542C, BusLogic BT-545S, Longshine LCS-6821N, Rancho RT1000B,
-  Trantor T130B
-- New network adapters added - NE2000 compatible
-- New cross-platform GUI
-- Voodoo SLI emulation
-- Improvements to Sound Blaster emulation
-- Improvements to Pentium timing
-- Various bug fixes
-- Minor optimisations
-
-Thanks to AmatCoder, basic2004, bit, dns2k, ecksemess, Greatpsycho, hOMER247, James-F, John Elliott,
-JosepMa, leilei, neozeed, ruben_balea, SA1988 and tomaszkam for contributions towards this release.
+Thanks to darksabre76, dns2kv2, EluanCM, Greatpsycho, ja've, John Elliott, leilei and nerd73 for
+contributions towards this release.
 
 
 PCem emulates the following machines:
@@ -1192,17 +1189,18 @@ Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've 
 
 Software tested:
 
+CP/M-86 1.0
+
 PC-DOS 1.0
-PC-DOS 2.10
+MS-DOS 2.11
 MS-DOS 3.30
+PC-DOS 4.01
 MS-DOS 5.0
+PC-DOS 5.02
 MS-DOS 6.0
 MS-DOS 6.22
 
-DR-DOS 6.0
-
 Windows 1.03
-Windows 2.03
 Windows/286 2.11
 Windows/386 2.11
 Windows 3.0
@@ -1214,7 +1212,6 @@ Windows 98
 Windows 98 SE
 Windows ME
 
-Windows NT 3.1
 Windows NT 3.51
 Windows NT 4
 Windows 2000
@@ -1224,12 +1221,15 @@ OS/2 v1.0
 OS/2 v1.1
 OS/2 v1.2
 OS/2 v1.3
-OS/2 v2.0
+OS/2 v2.1
 OS/2 Warp 3
 OS/2 Warp 4
 
+Corel Linux 1.2
 Red Hat Linux 7.1 (Seawolf)
-Ubuntu 10.04
+
+Solaris 2.4
+Solaris 2.5.1
 
 BeOS 5 Personal
 BeOS 5 Professional
@@ -1238,151 +1238,181 @@ DESQview/X
 
 GEM Desktop 3.11
 
-Borland C++ v3.1
-Fasttracker v2.08
-Internet Explorer 5.0
+After Dark 3.0
+Aldus PageMaker 5.0
+Ami Pro 3.0
+Borland C++ 3.1
+Cubasis v1.13
+Fasttracker 2.08
+Firefox 12.0
+Internet Explorer 5 (windows 3.x and 9x versions tested)
+Microsoft Basic 4.0
 Microsoft Office 95
-Microsoft Visual Basic 3.0
-Microsoft Word for OS/2 1.1
+Microsoft Visual C++ 6.0 Standard Edition
+Microsoft Word 1.1
 Microsoft Word for Windows 1.1
+Microsoft Word for Windows 2.0c
+Microsoft Word 6.0
+Microsoft Works 2.0
 Microsoft Works for Windows 3.0
-Micrografx Windows Draw 1.04
-PC Paintbrush for Windows v1.05
-Ventura Publisher v3.0
+Netscape Communicator 4.73
+Norton Utilities 8.0
+PC Paintbrush v1.05
+Photoshop v3.0.4
+Tantrakr
 
+Actua Soccer
 Age of Empires
 Aladdin
-Alien vs Predator (3DFX)
 All New World of Lemmings
-Alone in the Dark
-American McGee's Alice (3DFX)
+American McGee's Alice
+Area 51
 Arkanoid
-Beasts and Bumpkins
-Blake Stone
-BreakNeck (3DFX)
-Caesar III
+Ascendancy
+Battlezone
+Beyond Castle Wolfenstein
+Bio Menace (shareware)
+Blood 2
+Boppin'
+Brix (shareware)
+Bust-A-Move 2
+Caesar 3
 Cannon Fodder 2
-Civilization
+CART: Precision Racing
 Civilization II
-Colin McRae Rally (3DFX)
-Colonization
-Command & Conquer : Red Alert
-Command & Conquer : Red Alert 2
-Commander Keen : Goodbye Galaxy
-Commander Keen : Invasion of the Vorticons
+Clusterball
+Command and Conquer : Red Alert
+Commando
+Commandos: Behind Enemy Lines
+Commandos: Beyond the Call of Duty
+Conquest
 Corridor 7
-Croc (3DFX)
 Curse of Monkey Island
 Dawn Patrol
-Descent Freespace (3DFX)
-Deus Ex (3DFX)
+Desert Strike
+Dethkarz
+Deus Ex
 Discworld II
-Doom
-Doom II
-Duke Nukem 3D
+Digger
+Dogz
+Doom (v1.2 registered)
+Doom II (v1.666)
+Double Dragon
+Down Under Dan
+Drakan : Order of the Flame
+Dreamweb
+Duke Nukem 3D (shareware)
 Dune
 Dune II
-Ecstatica
-Epic Pinball
-Expendable (3DFX)
-Final Fantasy VII (3DFX)
-Formula 1 '97 (3DFX)
-Freespace 2 (3DFX)
-G-Police (3DFX)
-Grim Fandango (3DFX)
-Grand Theft Auto (3DFX)
-GTA2 (3DFX)
-Half-Life (3DFX)
+Dungeon Keeper 2
+Earthworm Jim (DOS)
+Epic Pinball (v2.1 registered)
+Final Fantasy VII
+Forsaken
+Frogger
+G-Police
+Grand Theft Auto
+Hardwar
 Heartlight
-Hitchhiker's Guide to the Galaxy
-Hocus Pocus
-House of the Dead 2 (3DFX)
-Incoming (3DFX)
-International Rally Championship (3DFX)
-Interstate 76
+Heretic
+Heretic II
+Hitch-Hiker's Guide to the Galaxy
+Hocus Pocus (v1.1 shareware)
+House of the Dead 2
+Incoming
 Jazz Jackrabbit
 Jazz Jackrabbit 2
-Jedi Knight (3DFX)
-Jill of the Jungle
-LBA 2
-Lode Runner : The Legend Returns
-Kings Quest
+Joe Montana Football
+Jumpman
+King's Quest
+King's Quest II
+Lemmings
+Lemmings 2 : The Tribes
+Little Big Adventure 2
+Lotus III
+Mageslayer
+Maniac Mansion
+Maniac Mansion (enhanced)
 Microsoft Arcade
-MiG-29 Fulcrum (3DFX)
 Monkey Island 2
-Monster Bash
-Mortal Kombat
-Mystic Towers
-Need for Speed II SE (3DFX)
-Need for Speed III (3DFX)
+Monster Bash (shareware)
+Monster Truck Madness
+Mortal Kombat II
+Mortal Kombat Trilogy
+Necrodome
+Need for Speed II SE
+Nerf Arena Blast
 Network Q RAC Rally
-No One Lives Forever (3DFX)
-Oddworld : Abe's Oddysee
+NFL Blitz
+NFL Blitz 2000
+Pax Corpus
 Pinball Fantasies
-Police Quest
+Pinball Illusions
+Police Quest II
 Power Drive
 Prince of Persia
 Pro Pinball : Big Race USA
-Pro Pinball : Timeshock!
-Psycho Pinball
-Quake (3DFX)
-Quake II (3DFX)
-Quake III Arena (3DFX)
+Pro Pinball : The Web
+Pro Pinball : Timeshock
+Puyo Puyo Tsu
+Quake (v1.01 registered)
+Quake 2
+Quake III Arena
 Railroad Tycoon II
+Rampage World Tour
 Rayman
-Rebel Moon Rising
-Resident Evil 2 (3DFX)
-Return Fire II (3DFX)
-Return to Castle Wolfenstein (3DFX)
-Rise of the Triad
+Redline Racer (1998 US release)
+Revolution X
 Rollercoaster Tycoon
-Rollercoaster Tycoon 2
-Sam & Max Hit the Road
+Rollo and the Brush Bros
 Screamer
-Screamer Rally (not 3DFX)
+Screamer 2
 Secret of Monkey Island
-Sensible World of Soccer        
-Sid Meier's Alpha Centauri
-SimCity 2000
-SimCity 3000
-SiN (3DFX)
-Sonic & Knuckles Collection
-Star Wars Episode 1 Racer (3DFX)
+SimCity 2000 (DOS)
+SimCity 2000 (OS/2)
+SimCity 3000 (Linux)
+Slipstream 5000
+Sonic R
+Space Strike
+Star Trek : Starfleet Command
+Star Trek : Voyager - Elite Force
 Stargunner
+Super Zaxxon
+Syndicate
 System Shock
-System Shock 2 (3DFX - SLOW)
-The Chaos Engine
+Take No Prisoners
+Terminal Velocity
+TFX
 The Humans
 The Lion King
+The Ultimate Doom (v1.9)
 Theme Hospital
-Tie Fighter
-TOCA 2 (3DFX)
-Tomb Raider (3DFX, ViRGE)
-Tomb Raider II (3DFX)
-Tomb Raider III (3DFX)
-Tony Hawk's Pro Skater 2 (3DFX)
+Theme Park (floppy version)
+Tomb Raider
+Tomb Raider II
+Tony Hawks Pro Skater 2
 Total Annihilation
 Transport Tycoon
-Trespasser (3DFX)
-Turok (3DFX)
-Turok 2 (3DFX)
+Transport Tycoon Deluxe
+Turok : Dinosaur Hunter
 Turrican II
-Tyrian
-Unreal (3DFX)
-Unreal Tournament (3DFX)
+UFO : Enemy Unknown (v1.2)
+Unreal
+Unreal Tournament
 Wacky Wheels
-Wing Commander
-Wizkid
-Wolfenstein 3D
-World Cup 98 (3DFX)
+Warcraft II
+Wargasm
+Wetrix
+Wing Commander 3
+Wing Commander Privateer
+Wolfenstein 3D (v1.4 registered)
 Worms
-Worms World Party
-X-Com : Apocalypse
-X-Com : Terror From The Deep
-Xenon
-Xenon 2
+Worms United
+Worms 2
+X-Wing (floppy version)
 Zak McKracken
-Zone 66
+Zone 66 (shareware)
+Zone Raiders
 
 Cascada - Cronologia
 Complex - Cyboman 2
@@ -1390,12 +1420,10 @@ EMF - Verses
 Future Crew - Second Reality
 Gazebo - Cyboman!
 Hornet - Introjr
-KFMF - Dance, Move, Shake
-KFMF - Trip (3DFX)
 Logic Design - Fashion
-Orange - x14
+Orange - X14
 Renaissance - Amnesia
-Skull - Putre Faction
+Skull - Putrefaction
 Tran - Ambience
 Tran - Luminati
 Tran - Timeless
@@ -1403,10 +1431,12 @@ Triton - Crystal Dream
 Triton - Crystal Dream II
 Ultraforce - Coldcut
 Ultraforce - Vectdemo
+Witan - Witan House
 
 BeebInC v0.99f
 Fellow v0.33
 KGen98 v0.4b
 PaCifiST v0.45
-ZSNES v0.800
 SNES9x v0.96
+vMac v1.9.1.1
+ZSNES v0.800
