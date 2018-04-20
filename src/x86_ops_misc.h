@@ -114,8 +114,8 @@ static int opF6_a16(uint32_t fetchdat)
                         x86_int(0);
                         return 1;
                 }
-                CLOCK_CYCLES(is486 ? 16 : 14);
-                PREFETCH_RUN(is486 ? 16 : 14, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 0);
+                CLOCK_CYCLES((is486 && !cpu_iscyrix) ? 16 : 14);
+                PREFETCH_RUN((is486 && !cpu_iscyrix) ? 16 : 14, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 0);
                 break;
                 case 0x38: /*IDIV AL,b*/
                 tempws = (int)(int16_t)AX;
@@ -214,8 +214,8 @@ static int opF6_a32(uint32_t fetchdat)
                         x86_int(0);
                         return 1;
                 }
-                CLOCK_CYCLES(is486 ? 16 : 14);
-                PREFETCH_RUN(is486 ? 16 : 14, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
+                CLOCK_CYCLES((is486 && !cpu_iscyrix) ? 16 : 14);
+                PREFETCH_RUN((is486 && !cpu_iscyrix) ? 16 : 14, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
                 break;
                 case 0x38: /*IDIV AL,b*/
                 tempws = (int)(int16_t)AX;
@@ -316,8 +316,8 @@ static int opF7_w_a16(uint32_t fetchdat)
                         x86_int(0);
                         return 1;
                 }
-                CLOCK_CYCLES(is486 ? 24 : 22);
-                PREFETCH_RUN(is486 ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 0);
+                CLOCK_CYCLES((is486 && !cpu_iscyrix) ? 24 : 22);
+                PREFETCH_RUN((is486 && !cpu_iscyrix) ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 0);
                 break;
                 case 0x38: /*IDIV AX,w*/
                 tempws = (int)((DX << 16)|AX);
@@ -410,8 +410,8 @@ static int opF7_w_a32(uint32_t fetchdat)
                         x86_int(0);
                         return 1;
                 }
-                CLOCK_CYCLES(is486 ? 24 : 22);
-                PREFETCH_RUN(is486 ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
+                CLOCK_CYCLES((is486 && !cpu_iscyrix) ? 24 : 22);
+                PREFETCH_RUN((is486 && !cpu_iscyrix) ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
                 break;
                 case 0x38: /*IDIV AX,w*/
                 tempws = (int)((DX << 16)|AX);
