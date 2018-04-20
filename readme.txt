@@ -729,15 +729,23 @@ An enhanced Hercules with a custom 720x350 16 colour mode.
 Unaccelerated (S)VGA cards :
 
 
+ATI Korean VGA
+ATI-28800 based. 512kb VRAM, supports up to 8-bit colour. Korean font support.
+
+ROM files needed:
+ atikorvga.bin
+ ati_ksc5601.rom
+
+
 ATI VGA Edge-16
-512kb VRAM, supports up to 8-bit colour.
+ATI-18800 based. 512kb VRAM, supports up to 8-bit colour.
 
 ROM files needed:
  vgaedge16.vbi
 
 
 ATI VGA Charger
-512kb VRAM, supports up to 8-bit colour.
+ATI-28800 based. 512kb VRAM, supports up to 8-bit colour.
 
 ROM files needed:
  bios.bin
@@ -748,6 +756,13 @@ IBM VGA (1987)
 
 ROM files needed:
  ibm_vga.bin
+
+
+OAK OTI-037C
+256kb VRAM, supports up to 8-bit colour.
+
+ROM files needed:
+ oti037\bios.bin
 
 
 OAK OTI-067
