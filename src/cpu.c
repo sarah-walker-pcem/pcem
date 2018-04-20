@@ -1681,7 +1681,7 @@ void cpu_update_waitstates()
                 cpu_cycles_write_l = (cpu_16bitbus ? 2 : 1) * cpu_s->mem_write_cycles;
         }
         if (is486)
-                cpu_prefetch_cycles *= 4;
+                cpu_prefetch_cycles = (cpu_prefetch_cycles * 11) / 16;
         cpu_mem_prefetch_cycles = cpu_prefetch_cycles;
         if (cpu_s->rspeed <= 8000000)
                 cpu_rom_prefetch_cycles = cpu_mem_prefetch_cycles;
