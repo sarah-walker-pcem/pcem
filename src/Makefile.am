@@ -15,7 +15,7 @@ endif
 amrefresh:	
 
 # Special wxWidgets files
-WINDRES = $(shell wx-config --rescomp)
+WINDRES = $(shell $(WX_CONFIG_PATH) --rescomp)
 wx.res: wx.rc
 	$(WINDRES) -i wx.rc --input-format=rc -o wx.res -O coff
  
@@ -53,8 +53,8 @@ resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
-pcem_CFLAGS = $(subst -fpermissive,,$(shell wx-config --cxxflags) $(shell sdl2-config --cflags))
-pcem_CXXFLAGS = $(shell wx-config --cxxflags) $(shell sdl2-config --cflags)
+pcem_CFLAGS = $(subst -fpermissive,,$(shell $(WX_CONFIG_PATH) --cxxflags) $(shell sdl2-config --cflags))
+pcem_CXXFLAGS = $(shell $(WX_CONFIG_PATH) --cxxflags) $(shell sdl2-config --cflags)
 pcem_LDADD = @LIBS@
 pcem_SOURCES += wx-main.cc wx-config_sel.c wx-dialogbox.cc wx-utils.cc wx-app.cc \
  wx-sdl2-joystick.c wx-sdl2-mouse.c wx-sdl2-keyboard.c wx-sdl2-video.c \
