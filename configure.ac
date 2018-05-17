@@ -118,6 +118,7 @@ AC_CHECK_LIB([pthread], [pthread_create])
 build_macosx="no"
 build_linux="no"
 build_win="no"
+build_other="no"
 
 case "$host" in
     *-*-darwin*)
@@ -135,7 +136,7 @@ case "$host" in
        build_win="yes"
        AC_SUBST(SET_MAKE, 'MAKE=mingw32-make')
        ;;
-    *)
+    *-*-linux*)
        AC_CHECK_LIB([GL], [glGetError], [], \
            [echo "You need to install the OpenGL library."
            exit -1])
@@ -144,12 +145,22 @@ case "$host" in
            exit -1])
        build_linux="yes"
        ;;
+    *)
+       AC_CHECK_LIB([GL], [glGetError], [], \
+           [echo "You need to install the OpenGL library."
+           exit -1])
+       AC_CHECK_LIB([openal], [alGetError], [], \
+           [echo "You need to install the OpenAL library."
+           exit -1])
+       build_other="yes"
+       ;;
 esac
 
 LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 
 AM_CONDITIONAL(OS_LINUX, [test "$build_linux" = "yes"])
 AM_CONDITIONAL(OS_WINDOWS, [test "$build_win" = "yes"])
+AM_CONDITIONAL(OS_OTHER, [test "$build_other" = "yes"])
 AM_CONDITIONAL(OS_MACOSX, [test "$build_macosx" = "yes"])
 
 AC_OUTPUT([Makefile src/Makefile])

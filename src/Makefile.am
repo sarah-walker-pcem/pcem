@@ -97,6 +97,10 @@ if OS_LINUX
 pcem_SOURCES += cdrom-ioctl-linux.c wx-sdl2-display.c
 endif
 
+if OS_OTHER
+pcem_SOURCES += cdrom-ioctl-dummy.c wx-sdl2-display.c
+endif
+
 if OS_MACOSX
 pcem_SOURCES += cdrom-ioctl-osx.c wx-sdl2-display.c
 pcem_CFLAGS += -DPCEM_RENDER_WITH_TIMER -DPCEM_RENDER_TIMER_LOOP
