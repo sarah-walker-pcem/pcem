@@ -74,6 +74,11 @@ AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
 
 AC_MSG_CHECKING([for off64_t])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],[[off64_t n=0;]])],[has_lfs="yes"],[has_lfs="no"])
+case "$host" in
+    *-*-freebsd*) # has off64_t but no fopen64/etc.
+       has_lfs="no"
+       ;;
+esac
 AC_MSG_RESULT($has_lfs)
 
 #AC_MSG_CHECKING([for libz])
