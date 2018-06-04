@@ -50,8 +50,8 @@
 #include "pci.h"
 #include "timer.h"
 
-//THIS IS THE DEFAULT MAC ADDRESS .... so it wont place nice with multiple VMs. YET.
-uint8_t maclocal[6] = {0xac, 0xde, 0x48, 0x88, 0xbb, 0xaa};
+/*MAC address*/
+uint8_t maclocal[6];
 
 typedef enum
 {
@@ -1673,9 +1673,35 @@ void *ne2000_common_init()
 {
         struct in_addr myaddr; 
         int rc;
+        unsigned int macint[6];
+        char *macstring;
 
         ne2000_t *ne2000 = malloc(sizeof(ne2000_t));
         memset(ne2000, 0, sizeof(ne2000_t));
+
+        macstring = config_get_string(CFG_MACHINE, NULL, "macaddr", "");
+
+        if (sscanf(macstring, "%02x:%02x:%02x:%02x:%02x:%02x",
+                   &macint[0],&macint[1],&macint[2],&macint[3],&macint[4],&macint[5]) != 6)
+        {
+                maclocal[0] = 0xac;
+                maclocal[1] = 0xde;
+                maclocal[2] = 0x48;
+                maclocal[3] = 0x88;
+                maclocal[4] = 0xbb;
+                maclocal[5] = 0xaa;
+                pclog("ne2000: Using default MAC address (AC:DE:48:88:BB:AA)\n");
+        }
+        else
+        {
+                maclocal[0] = macint[0];
+                maclocal[1] = macint[1];
+                maclocal[2] = macint[2];
+                maclocal[3] = macint[3];
+                maclocal[4] = macint[4];
+                maclocal[5] = macint[5];
+                pclog("ne2000: Using MAC address from pcem.cfg: %s\n", macstring);
+        }
 
         //net_type
         //0 pcap
