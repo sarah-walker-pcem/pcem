@@ -235,6 +235,8 @@ int loadbios()
                 if (!f) break;
                 romfread(rom+0xE000,8192,1,f);
                 fclose(f);
+                if (!mem_load_basic("genxt"))
+                        break;
                 return 1;
                 case ROM_DTKXT:
                 f=romfopen("dtk/dtk_erso_2.42_2764.bin","rb");
