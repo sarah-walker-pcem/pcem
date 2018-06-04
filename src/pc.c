@@ -275,7 +275,7 @@ void initpc(int argc, char *argv[])
                         if ((c+1) == argc)
                                 break;
 
-                        strncpy(discfns[0], argv[c+1], 260);
+                        strncpy(discfns[0], argv[c+1], 256);
                         c++;
                         override_drive_a = 1;
                 }
@@ -284,7 +284,7 @@ void initpc(int argc, char *argv[])
                         if ((c+1) == argc)
                                 break;
 
-                        strncpy(discfns[1], argv[c+1], 260);
+                        strncpy(discfns[1], argv[c+1], 256);
                         c++;
                         override_drive_b = 1;
                 }
