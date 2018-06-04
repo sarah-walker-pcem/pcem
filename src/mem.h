@@ -182,6 +182,8 @@ void mem_add_bios();
 void mem_init();
 void mem_resize();
 
+void mem_set_704kb();
+
 void flushmmucache();
 void flushmmucache_nopc();
 void flushmmucache_cr3();

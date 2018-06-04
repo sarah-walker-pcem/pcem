@@ -417,6 +417,8 @@ void resetpchard()
         disc_load(1, discfns[1]);
 
         model_init();
+        if (!AT)
+                mem_set_704kb();
         mouse_emu_init();
         video_init();
         speaker_init();
