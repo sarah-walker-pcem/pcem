@@ -2313,10 +2313,10 @@ void mem_init()
 
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0x000000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x000000, (mem_size > (AT ? 640 : 768)) ? (AT ? 0xa0000 : 0xc0000) : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
         mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
 
-        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
+        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > (AT ? 640 : 768)) ? (AT ? 0xa0000 : 0xc0000) : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
         if (mem_size > 1024)
         {
                 if (cpu_16bitbus && mem_size > 16256)
@@ -2414,10 +2414,10 @@ void mem_resize()
         
         memset(_mem_state, 0, sizeof(_mem_state));
 
-        mem_set_mem_state(0x000000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        mem_set_mem_state(0x000000, (mem_size > (AT ? 640 : 768)) ? (AT ? 0xa0000 : 0xc0000) : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
         mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
         
-        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
+        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > (AT ? 640 : 768)) ? (AT ? 0xa0000 : 0xc0000) : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
         if (mem_size > 1024)
         {
                 if (cpu_16bitbus && mem_size > 16256)
