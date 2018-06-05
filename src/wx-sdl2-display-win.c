@@ -306,6 +306,7 @@ LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
 int display_init()
 {
+        SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
         {
                 printf("SDL could not initialize! Error: %s\n", SDL_GetError());
