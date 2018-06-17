@@ -4,14 +4,6 @@
 #include "mem.h"
 #include "x86_ops.h"
 
-#ifdef __amd64__
-#include "codegen_x86-64.h"
-#elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
-#include "codegen_x86.h"
-#else
-#error Dynamic recompiler not implemented on your platform
-#endif
-
 /*Handling self-modifying code (of which there is a lot on x86) :
 
   PCem tracks a 'dirty mask' for each physical page, in which each bit
@@ -36,6 +28,9 @@
   avoiding most unnecessary evictions (eg when code & data are stored in the
   same page).
 */
+
+/*Hack until better memory management written*/
+#define BLOCK_DATA_SIZE 0x10000
 
 typedef struct codeblock_t
 {
@@ -66,7 +61,7 @@ typedef struct codeblock_t
         uint32_t status;
         uint32_t flags;
 
-        uint8_t data[2048];
+        uint8_t data[BLOCK_DATA_SIZE];
 } codeblock_t;
 
 /*Code block uses FPU*/
@@ -310,45 +305,6 @@ extern int block_current;
 extern int block_pos;
 
 #define CPU_BLOCK_END() cpu_block_end = 1
-
-static inline void addbyte(uint8_t val)
-{
-        codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addword(uint16_t val)
-{
-        *(uint16_t *)(void *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 2;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addlong(uint32_t val)
-{
-        *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 4;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addquad(uint64_t val)
-{
-        *(uint64_t *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 8;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
 
 /*Current physical page of block being recompiled. -1 if no recompilation taking place */
 extern uint32_t recomp_page;

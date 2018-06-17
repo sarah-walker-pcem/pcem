@@ -12,6 +12,7 @@
 #include <wx/wfstream.h>
 #include <wx/progdlg.h>
 #include <wx/choicebk.h>
+#include <wx/combobox.h>
 
 #include "wx-dialogbox.h"
 #include "wx-app.h"

@@ -8,6 +8,7 @@
 #include "x87.h"
 #include "mem.h"
 #include "codegen.h"
+#include "codegen_backend.h"
 #include "cpu.h"
 #include "fdc.h"
 #include "nmi.h"
