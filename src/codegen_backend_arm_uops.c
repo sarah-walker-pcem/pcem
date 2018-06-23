@@ -269,6 +269,28 @@ static int codegen_LOAD_FUNC_ARG3_IMM(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
+{
+	uint32_t arm_imm;
+
+	if (get_arm_imm(uop->imm_data, &arm_imm))
+		host_arm_MOV_IMM(block, uop->dest_reg_a_real, uop->imm_data);
+	else
+	{
+		int offset = add_literal(block, uop->imm_data);
+		host_arm_LDR_IMM(block, uop->dest_reg_a_real, REG_LITERAL, offset);
+	}
+
+        return 0;
+}
+static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
+{
+	int offset = add_literal(block, (uintptr_t)uop->p);
+	host_arm_LDR_IMM(block, uop->dest_reg_a_real, REG_LITERAL, offset);
+
+        return 0;
+}
+
 static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 {
 	uint32_t arm_imm;
@@ -308,7 +330,34 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_LOAD_FUNC_ARG_3_IMM & UOP_MASK] = codegen_LOAD_FUNC_ARG3_IMM,
 
         [UOP_STORE_P_IMM & UOP_MASK] = codegen_STORE_PTR_IMM,
-        [UOP_STORE_P_IMM_8 & UOP_MASK] = codegen_STORE_PTR_IMM_8
+        [UOP_STORE_P_IMM_8 & UOP_MASK] = codegen_STORE_PTR_IMM_8,
+
+        [UOP_MOV_PTR & UOP_MASK] = codegen_MOV_PTR,
+        [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM
 };
+
+void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg)
+{
+	if (in_range(p, &cpu_state))
+		host_arm_STRB_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+	else
+		fatal("codegen_direct_write_8 - not in range\n");
+}
+
+void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg)
+{
+	if (in_range(p, &cpu_state))
+		host_arm_STR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+	else
+		fatal("codegen_direct_write_32 - not in range\n");
+}
+
+void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg)
+{
+	if (in_range(p, &cpu_state))
+		host_arm_STR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+	else
+		fatal("codegen_direct_write_ptr - not in range\n");
+}
 
 #endif

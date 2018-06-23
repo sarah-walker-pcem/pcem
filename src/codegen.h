@@ -325,4 +325,5 @@ extern int codegen_reg_loaded[8];
 
 extern int codegen_in_recompile;
 
+void codegen_generate_reset();
 #endif

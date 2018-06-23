@@ -63,3 +63,5 @@ struct ir_data_t *codegen_get_ir_data();
 typedef int (*uOpFn)(codeblock_t *codeblock, struct uop_t *uop);
 
 extern const uOpFn uop_handlers[];
+
+extern int codegen_host_reg_list[CODEGEN_HOST_REGS];

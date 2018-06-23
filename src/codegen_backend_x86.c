@@ -13,6 +13,13 @@
 #include <windows.h>
 #endif
 
+int codegen_host_reg_list[CODEGEN_HOST_REGS] =
+{
+        REG_EAX,
+        REG_EBX,
+        REG_EDX
+};
+
 static void *mem_abrt_rout;
 
 void codegen_backend_init()

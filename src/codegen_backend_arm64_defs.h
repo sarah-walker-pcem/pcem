@@ -70,3 +70,5 @@
 #define REG_ARG3 REG_X3
 
 #define REG_CPUSTATE REG_X29
+
+#define CODEGEN_HOST_REGS 5

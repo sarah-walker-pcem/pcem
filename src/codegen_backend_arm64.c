@@ -15,6 +15,15 @@
 #include <windows.h>
 #endif
 
+int codegen_host_reg_list[CODEGEN_HOST_REGS] =
+{
+        REG_X19,
+        REG_X20,
+        REG_X21,
+	REG_X22,
+	REG_X23
+};
+
 void codegen_backend_init()
 {
         int c;

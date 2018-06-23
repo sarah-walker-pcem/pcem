@@ -12,6 +12,7 @@
 #include "codegen.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
+#include "codegen_reg.h"
 
 int codegen_flat_ds, codegen_flat_ss;
 int mmx_ebx_ecx_loaded;
@@ -308,6 +309,8 @@ void codegen_block_start_recompile(codeblock_t *block)
         codegen_flat_ss = !(cpu_cur_status & CPU_STATUS_NOTFLATSS);       
         
         ir_data = codegen_ir_init();
+        codegen_reg_reset();
+        codegen_generate_reset();
 }
 
 
