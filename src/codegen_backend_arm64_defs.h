@@ -29,6 +29,7 @@
 #define REG_W28 28
 #define REG_W29 29
 #define REG_W30 30
+#define REG_WZR 31
 
 #define REG_X0   0
 #define REG_X1   1
@@ -61,6 +62,7 @@
 #define REG_X28 28
 #define REG_X29 29
 #define REG_X30 30
+#define REG_XZR 31
 
 #define REG_SP  31
 

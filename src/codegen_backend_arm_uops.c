@@ -30,6 +30,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_SHIFT 20
 #define OPCODE_ADD_IMM  (0x28 << OPCODE_SHIFT)
+#define OPCODE_ADD_REG  (0x08 << OPCODE_SHIFT)
+#define OPCODE_AND_IMM  (0x20 << OPCODE_SHIFT)
+#define OPCODE_AND_REG  (0x00 << OPCODE_SHIFT)
 #define OPCODE_B        (0xa0 << OPCODE_SHIFT)
 #define OPCODE_LDMIA_WB (0x8b << OPCODE_SHIFT)
 #define OPCODE_LDR_IMM  (0x51 << OPCODE_SHIFT)
@@ -44,6 +47,18 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_BLX 0xe12fff30
 
 #define B_OFFSET(x) (((x) >> 2) & 0xffffff)
+
+#define SHIFT_TYPE_SHIFT 5
+#define SHIFT_TYPE_LSL (0 << SHIFT_TYPE_SHIFT)
+#define SHIFT_TYPE_LSR (1 << SHIFT_TYPE_SHIFT)
+#define SHIFT_TYPE_ASR (2 << SHIFT_TYPE_SHIFT)
+#define SHIFT_TYPE_ROR (3 << SHIFT_TYPE_SHIFT)
+
+#define SHIFT_TYPE_IMM (0 << 4)
+#define SHIFT_TYPE_REG (1 << 4)
+
+#define SHIFT_IMM_SHIFT 7
+#define SHIFT_LSL_IMM(x) (SHIFT_TYPE_LSL | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 
 static int literal_offset = 0;
 void codegen_reset_literal_pool(codeblock_t *block)
@@ -114,14 +129,49 @@ static inline int in_range(void *addr, void *base)
 	return 1;
 }
 
+void host_arm_ADD_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+
 void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
 {
 	uint32_t arm_imm;
 
-	if (!get_arm_imm(imm, &arm_imm))
-		fatal("host_arm_ADD_IMM !check_arm_imm %08x\n", imm);
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_ADD_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_ADD_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
 
-	codegen_addlong(block, COND_AL | OPCODE_ADD_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+void host_arm_ADD_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_ADD_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
+}
+
+void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
+{
+	uint32_t arm_imm;
+
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_AND_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
+
+void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_AND_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
 }
 
 void host_arm_BLX(codeblock_t *block, int addr_reg)
@@ -153,15 +203,20 @@ void host_arm_MOV_IMM(codeblock_t *block, int dst_reg, uint32_t imm)
 {
 	uint32_t arm_imm;
 
-	if (!get_arm_imm(imm, &arm_imm))
-		fatal("host_arm_MOV_IMM !check_arm_imm %08x\n", imm);
-
-	codegen_addlong(block, COND_AL | OPCODE_MOV_IMM | Rd(dst_reg) | arm_imm);
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_MOV_IMM | Rd(dst_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, dst_reg, REG_LITERAL, offset);
+	}
 }
 
-void host_arm_MOV_REG(codeblock_t *block, int dst_reg, int src_reg)
+void host_arm_MOV_REG_LSL(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg));
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSL_IMM(shift));
 }
 
 void host_arm_STMDB_WB(codeblock_t *block, int addr_reg, uint32_t reg_mask)
@@ -204,7 +259,31 @@ void host_arm_call(codeblock_t *block, void *dst_addr)
 
 void host_arm_nop(codeblock_t *block)
 {
-	host_arm_MOV_REG(block, REG_R0, REG_R0);
+	host_arm_MOV_REG_LSL(block, REG_R0, REG_R0, 0);
+}
+
+static int codegen_ADD(codeblock_t *block, uop_t *uop)
+{
+	host_arm_ADD_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
+        return 0;
+}
+
+static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
+{
+	host_arm_ADD_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
+}
+
+static int codegen_ADD_LSHIFT(codeblock_t *block, uop_t *uop)
+{
+	host_arm_ADD_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, uop->imm_data);
+        return 0;
+}
+
+static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
+{
+	host_arm_AND_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
 }
 
 static int codegen_CALL_INSTRUCTION_FUNC(codeblock_t *block, uop_t *uop)
@@ -266,6 +345,13 @@ static int codegen_LOAD_FUNC_ARG3_IMM(codeblock_t *block, uop_t *uop)
 		int offset = add_literal(block, uop->imm_data);
 		host_arm_LDR_IMM(block, REG_ARG3, REG_LITERAL, offset);
 	}
+        return 0;
+}
+
+static int codegen_MOV(codeblock_t *block, uop_t *uop)
+{
+	host_arm_MOV_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, 0);
+
         return 0;
 }
 
@@ -332,9 +418,23 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_STORE_P_IMM & UOP_MASK] = codegen_STORE_PTR_IMM,
         [UOP_STORE_P_IMM_8 & UOP_MASK] = codegen_STORE_PTR_IMM_8,
 
+        [UOP_MOV     & UOP_MASK] = codegen_MOV,
         [UOP_MOV_PTR & UOP_MASK] = codegen_MOV_PTR,
-        [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM
+        [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM,
+        
+        [UOP_ADD     & UOP_MASK] = codegen_ADD,
+        [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,
+        [UOP_ADD_LSHIFT & UOP_MASK] = codegen_ADD_LSHIFT,
+        [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM
 };
+
+void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)
+{
+	if (in_range(p, &cpu_state))
+		host_arm_LDR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+	else
+		fatal("codegen_direct_read_32 - not in range\n");
+}
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg)
 {

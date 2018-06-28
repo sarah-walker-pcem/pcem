@@ -20,8 +20,6 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
         REG_R4,
         REG_R5,
         REG_R6,
-//	REG_X22,
-//	REG_X23
 };
 
 void codegen_backend_init()

@@ -23,6 +23,8 @@
 #define REG_CPUSTATE REG_R10
 #define REG_LITERAL  REG_R11
 
+#define REG_TEMP REG_R3
+
 #define REG_MASK_R0  (1 << REG_R0)
 #define REG_MASK_R1  (1 << REG_R1)
 #define REG_MASK_R2  (1 << REG_R2)

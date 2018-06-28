@@ -32,8 +32,13 @@
 #define UOP_STORE_P_IMM_8         (UOP_TYPE_PARAMS_IMM     | 0x13)
 #define UOP_MOV_PTR               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x20)
 #define UOP_MOV_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x21)
+#define UOP_MOV                   (UOP_TYPE_PARAMS_REGS    | 0x22)
+#define UOP_ADD                   (UOP_TYPE_PARAMS_REGS    | 0x30)
+#define UOP_ADD_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x31)
+#define UOP_AND_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x32)
+#define UOP_ADD_LSHIFT            (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x33)
 
-#define UOP_MAX 0x22
+#define UOP_MAX 0x34
 
 #define UOP_MASK 0xffff
 
@@ -43,10 +48,10 @@ typedef struct uop_t
         ir_reg_t dest_reg_a;
         ir_reg_t src_reg_a;
         ir_reg_t src_reg_b;
-        ir_reg_t src_reg_c;
         uint32_t imm_data;
         void *p;
         ir_host_reg_t dest_reg_a_real;
+        ir_host_reg_t src_reg_a_real, src_reg_b_real;
 } uop_t;
 
 #define UOP_NR_MAX 4096
@@ -69,7 +74,7 @@ static inline uop_t *uop_alloc(ir_data_t *ir)
         uop->dest_reg_a = invalid_ir_reg;
         uop->src_reg_a = invalid_ir_reg;
         uop->src_reg_b = invalid_ir_reg;
-        uop->src_reg_c = invalid_ir_reg;
+//        uop->src_reg_c = invalid_ir_reg;
 
         return uop;
 }
@@ -98,6 +103,46 @@ static inline void uop_gen_reg_dst_pointer(uint32_t uop_type, ir_data_t *ir, int
         uop->type = uop_type;
         uop->dest_reg_a = codegen_reg_write(dest_reg);
         uop->p = p;
+}
+
+static inline void uop_gen_reg_dst_src1(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+}
+
+static inline void uop_gen_reg_dst_src2(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->src_reg_b = codegen_reg_read(src_reg_b);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+}
+
+static inline void uop_gen_reg_dst_src2_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b, uint32_t imm)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->src_reg_b = codegen_reg_read(src_reg_b);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->imm_data = imm;
+}
+
+static inline void uop_gen_reg_dst_src_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg, uint32_t imm)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->imm_data = imm;
 }
 
 static inline void uop_gen_imm(uint32_t uop_type, ir_data_t *ir, uint32_t imm)
@@ -129,14 +174,22 @@ static inline void uop_gen_pointer_imm(uint32_t uop_type, ir_data_t *ir, void *p
 
 #define uop_LOAD_FUNC_ARG_IMM(ir, arg, imm)  uop_gen_imm(UOP_LOAD_FUNC_ARG_0_IMM + arg, ir, imm)
 
+#define uop_ADD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_ADD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_ADD_IMM(ir, dst_reg, src_reg, imm) uop_gen_reg_dst_src_imm(UOP_ADD_IMM, ir, dst_reg, src_reg, imm)
+#define uop_ADD_LSHIFT(ir, dst_reg, src_reg_a, src_reg_b, shift) uop_gen_reg_dst_src2_imm(UOP_ADD_LSHIFT, ir, dst_reg, src_reg_a, src_reg_b, shift)
+#define uop_AND_IMM(ir, dst_reg, src_reg, imm) uop_gen_reg_dst_src_imm(UOP_AND_IMM, ir, dst_reg, src_reg, imm)
+
 #define uop_CALL_FUNC(ir, p)             uop_gen_pointer(UOP_CALL_FUNC, ir, p)
 #define uop_CALL_INSTRUCTION_FUNC(ir, p) uop_gen_pointer(UOP_CALL_INSTRUCTION_FUNC, ir, p)
 
+#define uop_MOV(ir, dst_reg, src_reg)    uop_gen_reg_dst_src1(UOP_MOV, ir, dst_reg, src_reg)
 #define uop_MOV_IMM(ir, reg, imm)        uop_gen_reg_dst_imm(UOP_MOV_IMM, ir, reg, imm)
 #define uop_MOV_PTR(ir, reg, p)          uop_gen_reg_dst_pointer(UOP_MOV_PTR, ir, reg, p)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)
+
+void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p);
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
