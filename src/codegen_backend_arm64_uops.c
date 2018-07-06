@@ -38,6 +38,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_CBNZ          (0xb5 << OPCODE_SHIFT)
 #define OPCODE_LDR_LITERAL_W (0x18 << OPCODE_SHIFT)
 #define OPCODE_LDR_LITERAL_X (0x58 << OPCODE_SHIFT)
+#define OPCODE_SUB_IMM       (0x51 << OPCODE_SHIFT)
 
 #define OPCODE_MOVK_W        (0x0e5 << 23)
 #define OPCODE_MOVZ_W        (0x0a5 << 23)
@@ -52,6 +53,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_ADD_LSL       (0x058 << 21)
 #define OPCODE_AND_LSL       (0x050 << 21)
 #define OPCODE_ORR_LSL       (0x150 << 21)
+#define OPCODE_SUB_LSL       (0x258 << 21)
 
 #define OPCODE_BLR           (0xd63f0000)
 #define OPCODE_NOP           (0xd503201f)
@@ -132,9 +134,15 @@ static inline int imm_is_imm12(uint32_t imm_data)
 	return 0;
 }
 
+void host_arm64_SUB_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
+
 void host_arm64_ADD_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
-	if (!(imm_data & 0xff000000))
+	if ((int32_t)imm_data < 0)
+	{
+		host_arm64_SUB_IMM(block, dst_reg, src_n_reg, -(int32_t)imm_data);
+	}
+	else if (!(imm_data & 0xff000000))
 	{
 		if (imm_data & 0xfff)
 			codegen_addlong(block, OPCODE_ADD_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM12(imm_data & 0xfff) | DATPROC_IMM_SHIFT(0));
@@ -274,6 +282,26 @@ void host_arm64_STRB_IMM(codeblock_t *block, int dest_reg, int base_reg, int off
 	codegen_addlong(block, OPCODE_STRB_IMM | OFFSET12_B(offset) | Rn(base_reg) | Rt(dest_reg));
 }
 
+void host_arm64_SUB_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
+{
+	if ((int32_t)imm_data < 0)
+	{
+		host_arm64_ADD_IMM(block, dst_reg, src_n_reg, -(int32_t)imm_data);
+	}
+	else if (!(imm_data & 0xff000000))
+	{
+		if (imm_data & 0xfff)
+			codegen_addlong(block, OPCODE_SUB_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM12(imm_data & 0xfff) | DATPROC_IMM_SHIFT(0));
+		if (imm_data & 0xfff000)
+			codegen_addlong(block, OPCODE_SUB_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM12((imm_data >> 12) & 0xfff) | DATPROC_IMM_SHIFT(1));
+	}
+	else
+	{
+		host_arm64_MOVZ_IMM(block, REG_W16, imm_data & 0xffff);
+		host_arm64_MOVK_IMM(block, REG_W16, imm_data & 0xffff0000);
+		codegen_addlong(block, OPCODE_SUB_LSL | Rd(dst_reg) | Rn(src_n_reg) | Rm(REG_W16) | DATPROC_SHIFT(0));
+	}
+}
 
 void host_arm64_call(codeblock_t *block, void *dst_addr)
 {
