@@ -54,6 +54,9 @@ struct
 	
 	[IREG_rm_mod_reg] = {REG_DWORD, &cpu_state.rm_data.rm_mod_reg_data},
 
+	[IREG_ins]    = {REG_DWORD, &cpu_state.cpu_recomp_ins},
+	[IREG_cycles] = {REG_DWORD, &cpu_state._cycles},
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
@@ -73,7 +76,10 @@ void codegen_reg_reset()
                 reg_version_refcount[c][0] = 0;
         }
         for (c = 0; c < CODEGEN_HOST_REGS; c++)
+        {
                 host_regs[c] = invalid_ir_reg;
+                host_reg_dirty[c] = 0;
+        }
 }
 
 static inline int ir_reg_is_invalid(ir_reg_t ir_reg)
@@ -119,6 +125,7 @@ static void codegen_reg_writeback(codeblock_t *block, int c)
         }
 
         host_regs[c] = invalid_ir_reg;
+        host_reg_dirty[c] = 0;
 }
 
 void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b)

@@ -10,6 +10,7 @@
 #include "386_common.h"
 
 #include "codegen.h"
+#include "codegen_accumulate.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 #include "codegen_reg.h"
@@ -310,6 +311,7 @@ void codegen_block_start_recompile(codeblock_t *block)
         
         ir_data = codegen_ir_init();
         codegen_reg_reset();
+        codegen_accumulate_reset();
         codegen_generate_reset();
 }
 
@@ -410,6 +412,7 @@ void codegen_block_end_recompile(codeblock_t *block)
         if (!(block->flags & CODEBLOCK_HAS_FPU))
                 block->flags &= ~CODEBLOCK_STATIC_TOP;
 
+        codegen_accumulate_flush(ir_data);
         codegen_ir_compile(ir_data, block);
 }
 

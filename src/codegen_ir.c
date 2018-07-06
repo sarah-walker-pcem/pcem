@@ -50,6 +50,8 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 uop_handlers[uop->type & UOP_MASK](block, uop);
         }
 
+        codegen_reg_flush(ir, block);
+        
         codegen_backend_epilogue(block);
 
 //        if (has_ea)

@@ -31,14 +31,17 @@ enum
 	IREG_ssegs  = 17,
 	
 	IREG_rm_mod_reg = 18,
+	
+	IREG_ins = 19,
+	IREG_cycles = 20,
 
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
-	IREG_temp0 = 20,
-	IREG_temp1 = 21,
-	IREG_temp2 = 22,
-	IREG_temp3 = 23,
+	IREG_temp0 = 21,
+	IREG_temp1 = 22,
+	IREG_temp2 = 23,
+	IREG_temp3 = 24,
 
 	IREG_COUNT,
 	

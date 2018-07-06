@@ -6,6 +6,7 @@
 
 #include "386_common.h"
 
+#include "codegen_accumulate.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 
@@ -262,7 +263,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         
         op_ea_seg = &_ds;
 
-        op_ea_seg = &_ds;
+        codegen_timing_start();
 
         while (!over)
         {
@@ -397,7 +398,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         goto generate_call;
                 }
                 fetchdat = fastreadl(cs + op_pc);
-//                codegen_timing_prefix(opcode, fetchdat);
+                codegen_timing_prefix(opcode, fetchdat);
                 if (cpu_state.abrt)
                         return;
                 opcode = fetchdat & 0xff;
@@ -408,6 +409,19 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         }
 
 generate_call:
+        codegen_timing_opcode(opcode, fetchdat, op_32);
+
+        codegen_accumulate(ACCREG_ins, 1);
+        codegen_accumulate(ACCREG_cycles, -codegen_block_cycles);
+        codegen_block_cycles = 0;
+
+        if ((op_table == x86_dynarec_opcodes &&
+              ((opcode & 0xf0) == 0x70 || (opcode & 0xfc) == 0xe0 || opcode == 0xc2 ||
+              (opcode & 0xfe) == 0xca || (opcode & 0xfc) == 0xcc || (opcode & 0xfc) == 0xe8 ||
+              (opcode == 0xff && ((fetchdat & 0x38) >= 0x10 && (fetchdat & 0x38) < 0x30)))) ||
+            (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80)))
+                codegen_accumulate_flush(ir);
+
         //pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 
