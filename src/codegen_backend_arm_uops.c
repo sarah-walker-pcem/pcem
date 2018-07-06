@@ -42,6 +42,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_STR_IMM  (0x50 << OPCODE_SHIFT)
 #define OPCODE_STRB_IMM (0x54 << OPCODE_SHIFT)
 #define OPCODE_SUB_IMM  (0x24 << OPCODE_SHIFT)
+#define OPCODE_SUB_REG  (0x04 << OPCODE_SHIFT)
 #define OPCODE_TST_REG  (0x11 << OPCODE_SHIFT)
 
 #define OPCODE_BLX 0xe12fff30
@@ -131,12 +132,17 @@ static inline int in_range(void *addr, void *base)
 
 void host_arm_ADD_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+void host_arm_SUB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
 void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
 {
 	uint32_t arm_imm;
 
-	if (get_arm_imm(imm, &arm_imm))
+	if ((int32_t)imm < 0)
+	{
+		host_arm_SUB_IMM(block, dst_reg, src_reg, -(int32_t)imm);
+	}
+	else if (get_arm_imm(imm, &arm_imm))
 	{
 		codegen_addlong(block, COND_AL | OPCODE_ADD_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
 	}
@@ -238,10 +244,25 @@ void host_arm_SUB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 {
 	uint32_t arm_imm;
 
-	if (!get_arm_imm(imm, &arm_imm))
-		fatal("host_arm_SUB_IMM !check_arm_imm %08x\n", imm);
+	if ((int32_t)imm < 0)
+	{
+		host_arm_ADD_IMM(block, dst_reg, src_reg, -(int32_t)imm);
+	}
+	else if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_SUB_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_SUB_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
 
-	codegen_addlong(block, COND_AL | OPCODE_SUB_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+void host_arm_SUB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_SUB_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
 }
 
 void host_arm_TST_REG(codeblock_t *block, int src_reg1, int src_reg2)
