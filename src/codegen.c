@@ -258,6 +258,9 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         int op_ssegs = 0;
         int over = 0;
         int test_modrm = 1;
+        int pc_off = 0;
+        
+        op_ea_seg = &_ds;
 
         op_ea_seg = &_ds;
 
@@ -303,6 +306,81 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         op_32 = ((use32 & 0x200) ^ 0x200) | (op_32 & 0x100);
                         break;
 
+                        case 0xd8:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d8_a32 : x86_dynarec_opcodes_d8_a16;
+//                        recomp_op_table = recomp_opcodes_d8;
+                        opcode_shift = 3;
+                        opcode_mask = 0x1f;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xd9:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d9_a32 : x86_dynarec_opcodes_d9_a16;
+//                        recomp_op_table = recomp_opcodes_d9;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xda:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_da_a32 : x86_dynarec_opcodes_da_a16;
+//                        recomp_op_table = recomp_opcodes_da;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xdb:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_db_a32 : x86_dynarec_opcodes_db_a16;
+//                        recomp_op_table = recomp_opcodes_db;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xdc:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dc_a32 : x86_dynarec_opcodes_dc_a16;
+//                        recomp_op_table = recomp_opcodes_dc;
+                        opcode_shift = 3;
+                        opcode_mask = 0x1f;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xdd:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dd_a32 : x86_dynarec_opcodes_dd_a16;
+//                        recomp_op_table = recomp_opcodes_dd;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xde:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_de_a32 : x86_dynarec_opcodes_de_a16;
+//                        recomp_op_table = recomp_opcodes_de;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+                        case 0xdf:
+                        op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_df_a32 : x86_dynarec_opcodes_df_a16;
+//                        recomp_op_table = recomp_opcodes_df;
+                        opcode_mask = 0xff;
+                        over = 1;
+                        pc_off = -1;
+                        test_modrm = 0;
+                        block->flags |= CODEBLOCK_HAS_FPU;
+                        break;
+
                         case 0xf0: /*LOCK*/
                         break;
 
@@ -323,7 +401,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                 if (cpu_state.abrt)
                         return;
                 opcode = fetchdat & 0xff;
-//                if (!pc_off)
+                if (!pc_off)
                         fetchdat >>= 8;
 
                 op_pc++;
@@ -348,7 +426,7 @@ generate_call:
 
                 uop_MOV_IMM(ir, IREG_rm_mod_reg, cpu_rm | (cpu_mod << 8) | (cpu_reg << 16));
 
-//                op_pc += pc_off;
+                op_pc += pc_off;
                 if (cpu_mod != 3 && !(op_32 & 0x200))
                 {
                         op_ea_seg = codegen_generate_ea_16_long(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc);
@@ -360,11 +438,11 @@ generate_call:
 //                        has_ea = 1;
                 }
 //                        op_ea_seg = codegen_generate_ea_32_long(op_ea_seg, fetchdat, op_ssegs, &op_pc, stack_offset);
-//                op_pc -= pc_off;
+                op_pc -= pc_off;
         }
 
 
-        uop_MOV_IMM(ir, IREG_pc, op_pc);
+        uop_MOV_IMM(ir, IREG_pc, op_pc+pc_off);
         uop_MOV_IMM(ir, IREG_oldpc, old_pc);
         if (op_32 != last_op_32)
                 uop_MOV_IMM(ir, IREG_op32, op_32);
