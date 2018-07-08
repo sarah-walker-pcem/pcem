@@ -11,6 +11,12 @@
 #define STACK_ARG2 (8)
 #define STACK_ARG3 (12)
 
+#define RM_OP_ADD 0x00
+#define RM_OP_OR  0x08
+#define RM_OP_AND 0x20
+#define RM_OP_SUB 0x28
+#define RM_OP_XOR 0x30
+
 static inline void codegen_addbyte(codeblock_t *block, uint8_t val)
 {
         block->data[block_pos++] = val;
@@ -101,7 +107,7 @@ static void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg,
 
         if (is_imm8(imm_data))
         {
-                codegen_addbyte3(block, 0x83, 0xc0 | dst_reg, imm_data & 0xff); /*ADD dst_reg, imm_data*/
+                codegen_addbyte3(block, 0x83, 0xc0 | RM_OP_ADD | dst_reg, imm_data & 0xff); /*ADD dst_reg, imm_data*/
         }
         else
         {
@@ -112,31 +118,7 @@ static void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg,
                 }
                 else
                 {
-                        codegen_addbyte2(block, 0x81, 0xc0 | dst_reg); /*ADD dst_reg, imm_data*/
-                        codegen_addlong(block, imm_data);
-                }
-        }
-}
-
-static void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
-{
-        if (dst_reg != src_reg)
-                fatal("host_x86_AND32_REG_IMM - dst_reg != src_reg\n");
-
-        if (is_imm8(imm_data))
-        {
-                codegen_addbyte3(block, 0x83, 0xe0 | dst_reg, imm_data & 0xff); /*AND dst_reg, imm_data*/
-        }
-        else
-        {
-                if (dst_reg == REG_EAX)
-                {
-                        codegen_addbyte(block, 0x25); /*AND EAX, imm_data*/
-                        codegen_addlong(block, imm_data);
-                }
-                else
-                {
-                        codegen_addbyte2(block, 0x81, 0xe0 | dst_reg); /*AND dst_reg, imm_data*/
+                        codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_ADD | dst_reg); /*ADD dst_reg, imm_data*/
                         codegen_addlong(block, imm_data);
                 }
         }
@@ -147,7 +129,39 @@ static void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_
         if (dst_reg != src_reg_a)
                 fatal("host_x86_ADD32_REG_IMM - dst_reg != src_reg_a\n");
 
-        codegen_addbyte2(block, 0x01, 0xc0 | dst_reg | src_reg_b); /*ADD dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x01, 0xc0 | dst_reg | (src_reg_b << 3)); /*ADD dst_reg, src_reg_b*/
+}
+
+static void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+{
+        if (dst_reg != src_reg)
+                fatal("host_x86_AND32_REG_IMM - dst_reg != src_reg\n");
+
+        if (is_imm8(imm_data))
+        {
+                codegen_addbyte3(block, 0x83, 0xc0 | RM_OP_AND | dst_reg, imm_data & 0xff); /*AND dst_reg, imm_data*/
+        }
+        else
+        {
+                if (dst_reg == REG_EAX)
+                {
+                        codegen_addbyte(block, 0x25); /*AND EAX, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+                else
+                {
+                        codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_AND | dst_reg); /*AND dst_reg, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+        }
+}
+
+static void host_x86_AND32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+{
+        if (dst_reg != src_reg_a)
+                fatal("host_x86_AND32_REG_REG - dst_reg != src_reg_a\n");
+
+        codegen_addbyte2(block, 0x21, 0xc0 | dst_reg | (src_reg_b << 3)); /*AND dst_reg, src_reg_b*/
 }
 
 static void host_x86_CALL(codeblock_t *block, void *p)
@@ -284,12 +298,108 @@ static void host_x86_MOV32_STACK_IMM(codeblock_t *block, int32_t offset, uint32_
         }
 }
 
+static void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+{
+        if (dst_reg != src_reg_a)
+                fatal("host_x86_OR32_REG_IMM - dst_reg != src_reg_a\n");
+
+        codegen_addbyte2(block, 0x09, 0xc0 | dst_reg | (src_reg_b << 3)); /*OR dst_reg, src_reg_b*/
+}
+static void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+{
+        if (dst_reg != src_reg)
+                fatal("host_x86_OR32_REG_IMM - dst_reg != src_reg\n");
+
+        if (is_imm8(imm_data))
+        {
+                codegen_addbyte3(block, 0x83, 0xc0 | RM_OP_OR | dst_reg, imm_data & 0xff); /*OR dst_reg, imm_data*/
+        }
+        else
+        {
+                if (dst_reg == REG_EAX)
+                {
+                        codegen_addbyte(block, 0x0d); /*OR EAX, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+                else
+                {
+                        codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_OR | dst_reg); /*OR dst_reg, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+        }
+}
+
 #define MODRM_MOD_REG(rm, reg) (0xc0 | reg | (rm << 3))
+
+static void host_x86_SUB32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+{
+        if (dst_reg != src_reg)
+                fatal("host_x86_SUB32_REG_IMM - dst_reg != src_reg\n");
+
+        if (is_imm8(imm_data))
+        {
+                codegen_addbyte3(block, 0x83, 0xc0 | RM_OP_SUB | dst_reg, imm_data & 0xff); /*SUB dst_reg, imm_data*/
+        }
+        else
+        {
+                if (dst_reg == REG_EAX)
+                {
+                        codegen_addbyte(block, 0x2d); /*SUB EAX, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+                else
+                {
+                        codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_SUB | dst_reg); /*SUB dst_reg, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+        }
+}
+
+static void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+{
+        if (dst_reg != src_reg_a)
+                fatal("host_x86_SUB32_REG_IMM - dst_reg != src_reg_a\n");
+
+        codegen_addbyte2(block, 0x29, 0xc0 | dst_reg | (src_reg_b << 3)); /*SUB dst_reg, src_reg_b*/
+}
 
 static void host_x86_TEST32_REG(codeblock_t *block, int src_host_reg, int dst_host_reg)
 {
         codegen_addbyte2(block, 0x85, MODRM_MOD_REG(dst_host_reg, src_host_reg)); /*TEST dst_host_reg, src_host_reg*/
 }
+
+static void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+{
+        if (dst_reg != src_reg_a)
+                fatal("host_x86_XOR32_REG_IMM - dst_reg != src_reg_a\n");
+
+        codegen_addbyte2(block, 0x31, 0xc0 | dst_reg | (src_reg_b << 3)); /*XOR dst_reg, src_reg_b*/
+}
+
+static void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+{
+        if (dst_reg != src_reg)
+                fatal("host_x86_XOR32_REG_IMM - dst_reg != src_reg\n");
+
+        if (is_imm8(imm_data))
+        {
+                codegen_addbyte3(block, 0x83, 0xc0 | RM_OP_XOR | dst_reg, imm_data & 0xff); /*XOR dst_reg, imm_data*/
+        }
+        else
+        {
+                if (dst_reg == REG_EAX)
+                {
+                        codegen_addbyte(block, 0x35); /*XOR EAX, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+                else
+                {
+                        codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_XOR | dst_reg); /*XOR dst_reg, imm_data*/
+                        codegen_addlong(block, imm_data);
+                }
+        }
+}
+
 
 /*void codegen_debug()
 {
@@ -317,6 +427,12 @@ static int codegen_ADD_LSHIFT(codeblock_t *block, uop_t *uop)
         else
                 fatal("codegen_ADD_LSHIFT - shift out of range %i\n", uop->imm_data);
 
+        return 0;
+}
+
+static int codegen_AND(codeblock_t *block, uop_t *uop)
+{
+        host_x86_AND32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
         return 0;
 }
 
@@ -373,6 +489,17 @@ static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_OR(codeblock_t *block, uop_t *uop)
+{
+        host_x86_OR32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+        return 0;
+}
+static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
+{
+        host_x86_OR32_REG_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
+}
+
 static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 {
         host_x86_MOV32_ABS_IMM(block, uop->p, uop->imm_data);
@@ -381,6 +508,34 @@ static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 static int codegen_STORE_PTR_IMM_8(codeblock_t *block, uop_t *uop)
 {
         host_x86_MOV8_ABS_IMM(block, uop->p, uop->imm_data);
+        return 0;
+}
+
+static int codegen_SUB(codeblock_t *block, uop_t *uop)
+{
+        if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                host_x86_MOV32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        host_x86_SUB32_REG_REG(block, uop->dest_reg_a_real, uop->dest_reg_a_real, uop->src_reg_b_real);
+        return 0;
+}
+static int codegen_SUB_IMM(codeblock_t *block, uop_t *uop)
+{
+        if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                host_x86_MOV32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        host_x86_SUB32_REG_IMM(block, uop->dest_reg_a_real, uop->dest_reg_a_real, uop->imm_data);
+        return 0;
+}
+
+static int codegen_XOR(codeblock_t *block, uop_t *uop)
+{
+        host_x86_XOR32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+        return 0;
+}
+static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
+{
+        host_x86_XOR32_REG_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
         return 0;
 }
 
@@ -403,7 +558,14 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,
         [UOP_ADD_LSHIFT & UOP_MASK] = codegen_ADD_LSHIFT,
-        [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM
+        [UOP_AND     & UOP_MASK] = codegen_AND,
+        [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM,
+        [UOP_OR      & UOP_MASK] = codegen_OR,
+        [UOP_OR_IMM  & UOP_MASK] = codegen_OR_IMM,
+        [UOP_SUB     & UOP_MASK] = codegen_SUB,
+        [UOP_SUB_IMM & UOP_MASK] = codegen_SUB_IMM,
+        [UOP_XOR     & UOP_MASK] = codegen_XOR,
+        [UOP_XOR_IMM & UOP_MASK] = codegen_XOR_IMM
 };
 
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)

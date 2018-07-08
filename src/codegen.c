@@ -9,6 +9,7 @@
 #include "codegen_accumulate.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
+#include "codegen_ops.h"
 
 int has_ea;
 
@@ -252,6 +253,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         ir_data_t *ir = codegen_get_ir_data();
         uint32_t op_pc = new_pc;
         OpFn *op_table = x86_dynarec_opcodes;
+        RecompOpFn *recomp_op_table = recomp_opcodes;
         int opcode_shift = 0;
         int opcode_mask = 0x3ff;
         uint32_t op_32 = use32;
@@ -271,7 +273,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                 {
                         case 0x0f:
                         op_table = x86_dynarec_opcodes_0f;
-//                        recomp_op_table = recomp_opcodes_0f;
+                        recomp_op_table = NULL;//recomp_opcodes_0f;
                         over = 1;
                         break;
 
@@ -309,7 +311,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
 
                         case 0xd8:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d8_a32 : x86_dynarec_opcodes_d8_a16;
-//                        recomp_op_table = recomp_opcodes_d8;
+                        recomp_op_table = NULL;//recomp_opcodes_d8;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;
@@ -319,7 +321,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xd9:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d9_a32 : x86_dynarec_opcodes_d9_a16;
-//                        recomp_op_table = recomp_opcodes_d9;
+                        recomp_op_table = NULL;//recomp_opcodes_d9;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -328,7 +330,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xda:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_da_a32 : x86_dynarec_opcodes_da_a16;
-//                        recomp_op_table = recomp_opcodes_da;
+                        recomp_op_table = NULL;//recomp_opcodes_da;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -337,7 +339,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdb:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_db_a32 : x86_dynarec_opcodes_db_a16;
-//                        recomp_op_table = recomp_opcodes_db;
+                        recomp_op_table = NULL;//recomp_opcodes_db;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -346,7 +348,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdc:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dc_a32 : x86_dynarec_opcodes_dc_a16;
-//                        recomp_op_table = recomp_opcodes_dc;
+                        recomp_op_table = NULL;//recomp_opcodes_dc;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;
@@ -356,7 +358,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdd:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dd_a32 : x86_dynarec_opcodes_dd_a16;
-//                        recomp_op_table = recomp_opcodes_dd;
+                        recomp_op_table = NULL;//recomp_opcodes_dd;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -365,7 +367,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xde:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_de_a32 : x86_dynarec_opcodes_de_a16;
-//                        recomp_op_table = recomp_opcodes_de;
+                        recomp_op_table = NULL;//recomp_opcodes_de;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -374,7 +376,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdf:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_df_a32 : x86_dynarec_opcodes_df_a16;
-//                        recomp_op_table = recomp_opcodes_df;
+                        recomp_op_table = NULL;//recomp_opcodes_df;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -387,11 +389,11 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
 
                         case 0xf2: /*REPNE*/
                         op_table = x86_dynarec_opcodes_REPNE;
-//                        recomp_op_table = recomp_opcodes_REPNE;
+                        recomp_op_table = NULL;//recomp_opcodes_REPNE;
                         break;
                         case 0xf3: /*REPE*/
                         op_table = x86_dynarec_opcodes_REPE;
-//                        recomp_op_table = recomp_opcodes_REPE;
+                        recomp_op_table = NULL;//recomp_opcodes_REPE;
                         break;
 
                         default:
@@ -421,8 +423,21 @@ generate_call:
               (opcode == 0xff && ((fetchdat & 0x38) >= 0x10 && (fetchdat & 0x38) < 0x30)))) ||
             (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80)))
                 codegen_accumulate_flush(ir);
+//        pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
+        if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff])
+        {
+                uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](block, ir, opcode, fetchdat, op_32, op_pc);
+                if (new_pc)
+                {
+                        if (new_pc != -1)
+                                uop_MOV_IMM(ir, IREG_pc, new_pc);
 
-        //pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
+                        codegen_endpc = (cs + cpu_state.pc) + 8;
+
+                        return;
+                }
+        }
+        
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 
         if (!test_modrm ||

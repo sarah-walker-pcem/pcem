@@ -34,10 +34,16 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_AND_IMM  (0x20 << OPCODE_SHIFT)
 #define OPCODE_AND_REG  (0x00 << OPCODE_SHIFT)
 #define OPCODE_B        (0xa0 << OPCODE_SHIFT)
+#define OPCODE_BIC_IMM  (0x3c << OPCODE_SHIFT)
+#define OPCODE_BIC_REG  (0x1c << OPCODE_SHIFT)
+#define OPCODE_EOR_IMM  (0x22 << OPCODE_SHIFT)
+#define OPCODE_EOR_REG  (0x02 << OPCODE_SHIFT)
 #define OPCODE_LDMIA_WB (0x8b << OPCODE_SHIFT)
 #define OPCODE_LDR_IMM  (0x51 << OPCODE_SHIFT)
 #define OPCODE_MOV_IMM  (0x3a << OPCODE_SHIFT)
 #define OPCODE_MOV_REG  (0x1a << OPCODE_SHIFT)
+#define OPCODE_ORR_IMM  (0x38 << OPCODE_SHIFT)
+#define OPCODE_ORR_REG  (0x18 << OPCODE_SHIFT)
 #define OPCODE_STMDB_WB (0x92 << OPCODE_SHIFT)
 #define OPCODE_STR_IMM  (0x50 << OPCODE_SHIFT)
 #define OPCODE_STRB_IMM (0x54 << OPCODE_SHIFT)
@@ -132,13 +138,15 @@ static inline int in_range(void *addr, void *base)
 
 void host_arm_ADD_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+void host_arm_EOR_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+void host_arm_ORR_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_SUB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
 void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
 {
 	uint32_t arm_imm;
 
-	if ((int32_t)imm < 0)
+	if ((int32_t)imm < 0 && imm != 0x80000000)
 	{
 		host_arm_SUB_IMM(block, dst_reg, src_reg, -(int32_t)imm);
 	}
@@ -167,6 +175,10 @@ void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	{
 		codegen_addlong(block, COND_AL | OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
 	}
+	else if (get_arm_imm(~imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_BIC_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
 	else
 	{
 		int offset = add_literal(block, imm);
@@ -193,6 +205,27 @@ void host_arm_BNE(codeblock_t *block, uintptr_t dest_addr)
 		fatal("host_arm_BNE - out of range %08x %i\n", offset, offset);
 
 	codegen_addlong(block, COND_NE | OPCODE_B | B_OFFSET(offset));
+}
+
+void host_arm_EOR_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
+{
+	uint32_t arm_imm;
+
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_EOR_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_EOR_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
+
+void host_arm_EOR_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_EOR_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
 }
 
 void host_arm_LDMIA_WB(codeblock_t *block, int addr_reg, uint32_t reg_mask)
@@ -225,6 +258,27 @@ void host_arm_MOV_REG_LSL(codeblock_t *block, int dst_reg, int src_reg, int shif
 	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSL_IMM(shift));
 }
 
+void host_arm_ORR_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
+{
+	uint32_t arm_imm;
+
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		int offset = add_literal(block, imm);
+		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_ORR_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
+
+void host_arm_ORR_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_ORR_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
+}
+
 void host_arm_STMDB_WB(codeblock_t *block, int addr_reg, uint32_t reg_mask)
 {
 	codegen_addlong(block, COND_AL | OPCODE_STMDB_WB | Rn(addr_reg) | reg_mask);
@@ -244,7 +298,7 @@ void host_arm_SUB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 {
 	uint32_t arm_imm;
 
-	if ((int32_t)imm < 0)
+	if ((int32_t)imm < 0 && imm != 0x80000000)
 	{
 		host_arm_ADD_IMM(block, dst_reg, src_reg, -(int32_t)imm);
 	}
@@ -288,19 +342,22 @@ static int codegen_ADD(codeblock_t *block, uop_t *uop)
 	host_arm_ADD_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
         return 0;
 }
-
 static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
 {
 	host_arm_ADD_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
         return 0;
 }
-
 static int codegen_ADD_LSHIFT(codeblock_t *block, uop_t *uop)
 {
 	host_arm_ADD_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, uop->imm_data);
         return 0;
 }
 
+static int codegen_AND(codeblock_t *block, uop_t *uop)
+{
+	host_arm_AND_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
+        return 0;
+}
 static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
 {
 	host_arm_AND_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
@@ -398,6 +455,17 @@ static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_OR(codeblock_t *block, uop_t *uop)
+{
+	host_arm_ORR_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
+        return 0;
+}
+static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
+{
+	host_arm_ORR_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
+}
+
 static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 {
 	uint32_t arm_imm;
@@ -427,6 +495,28 @@ static int codegen_STORE_PTR_IMM_8(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_SUB(codeblock_t *block, uop_t *uop)
+{
+	host_arm_SUB_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
+        return 0;
+}
+static int codegen_SUB_IMM(codeblock_t *block, uop_t *uop)
+{
+	host_arm_SUB_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
+}
+
+static int codegen_XOR(codeblock_t *block, uop_t *uop)
+{
+	host_arm_EOR_REG_LSL(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, 0);
+        return 0;
+}
+static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
+{
+	host_arm_EOR_IMM(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->imm_data);
+        return 0;
+}
+
 const uOpFn uop_handlers[UOP_MAX] =
 {
         [UOP_CALL_INSTRUCTION_FUNC & UOP_MASK] = codegen_CALL_INSTRUCTION_FUNC,
@@ -446,7 +536,14 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,
         [UOP_ADD_LSHIFT & UOP_MASK] = codegen_ADD_LSHIFT,
-        [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM
+        [UOP_AND     & UOP_MASK] = codegen_AND,
+        [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM,
+        [UOP_OR      & UOP_MASK] = codegen_OR,
+        [UOP_OR_IMM  & UOP_MASK] = codegen_OR_IMM,
+        [UOP_SUB     & UOP_MASK] = codegen_SUB,
+        [UOP_SUB_IMM & UOP_MASK] = codegen_SUB_IMM,
+        [UOP_XOR     & UOP_MASK] = codegen_XOR,
+        [UOP_XOR_IMM & UOP_MASK] = codegen_XOR_IMM
 };
 
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)

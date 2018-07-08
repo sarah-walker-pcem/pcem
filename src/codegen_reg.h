@@ -48,6 +48,8 @@ enum
 	IREG_INVALID = 255
 };
 
+#define IREG_32(reg) ((reg) + IREG_EAX)
+
 extern uint8_t reg_last_version[IREG_COUNT];
 extern uint8_t reg_version_refcount[IREG_COUNT][256];
 

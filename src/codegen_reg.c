@@ -200,13 +200,13 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg)
                 host_regs_locked |= (1 << c);
 //                fatal("codegen_reg_alloc_read_reg - read %i.%i to %i\n", ir_reg.reg,ir_reg.version, c);
 //                codegen_reg_writeback(block, c);
+                host_reg_dirty[c] = 0;
         }
 
         reg_version_refcount[host_regs[c].reg][host_regs[c].version]--;
         if (reg_version_refcount[host_regs[c].reg][host_regs[c].version] < 0)
                 fatal("codegen_reg_alloc_read_reg - refcount < 0\n");
 
-        host_reg_dirty[c] = 0;
 //        pclog(" codegen_reg_alloc_read_reg: %i.%i %i\n", ir_reg.reg, ir_reg.version, codegen_host_reg_list[c]);
         return codegen_host_reg_list[c];
 }
