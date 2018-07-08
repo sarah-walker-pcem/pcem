@@ -75,8 +75,17 @@ void codegen_reset_literal_pool(codeblock_t *block)
 
 int add_literal(codeblock_t *block, uint32_t data)
 {
+	int c;
+
 	if (literal_offset >= 4096)
 		fatal("add_literal - literal pool full\n");
+
+	/*Search for pre-existing value*/
+	for (c = 0; c < literal_offset; c += 4)
+	{
+		if (*(uint32_t *)&block->data[ARM_LITERAL_POOL_OFFSET + c] == data)
+			return c;
+	}
 
 	*(uint32_t *)&block->data[ARM_LITERAL_POOL_OFFSET + literal_offset] = data;
 
