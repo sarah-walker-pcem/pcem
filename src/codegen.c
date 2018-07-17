@@ -58,7 +58,7 @@ static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uin
         {
                 int base_reg, index_reg, offset;
 
-                switch (cpu_rm)
+                switch (cpu_rm & 7)
                 {
                         case 0: case 1: case 7:
                         base_reg = IREG_EBX;

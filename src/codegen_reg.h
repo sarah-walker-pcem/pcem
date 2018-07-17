@@ -1,10 +1,17 @@
 #ifndef _CODEGEN_REG_H_
 #define _CODEGEN_REG_H_
 
-#define IREG_SIZE_L  (0 << 6)
-#define IREG_SIZE_W  (1 << 6)
-#define IREG_SIZE_B  (2 << 6)
-#define IREG_SIZE_BH (3 << 6)
+#define IREG_REG_MASK 0x3f
+#define IREG_SIZE_SHIFT 6
+#define IREG_SIZE_MASK (3 << IREG_SIZE_SHIFT)
+
+#define IREG_GET_REG(reg)  ((reg) & IREG_REG_MASK)
+#define IREG_GET_SIZE(reg) ((reg) & IREG_SIZE_MASK)
+
+#define IREG_SIZE_L  (0 << IREG_SIZE_SHIFT)
+#define IREG_SIZE_W  (1 << IREG_SIZE_SHIFT)
+#define IREG_SIZE_B  (2 << IREG_SIZE_SHIFT)
+#define IREG_SIZE_BH (3 << IREG_SIZE_SHIFT)
 
 enum
 {
@@ -45,9 +52,34 @@ enum
 
 	IREG_COUNT,
 	
-	IREG_INVALID = 255
+	IREG_INVALID = 63,
+	
+	IREG_AX = IREG_EAX + IREG_SIZE_W,
+	IREG_CX = IREG_ECX + IREG_SIZE_W,
+	IREG_DX = IREG_EDX + IREG_SIZE_W,
+	IREG_BX = IREG_EBX + IREG_SIZE_W,
+	IREG_SP = IREG_ESP + IREG_SIZE_W,
+	IREG_BP = IREG_EBP + IREG_SIZE_W,
+	IREG_SI = IREG_ESI + IREG_SIZE_W,
+	IREG_DI = IREG_EDI + IREG_SIZE_W,
+
+	IREG_AL = IREG_EAX + IREG_SIZE_B,
+	IREG_CL = IREG_ECX + IREG_SIZE_B,
+	IREG_DL = IREG_EDX + IREG_SIZE_B,
+	IREG_BL = IREG_EBX + IREG_SIZE_B,
+
+	IREG_AH = IREG_EAX + IREG_SIZE_BH,
+	IREG_CH = IREG_ECX + IREG_SIZE_BH,
+	IREG_DH = IREG_EDX + IREG_SIZE_BH,
+	IREG_BH = IREG_EBX + IREG_SIZE_BH,
+	
+	IREG_flags_res_W = IREG_flags_res + IREG_SIZE_W,
+	
+	IREG_flags_res_B = IREG_flags_res + IREG_SIZE_B
 };
 
+#define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))
+#define IREG_16(reg) ((reg) + IREG_AX)
 #define IREG_32(reg) ((reg) + IREG_EAX)
 
 extern uint8_t reg_last_version[IREG_COUNT];
@@ -67,13 +99,13 @@ static inline ir_reg_t codegen_reg_read(int reg)
 {
         ir_reg_t ireg;
         
-        if (reg == IREG_INVALID)
+        if (IREG_GET_REG(reg) == IREG_INVALID)
                 fatal("codegen_reg_read - IREG_INVALID\n");
         
         ireg.reg = reg;
-        ireg.version = reg_last_version[reg];
-        reg_version_refcount[ireg.reg][ireg.version]++;
-        if (!reg_version_refcount[ireg.reg][ireg.version])
+        ireg.version = reg_last_version[IREG_GET_REG(reg)];
+        reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version]++;
+        if (!reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version])
                 fatal("codegen_reg_read - refcount overflow\n");
         
         return ireg;
@@ -83,15 +115,15 @@ static inline ir_reg_t codegen_reg_write(int reg)
 {
         ir_reg_t ireg;
 
-        if (reg == IREG_INVALID)
+        if (IREG_GET_REG(reg) == IREG_INVALID)
                 fatal("codegen_reg_write - IREG_INVALID\n");
 
         ireg.reg = reg;
-        ireg.version = reg_last_version[reg] + 1;
-        reg_last_version[reg]++;
-        if (!reg_last_version[reg])
+        ireg.version = reg_last_version[IREG_GET_REG(reg)] + 1;
+        reg_last_version[IREG_GET_REG(reg)]++;
+        if (!reg_last_version[IREG_GET_REG(reg)])
                 fatal("codegen_reg_write - version overflow\n");
-        reg_version_refcount[reg][ireg.version] = 0;
+        reg_version_refcount[IREG_GET_REG(reg)][ireg.version] = 0;
 
         return ireg;
 }
@@ -104,7 +136,7 @@ void codegen_reg_flush(struct ir_data_t *ir, codeblock_t *block);
 /*Register ir_reg usage for this uOP. This ensures that required registers aren't evicted*/
 void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b);
 
-ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg);
+ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx);
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg);
 
 #endif

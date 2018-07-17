@@ -27,22 +27,40 @@
 #define UOP_LOAD_FUNC_ARG_2_IMM   (UOP_TYPE_PARAMS_IMM     | 0x0a)
 #define UOP_LOAD_FUNC_ARG_3_IMM   (UOP_TYPE_PARAMS_IMM     | 0x0b)
 #define UOP_CALL_FUNC             (UOP_TYPE_PARAMS_POINTER | 0x10 | UOP_TYPE_BARRIER)
+/*UOP_CALL_INSTRUCTION_FUNC - call instruction handler at p, check return value and exit block if non-zero*/
 #define UOP_CALL_INSTRUCTION_FUNC (UOP_TYPE_PARAMS_POINTER | 0x11 | UOP_TYPE_BARRIER)
 #define UOP_STORE_P_IMM           (UOP_TYPE_PARAMS_IMM     | 0x12)
 #define UOP_STORE_P_IMM_8         (UOP_TYPE_PARAMS_IMM     | 0x13)
+/*UOP_MOV_PTR - dest_reg = p*/
 #define UOP_MOV_PTR               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x20)
+/*UOP_MOV_IMM - dest_reg = imm_data*/
 #define UOP_MOV_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x21)
+/*UOP_MOV - dest_reg = src_reg_a*/
 #define UOP_MOV                   (UOP_TYPE_PARAMS_REGS    | 0x22)
+/*UOP_MOVZX - dest_reg = zero_extend(src_reg_a)*/
+#define UOP_MOVZX                 (UOP_TYPE_PARAMS_REGS    | 0x23)
+/*UOP_ADD - dest_reg = src_reg_a + src_reg_b*/
 #define UOP_ADD                   (UOP_TYPE_PARAMS_REGS    | 0x30)
+/*UOP_ADD_IMM - dest_reg = src_reg_a + immediate*/
 #define UOP_ADD_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x31)
+/*UOP_AND - dest_reg = src_reg_a & src_reg_b*/
 #define UOP_AND                   (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x32)
+/*UOP_AND_IMM - dest_reg = src_reg_a & immediate*/
 #define UOP_AND_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x33)
+/*UOP_ADD_LSHIFT - dest_reg = src_reg_a + (src_reg_b << imm_data)
+  Intended for EA calcluations, imm_data must be between 0 and 3*/
 #define UOP_ADD_LSHIFT            (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x34)
+/*UOP_OR - dest_reg = src_reg_a | src_reg_b*/
 #define UOP_OR                    (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x35)
+/*UOP_OR_IMM - dest_reg = src_reg_a | immediate*/
 #define UOP_OR_IMM                (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x36)
+/*UOP_SUB - dest_reg = src_reg_a - src_reg_b*/
 #define UOP_SUB                   (UOP_TYPE_PARAMS_REGS    | 0x37)
+/*UOP_SUB_IMM - dest_reg = src_reg_a - immediate*/
 #define UOP_SUB_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x38)
+/*UOP_XOR - dest_reg = src_reg_a ^ src_reg_b*/
 #define UOP_XOR                   (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x39)
+/*UOP_XOR_IMM - dest_reg = src_reg_a ^ immediate*/
 #define UOP_XOR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x3a)
 
 #define UOP_MAX 0x3b
@@ -81,7 +99,6 @@ static inline uop_t *uop_alloc(ir_data_t *ir)
         uop->dest_reg_a = invalid_ir_reg;
         uop->src_reg_a = invalid_ir_reg;
         uop->src_reg_b = invalid_ir_reg;
-//        uop->src_reg_c = invalid_ir_reg;
 
         return uop;
 }
@@ -119,6 +136,16 @@ static inline void uop_gen_reg_dst_src1(uint32_t uop_type, ir_data_t *ir, int de
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg);
         uop->dest_reg_a = codegen_reg_write(dest_reg);
+}
+
+static inline void uop_gen_reg_dst_src1_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, uint32_t imm)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->imm_data = imm;
 }
 
 static inline void uop_gen_reg_dst_src2(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b)
@@ -196,9 +223,10 @@ static inline void uop_gen_pointer_imm(uint32_t uop_type, ir_data_t *ir, void *p
 #define uop_CALL_FUNC(ir, p)             uop_gen_pointer(UOP_CALL_FUNC, ir, p)
 #define uop_CALL_INSTRUCTION_FUNC(ir, p) uop_gen_pointer(UOP_CALL_INSTRUCTION_FUNC, ir, p)
 
-#define uop_MOV(ir, dst_reg, src_reg)    uop_gen_reg_dst_src1(UOP_MOV, ir, dst_reg, src_reg)
-#define uop_MOV_IMM(ir, reg, imm)        uop_gen_reg_dst_imm(UOP_MOV_IMM, ir, reg, imm)
-#define uop_MOV_PTR(ir, reg, p)          uop_gen_reg_dst_pointer(UOP_MOV_PTR, ir, reg, p)
+#define uop_MOV(ir, dst_reg, src_reg)         uop_gen_reg_dst_src1(UOP_MOV, ir, dst_reg, src_reg)
+#define uop_MOV_IMM(ir, reg, imm)             uop_gen_reg_dst_imm(UOP_MOV_IMM, ir, reg, imm)
+#define uop_MOV_PTR(ir, reg, p)               uop_gen_reg_dst_pointer(UOP_MOV_PTR, ir, reg, p)
+#define uop_MOVZX(ir, dst_reg, src_reg)       uop_gen_reg_dst_src1(UOP_MOVZX, ir, dst_reg, src_reg)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)

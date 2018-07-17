@@ -73,4 +73,6 @@
 
 #define REG_CPUSTATE REG_X29
 
+#define REG_TEMP REG_X7
+
 #define CODEGEN_HOST_REGS 5

@@ -32,11 +32,11 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                         codegen_reg_alloc_register(uop->dest_reg_a, uop->src_reg_a, uop->src_reg_b);
                         if (uop->src_reg_a.reg != IREG_INVALID)
                         {
-                                uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a);
+                                uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a, NULL);
                         }
                         if (uop->src_reg_b.reg != IREG_INVALID)
                         {
-                                uop->src_reg_b_real = codegen_reg_alloc_read_reg(block, uop->src_reg_b);
+                                uop->src_reg_b_real = codegen_reg_alloc_read_reg(block, uop->src_reg_b, NULL);
                         }
                         if (uop->dest_reg_a.reg != IREG_INVALID)
                         {
