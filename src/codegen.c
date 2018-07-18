@@ -110,7 +110,7 @@ static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uin
         return op_ea_seg;
 }
 
-static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
+static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, int stack_offset)
 {
         uint32_t new_eaaddr;
 
@@ -146,11 +146,12 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                         (*op_pc) += 4;
                         break;
                 }
-//                if (stack_offset && (sib & 7) == 4 && (cpu_mod || (sib & 7) != 5)) /*ESP*/
-//                {
+                if (stack_offset && (sib & 7) == 4 && (cpu_mod || (sib & 7) != 5)) /*ESP*/
+                {
+                        uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, stack_offset);
 //                        addbyte(0x05);
 //                        addlong(stack_offset);
-//                }
+                }
                 if (((sib & 7) == 4 || (cpu_mod && (sib & 7) == 5)) && !op_ssegs)
                         op_ea_seg = &_ss;
                 if (((sib >> 3) & 7) != 4)
@@ -444,10 +445,10 @@ generate_call:
                 (op_table == x86_dynarec_opcodes && opcode_modrm[opcode]) ||
                 (op_table == x86_dynarec_opcodes_0f && opcode_0f_modrm[opcode]))
         {
-                //int stack_offset = 0;
+                int stack_offset = 0;
 
-//                if (op_table == x86_dynarec_opcodes && opcode == 0x8f) /*POP*/
-//                        stack_offset = (op_32 & 0x100) ? 4 : 2;
+                if (op_table == x86_dynarec_opcodes && opcode == 0x8f) /*POP*/
+                        stack_offset = (op_32 & 0x100) ? 4 : 2;
 
                 cpu_mod = (fetchdat >> 6) & 3;
                 cpu_reg = (fetchdat >> 3) & 7;
@@ -463,7 +464,7 @@ generate_call:
                 }
                 if (cpu_mod != 3 &&  (op_32 & 0x200))
                 {
-                        op_ea_seg = codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc);
+                        op_ea_seg = codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, stack_offset);
 //                        has_ea = 1;
                 }
 //                        op_ea_seg = codegen_generate_ea_32_long(op_ea_seg, fetchdat, op_ssegs, &op_pc, stack_offset);
