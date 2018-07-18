@@ -4,6 +4,7 @@ static int opFADD ## name ## _a ## a_size(uint32_t fetchdat)    \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         if ((cpu_state.npxc >> 10) & 3)                                   \
                 fesetround(rounding_modes[(cpu_state.npxc >> 10) & 3]);   \
@@ -19,6 +20,7 @@ static int opFCOM ## name ## _a ## a_size(uint32_t fetchdat)    \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         cpu_state.npxs &= ~(C0|C2|C3);                                    \
         cpu_state.npxs |= x87_compare(ST(0), (double)use_var);            \
@@ -30,6 +32,7 @@ static int opFCOMP ## name ## _a ## a_size(uint32_t fetchdat)   \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         cpu_state.npxs &= ~(C0|C2|C3);                                    \
         cpu_state.npxs |= x87_compare(ST(0), (double)use_var);            \
@@ -42,6 +45,7 @@ static int opFDIV ## name ## _a ## a_size(uint32_t fetchdat)    \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         x87_div(ST(0), ST(0), use_var);                         \
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;                                \
@@ -53,6 +57,7 @@ static int opFDIVR ## name ## _a ## a_size(uint32_t fetchdat)   \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         x87_div(ST(0), use_var, ST(0));                         \
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;                                \
@@ -64,6 +69,7 @@ static int opFMUL ## name ## _a ## a_size(uint32_t fetchdat)    \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         ST(0) *= use_var;                                       \
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;                                \
@@ -75,6 +81,7 @@ static int opFSUB ## name ## _a ## a_size(uint32_t fetchdat)    \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         ST(0) -= use_var;                                       \
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;                                \
@@ -86,6 +93,7 @@ static int opFSUBR ## name ## _a ## a_size(uint32_t fetchdat)   \
         optype t;                                               \
         FP_ENTER();                                             \
         fetch_ea_ ## a_size(fetchdat);                          \
+        SEG_CHECK_READ(cpu_state.ea_seg);                       \
         load_var = get(); if (cpu_state.abrt) return 1;                   \
         ST(0) = use_var - ST(0);                                \
         cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64;                                \

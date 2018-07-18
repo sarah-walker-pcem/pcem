@@ -182,6 +182,7 @@ static int opMOV_b_imm_a16(uint32_t fetchdat)
         uint8_t temp;
         fetch_ea_16(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = readmemb(cs,cpu_state.pc); cpu_state.pc++;               if (cpu_state.abrt) return 1;
         CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
         seteab(temp);
@@ -194,6 +195,7 @@ static int opMOV_b_imm_a32(uint32_t fetchdat)
         uint8_t temp;
         fetch_ea_32(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = getbyte();               if (cpu_state.abrt) return 1;
         seteab(temp);
         CLOCK_CYCLES(timing_rr);
@@ -206,6 +208,7 @@ static int opMOV_w_imm_a16(uint32_t fetchdat)
         uint16_t temp;
         fetch_ea_16(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = getword();               if (cpu_state.abrt) return 1;
         seteaw(temp);
         CLOCK_CYCLES(timing_rr);
@@ -217,6 +220,7 @@ static int opMOV_w_imm_a32(uint32_t fetchdat)
         uint16_t temp;
         fetch_ea_32(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = getword();               if (cpu_state.abrt) return 1;
         seteaw(temp);
         CLOCK_CYCLES(timing_rr);
@@ -228,6 +232,7 @@ static int opMOV_l_imm_a16(uint32_t fetchdat)
         uint32_t temp;
         fetch_ea_16(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = getlong();               if (cpu_state.abrt) return 1;
         seteal(temp);
         CLOCK_CYCLES(timing_rr);
@@ -239,6 +244,7 @@ static int opMOV_l_imm_a32(uint32_t fetchdat)
         uint32_t temp;
         fetch_ea_32(fetchdat);
         ILLEGAL_ON((rmdat & 0x38) != 0);
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         temp = getlong();               if (cpu_state.abrt) return 1;
         seteal(temp);
         CLOCK_CYCLES(timing_rr);
@@ -251,6 +257,7 @@ static int opMOV_AL_a16(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
         uint8_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr);
         temp = readmemb(cpu_state.ea_seg->base, addr);      if (cpu_state.abrt) return 1;
         AL = temp;
@@ -262,6 +269,7 @@ static int opMOV_AL_a32(uint32_t fetchdat)
 {
         uint32_t addr = getlong();
         uint8_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr);
         temp = readmemb(cpu_state.ea_seg->base, addr);      if (cpu_state.abrt) return 1;
         AL = temp;
@@ -273,6 +281,7 @@ static int opMOV_AX_a16(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
         uint16_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr+1);
         temp = readmemw(cpu_state.ea_seg->base, addr);     if (cpu_state.abrt) return 1;
         AX = temp;
@@ -284,6 +293,7 @@ static int opMOV_AX_a32(uint32_t fetchdat)
 {
         uint32_t addr = getlong();
         uint16_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr+1);
         temp = readmemw(cpu_state.ea_seg->base, addr);     if (cpu_state.abrt) return 1;
         AX = temp;
@@ -295,6 +305,7 @@ static int opMOV_EAX_a16(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
         uint32_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr+3);
         temp = readmeml(cpu_state.ea_seg->base, addr);     if (cpu_state.abrt) return 1;
         EAX = temp;
@@ -306,6 +317,7 @@ static int opMOV_EAX_a32(uint32_t fetchdat)
 {
         uint32_t addr = getlong();
         uint32_t temp;
+        SEG_CHECK_READ(cpu_state.ea_seg);
         CHECK_READ(cpu_state.ea_seg, addr, addr+3);
         temp = readmeml(cpu_state.ea_seg->base, addr);     if (cpu_state.abrt) return 1;
         EAX = temp;
@@ -317,6 +329,7 @@ static int opMOV_EAX_a32(uint32_t fetchdat)
 static int opMOV_a16_AL(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememb(cpu_state.ea_seg->base, addr, AL);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 3, -1, 0,0,1,0, 0);
@@ -325,6 +338,7 @@ static int opMOV_a16_AL(uint32_t fetchdat)
 static int opMOV_a32_AL(uint32_t fetchdat)
 {
         uint32_t addr = getlong();
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememb(cpu_state.ea_seg->base, addr, AL);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 5, -1, 0,0,1,0, 1);
@@ -333,6 +347,7 @@ static int opMOV_a32_AL(uint32_t fetchdat)
 static int opMOV_a16_AX(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememw(cpu_state.ea_seg->base, addr, AX);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 3, -1, 0,0,1,0, 0);
@@ -341,6 +356,7 @@ static int opMOV_a16_AX(uint32_t fetchdat)
 static int opMOV_a32_AX(uint32_t fetchdat)
 {
         uint32_t addr = getlong();             if (cpu_state.abrt) return 1;
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememw(cpu_state.ea_seg->base, addr, AX);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 5, -1, 0,0,1,0, 1);
@@ -349,6 +365,7 @@ static int opMOV_a32_AX(uint32_t fetchdat)
 static int opMOV_a16_EAX(uint32_t fetchdat)
 {
         uint16_t addr = getwordf();
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememl(cpu_state.ea_seg->base, addr, EAX);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 3, -1, 0,0,0,1, 0);
@@ -357,6 +374,7 @@ static int opMOV_a16_EAX(uint32_t fetchdat)
 static int opMOV_a32_EAX(uint32_t fetchdat)
 {
         uint32_t addr = getlong();             if (cpu_state.abrt) return 1;
+        SEG_CHECK_WRITE(cpu_state.ea_seg);
         writememl(cpu_state.ea_seg->base, addr, EAX);
         CLOCK_CYCLES((is486) ? 1 : 2);
         PREFETCH_RUN(2, 5, -1, 0,0,0,1, 1);
@@ -407,7 +425,10 @@ static int opLEA_l_a32(uint32_t fetchdat)
 static int opXLAT_a16(uint32_t fetchdat)
 {
         uint32_t addr = (BX + AL)&0xFFFF;
-        uint8_t temp = readmemb(cpu_state.ea_seg->base, addr); if (cpu_state.abrt) return 1;
+        uint8_t temp;
+        
+        SEG_CHECK_READ(cpu_state.ea_seg);
+        temp = readmemb(cpu_state.ea_seg->base, addr); if (cpu_state.abrt) return 1;
         AL = temp;
         CLOCK_CYCLES(5);
         PREFETCH_RUN(5, 1, -1, 1,0,0,0, 0);
@@ -416,7 +437,10 @@ static int opXLAT_a16(uint32_t fetchdat)
 static int opXLAT_a32(uint32_t fetchdat)
 {
         uint32_t addr = EBX + AL;
-        uint8_t temp = readmemb(cpu_state.ea_seg->base, addr); if (cpu_state.abrt) return 1;
+        uint8_t temp;
+        
+        SEG_CHECK_READ(cpu_state.ea_seg);
+        temp = readmemb(cpu_state.ea_seg->base, addr); if (cpu_state.abrt) return 1;
         AL = temp;
         CLOCK_CYCLES(5);
         PREFETCH_RUN(5, 1, -1, 1,0,0,0, 1);
@@ -434,6 +458,7 @@ static int opMOV_b_r_a16(uint32_t fetchdat)
         }
         else
         {
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
                 seteab(getr8(cpu_reg));
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -452,6 +477,7 @@ static int opMOV_b_r_a32(uint32_t fetchdat)
         }
         else
         {
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
                 seteab(getr8(cpu_reg));
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -470,6 +496,7 @@ static int opMOV_w_r_a16(uint32_t fetchdat)
         }
         else
         { 
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);
                 seteaw(cpu_state.regs[cpu_reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -488,6 +515,7 @@ static int opMOV_w_r_a32(uint32_t fetchdat)
         }
         else
         { 
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);
                 seteaw(cpu_state.regs[cpu_reg].w);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -506,6 +534,7 @@ static int opMOV_l_r_a16(uint32_t fetchdat)
         }
         else
         {
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);
                 seteal(cpu_state.regs[cpu_reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -524,6 +553,7 @@ static int opMOV_l_r_a32(uint32_t fetchdat)
         }
         else
         {
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
                 CHECK_WRITE(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);
                 seteal(cpu_state.regs[cpu_reg].l);
                 CLOCK_CYCLES(is486 ? 1 : 2);
@@ -544,6 +574,7 @@ static int opMOV_r_b_a16(uint32_t fetchdat)
         else
         {
                 uint8_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
                 temp = geteab();                if (cpu_state.abrt) return 1;
                 setr8(cpu_reg, temp);
@@ -564,6 +595,7 @@ static int opMOV_r_b_a32(uint32_t fetchdat)
         else
         {
                 uint8_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr);
                 temp = geteab();                if (cpu_state.abrt) return 1;
                 setr8(cpu_reg, temp);
@@ -584,6 +616,7 @@ static int opMOV_r_w_a16(uint32_t fetchdat)
         else
         {
                 uint16_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);
                 temp = geteaw();                if (cpu_state.abrt) return 1;
                 cpu_state.regs[cpu_reg].w = temp;
@@ -604,6 +637,7 @@ static int opMOV_r_w_a32(uint32_t fetchdat)
         else
         {
                 uint16_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);
                 temp = geteaw();                if (cpu_state.abrt) return 1;
                 cpu_state.regs[cpu_reg].w = temp;
@@ -624,6 +658,7 @@ static int opMOV_r_l_a16(uint32_t fetchdat)
         else
         {
                 uint32_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);
                 temp = geteal();                if (cpu_state.abrt) return 1;
                 cpu_state.regs[cpu_reg].l = temp;
@@ -644,6 +679,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
         else
         {
                 uint32_t temp;
+                SEG_CHECK_READ(cpu_state.ea_seg);
                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);
                 temp = geteal();                if (cpu_state.abrt) return 1;
                 cpu_state.regs[cpu_reg].l = temp;
@@ -664,6 +700,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
                         else                                                            \
                         {                                                               \
                                 uint16_t temp;                                          \
+                                SEG_CHECK_READ(cpu_state.ea_seg);                       \
                                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);                   \
                                 temp = geteaw();                if (cpu_state.abrt) return 1;     \
                                 cpu_state.regs[cpu_reg].w = temp;                           \
@@ -682,6 +719,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
                         else                                                            \
                         {                                                               \
                                 uint16_t temp;                                          \
+                                SEG_CHECK_READ(cpu_state.ea_seg);                       \
                                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+1);                   \
                                 temp = geteaw();                if (cpu_state.abrt) return 1;     \
                                 cpu_state.regs[cpu_reg].w = temp;                           \
@@ -700,6 +738,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
                         else                                                            \
                         {                                                               \
                                 uint32_t temp;                                          \
+                                SEG_CHECK_READ(cpu_state.ea_seg);                       \
                                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);                   \
                                 temp = geteal();                if (cpu_state.abrt) return 1;     \
                                 cpu_state.regs[cpu_reg].l = temp;                           \
@@ -719,6 +758,7 @@ static int opMOV_r_l_a32(uint32_t fetchdat)
                         {                                                               \
                                 uint32_t temp;                                          \
                                 CHECK_READ(cpu_state.ea_seg, cpu_state.eaaddr, cpu_state.eaaddr+3);                   \
+                                SEG_CHECK_READ(cpu_state.ea_seg);                       \
                                 temp = geteal();                if (cpu_state.abrt) return 1;     \
                                 cpu_state.regs[cpu_reg].l = temp;                           \
                         }                                                               \

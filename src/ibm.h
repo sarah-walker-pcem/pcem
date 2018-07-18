@@ -31,8 +31,8 @@ int writelnext;
 extern int mmu_perm;
 
 #define readmemb(a) ((readlookup2[(a)>>12]==-1)?readmembl(a):*(uint8_t *)(readlookup2[(a) >> 12] + (a)))
-#define readmemw(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a)) & 1))?readmemwl(s,a):*(uint16_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
-#define readmeml(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a)) & 3))?readmemll(s,a):*(uint32_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
+#define readmemw(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 1))?readmemwl((s)+(a)):*(uint16_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
+#define readmeml(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 3))?readmemll((s)+(a)):*(uint32_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
 
 //#define writememb(a,v) if (writelookup2[(a)>>12]==0xFFFFFFFF) writemembl(a,v); else ram[writelookup2[(a)>>12]+((a)&0xFFF)]=v
 //#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
@@ -43,14 +43,14 @@ extern int mmu_perm;
 //void writememb(uint32_t addr, uint8_t val);
 uint8_t readmembl(uint32_t addr);
 void writemembl(uint32_t addr, uint8_t val);
-uint8_t readmemb386l(uint32_t seg, uint32_t addr);
-void writememb386l(uint32_t seg, uint32_t addr, uint8_t val);
-uint16_t readmemwl(uint32_t seg, uint32_t addr);
-void writememwl(uint32_t seg, uint32_t addr, uint16_t val);
-uint32_t readmemll(uint32_t seg, uint32_t addr);
-void writememll(uint32_t seg, uint32_t addr, uint32_t val);
-uint64_t readmemql(uint32_t seg, uint32_t addr);
-void writememql(uint32_t seg, uint32_t addr, uint64_t val);
+uint8_t readmemb386l(uint32_t addr);
+void writememb386l(uint32_t addr, uint8_t val);
+uint16_t readmemwl(uint32_t addr);
+void writememwl(uint32_t addr, uint16_t val);
+uint32_t readmemll(uint32_t addr);
+void writememll(uint32_t addr, uint32_t val);
+uint64_t readmemql(uint32_t addr);
+void writememql(uint32_t addr, uint64_t val);
 
 uint8_t *getpccache(uint32_t a);
 

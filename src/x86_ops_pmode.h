@@ -4,6 +4,8 @@ static int opARPL_a16(uint32_t fetchdat)
         
         NOTRM
         fetch_ea_16(fetchdat);
+        if (cpu_mod != 3)
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
         pclog("ARPL_a16\n");
         temp_seg = geteaw();            if (cpu_state.abrt) return 1;
         
@@ -27,7 +29,9 @@ static int opARPL_a32(uint32_t fetchdat)
         
         NOTRM
         fetch_ea_32(fetchdat);
-        pclog("ARPL_a32\n");        
+        if (cpu_mod != 3)
+                SEG_CHECK_WRITE(cpu_state.ea_seg);
+        pclog("ARPL_a32\n");
         temp_seg = geteaw();            if (cpu_state.abrt) return 1;
         
         flags_rebuild();
@@ -53,6 +57,8 @@ static int opARPL_a32(uint32_t fetchdat)
                                                                                                                 \
                 NOTRM                                                                                           \
                 fetch_ea(fetchdat);                                                                             \
+                if (cpu_mod != 3)                                                                               \
+                        SEG_CHECK_READ(cpu_state.ea_seg);                                                       \
                                                                                                                 \
                 sel = geteaw();                 if (cpu_state.abrt) return 1;                                             \
                                                                                                                 \
@@ -103,6 +109,8 @@ opLAR(l_a32, fetch_ea_32, 1, 1)
                                                                                                                 \
                 NOTRM                                                                                           \
                 fetch_ea(fetchdat);                                                                             \
+                if (cpu_mod != 3)                                                                               \
+                        SEG_CHECK_READ(cpu_state.ea_seg);                                                       \
                                                                                                                 \
                 sel = geteaw();                 if (cpu_state.abrt) return 1;                                             \
                 flags_rebuild();                                                                                \
@@ -163,11 +171,15 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
         switch (rmdat & 0x38)
         {
                 case 0x00: /*SLDT*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_WRITE(cpu_state.ea_seg);
                 seteaw(ldt.seg);
                 CLOCK_CYCLES(4);
                 PREFETCH_RUN(4, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
                 break;
                 case 0x08: /*STR*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_WRITE(cpu_state.ea_seg);
                 seteaw(tr.seg);
                 CLOCK_CYCLES(4);
                 PREFETCH_RUN(4, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
@@ -179,6 +191,8 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                         x86gpf(NULL,0);
                         return 1;
                 }
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw(); if (cpu_state.abrt) return 1;
                 addr = (sel & ~7) + gdt.base;
                 limit = readmemw(0, addr) + ((readmemb(0, addr + 6) & 0xf) << 16);
@@ -205,6 +219,8 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                         x86gpf(NULL,0);
                         break;
                 }
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw(); if (cpu_state.abrt) return 1;
                 addr = (sel & ~7) + gdt.base;
                 limit = readmemw(0, addr) + ((readmemb(0, addr + 6) & 0xf) << 16);
@@ -228,6 +244,8 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 PREFETCH_RUN(20, 2, rmdat, (cpu_mod == 3) ? 0:1,2,0,0, ea32);
                 break;
                 case 0x20: /*VERR*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw();                 if (cpu_state.abrt) return 1;
                 flags_rebuild();
                 flags &= ~Z_FLAG;
@@ -248,6 +266,8 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 PREFETCH_RUN(20, 2, rmdat, (cpu_mod == 3) ? 1:2,0,0,0, ea32);
                 break;
                 case 0x28: /*VERW*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw();                 if (cpu_state.abrt) return 1;
                 flags_rebuild();
                 flags &= ~Z_FLAG;
@@ -300,6 +320,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
         switch (rmdat & 0x38)
         {
                 case 0x00: /*SGDT*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_WRITE(cpu_state.ea_seg);
                 seteaw(gdt.limit);
                 base = gdt.base; //is32 ? gdt.base : (gdt.base & 0xffffff);
                 if (is286)
@@ -309,6 +331,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 PREFETCH_RUN(7, 2, rmdat, 0,0,1,1, ea32);
                 break;
                 case 0x08: /*SIDT*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_WRITE(cpu_state.ea_seg);
                 seteaw(idt.limit);
                 base = idt.base;
                 if (is286)
@@ -324,6 +348,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                         x86gpf(NULL,0);
                         break;
                 }
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
 //                pclog("LGDT %08X:%08X\n", easeg, eaaddr);
                 limit = geteaw();
                 base = readmeml(0, easeg + cpu_state.eaaddr + 2);         if (cpu_state.abrt) return 1;
@@ -341,6 +367,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                         x86gpf(NULL,0);
                         break;
                 }
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
 //                pclog("LIDT %08X:%08X\n", easeg, eaaddr);
                 limit = geteaw();
                 base = readmeml(0, easeg + cpu_state.eaaddr + 2);         if (cpu_state.abrt) return 1;
@@ -353,6 +381,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 break;
 
                 case 0x20: /*SMSW*/
+                if (cpu_mod != 3)
+                        SEG_CHECK_WRITE(cpu_state.ea_seg);
                 if (is486)      seteaw(msw);
                 else if (is386) seteaw(msw | 0xFF00);
                 else            seteaw(msw | 0xFFF0);
@@ -366,6 +396,8 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                         x86gpf(NULL, 0);
                         break;
                 }
+                if (cpu_mod != 3)
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                 tempw = geteaw();                                       if (cpu_state.abrt) return 1;
                 if (msw & 1) tempw |= 1;
                 if (is386)
@@ -391,6 +423,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                                 x86gpf(NULL, 0);
                                 break;
                         }
+                        SEG_CHECK_READ(cpu_state.ea_seg);
                         mmu_invalidate(ds + cpu_state.eaaddr);
                         CLOCK_CYCLES(12);
                         PREFETCH_RUN(12, 2, rmdat, 0,0,0,0, ea32);
