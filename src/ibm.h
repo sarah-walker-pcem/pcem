@@ -176,6 +176,8 @@ struct
         MMX_REG MM[8];
         
         uint16_t old_npxc, new_npxc;
+        
+        x86seg seg_cs,seg_ds,seg_es,seg_ss,seg_fs,seg_gs;
 } cpu_state;
 
 #define cycles cpu_state._cycles
@@ -209,7 +211,6 @@ extern int ins,output;
 extern int cycdiff;
 
 x86seg gdt,ldt,idt,tr;
-x86seg _cs,_ds,_es,_ss,_fs,_gs;
 x86seg _oldds;
 
 uint32_t pccache;
@@ -218,20 +219,20 @@ uint8_t *pccache2;
   _cs,_ds,_es,_ss are the segment structures
   CS,DS,ES,SS is the 16-bit data
   cs,ds,es,ss are defines to the bases*/
-#define CS _cs.seg
-#define DS _ds.seg
-#define ES _es.seg
-#define SS _ss.seg
-#define FS _fs.seg
-#define GS _gs.seg
-#define cs _cs.base
-#define ds _ds.base
-#define es _es.base
-#define ss _ss.base
-#define seg_fs _fs.base
-#define gs _gs.base
+#define CS cpu_state.seg_cs.seg
+#define DS cpu_state.seg_ds.seg
+#define ES cpu_state.seg_es.seg
+#define SS cpu_state.seg_ss.seg
+#define FS cpu_state.seg_fs.seg
+#define GS cpu_state.seg_gs.seg
+#define cs cpu_state.seg_cs.base
+#define ds cpu_state.seg_ds.base
+#define es cpu_state.seg_es.base
+#define ss cpu_state.seg_ss.base
+//#define seg_fs _fs.base
+#define gs cpu_state.seg_gs.base
 
-#define CPL ((_cs.access>>5)&3)
+#define CPL ((cpu_state.seg_cs.access>>5)&3)
 
 void loadseg(uint16_t seg, x86seg *s);
 void loadcs(uint16_t seg);

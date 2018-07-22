@@ -577,15 +577,15 @@ void dumpregs()
            printf("In %s mode\n",(msw&1)?((eflags&VM_FLAG)?"V86":"protected"):"real");
         else
            printf("In %s mode\n",(msw&1)?"protected":"real");
-        printf("CS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",cs,_cs.limit,_cs.access, _cs.limit_low, _cs.limit_high);
-        printf("DS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ds,_ds.limit,_ds.access, _ds.limit_low, _ds.limit_high);
-        printf("ES : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",es,_es.limit,_es.access, _es.limit_low, _es.limit_high);
+        printf("CS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",cs,cpu_state.seg_cs.limit,cpu_state.seg_cs.access, cpu_state.seg_cs.limit_low, cpu_state.seg_cs.limit_high);
+        printf("DS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ds,cpu_state.seg_ds.limit,cpu_state.seg_ds.access, cpu_state.seg_ds.limit_low, cpu_state.seg_ds.limit_high);
+        printf("ES : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",es,cpu_state.seg_es.limit,cpu_state.seg_es.access, cpu_state.seg_es.limit_low, cpu_state.seg_es.limit_high);
         if (is386)
         {
-                printf("FS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",seg_fs,_fs.limit,_fs.access, _fs.limit_low, _fs.limit_high);
-                printf("GS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",gs,_gs.limit,_gs.access, _gs.limit_low, _gs.limit_high);
+                printf("FS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",cpu_state.seg_fs.base,cpu_state.seg_fs.limit,cpu_state.seg_fs.access, cpu_state.seg_fs.limit_low, cpu_state.seg_fs.limit_high);
+                printf("GS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",gs,cpu_state.seg_gs.limit,cpu_state.seg_gs.access, cpu_state.seg_gs.limit_low, cpu_state.seg_gs.limit_high);
         }
-        printf("SS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ss,_ss.limit,_ss.access, _ss.limit_low, _ss.limit_high);
+        printf("SS : base=%06X limit=%08X access=%02X  limit_low=%08X limit_high=%08X\n",ss,cpu_state.seg_ss.limit,cpu_state.seg_ss.access, cpu_state.seg_ss.limit_low, cpu_state.seg_ss.limit_high);
         printf("GDT : base=%06X limit=%04X\n",gdt.base,gdt.limit);
         printf("LDT : base=%06X limit=%04X\n",ldt.base,ldt.limit);
         printf("IDT : base=%06X limit=%04X\n",idt.base,idt.limit);
@@ -1195,7 +1195,7 @@ void execx86(int cycs)
                         case 0x07: /*POP ES*/
                         if (cpu_state.ssegs) ss=oldss;
                         tempw=readmemw(ss,SP);
-                        loadseg(tempw,&_es);
+                        loadseg(tempw,&cpu_state.seg_es);
                         SP+=2;
                         cycles-=12;
                         break;
@@ -1258,7 +1258,7 @@ void execx86(int cycs)
                         case 0x0F: /*POP CS - 8088/8086 only*/
                         if (cpu_state.ssegs) ss=oldss;
                         tempw=readmemw(ss,SP);
-                        loadseg(tempw,&_cs);
+                        loadseg(tempw,&cpu_state.seg_cs);
                         SP+=2;
                         cycles-=12;
                         break;
@@ -1317,7 +1317,7 @@ void execx86(int cycs)
                         case 0x17: /*POP SS*/
                         if (cpu_state.ssegs) ss=oldss;
                         tempw=readmemw(ss,SP);
-                        loadseg(tempw,&_ss);
+                        loadseg(tempw,&cpu_state.seg_ss);
                         SP+=2;
                         noint=1;
                         cycles-=12;
@@ -1382,7 +1382,7 @@ void execx86(int cycs)
                         case 0x1F: /*POP DS*/
                         if (cpu_state.ssegs) ss=oldss;
                         tempw=readmemw(ss,SP);
-                        loadseg(tempw,&_ds);
+                        loadseg(tempw,&cpu_state.seg_ds);
                         if (cpu_state.ssegs) oldds=ds;
                         SP+=2;
                         cycles-=12;
@@ -2088,20 +2088,20 @@ void execx86(int cycs)
                         {
                                 case 0x00: /*ES*/
                                 tempw=geteaw();
-                                loadseg(tempw,&_es);
+                                loadseg(tempw,&cpu_state.seg_es);
                                 break;
                                 case 0x08: /*CS - 8088/8086 only*/
                                 tempw=geteaw();
-                                loadseg(tempw,&_cs);
+                                loadseg(tempw,&cpu_state.seg_cs);
                                 break;
                                 case 0x18: /*DS*/
                                 tempw=geteaw();
-                                loadseg(tempw,&_ds);
+                                loadseg(tempw,&cpu_state.seg_ds);
                                 if (cpu_state.ssegs) oldds=ds;
                                 break;
                                 case 0x10: /*SS*/
                                 tempw=geteaw();
-                                loadseg(tempw,&_ss);
+                                loadseg(tempw,&cpu_state.seg_ss);
                                 if (cpu_state.ssegs) oldss=ss;
 //                                printf("LOAD SS %04X %04X\n",tempw,SS);
 //				printf("SS loaded with %04X %04X:%04X %04X %04X %04X\n",ss>>4,cs>>4,pc,CX,DX,es>>4);
@@ -2350,14 +2350,14 @@ void execx86(int cycs)
                         fetchea();
                         cpu_state.regs[cpu_reg].w=readmemw(easeg,cpu_state.eaaddr); //geteaw();
                         tempw=readmemw(easeg,(cpu_state.eaaddr+2)&0xFFFF); //geteaw2();
-                        loadseg(tempw,&_es);
+                        loadseg(tempw,&cpu_state.seg_es);
                         cycles-=24;
                         break;
                         case 0xC5: /*LDS*/
                         fetchea();
                         cpu_state.regs[cpu_reg].w=readmemw(easeg,cpu_state.eaaddr);
                         tempw=readmemw(easeg,(cpu_state.eaaddr+2)&0xFFFF);
-                        loadseg(tempw,&_ds);
+                        loadseg(tempw,&cpu_state.seg_ds);
                         if (cpu_state.ssegs) oldds=ds;
                         cycles-=24;
                         break;

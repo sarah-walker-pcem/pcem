@@ -103,7 +103,7 @@ static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uin
 
                 if (mod1seg[cpu_rm] == &ss && !op_ssegs)
                 {
-                        op_ea_seg = &_ss;
+                        op_ea_seg = &cpu_state.seg_ss;
                 }
         }
         
@@ -153,7 +153,7 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
 //                        addlong(stack_offset);
                 }
                 if (((sib & 7) == 4 || (cpu_mod && (sib & 7) == 5)) && !op_ssegs)
-                        op_ea_seg = &_ss;
+                        op_ea_seg = &cpu_state.seg_ss;
                 if (((sib >> 3) & 7) != 4)
                 {
                         switch (sib >> 6)
@@ -186,7 +186,7 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                 if (cpu_mod)
                 {
                         if (cpu_rm == 5 && !op_ssegs)
-                                op_ea_seg = &_ss;
+                                op_ea_seg = &cpu_state.seg_ss;
                         if (cpu_mod == 1)
                         {
                                 uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, (uint32_t)(int8_t)(fetchdat >> 8));
@@ -258,13 +258,12 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         int opcode_shift = 0;
         int opcode_mask = 0x3ff;
         uint32_t op_32 = use32;
-        x86seg *op_ea_seg = &_ds;
-        int op_ssegs = 0;
         int over = 0;
         int test_modrm = 1;
         int pc_off = 0;
         
-        op_ea_seg = &_ds;
+        op_ea_seg = &cpu_state.seg_ds;
+        op_ssegs = 0;
 
         codegen_timing_start();
 
@@ -279,27 +278,27 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
 
                         case 0x26: /*ES:*/
-                        op_ea_seg = &_es;
+                        op_ea_seg = &cpu_state.seg_es;
                         op_ssegs = 1;
                         break;
                         case 0x2e: /*CS:*/
-                        op_ea_seg = &_cs;
+                        op_ea_seg = &cpu_state.seg_cs;
                         op_ssegs = 1;
                         break;
                         case 0x36: /*SS:*/
-                        op_ea_seg = &_ss;
+                        op_ea_seg = &cpu_state.seg_ss;
                         op_ssegs = 1;
                         break;
                         case 0x3e: /*DS:*/
-                        op_ea_seg = &_ds;
+                        op_ea_seg = &cpu_state.seg_ds;
                         op_ssegs = 1;
                         break;
                         case 0x64: /*FS:*/
-                        op_ea_seg = &_fs;
+                        op_ea_seg = &cpu_state.seg_fs;
                         op_ssegs = 1;
                         break;
                         case 0x65: /*GS:*/
-                        op_ea_seg = &_gs;
+                        op_ea_seg = &cpu_state.seg_gs;
                         op_ssegs = 1;
                         break;
 

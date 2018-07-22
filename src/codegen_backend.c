@@ -301,7 +301,7 @@ void codegen_block_start_recompile(codeblock_t *block)
         codegen_fpu_loaded_iq[0] = codegen_fpu_loaded_iq[1] = codegen_fpu_loaded_iq[2] = codegen_fpu_loaded_iq[3] =
         codegen_fpu_loaded_iq[4] = codegen_fpu_loaded_iq[5] = codegen_fpu_loaded_iq[6] = codegen_fpu_loaded_iq[7] = 0;
         
-        _ds.checked = _es.checked = _fs.checked = _gs.checked = (cr0 & 1) ? 0 : 1;
+        cpu_state.seg_ds.checked = cpu_state.seg_es.checked = cpu_state.seg_fs.checked = cpu_state.seg_gs.checked = (cr0 & 1) ? 0 : 1;
 
         block->TOP = cpu_state.TOP;
         block->was_recompiled = 1;

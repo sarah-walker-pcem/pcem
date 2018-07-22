@@ -63,26 +63,26 @@ static int op ## name ## _l_a32(uint32_t fetchdat)              \
         return normal_opcode_table[(fetchdat & 0xff) | 0x300](fetchdat >> 8); \
 }
 
-op_seg(CS, _cs, x86_opcodes, x86_opcodes)
-op_seg(DS, _ds, x86_opcodes, x86_opcodes)
-op_seg(ES, _es, x86_opcodes, x86_opcodes)
-op_seg(FS, _fs, x86_opcodes, x86_opcodes)
-op_seg(GS, _gs, x86_opcodes, x86_opcodes)
-op_seg(SS, _ss, x86_opcodes, x86_opcodes)
+op_seg(CS, cpu_state.seg_cs, x86_opcodes, x86_opcodes)
+op_seg(DS, cpu_state.seg_ds, x86_opcodes, x86_opcodes)
+op_seg(ES, cpu_state.seg_es, x86_opcodes, x86_opcodes)
+op_seg(FS, cpu_state.seg_fs, x86_opcodes, x86_opcodes)
+op_seg(GS, cpu_state.seg_gs, x86_opcodes, x86_opcodes)
+op_seg(SS, cpu_state.seg_ss, x86_opcodes, x86_opcodes)
 
-op_seg(CS_REPE, _cs, x86_opcodes_REPE, x86_opcodes)
-op_seg(DS_REPE, _ds, x86_opcodes_REPE, x86_opcodes)
-op_seg(ES_REPE, _es, x86_opcodes_REPE, x86_opcodes)
-op_seg(FS_REPE, _fs, x86_opcodes_REPE, x86_opcodes)
-op_seg(GS_REPE, _gs, x86_opcodes_REPE, x86_opcodes)
-op_seg(SS_REPE, _ss, x86_opcodes_REPE, x86_opcodes)
+op_seg(CS_REPE, cpu_state.seg_cs, x86_opcodes_REPE, x86_opcodes)
+op_seg(DS_REPE, cpu_state.seg_ds, x86_opcodes_REPE, x86_opcodes)
+op_seg(ES_REPE, cpu_state.seg_es, x86_opcodes_REPE, x86_opcodes)
+op_seg(FS_REPE, cpu_state.seg_fs, x86_opcodes_REPE, x86_opcodes)
+op_seg(GS_REPE, cpu_state.seg_gs, x86_opcodes_REPE, x86_opcodes)
+op_seg(SS_REPE, cpu_state.seg_ss, x86_opcodes_REPE, x86_opcodes)
 
-op_seg(CS_REPNE, _cs, x86_opcodes_REPNE, x86_opcodes)
-op_seg(DS_REPNE, _ds, x86_opcodes_REPNE, x86_opcodes)
-op_seg(ES_REPNE, _es, x86_opcodes_REPNE, x86_opcodes)
-op_seg(FS_REPNE, _fs, x86_opcodes_REPNE, x86_opcodes)
-op_seg(GS_REPNE, _gs, x86_opcodes_REPNE, x86_opcodes)
-op_seg(SS_REPNE, _ss, x86_opcodes_REPNE, x86_opcodes)
+op_seg(CS_REPNE, cpu_state.seg_cs, x86_opcodes_REPNE, x86_opcodes)
+op_seg(DS_REPNE, cpu_state.seg_ds, x86_opcodes_REPNE, x86_opcodes)
+op_seg(ES_REPNE, cpu_state.seg_es, x86_opcodes_REPNE, x86_opcodes)
+op_seg(FS_REPNE, cpu_state.seg_fs, x86_opcodes_REPNE, x86_opcodes)
+op_seg(GS_REPNE, cpu_state.seg_gs, x86_opcodes_REPNE, x86_opcodes)
+op_seg(SS_REPNE, cpu_state.seg_ss, x86_opcodes_REPNE, x86_opcodes)
 
 static int op_66(uint32_t fetchdat) /*Data size select*/
 {

@@ -9,7 +9,7 @@ static int opREP_INSB_ ## size(uint32_t fetchdat)                               
         {                                                                       \
                 uint8_t temp;                                                   \
                                                                                 \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
                 check_io_perm(DX);                                              \
                 temp = inb(DX);                                                 \
                 writememb(es, DEST_REG, temp); if (cpu_state.abrt) return 1;    \
@@ -37,7 +37,7 @@ static int opREP_INSW_ ## size(uint32_t fetchdat)                               
         {                                                                       \
                 uint16_t temp;                                                  \
                                                                                 \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
                 check_io_perm(DX);                                               \
                 check_io_perm(DX+1);                                             \
                 temp = inw(DX);                                                 \
@@ -66,7 +66,7 @@ static int opREP_INSL_ ## size(uint32_t fetchdat)                               
         {                                                                       \
                 uint32_t temp;                                                  \
                                                                                 \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
                 check_io_perm(DX);                                               \
                 check_io_perm(DX+1);                                             \
                 check_io_perm(DX+2);                                             \
@@ -182,13 +182,13 @@ static int opREP_MOVSB_ ## size(uint32_t fetchdat)                              
         if (CNT_REG > 0)                                                        \
         {                                                                       \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         }                                                                       \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
                 uint8_t temp;                                                   \
                                                                                 \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG);                      \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);         \
                 temp = readmemb(cpu_state.ea_seg->base, SRC_REG); if (cpu_state.abrt) return 1;    \
                 writememb(es, DEST_REG, temp); if (cpu_state.abrt) return 1;       \
                                                                                 \
@@ -220,13 +220,13 @@ static int opREP_MOVSW_ ## size(uint32_t fetchdat)                              
         if (CNT_REG > 0)                                                        \
         {                                                                       \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         }                                                                       \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
                 uint16_t temp;                                                  \
                                                                                 \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG);                      \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);         \
                 temp = readmemw(cpu_state.ea_seg->base, SRC_REG); if (cpu_state.abrt) return 1;    \
                 writememw(es, DEST_REG, temp); if (cpu_state.abrt) return 1;       \
                                                                                 \
@@ -258,13 +258,13 @@ static int opREP_MOVSL_ ## size(uint32_t fetchdat)                              
         if (CNT_REG > 0)                                                        \
         {                                                                       \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         }                                                                       \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
                 uint32_t temp;                                                  \
                                                                                 \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG);                      \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);         \
                 temp = readmeml(cpu_state.ea_seg->base, SRC_REG); if (cpu_state.abrt) return 1;    \
                 writememl(es, DEST_REG, temp); if (cpu_state.abrt) return 1;       \
                                                                                 \
@@ -296,10 +296,10 @@ static int opREP_STOSB_ ## size(uint32_t fetchdat)                              
         if (trap)                                                               \
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         if (CNT_REG > 0)                                                        \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG);                      \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);         \
                 writememb(es, DEST_REG, AL); if (cpu_state.abrt) return 1;         \
                 if (flags & D_FLAG) DEST_REG--;                                 \
                 else                DEST_REG++;                                 \
@@ -326,10 +326,10 @@ static int opREP_STOSW_ ## size(uint32_t fetchdat)                              
         if (trap)                                                               \
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         if (CNT_REG > 0)                                                        \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG+1);                    \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG+1);       \
                 writememw(es, DEST_REG, AX); if (cpu_state.abrt) return 1;         \
                 if (flags & D_FLAG) DEST_REG -= 2;                              \
                 else                DEST_REG += 2;                              \
@@ -356,10 +356,10 @@ static int opREP_STOSL_ ## size(uint32_t fetchdat)                              
         if (trap)                                                               \
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         if (CNT_REG > 0)                                                        \
-                SEG_CHECK_WRITE(&_es);                                          \
+                SEG_CHECK_WRITE(&cpu_state.seg_es);                             \
         while (CNT_REG > 0)                                                     \
         {                                                                       \
-                CHECK_WRITE_REP(&_es, DEST_REG, DEST_REG+3);                    \
+                CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG+3);       \
                 writememl(es, DEST_REG, EAX); if (cpu_state.abrt) return 1;        \
                 if (flags & D_FLAG) DEST_REG -= 4;                              \
                 else                DEST_REG += 4;                              \
@@ -479,7 +479,7 @@ static int opREP_CMPSB_ ## size(uint32_t fetchdat)                              
         {                                                                       \
                 uint8_t temp, temp2;                                            \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
                 temp = readmemb(cpu_state.ea_seg->base, SRC_REG);               \
                 temp2 = readmemb(es, DEST_REG); if (cpu_state.abrt) return 1;   \
                                                                                 \
@@ -509,7 +509,7 @@ static int opREP_CMPSW_ ## size(uint32_t fetchdat)                              
         {                                                                       \
                 uint16_t temp, temp2;                                           \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
                 temp = readmemw(cpu_state.ea_seg->base, SRC_REG);               \
                 temp2 = readmemw(es, DEST_REG); if (cpu_state.abrt) return 1;   \
                                                                                 \
@@ -539,7 +539,7 @@ static int opREP_CMPSL_ ## size(uint32_t fetchdat)                              
         {                                                                       \
                 uint32_t temp, temp2;                                           \
                 SEG_CHECK_READ(cpu_state.ea_seg);                               \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
                 temp = readmeml(cpu_state.ea_seg->base, SRC_REG);               \
                 temp2 = readmeml(es, DEST_REG); if (cpu_state.abrt) return 1;   \
                                                                                 \
@@ -569,7 +569,7 @@ static int opREP_SCASB_ ## size(uint32_t fetchdat)                              
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         tempz = FV;                                                             \
         if ((CNT_REG > 0) && (FV == tempz))                                     \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
         while ((CNT_REG > 0) && (FV == tempz))                                  \
         {                                                                       \
                 uint8_t temp = readmemb(es, DEST_REG); if (cpu_state.abrt) break;\
@@ -602,7 +602,7 @@ static int opREP_SCASW_ ## size(uint32_t fetchdat)                              
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         tempz = FV;                                                             \
         if ((CNT_REG > 0) && (FV == tempz))                                     \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
         while ((CNT_REG > 0) && (FV == tempz))                                  \
         {                                                                       \
                 uint16_t temp = readmemw(es, DEST_REG); if (cpu_state.abrt) break;\
@@ -635,7 +635,7 @@ static int opREP_SCASL_ ## size(uint32_t fetchdat)                              
                 cycles_end = cycles+1; /*Force the instruction to end after only one iteration when trap flag set*/     \
         tempz = FV;                                                             \
         if ((CNT_REG > 0) && (FV == tempz))                                     \
-                SEG_CHECK_READ(&_es);                                           \
+                SEG_CHECK_READ(&cpu_state.seg_es);                              \
         while ((CNT_REG > 0) && (FV == tempz))                                  \
         {                                                                       \
                 uint32_t temp = readmeml(es, DEST_REG); if (cpu_state.abrt) break;\

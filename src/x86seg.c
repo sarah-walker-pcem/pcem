@@ -68,7 +68,7 @@ static void seg_reset(x86seg *s)
         s->limit = 0xFFFF;
         s->limit_low = 0;
         s->limit_high = 0xffff;
-        if (s == &_cs)
+        if (s == &cpu_state.seg_cs)
         {
                 // TODO - When the PC is reset, initialization of the CS descriptor must be like the annotated line below.
                 //s->base = AT ? (cpu_16bitbus ? 0xFF0000 : 0xFFFF0000) : 0xFFFF0;
@@ -84,12 +84,12 @@ static void seg_reset(x86seg *s)
 
 void x86seg_reset()
 {
-        seg_reset(&_cs);
-        seg_reset(&_ds);
-        seg_reset(&_es);
-        seg_reset(&_fs);
-        seg_reset(&_gs);
-        seg_reset(&_ss);
+        seg_reset(&cpu_state.seg_cs);
+        seg_reset(&cpu_state.seg_ds);
+        seg_reset(&cpu_state.seg_es);
+        seg_reset(&cpu_state.seg_fs);
+        seg_reset(&cpu_state.seg_gs);
+        seg_reset(&cpu_state.seg_ss);
 }
 
 void x86_doabrt(int x86_abrt)
@@ -97,7 +97,7 @@ void x86_doabrt(int x86_abrt)
 //        ingpf = 1;
         CS = oldcs;
         cpu_state.pc = cpu_state.oldpc;
-        _cs.access = oldcpl << 5;
+        cpu_state.seg_cs.access = oldcpl << 5;
 //        pclog("x86_doabrt - %02X %08X  %04X:%08X  %i\n", x86_abrt, abrt_error, CS, pc, ins);
         
 /*        if (CS == 0x3433 && pc == 0x000006B0)
@@ -238,14 +238,14 @@ static void do_seg_load(x86seg *s, uint16_t *segdat)
         }
 //        if (output) pclog("SEG : base=%08x limit=%08x low=%08x high=%08x\n", s->base, s->limit, s->limit_low, s->limit_high);
 
-        if (s == &_ds)
+        if (s == &cpu_state.seg_ds)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
                         cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
                 else
                         cpu_cur_status |= CPU_STATUS_NOTFLATDS;
         }
-        if (s == &_ss)
+        if (s == &cpu_state.seg_ss)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
                         cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
@@ -320,7 +320,7 @@ void loadseg(uint16_t seg, x86seg *s)
 //                intcount++;
                 if (!(seg&~3))
                 {
-                        if (s==&_ss)
+                        if (s==&cpu_state.seg_ss)
                         {
                                 pclog("SS selector = NULL!\n");
                                 x86ss(NULL,0);
@@ -332,7 +332,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         s->seg=0;
                         s->access = 0;
                         s->base=-1;
-                        if (s == &_ds)
+                        if (s == &cpu_state.seg_ds)
                                 cpu_cur_status |= CPU_STATUS_NOTFLATDS;
 //                        pclog("NULL selector %s%s%s%s %04X(%06X):%06X\n",(s==&_ds)?"DS":"",(s==&_es)?"ES":"",(s==&_fs)?"FS":"",(s==&_gs)?"GS":"",CS,cs,pc);
                         return;
@@ -371,7 +371,7 @@ void loadseg(uint16_t seg, x86seg *s)
                 segdat[2]=readmemw(0,addr+4);
                 segdat[3]=readmemw(0,addr+6); cpl_override=0; if (cpu_state.abrt) return;
                 dpl=(segdat[2]>>13)&3;
-                if (s==&_ss)
+                if (s==&cpu_state.seg_ss)
                 {
                         if (!(seg&~3))
                         {
@@ -405,7 +405,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         set_stack32((segdat[3] & 0x40) ? 1 : 0);
 //                        pclog("Load SS  %04x %04x %04x %04x\n", segdat[0], segdat[1], segdat[2], segdat[3]);
                 }
-                else if (s!=&_cs)
+                else if (s!=&cpu_state.seg_cs)
                 {
                         if (output) pclog("Seg data %04X %04X %04X %04X\n", segdat[0], segdat[1], segdat[2], segdat[3]);
                         if (output) pclog("Seg type %03X\n",segdat[2]&0x1F00);
@@ -453,9 +453,9 @@ void loadseg(uint16_t seg, x86seg *s)
                 }
 #endif
                 s->checked = 0;
-                if (s == &_ds)
+                if (s == &cpu_state.seg_ds)
                         codegen_flat_ds = 0;
-                if (s == &_ss)
+                if (s == &cpu_state.seg_ss)
                         codegen_flat_ss = 0;
         }
         else
@@ -463,23 +463,23 @@ void loadseg(uint16_t seg, x86seg *s)
                 s->access = (3 << 5) | 2;
                 s->base = seg << 4;
                 s->seg = seg;
-                if (s == &_ss)
+                if (s == &cpu_state.seg_ss)
                         set_stack32(0);
                 s->checked = 1;
-                if (s == &_ds)
+                if (s == &cpu_state.seg_ds)
                         codegen_flat_ds = 0;
-                if (s == &_ss)
+                if (s == &cpu_state.seg_ss)
                         codegen_flat_ss = 0;
         }
         
-        if (s == &_ds)
+        if (s == &cpu_state.seg_ds)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
                         cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
                 else
                         cpu_cur_status |= CPU_STATUS_NOTFLATDS;
         }
-        if (s == &_ss)
+        if (s == &cpu_state.seg_ss)
         {
                 if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
                         cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
@@ -568,7 +568,7 @@ void loadcs(uint16_t seg)
                         }
                         set_use32(segdat[3] & 0x40);
                         CS=(seg&~3)|CPL;
-                        do_seg_load(&_cs, segdat);
+                        do_seg_load(&cpu_state.seg_cs, segdat);
                         use32=(segdat[3]&0x40)?0x300:0;
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 
@@ -601,13 +601,13 @@ void loadcs(uint16_t seg)
         }
         else
         {
-                _cs.base=seg<<4;
-                _cs.limit=0xFFFF;
-                _cs.limit_low = 0;
-                _cs.limit_high = 0xffff;
+                cpu_state.seg_cs.base=seg<<4;
+                cpu_state.seg_cs.limit=0xFFFF;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
-                else                _cs.access=(0<<5) | 2;
+                if (eflags&VM_FLAG) cpu_state.seg_cs.access=(3<<5) | 2;
+                else                cpu_state.seg_cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
         }
 }
@@ -693,7 +693,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                         CS = (seg & ~3) | CPL;
                         segdat[2] = (segdat[2] & ~(3 << (5+8))) | (CPL << (5+8));
 
-                        do_seg_load(&_cs, segdat);
+                        do_seg_load(&cpu_state.seg_cs, segdat);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 /*                        if (segdat[3]&0x40) 
                         {
@@ -797,7 +797,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                         }
                                         case 0x1C00: case 0x1D00: case 0x1E00: case 0x1F00: /*Conforming*/
                                         CS=seg2;
-                                        do_seg_load(&_cs, segdat);
+                                        do_seg_load(&cpu_state.seg_cs, segdat);
                                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                         set_use32(segdat[3]&0x40);
                                         cpu_state.pc=newpc;
@@ -846,13 +846,13 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
         }
         else
         {
-                _cs.base=seg<<4;
-                _cs.limit=0xFFFF;
-                _cs.limit_low = 0;
-                _cs.limit_high = 0xffff;
+                cpu_state.seg_cs.base=seg<<4;
+                cpu_state.seg_cs.limit=0xFFFF;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
-                else                _cs.access=(0<<5) | 2;
+                if (eflags&VM_FLAG) cpu_state.seg_cs.access=(3<<5) | 2;
+                else                cpu_state.seg_cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 cycles -= timing_jmp_rm;
         }
@@ -1028,7 +1028,7 @@ void loadcscall(uint16_t seg)
                         else /*On non-conforming segments, set RPL = CPL*/
                                 seg = (seg & ~3) | CPL;
                         CS=seg;
-                        do_seg_load(&_cs, segdat);
+                        do_seg_load(&cpu_state.seg_cs, segdat);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 /*                        if (segdat[3]&0x40) 
                         {
@@ -1205,7 +1205,7 @@ void loadcscall(uint16_t seg)
                                                 if (stack32) ESP=newsp;
                                                 else         SP=newsp;
                                                 
-                                                do_seg_load(&_ss, segdat2);
+                                                do_seg_load(&cpu_state.seg_ss, segdat2);
 
                                                 if (output) pclog("Set access 1\n");
 
@@ -1216,7 +1216,7 @@ void loadcscall(uint16_t seg)
 #endif
                                                 
                                                 CS=seg2;
-                                                do_seg_load(&_cs, segdat);
+                                                do_seg_load(&cpu_state.seg_cs, segdat);
                                                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                                 set_use32(segdat[3]&0x40);
                                                 cpu_state.pc=newpc;
@@ -1320,7 +1320,7 @@ void loadcscall(uint16_t seg)
                                                 PUSHW(oldpc); if (cpu_state.abrt) return;
                                         }*/
                                         CS=seg2;
-                                        do_seg_load(&_cs, segdat);
+                                        do_seg_load(&cpu_state.seg_cs, segdat);
                                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                                         set_use32(segdat[3]&0x40);
                                         cpu_state.pc=newpc;
@@ -1363,13 +1363,13 @@ void loadcscall(uint16_t seg)
         }
         else
         {
-                _cs.base=seg<<4;
-                _cs.limit=0xFFFF;
-                _cs.limit_low = 0;
-                _cs.limit_high = 0xffff;
+                cpu_state.seg_cs.base=seg<<4;
+                cpu_state.seg_cs.limit=0xFFFF;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffff;
                 CS=seg;
-                if (eflags&VM_FLAG) _cs.access=(3<<5) | 2;
-                else                _cs.access=(0<<5) | 2;
+                if (eflags&VM_FLAG) cpu_state.seg_cs.access=(3<<5) | 2;
+                else                cpu_state.seg_cs.access=(0<<5) | 2;
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
         }
 }
@@ -1495,8 +1495,8 @@ void pmoderetf(int is32, uint16_t off)
                 if (segdat[2] & 0x400)
                    segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
                 CS = seg;
-                do_seg_load(&_cs, segdat);
-                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
+                do_seg_load(&cpu_state.seg_cs, segdat);
+                cpu_state.seg_cs.access = (cpu_state.seg_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 set_use32(segdat[3] & 0x40);
                 
@@ -1630,7 +1630,7 @@ void pmoderetf(int is32, uint16_t off)
                 set_stack32((segdat2[3] & 0x40) ? 1 : 0);
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
-                do_seg_load(&_ss, segdat2);
+                do_seg_load(&cpu_state.seg_ss, segdat2);
 
 #ifdef SEL_ACCESSED
                 cpl_override = 1;
@@ -1647,17 +1647,17 @@ void pmoderetf(int is32, uint16_t off)
 
                 cpu_state.pc=newpc;
                 CS=seg;
-                do_seg_load(&_cs, segdat);
+                do_seg_load(&cpu_state.seg_cs, segdat);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 set_use32(segdat[3] & 0x40);
                 
                 if (stack32) ESP+=off;
                 else         SP+=off;
                 
-                check_seg_valid(&_ds);
-                check_seg_valid(&_es);
-                check_seg_valid(&_fs);
-                check_seg_valid(&_gs);
+                check_seg_valid(&cpu_state.seg_ds);
+                check_seg_valid(&cpu_state.seg_es);
+                check_seg_valid(&cpu_state.seg_fs);
+                check_seg_valid(&cpu_state.seg_gs);
 //                pclog("CPL<RPL return to %04X:%08X %04X:%08X\n",CS,pc,SS,ESP);
                 cycles -= timing_retf_pm_outer;
         }
@@ -1665,7 +1665,7 @@ void pmoderetf(int is32, uint16_t off)
 
 void restore_stack()
 {
-        ss=oldss; _ss.limit=oldsslimit;
+        ss=oldss; cpu_state.seg_ss.limit=oldsslimit;
 }
 
 void pmodeint(int num, int soft)
@@ -1881,7 +1881,7 @@ void pmodeint(int num, int soft)
                                         set_stack32((segdat3[3] & 0x40) ? 1 : 0);
                                         if (stack32) ESP=newsp;
                                         else         SP=newsp;
-                                        do_seg_load(&_ss, segdat3);
+                                        do_seg_load(&cpu_state.seg_ss, segdat3);
 
 #ifdef CS_ACCESSED                                        
                                         cpl_override = 1;
@@ -1900,10 +1900,10 @@ void pmodeint(int num, int soft)
                                                         PUSHL(FS);
                                                         PUSHL(DS);
                                                         PUSHL(ES); if (cpu_state.abrt) return;
-                                                        loadseg(0,&_ds);
-                                                        loadseg(0,&_es);
-                                                        loadseg(0,&_fs);
-                                                        loadseg(0,&_gs);
+                                                        loadseg(0,&cpu_state.seg_ds);
+                                                        loadseg(0,&cpu_state.seg_es);
+                                                        loadseg(0,&cpu_state.seg_fs);
+                                                        loadseg(0,&cpu_state.seg_gs);
                                                 }
                                                 PUSHL(oldss);
                                                 PUSHL(oldsp);
@@ -1927,7 +1927,7 @@ void pmodeint(int num, int soft)
 //                                                if (output) pclog("16Stack %04X:%08X\n",SS,ESP);
                                         }
                                         cpl_override=0;
-                                        _cs.access=0;
+                                        cpu_state.seg_cs.access=0;
                                         cycles -= timing_int_pm_outer - timing_int_pm;
 //                                        pclog("Non-confirming int gate, CS = %04X\n");
                                         break;
@@ -1975,9 +1975,9 @@ void pmodeint(int num, int soft)
                                 x86gpf(NULL,seg&~3);
                                 return;
                         }
-                do_seg_load(&_cs, segdat2);
+                do_seg_load(&cpu_state.seg_cs, segdat2);
                 CS = (seg & ~3) | new_cpl;
-                _cs.access = (_cs.access & ~(3 << 5)) | (new_cpl << 5);
+                cpu_state.seg_cs.access = (cpu_state.seg_cs.access & ~(3 << 5)) | (new_cpl << 5);
 //                pclog("New CS = %04X\n",CS);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 if (type>0x800) cpu_state.pc=segdat[0]|(segdat[3]<<16);
@@ -2086,10 +2086,10 @@ void pmodeiret(int is32)
                         tempflags=POPW(); if (cpu_state.abrt) return;
                 }
                 cpu_state.pc=newpc;
-                _cs.base=seg<<4;
-                _cs.limit=0xFFFF;
-                _cs.limit_low = 0;
-                _cs.limit_high = 0xffff;
+                cpu_state.seg_cs.base=seg<<4;
+                cpu_state.seg_cs.limit=0xFFFF;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffff;
                 CS=seg;
                 flags=(flags&0x3000)|(tempflags&0xCFD5)|2;
                 cycles -= timing_iret_rm;
@@ -2155,31 +2155,31 @@ void pmodeiret(int is32)
 //                        pclog("Pop stack %04X:%04X\n",newss,newsp);
                         eflags=tempflags>>16;
                         cpu_cur_status |= CPU_STATUS_V86;
-                        loadseg(segs[0],&_es);
-                        do_seg_v86_init(&_es);
-                        loadseg(segs[1],&_ds);
-                        do_seg_v86_init(&_ds);
+                        loadseg(segs[0],&cpu_state.seg_es);
+                        do_seg_v86_init(&cpu_state.seg_es);
+                        loadseg(segs[1],&cpu_state.seg_ds);
+                        do_seg_v86_init(&cpu_state.seg_ds);
                         cpu_cur_status |= CPU_STATUS_NOTFLATDS;
-                        loadseg(segs[2],&_fs);
-                        do_seg_v86_init(&_fs);
-                        loadseg(segs[3],&_gs);
-                        do_seg_v86_init(&_gs);                        
+                        loadseg(segs[2],&cpu_state.seg_fs);
+                        do_seg_v86_init(&cpu_state.seg_fs);
+                        loadseg(segs[3],&cpu_state.seg_gs);
+                        do_seg_v86_init(&cpu_state.seg_gs);
                         
 //                        pclog("V86 IRET %04X:%08X\n",SS,ESP);
 //                        output=3;
                         
                         cpu_state.pc=newpc;
-                        _cs.base=seg<<4;
-                        _cs.limit=0xFFFF;
-                        _cs.limit_low = 0;
-                        _cs.limit_high = 0xffff;
+                        cpu_state.seg_cs.base=seg<<4;
+                        cpu_state.seg_cs.limit=0xFFFF;
+                        cpu_state.seg_cs.limit_low = 0;
+                        cpu_state.seg_cs.limit_high = 0xffff;
                         CS=seg;
-                        _cs.access=(3<<5) | 2;
+                        cpu_state.seg_cs.access=(3<<5) | 2;
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
 
                         ESP=newsp;
-                        loadseg(newss,&_ss);
-                        do_seg_v86_init(&_ss);
+                        loadseg(newss,&cpu_state.seg_ss);
+                        do_seg_v86_init(&cpu_state.seg_ss);
                         cpu_cur_status |= CPU_STATUS_NOTFLATSS;
                         use32=0;
                         cpu_cur_status &= ~CPU_STATUS_USE32;
@@ -2292,8 +2292,8 @@ void pmodeiret(int is32)
         {
 //                pclog("Same level\n");
                 CS=seg;
-                do_seg_load(&_cs, segdat);
-                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
+                do_seg_load(&cpu_state.seg_cs, segdat);
+                cpu_state.seg_cs.access = (cpu_state.seg_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 set_use32(segdat[3]&0x40);
 
@@ -2392,7 +2392,7 @@ void pmodeiret(int is32)
                 set_stack32((segdat2[3] & 0x40) ? 1 : 0);
                 if (stack32) ESP=newsp;
                 else         SP=newsp;
-                do_seg_load(&_ss, segdat2);
+                do_seg_load(&cpu_state.seg_ss, segdat2);
 
 #ifdef SEL_ACCESSED
                 cpl_override = 1;
@@ -2408,15 +2408,15 @@ void pmodeiret(int is32)
                            segdat[2] = (segdat[2] & ~(3 << (5+8))) | ((seg & 3) << (5+8));
 
                 CS=seg;
-                do_seg_load(&_cs, segdat);
-                _cs.access = (_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
+                do_seg_load(&cpu_state.seg_cs, segdat);
+                cpu_state.seg_cs.access = (cpu_state.seg_cs.access & ~(3 << 5)) | ((CS & 3) << 5);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 set_use32(segdat[3] & 0x40);
                         
-                check_seg_valid(&_ds);
-                check_seg_valid(&_es);
-                check_seg_valid(&_fs);
-                check_seg_valid(&_gs);
+                check_seg_valid(&cpu_state.seg_ds);
+                check_seg_valid(&cpu_state.seg_es);
+                check_seg_valid(&cpu_state.seg_fs);
+                check_seg_valid(&cpu_state.seg_gs);
                 cycles -= timing_iret_pm_outer;
         }
         cpu_state.pc=newpc;
@@ -2643,7 +2643,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 
 //                if (output) pclog("new_cs %04X\n",new_cs);
                         CS=new_cs;
-                        do_seg_load(&_cs, segdat2);
+                        do_seg_load(&cpu_state.seg_cs, segdat2);
                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                         set_use32(segdat2[3] & 0x40);
                         cpu_cur_status &= ~CPU_STATUS_V86;
@@ -2659,15 +2659,15 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 EDI=new_edi;
 
                 if (output) pclog("Load ES %04X\n",new_es);
-                loadseg(new_es,&_es);
+                loadseg(new_es,&cpu_state.seg_es);
                 if (output) pclog("Load SS %04X\n",new_ss);
-                loadseg(new_ss,&_ss);
+                loadseg(new_ss,&cpu_state.seg_ss);
                 if (output) pclog("Load DS %04X\n",new_ds);
-                loadseg(new_ds,&_ds);
+                loadseg(new_ds,&cpu_state.seg_ds);
                 if (output) pclog("Load FS %04X\n",new_fs);
-                loadseg(new_fs,&_fs);
+                loadseg(new_fs,&cpu_state.seg_fs);
                 if (output) pclog("Load GS %04X\n",new_gs);
-                loadseg(new_gs,&_gs);
+                loadseg(new_gs,&cpu_state.seg_gs);
 
                 if (output) pclog("Resuming at %04X:%08X\n",CS,cpu_state.pc);
         }
@@ -2842,7 +2842,7 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
 
 //                if (output) pclog("new_cs %04X\n",new_cs);
                 CS=new_cs;
-                do_seg_load(&_cs, segdat2);
+                do_seg_load(&cpu_state.seg_cs, segdat2);
                 if (CPL==3 && oldcpl!=3) flushmmucache_cr3();
                 set_use32(0);
 
@@ -2856,15 +2856,15 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
                 EDI=new_edi | 0xFFFF0000;
 
                 if (output) pclog("Load ES %04X\n",new_es);
-                loadseg(new_es,&_es);
+                loadseg(new_es,&cpu_state.seg_es);
                 if (output) pclog("Load SS %04X\n",new_ss);
-                loadseg(new_ss,&_ss);
+                loadseg(new_ss,&cpu_state.seg_ss);
                 if (output) pclog("Load DS %04X\n",new_ds);
-                loadseg(new_ds,&_ds);
+                loadseg(new_ds,&cpu_state.seg_ds);
                 if (is386)
                 {
-                        loadseg(0,&_fs);
-                        loadseg(0,&_gs);
+                        loadseg(0,&cpu_state.seg_fs);
+                        loadseg(0,&cpu_state.seg_gs);
                 }
 
                 if (output) pclog("Resuming at %04X:%08X\n",CS,cpu_state.pc);

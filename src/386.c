@@ -90,7 +90,7 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 {
                         easeg = ss;
                         ea_rseg = SS;
-                        cpu_state.ea_seg = &_ss;
+                        cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
                         cpu_state.eaaddr += cpu_state.regs[(sib >> 3) & 7].l << (sib >> 6);
@@ -104,7 +104,7 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         {
                                 easeg = ss;
                                 ea_rseg = SS;
-                                cpu_state.ea_seg = &_ss;
+                                cpu_state.ea_seg = &cpu_state.seg_ss;
                         }
                         if (cpu_mod == 1) 
                         { 
@@ -159,7 +159,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                 {
                         easeg = ss;
                         ea_rseg = SS;
-                        cpu_state.ea_seg = &_ss;
+                        cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 cpu_state.eaaddr &= 0xFFFF;
         }
@@ -244,7 +244,7 @@ void exec386(int cycs)
                 
 dontprint=0;
 
-                cpu_state.ea_seg = &_ds;
+                cpu_state.ea_seg = &cpu_state.seg_ds;
                 cpu_state.ssegs = 0;
                 
                 fetchdat = fastreadl(cs + cpu_state.pc);
