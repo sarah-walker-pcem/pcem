@@ -30,7 +30,12 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
         REG_X20,
         REG_X21,
 	REG_X22,
-	REG_X23
+	REG_X23,
+        REG_X24,
+        REG_X25,
+	REG_X26,
+	REG_X27,
+	REG_X28
 };
 
 static void build_load_routine(codeblock_t *block, int size)

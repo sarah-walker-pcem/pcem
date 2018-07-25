@@ -75,7 +75,7 @@
 
 #define REG_TEMP REG_X7
 
-#define CODEGEN_HOST_REGS 5
+#define CODEGEN_HOST_REGS 10
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;
