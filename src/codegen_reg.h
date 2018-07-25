@@ -120,6 +120,8 @@ extern ir_reg_t invalid_ir_reg;
 
 typedef uint8_t ir_host_reg_t;
 
+#define REG_VERSION_MAX 250
+
 static inline ir_reg_t codegen_reg_read(int reg)
 {
         ir_reg_t ireg;
@@ -132,6 +134,8 @@ static inline ir_reg_t codegen_reg_read(int reg)
         reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version]++;
         if (!reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version])
                 fatal("codegen_reg_read - refcount overflow\n");
+        else if (reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version] > REG_VERSION_MAX)
+                CPU_BLOCK_END();
         
         return ireg;
 }
@@ -148,6 +152,8 @@ static inline ir_reg_t codegen_reg_write(int reg)
         reg_last_version[IREG_GET_REG(reg)]++;
         if (!reg_last_version[IREG_GET_REG(reg)])
                 fatal("codegen_reg_write - version overflow\n");
+        else if (reg_last_version[IREG_GET_REG(reg)] > REG_VERSION_MAX)
+                CPU_BLOCK_END();
         reg_version_refcount[IREG_GET_REG(reg)][ireg.version] = 0;
 
         return ireg;
