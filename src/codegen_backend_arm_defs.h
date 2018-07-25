@@ -46,3 +46,11 @@
 			REG_MASK_R8 | REG_MASK_R9 | REG_MASK_R10 | REG_MASK_R11)
 
 #define CODEGEN_HOST_REGS 3
+
+extern void *codegen_mem_load_byte;
+extern void *codegen_mem_load_word;
+extern void *codegen_mem_load_long;
+
+extern void *codegen_mem_store_byte;
+extern void *codegen_mem_store_word;
+extern void *codegen_mem_store_long;

@@ -70,20 +70,20 @@ pcem_SOURCES += wx-sdl2-midi.c
 endif
 
 if CPU_I386
-pcem_SOURCES += codegen_backend_x86.c codegen_backend_x86_uops.c
+pcem_SOURCES += codegen_backend_x86.c codegen_backend_x86_ops.c codegen_backend_x86_uops.c
 pcem_CFLAGS += -msse2
 endif
 
 if CPU_X86_64
-pcem_SOURCES += codegen_backend_x86-64.c codegen_backend_x86-64_uops.c
+pcem_SOURCES += codegen_backend_x86-64.c codegen_backend_x86-64_ops.c codegen_backend_x86-64_uops.c
 endif
 
 if CPU_ARM
-pcem_SOURCES += codegen_backend_arm.c codegen_backend_arm_uops.c
+pcem_SOURCES += codegen_backend_arm.c codegen_backend_arm_ops.c codegen_backend_arm_uops.c
 endif
 
 if CPU_ARM64
-pcem_SOURCES += codegen_backend_arm64.c codegen_backend_arm64_uops.c
+pcem_SOURCES += codegen_backend_arm64.c codegen_backend_arm64_ops.c codegen_backend_arm64_uops.c
 endif
 
 if USE_NETWORKING

@@ -56,6 +56,13 @@ struct
 
 	[IREG_ins]    = {REG_DWORD, &cpu_state.cpu_recomp_ins},
 	[IREG_cycles] = {REG_DWORD, &cpu_state._cycles},
+	
+	[IREG_CS_base] = {REG_DWORD, &cpu_state.seg_cs.base},
+	[IREG_DS_base] = {REG_DWORD, &cpu_state.seg_ds.base},
+	[IREG_ES_base] = {REG_DWORD, &cpu_state.seg_es.base},
+	[IREG_FS_base] = {REG_DWORD, &cpu_state.seg_fs.base},
+	[IREG_GS_base] = {REG_DWORD, &cpu_state.seg_gs.base},
+	[IREG_SS_base] = {REG_DWORD, &cpu_state.seg_ss.base},
 
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
@@ -63,7 +70,7 @@ struct
 	[IREG_temp0] = {REG_DWORD, NULL},
 	[IREG_temp1] = {REG_DWORD, NULL},
 	[IREG_temp2] = {REG_DWORD, NULL},
-	[IREG_temp3] = {REG_DWORD, NULL}
+	[IREG_temp3] = {REG_DWORD, NULL},
 };
 
 void codegen_reg_reset()
@@ -103,7 +110,7 @@ static void codegen_reg_load(codeblock_t *block, int c, ir_reg_t ir_reg)
 //pclog("       codegen_reg_load: c=%i reg=%02x.%i\n", c, host_regs[c].reg,host_regs[c].version);
 }
 
-static void codegen_reg_writeback(codeblock_t *block, int c)
+static void codegen_reg_writeback(codeblock_t *block, int c, int invalidate)
 {
         int ir_reg = IREG_GET_REG(host_regs[c].reg);
 
@@ -125,11 +132,12 @@ static void codegen_reg_writeback(codeblock_t *block, int c)
                 fatal("codegen_reg_flush - native_size=%i\n", ireg_data[ir_reg].native_size);
         }
 
-        host_regs[c] = invalid_ir_reg;
+        if (invalidate)
+                host_regs[c] = invalid_ir_reg;
         host_reg_dirty[c] = 0;
 }
 
-void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b)
+void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b, ir_reg_t src_reg_c)
 {
         int c;
         int dest_reference = 0;
@@ -146,6 +154,8 @@ void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_
                         dest_reference++;
                 if (!ir_reg_is_invalid(src_reg_b) && IREG_GET_REG(src_reg_b.reg) == IREG_GET_REG(dest_reg_a.reg) && src_reg_b.version == dest_reg_a.version-1)
                         dest_reference++;
+                if (!ir_reg_is_invalid(src_reg_c) && IREG_GET_REG(src_reg_c.reg) == IREG_GET_REG(dest_reg_a.reg) && src_reg_c.version == dest_reg_a.version-1)
+                        dest_reference++;
         }
         for (c = 0; c < CODEGEN_HOST_REGS; c++)
         {
@@ -159,6 +169,12 @@ void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_
                 {
                         if (host_regs[c].version != src_reg_b.version)
                                 fatal("codegen_reg_alloc_register - host_regs[c].version != src_reg_b.version\n");
+                        host_regs_locked |= (1 << c);
+                }
+                if (!ir_reg_is_invalid(src_reg_c) && IREG_GET_REG(host_regs[c].reg) == IREG_GET_REG(src_reg_c.reg))
+                {
+                        if (host_regs[c].version != src_reg_c.version)
+                                fatal("codegen_reg_alloc_register - host_regs[c].version != src_reg_c.version\n");
                         host_regs_locked |= (1 << c);
                 }
                 if (!ir_reg_is_invalid(dest_reg_a) && IREG_GET_REG(host_regs[c].reg) == IREG_GET_REG(dest_reg_a.reg))
@@ -196,7 +212,7 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
                 if (c == CODEGEN_HOST_REGS)
                         fatal("codegen_reg_alloc_read_reg - out of registers\n");
                 if (host_reg_dirty[c])
-                        codegen_reg_writeback(block, c);
+                        codegen_reg_writeback(block, c, 1);
 //                pclog("   load %i\n", c);
                 codegen_reg_load(block, c, ir_reg);
                 host_regs_locked |= (1 << c);
@@ -277,7 +293,7 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                         if (c == CODEGEN_HOST_REGS)
                                 fatal("codegen_reg_alloc_write_reg - out of registers\n");
                         if (host_reg_dirty[c])
-                                codegen_reg_writeback(block, c);
+                                codegen_reg_writeback(block, c, 1);
                 }
         }
         
@@ -291,12 +307,25 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
 void codegen_reg_flush(ir_data_t *ir, codeblock_t *block)
 {
         int c;
+
+        for (c = 0; c < CODEGEN_HOST_REGS; c++)
+        {
+                if (!ir_reg_is_invalid(host_regs[c]) && host_reg_dirty[c])
+                {
+                        codegen_reg_writeback(block, c, 0);
+                }
+        }
+}
+
+void codegen_reg_flush_invalidate(ir_data_t *ir, codeblock_t *block)
+{
+        int c;
         
         for (c = 0; c < CODEGEN_HOST_REGS; c++)
         {
                 if (!ir_reg_is_invalid(host_regs[c]))
                 {
-                        codegen_reg_writeback(block, c);
+                        codegen_reg_writeback(block, c, 1);
                 }
         }
 }

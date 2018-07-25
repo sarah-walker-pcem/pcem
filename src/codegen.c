@@ -45,6 +45,41 @@ void codegen_generate_reset()
         has_ea = 0;
 }
 
+void codegen_check_seg_read(codeblock_t *block, ir_data_t *ir, x86seg *seg)
+{
+        /*Segments always valid in real/V86 mode*/
+        if (!(cr0 & 1) || (eflags & VM_FLAG))
+                return;
+        /*CS and SS must always be valid*/
+        if (seg == &cpu_state.seg_cs || seg == &cpu_state.seg_ss)
+                return;
+        if (seg->checked)
+                return;
+        if (seg == &cpu_state.seg_ds && codegen_flat_ds && !(cpu_cur_status & CPU_STATUS_NOTFLATDS))
+                return;
+
+        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, &block->data[BLOCK_GPF_OFFSET]);
+
+        seg->checked = 1;
+}
+void codegen_check_seg_write(codeblock_t *block, ir_data_t *ir, x86seg *seg)
+{
+        /*Segments always valid in real/V86 mode*/
+        if (!(cr0 & 1) || (eflags & VM_FLAG))
+                return;
+        /*CS and SS must always be valid*/
+        if (seg == &cpu_state.seg_cs || seg == &cpu_state.seg_ss)
+                return;
+        if (seg->checked)
+                return;
+        if (seg == &cpu_state.seg_ds && codegen_flat_ds && !(cpu_cur_status & CPU_STATUS_NOTFLATDS))
+                return;
+
+        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, &block->data[BLOCK_GPF_OFFSET]);
+
+        seg->checked = 1;
+}
+
 static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
 {
 //        pclog("codegen - mod=%i rm=%i reg=%i fetchdat=%08x\n", cpu_mod, cpu_rm, cpu_reg, fetchdat);
@@ -201,6 +236,18 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                 }
         }
         return op_ea_seg;
+}
+
+x86seg *codegen_generate_ea(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32)
+{
+        cpu_mod = (fetchdat >> 6) & 3;
+        cpu_reg = (fetchdat >> 3) & 7;
+        cpu_rm = fetchdat & 7;
+
+        if (op_32 & 0x200)
+                return codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc, 0);
+
+        return codegen_generate_ea_16_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc);
 }
 
 static uint8_t opcode_modrm[256] =

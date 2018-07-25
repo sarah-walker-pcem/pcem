@@ -27,9 +27,14 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 
 //                pclog("uOP %i : %08x\n", c, uop->type);
                 
+                if (uop->type & UOP_TYPE_BARRIER)
+                        codegen_reg_flush_invalidate(ir, block);
+                else if (uop->type & UOP_TYPE_ORDER_BARRIER)
+                        codegen_reg_flush(ir, block);
+
                 if (uop->type & UOP_TYPE_PARAMS_REGS)
                 {
-                        codegen_reg_alloc_register(uop->dest_reg_a, uop->src_reg_a, uop->src_reg_b);
+                        codegen_reg_alloc_register(uop->dest_reg_a, uop->src_reg_a, uop->src_reg_b, uop->src_reg_c);
                         if (uop->src_reg_a.reg != IREG_INVALID)
                         {
                                 uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a, NULL);
@@ -38,19 +43,22 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                         {
                                 uop->src_reg_b_real = codegen_reg_alloc_read_reg(block, uop->src_reg_b, NULL);
                         }
+                        if (uop->src_reg_c.reg != IREG_INVALID)
+                        {
+                                uop->src_reg_c_real = codegen_reg_alloc_read_reg(block, uop->src_reg_c, NULL);
+                        }
                         if (uop->dest_reg_a.reg != IREG_INVALID)
                         {
                                 uop->dest_reg_a_real = codegen_reg_alloc_write_reg(block, uop->dest_reg_a);
                         }
                 }
                 
-                if (uop->type & UOP_TYPE_BARRIER)
-                        codegen_reg_flush(ir, block);
-                
+                if (!uop_handlers[uop->type & UOP_MASK])
+                        fatal("!uop_handlers[uop->type & UOP_MASK]\n");
                 uop_handlers[uop->type & UOP_MASK](block, uop);
         }
 
-        codegen_reg_flush(ir, block);
+        codegen_reg_flush_invalidate(ir, block);
         
         codegen_backend_epilogue(block);
 

@@ -42,13 +42,20 @@ enum
 	IREG_ins = 19,
 	IREG_cycles = 20,
 
+        IREG_CS_base = 21,
+        IREG_DS_base = 22,
+        IREG_ES_base = 23,
+        IREG_FS_base = 24,
+        IREG_GS_base = 25,
+        IREG_SS_base = 26,
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
-	IREG_temp0 = 21,
-	IREG_temp1 = 22,
-	IREG_temp2 = 23,
-	IREG_temp3 = 24,
+	IREG_temp0 = 27,
+	IREG_temp1 = 28,
+	IREG_temp2 = 29,
+	IREG_temp3 = 30,
 
 	IREG_COUNT,
 	
@@ -81,6 +88,24 @@ enum
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))
 #define IREG_16(reg) ((reg) + IREG_AX)
 #define IREG_32(reg) ((reg) + IREG_EAX)
+
+static inline int ireg_seg_base(x86seg *seg)
+{
+        if (seg == &cpu_state.seg_cs)
+                return IREG_CS_base;
+        if (seg == &cpu_state.seg_ds)
+                return IREG_DS_base;
+        if (seg == &cpu_state.seg_es)
+                return IREG_ES_base;
+        if (seg == &cpu_state.seg_fs)
+                return IREG_FS_base;
+        if (seg == &cpu_state.seg_gs)
+                return IREG_GS_base;
+        if (seg == &cpu_state.seg_ss)
+                return IREG_SS_base;
+        fatal("ireg_seg_base : unknown segment\n");
+        return 0;
+}
 
 extern uint8_t reg_last_version[IREG_COUNT];
 extern uint8_t reg_version_refcount[IREG_COUNT][256];
@@ -131,10 +156,13 @@ static inline ir_reg_t codegen_reg_write(int reg)
 struct ir_data_t;
 
 void codegen_reg_reset();
+/*Write back all dirty registers*/
 void codegen_reg_flush(struct ir_data_t *ir, codeblock_t *block);
+/*Write back and evict all registers*/
+void codegen_reg_flush_invalidate(struct ir_data_t *ir, codeblock_t *block);
 
 /*Register ir_reg usage for this uOP. This ensures that required registers aren't evicted*/
-void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b);
+void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b, ir_reg_t src_reg_c);
 
 ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx);
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg);

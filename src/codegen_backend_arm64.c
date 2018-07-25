@@ -5,6 +5,7 @@
 #include "codegen.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm64_defs.h"
+#include "codegen_backend_arm64_ops.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -15,6 +16,14 @@
 #include <windows.h>
 #endif
 
+void *codegen_mem_load_byte;
+void *codegen_mem_load_word;
+void *codegen_mem_load_long;
+
+void *codegen_mem_store_byte;
+void *codegen_mem_store_word;
+void *codegen_mem_store_long;
+
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
         REG_X19,
@@ -23,6 +32,145 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 	REG_X22,
 	REG_X23
 };
+
+static void build_load_routine(codeblock_t *block, int size)
+{
+        uint32_t *branch_offset;
+        uint8_t *misaligned_offset;
+	int offset;
+
+        /*In - W0 = address
+          Out - W0 = data, W1 = abrt*/
+	/*MOV W1, W0, LSR #12
+	  MOV X2, #readlookup2
+	  LDR X1, [X2, X1, LSL #3]
+	  CMP X1, #-1
+	  BEQ +
+	  LDRB W0, [X1, X0]
+	  MOV W1, #0
+	  RET
+	* STP X29, X30, [SP, #-16]
+	  BL readmemb386l
+	  LDRB R1, cpu_state.abrt
+	  LDP X29, X30, [SP, #-16]
+	  RET
+	*/
+	host_arm64_MOV_REG_LSR(block, REG_W1, REG_W0, 12);
+	offset = add_literal_q(block, (uintptr_t)readlookup2);
+	host_arm64_LDR_LITERAL_X(block, REG_X2, offset);
+	host_arm64_LDRX_REG_LSL3(block, REG_X1, REG_X2, REG_X1);
+	if (size != 1)
+	{
+		host_arm64_TST_IMM(block, REG_W0, size-1);
+		misaligned_offset = host_arm64_BNE_(block);
+	}
+	host_arm64_CMPX_IMM(block, REG_X1, -1);
+	branch_offset = host_arm64_BEQ_(block);
+	if (size == 1)
+		host_arm64_LDRB_REG(block, REG_W0, REG_W1, REG_W0);
+	else if (size == 2)
+		host_arm64_LDRH_REG(block, REG_W0, REG_W1, REG_W0);
+	else if (size == 4)
+		host_arm64_LDR_REG(block, REG_W0, REG_W1, REG_W0);
+	host_arm64_MOVZ_IMM(block, REG_W1, 0);
+	host_arm64_RET(block, REG_X30);
+
+	host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+	if (size != 1)
+		host_arm64_branch_set_offset(misaligned_offset, &block->data[block_pos]);
+	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
+	if (size == 1)
+		host_arm64_call(block, (uintptr_t)readmemb386l);
+	else if (size == 2)
+		host_arm64_call(block, (uintptr_t)readmemwl);
+	else if (size == 4)
+		host_arm64_call(block, (uintptr_t)readmemll);
+	else
+		fatal("build_load_routine - unknown size %i\n", size);
+	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_RET(block, REG_X30);
+
+        block_pos = (block_pos + 63) & ~63;
+}
+
+static void build_store_routine(codeblock_t *block, int size)
+{
+        uint8_t *branch_offset;
+        uint8_t *misaligned_offset;
+	int offset;
+
+        /*In - R0 = address, R1 = data
+          Out - R1 = abrt*/
+	/*MOV W2, W0, LSR #12
+	  MOV X3, #writelookup2
+	  LDR X2, [X3, X2, LSL #3]
+	  CMP X2, #-1
+	  BEQ +
+	  STRB W1, [X2, X0]
+	  MOV W1, #0
+	  RET
+	* STP X29, X30, [SP, #-16]
+	  BL writememb386l
+	  LDRB R1, cpu_state.abrt
+	  LDP X29, X30, [SP, #-16]
+	  RET
+	*/
+	host_arm64_MOV_REG_LSR(block, REG_W2, REG_W0, 12);
+	offset = add_literal_q(block, (uintptr_t)writelookup2);
+	host_arm64_LDR_LITERAL_X(block, REG_X3, offset);
+	host_arm64_LDRX_REG_LSL3(block, REG_X2, REG_X3, REG_X2);
+	if (size != 1)
+	{
+		host_arm64_TST_IMM(block, REG_W0, size-1);
+		misaligned_offset = host_arm64_BNE_(block);
+	}
+	host_arm64_CMPX_IMM(block, REG_X2, -1);
+	branch_offset = host_arm64_BEQ_(block);
+	if (size == 1)
+		host_arm64_STRB_REG(block, REG_X1, REG_X2, REG_X0);
+	else if (size == 2)
+		host_arm64_STRH_REG(block, REG_X1, REG_X2, REG_X0);
+	else if (size == 4)
+		host_arm64_STR_REG(block, REG_X1, REG_X2, REG_X0);
+	host_arm64_MOVZ_IMM(block, REG_X1, 0);
+	host_arm64_RET(block, REG_X30);
+
+	host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+	if (size != 1)
+		host_arm64_branch_set_offset(misaligned_offset, &block->data[block_pos]);
+	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
+	if (size == 1)
+		host_arm64_call(block, (uintptr_t)writememb386l);
+	else if (size == 2)
+		host_arm64_call(block, (uintptr_t)writememwl);
+	else if (size == 4)
+		host_arm64_call(block, (uintptr_t)writememll);
+	else
+		fatal("build_store_routine - unknown size %i\n", size);
+	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_RET(block, REG_X30);
+
+        block_pos = (block_pos + 63) & ~63;
+}
+
+static void build_loadstore_routines(codeblock_t *block)
+{
+        codegen_mem_load_byte = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 1);
+        codegen_mem_load_word = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 2);
+        codegen_mem_load_long = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 4);
+
+        codegen_mem_store_byte = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 1);
+        codegen_mem_store_word = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 2);
+        codegen_mem_store_long = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 4);
+}
 
 void codegen_backend_init()
 {
@@ -59,6 +207,11 @@ void codegen_backend_init()
 	}
 #endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
+
+        block_current = BLOCK_SIZE;
+        block_pos = 0;
+	codegen_reset_literal_pool(&codeblock[block_current]);
+        build_loadstore_routines(&codeblock[block_current]);
 }
 
 /*R11 - literal pool
