@@ -174,21 +174,21 @@ void host_x86_ADD64_REG_IMM(codeblock_t *block, int dst_reg, uint64_t imm_data)
 void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
 {
         if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD8_REG_IMM - dst_reg != src_reg_a\n");
+                fatal("host_x86_ADD8_REG_REG - dst_reg != src_reg_a\n");
 
         codegen_addbyte2(block, 0x00, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
 }
 void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
 {
         if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD16_REG_IMM - dst_reg != src_reg_a\n");
+                fatal("host_x86_ADD16_REG_REG - dst_reg != src_reg_a\n");
 
         codegen_addbyte3(block, 0x66, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
 }
 void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
 {
         if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD32_REG_IMM - dst_reg != src_reg_a\n");
+                fatal("host_x86_ADD32_REG_REG - dst_reg != src_reg_a\n");
 
         codegen_addbyte2(block, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
 }
@@ -499,6 +499,42 @@ void host_x86_MOV64_REG_BASE_INDEX_SHIFT(codeblock_t *block, int dst_reg, int ba
                 codegen_addbyte4(block, 0x49, 0x8b, 0x04 | ((dst_reg & 7) << 3), (scale << 6) | ((index_reg & 7) << 3) | (base_reg & 7)); /*MOV dst_reg, Q[base_reg + index_reg << scale]*/
         else
                 codegen_addbyte4(block, 0x48, 0x8b, 0x04 | ((dst_reg & 7) << 3), (scale << 6) | ((index_reg & 7) << 3) | (base_reg & 7)); /*MOV dst_reg, Q[base_reg + index_reg << scale]*/
+}
+
+void host_x86_MOV32_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset)
+{
+        if ((dst_reg & 8) || (base_reg & 8))
+                fatal("host_x86_MOV64_REG_BASE_OFFSET reg & 8\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                if (base_reg == REG_RSP)
+                {
+                        codegen_addbyte4(block, 0x8b, 0x40 | base_reg | (dst_reg << 3), 0x24, offset);
+                }
+                else
+                        codegen_addbyte3(block, 0x8b, 0x40 | base_reg | (dst_reg << 3), offset);
+        }
+        else
+                fatal("MOV32_REG_BASE_OFFSET - offset %i\n", offset);
+}
+
+void host_x86_MOV32_BASE_OFFSET_REG(codeblock_t *block, int base_reg, int offset, int src_reg)
+{
+        if ((src_reg & 8) || (base_reg & 8))
+                fatal("host_x86_MOV64_BASE_OFFSET_REG reg & 8\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                if (base_reg == REG_RSP)
+                {
+                        codegen_addbyte4(block, 0x89, 0x40 | base_reg | (src_reg << 3), 0x24, offset);
+                }
+                else
+                        codegen_addbyte3(block, 0x89, 0x40 | base_reg | (src_reg << 3), offset);
+        }
+        else
+                fatal("MOV32_BASE_OFFSET_REG - offset %i\n", offset);
 }
 
 void host_x86_MOV8_REG_IMM(codeblock_t *block, int reg, uint16_t imm_data)

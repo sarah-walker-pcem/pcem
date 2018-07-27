@@ -34,6 +34,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_SHIFT 24
 #define OPCODE_ADD_IMM       (0x11 << OPCODE_SHIFT)
+#define OPCODE_ADDX_IMM      (0x91 << OPCODE_SHIFT)
 #define OPCODE_BCOND         (0x54 << OPCODE_SHIFT)
 #define OPCODE_CBNZ          (0xb5 << OPCODE_SHIFT)
 #define OPCODE_CMN_IMM       (0x31 << OPCODE_SHIFT)
@@ -43,6 +44,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_LDR_LITERAL_W (0x18 << OPCODE_SHIFT)
 #define OPCODE_LDR_LITERAL_X (0x58 << OPCODE_SHIFT)
 #define OPCODE_SUB_IMM       (0x51 << OPCODE_SHIFT)
+#define OPCODE_SUBX_IMM      (0xd1 << OPCODE_SHIFT)
 
 #define OPCODE_AND_IMM       (0x024 << 23)
 #define OPCODE_ANDS_IMM      (0x0e4 << 23)
@@ -63,6 +65,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_ADD_LSL       (0x058 << 21)
 #define OPCODE_ADD_LSR       (0x05a << 21)
+#define OPCODE_ADDX_LSL      (0x458 << 21)
 #define OPCODE_AND_ASR       (0x054 << 21)
 #define OPCODE_AND_LSL       (0x050 << 21)
 #define OPCODE_AND_ROR       (0x056 << 21)
@@ -70,8 +73,10 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_EOR_LSL       (0x250 << 21)
 #define OPCODE_ORR_LSL       (0x150 << 21)
 #define OPCODE_ORR_LSR       (0x152 << 21)
+#define OPCODE_ORRX_LSL      (0x550 << 21)
 #define OPCODE_SUB_LSL       (0x258 << 21)
 #define OPCODE_SUB_LSR       (0x25a << 21)
+#define OPCODE_SUBX_LSL      (0x658 << 21)
 
 #define OPCODE_BLR           (0xd63f0000)
 #define OPCODE_LDR_REG       (0xb8606800)
@@ -442,6 +447,12 @@ void host_arm64_MOV_REG(codeblock_t *block, int dst_reg, int src_m_reg, int shif
 void host_arm64_MOV_REG_LSR(codeblock_t *block, int dst_reg, int src_m_reg, int shift)
 {
 	codegen_addlong(block, OPCODE_ORR_LSR | Rd(dst_reg) | Rn(REG_WZR) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+
+void host_arm64_MOVX_REG(codeblock_t *block, int dst_reg, int src_m_reg, int shift)
+{
+	if (dst_reg != src_m_reg)
+		codegen_addlong(block, OPCODE_ORRX_LSL | Rd(dst_reg) | Rn(REG_XZR) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
 }
 
 void host_arm64_MOVZ_IMM(codeblock_t *block, int reg, uint32_t imm_data)

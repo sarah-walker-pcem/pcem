@@ -304,4 +304,8 @@ void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg);
 
+void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);
+
+void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg);
+
 #endif

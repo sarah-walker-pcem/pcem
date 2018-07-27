@@ -82,7 +82,13 @@ enum
 	
 	IREG_flags_res_W = IREG_flags_res + IREG_SIZE_W,
 	
-	IREG_flags_res_B = IREG_flags_res + IREG_SIZE_B
+	IREG_flags_res_B = IREG_flags_res + IREG_SIZE_B,
+	
+	IREG_temp0_W = IREG_temp0 + IREG_SIZE_W,
+	IREG_temp1_W = IREG_temp1 + IREG_SIZE_W,
+	
+	IREG_temp0_B = IREG_temp0 + IREG_SIZE_B,
+	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B
 };
 
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))

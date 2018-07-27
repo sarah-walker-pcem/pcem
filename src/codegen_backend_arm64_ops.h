@@ -48,6 +48,8 @@ void host_arm64_LDRX_REG_LSL3(codeblock_t *block, int dest_reg, int base_reg, in
 void host_arm64_MOV_REG(codeblock_t *block, int dst_reg, int src_m_reg, int shift);
 void host_arm64_MOV_REG_LSR(codeblock_t *block, int dst_reg, int src_m_reg, int shift);
 
+void host_arm64_MOVX_REG(codeblock_t *block, int dst_reg, int src_m_reg, int shift);
+
 void host_arm64_MOVZ_IMM(codeblock_t *block, int reg, uint32_t imm_data);
 void host_arm64_MOVK_IMM(codeblock_t *block, int reg, uint32_t imm_data);
 

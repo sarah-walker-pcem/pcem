@@ -253,18 +253,18 @@ void codegen_backend_prologue(codeblock_t *block)
         addbyte(0x55); /*PUSH EBP*/
         addbyte(0x56); /*PUSH ESI*/
         addbyte(0x57); /*PUSH EDI*/
-        addbyte(0x83); /*SUBL $16,%esp*/
+        addbyte(0x83); /*SUBL $32,%esp*/
         addbyte(0xEC);
-        addbyte(0x10);
+        addbyte(0x20);
         addbyte(0xBD); /*MOVL EBP, &cpu_state*/
         addlong(((uintptr_t)&cpu_state) + 128);
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-        addbyte(0x83); /*ADDL $16,%esp*/
+        addbyte(0x83); /*ADDL $32,%esp*/
         addbyte(0xC4);
-        addbyte(0x10);
+        addbyte(0x20);
         addbyte(0x5f); /*POP EDI*/
         addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/
@@ -287,9 +287,9 @@ void codegen_backend_epilogue(codeblock_t *block)
         addbyte(0xe8); /*CALL x86gpf*/
         addlong((uint32_t)x86gpf - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        addbyte(0x83); /*ADDL $16,%esp*/
+        addbyte(0x83); /*ADDL $32,%esp*/
         addbyte(0xC4);
-        addbyte(0x10);
+        addbyte(0x20);
         addbyte(0x5f); /*POP EDI*/
         addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/

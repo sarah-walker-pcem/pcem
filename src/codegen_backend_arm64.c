@@ -237,7 +237,7 @@ void codegen_backend_prologue(codeblock_t *block)
 		host_arm64_NOP(block);
 
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 48);
 	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
@@ -255,7 +255,7 @@ void codegen_backend_prologue(codeblock_t *block)
 	host_arm64_STP_PREIDX_X(block, REG_X25, REG_X26, REG_SP, -16);
 	host_arm64_STP_PREIDX_X(block, REG_X23, REG_X24, REG_SP, -16);
 	host_arm64_STP_PREIDX_X(block, REG_X21, REG_X22, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -48);
 
 	offset = add_literal_q(block, (uintptr_t)&cpu_state);
 	host_arm64_LDR_LITERAL_X(block, REG_CPUSTATE, offset);
@@ -263,7 +263,7 @@ void codegen_backend_prologue(codeblock_t *block)
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 48);
 	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);

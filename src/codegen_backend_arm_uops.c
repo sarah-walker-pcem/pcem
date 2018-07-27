@@ -75,15 +75,15 @@ static int codegen_ADD(codeblock_t *block, uop_t *uop)
 	{
 		host_arm_ADD_REG_LSL(block, dest_reg, src_reg_a, src_reg_b, 0);
 	}
-	else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b) && dest_reg == src_reg_a)
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
 	{
-		host_arm_UXTH(block, REG_TEMP, src_reg_b, 0);
-		host_arm_UADD16(block, dest_reg, src_reg_a, REG_TEMP);
+		host_arm_ADD_REG(block, REG_TEMP, src_reg_a, src_reg_b);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
 	}
-	else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b) && dest_reg == src_reg_a)
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
 	{
-		host_arm_UXTB(block, REG_TEMP, src_reg_b, 0);
-		host_arm_UADD8(block, dest_reg, src_reg_a, REG_TEMP);
+		host_arm_ADD_REG(block, REG_TEMP, src_reg_a, src_reg_b);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
 	}
 	else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_BH(src_size_b) && dest_reg == src_reg_a)
 	{
@@ -118,15 +118,15 @@ static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
 	{
 		host_arm_ADD_IMM(block, dest_reg, src_reg, uop->imm_data);
 	}
-	else if (REG_IS_W(dest_size) && REG_IS_W(src_size) && src_reg == dest_reg)
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
 	{
-		host_arm_MOV_IMM(block, REG_TEMP, uop->imm_data);
-		host_arm_UADD16(block, dest_reg, src_reg, REG_TEMP);
+		host_arm_ADD_IMM(block, REG_TEMP, src_reg, uop->imm_data);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
 	}
-	else if (REG_IS_B(dest_size) && REG_IS_B(src_size) && src_reg == dest_reg)
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
 	{
-		host_arm_MOV_IMM(block, REG_TEMP, uop->imm_data);
-		host_arm_UADD8(block, dest_reg, src_reg, REG_TEMP);
+		host_arm_ADD_IMM(block, REG_TEMP, src_reg, uop->imm_data);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
 	}
 	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size) && src_reg == dest_reg)
 	{
@@ -903,6 +903,22 @@ void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg)
 		host_arm_STR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
 	else
 		fatal("codegen_direct_write_ptr - not in range\n");
+}
+
+void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+	if (stack_offset >= 0 && stack_offset < 4096)
+		host_arm_LDR_IMM(block, host_reg, REG_SP, stack_offset);
+	else
+		fatal("codegen_direct_read_32 - not in range\n");
+}
+
+void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+	if (stack_offset >= 0 && stack_offset < 4096)
+		host_arm_STR_IMM(block, host_reg, REG_SP, stack_offset);
+	else
+		fatal("codegen_direct_write_32 - not in range\n");
 }
 
 #endif

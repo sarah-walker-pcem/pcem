@@ -221,7 +221,7 @@ void codegen_backend_prologue(codeblock_t *block)
 		host_arm_nop(block);
 
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x10);
+	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x20);
 	host_arm_LDMIA_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_PC);
 	while (block_pos != BLOCK_START)
 		host_arm_nop(block);
@@ -229,7 +229,7 @@ void codegen_backend_prologue(codeblock_t *block)
 	/*Entry code*/
 
 	host_arm_STMDB_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_LR);
-	host_arm_SUB_IMM(block, REG_SP, REG_SP, 0x10);
+	host_arm_SUB_IMM(block, REG_SP, REG_SP, 0x20);
 	host_arm_ADD_IMM(block, REG_LITERAL, REG_PC, ARM_LITERAL_POOL_OFFSET);
 	host_arm_SUB_IMM(block, REG_LITERAL, REG_LITERAL, 16 + BLOCK_START);
 	offset = add_literal(block, (uintptr_t)&cpu_state);
@@ -238,7 +238,7 @@ void codegen_backend_prologue(codeblock_t *block)
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x10);
+	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x20);
 	host_arm_LDMIA_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_PC);
 
         if (block_pos > ARM_LITERAL_POOL_OFFSET)

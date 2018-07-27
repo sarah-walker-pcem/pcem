@@ -67,10 +67,10 @@ struct
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
-	[IREG_temp0] = {REG_DWORD, NULL},
-	[IREG_temp1] = {REG_DWORD, NULL},
-	[IREG_temp2] = {REG_DWORD, NULL},
-	[IREG_temp3] = {REG_DWORD, NULL},
+	[IREG_temp0] = {REG_DWORD, (void *)16},
+	[IREG_temp1] = {REG_DWORD, (void *)20},
+	[IREG_temp2] = {REG_DWORD, (void *)24},
+	[IREG_temp3] = {REG_DWORD, (void *)28},
 };
 
 void codegen_reg_reset()
@@ -99,7 +99,10 @@ static void codegen_reg_load(codeblock_t *block, int c, ir_reg_t ir_reg)
         switch (ireg_data[IREG_GET_REG(ir_reg.reg)].native_size)
         {
                 case REG_DWORD:
-                codegen_direct_read_32(block, codegen_host_reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
+                        codegen_direct_read_32_stack(block, codegen_host_reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                else
+                        codegen_direct_read_32(block, codegen_host_reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
 
                 default:
@@ -113,19 +116,27 @@ static void codegen_reg_load(codeblock_t *block, int c, ir_reg_t ir_reg)
 static void codegen_reg_writeback(codeblock_t *block, int c, int invalidate)
 {
         int ir_reg = IREG_GET_REG(host_regs[c].reg);
+        void *p = ireg_data[ir_reg].p;
 
         switch (ireg_data[ir_reg].native_size)
         {
                 case REG_BYTE:
-                codegen_direct_write_8(block, ireg_data[ir_reg].p, codegen_host_reg_list[c]);
+                if ((uintptr_t)p < 256)
+                        fatal("codegen_reg_writeback - REG_BYTE %p\n", p);
+                codegen_direct_write_8(block, p, codegen_host_reg_list[c]);
                 break;
 
                 case REG_DWORD:
-                codegen_direct_write_32(block, ireg_data[ir_reg].p, codegen_host_reg_list[c]);
+                if ((uintptr_t)p < 256)
+                        codegen_direct_write_32_stack(block, (int)p, codegen_host_reg_list[c]);
+                else
+                        codegen_direct_write_32(block, p, codegen_host_reg_list[c]);
                 break;
 
                 case REG_POINTER:
-                codegen_direct_write_ptr(block, ireg_data[ir_reg].p, codegen_host_reg_list[c]);
+                if ((uintptr_t)p < 256)
+                        fatal("codegen_reg_writeback - REG_POINTER %p\n", p);
+                codegen_direct_write_ptr(block, p, codegen_host_reg_list[c]);
                 break;
 
                 default:
