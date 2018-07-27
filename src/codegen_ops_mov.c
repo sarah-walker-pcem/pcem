@@ -114,7 +114,6 @@ uint32_t ropMOV_r_b(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32);
                 codegen_check_seg_read(block, ir, target_seg);
                 uop_MEM_LOAD_REG(ir, IREG_8(dest_reg), ireg_seg_base(target_seg), IREG_eaaddr);
-                CPU_BLOCK_END();
         }
 
         return op_pc + 1;
