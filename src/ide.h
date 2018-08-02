@@ -2,6 +2,7 @@
 #define __IDE__
 
 #include "device.h"
+#include "timer.h"
 
 struct IDE;
 
@@ -26,7 +27,7 @@ extern void (*ide_bus_master_set_irq)(int channel);
 
 extern int ideboard;
 
-extern int idecallback[2];
+extern pc_timer_t ide_timer[2];
 
 extern char ide_fn[7][512];
 

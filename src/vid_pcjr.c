@@ -36,7 +36,8 @@ typedef struct pcjr_t
         int vsynctime, vadj;
         uint16_t ma, maback;
         
-        int dispontime, dispofftime, vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         int firstline, lastline;
         
         int composite;
@@ -168,8 +169,8 @@ void pcjr_recalctimings(pcjr_t *pcjr)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= CGACONST;
         _dispofftime *= CGACONST;
-	pcjr->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	pcjr->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	pcjr->dispontime  = (uint64_t)_dispontime;
+	pcjr->dispofftime = (uint64_t)_dispofftime;
 }
 
 void pcjr_poll(void *p)
@@ -189,7 +190,7 @@ void pcjr_poll(void *p)
         {
 //                cgapal[0]=pcjr->col&15;
 //                printf("Firstline %i Lastline %i pcjr->displine %i\n",firstline,lastline,pcjr->displine);
-                pcjr->vidtime += pcjr->dispofftime;
+                timer_advance_u64(&pcjr->timer, pcjr->dispofftime);
                 pcjr->stat &= ~1;
                 pcjr->linepos = 1;
                 oldsc = pcjr->sc;
@@ -435,7 +436,7 @@ void pcjr_poll(void *p)
         }
         else
         {
-                pcjr->vidtime += pcjr->dispontime;
+                timer_advance_u64(&pcjr->timer, pcjr->dispontime);
                 if (pcjr->dispon) 
                         pcjr->stat |= 1;
                 pcjr->linepos = 0;
@@ -552,7 +553,7 @@ static void *pcjr_video_init()
 
         pcjr->memctrl = -1;
         
-        timer_add(pcjr_poll, &pcjr->vidtime, TIMER_ALWAYS_ENABLED, pcjr);
+        timer_add(&pcjr->timer, pcjr_poll, pcjr, 1);
         mem_mapping_add(&pcjr->mapping, 0xb8000, 0x08000, pcjr_read, NULL, NULL, pcjr_write, NULL, NULL,  NULL, 0, pcjr);
         io_sethandler(0x03d0, 0x0010, pcjr_in, NULL, NULL, pcjr_out, NULL, NULL, pcjr);
         return pcjr;

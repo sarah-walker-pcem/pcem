@@ -49,7 +49,8 @@ typedef struct es1371_t
                 
                 uint16_t samp_ct, curr_samp_ct;
                 
-                int time, latch;
+                pc_timer_t timer; 
+		uint64_t latch;
                 
                 uint32_t vf, ac;
                 
@@ -1077,7 +1078,7 @@ static void es1371_poll(void *p)
 {
         es1371_t *es1371 = (es1371_t *)p;
         
-        es1371->dac[1].time += es1371->dac[1].latch;
+        timer_advance_u64(&es1371->dac[1].timer, es1371->dac[1].latch);
         
         es1371_update(es1371);
         
@@ -1205,7 +1206,7 @@ static void *es1371_init()
 
         es1371->card = pci_add(es1371_pci_read, es1371_pci_write, es1371);
 
-        timer_add(es1371_poll, &es1371->dac[1].time, TIMER_ALWAYS_ENABLED, es1371);
+        timer_add(&es1371->dac[1].timer, es1371_poll, es1371, 1);
         
         generate_es1371_filter();
                 

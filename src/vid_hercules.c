@@ -17,8 +17,8 @@ typedef struct hercules_t
 
         uint8_t ctrl, ctrl2, stat;
 
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         
         int firstline, lastline;
 
@@ -110,8 +110,8 @@ void hercules_recalctimings(hercules_t *hercules)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= MDACONST;
         _dispofftime *= MDACONST;
-	hercules->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	hercules->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	hercules->dispontime  = (uint64_t)_dispontime;
+	hercules->dispofftime = (uint64_t)_dispofftime;
 }
 
 void hercules_poll(void *p)
@@ -128,7 +128,7 @@ void hercules_poll(void *p)
         if (!hercules->linepos)
         {
                 //pclog("Poll %i %i\n",vc,sc);
-                hercules->vidtime += hercules->dispofftime;
+                timer_advance_u64(&hercules->timer, hercules->dispofftime);
                 hercules->stat |= 1;
                 hercules->linepos = 1;
                 oldsc = hercules->sc;
@@ -199,7 +199,7 @@ void hercules_poll(void *p)
         }
         else
         {
-                hercules->vidtime += hercules->dispontime;
+                timer_advance_u64(&hercules->timer, hercules->dispontime);
                 if (hercules->dispon) 
                         hercules->stat &= ~1;
                 hercules->linepos = 0;
@@ -314,7 +314,7 @@ void *hercules_init()
 
         hercules->vram = malloc(0x10000);
 
-        timer_add(hercules_poll, &hercules->vidtime, TIMER_ALWAYS_ENABLED, hercules);
+        timer_add(&hercules->timer, hercules_poll, hercules, 1);
         mem_mapping_add(&hercules->mapping, 0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, hercules);
         io_sethandler(0x03b0, 0x0010, hercules_in, NULL, NULL, hercules_out, NULL, NULL, hercules);
 

@@ -433,8 +433,8 @@ void svga_recalctimings(svga_t *svga)
         _dispontime *= crtcconst;
         _dispofftime *= crtcconst;
 
-	svga->dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	svga->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	svga->dispontime = (uint64_t)_dispontime;
+	svga->dispofftime = (uint64_t)_dispofftime;
 /*        printf("SVGA horiz total %i display end %i vidclock %f\n",svga->crtc[0],svga->crtc[1],svga->clock);
         printf("SVGA vert total %i display end %i max row %i vsync %i\n",svga->vtotal,svga->dispend,(svga->crtc[9]&31)+1,svga->vsyncstart);
         printf("total %f on %i cycles off %i cycles frame %i sec %i %02X\n",disptime*crtcconst,svga->dispontime,svga->dispofftime,(svga->dispontime+svga->dispofftime)*svga->vtotal,(svga->dispontime+svga->dispofftime)*svga->vtotal*70,svga->seqregs[1]);
@@ -478,7 +478,7 @@ void svga_poll(void *p)
                         svga->overlay_oddeven = 1;
                 }
 
-                svga->vidtime += svga->dispofftime;
+                timer_advance_u64(&svga->timer, svga->dispofftime);
 //                if (output) printf("Display off %f\n",vidtime);
                 svga->cgastat |= 1;
                 svga->linepos = 1;
@@ -540,7 +540,7 @@ void svga_poll(void *p)
         else
         {
 //                pclog("VC %i ma %05X\n", svga->vc, svga->ma);
-                svga->vidtime += svga->dispontime;
+                timer_advance_u64(&svga->timer, svga->dispontime);
 
 //                if (output) printf("Display on %f\n",vidtime);
                 if (svga->dispon) 
@@ -730,8 +730,8 @@ int svga_init(svga_t *svga, void *p, int memsize,
 
         svga->crtc[0] = 63;
         svga->crtc[6] = 255;
-        svga->dispontime = 1000 * (1 << TIMER_SHIFT);
-        svga->dispofftime = 1000 * (1 << TIMER_SHIFT);        
+        svga->dispontime = 1000ull << 32;
+        svga->dispofftime = 1000ull << 32;
         svga->bpp = 8;
         svga->vram = malloc(memsize);
         svga->vram_max = memsize;
@@ -749,7 +749,7 @@ int svga_init(svga_t *svga, void *p, int memsize,
 
         mem_mapping_add(&svga->mapping, 0xa0000, 0x20000, svga_read, svga_readw, svga_readl, svga_write, svga_writew, svga_writel, NULL, MEM_MAPPING_EXTERNAL, svga);
 
-        timer_add(svga_poll, &svga->vidtime, TIMER_ALWAYS_ENABLED, svga);
+        timer_add(&svga->timer, svga_poll, svga, 1);
         
         svga_pri = svga;
         

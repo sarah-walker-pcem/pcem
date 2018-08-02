@@ -33,7 +33,8 @@ typedef struct m24_t
         uint16_t ma, maback;
         int dispon;
         
-        int dispontime, dispofftime, vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         
         int firstline, lastline;
 } m24_t;
@@ -100,9 +101,11 @@ uint8_t m24_in(uint16_t addr, void *p)
 void m24_write(uint32_t addr, uint8_t val, void *p)
 {
         m24_t *m24 = (m24_t *)p;
+        int offset = ((timer_get_remaining_u64(&m24->timer) / CGACONST) * 4) & 0xfc;
+        
         m24->vram[addr & 0x7FFF]=val;
-        m24->charbuffer[ ((int)(((m24->dispontime - m24->vidtime) * 2) / (CGACONST / 2))) & 0xfc] = val;
-        m24->charbuffer[(((int)(((m24->dispontime - m24->vidtime) * 2) / (CGACONST / 2))) & 0xfc) | 1] = val;        
+        m24->charbuffer[offset] = val;
+        m24->charbuffer[offset | 1] = val;
 }
 
 uint8_t m24_read(uint32_t addr, void *p)
@@ -129,8 +132,8 @@ void m24_recalctimings(m24_t *m24)
         _dispontime  *= CGACONST / 2;
         _dispofftime *= CGACONST / 2;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
-	m24->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	m24->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	m24->dispontime  = (uint64_t)_dispontime;
+	m24->dispofftime = (uint64_t)_dispofftime;
 }
 
 void m24_poll(void *p)
@@ -148,7 +151,7 @@ void m24_poll(void *p)
         if (!m24->linepos)
         {
 //                pclog("Line poll  %i %i %i %i - %04X %i %i %i\n", m24_lineff, vc, sc, vadj, ma, firstline, lastline, displine);
-                m24->vidtime += m24->dispofftime;
+                timer_advance_u64(&m24->timer, m24->dispofftime);
                 m24->stat |= 1;
                 m24->linepos = 1;
                 oldsc = m24->sc;
@@ -324,7 +327,7 @@ void m24_poll(void *p)
         else
         {
 //                pclog("Line poll  %i %i %i %i\n", m24_lineff, vc, sc, vadj);
-                m24->vidtime += m24->dispontime;
+                timer_advance_u64(&m24->timer, m24->dispontime);
                 if (m24->dispon) m24->stat &= ~1;
                 m24->linepos = 0;
                 m24->lineff ^= 1;
@@ -456,7 +459,7 @@ void *m24_init()
 
         m24->vram = malloc(0x8000);
                 
-        timer_add(m24_poll, &m24->vidtime, TIMER_ALWAYS_ENABLED, m24);
+        timer_add(&m24->timer, m24_poll, m24, 1);
         mem_mapping_add(&m24->mapping, 0xb8000, 0x08000, m24_read, NULL, NULL, m24_write, NULL, NULL,  NULL, 0, m24);
         io_sethandler(0x03d0, 0x0010, m24_in, NULL, NULL, m24_out, NULL, NULL, m24);
         return m24;

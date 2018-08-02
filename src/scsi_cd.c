@@ -164,7 +164,7 @@ typedef struct scsi_cd_data_t
         int blocks;
         
         int cmd_pos, new_cmd_pos;
-        int callback;
+	pc_timer_t callback_timer;
         int wait_time;
         scsi_bus_t *bus;
         
@@ -269,21 +269,18 @@ void cd_set_speed(int speed)
 static void scsi_cd_callback(void *p)
 {
         scsi_cd_data_t *data = p;
-        
+
         if (data->cmd_pos == CMD_POS_WAIT)
         {
                 data->wait_time--;
                 if (!data->wait_time)
                 {
-                        data->callback = 0;
                         data->cmd_pos = data->new_cmd_pos;
                         scsi_bus_kick(data->bus);
                 }
                 else
-                        data->callback = 1000 * TIMER_USEC;
+                        timer_advance_u64(&data->callback_timer, 1000 * TIMER_USEC);
         }
-        else
-                data->callback = 0;
 }
 
 //#define SECTOR_TIME 13333 /*Time between sectors on 1x drive*/
@@ -397,7 +394,7 @@ static void *scsi_cd_init(scsi_bus_t *bus, int id)
 	memset(mode_pages_in[GPMODE_CDROM_AUDIO_PAGE], 0, 256);	/* Clear the page itself. */
 	page_flags[GPMODE_CDROM_AUDIO_PAGE] &= ~PAGE_CHANGED;
 
-        timer_add(scsi_cd_callback, &data->callback, &data->callback, data);
+        timer_add(&data->callback_timer, scsi_cd_callback, data, 0);
         
         cd_data = data;
         cd_set_speed(cd_speed);
@@ -697,7 +694,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                                 data->cmd_pos = CMD_POS_WAIT;
                                 data->new_cmd_pos = CMD_POS_COMPLETE;
                                 data->wait_time = seek_time;
-                                data->callback = 1000 * TIMER_USEC;
+                                timer_set_delay_u64(&data->callback_timer, 1000 * TIMER_USEC);
                                 return SCSI_PHASE_COMMAND;
                         }
                 }
@@ -761,7 +758,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                                 data->cmd_pos = CMD_POS_WAIT;
                                 data->new_cmd_pos = CMD_POS_COMPLETE;
                                 data->wait_time = seek_time;
-                                data->callback = 1000 * TIMER_USEC;
+                                timer_set_delay_u64(&data->callback_timer, 1000 * TIMER_USEC);
                                 return SCSI_PHASE_COMMAND;
                         }
                 }
@@ -862,7 +859,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                                 data->cmd_pos = CMD_POS_WAIT;
                                 data->new_cmd_pos = CMD_POS_START_SECTOR;
                                 data->wait_time = seek_time;
-                                data->callback = 1000 * TIMER_USEC;
+                                timer_set_delay_u64(&data->callback_timer, 1000 * TIMER_USEC);
                                 return SCSI_PHASE_COMMAND;
                         }
                 }
@@ -875,23 +872,21 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 }
                 if (data->cmd_pos == CMD_POS_START_SECTOR)
                 {
-                        uint64_t time = (((uint64_t)SECTOR_TIME * (uint64_t)TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
+                        uint64_t time = (((uint64_t)SECTOR_TIME * TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
 
                         data->cmd_pos = CMD_POS_WAIT;
                         data->new_cmd_pos = CMD_POS_TRANSFER;
-                        
-                        if (time > 0x7fffffffull)
+
+                        if (time > (TIMER_USEC * 1000ull))
                         {
-                                data->wait_time = (int)(time / ((uint64_t)TIMER_USEC * 1000ull));
-                                data->callback = (int)(time % ((uint64_t)TIMER_USEC * 1000ull));;
+                                data->wait_time = (int)(time / (TIMER_USEC * 1000ull));
+                                timer_set_delay_u64(&data->callback_timer, time % (TIMER_USEC * 1000ull));
                         }
                         else
                         {
-                                data->callback = time;
+                                timer_set_delay_u64(&data->callback_timer, time);
                                 data->wait_time = 1;
                         }
-                        if (data->callback == 0)
-                                data->callback = 1;
                         return SCSI_PHASE_COMMAND;
                 }
 
@@ -969,7 +964,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                                 data->cmd_pos = CMD_POS_WAIT;
                                 data->new_cmd_pos = CMD_POS_START_SECTOR;
                                 data->wait_time = seek_time;
-                                data->callback = 1000 * TIMER_USEC;
+                                timer_set_delay_u64(&data->callback_timer, 1000 * TIMER_USEC);
                                 return SCSI_PHASE_COMMAND;
                         }
                 }
@@ -982,23 +977,21 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 }
                 if (data->cmd_pos == CMD_POS_START_SECTOR)
                 {
-                        uint64_t time = (((uint64_t)SECTOR_TIME * (uint64_t)TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
+                        uint64_t time = (((uint64_t)SECTOR_TIME * TIMER_USEC) / data->cur_speed) * (uint64_t)data->cdlen;
 
                         data->cmd_pos = CMD_POS_WAIT;
                         data->new_cmd_pos = CMD_POS_TRANSFER;
                         
-                        if (time > 0x7fffffffull)
+                        if (time > (TIMER_USEC * 1000ull))
                         {
-                                data->wait_time = (int)(time / ((uint64_t)TIMER_USEC * 1000ull));
-                                data->callback = (int)(time % ((uint64_t)TIMER_USEC * 1000ull));;
+                                data->wait_time = (int)(time / (TIMER_USEC * 1000ull));
+                                timer_set_delay_u64(&data->callback_timer, time % (TIMER_USEC * 1000ull));
                         }
                         else
                         {
-                                data->callback = time;
+                                timer_set_delay_u64(&data->callback_timer, time);
                                 data->wait_time = 1;
                         }
-                        if (data->callback == 0)
-                                data->callback = 1;
                         return SCSI_PHASE_COMMAND;
                 }
                 
@@ -1372,7 +1365,7 @@ atapi_out:
                                 data->cmd_pos = CMD_POS_WAIT;
                                 data->new_cmd_pos = CMD_POS_COMPLETE;
                                 data->wait_time = seek_time;
-                                data->callback = 1000 * TIMER_USEC;
+                                timer_set_delay_u64(&data->callback_timer, 1000 * TIMER_USEC);
                                 return SCSI_PHASE_COMMAND;
                         }
                 }

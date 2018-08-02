@@ -1206,7 +1206,7 @@ void s3_recalctimings(svga_t *svga)
         else if (svga->crtc[0x43] & 0x04) svga->rowoffset  += 0x100;
         if (!svga->rowoffset) svga->rowoffset = 256;
         svga->interlace = svga->crtc[0x42] & 0x20;
-        svga->clock = cpuclock / s3->getclock((svga->miscout >> 2) & 3, s3->getclock_p);
+        svga->clock = (cpuclock * (float)(1ull << 32)) / s3->getclock((svga->miscout >> 2) & 3, s3->getclock_p);
 
         switch (svga->crtc[0x67] >> 4)
         {

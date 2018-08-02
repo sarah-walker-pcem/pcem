@@ -36,7 +36,7 @@ typedef struct adgold_t
         int16_t adgold_mma_out[2];
         int adgold_mma_intpos[2];
 
-        int adgold_mma_timer_count;
+        pc_timer_t adgold_mma_timer;
 
         struct
         {
@@ -586,9 +586,10 @@ void adgold_timer_poll(void *p)
 {
         adgold_t *adgold = (adgold_t *)p;
         
-        while (adgold->adgold_mma_timer_count <= 0)
-        {
-                adgold->adgold_mma_timer_count += (int)((double)TIMER_USEC * 1.88964);
+	timer_advance_u64(&adgold->adgold_mma_timer, (uint64_t)((double)TIMER_USEC * 1.88964));
+//        while (adgold->adgold_mma_timer_count <= 0)
+//        {
+//                adgold->adgold_mma_timer_count += (int)((double)TIMER_USEC * 1.88964);
                 if (adgold->adgold_mma_regs[0][8] & 0x01) /*Timer 0*/
                 {
                         adgold->adgold_mma.timer0_count--;
@@ -649,7 +650,7 @@ void adgold_timer_poll(void *p)
                                 adgold_mma_poll(adgold, 1);
                         }
                 }
-        }
+//        }
 }
 
 static void adgold_get_buffer(int32_t *buffer, int len, void *p)
@@ -817,7 +818,7 @@ void *adgold_init()
         /*388/389 are handled by adlib_init*/
         io_sethandler(0x0388, 0x0008, adgold_read, NULL, NULL, adgold_write, NULL, NULL, adgold);
         
-        timer_add(adgold_timer_poll, &adgold->adgold_mma_timer_count, TIMER_ALWAYS_ENABLED, adgold);
+        timer_add(&adgold->adgold_mma_timer, adgold_timer_poll, adgold, 1);
 
         sound_add_handler(adgold_get_buffer, adgold);
         

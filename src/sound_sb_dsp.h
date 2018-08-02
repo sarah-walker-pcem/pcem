@@ -47,9 +47,9 @@ typedef struct sb_dsp_t
         
         int sbenable, sb_enable_i;
         
-        int sbcount, sb_count_i;
+        pc_timer_t output_timer, input_timer;
         
-        int sblatcho, sblatchi;
+        uint64_t sblatcho, sblatchi;
         
         uint16_t sb_addr;
         
@@ -57,7 +57,8 @@ typedef struct sb_dsp_t
         
         int asp_data_len;
         
-        int wb_time, wb_full;
+	pc_timer_t wb_timer;
+        int wb_full;
         
         int busy_count;
 

@@ -214,7 +214,7 @@ typedef struct voodoo_t
         uint16_t dac_pll_regs[16];
         
         float pixel_clock;
-        int line_time;
+        uint64_t line_time;
         
         voodoo_params_t params;
         
@@ -248,7 +248,7 @@ typedef struct voodoo_t
         int swap_count;
         
         int disp_buffer, draw_buffer;
-        int timer_count;
+        pc_timer_t timer;
         
         int line;
         svga_t *svga;
@@ -386,7 +386,7 @@ typedef struct voodoo_t
 
         int read_time, write_time, burst_time;
 
-        int wake_timer;
+        pc_timer_t wake_timer;
                 
         uint8_t thefilter[256][256]; // pixel filter, feeding from one or two
         uint8_t thefilterg[256][256]; // for green
@@ -5860,15 +5860,13 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
 #define WAKE_DELAY (TIMER_USEC * 100)
 static inline void wake_fifo_thread(voodoo_t *voodoo)
 {
-        if (!voodoo->wake_timer)
+        if (!timer_is_enabled(&voodoo->wake_timer))
         {
                 /*Don't wake FIFO thread immediately - if we do that it will probably
                   process one word and go back to sleep, requiring it to be woken on
                   almost every write. Instead, wait a short while so that the CPU
                   emulation writes more data so we have more batched-up work.*/
-                timer_process();
-                voodoo->wake_timer = WAKE_DELAY;
-                timer_update_outstanding();
+		timer_set_delay_u64(&voodoo->wake_timer, WAKE_DELAY);
         }
 }
 
@@ -5881,8 +5879,6 @@ static void voodoo_wake_timer(void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
         
-        voodoo->wake_timer = 0;
-
         thread_set_event(voodoo->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
 }
 
@@ -6126,13 +6122,11 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 break;
 
                 case SST_vRetrace:
-                timer_clock();
                 temp = voodoo->line & 0x1fff;
                 break;
                 case SST_hvRetrace:
-                timer_clock();
                 temp = voodoo->line & 0x1fff;
-                temp |= ((((voodoo->line_time - voodoo->timer_count) * voodoo->h_total) / voodoo->timer_count) << 16) & 0x7ff0000;
+                temp |= ((((tsc - timer_get_ts_int(&voodoo->timer)) * voodoo->h_total) / (voodoo->line_time >> 32)) << 16) & 0x7ff0000;
                 break;
 
                 case SST_fbiInit5:
@@ -6208,7 +6202,7 @@ static void voodoo_pixelclock_update(voodoo_t *voodoo)
         voodoo->pixel_clock = t;
 
         clock_const = cpuclock / t;
-        voodoo->line_time = (int)((double)line_length * clock_const * (double)(1 << TIMER_SHIFT));
+        voodoo->line_time = (uint64_t)((double)line_length * clock_const * (double)(1ull << 32));
 }
 
 static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
@@ -7440,9 +7434,9 @@ skip_draw:
                 voodoo->v_retrace = 0;
         }
         if (voodoo->line_time)
-                voodoo->timer_count += voodoo->line_time;
+		timer_advance_u64(&voodoo->timer, voodoo->line_time);
         else
-                voodoo->timer_count += TIMER_USEC * 32;
+		timer_advance_u64(&voodoo->timer, TIMER_USEC * 32);
 }
 
 static void voodoo_add_status_info(char *s, int max_len, void *p)
@@ -7610,7 +7604,7 @@ void *voodoo_card_init()
                 }
         }
 
-        timer_add(voodoo_callback, &voodoo->timer_count, TIMER_ALWAYS_ENABLED, voodoo);
+        timer_add(&voodoo->timer, voodoo_callback, voodoo, 1);
         
         voodoo->svga = svga_get_pri();
         voodoo->fbiInit0 = 0;
@@ -7627,7 +7621,7 @@ void *voodoo_card_init()
         if (voodoo->render_threads == 2)
                 voodoo->render_thread[1] = thread_create(render_thread_2, voodoo);
 
-        timer_add(voodoo_wake_timer, &voodoo->wake_timer, &voodoo->wake_timer, (void *)voodoo);
+        timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
         
         for (c = 0; c < 0x100; c++)
         {

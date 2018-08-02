@@ -36,6 +36,8 @@ struct
         
         int tandy;
         int pb2_turbo;
+
+	pc_timer_t send_delay_timer;
 } keyboard_xt;
 
 static uint8_t key_queue[16];
@@ -43,7 +45,7 @@ static int key_queue_start = 0, key_queue_end = 0;
 
 void keyboard_xt_poll()
 {
-        keybsenddelay += (1000 * TIMER_USEC);
+        timer_advance_u64(&keyboard_xt.send_delay_timer, (1000 * TIMER_USEC));
         if (!(keyboard_xt.pb & 0x40) && romset != ROM_TANDY)
                 return;
         if (keyboard_xt.wantirq)
@@ -124,8 +126,7 @@ void keyboard_xt_write(uint16_t port, uint8_t val, void *priv)
                 ppi.pb = val;
 
                 timer_process();
-                timer_update_outstanding();
-                
+
                 if (keyboard_xt.pb2_turbo)
                         cpu_set_turbo((val & 4) ? 0 : 1);
         
@@ -236,7 +237,7 @@ void keyboard_xt_init()
         keyboard_xt.tandy = 0;
         keyboard_xt.pb2_turbo = (romset == ROM_GENXT || romset == ROM_DTKXT || romset == ROM_AMIXT || romset == ROM_PXXT) ? 1 : 0;
 
-        timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_xt.send_delay_timer, keyboard_xt_poll, NULL, 1);
 }
 
 void keyboard_tandy_init()
@@ -248,5 +249,5 @@ void keyboard_tandy_init()
         keyboard_poll = keyboard_xt_poll;
         keyboard_xt.tandy = (romset != ROM_TANDY) ? 1 : 0;
         
-        timer_add(keyboard_xt_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_xt.send_delay_timer, keyboard_xt_poll, NULL, 1);
 }

@@ -76,15 +76,12 @@ static struct
 
 int fdd_swap = 0;
 
-void fdd_seek(int drive, int track_diff)
+uint64_t fdd_seek(int drive, int track_diff)
 {
         drive ^= fdd_swap;
         
         if (drive >= 2)
-	{
-	        disctime = 5000;
-                return;
-	}
+                return 1000 * TIMER_USEC;
 
         fdd[drive].track += track_diff;
         
@@ -99,7 +96,7 @@ void fdd_seek(int drive, int track_diff)
         fdc_discchange_clear(drive);
         
         disc_seek(drive, fdd[drive].track);
-        disctime = 5000;
+        return 1000 * TIMER_USEC;
 }
 
 void fdd_disc_changed(int drive)

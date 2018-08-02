@@ -7,7 +7,8 @@
 
 typedef struct mouse_serial_t
 {
-        int mousepos, mousedelay;
+        int mousepos;
+	pc_timer_t mousedelay_timer;
         int oldb;
         SERIAL *serial;
 } mouse_serial_t;
@@ -52,14 +53,13 @@ void mouse_serial_rcr(struct SERIAL *serial, void *p)
         mouse_serial_t *mouse = (mouse_serial_t *)p;
         
         mouse->mousepos = -1;
-        mouse->mousedelay = 5000 * (1 << TIMER_SHIFT);
+        timer_set_delay_u64(&mouse->mousedelay_timer, TIMER_USEC * 5000);
 }
         
 void mousecallback(void *p)
 {
         mouse_serial_t *mouse = (mouse_serial_t *)p;
 
-	mouse->mousedelay = 0;
         if (mouse->mousepos == -1)
         {
                 mouse->mousepos = 0;
@@ -75,7 +75,7 @@ void *mouse_serial_init()
         mouse->serial = &serial1;
         serial1.rcr_callback = mouse_serial_rcr;
         serial1.rcr_callback_p = mouse;
-        timer_add(mousecallback, &mouse->mousedelay, &mouse->mousedelay, mouse);
+        timer_add(&mouse->mousedelay_timer, mousecallback, mouse, 0);
         
         return mouse;
 }

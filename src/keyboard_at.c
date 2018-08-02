@@ -48,10 +48,12 @@ struct
         void (*mouse_write)(uint8_t val, void *p);
         void *mouse_p;
         
-        int refresh_time;
+        pc_timer_t refresh_timer;
         int refresh;
         
         int is_ps2;
+
+	pc_timer_t send_delay_timer;
 } keyboard_at;
 
 static uint8_t key_ctrl_queue[16];
@@ -65,7 +67,7 @@ int mouse_queue_start = 0, mouse_queue_end = 0;
 
 void keyboard_at_poll()
 {
-	keybsenddelay += (100 * TIMER_USEC);
+	timer_advance_u64(&keyboard_at.send_delay_timer, (100 * TIMER_USEC));
 
         if (keyboard_at.out_new != -1 && !keyboard_at.last_irq)
         {
@@ -335,9 +337,6 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                
                 case 0x61:
                 ppi.pb = val;
-
-                timer_process();
-                timer_update_outstanding();
 
                 speaker_update();
                 speaker_gated = val & 1;
@@ -626,7 +625,7 @@ void keyboard_at_reset()
 static void at_refresh(void *p)
 {
         keyboard_at.refresh = !keyboard_at.refresh;
-        keyboard_at.refresh_time += PS2_REFRESH_TIME;
+        timer_advance_u64(&keyboard_at.refresh_timer, PS2_REFRESH_TIME);
 }
 
 void keyboard_at_init()
@@ -641,7 +640,7 @@ void keyboard_at_init()
         keyboard_at.mouse_p = NULL;
         keyboard_at.is_ps2 = 0;
         
-        timer_add(keyboard_at_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_at.send_delay_timer, keyboard_at_poll, NULL, 1);
 }
 
 void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p)
@@ -652,6 +651,6 @@ void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p)
 
 void keyboard_at_init_ps2()
 {
-        timer_add(at_refresh, &keyboard_at.refresh_time, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_at.refresh_timer, at_refresh, NULL, 1);
         keyboard_at.is_ps2 = 1;
 }

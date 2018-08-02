@@ -12,7 +12,7 @@ typedef struct dss_t
         
         uint8_t dac_val;
         
-        int time;
+        pc_timer_t timer;
         
         int16_t buffer[MAXSOUNDBUFLEN];
         int pos;
@@ -28,8 +28,6 @@ static void dss_update(dss_t *dss)
 static void dss_write_data(uint8_t val, void *p)
 {
         dss_t *dss = (dss_t *)p;
-
-        timer_clock();
 
         if ((dss->write_idx - dss->read_idx) < 16)
         {
@@ -82,7 +80,7 @@ static void dss_callback(void *p)
                 dss->read_idx++;
         }
         
-        dss->time += (TIMER_USEC * (1000000.0 / 7000.0));
+        timer_advance_u64(&dss->timer, (TIMER_USEC * (1000000.0 / 7000.0)));
 }
 
 static void *dss_init()
@@ -91,7 +89,7 @@ static void *dss_init()
         memset(dss, 0, sizeof(dss_t));
 
         sound_add_handler(dss_get_buffer, dss);
-        timer_add(dss_callback, &dss->time, TIMER_ALWAYS_ENABLED, dss);
+        timer_add(&dss->timer, dss_callback, dss, 1);
                 
         return dss;
 }

@@ -19,9 +19,10 @@ int nvraddr;
 
 int nvr_dosave = 0;
 
-static int nvr_onesec_time = 0, nvr_onesec_cnt = 0;
+static pc_timer_t nvr_onesec_timer;
+static int nvr_onesec_cnt = 0;
 
-static int rtctime;
+static pc_timer_t rtc_timer;
 
 FILE *nvrfopen(char *fn, char *mode)
 {
@@ -62,10 +63,9 @@ void getnvrtime()
 void nvr_recalc()
 {
         int c;
-        int newrtctime;
+
         c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-        newrtctime=(int)(RTCCONST * c * (1 << TIMER_SHIFT));
-        if (rtctime>newrtctime) rtctime=newrtctime;
+	timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
 }
 
 void nvr_rtc(void *p)
@@ -73,11 +73,11 @@ void nvr_rtc(void *p)
         int c;
         if (!(nvrram[RTC_REGA] & RTC_RS))
         {
-                rtctime=0x7fffffff;
+		timer_disable(&rtc_timer);
                 return;
         }
         c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-        rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
+        timer_advance_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
 //        pclog("RTCtime now %f\n",rtctime);
         nvrram[RTC_REGC] |= RTC_PF;
         if (nvrram[RTC_REGB] & RTC_PIE)
@@ -98,7 +98,7 @@ int nvr_check_alarm(int nvraddr)
         return (nvrram[nvraddr + 1] == nvrram[nvraddr] || (nvrram[nvraddr + 1] & ALARM_DONTCARE) == ALARM_DONTCARE);
 }
 
-int nvr_update_end_count = 0;
+pc_timer_t nvr_update_end_timer;
 
 void nvr_update_end(void *p)
 {
@@ -130,8 +130,6 @@ void nvr_update_end(void *p)
         }
         
 //                pclog("RTC onesec\n");
-
-        nvr_update_end_count = 0;
 }
 
 void nvr_onesec(void *p)
@@ -144,11 +142,11 @@ void nvr_onesec(void *p)
                         nvr_update_status = RTC_UIP;
                         rtc_tick();
 
-                        nvr_update_end_count = (int)((244.0 + 1984.0) * TIMER_USEC);
+                        timer_set_delay_u64(&nvr_update_end_timer, (uint64_t)((244.0 + 1984.0) * TIMER_USEC));
                 }
                 nvr_onesec_cnt = 0;
         }
-        nvr_onesec_time += (int)(10000 * TIMER_USEC);
+        timer_advance_u64(&nvr_onesec_timer, (uint64_t)(10000 * TIMER_USEC));
 }
 
 void writenvr(uint16_t addr, uint8_t val, void *priv)
@@ -174,10 +172,10 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
                         if (val & RTC_RS)
                         {
                                 c = 1 << ((val & RTC_RS) - 1);
-                                rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
+				timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
                         }
                         else
-                           rtctime = 0x7fffffff;
+				timer_disable(&rtc_timer);
                 }
 		else
 		{
@@ -333,7 +331,7 @@ void loadnvr()
         nvrram[RTC_REGA] = 6;
         nvrram[RTC_REGB] = RTC_2412;
         c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-        rtctime += (int)(RTCCONST * c * (1 << TIMER_SHIFT));
+        timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
 }
 void savenvr()
 {
@@ -408,8 +406,8 @@ void savenvr()
 void nvr_init()
 {
         io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL,  NULL);
-        timer_add(nvr_rtc, &rtctime, TIMER_ALWAYS_ENABLED, NULL);
-        timer_add(nvr_onesec, &nvr_onesec_time, TIMER_ALWAYS_ENABLED, NULL);
-        timer_add(nvr_update_end, &nvr_update_end_count, &nvr_update_end_count, NULL);
+        timer_add(&rtc_timer, nvr_rtc, NULL, 1);
+        timer_add(&nvr_onesec_timer, nvr_onesec, NULL, 1);
+        timer_add(&nvr_update_end_timer, nvr_update_end, NULL, 0);
 
 }

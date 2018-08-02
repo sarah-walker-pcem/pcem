@@ -58,7 +58,7 @@ typedef struct esdi_t
         int cmd_state;
         
         int in_reset;
-        int callback;
+        pc_timer_t callback_timer;
         
         uint32_t rba;
         
@@ -163,7 +163,7 @@ static void esdi_write(uint16_t port, uint8_t val, void *p)
                 {
 //                        pclog("ESDI reset\n");
                         esdi->in_reset = 1;
-                        esdi->callback = ESDI_TIME * 50;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME * 50);
                         esdi->status = STATUS_BUSY;
                 }
                 esdi->basic_ctrl = val;
@@ -195,7 +195,7 @@ static void esdi_write(uint16_t port, uint8_t val, void *p)
                                 case ATTN_RESET:
 //                                pclog("ESDI reset\n");
                                 esdi->in_reset = 1;
-                                esdi->callback = ESDI_TIME * 50;
+                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME * 50);
                                 esdi->status = STATUS_BUSY;
                                 break;
                                 
@@ -311,7 +311,7 @@ static void esdi_writew(uint16_t port, uint16_t val, void *p)
                         if ((esdi->cmd_data[0] & CMD_DEVICE_SEL) != esdi->cmd_dev)
                                 fatal("Command device mismatch with attn\n");
                         esdi->command = esdi->cmd_data[0] & CMD_MASK;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         esdi->status = STATUS_BUSY;
                         esdi->data_pos = 0;
                 }
@@ -421,8 +421,6 @@ static void esdi_callback(void *p)
         esdi_t *esdi = (esdi_t *)p;
         hdd_file_t *hdd_file;
         
-        esdi->callback = 0;
-        
 //        pclog("esdi_callback: in_reset=%i command=%x\n", esdi->in_reset, esdi->command);
         if (esdi->in_reset)
         {
@@ -464,7 +462,7 @@ static void esdi_callback(void *p)
                         esdi_set_irq(esdi);
                         
                         esdi->cmd_state = 1;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         esdi->data_pos = 0;
                         break;
                         
@@ -472,7 +470,7 @@ static void esdi_callback(void *p)
                         if (!(esdi->basic_ctrl & CTRL_DMA_ENA))
                         {
 //                                pclog("DMA not enabled\n");
-                                esdi->callback = ESDI_TIME;
+                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                 return;
                         }
                         while (esdi->sector_pos < esdi->sector_count)
@@ -492,7 +490,7 @@ static void esdi_callback(void *p)
                                         if (val == DMA_NODATA)
                                         {
 //                                                pclog("DMA out of data\n");
-                                                esdi->callback = ESDI_TIME;
+                                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                                 return;
                                         }
                                 
@@ -506,7 +504,7 @@ static void esdi_callback(void *p)
 
                         esdi->status = STATUS_CMD_IN_PROGRESS;
                         esdi->cmd_state = 2;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         break;
                         
                         case 2:
@@ -551,7 +549,7 @@ static void esdi_callback(void *p)
                         esdi_set_irq(esdi);
                         
                         esdi->cmd_state = 1;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         esdi->data_pos = 0;
                         break;
                         
@@ -559,7 +557,7 @@ static void esdi_callback(void *p)
                         if (!(esdi->basic_ctrl & CTRL_DMA_ENA))
                         {
 //                                pclog("DMA not enabled\n");
-                                esdi->callback = ESDI_TIME;
+                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                 return;
                         }
                         while (esdi->sector_pos < esdi->sector_count)
@@ -572,7 +570,7 @@ static void esdi_callback(void *p)
                                         if (val == DMA_NODATA)
                                         {
 //                                                pclog("DMA out of data\n");
-                                                esdi->callback = ESDI_TIME;
+                                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                                 return;
                                         }
                                 
@@ -591,7 +589,7 @@ static void esdi_callback(void *p)
 
                         esdi->status = STATUS_CMD_IN_PROGRESS;
                         esdi->cmd_state = 2;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         break;
                         
                         case 2:
@@ -739,7 +737,7 @@ static void esdi_callback(void *p)
                         esdi_set_irq(esdi);
                         
                         esdi->cmd_state = 1;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         esdi->data_pos = 0;
                         break;
                         
@@ -747,7 +745,7 @@ static void esdi_callback(void *p)
                         if (!(esdi->basic_ctrl & CTRL_DMA_ENA))
                         {
 //                                pclog("DMA not enabled\n");
-                                esdi->callback = ESDI_TIME;
+                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                 return;
                         }
                         while (esdi->sector_pos < esdi->sector_count)
@@ -762,7 +760,7 @@ static void esdi_callback(void *p)
                                         if (val == DMA_NODATA)
                                         {
 //                                                pclog("DMA out of data\n");
-                                                esdi->callback = ESDI_TIME;
+                                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                                 return;
                                         }
                                 
@@ -774,7 +772,7 @@ static void esdi_callback(void *p)
 
                         esdi->status = STATUS_CMD_IN_PROGRESS;
                         esdi->cmd_state = 2;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         break;
                         
                         case 2:
@@ -803,7 +801,7 @@ static void esdi_callback(void *p)
                         esdi_set_irq(esdi);
                         
                         esdi->cmd_state = 1;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         esdi->data_pos = 0;
                         break;
                         
@@ -811,7 +809,7 @@ static void esdi_callback(void *p)
                         if (!(esdi->basic_ctrl & CTRL_DMA_ENA))
                         {
 //                                pclog("DMA not enabled\n");
-                                esdi->callback = ESDI_TIME;
+                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                 return;
                         }
                         while (esdi->sector_pos < esdi->sector_count)
@@ -824,7 +822,7 @@ static void esdi_callback(void *p)
                                         if (val == DMA_NODATA)
                                         {
   //                                              pclog("DMA out of data\n");
-                                                esdi->callback = ESDI_TIME;
+                                                timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                                                 return;
                                         }
                                 
@@ -837,7 +835,7 @@ static void esdi_callback(void *p)
 
                         esdi->status = STATUS_CMD_IN_PROGRESS;
                         esdi->cmd_state = 2;
-                        esdi->callback = ESDI_TIME;
+                        timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME);
                         break;
                         
                         case 2:
@@ -917,7 +915,7 @@ static void *esdi_init()
         hdd_load(&esdi->hdd_file[0], 0, ide_fn[0]);
         hdd_load(&esdi->hdd_file[1], 1, ide_fn[1]);
                 
-        timer_add(esdi_callback, &esdi->callback, &esdi->callback, esdi);
+        timer_add(&esdi->callback_timer, esdi_callback, esdi, 0);
         
         mca_add(esdi_mca_read, esdi_mca_write, esdi);
         
@@ -925,7 +923,7 @@ static void *esdi_init()
         esdi->pos_regs[1] = 0xdd;
 
         esdi->in_reset = 1;
-        esdi->callback = ESDI_TIME * 50;
+	timer_set_delay_u64(&esdi->callback_timer, ESDI_TIME * 50);
         esdi->status = STATUS_BUSY;
         
         return esdi;

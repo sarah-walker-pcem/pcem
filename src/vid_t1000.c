@@ -13,6 +13,9 @@
 #define T1000_XSIZE 640
 #define T1000_YSIZE 200
 
+/*Very rough estimate*/
+#define VID_CLOCK (double)(651 * 216 * 60)
+
 /* Mapping of attributes to colours */
 static uint32_t blue, grey;
 static uint8_t  boldcols[256];		/* Which attributes use the bold font */
@@ -65,7 +68,7 @@ typedef struct t1000_t
 	int internal;		/* Using internal display? */
 	uint8_t	attrmap;	/* Attribute mapping register */
 
-        int dispontime, dispofftime;
+        uint64_t dispontime, dispofftime;
         
         int linepos, displine;
         int vc;
@@ -176,8 +179,8 @@ static void t1000_recalctimings(t1000_t *t1000)
 	disptime = 651;
 	_dispontime = 640;
         _dispofftime = disptime - _dispontime;
-	t1000->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	t1000->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	t1000->dispontime  = (uint64_t)(_dispontime * (cpuclock / VID_CLOCK) * (double)(1ull << 32));
+	t1000->dispofftime = (uint64_t)(_dispofftime * (cpuclock / VID_CLOCK) * (double)(1ull << 32));
 }
 
 /* Draw a row of text in 80-column mode */
@@ -446,7 +449,7 @@ static void t1000_poll(void *p)
 
         if (!t1000->linepos)
         {
-                t1000->cga.vidtime += t1000->dispofftime;
+                timer_advance_u64(&t1000->cga.timer, t1000->dispofftime);
                 t1000->cga.cgastat |= 1;
                 t1000->linepos = 1;
                 if (t1000->dispon)
@@ -493,7 +496,7 @@ static void t1000_poll(void *p)
 		{
                 	t1000->cga.cgastat &= ~1;
 		}
-                t1000->cga.vidtime += t1000->dispontime;
+                timer_advance_u64(&t1000->cga.timer, t1000->dispontime);
                 t1000->linepos = 0;
 
 		if (t1000->displine == 200)
@@ -635,7 +638,8 @@ static void *t1000_init()
 	/* 16k video RAM */
         t1000->vram = malloc(0x4000);
 
-        timer_add(t1000_poll, &t1000->cga.vidtime, TIMER_ALWAYS_ENABLED, t1000);
+        timer_set_callback(&t1000->cga.timer, t1000_poll);
+        timer_set_p(&t1000->cga.timer, t1000);
 
 	/* Occupy memory between 0xB8000 and 0xBFFFF */
         mem_mapping_add(&t1000->mapping, 0xb8000, 0x8000, t1000_read, NULL, NULL, t1000_write, NULL, NULL,  NULL, 0, t1000);

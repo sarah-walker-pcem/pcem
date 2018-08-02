@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "timer.h"
+
 #ifdef ABS
 #undef ABS
 #endif
@@ -296,7 +298,7 @@ typedef struct PIT_nr
 typedef struct PIT
 {
         uint32_t l[3];
-        int c[3];
+	pc_timer_t timer[3];
         uint8_t m[3];
         uint8_t ctrl,ctrls[3];
         int wp,rm[3],wm[3];
@@ -378,7 +380,6 @@ PIC pic,pic2;
 extern int pic_intpending;
 
 
-int disctime;
 char discfns[2][256];
 int driveempty[2];
 
@@ -527,10 +528,10 @@ extern int changeframecount;
 
 /*Sound*/
 int ppispeakon;
-float CGACONST;
-float MDACONST;
-float VGACONST1,VGACONST2;
-float RTCCONST;
+extern uint64_t CGACONST;
+extern uint64_t MDACONST;
+extern uint64_t VGACONST1,VGACONST2;
+extern uint64_t RTCCONST;
 int gated,speakval,speakon;
 
 

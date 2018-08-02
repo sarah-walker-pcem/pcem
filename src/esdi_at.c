@@ -74,7 +74,7 @@ typedef struct esdi_t
         uint16_t buffer[256];
         int irqstat;
         
-        int callback;
+        pc_timer_t callback_timer;
         
         esdi_drive_t drives[2];
         
@@ -224,18 +224,14 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
 //                        pclog("Restore\n");
                         esdi->command &= ~0x0f; /*Mask off step rate*/
                         esdi->status = STAT_BUSY;
-                        timer_clock();
-                        esdi->callback = 200*IDE_TIME;
-                        timer_update_outstanding();
+                        timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                         break;
 
                         case CMD_SEEK:
 //                        pclog("Seek to cylinder %i\n", esdi->cylinder);
                         esdi->command &= ~0x0f; /*Mask off step rate*/
                         esdi->status = STAT_BUSY;
-                        timer_clock();
-                        esdi->callback = 200*IDE_TIME;
-                        timer_update_outstanding();
+                        timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                         break;
 
                         default:
@@ -243,9 +239,7 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
                         {
                                 case CMD_NOP:
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                                 break;
                                 
                                 case CMD_READ: case CMD_READ+1:
@@ -256,9 +250,7 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
                                         fatal("Read with ECC\n");
                                 case 0xa0:
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                                 break;
 
                                 case CMD_WRITE: case CMD_WRITE+1:
@@ -275,9 +267,7 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
 //                                pclog("Read verify %i sectors from sector %i cylinder %i head %i\n",esdi->secount,esdi->sector,esdi->cylinder,esdi->head);
                                 esdi->command &= ~1;
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200 * IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200 * IDE_TIME);
                                 break;
 
                                 case CMD_FORMAT:
@@ -288,33 +278,25 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
 
                                 case CMD_SET_PARAMETERS: /* Initialize Drive Parameters */
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 30*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 30*IDE_TIME);
                                 break;
 
                                 case CMD_DIAGNOSE: /* Execute Drive Diagnostics */
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                                 break;
 
                                 case 0xe0: /*???*/
                                 case CMD_READ_PARAMETERS:
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                                 break;
 
                                 default:
                                 pclog("Bad esdi command %02X\n", val);
                                 case 0xe8: /*???*/
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 200*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 200*IDE_TIME);
                                 break;
                         }
                 }                
@@ -323,9 +305,7 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
                 case 0x3F6: /* Device control */
                 if ((esdi->fdisk & 4) && !(val & 4))
                 {
-                        timer_clock();
-                        esdi->callback = 500*IDE_TIME;
-                        timer_update_outstanding();
+                        timer_set_delay_u64(&esdi->callback_timer, 500*IDE_TIME);
                         esdi->reset = 1;
                         esdi->status = STAT_BUSY;
 //                        pclog("esdi Reset\n");
@@ -333,9 +313,7 @@ void esdi_write(uint16_t port, uint8_t val, void *p)
                 if (val & 4)
                 {
                         /*Drive held in reset*/
-                        timer_clock();
-                        esdi->callback = 0;
-                        timer_update_outstanding();
+                        timer_disable(&esdi->callback_timer);
                         esdi->status = STAT_BUSY;
                 }
                 esdi->fdisk = val;
@@ -357,9 +335,7 @@ void esdi_writew(uint16_t port, uint16_t val, void *p)
         {
                 esdi->pos = 0;
                 esdi->status = STAT_BUSY;
-                timer_clock();
-              	esdi->callback = 6*IDE_TIME;
-                timer_update_outstanding();
+              	timer_set_delay_u64(&esdi->callback_timer, 6*IDE_TIME);
         }
 }
 
@@ -428,9 +404,7 @@ uint16_t esdi_readw(uint16_t port, void *p)
                         {
                                 esdi_next_sector(esdi);
                                 esdi->status = STAT_BUSY;
-                                timer_clock();
-                                esdi->callback = 6*IDE_TIME;
-                                timer_update_outstanding();
+                                timer_set_delay_u64(&esdi->callback_timer, 6*IDE_TIME);
                         }
                 }
         }
@@ -446,7 +420,7 @@ void esdi_callback(void *p)
         off64_t addr;
         
 //        pclog("esdi_callback: command=%02x reset=%i\n", esdi->command, esdi->reset);
-        esdi->callback = 0;
+        
         if (esdi->reset)
         {
                 esdi->status = STAT_READY | STAT_DSC;
@@ -586,7 +560,7 @@ void esdi_callback(void *p)
                         esdi_next_sector(esdi);
                         esdi->secount = (esdi->secount - 1) & 0xff;
                         if (esdi->secount)
-                                esdi->callback = 6*IDE_TIME;
+                                timer_set_delay_u64(&esdi->callback_timer, 6*IDE_TIME);
                         else
                         {
                                 esdi->pos = 0;
@@ -804,7 +778,7 @@ void *wd1007vse1_init()
         io_sethandler(0x01f1, 0x0007, esdi_read, NULL,      NULL, esdi_write, NULL,       NULL, esdi);
         io_sethandler(0x03f6, 0x0001, NULL,     NULL,      NULL, esdi_write, NULL,       NULL, esdi);
 
-        timer_add(esdi_callback, &esdi->callback, &esdi->callback, esdi);	
+        timer_add(&esdi->callback_timer, esdi_callback, esdi, 0);
         
 	return esdi;
 }

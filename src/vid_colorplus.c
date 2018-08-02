@@ -119,7 +119,7 @@ void colorplus_poll(void *p)
 
         if (!colorplus->cga.linepos)
         {
-                colorplus->cga.vidtime += colorplus->cga.dispofftime;
+                timer_advance_u64(&colorplus->cga.timer, colorplus->cga.dispofftime);
                 colorplus->cga.cgastat |= 1;
                 colorplus->cga.linepos = 1;
                 oldsc = colorplus->cga.sc;
@@ -215,7 +215,7 @@ void colorplus_poll(void *p)
         }
         else
         {
-                colorplus->cga.vidtime += colorplus->cga.dispontime;
+                timer_advance_u64(&colorplus->cga.timer, colorplus->cga.dispontime);
                 colorplus->cga.linepos = 0;
                 if (colorplus->cga.vsynctime)
                 {
@@ -346,7 +346,7 @@ void *colorplus_init()
         display_type = device_get_config_int("display_type");
         contrast = device_get_config_int("contrast");
                 
-        timer_add(colorplus_poll, &colorplus->cga.vidtime, TIMER_ALWAYS_ENABLED, colorplus);
+        timer_add(&colorplus->cga.timer, colorplus_poll, colorplus, 1);
         mem_mapping_add(&colorplus->cga.mapping, 0xb8000, 0x08000, colorplus_read, NULL, NULL, colorplus_write, NULL, NULL,  NULL, 0, colorplus);
         io_sethandler(0x03d0, 0x0010, colorplus_in, NULL, NULL, colorplus_out, NULL, NULL, colorplus);
         

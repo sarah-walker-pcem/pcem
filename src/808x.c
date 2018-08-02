@@ -25,7 +25,7 @@
 #include "x87.h"
 #include "paths.h"
 
-int xt_cpu_multi;
+uint64_t xt_cpu_multi;
 int nmi = 0;
 int nmi_auto_clear = 0;
 
@@ -821,13 +821,24 @@ static void setsbc16(uint16_t a, uint16_t b)
 }
 
 int current_diff = 0;
+
+/*XT systems use the XT master oscillator (14.318 MHz) rather than the CPU clock
+  at the base timer frequency. Because there isn't an integer relationship
+  between the two frequencies, use fixed point arithmetic when updating TSC.*/
+static uint64_t tsc_frac = 0;
+
 void clockhardware()
 {
         int diff = cycdiff - cycles - current_diff;
         
         current_diff += diff;
-  
-        timer_end_period(cycles*xt_cpu_multi);
+
+        tsc_frac += (uint64_t)diff * xt_cpu_multi;
+
+	tsc += (tsc_frac >> 32);
+        tsc_frac &= 0xffffffff;
+	if (TIMER_VAL_LESS_THAN_VAL(timer_target, (uint32_t)tsc))
+		timer_process();
 }
 
 static int takeint = 0;
@@ -1104,7 +1115,6 @@ void execx86(int cycs)
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
 //                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
-                timer_start_period(cycles*xt_cpu_multi);
                 current_diff = 0;
                 cycles-=nextcyc;
 //                if (instime) pclog("Cycles %i %i\n",cycles,cycdiff);

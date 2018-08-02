@@ -222,12 +222,11 @@ void exec386(int cycs)
 //        output=3;
         while (cycles>0)
         {
-                int cycle_period = (timer_count >> TIMER_SHIFT) + 1;
+                int cycle_period = (timer_target - (uint32_t)tsc) + 1;
                 
                 x86_was_reset = 0;
                 cycdiff=0;
                 oldcyc=cycles;
-                timer_start_period(cycles << TIMER_SHIFT);
 //                pclog("%i %02X\n", ins, ram[8]);
                 while (cycdiff < cycle_period)
                 {
@@ -257,7 +256,7 @@ dontprint=0;
 
                         if (output == 3)
                         {
-                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X %02X%02X  %02X\n",CS,cs,cpu_state.pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0xB270+0x3F5], ram[0xB270+0x3F4], ram[0xB270+0x3F7], ram[0xB270+0x3F6], ram[0xB270+0x3F9], ram[0xB270+0x3F8], ram[0x4430+0x0D49]);
+                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X\n",CS,cs,cpu_state.pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask);
                         }
                         cpu_state.pc++;
                         x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
@@ -381,7 +380,7 @@ dontprint=0;
                 }
                 
                 tsc += cycdiff;
-                
-                timer_end_period(cycles << TIMER_SHIFT);
+		if (TIMER_VAL_LESS_THAN_VAL(timer_target, (uint32_t)tsc))
+			timer_process();
         }
 }

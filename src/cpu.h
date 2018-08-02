@@ -140,7 +140,7 @@ void cpu_WRMSR();
 
 extern int cpu_use_dynarec;
 
-extern int xt_cpu_multi;
+extern uint64_t xt_cpu_multi;
 
 extern int isa_cycles;
 #define ISA_CYCLES(x) (x * isa_cycles)

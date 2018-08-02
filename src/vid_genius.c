@@ -98,8 +98,8 @@ typedef struct genius_t
 	int enabled;		/* Display enabled, 0 or 1 */
 	int detach;		/* Detach cursor, 0 or 1 */
 
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
         
         int linepos, displine;
         int vc;
@@ -246,8 +246,8 @@ void genius_recalctimings(genius_t *genius)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= MDACONST;
         _dispofftime *= MDACONST;
-	genius->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	genius->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	genius->dispontime  = (uint64_t)_dispontime;
+	genius->dispofftime = (uint64_t)_dispofftime;
 }
 
 
@@ -462,7 +462,7 @@ void genius_poll(void *p)
 
         if (!genius->linepos)
         {
-                genius->vidtime += genius->dispofftime;
+                timer_advance_u64(&genius->timer, genius->dispofftime);
                 genius->cga_stat |= 1;
                 genius->mda_stat |= 1;
                 genius->linepos = 1;
@@ -526,7 +526,7 @@ void genius_poll(void *p)
                 	genius->cga_stat &= ~1;
                 	genius->mda_stat &= ~1;
 		}
-                genius->vidtime += genius->dispontime;
+                timer_advance_u64(&genius->timer, genius->dispontime);
                 genius->linepos = 0;
 
 		if (genius->displine == 1008)
@@ -561,7 +561,7 @@ void *genius_init()
 	/* 160k video RAM */
         genius->vram = malloc(0x28000);
 
-        timer_add(genius_poll, &genius->vidtime, TIMER_ALWAYS_ENABLED, genius);
+        timer_add(&genius->timer, genius_poll, genius, 1);
 
 	/* Occupy memory between 0xB0000 and 0xBFFFF (moves to 0xA0000 in
 	 * high-resolution modes)  */

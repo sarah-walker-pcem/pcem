@@ -32,6 +32,8 @@ struct
 
         uint8_t pa;
         uint8_t pb;
+
+	pc_timer_t send_delay_timer;
 } keyboard_pcjr;
 
 static uint8_t key_queue[16];
@@ -39,8 +41,7 @@ static int key_queue_start = 0, key_queue_end = 0;
 
 void keyboard_pcjr_poll()
 {
-        keybsenddelay += (220 * TIMER_USEC);
-
+        timer_advance_u64(&keyboard_pcjr.send_delay_timer, (220 * TIMER_USEC));
 
         if (key_queue_start != key_queue_end && !keyboard_pcjr.serial_pos && !keyboard_pcjr.latched)
         {
@@ -127,7 +128,6 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 keyboard_pcjr.pb = val;
 
                 timer_process();
-                timer_update_outstanding();
 
                 speaker_update();
                 speaker_gated = val & 1;
@@ -205,5 +205,5 @@ void keyboard_pcjr_init()
         keyboard_send = keyboard_pcjr_adddata;
         keyboard_poll = keyboard_pcjr_poll;
 
-        timer_add(keyboard_pcjr_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_pcjr.send_delay_timer, keyboard_pcjr_poll, NULL, 1);
 }

@@ -13,6 +13,9 @@
 #define T3100E_XSIZE 640
 #define T3100E_YSIZE 400
 
+/*Very rough estimate*/
+#define VID_CLOCK (double)(651 * 416 * 60)
+
 /* T3100e CRTC regs (from the ROM):
  *
  * Selecting a character height of 3 seems to be sufficient to convert the
@@ -73,7 +76,7 @@ typedef struct t3100e_t
 	int internal;		/* Using internal display? */
 	uint8_t	attrmap;	/* Attribute mapping register */
 
-        int dispontime, dispofftime;
+        uint64_t dispontime, dispofftime;
         
         int linepos, displine;
         int vc;
@@ -186,8 +189,8 @@ void t3100e_recalctimings(t3100e_t *t3100e)
 	disptime = 651;
 	_dispontime = 640;
         _dispofftime = disptime - _dispontime;
-	t3100e->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	t3100e->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	t3100e->dispontime  = (uint64_t)(_dispontime * (cpuclock / VID_CLOCK) * (double)(1ull << 32));
+	t3100e->dispofftime = (uint64_t)(_dispofftime * (cpuclock / VID_CLOCK) * (double)(1ull << 32));
 }
 
 
@@ -481,7 +484,7 @@ void t3100e_poll(void *p)
 
         if (!t3100e->linepos)
         {
-                t3100e->cga.vidtime += t3100e->dispofftime;
+                timer_advance_u64(&t3100e->cga.timer, t3100e->dispofftime);
                 t3100e->cga.cgastat |= 1;
                 t3100e->linepos = 1;
                 if (t3100e->dispon)
@@ -528,7 +531,7 @@ void t3100e_poll(void *p)
 		{
                 	t3100e->cga.cgastat &= ~1;
 		}
-                t3100e->cga.vidtime += t3100e->dispontime;
+                timer_advance_u64(&t3100e->cga.timer, t3100e->dispontime);
                 t3100e->linepos = 0;
 
 		if (t3100e->displine == 400)
@@ -672,7 +675,8 @@ void *t3100e_init()
 	/* 32k video RAM */
         t3100e->vram = malloc(0x8000);
 
-        timer_add(t3100e_poll, &t3100e->cga.vidtime, TIMER_ALWAYS_ENABLED, t3100e);
+        timer_set_callback(&t3100e->cga.timer, t3100e_poll);
+        timer_set_p(&t3100e->cga.timer, t3100e);
 
 	/* Occupy memory between 0xB8000 and 0xBFFFF */
         mem_mapping_add(&t3100e->mapping, 0xb8000, 0x8000, t3100e_read, NULL, NULL, t3100e_write, NULL, NULL,  NULL, 0, t3100e);

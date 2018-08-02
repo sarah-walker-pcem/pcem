@@ -13,7 +13,8 @@ typedef struct ps1_audio_t
         
         uint8_t status, ctrl;
         
-        int timer_latch, timer_count, timer_enable;
+        uint64_t timer_latch;
+	pc_timer_t timer;
         
         uint8_t fifo[2048];
         int fifo_read_idx, fifo_write_idx;
@@ -89,8 +90,10 @@ static void ps1_audio_write(uint16_t port, uint8_t val, void *p)
                 break;
                 case 3: /*Timer reload value*/
                 ps1->timer_latch = val;
-                ps1->timer_count = (0xff-val) * TIMER_USEC;
-                ps1->timer_enable = (val != 0);
+		if (val)
+	                timer_set_delay_u64(&ps1->timer, (0xff-val) * TIMER_USEC);
+		else
+			timer_disable(&ps1->timer);
                 break;
                 case 4: /*Almost empty*/
                 ps1->fifo_threshold = val * 4;
@@ -124,7 +127,7 @@ static void ps1_audio_callback(void *p)
         ps1->status |= 0x10; /*ADC data ready*/
         ps1_update_irq_status(ps1);
         
-        ps1->timer_count += ps1->timer_latch * TIMER_USEC;
+        timer_advance_u64(&ps1->timer, ps1->timer_latch * TIMER_USEC);
 }
 
 static void ps1_audio_get_buffer(int32_t *buffer, int len, void *p)
@@ -149,7 +152,7 @@ static void *ps1_audio_init()
 
         io_sethandler(0x0200, 0x0001, ps1_audio_read, NULL, NULL, ps1_audio_write, NULL, NULL, ps1);
         io_sethandler(0x0202, 0x0006, ps1_audio_read, NULL, NULL, ps1_audio_write, NULL, NULL, ps1);
-        timer_add(ps1_audio_callback, &ps1->timer_count, &ps1->timer_enable, ps1);
+        timer_add(&ps1->timer, ps1_audio_callback, ps1, 0);
         sound_add_handler(ps1_audio_get_buffer, ps1);
         
         return ps1;
