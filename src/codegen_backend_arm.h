@@ -2,7 +2,7 @@
 
 #define BLOCK_SIZE 0x1000
 #define BLOCK_MASK 0x0fff
-#define BLOCK_START 32
+#define BLOCK_START 64
 
 #define HASH_SIZE 0x20000
 #define HASH_MASK 0x1ffff
@@ -13,7 +13,7 @@
 /*#define BLOCK_EXIT_OFFSET 0x7f0*/
 
 #define BLOCK_GPF_OFFSET 0
-#define BLOCK_EXIT_OFFSET 16
+#define BLOCK_EXIT_OFFSET 32
 
 #define ARM_LITERAL_POOL_OFFSET 0xf000
 

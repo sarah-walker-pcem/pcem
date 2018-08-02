@@ -201,8 +201,7 @@ void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_ADD_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
 	}
 }
@@ -226,8 +225,7 @@ void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_AND_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
 	}
 }
@@ -314,8 +312,7 @@ void host_arm_CMN_IMM(codeblock_t *block, int src_reg, uint32_t imm)
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_CMN_REG_LSL(block, src_reg, REG_TEMP, 0);
 	}
 }
@@ -338,8 +335,7 @@ void host_arm_CMP_IMM(codeblock_t *block, int src_reg, uint32_t imm)
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_CMP_REG_LSL(block, src_reg, REG_TEMP, 0);
 	}
 }
@@ -358,8 +354,7 @@ void host_arm_EOR_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_EOR_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
 	}
 }
@@ -457,8 +452,7 @@ void host_arm_ORR_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_ORR_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
 	}
 }
@@ -519,8 +513,7 @@ void host_arm_SUB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_SUB_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
 	}
 }
@@ -544,8 +537,7 @@ void host_arm_TST_IMM(codeblock_t *block, int src_reg, uint32_t imm)
 	}
 	else
 	{
-		int offset = add_literal(block, imm);
-		host_arm_LDR_IMM(block, REG_TEMP, REG_LITERAL, offset);
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
 		host_arm_TST_REG(block, src_reg, REG_TEMP);
 	}
 }

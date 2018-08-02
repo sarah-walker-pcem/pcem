@@ -49,8 +49,7 @@ static inline int in_range(void *addr, void *base)
 
 void host_arm_call(codeblock_t *block, void *dst_addr)
 {
-	int offset = add_literal(block, (uintptr_t)dst_addr);
-	host_arm_LDR_IMM(block, REG_R3, REG_LITERAL, offset);
+	host_arm_MOV_IMM(block, REG_R3, (uintptr_t)dst_addr);
 	host_arm_BLX(block, REG_R3);
 }
 
@@ -240,54 +239,22 @@ static int codegen_CMP_IMM_JZ(codeblock_t *block, uop_t *uop)
 
 static int codegen_LOAD_FUNC_ARG0_IMM(codeblock_t *block, uop_t *uop)
 {
-	uint32_t arm_imm;
-
-	if (get_arm_imm(uop->imm_data, &arm_imm))
-		host_arm_MOV_IMM(block, REG_ARG0, uop->imm_data);
-	else
-	{
-		int offset = add_literal(block, uop->imm_data);
-		host_arm_LDR_IMM(block, REG_ARG0, REG_LITERAL, offset);
-	}
+	host_arm_MOV_IMM(block, REG_ARG0, uop->imm_data);
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG1_IMM(codeblock_t *block, uop_t *uop)
 {
-	uint32_t arm_imm;
-
-	if (get_arm_imm(uop->imm_data, &arm_imm))
-		host_arm_MOV_IMM(block, REG_ARG1, uop->imm_data);
-	else
-	{
-		int offset = add_literal(block, uop->imm_data);
-		host_arm_LDR_IMM(block, REG_ARG1, REG_LITERAL, offset);
-	}
+	host_arm_MOV_IMM(block, REG_ARG1, uop->imm_data);
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG2_IMM(codeblock_t *block, uop_t *uop)
 {
-	uint32_t arm_imm;
-
-	if (get_arm_imm(uop->imm_data, &arm_imm))
-		host_arm_MOV_IMM(block, REG_ARG2, uop->imm_data);
-	else
-	{
-		int offset = add_literal(block, uop->imm_data);
-		host_arm_LDR_IMM(block, REG_ARG2, REG_LITERAL, offset);
-	}
+	host_arm_MOV_IMM(block, REG_ARG2, uop->imm_data);
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG3_IMM(codeblock_t *block, uop_t *uop)
 {
-	uint32_t arm_imm;
-
-	if (get_arm_imm(uop->imm_data, &arm_imm))
-		host_arm_MOV_IMM(block, REG_ARG3, uop->imm_data);
-	else
-	{
-		int offset = add_literal(block, uop->imm_data);
-		host_arm_LDR_IMM(block, REG_ARG3, REG_LITERAL, offset);
-	}
+	host_arm_MOV_IMM(block, REG_ARG3, uop->imm_data);
         return 0;
 }
 
@@ -519,15 +486,7 @@ static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
 
 	if (REG_IS_L(dest_size))
 	{
-		uint32_t arm_imm;
-
-		if (get_arm_imm(uop->imm_data, &arm_imm))
-			host_arm_MOV_IMM(block, dest_reg, uop->imm_data);
-		else
-		{
-			int offset = add_literal(block, uop->imm_data);
-			host_arm_LDR_IMM(block, dest_reg, REG_LITERAL, offset);
-		}
+		host_arm_MOV_IMM(block, dest_reg, uop->imm_data);
 	}
 	else if (REG_IS_W(dest_size))
 	{
@@ -551,8 +510,7 @@ static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
 }
 static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
 {
-	int offset = add_literal(block, (uintptr_t)uop->p);
-	host_arm_LDR_IMM(block, uop->dest_reg_a_real, REG_LITERAL, offset);
+	host_arm_MOV_IMM(block, uop->dest_reg_a_real, (uintptr_t)uop->p);
 
         return 0;
 }
@@ -650,13 +608,8 @@ static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 {
 	uint32_t arm_imm;
 
-	if (get_arm_imm(uop->imm_data, &arm_imm))
-		host_arm_MOV_IMM(block, REG_R0, uop->imm_data);
-	else
-	{
-		int offset = add_literal(block, uop->imm_data);
-		host_arm_LDR_IMM(block, REG_R0, REG_LITERAL, offset);
-	}
+	host_arm_MOV_IMM(block, REG_R0, uop->imm_data);
+
 	if (in_range(uop->p, &cpu_state))
 		host_arm_STR_IMM(block, REG_R0, REG_CPUSTATE, (uintptr_t)uop->p - (uintptr_t)&cpu_state);
 	else
