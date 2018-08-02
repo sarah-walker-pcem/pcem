@@ -34,7 +34,7 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 static void build_load_routine(codeblock_t *block, int size)
 {
         uint32_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint32_t *misaligned_offset;
 
         /*In - R0 = address
           Out - R0 = data, R1 = abrt*/
@@ -73,7 +73,7 @@ static void build_load_routine(codeblock_t *block, int size)
         *branch_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 8) & 0x3fffffc) >> 2;
 	if (size != 1)
 	        *misaligned_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)misaligned_offset) - 8) & 0x3fffffc) >> 2;
-	host_arm_STR_IMM_WB(block, REG_LR, REG_SP, -4);
+	host_arm_STR_IMM_WB(block, REG_LR, REG_HOST_SP, -4);
 	if (size == 1)
 		host_arm_BL(block, (uintptr_t)readmemb386l);
 	else if (size == 2)
@@ -83,15 +83,15 @@ static void build_load_routine(codeblock_t *block, int size)
 	else
 		fatal("build_load_routine - unknown size %i\n", size);
 	host_arm_LDRB_ABS(block, REG_R1, &cpu_state.abrt);
-	host_arm_LDR_IMM_POST(block, REG_PC, REG_SP, 4);
+	host_arm_LDR_IMM_POST(block, REG_PC, REG_HOST_SP, 4);
 
         block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_store_routine(codeblock_t *block, int size)
 {
-        uint8_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint32_t *branch_offset;
+        uint32_t *misaligned_offset;
 
         /*In - R0 = address
           Out - R0 = data, R1 = abrt*/
@@ -130,7 +130,7 @@ static void build_store_routine(codeblock_t *block, int size)
         *branch_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 8) & 0x3fffffc) >> 2;
 	if (size != 1)
 	        *misaligned_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)misaligned_offset) - 8) & 0x3fffffc) >> 2;
-	host_arm_STR_IMM_WB(block, REG_LR, REG_SP, -4);
+	host_arm_STR_IMM_WB(block, REG_LR, REG_HOST_SP, -4);
 	if (size == 1)
 		host_arm_BL(block, (uintptr_t)writememb386l);
 	else if (size == 2)
@@ -140,7 +140,7 @@ static void build_store_routine(codeblock_t *block, int size)
 	else
 		fatal("build_store_routine - unknown size %i\n", size);
 	host_arm_LDRB_ABS(block, REG_R1, &cpu_state.abrt);
-	host_arm_LDR_IMM_POST(block, REG_PC, REG_SP, 4);
+	host_arm_LDR_IMM_POST(block, REG_PC, REG_HOST_SP, 4);
 
         block_pos = (block_pos + 63) & ~63;
 }
@@ -221,15 +221,15 @@ void codegen_backend_prologue(codeblock_t *block)
 		host_arm_nop(block);
 
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x20);
-	host_arm_LDMIA_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_PC);
+	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
+	host_arm_LDMIA_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_PC);
 	while (block_pos != BLOCK_START)
 		host_arm_nop(block);
 
 	/*Entry code*/
 
-	host_arm_STMDB_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_LR);
-	host_arm_SUB_IMM(block, REG_SP, REG_SP, 0x20);
+	host_arm_STMDB_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_LR);
+	host_arm_SUB_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
 	host_arm_ADD_IMM(block, REG_LITERAL, REG_PC, ARM_LITERAL_POOL_OFFSET);
 	host_arm_SUB_IMM(block, REG_LITERAL, REG_LITERAL, 16 + BLOCK_START);
 	offset = add_literal(block, (uintptr_t)&cpu_state);
@@ -238,8 +238,8 @@ void codegen_backend_prologue(codeblock_t *block)
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm_ADD_IMM(block, REG_SP, REG_SP, 0x20);
-	host_arm_LDMIA_WB(block, REG_SP, REG_MASK_LOCAL | REG_MASK_PC);
+	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
+	host_arm_LDMIA_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_PC);
 
         if (block_pos > ARM_LITERAL_POOL_OFFSET)
                 fatal("Over limit!\n");

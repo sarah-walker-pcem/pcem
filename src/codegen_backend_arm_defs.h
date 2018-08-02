@@ -11,7 +11,7 @@
 #define REG_R10 10
 #define REG_R11 11
 #define REG_R12 12
-#define REG_SP  13
+#define REG_HOST_SP  13
 #define REG_LR  14
 #define REG_PC  15
 
@@ -38,7 +38,7 @@
 #define REG_MASK_R10 (1 << REG_R10)
 #define REG_MASK_R11 (1 << REG_R11)
 #define REG_MASK_R12 (1 << REG_R12)
-#define REG_MASK_SP  (1 << REG_SP)
+#define REG_MASK_SP  (1 << REG_HOST_SP)
 #define REG_MASK_LR  (1 << REG_LR)
 #define REG_MASK_PC  (1 << REG_PC)
 
