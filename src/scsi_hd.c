@@ -8,7 +8,7 @@
 #include "scsi_hd.h"
 #include "timer.h"
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 #define BUFFER_SIZE (256*1024)
 

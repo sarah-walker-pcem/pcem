@@ -26,7 +26,7 @@
 
 #define CMD_ADAPTER 0
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 typedef struct esdi_t
 {

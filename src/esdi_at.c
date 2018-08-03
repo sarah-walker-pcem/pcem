@@ -50,7 +50,7 @@
 #define CMD_SET_PARAMETERS              0x91
 #define CMD_READ_PARAMETERS             0xec
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 typedef struct esdi_drive_t
 {

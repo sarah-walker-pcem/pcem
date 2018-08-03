@@ -46,7 +46,7 @@
 #define CMD_DIAGNOSE                    0x90
 #define CMD_SET_PARAMETERS              0x91
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 typedef struct mfm_drive_t
 {

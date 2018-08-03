@@ -23,7 +23,7 @@
 
 #define XEBEC_TIME (2000 * TIMER_USEC)
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 enum
 {
