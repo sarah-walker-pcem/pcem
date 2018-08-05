@@ -105,32 +105,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define MOVT_IMM(imm) (((imm) & 0xfff) | (((imm) & 0xf000) << 4))
 #define MOVW_IMM(imm) (((imm) & 0xfff) | (((imm) & 0xf000) << 4))
 
-static int literal_offset = 0;
-void codegen_reset_literal_pool(codeblock_t *block)
-{
-	literal_offset = 0;
-}
-
-int add_literal(codeblock_t *block, uint32_t data)
-{
-	int c;
-
-	if (literal_offset >= 4096)
-		fatal("add_literal - literal pool full\n");
-
-	/*Search for pre-existing value*/
-	for (c = 0; c < literal_offset; c += 4)
-	{
-		if (*(uint32_t *)&block->data[ARM_LITERAL_POOL_OFFSET + c] == data)
-			return c;
-	}
-
-	*(uint32_t *)&block->data[ARM_LITERAL_POOL_OFFSET + literal_offset] = data;
-
-	literal_offset += 4;
-
-	return literal_offset - 4;
-}
+#define LDRH_IMM(imm) (((imm) & 0xf) | (((imm) & 0xf0) << 4))
+#define STRH_IMM(imm) LDRH_IMM(imm)
 
 
 static inline uint32_t arm_data_offset(int offset)

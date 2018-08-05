@@ -21,7 +21,6 @@
 #define REG_ARG3 REG_R3
 
 #define REG_CPUSTATE REG_R10
-#define REG_LITERAL  REG_R11
 
 #define REG_TEMP REG_R3
 
@@ -45,7 +44,7 @@
 #define REG_MASK_LOCAL (REG_MASK_R4 | REG_MASK_R5 | REG_MASK_R6 | REG_MASK_R7 | \
 			REG_MASK_R8 | REG_MASK_R9 | REG_MASK_R10 | REG_MASK_R11)
 
-#define CODEGEN_HOST_REGS 3
+#define CODEGEN_HOST_REGS 7
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;

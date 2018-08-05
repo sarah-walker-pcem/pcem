@@ -29,6 +29,10 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
         REG_R4,
         REG_R5,
         REG_R6,
+	REG_R7,
+	REG_R8,
+	REG_R9,
+	REG_R11,
 };
 
 static void build_load_routine(codeblock_t *block, int size)
@@ -203,14 +207,9 @@ void codegen_backend_init()
         build_loadstore_routines(&codeblock[block_current]);
 }
 
-/*R11 - literal pool
-  R10 - cpu_state*/
+/*R10 - cpu_state*/
 void codegen_backend_prologue(codeblock_t *block)
 {
-	int offset;
-
-	codegen_reset_literal_pool(block);
-
         block_pos = 0;
 
         block_pos = BLOCK_GPF_OFFSET;
@@ -230,10 +229,7 @@ void codegen_backend_prologue(codeblock_t *block)
 
 	host_arm_STMDB_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_LR);
 	host_arm_SUB_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
-	host_arm_ADD_IMM(block, REG_LITERAL, REG_PC, ARM_LITERAL_POOL_OFFSET);
-	host_arm_SUB_IMM(block, REG_LITERAL, REG_LITERAL, 16 + BLOCK_START);
-	offset = add_literal(block, (uintptr_t)&cpu_state);
-	host_arm_LDR_IMM(block, REG_CPUSTATE, REG_R11, offset);
+	host_arm_MOV_IMM(block, REG_CPUSTATE, (uint32_t)&cpu_state);
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
@@ -243,8 +239,6 @@ void codegen_backend_epilogue(codeblock_t *block)
 
         if (block_pos > ARM_LITERAL_POOL_OFFSET)
                 fatal("Over limit!\n");
-
-
 
 	__clear_cache(&block->data[0], &block->data[block_pos]);
 }
