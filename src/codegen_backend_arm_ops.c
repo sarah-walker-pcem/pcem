@@ -71,7 +71,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_BFI    0xe7c00010
 #define OPCODE_BLX    0xe12fff30
+#define OPCODE_LDRH_IMM 0xe1d000b0
 #define OPCODE_LDRH_REG 0xe19000b0
+#define OPCODE_STRH_IMM 0xe1c000b0
 #define OPCODE_STRH_REG 0xe18000b0
 #define OPCODE_UADD8  0xe6500f90
 #define OPCODE_UADD16 0xe6500f10
@@ -209,6 +211,10 @@ void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 void host_arm_ADD_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
 {
 	codegen_addlong(block, COND_AL | OPCODE_ADD_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
+}
+void host_arm_ADD_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_ADD_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSR_IMM(shift));
 }
 
 void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
@@ -398,6 +404,10 @@ void host_arm_LDRB_REG_LSL(codeblock_t *block, int dst_reg, int addr_reg, int of
 	codegen_addlong(block, COND_AL | OPCODE_LDRB_REG | Rn(addr_reg) | Rd(dst_reg) | Rm(offset_reg) | SHIFT_LSL_IMM(shift));
 }
 
+void host_arm_LDRH_IMM(codeblock_t *block, int dst_reg, int addr_reg, int offset)
+{
+	codegen_addlong(block, COND_AL | OPCODE_LDRH_IMM | Rn(addr_reg) | Rd(dst_reg) | LDRH_IMM(offset));
+}
 void host_arm_LDRH_REG(codeblock_t *block, int dst_reg, int addr_reg, int offset_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_LDRH_REG | Rn(addr_reg) | Rd(dst_reg) | Rm(offset_reg));
@@ -494,6 +504,10 @@ void host_arm_STRB_REG_LSL(codeblock_t *block, int src_reg, int addr_reg, int of
 	codegen_addlong(block, COND_AL | OPCODE_STRB_REG | Rn(addr_reg) | Rd(src_reg) | Rm(offset_reg) | SHIFT_LSL_IMM(shift));
 }
 
+void host_arm_STRH_IMM(codeblock_t *block, int dst_reg, int addr_reg, int offset)
+{
+	codegen_addlong(block, COND_AL | OPCODE_STRH_IMM | Rn(addr_reg) | Rd(dst_reg) | STRH_IMM(offset));
+}
 void host_arm_STRH_REG(codeblock_t *block, int src_reg, int addr_reg, int offset_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_STRH_REG | Rn(addr_reg) | Rd(src_reg) | Rm(offset_reg));

@@ -238,14 +238,14 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
         return op_ea_seg;
 }
 
-x86seg *codegen_generate_ea(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32)
+x86seg *codegen_generate_ea(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32, int stack_offset)
 {
         cpu_mod = (fetchdat >> 6) & 3;
         cpu_reg = (fetchdat >> 3) & 7;
         cpu_rm = fetchdat & 7;
 
         if (op_32 & 0x200)
-                return codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc, 0);
+                return codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc, stack_offset);
 
         return codegen_generate_ea_16_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc);
 }
@@ -320,7 +320,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                 {
                         case 0x0f:
                         op_table = x86_dynarec_opcodes_0f;
-                        recomp_op_table = NULL;//recomp_opcodes_0f;
+                        recomp_op_table = recomp_opcodes_0f;
                         over = 1;
                         break;
 

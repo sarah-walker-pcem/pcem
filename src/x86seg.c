@@ -309,7 +309,7 @@ static void check_seg_valid(x86seg *s)
                 loadseg(0, s);
 }
 
-void loadseg(uint16_t seg, x86seg *s)
+int loadseg(uint16_t seg, x86seg *s)
 {
         uint16_t segdat[4];
         uint32_t addr;
@@ -324,7 +324,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         {
                                 pclog("SS selector = NULL!\n");
                                 x86ss(NULL,0);
-                                return;
+                                return 1;
 //                                dumpregs();
 //                                exit(-1);
                         }
@@ -335,7 +335,7 @@ void loadseg(uint16_t seg, x86seg *s)
                         if (s == &cpu_state.seg_ds)
                                 cpu_cur_status |= CPU_STATUS_NOTFLATDS;
 //                        pclog("NULL selector %s%s%s%s %04X(%06X):%06X\n",(s==&_ds)?"DS":"",(s==&_es)?"ES":"",(s==&_fs)?"FS":"",(s==&_gs)?"GS":"",CS,cs,pc);
-                        return;
+                        return 0;
                 }
 //                if (s==&_ss) pclog("Load SS %04X\n",seg);
 //                pclog("Protected mode seg load!\n");
@@ -349,7 +349,7 @@ void loadseg(uint16_t seg, x86seg *s)
 //                                dumpregs();
 //                                exit(-1);
                                 x86gpf(NULL,seg&~3);
-                                return;
+                                return 1;
                         }
                         addr+=ldt.base;
                 }
@@ -361,7 +361,7 @@ void loadseg(uint16_t seg, x86seg *s)
 //                                dumpregs();
 //                                exit(-1);
                                 x86gpf(NULL,seg&~3);
-                                return;
+                                return 1;
                         }
                         addr+=gdt.base;
                 }
@@ -369,7 +369,7 @@ void loadseg(uint16_t seg, x86seg *s)
                 segdat[0]=readmemw(0,addr);
                 segdat[1]=readmemw(0,addr+2);
                 segdat[2]=readmemw(0,addr+4);
-                segdat[3]=readmemw(0,addr+6); cpl_override=0; if (cpu_state.abrt) return;
+                segdat[3]=readmemw(0,addr+6); cpl_override=0; if (cpu_state.abrt) return 1;
                 dpl=(segdat[2]>>13)&3;
                 if (s==&cpu_state.seg_ss)
                 {
@@ -377,14 +377,14 @@ void loadseg(uint16_t seg, x86seg *s)
                         {
                                 pclog("Load SS null selector\n");
                                 x86gpf(NULL,seg&~3);
-                                return;
+                                return 1;
                         }
                         if ((seg&3)!=CPL || dpl!=CPL)
                         {
                                 pclog("Invalid SS permiss\n");
                                 x86gpf(NULL,seg&~3);
 //                                x86abort("Invalid SS permiss for %04X!\n",seg&0xFFFC);
-                                return;
+                                return 1;
                         }
                         switch ((segdat[2]>>8)&0x1F)
                         {
@@ -394,13 +394,13 @@ void loadseg(uint16_t seg, x86seg *s)
                                 pclog("Invalid SS type\n");
                                 x86gpf(NULL,seg&~3);
 //                                x86abort("Invalid SS segment type for %04X!\n",seg&0xFFFC);
-                                return;
+                                return 1;
                         }
                         if (!(segdat[2]&0x8000))
                         {
                                 pclog("Load SS not present!\n");
                                 x86ss(NULL,seg&~3);
-                                return;
+                                return 1;
                         }
                         set_stack32((segdat[3] & 0x40) ? 1 : 0);
 //                        pclog("Load SS  %04x %04x %04x %04x\n", segdat[0], segdat[1], segdat[2], segdat[3]);
@@ -420,7 +420,7 @@ void loadseg(uint16_t seg, x86seg *s)
                                         pclog("Data seg fail - %04X:%08X %04X %i %04X\n",CS,cpu_state.pc,seg,dpl,segdat[2]);
                                         x86gpf(NULL,seg&~3);
 //                                        x86abort("Data segment load - level too low!\n",seg&0xFFFC);
-                                        return;
+                                        return 1;
                                 }
                                 break;
                                 case 0x1E: case 0x1F: /*Readable conforming code*/
@@ -428,14 +428,14 @@ void loadseg(uint16_t seg, x86seg *s)
                                 default:
                                 pclog("Invalid segment type for %04X! %04X\n",seg&0xFFFC,segdat[2]);
                                 x86gpf(NULL,seg&~3);
-                                return;
+                                return 1;
                         }
                 }
 
                 if (!(segdat[2] & 0x8000))
                 {
                         x86np("Load data seg not present", seg & 0xfffc);
-                        return;
+                        return 1;
                 }
                 s->seg = seg;
                 do_seg_load(s, segdat);
@@ -486,6 +486,8 @@ void loadseg(uint16_t seg, x86seg *s)
                 else
                         cpu_cur_status |= CPU_STATUS_NOTFLATSS;        
         }
+        
+        return cpu_state.abrt;
 }
 
 #define DPL ((segdat[2]>>13)&3)

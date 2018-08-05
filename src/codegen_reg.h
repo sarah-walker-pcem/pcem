@@ -49,13 +49,20 @@ enum
         IREG_GS_base = 25,
         IREG_SS_base = 26,
 
+        IREG_CS_seg = 27,
+        IREG_DS_seg = 28,
+        IREG_ES_seg = 29,
+        IREG_FS_seg = 30,
+        IREG_GS_seg = 31,
+        IREG_SS_seg = 32,
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
-	IREG_temp0 = 27,
-	IREG_temp1 = 28,
-	IREG_temp2 = 29,
-	IREG_temp3 = 30,
+	IREG_temp0 = 33,
+	IREG_temp1 = 34,
+	IREG_temp2 = 35,
+	IREG_temp3 = 36,
 
 	IREG_COUNT,
 	
@@ -88,7 +95,16 @@ enum
 	IREG_temp1_W = IREG_temp1 + IREG_SIZE_W,
 	
 	IREG_temp0_B = IREG_temp0 + IREG_SIZE_B,
-	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B
+	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B,
+	
+	IREG_eaaddr_W = IREG_eaaddr + IREG_SIZE_W,
+	
+        IREG_CS_seg_W = IREG_CS_seg + IREG_SIZE_W,
+        IREG_DS_seg_W = IREG_DS_seg + IREG_SIZE_W,
+        IREG_ES_seg_W = IREG_ES_seg + IREG_SIZE_W,
+        IREG_FS_seg_W = IREG_FS_seg + IREG_SIZE_W,
+        IREG_GS_seg_W = IREG_GS_seg + IREG_SIZE_W,
+        IREG_SS_seg_W = IREG_SS_seg + IREG_SIZE_W
 };
 
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))

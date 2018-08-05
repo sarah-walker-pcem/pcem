@@ -39,6 +39,8 @@
 #define UOP_CALL_INSTRUCTION_FUNC (UOP_TYPE_PARAMS_POINTER | 0x11 | UOP_TYPE_BARRIER)
 #define UOP_STORE_P_IMM           (UOP_TYPE_PARAMS_IMM     | 0x12)
 #define UOP_STORE_P_IMM_8         (UOP_TYPE_PARAMS_IMM     | 0x13)
+/*UOP_LOAD_SEG - load segment in src_reg_a to segment p via loadseg(), check return value and exit block if non-zero*/
+#define UOP_LOAD_SEG              (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x14 | UOP_TYPE_BARRIER)
 /*UOP_MOV_PTR - dest_reg = p*/
 #define UOP_MOV_PTR               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x20)
 /*UOP_MOV_IMM - dest_reg = imm_data*/
@@ -250,6 +252,15 @@ static inline void uop_gen_pointer_imm(uint32_t uop_type, ir_data_t *ir, void *p
         uop->imm_data = imm;
 }
 
+static inline void uop_gen_reg_src_pointer(uint32_t uop_type, ir_data_t *ir, int src_reg_a, void *p)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->p = p;
+}
+
 static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir, int src_reg_a, void *p, uint32_t imm)
 {
         uop_t *uop = uop_alloc(ir);
@@ -281,6 +292,8 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 #define uop_CMP_IMM_JZ(ir, src_reg, imm, p)  uop_gen_reg_src_pointer_imm(UOP_CMP_IMM_JZ, ir, src_reg, p, imm)
 
+#define uop_LOAD_SEG(ir, p, src_reg) uop_gen_reg_src_pointer(UOP_LOAD_SEG, ir, src_reg, p)
+
 #define uop_MEM_LOAD_ABS(ir, dst_reg, seg_reg, imm) uop_gen_reg_dst_src_imm(UOP_MEM_LOAD_ABS, ir, dst_reg, seg_reg, imm)
 #define uop_MEM_LOAD_REG(ir, dst_reg, seg_reg, addr_reg) uop_gen_reg_dst_src2(UOP_MEM_LOAD_REG, ir, dst_reg, seg_reg, addr_reg)
 #define uop_MEM_STORE_ABS(ir, seg_reg, imm, src_reg) uop_gen_reg_src2_imm(UOP_MEM_STORE_ABS, ir, seg_reg, src_reg, imm)
@@ -297,13 +310,15 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)
 
-
+void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p);
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_16(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg);
 
+void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg);

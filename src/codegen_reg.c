@@ -64,6 +64,13 @@ struct
 	[IREG_GS_base] = {REG_DWORD, &cpu_state.seg_gs.base},
 	[IREG_SS_base] = {REG_DWORD, &cpu_state.seg_ss.base},
 
+	[IREG_CS_seg] = {REG_WORD, &cpu_state.seg_cs.seg},
+	[IREG_DS_seg] = {REG_WORD, &cpu_state.seg_ds.seg},
+	[IREG_ES_seg] = {REG_WORD, &cpu_state.seg_es.seg},
+	[IREG_FS_seg] = {REG_WORD, &cpu_state.seg_fs.seg},
+	[IREG_GS_seg] = {REG_WORD, &cpu_state.seg_gs.seg},
+	[IREG_SS_seg] = {REG_WORD, &cpu_state.seg_ss.seg},
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
@@ -98,6 +105,13 @@ static void codegen_reg_load(codeblock_t *block, int c, ir_reg_t ir_reg)
 {
         switch (ireg_data[IREG_GET_REG(ir_reg.reg)].native_size)
         {
+                case REG_WORD:
+                if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
+                        codegen_direct_read_16_stack(block, codegen_host_reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                else
+                        codegen_direct_read_16(block, codegen_host_reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                break;
+
                 case REG_DWORD:
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_32_stack(block, codegen_host_reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
@@ -124,6 +138,12 @@ static void codegen_reg_writeback(codeblock_t *block, int c, int invalidate)
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_BYTE %p\n", p);
                 codegen_direct_write_8(block, p, codegen_host_reg_list[c]);
+                break;
+
+                case REG_WORD:
+                if ((uintptr_t)p < 256)
+                        fatal("codegen_reg_writeback - REG_WORD %p\n", p);
+                codegen_direct_write_16(block, p, codegen_host_reg_list[c]);
                 break;
 
                 case REG_DWORD:

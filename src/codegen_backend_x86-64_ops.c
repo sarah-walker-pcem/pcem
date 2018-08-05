@@ -395,6 +395,28 @@ void host_x86_MOV8_ABS_REG(codeblock_t *block, void *p, int src_reg)
                 codegen_addlong(block, (uint32_t)(uintptr_t)p);
         }
 }
+void host_x86_MOV16_ABS_REG(codeblock_t *block, void *p, int src_reg)
+{
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (src_reg & 8)
+                fatal("host_x86_MOV16_ABS_REG - bad reg\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x66, 0x89, 0x45 | ((src_reg & 7) << 3), offset); /*MOV offset[RBP], src_reg*/
+        }
+        else if (offset < (1ull << 32))
+        {
+                codegen_addbyte3(block, 0x66, 0x89, 0x85 | ((src_reg & 7) << 3)); /*MOV offset[RBP], src_reg*/
+                codegen_addlong(block, offset);
+        }
+        else
+        {
+                if ((uintptr_t)p >> 32)
+                        fatal("host_x86_MOV32_ABS_REG - out of range %p\n", p);
+        }
+}
 void host_x86_MOV32_ABS_REG(codeblock_t *block, void *p, int src_reg)
 {
         int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -459,6 +481,27 @@ void host_x86_MOV32_BASE_INDEX_REG(codeblock_t *block, int base_reg, int index_r
         codegen_addbyte3(block, 0x89, 0x04 | (src_reg << 3), (index_reg << 3) | base_reg); /*MOV L[base_reg + index_reg], src_reg*/
 }
 
+void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (dst_reg & 8)
+                fatal("host_x86_MOV16_REG_ABS reg & 8\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x66, 0x8b, 0x45 | ((dst_reg & 7) << 3), offset); /*MOV dst_reg, offset[RBP]*/
+        }
+        else if (offset < (1ull << 32))
+        {
+                codegen_addbyte3(block, 0x66, 0x8b, 0x85 | ((dst_reg & 7) << 3)); /*MOV dst_reg, offset[RBP]*/
+                codegen_addlong(block, offset);
+        }
+        else
+        {
+                fatal("host_x86_MOV16_REG_ABS - out of range\n");
+        }
+}
 void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -501,10 +544,28 @@ void host_x86_MOV64_REG_BASE_INDEX_SHIFT(codeblock_t *block, int dst_reg, int ba
                 codegen_addbyte4(block, 0x48, 0x8b, 0x04 | ((dst_reg & 7) << 3), (scale << 6) | ((index_reg & 7) << 3) | (base_reg & 7)); /*MOV dst_reg, Q[base_reg + index_reg << scale]*/
 }
 
+void host_x86_MOV16_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset)
+{
+        if ((dst_reg & 8) || (base_reg & 8))
+                fatal("host_x86_MOV16_REG_BASE_OFFSET reg & 8\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                if (base_reg == REG_RSP)
+                {
+                        codegen_addbyte(block, 0x66);
+                        codegen_addbyte4(block, 0x8b, 0x40 | base_reg | (dst_reg << 3), 0x24, offset);
+                }
+                else
+                        codegen_addbyte4(block, 0x66, 0x8b, 0x40 | base_reg | (dst_reg << 3), offset);
+        }
+        else
+                fatal("MOV16_REG_BASE_OFFSET - offset %i\n", offset);
+}
 void host_x86_MOV32_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset)
 {
         if ((dst_reg & 8) || (base_reg & 8))
-                fatal("host_x86_MOV64_REG_BASE_OFFSET reg & 8\n");
+                fatal("host_x86_MOV32_REG_BASE_OFFSET reg & 8\n");
 
         if (offset >= -128 && offset < 127)
         {

@@ -41,6 +41,7 @@ void host_arm64_LDR_REG(codeblock_t *block, int dest_reg, int base_reg, int offs
 void host_arm64_LDRB_IMM_W(codeblock_t *block, int dest_reg, int base_reg, int offset);
 void host_arm64_LDRB_REG(codeblock_t *block, int dest_reg, int base_reg, int offset_reg);
 
+void host_arm64_LDRH_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset);
 void host_arm64_LDRH_REG(codeblock_t *block, int dest_reg, int base_reg, int offset_reg);
 
 void host_arm64_LDRX_REG_LSL3(codeblock_t *block, int dest_reg, int base_reg, int offset_reg);
@@ -69,6 +70,7 @@ void host_arm64_STR_REG(codeblock_t *block, int src_reg, int base_reg, int offse
 void host_arm64_STRB_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset);
 void host_arm64_STRB_REG(codeblock_t *block, int src_reg, int base_reg, int offset_reg);
 
+void host_arm64_STRH_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset);
 void host_arm64_STRH_REG(codeblock_t *block, int src_reg, int base_reg, int offset_reg);
 
 void host_arm64_SUB_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
@@ -85,6 +87,7 @@ void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data);
 
 #define in_range7_x(offset) (((offset) >= -0x200) && ((offset) < (0x200)) && !((offset) & 7))
 #define in_range12_b(offset) (((offset) >= 0) && ((offset) < 0x1000))
+#define in_range12_h(offset) (((offset) >= 0) && ((offset) < 0x2000) && !((offset) & 1))
 #define in_range12_w(offset) (((offset) >= 0) && ((offset) < 0x4000) && !((offset) & 3))
 #define in_range12_q(offset) (((offset) >= 0) && ((offset) < 0x8000) && !((offset) & 7))
 

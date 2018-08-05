@@ -364,6 +364,20 @@ void host_x86_MOV8_ABS_REG(codeblock_t *block, void *p, int src_reg)
                 codegen_addlong(block, (uint32_t)p);
         }
 }
+void host_x86_MOV16_ABS_REG(codeblock_t *block, void *p, int src_reg)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x66, 0x89, 0x45 | (src_reg << 3), offset); /*MOV offset[EBP], src_reg*/
+        }
+        else
+        {
+                codegen_addbyte3(block, 0x66, 0x89, 0x05 | (src_reg << 3)); /*MOV [p], src_reg*/
+                codegen_addlong(block, (uint32_t)p);
+        }
+}
 void host_x86_MOV32_ABS_REG(codeblock_t *block, void *p, int src_reg)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -393,6 +407,20 @@ void host_x86_MOV32_BASE_INDEX_REG(codeblock_t *block, int base_reg, int idx_reg
         codegen_addbyte3(block, 0x89, 0x04 | (src_reg << 3), base_reg | (idx_reg << 3)); /*MOV L[base_reg + idx_reg], src_reg*/
 }
 
+void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x66, 0x8b, 0x45 | (dst_reg << 3), offset); /*MOV offset[EBP], src_reg*/
+        }
+        else
+        {
+                codegen_addbyte3(block, 0x66, 0x8b, 0x05 | (dst_reg << 3)); /*MOV [p], src_reg*/
+                codegen_addlong(block, (uint32_t)p);
+        }
+}
 void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -420,6 +448,21 @@ void host_x86_MOV32_REG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg
         codegen_addbyte3(block, 0x8b, 0x04 | (dst_reg << 3), base_reg | (idx_reg << 3)); /*MOV dst_reg, L[base_reg + idx_reg]*/
 }
 
+void host_x86_MOV16_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset)
+{
+        if (offset >= -128 && offset < 127)
+        {
+                if (base_reg == REG_ESP)
+                {
+                        codegen_addbyte(block, 0x66);
+                        codegen_addbyte4(block, 0x8b, 0x40 | base_reg | (dst_reg << 3), 0x24, offset);
+                }
+                else
+                        codegen_addbyte4(block, 0x66, 0x8b, 0x40 | base_reg | (dst_reg << 3), offset);
+        }
+        else
+                fatal("MOV16_REG_BASE_OFFSET - offset %i\n", offset);
+}
 void host_x86_MOV32_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset)
 {
         if (offset >= -128 && offset < 127)
@@ -435,6 +478,21 @@ void host_x86_MOV32_REG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_re
                 fatal("MOV32_REG_BASE_OFFSET - offset %i\n", offset);
 }
 
+void host_x86_MOV16_BASE_OFFSET_REG(codeblock_t *block, int base_reg, int offset, int src_reg)
+{
+        if (offset >= -128 && offset < 127)
+        {
+                if (base_reg == REG_ESP)
+                {
+                        codegen_addbyte(block, 0x66);
+                        codegen_addbyte4(block, 0x89, 0x40 | base_reg | (src_reg << 3), 0x24, offset);
+                }
+                else
+                        codegen_addbyte4(block, 0x66, 0x89, 0x40 | base_reg | (src_reg << 3), offset);
+        }
+        else
+                fatal("MOV16_BASE_OFFSET_REG - offset %i\n", offset);
+}
 void host_x86_MOV32_BASE_OFFSET_REG(codeblock_t *block, int base_reg, int offset, int src_reg)
 {
         if (offset >= -128 && offset < 127)

@@ -56,11 +56,13 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_BFI           (0x0cc << 22)
 #define OPCODE_LDR_IMM_W     (0x2e5 << 22)
 #define OPCODE_LDRB_IMM_W    (0x0e5 << 22)
+#define OPCODE_LDRH_IMM      (0x1e5 << 22)
 #define OPCODE_LDP_POSTIDX_X (0x2a3 << 22)
 #define OPCODE_STP_PREIDX_X  (0x2a6 << 22)
 #define OPCODE_STR_IMM_W     (0x2e4 << 22)
 #define OPCODE_STR_IMM_Q     (0x3e4 << 22)
 #define OPCODE_STRB_IMM      (0x0e4 << 22)
+#define OPCODE_STRH_IMM      (0x1e4 << 22)
 #define OPCODE_UBFX          (0x14c << 22)
 
 #define OPCODE_ADD_LSL       (0x058 << 21)
@@ -104,6 +106,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OFFSET19(offset) (((offset >> 2) << 5) & 0x00ffffe0)
 
 #define OFFSET12_B(offset)    (offset << 10)
+#define OFFSET12_H(offset) ((offset >> 1) << 10)
 #define OFFSET12_W(offset) ((offset >> 2) << 10)
 #define OFFSET12_Q(offset) ((offset >> 3) << 10)
 
@@ -428,6 +431,12 @@ void host_arm64_LDRB_REG(codeblock_t *block, int dest_reg, int base_reg, int off
 	codegen_addlong(block, OPCODE_LDRB_REG | Rn(base_reg) | Rm(offset_reg) | Rt(dest_reg));
 }
 
+void host_arm64_LDRH_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset)
+{
+	if (!in_range12_h(offset))
+		fatal("host_arm64_LDRH_IMM out of range12 %i\n", offset);
+	codegen_addlong(block, OPCODE_LDRH_IMM | OFFSET12_H(offset) | Rn(base_reg) | Rt(dest_reg));
+}
 void host_arm64_LDRH_REG(codeblock_t *block, int dest_reg, int base_reg, int offset_reg)
 {
 	codegen_addlong(block, OPCODE_LDRH_REG | Rn(base_reg) | Rm(offset_reg) | Rt(dest_reg));
@@ -557,6 +566,12 @@ void host_arm64_STRB_REG(codeblock_t *block, int src_reg, int base_reg, int offs
 	codegen_addlong(block, OPCODE_STRB_REG | Rn(base_reg) | Rm(offset_reg) | Rt(src_reg));
 }
 
+void host_arm64_STRH_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset)
+{
+	if (!in_range12_h(offset))
+		fatal("host_arm64_STRH_IMM out of range12 %i\n", offset);
+	codegen_addlong(block, OPCODE_STRH_IMM | OFFSET12_H(offset) | Rn(base_reg) | Rt(dest_reg));
+}
 void host_arm64_STRH_REG(codeblock_t *block, int src_reg, int base_reg, int offset_reg)
 {
 	codegen_addlong(block, OPCODE_STRH_REG | Rn(base_reg) | Rm(offset_reg) | Rt(src_reg));

@@ -236,7 +236,7 @@ uint8_t *pccache2;
 
 #define CPL ((cpu_state.seg_cs.access>>5)&3)
 
-void loadseg(uint16_t seg, x86seg *s);
+int loadseg(uint16_t seg, x86seg *s);
 void loadcs(uint16_t seg);
 
 union
