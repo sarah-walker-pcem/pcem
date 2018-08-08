@@ -66,6 +66,7 @@ void host_x86_MOV32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_MOV32_STACK_IMM(codeblock_t *block, int32_t offset, uint32_t imm_data);
 
+void host_x86_MOVZX_REG_16_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_16(codeblock_t *block, int dst_reg, int src_reg);
 

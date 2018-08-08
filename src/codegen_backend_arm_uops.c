@@ -194,6 +194,32 @@ static int codegen_AND(codeblock_t *block, uop_t *uop)
 		host_arm_AND_IMM(block, REG_TEMP, REG_TEMP, 0x0000ff00);
 		host_arm_BIC_REG_LSL(block, dest_reg, src_reg_a, REG_TEMP, 0);
 	}
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
+	{
+		host_arm_AND_REG_LSL(block, REG_TEMP, src_reg_a, src_reg_b, 0);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
+	{
+		host_arm_AND_REG_LSL(block, REG_TEMP, src_reg_a, src_reg_b, 0);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_BH(src_size_b))
+	{
+		host_arm_AND_REG_LSR(block, REG_TEMP, src_reg_a, src_reg_b, 8);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_BH(src_size_a) && REG_IS_B(src_size_b))
+	{
+		host_arm_AND_REG_LSR(block, REG_TEMP, src_reg_b, src_reg_a, 8);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_BH(src_size_a) && REG_IS_BH(src_size_b))
+	{
+		host_arm_AND_REG_LSL(block, REG_TEMP, src_reg_a, src_reg_b, 0);
+		host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, 8);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+	}
 	else
                 fatal("AND %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
 
@@ -219,6 +245,22 @@ static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
 	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size) && dest_reg == src_reg)
 	{
 		host_arm_AND_IMM(block, dest_reg, src_reg, (uop->imm_data << 8) | 0xffff00ff);
+	}
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+	{
+		host_arm_AND_IMM(block, REG_TEMP, src_reg, uop->imm_data);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+	{
+		host_arm_AND_IMM(block, REG_TEMP, src_reg, uop->imm_data);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+	}
+	else if (REG_IS_B(dest_size) && REG_IS_BH(src_size))
+	{
+		host_arm_MOV_REG_LSR(block, REG_TEMP, src_reg, 8);
+		host_arm_AND_IMM(block, REG_TEMP, REG_TEMP, uop->imm_data);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
 	}
 	else
                 fatal("AND_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
@@ -561,6 +603,22 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
 	else if (REG_IS_L(dest_size) && REG_IS_W(src_size))
 	{
 		host_arm_UXTH(block, dest_reg, src_reg, 0);
+	}
+	else if (REG_IS_W(dest_size) && REG_IS_B(src_size))
+	{
+		if (src_reg == dest_reg)
+			host_arm_BIC_IMM(block, dest_reg, dest_reg, 0xff00);
+		else
+		{
+			host_arm_UXTB(block, REG_TEMP, src_reg, 0);
+			host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+		}
+	}
+	else if (REG_IS_W(dest_size) && REG_IS_BH(src_size))
+	{
+		host_arm_MOV_REG_LSR(block, REG_TEMP, src_reg, 8);
+		host_arm_BIC_IMM(block, dest_reg, dest_reg, 0xff00);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
 	}
 	else
 		fatal("MOVZX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);

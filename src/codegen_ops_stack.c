@@ -64,6 +64,56 @@ uint32_t ropPOP_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         return op_pc;
 }
 
+uint32_t ropPUSH_imm_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uint16_t imm = fastreadw(cs + op_pc);
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -2);
+        uop_MEM_STORE_IMM_16(ir, IREG_SS_base, sp_reg, imm);
+        SUB_SP(ir, 2);
+
+        return op_pc + 2;
+}
+uint32_t ropPUSH_imm_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uint32_t imm = fastreadl(cs + op_pc);
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -4);
+        uop_MEM_STORE_IMM_32(ir, IREG_SS_base, sp_reg, imm);
+        SUB_SP(ir, 4);
+
+        return op_pc + 4;
+}
+
+uint32_t ropPUSH_imm_16_8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uint16_t imm = (int16_t)(int8_t)fastreadb(cs + op_pc);
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -2);
+        uop_MEM_STORE_IMM_16(ir, IREG_SS_base, sp_reg, imm);
+        SUB_SP(ir, 2);
+
+        return op_pc + 1;
+}
+uint32_t ropPUSH_imm_32_8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uint32_t imm = (int32_t)(int8_t)fastreadb(cs + op_pc);
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -4);
+        uop_MEM_STORE_IMM_32(ir, IREG_SS_base, sp_reg, imm);
+        SUB_SP(ir, 4);
+
+        return op_pc + 1;
+}
+
 uint32_t ropPOP_W(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);

@@ -69,6 +69,7 @@ void host_x86_MOVZX_BASE_INDEX_32_16(codeblock_t *block, int dst_reg, int base_r
 
 void host_x86_MOV32_BASE_OFFSET_REG(codeblock_t *block, int base_reg, int offset, int src_reg);
 
+void host_x86_MOVZX_REG_16_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_16(codeblock_t *block, int dst_reg, int src_reg);
 

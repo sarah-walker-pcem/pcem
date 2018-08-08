@@ -5,9 +5,11 @@ void host_arm_ADD_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int sr
 
 void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm);
 void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
+void host_arm_AND_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
 void host_arm_BFI(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width);
 
+void host_arm_BIC_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm);
 void host_arm_BIC_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_BIC_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
