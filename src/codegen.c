@@ -485,6 +485,12 @@ generate_call:
                 }
         }
         
+        if ((op_table == x86_dynarec_opcodes_REPNE || op_table == x86_dynarec_opcodes_REPE) && !op_table[opcode | op_32])
+        {
+                op_table = x86_dynarec_opcodes;
+                recomp_op_table = recomp_opcodes;
+        }
+
         op = op_table[((opcode >> opcode_shift) | op_32) & opcode_mask];
 
         if (!test_modrm ||
