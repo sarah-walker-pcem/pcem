@@ -435,6 +435,10 @@ void svga_recalctimings(svga_t *svga)
 
 	svga->dispontime = (uint64_t)_dispontime;
 	svga->dispofftime = (uint64_t)_dispofftime;
+	if (svga->dispontime < TIMER_USEC)
+        	svga->dispontime = TIMER_USEC;
+	if (svga->dispofftime < TIMER_USEC)
+        	svga->dispofftime = TIMER_USEC;
 /*        printf("SVGA horiz total %i display end %i vidclock %f\n",svga->crtc[0],svga->crtc[1],svga->clock);
         printf("SVGA vert total %i display end %i max row %i vsync %i\n",svga->vtotal,svga->dispend,(svga->crtc[9]&31)+1,svga->vsyncstart);
         printf("total %f on %i cycles off %i cycles frame %i sec %i %02X\n",disptime*crtcconst,svga->dispontime,svga->dispofftime,(svga->dispontime+svga->dispofftime)*svga->vtotal,(svga->dispontime+svga->dispofftime)*svga->vtotal*70,svga->seqregs[1]);
