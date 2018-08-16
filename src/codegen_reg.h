@@ -93,6 +93,7 @@ enum
 	
 	IREG_temp0_W = IREG_temp0 + IREG_SIZE_W,
 	IREG_temp1_W = IREG_temp1 + IREG_SIZE_W,
+	IREG_temp2_W = IREG_temp2 + IREG_SIZE_W,
 	
 	IREG_temp0_B = IREG_temp0 + IREG_SIZE_B,
 	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B,

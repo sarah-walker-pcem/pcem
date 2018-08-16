@@ -244,6 +244,8 @@ x86seg *codegen_generate_ea(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat,
         cpu_reg = (fetchdat >> 3) & 7;
         cpu_rm = fetchdat & 7;
 
+        if ((fetchdat & 0xc0) == 0xc0)
+                return NULL;
         if (op_32 & 0x200)
                 return codegen_generate_ea_32_long(ir, op_ea_seg, fetchdat, op_ssegs, op_pc, stack_offset);
 

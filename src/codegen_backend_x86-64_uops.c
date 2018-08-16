@@ -473,11 +473,15 @@ static int codegen_OR(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
         {
-                host_x86_OR32_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                if (dest_reg != src_reg_a)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg_a);
+                host_x86_OR32_REG_REG(block, dest_reg, dest_reg, src_reg_b);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
         {
-                host_x86_OR16_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                if (dest_reg != src_reg_a)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg_a);
+                host_x86_OR16_REG_REG(block, dest_reg, dest_reg, src_reg_b);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
         {
@@ -507,6 +511,178 @@ static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("OR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+
+static int codegen_SAR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        host_x86_MOV32_REG_REG(block, REG_ECX, shift_reg);
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR32_CL(block, dest_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR16_CL(block, dest_reg);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR8_CL(block, dest_reg);
+        }
+        else
+                fatal("SAR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_SAR_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR32_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR16_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SAR8_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("SAR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_SHL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        host_x86_MOV32_REG_REG(block, REG_ECX, shift_reg);
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL32_CL(block, dest_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL16_CL(block, dest_reg);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL8_CL(block, dest_reg);
+        }
+        else
+                fatal("SHL %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_SHL_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL32_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL16_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHL8_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("SHL_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_SHR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        host_x86_MOV32_REG_REG(block, REG_ECX, shift_reg);
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR32_CL(block, dest_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR16_CL(block, dest_reg);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR8_CL(block, dest_reg);
+        }
+        else
+                fatal("SHR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_SHR_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR32_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR16_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_SHR8_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("SHR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 
         return 0;
 }
@@ -667,6 +843,13 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_SUB_IMM & UOP_MASK] = codegen_SUB_IMM,
         [UOP_XOR     & UOP_MASK] = codegen_XOR,
         [UOP_XOR_IMM & UOP_MASK] = codegen_XOR_IMM,
+
+        [UOP_SAR     & UOP_MASK] = codegen_SAR,
+        [UOP_SAR_IMM & UOP_MASK] = codegen_SAR_IMM,
+        [UOP_SHL     & UOP_MASK] = codegen_SHL,
+        [UOP_SHL_IMM & UOP_MASK] = codegen_SHL_IMM,
+        [UOP_SHR     & UOP_MASK] = codegen_SHR,
+        [UOP_SHR_IMM & UOP_MASK] = codegen_SHR_IMM,
 
         [UOP_CMP_IMM_JZ & UOP_MASK] = codegen_CMP_IMM_JZ
 };

@@ -13,7 +13,9 @@
 #define RM_OP_XOR 0x30
 #define RM_OP_CMP 0x38
 
+#define RM_OP_SHL 0x20
 #define RM_OP_SHR 0x28
+#define RM_OP_SAR 0x38
 
 static inline void codegen_addbyte(codeblock_t *block, uint8_t val)
 {
@@ -707,6 +709,79 @@ void host_x86_RET(codeblock_t *block)
 
 #define MODRM_MOD_REG(rm, reg) (0xc0 | reg | (rm << 3))
 
+void host_x86_SAR8_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd2, 0xc0 | RM_OP_SAR | dst_reg); /*SAR dst_reg, CL*/
+}
+void host_x86_SAR16_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte3(block, 0x66, 0xd3, 0xc0 | RM_OP_SAR | dst_reg); /*SAR dst_reg, CL*/
+}
+void host_x86_SAR32_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd3, 0xc0 | RM_OP_SAR | dst_reg); /*SAR dst_reg, CL*/
+}
+
+void host_x86_SAR8_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte3(block, 0xc0, 0xc0 | RM_OP_SAR | dst_reg, shift); /*SAR dst_reg, shift*/
+}
+void host_x86_SAR16_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0xc1, 0xc0 | RM_OP_SAR | dst_reg, shift); /*SAR dst_reg, shift*/
+}
+void host_x86_SAR32_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_SAR | dst_reg, shift); /*SAR dst_reg, shift*/
+}
+
+void host_x86_SHL8_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd2, 0xc0 | RM_OP_SHL | dst_reg); /*SHL dst_reg, CL*/
+}
+void host_x86_SHL16_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte3(block, 0x66, 0xd3, 0xc0 | RM_OP_SHL | dst_reg); /*SHL dst_reg, CL*/
+}
+void host_x86_SHL32_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd3, 0xc0 | RM_OP_SHL | dst_reg); /*SHL dst_reg, CL*/
+}
+
+void host_x86_SHL8_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte3(block, 0xc0, 0xc0 | RM_OP_SHL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+void host_x86_SHL16_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0xc1, 0xc0 | RM_OP_SHL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+void host_x86_SHL32_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_SHL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+
+void host_x86_SHR8_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd2, 0xc0 | RM_OP_SHR | dst_reg); /*SHR dst_reg, CL*/
+}
+void host_x86_SHR16_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte3(block, 0x66, 0xd3, 0xc0 | RM_OP_SHR | dst_reg); /*SHR dst_reg, CL*/
+}
+void host_x86_SHR32_CL(codeblock_t *block, int dst_reg)
+{
+        codegen_addbyte2(block, 0xd3, 0xc0 | RM_OP_SHR | dst_reg); /*SHR dst_reg, CL*/
+}
+
+void host_x86_SHR8_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte3(block, 0xc0, 0xc0 | RM_OP_SHR | dst_reg, shift); /*SHR dst_reg, shift*/
+}
+void host_x86_SHR16_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0xc1, 0xc0 | RM_OP_SHR | dst_reg, shift); /*SHR dst_reg, shift*/
+}
 void host_x86_SHR32_IMM(codeblock_t *block, int dst_reg, int shift)
 {
         codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_SHR | dst_reg, shift); /*SHR dst_reg, shift*/

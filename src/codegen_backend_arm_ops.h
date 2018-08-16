@@ -46,8 +46,12 @@ void host_arm_LDRH_REG(codeblock_t *block, int dst_reg, int addr_reg, int offset
 
 void host_arm_MOV_IMM(codeblock_t *block, int dst_reg, uint32_t imm);
 #define host_arm_MOV_REG(block, dst_reg, src_reg) host_arm_MOV_REG_LSL(block, dst_reg, src_reg, 0)
+void host_arm_MOV_REG_ASR(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm_MOV_REG_ASR_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg);
 void host_arm_MOV_REG_LSL(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm_MOV_REG_LSL_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg);
 void host_arm_MOV_REG_LSR(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm_MOV_REG_LSR_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg);
 void host_arm_MOVT_IMM(codeblock_t *block, int dst_reg, uint16_t imm);
 void host_arm_MOVW_IMM(codeblock_t *block, int dst_reg, uint16_t imm);
 

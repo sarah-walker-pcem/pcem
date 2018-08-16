@@ -89,7 +89,20 @@
 /*UOP_CMP_JZ - if (src_reg_a == imm_data) then jump to ptr*/
 #define UOP_CMP_IMM_JZ            (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | UOP_TYPE_PARAMS_POINTER | 0x48 | UOP_TYPE_ORDER_BARRIER)
 
-#define UOP_MAX 0x49
+/*UOP_SAR - dest_reg = src_reg_a >> src_reg_b*/
+#define UOP_SAR                   (UOP_TYPE_PARAMS_REGS | 0x50)
+/*UOP_SAR_IMM - dest_reg = src_reg_a >> immediate*/
+#define UOP_SAR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x51)
+/*UOP_SHL - dest_reg = src_reg_a << src_reg_b*/
+#define UOP_SHL                   (UOP_TYPE_PARAMS_REGS | 0x52)
+/*UOP_SHL_IMM - dest_reg = src_reg_a << immediate*/
+#define UOP_SHL_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x53)
+/*UOP_SHR - dest_reg = src_reg_a >> src_reg_b*/
+#define UOP_SHR                   (UOP_TYPE_PARAMS_REGS | 0x54)
+/*UOP_SHR_IMM - dest_reg = src_reg_a >> immediate*/
+#define UOP_SHR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x55)
+
+#define UOP_MAX 0x56
 
 #define UOP_MASK 0xffff
 
@@ -286,6 +299,13 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_SUB_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SUB_IMM, ir, dst_reg, src_reg, imm)
 #define uop_XOR(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_XOR, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_XOR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_XOR_IMM, ir, dst_reg, src_reg, imm)
+
+#define uop_SAR(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_SAR, ir, dst_reg, src_reg, shift_reg)
+#define uop_SAR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SAR_IMM, ir, dst_reg, src_reg, imm)
+#define uop_SHL(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_SHL, ir, dst_reg, src_reg, shift_reg)
+#define uop_SHL_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SHL_IMM, ir, dst_reg, src_reg, imm)
+#define uop_SHR(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_SHR, ir, dst_reg, src_reg, shift_reg)
+#define uop_SHR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SHR_IMM, ir, dst_reg, src_reg, imm)
 
 #define uop_CALL_FUNC(ir, p)             uop_gen_pointer(UOP_CALL_FUNC, ir, p)
 #define uop_CALL_INSTRUCTION_FUNC(ir, p) uop_gen_pointer(UOP_CALL_INSTRUCTION_FUNC, ir, p)

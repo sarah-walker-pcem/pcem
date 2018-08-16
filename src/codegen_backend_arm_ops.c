@@ -18,6 +18,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 }
 
 #define Rm(x) (x)
+#define Rs(x) ((x) << 8)
 #define Rd(x) ((x) << 12)
 #define Rn(x) ((x) << 16)
 
@@ -94,8 +95,13 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define SHIFT_TYPE_REG (1 << 4)
 
 #define SHIFT_IMM_SHIFT 7
+#define SHIFT_ASR_IMM(x) (SHIFT_TYPE_ASR | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 #define SHIFT_LSL_IMM(x) (SHIFT_TYPE_LSL | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 #define SHIFT_LSR_IMM(x) (SHIFT_TYPE_LSR | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
+
+#define SHIFT_ASR_REG(x) (SHIFT_TYPE_ASR | SHIFT_TYPE_REG | Rs(x))
+#define SHIFT_LSL_REG(x) (SHIFT_TYPE_LSL | SHIFT_TYPE_REG | Rs(x))
+#define SHIFT_LSR_REG(x) (SHIFT_TYPE_LSR | SHIFT_TYPE_REG | Rs(x))
 
 #define BFI_lsb(lsb) ((lsb) << 7)
 #define BFI_msb(msb) ((msb) << 16)
@@ -427,13 +433,29 @@ void host_arm_MOV_IMM(codeblock_t *block, int dst_reg, uint32_t imm)
 	}
 }
 
+void host_arm_MOV_REG_ASR(codeblock_t *block, int dst_reg, int src_reg, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_ASR_IMM(shift));
+}
+void host_arm_MOV_REG_ASR_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_ASR_REG(shift_reg));
+}
 void host_arm_MOV_REG_LSL(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
 	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSL_IMM(shift));
 }
+void host_arm_MOV_REG_LSL_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSL_REG(shift_reg));
+}
 void host_arm_MOV_REG_LSR(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
 	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSR_IMM(shift));
+}
+void host_arm_MOV_REG_LSR_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSR_REG(shift_reg));
 }
 
 void host_arm_MOVT_IMM(codeblock_t *block, int dst_reg, uint16_t imm)
