@@ -17,6 +17,7 @@ ir_data_t *codegen_ir_init()
 
 void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
 {
+        int jump_target_at_end = -1;
         int c;
 
         codegen_backend_prologue(block);
@@ -26,11 +27,22 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 uop_t *uop = &ir->uops[c];
                 
 //                pclog("uOP %i : %08x\n", c, uop->type);
-                
+
                 if (uop->type & UOP_TYPE_BARRIER)
                         codegen_reg_flush_invalidate(ir, block);
                 else if (uop->type & UOP_TYPE_ORDER_BARRIER)
                         codegen_reg_flush(ir, block);
+
+                if (uop->type & UOP_TYPE_JUMP_DEST)
+                {
+                        uop_t *uop_dest = uop;
+
+                        while (uop_dest->jump_list_next != -1)
+                        {
+                                uop_dest = &ir->uops[uop_dest->jump_list_next];
+                                codegen_set_jump_dest(block, uop_dest->p);
+                        }
+                }
 
                 if (uop->type & UOP_TYPE_PARAMS_REGS)
                 {
@@ -56,10 +68,51 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 if (!uop_handlers[uop->type & UOP_MASK])
                         fatal("!uop_handlers[uop->type & UOP_MASK]\n");
                 uop_handlers[uop->type & UOP_MASK](block, uop);
+
+                if (uop->type & UOP_TYPE_JUMP)
+                {
+                        if (uop->jump_dest_uop == ir->wr_pos)
+                        {
+                                if (jump_target_at_end == -1)
+                                        jump_target_at_end = c;
+                                else
+                                {
+                                        uop_t *uop_dest = &ir->uops[jump_target_at_end];
+
+                                        while (uop_dest->jump_list_next != -1)
+                                                uop_dest = &ir->uops[uop_dest->jump_list_next];
+
+                                        uop_dest->jump_list_next = c;
+                                }
+                        }
+                        else
+                        {
+                                uop_t *uop_dest = &ir->uops[uop->jump_dest_uop];
+                                
+                                while (uop_dest->jump_list_next != -1)
+                                        uop_dest = &ir->uops[uop_dest->jump_list_next];
+
+                                uop_dest->jump_list_next = c;
+                                ir->uops[uop->jump_dest_uop].type |= UOP_TYPE_JUMP_DEST;
+                        }
+                }
         }
 
         codegen_reg_flush_invalidate(ir, block);
         
+        if (jump_target_at_end != -1)
+        {
+                uop_t *uop_dest = &ir->uops[jump_target_at_end];
+
+                while (1)
+                {
+                        codegen_set_jump_dest(block, uop_dest->p);
+                        if (uop_dest->jump_list_next == -1)
+                                break;
+                        uop_dest = &ir->uops[uop_dest->jump_list_next];
+                }
+        }
+
         codegen_backend_epilogue(block);
 
 //        if (has_ea)

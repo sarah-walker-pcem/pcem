@@ -260,6 +260,21 @@ void host_x86_CALL(codeblock_t *block, void *p)
         codegen_addlong(block, (uintptr_t)p - (uintptr_t)&block->data[block_pos + 4]);
 }
 
+void host_x86_CMP16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
+{
+        if (is_imm8(imm_data))
+                codegen_addbyte4(block, 0x66, 0x83, 0xc0 | RM_OP_CMP | dst_reg, imm_data & 0xff); /*CMP dst_reg, imm_data*/
+        else if (dst_reg == REG_EAX)
+        {
+                codegen_addbyte2(block, 0x66, 0x3d); /*CMP AX, imm_data*/
+                codegen_addword(block, imm_data);
+        }
+        else
+        {
+                codegen_addbyte3(block, 0x66, 0x81, 0xc0 | RM_OP_CMP | dst_reg); /*CMP dst_reg, imm_data*/
+                codegen_addword(block, imm_data);
+        }
+}
 void host_x86_CMP32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
         if (is_imm8(imm_data))
@@ -274,6 +289,25 @@ void host_x86_CMP32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
                 codegen_addbyte2(block, 0x81, 0xc0 | RM_OP_CMP | dst_reg); /*CMP dst_reg, imm_data*/
                 codegen_addlong(block, imm_data);
         }
+}
+
+void host_x86_CMP8_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
+{
+        codegen_addbyte2(block, 0x38, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
+}
+void host_x86_CMP16_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
+{
+        codegen_addbyte3(block, 0x66, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
+}
+void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
+{
+        codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
+}
+
+void host_x86_JMP(codeblock_t *block, void *p)
+{
+        codegen_addbyte(block, 0xe9); /*JMP*/
+        codegen_addlong(block, (uintptr_t)p - (uintptr_t)&block->data[block_pos + 4]);
 }
 
 void host_x86_JNZ(codeblock_t *block, void *p)
@@ -296,6 +330,91 @@ uint8_t *host_x86_JZ_short(codeblock_t *block)
 {
         codegen_addbyte2(block, 0x74, 0); /*JZ*/
         return &block->data[block_pos-1];
+}
+
+uint32_t *host_x86_JNB_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x83); /*JNB*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNBE_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x87); /*JNBE*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNL_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x8d); /*JNL*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNLE_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x8f); /*JNLE*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNO_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x81); /*JNO*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNS_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x89); /*JNS*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JNZ_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x85); /*JNZ*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JB_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x82); /*JB*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JBE_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x86); /*JBE*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JL_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x8c); /*JL*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JLE_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x8e); /*JLE*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JO_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x80); /*JO*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JS_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x88); /*JS*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_x86_JZ_long(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x0f, 0x84); /*JZ*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
 }
 
 void host_x86_LEA_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t offset)
@@ -856,6 +975,14 @@ void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int 
         codegen_addbyte2(block, 0x29, 0xc0 | dst_reg | (src_reg_b << 3)); /*SUB dst_reg, src_reg_b*/
 }
 
+void host_x86_TEST8_REG(codeblock_t *block, int src_host_reg, int dst_host_reg)
+{
+        codegen_addbyte2(block, 0x84, MODRM_MOD_REG(dst_host_reg, src_host_reg)); /*TEST dst_host_reg, src_host_reg*/
+}
+void host_x86_TEST16_REG(codeblock_t *block, int src_host_reg, int dst_host_reg)
+{
+        codegen_addbyte3(block, 0x66, 0x85, MODRM_MOD_REG(dst_host_reg, src_host_reg)); /*TEST dst_host_reg, src_host_reg*/
+}
 void host_x86_TEST32_REG(codeblock_t *block, int src_host_reg, int dst_host_reg)
 {
         codegen_addbyte2(block, 0x85, MODRM_MOD_REG(dst_host_reg, src_host_reg)); /*TEST dst_host_reg, src_host_reg*/

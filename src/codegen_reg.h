@@ -88,9 +88,13 @@ enum
 	IREG_BH = IREG_EBX + IREG_SIZE_BH,
 	
 	IREG_flags_res_W = IREG_flags_res + IREG_SIZE_W,
-	
+	IREG_flags_op1_W = IREG_flags_op1 + IREG_SIZE_W,
+	IREG_flags_op2_W = IREG_flags_op2 + IREG_SIZE_W,
+
 	IREG_flags_res_B = IREG_flags_res + IREG_SIZE_B,
-	
+	IREG_flags_op1_B = IREG_flags_op1 + IREG_SIZE_B,
+	IREG_flags_op2_B = IREG_flags_op2 + IREG_SIZE_B,
+
 	IREG_temp0_W = IREG_temp0 + IREG_SIZE_W,
 	IREG_temp1_W = IREG_temp1 + IREG_SIZE_W,
 	IREG_temp2_W = IREG_temp2 + IREG_SIZE_W,

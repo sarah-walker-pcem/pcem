@@ -7,6 +7,8 @@ void host_arm_AND_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 void host_arm_AND_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_AND_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
+void host_arm_B(codeblock_t *block, uintptr_t dest_addr);
+
 void host_arm_BFI(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width);
 
 void host_arm_BIC_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm);
@@ -15,15 +17,32 @@ void host_arm_BIC_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int sr
 
 void host_arm_BL(codeblock_t *block, uintptr_t dest_addr);
 void host_arm_BLX(codeblock_t *block, int addr_reg);
+
+uint32_t *host_arm_BCC_(codeblock_t *block);
+uint32_t *host_arm_BCS_(codeblock_t *block);
 uint32_t *host_arm_BEQ_(codeblock_t *block);
+uint32_t *host_arm_BGE_(codeblock_t *block);
+uint32_t *host_arm_BGT_(codeblock_t *block);
+uint32_t *host_arm_BHI_(codeblock_t *block);
+uint32_t *host_arm_BLE_(codeblock_t *block);
+uint32_t *host_arm_BLS_(codeblock_t *block);
+uint32_t *host_arm_BLT_(codeblock_t *block);
+uint32_t *host_arm_BMI_(codeblock_t *block);
 uint32_t *host_arm_BNE_(codeblock_t *block);
+uint32_t *host_arm_BPL_(codeblock_t *block);
+uint32_t *host_arm_BVC_(codeblock_t *block);
+uint32_t *host_arm_BVS_(codeblock_t *block);
+
 void host_arm_BEQ(codeblock_t *block, uintptr_t dest_addr);
 void host_arm_BNE(codeblock_t *block, uintptr_t dest_addr);
+
+void host_arm_BX(codeblock_t *block, int addr_reg);
 
 void host_arm_CMN_IMM(codeblock_t *block, int src_reg, uint32_t imm);
 void host_arm_CMN_REG_LSL(codeblock_t *block, int src_reg_n, int src_reg_m, int shift);
 
 void host_arm_CMP_IMM(codeblock_t *block, int src_reg, uint32_t imm);
+#define host_arm_CMP_REG(block, src_reg_n, src_reg_m) host_arm_CMP_REG_LSL(block, src_reg_n, src_reg_m, 0)
 void host_arm_CMP_REG_LSL(codeblock_t *block, int src_reg_n, int src_reg_m, int shift);
 
 void host_arm_EOR_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm);

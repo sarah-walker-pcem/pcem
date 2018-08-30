@@ -31,6 +31,19 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define COND_EQ (0x0)
 #define COND_NE (0x1)
+#define COND_CS (0x2)
+#define COND_CC (0x3)
+#define COND_MI (0x4)
+#define COND_PL (0x5)
+#define COND_VS (0x6)
+#define COND_VC (0x7)
+#define COND_HI (0x8)
+#define COND_LS (0x9)
+#define COND_GE (0xa)
+#define COND_LT (0xb)
+#define COND_GT (0xc)
+#define COND_LE (0xd)
+
 
 #define OPCODE_SHIFT 24
 #define OPCODE_ADD_IMM       (0x11 << OPCODE_SHIFT)
@@ -72,6 +85,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_AND_LSL       (0x050 << 21)
 #define OPCODE_AND_ROR       (0x056 << 21)
 #define OPCODE_ANDS_LSL      (0x350 << 21)
+#define OPCODE_CMP_LSL       (0x358 << 21)
 #define OPCODE_EOR_LSL       (0x250 << 21)
 #define OPCODE_ORR_ASR       (0x154 << 21)
 #define OPCODE_ORR_LSL       (0x150 << 21)
@@ -83,6 +97,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_ASR           (0x1ac02800)
 #define OPCODE_BLR           (0xd63f0000)
+#define OPCODE_BR            (0xd61f0000)
 #define OPCODE_LDR_REG       (0xb8606800)
 #define OPCODE_LDRB_REG      (0x38606800)
 #define OPCODE_LDRH_REG      (0x78606800)
@@ -290,21 +305,86 @@ void host_arm64_BLR(codeblock_t *block, int addr_reg)
 	codegen_addlong(block, OPCODE_BLR | Rn(addr_reg));
 }
 
+uint32_t *host_arm64_BCC_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_CC);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BCS_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_CS);
+	return (uint32_t *)&block->data[block_pos-4];
+}
 uint32_t *host_arm64_BEQ_(codeblock_t *block)
 {
 	codegen_addlong(block, OPCODE_BCOND | COND_EQ);
-	return &block->data[block_pos-4];
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BGE_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_GE);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BGT_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_GT);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BHI_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_HI);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BLE_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_LE);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BLS_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_LS);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BLT_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_LT);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BMI_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_MI);
+	return (uint32_t *)&block->data[block_pos-4];
 }
 uint32_t *host_arm64_BNE_(codeblock_t *block)
 {
 	codegen_addlong(block, OPCODE_BCOND | COND_NE);
-	return &block->data[block_pos-4];
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BPL_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_PL);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BVC_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_VC);
+	return (uint32_t *)&block->data[block_pos-4];
+}
+uint32_t *host_arm64_BVS_(codeblock_t *block)
+{
+	codegen_addlong(block, OPCODE_BCOND | COND_VS);
+	return (uint32_t *)&block->data[block_pos-4];
 }
 
 void host_arm64_branch_set_offset(uint32_t *opcode, void *dest)
 {
 	int offset = (uintptr_t)dest - (uintptr_t)opcode;
 	*opcode |= OFFSET19(offset);
+}
+
+void host_arm64_BR(codeblock_t *block, int addr_reg)
+{
+	codegen_addlong(block, OPCODE_BR | Rn(addr_reg));
 }
 
 void host_arm64_BEQ(codeblock_t *block, void *dest)
@@ -373,6 +453,11 @@ void host_arm64_CMPX_IMM(codeblock_t *block, int src_n_reg, uint64_t imm_data)
 	}
 	else
 		fatal("CMPX_IMM %08x\n", imm_data);
+}
+
+void host_arm64_CMP_REG_LSL(codeblock_t *block, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_CMP_LSL | Rd(0x1f) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
 }
 
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
@@ -647,6 +732,13 @@ void host_arm64_call(codeblock_t *block, void *dst_addr)
 	int offset = add_literal_q(block, (uintptr_t)dst_addr);
 	host_arm64_LDR_LITERAL_X(block, REG_X16, offset);
 	host_arm64_BLR(block, REG_X16);
+}
+
+void host_arm64_jump(codeblock_t *block, uintptr_t dst_addr)
+{
+	int offset = add_literal_q(block, (uintptr_t)dst_addr);
+	host_arm64_LDR_LITERAL_X(block, REG_X16, offset);
+	host_arm64_BR(block, REG_X16);
 }
 
 void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data)

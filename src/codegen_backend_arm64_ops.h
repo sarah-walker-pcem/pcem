@@ -17,10 +17,24 @@ void host_arm64_BLR(codeblock_t *block, int addr_reg);
 
 void host_arm64_BEQ(codeblock_t *block, void *dest);
 
+uint32_t *host_arm64_BCC_(codeblock_t *block);
+uint32_t *host_arm64_BCS_(codeblock_t *block);
 uint32_t *host_arm64_BEQ_(codeblock_t *block);
+uint32_t *host_arm64_BGE_(codeblock_t *block);
+uint32_t *host_arm64_BGT_(codeblock_t *block);
+uint32_t *host_arm64_BHI_(codeblock_t *block);
+uint32_t *host_arm64_BLE_(codeblock_t *block);
+uint32_t *host_arm64_BLS_(codeblock_t *block);
+uint32_t *host_arm64_BLT_(codeblock_t *block);
+uint32_t *host_arm64_BMI_(codeblock_t *block);
 uint32_t *host_arm64_BNE_(codeblock_t *block);
+uint32_t *host_arm64_BPL_(codeblock_t *block);
+uint32_t *host_arm64_BVC_(codeblock_t *block);
+uint32_t *host_arm64_BVS_(codeblock_t *block);
 
 void host_arm64_branch_set_offset(uint32_t *opcode, void *dest);
+
+void host_arm64_BR(codeblock_t *block, int addr_reg);
 
 void host_arm64_CBNZ(codeblock_t *block, int reg, uintptr_t dest);
 
@@ -30,6 +44,8 @@ void host_arm64_CMNX_IMM(codeblock_t *block, int src_n_reg, uint64_t imm_data);
 void host_arm64_CMP_IMM(codeblock_t *block, int src_n_reg, uint32_t imm_data);
 void host_arm64_CMPX_IMM(codeblock_t *block, int src_n_reg, uint64_t imm_data);
 
+#define host_arm64_CMP_REG(block, src_n_reg, src_m_reg) host_arm64_CMP_REG_LSL(block, src_n_reg, src_m_reg, 0)
+void host_arm64_CMP_REG_LSL(codeblock_t *block, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_EOR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 
@@ -88,6 +104,7 @@ void host_arm64_SUB_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int 
 void host_arm64_UBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width);
 
 void host_arm64_call(codeblock_t *block, void *dst_addr);
+void host_arm64_jump(codeblock_t *block, uintptr_t dst_addr);
 void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data);
 
 
