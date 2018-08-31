@@ -53,6 +53,8 @@ void svga_out(uint16_t addr, uint8_t val, void *p)
                 }
                 else
                 {
+                        if ((svga->attraddr == 0x13) && (svga->attrregs[0x13] != val))
+                                svga->fullchange = changeframecount;
                         svga->attrregs[svga->attraddr & 31] = val;
                         if (svga->attraddr < 16) 
                                 svga->fullchange = changeframecount;
