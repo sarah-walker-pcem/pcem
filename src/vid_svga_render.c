@@ -40,7 +40,8 @@ void svga_render_text_40(svga_t *svga)
         
         if (svga->fullchange)
         {
-                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[32];
+                int offset = ((8 - svga->scrollcache) << 1) + 16;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
                 int x, xx;
                 int drawcursor;
                 uint8_t chr, attr, dat;
@@ -103,7 +104,8 @@ void svga_render_text_80(svga_t *svga)
         
         if (svga->fullchange)
         {
-                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[32];
+                int offset = (8 - svga->scrollcache) + 24;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
                 int x, xx;
                 int drawcursor;
                 uint8_t chr, attr, dat;
@@ -166,7 +168,8 @@ void svga_render_text_80_ksc5601(svga_t *svga)
         
         if (svga->fullchange)
         {
-                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[32];
+                int offset = (8 - svga->scrollcache) + 24;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
                 int x, xx;
                 int drawcursor;
                 uint8_t chr, attr, dat, nextchr;
