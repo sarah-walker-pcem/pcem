@@ -238,28 +238,97 @@ uint32_t ropF7_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         return 0;
 }
 
+static void rebuild_c(ir_data_t *ir)
+{
+        int needs_rebuild = 1;
+
+        if (codegen_flags_changed)
+        {
+                switch (cpu_state.flags_op)
+                {
+                        case FLAGS_INC8: case FLAGS_INC16: case FLAGS_INC32:
+                        case FLAGS_DEC8: case FLAGS_DEC16: case FLAGS_DEC32:
+                        needs_rebuild = 0;
+                        break;
+                }
+        }
+
+        if (needs_rebuild)
+        {
+                uop_CALL_FUNC(ir, flags_rebuild_c);
+        }
+}
+
 uint32_t ropFF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
+        x86seg *target_seg = NULL;
         int src_reg, sp_reg;
         
-        if ((fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x30)
+        if ((fetchdat & 0x38) != 0x00 && (fetchdat & 0x38) != 0x08 && (fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x30)
                 return 0;
-                
+
         if ((fetchdat & 0xc0) == 0xc0)
                 src_reg = IREG_16(fetchdat & 7);
         else
         {
-                x86seg *target_seg;
-
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
+                if (!(fetchdat & 0x30)) /*INC/DEC*/
+                        codegen_check_seg_write(block, ir, target_seg);
+                else
+                        codegen_check_seg_read(block, ir, target_seg);
                 uop_MEM_LOAD_REG(ir, IREG_temp0_W, ireg_seg_base(target_seg), IREG_eaaddr);
                 src_reg = IREG_temp0_W;
         }
         
         switch (fetchdat & 0x38)
         {
+                case 0x00: /*INC*/
+                rebuild_c(ir);
+                codegen_flags_changed = 1;
+
+                if ((fetchdat & 0xc0) == 0xc0)
+                {
+                        uop_MOVZX(ir, IREG_flags_op1, src_reg);
+                        uop_ADD_IMM(ir, src_reg, src_reg, 1);
+                        uop_MOVZX(ir, IREG_flags_res, src_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC16);
+                }
+                else
+                {
+                        uop_ADD_IMM(ir, IREG_temp1_W, src_reg, 1);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
+                        uop_MOVZX(ir, IREG_flags_op1, src_reg);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp1_W);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC16);
+                }
+                return op_pc+1;
+                
+                case 0x08: /*DEC*/
+                rebuild_c(ir);
+                codegen_flags_changed = 1;
+
+                if ((fetchdat & 0xc0) == 0xc0)
+                {
+                        uop_MOVZX(ir, IREG_flags_op1, src_reg);
+                        uop_SUB_IMM(ir, src_reg, src_reg, 1);
+                        uop_MOVZX(ir, IREG_flags_res, src_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC16);
+                }
+                else
+                {
+                        uop_SUB_IMM(ir, IREG_temp1_W, src_reg, 1);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
+                        uop_MOVZX(ir, IREG_flags_op1, src_reg);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp1_W);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC16);
+                }
+                return op_pc+1;
+
                 case 0x10: /*CALL*/
                 if ((fetchdat & 0xc0) == 0xc0)
                         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -286,26 +355,74 @@ uint32_t ropFF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 
 uint32_t ropFF_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
+        x86seg *target_seg = NULL;
         int src_reg, sp_reg;
 
-        if ((fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x30)
+        if ((fetchdat & 0x38) != 0x00 && (fetchdat & 0x38) != 0x08 && (fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x30)
                 return 0;
 
         if ((fetchdat & 0xc0) == 0xc0)
                 src_reg = IREG_32(fetchdat & 7);
         else
         {
-                x86seg *target_seg;
-
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
+                if (!(fetchdat & 0x30)) /*INC/DEC*/
+                        codegen_check_seg_write(block, ir, target_seg);
+                else
+                        codegen_check_seg_read(block, ir, target_seg);
                 uop_MEM_LOAD_REG(ir, IREG_temp0, ireg_seg_base(target_seg), IREG_eaaddr);
                 src_reg = IREG_temp0;
         }
 
         switch (fetchdat & 0x38)
         {
+                case 0x00: /*INC*/
+                rebuild_c(ir);
+                codegen_flags_changed = 1;
+
+                if ((fetchdat & 0xc0) == 0xc0)
+                {
+                        uop_MOV(ir, IREG_flags_op1, src_reg);
+                        uop_ADD_IMM(ir, src_reg, src_reg, 1);
+                        uop_MOV(ir, IREG_flags_res, src_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC32);
+                }
+                else
+                {
+                        uop_ADD_IMM(ir, IREG_temp1, src_reg, 1);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
+                        uop_MOV(ir, IREG_flags_op1, src_reg);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp1);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC32);
+                }
+                return op_pc+1;
+
+                case 0x08: /*DEC*/
+                rebuild_c(ir);
+                codegen_flags_changed = 1;
+
+                if ((fetchdat & 0xc0) == 0xc0)
+                {
+                        uop_MOV(ir, IREG_flags_op1, src_reg);
+                        uop_SUB_IMM(ir, src_reg, src_reg, 1);
+                        uop_MOV(ir, IREG_flags_res, src_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC32);
+                }
+                else
+                {
+                        uop_SUB_IMM(ir, IREG_temp1, src_reg, 1);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
+                        uop_MOV(ir, IREG_flags_op1, src_reg);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp1);
+                        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC32);
+                }
+                return op_pc+1;
+
                 case 0x10: /*CALL*/
                 if ((fetchdat & 0xc0) == 0xc0)
                         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);

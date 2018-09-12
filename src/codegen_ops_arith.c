@@ -1330,3 +1330,130 @@ uint32_t rop83_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         codegen_flags_changed = 1;
         return op_pc + 2;
 }
+
+static void rebuild_c(ir_data_t *ir)
+{
+        int needs_rebuild = 1;
+        
+        if (codegen_flags_changed)
+        {
+                switch (cpu_state.flags_op)
+                {
+                        case FLAGS_INC8: case FLAGS_INC16: case FLAGS_INC32:
+                        case FLAGS_DEC8: case FLAGS_DEC16: case FLAGS_DEC32:
+                        needs_rebuild = 0;
+                        break;
+                }
+        }
+        
+        if (needs_rebuild)
+        {
+                uop_CALL_FUNC(ir, flags_rebuild_c);
+        }
+}
+
+uint32_t ropINC_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        rebuild_c(ir);
+
+        uop_MOVZX(ir, IREG_flags_op1, IREG_16(opcode & 7));
+        uop_ADD_IMM(ir, IREG_16(opcode & 7), IREG_16(opcode & 7), 1);
+        uop_MOVZX(ir, IREG_flags_res, IREG_16(opcode & 7));
+        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC16);
+        codegen_flags_changed = 1;
+
+        return op_pc;
+}
+uint32_t ropINC_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        rebuild_c(ir);
+        
+        uop_MOV(ir, IREG_flags_op1, IREG_32(opcode & 7));
+        uop_ADD_IMM(ir, IREG_32(opcode & 7), IREG_32(opcode & 7), 1);
+        uop_MOV(ir, IREG_flags_res, IREG_32(opcode & 7));
+        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC32);
+        codegen_flags_changed = 1;
+
+        return op_pc;
+}
+
+uint32_t ropDEC_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        rebuild_c(ir);
+
+        uop_MOVZX(ir, IREG_flags_op1, IREG_16(opcode & 7));
+        uop_SUB_IMM(ir, IREG_16(opcode & 7), IREG_16(opcode & 7), 1);
+        uop_MOVZX(ir, IREG_flags_res, IREG_16(opcode & 7));
+        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC16);
+        codegen_flags_changed = 1;
+
+        return op_pc;
+}
+uint32_t ropDEC_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        rebuild_c(ir);
+
+        uop_MOV(ir, IREG_flags_op1, IREG_32(opcode & 7));
+        uop_SUB_IMM(ir, IREG_32(opcode & 7), IREG_32(opcode & 7), 1);
+        uop_MOV(ir, IREG_flags_res, IREG_32(opcode & 7));
+        uop_MOV_IMM(ir, IREG_flags_op2, 1);
+        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC32);
+        codegen_flags_changed = 1;
+
+        return op_pc;
+}
+
+uint32_t ropINCDEC(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        if ((fetchdat & 0xc0) == 0xc0)
+        {
+                uop_MOVZX(ir, IREG_flags_op1, IREG_8(fetchdat & 7));
+                if (fetchdat & 0x38)
+                {
+                        uop_SUB_IMM(ir, IREG_8(fetchdat & 7), IREG_8(fetchdat & 7), 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC8);
+                }
+                else
+                {
+                        uop_ADD_IMM(ir, IREG_8(fetchdat & 7), IREG_8(fetchdat & 7), 1);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC8);
+                }
+                uop_MOVZX(ir, IREG_flags_res, IREG_8(fetchdat & 7));
+                uop_MOV_IMM(ir, IREG_flags_op2, 1);
+        }
+        else
+        {
+                x86seg *target_seg;
+
+                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+                codegen_check_seg_write(block, ir, target_seg);
+                uop_MEM_LOAD_REG(ir, IREG_temp0_B, ireg_seg_base(target_seg), IREG_eaaddr);
+
+                if (fetchdat & 0x38)
+                {
+                        uop_SUB_IMM(ir, IREG_temp1_B, IREG_temp0_B, 1);
+                }
+                else
+                {
+                        uop_ADD_IMM(ir, IREG_temp1_B, IREG_temp0_B, 1);
+                }
+                uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_B);
+                uop_MOVZX(ir, IREG_flags_op1, IREG_temp0_B);
+                uop_MOVZX(ir, IREG_flags_res, IREG_temp1_B);
+                uop_MOV_IMM(ir, IREG_flags_op2, 1);
+                if (fetchdat & 0x38)
+                {
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_DEC8);
+                }
+                else
+                {
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_INC8);
+                }
+        }
+
+        return op_pc+1;
+}

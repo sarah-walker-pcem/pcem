@@ -268,6 +268,13 @@ static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_CALL_FUNC(codeblock_t *block, uop_t *uop)
+{
+        host_arm_call(block, uop->p);
+
+        return 0;
+}
+
 static int codegen_CALL_FUNC_RESULT(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
@@ -1493,6 +1500,7 @@ static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
 
 const uOpFn uop_handlers[UOP_MAX] =
 {
+        [UOP_CALL_FUNC & UOP_MASK] = codegen_CALL_FUNC,
         [UOP_CALL_FUNC_RESULT & UOP_MASK] = codegen_CALL_FUNC_RESULT,
         [UOP_CALL_INSTRUCTION_FUNC & UOP_MASK] = codegen_CALL_INSTRUCTION_FUNC,
 
