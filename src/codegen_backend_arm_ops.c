@@ -89,6 +89,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_LDRH_REG 0xe19000b0
 #define OPCODE_STRH_IMM 0xe1c000b0
 #define OPCODE_STRH_REG 0xe18000b0
+#define OPCODE_SXTB   0xe6af0070
+#define OPCODE_SXTH   0xe6bf0070
 #define OPCODE_UADD8  0xe6500f90
 #define OPCODE_UADD16 0xe6500f10
 #define OPCODE_USUB8  0xe6500ff0
@@ -662,6 +664,15 @@ void host_arm_SUB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int sr
 void host_arm_SUB_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
 {
 	codegen_addlong(block, COND_AL | OPCODE_SUB_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSR_IMM(shift));
+}
+
+void host_arm_SXTB(codeblock_t *block, int dst_reg, int src_reg, int rotate)
+{
+	codegen_addlong(block, OPCODE_SXTB | Rd(dst_reg) | Rm(src_reg) | UXTB_ROTATE(rotate));
+}
+void host_arm_SXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate)
+{
+	codegen_addlong(block, OPCODE_SXTH | Rd(dst_reg) | Rm(src_reg) | UXTB_ROTATE(rotate));
 }
 
 void host_arm_TST_IMM(codeblock_t *block, int src_reg, uint32_t imm)

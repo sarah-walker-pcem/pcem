@@ -60,6 +60,8 @@
 #define UOP_MOV                   (UOP_TYPE_PARAMS_REGS    | 0x22)
 /*UOP_MOVZX - dest_reg = zero_extend(src_reg_a)*/
 #define UOP_MOVZX                 (UOP_TYPE_PARAMS_REGS    | 0x23)
+/*UOP_MOVSX - dest_reg = sign_extend(src_reg_a)*/
+#define UOP_MOVSX                 (UOP_TYPE_PARAMS_REGS    | 0x24)
 /*UOP_ADD - dest_reg = src_reg_a + src_reg_b*/
 #define UOP_ADD                   (UOP_TYPE_PARAMS_REGS    | 0x30)
 /*UOP_ADD_IMM - dest_reg = src_reg_a + immediate*/
@@ -435,6 +437,7 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_MOV(ir, dst_reg, src_reg)         uop_gen_reg_dst_src1(UOP_MOV, ir, dst_reg, src_reg)
 #define uop_MOV_IMM(ir, reg, imm)             uop_gen_reg_dst_imm(UOP_MOV_IMM, ir, reg, imm)
 #define uop_MOV_PTR(ir, reg, p)               uop_gen_reg_dst_pointer(UOP_MOV_PTR, ir, reg, p)
+#define uop_MOVSX(ir, dst_reg, src_reg)       uop_gen_reg_dst_src1(UOP_MOVSX, ir, dst_reg, src_reg)
 #define uop_MOVZX(ir, dst_reg, src_reg)       uop_gen_reg_dst_src1(UOP_MOVZX, ir, dst_reg, src_reg)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)

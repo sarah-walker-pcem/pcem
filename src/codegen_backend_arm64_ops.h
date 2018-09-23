@@ -83,6 +83,8 @@ void host_arm64_ORR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 
 void host_arm64_RET(codeblock_t *block, int reg);
 
+void host_arm64_SBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width);
+
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset);
 
 void host_arm64_STR_IMM_W(codeblock_t *block, int dest_reg, int base_reg, int offset);

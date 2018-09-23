@@ -99,6 +99,9 @@ void host_arm_SUB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 void host_arm_SUB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 void host_arm_SUB_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
+void host_arm_SXTB(codeblock_t *block, int dst_reg, int src_reg, int rotate);
+void host_arm_SXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate);
+
 void host_arm_TST_IMM(codeblock_t *block, int src_reg1, uint32_t imm);
 void host_arm_TST_REG(codeblock_t *block, int src_reg1, int src_reg2);
 

@@ -801,6 +801,27 @@ static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
         host_x86_MOV64_REG_IMM(block, uop->dest_reg_a_real, (uint64_t)uop->p);
         return 0;
 }
+static int codegen_MOVSX(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_W(src_size))
+        {
+                host_x86_MOVSX_REG_32_16(block, dest_reg, src_reg);
+        }
+        else if (REG_IS_L(dest_size) && REG_IS_B(src_size))
+        {
+                host_x86_MOVSX_REG_32_8(block, dest_reg, src_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_B(src_size))
+        {
+                host_x86_MOVSX_REG_16_8(block, dest_reg, src_reg);
+        }
+        else
+                fatal("MOVSX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+        return 0;
+}
 static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
@@ -1240,6 +1261,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOV     & UOP_MASK] = codegen_MOV,
         [UOP_MOV_PTR & UOP_MASK] = codegen_MOV_PTR,
         [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM,
+        [UOP_MOVSX   & UOP_MASK] = codegen_MOVSX,
         [UOP_MOVZX   & UOP_MASK] = codegen_MOVZX,
         
         [UOP_ADD     & UOP_MASK] = codegen_ADD,

@@ -451,3 +451,28 @@ uint32_t ropNOP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
 {
         return op_pc;
 }
+
+uint32_t ropCBW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_MOVSX(ir, IREG_AX, IREG_AL);
+
+        return op_pc;
+}
+uint32_t ropCDQ(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_SAR_IMM(ir, IREG_EDX, IREG_EAX, 31);
+
+        return op_pc;
+}
+uint32_t ropCWD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_SAR_IMM(ir, IREG_DX, IREG_AX, 15);
+
+        return op_pc;
+}
+uint32_t ropCWDE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_MOVSX(ir, IREG_EAX, IREG_AX);
+
+        return op_pc;
+}

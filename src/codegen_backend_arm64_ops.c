@@ -71,6 +71,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_LDRB_IMM_W    (0x0e5 << 22)
 #define OPCODE_LDRH_IMM      (0x1e5 << 22)
 #define OPCODE_LDP_POSTIDX_X (0x2a3 << 22)
+#define OPCODE_SBFX          (0x04c << 22)
 #define OPCODE_STP_PREIDX_X  (0x2a6 << 22)
 #define OPCODE_STR_IMM_W     (0x2e4 << 22)
 #define OPCODE_STR_IMM_Q     (0x3e4 << 22)
@@ -638,6 +639,11 @@ void host_arm64_ORR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 void host_arm64_RET(codeblock_t *block, int reg)
 {
 	codegen_addlong(block, OPCODE_RET | Rn(reg));
+}
+
+void host_arm64_SBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width)
+{
+	codegen_addlong(block, OPCODE_SBFX | Rd(dst_reg) | Rn(src_reg) | IMMN(0) | IMMR(lsb) | IMMS((lsb+width-1) & 31));
 }
 
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset)
