@@ -255,3 +255,36 @@ ROP_POP_SEG(DS, cpu_state.seg_ds)
 ROP_POP_SEG(ES, cpu_state.seg_es)
 ROP_POP_SEG(FS, cpu_state.seg_fs)
 ROP_POP_SEG(GS, cpu_state.seg_gs)
+
+uint32_t ropLEAVE_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+
+        if (stack32)
+                uop_MEM_LOAD_REG(ir, IREG_temp0_W, IREG_SS_base, IREG_EBP);
+        else
+        {
+                uop_MOVZX(ir, IREG_eaaddr, IREG_BP);
+                uop_MEM_LOAD_REG(ir, IREG_temp0_W, IREG_SS_base, IREG_eaaddr);
+        }
+        uop_ADD_IMM(ir, IREG_SP, IREG_BP, 2);
+        uop_MOV(ir, IREG_BP, IREG_temp0_W);
+
+        return op_pc;
+}
+uint32_t ropLEAVE_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+
+        if (stack32)
+                uop_MEM_LOAD_REG(ir, IREG_temp0, IREG_SS_base, IREG_EBP);
+        else
+        {
+                uop_MOVZX(ir, IREG_eaaddr, IREG_BP);
+                uop_MEM_LOAD_REG(ir, IREG_temp0, IREG_SS_base, IREG_eaaddr);
+        }
+        uop_ADD_IMM(ir, IREG_ESP, IREG_EBP, 4);
+        uop_MOV(ir, IREG_EBP, IREG_temp0);
+
+        return op_pc;
+}

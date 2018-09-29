@@ -542,6 +542,36 @@ static int codegen_JMP(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_LOAD_FUNC_ARG0(codeblock_t *block, uop_t *uop)
+{
+        int src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_W(src_size))
+        {
+                host_x86_MOV16_STACK_REG(block, STACK_ARG0, src_reg);
+        }
+        else
+                fatal("codegen_LOAD_FUNC_ARG0 %02x\n", uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_LOAD_FUNC_ARG1(codeblock_t *block, uop_t *uop)
+{
+        fatal("codegen_LOAD_FUNC_ARG1 %02x\n", uop->src_reg_a_real);
+        return 0;
+}
+static int codegen_LOAD_FUNC_ARG2(codeblock_t *block, uop_t *uop)
+{
+        fatal("codegen_LOAD_FUNC_ARG2 %02x\n", uop->src_reg_a_real);
+        return 0;
+}
+static int codegen_LOAD_FUNC_ARG3(codeblock_t *block, uop_t *uop)
+{
+        fatal("codegen_LOAD_FUNC_ARG3 %02x\n", uop->src_reg_a_real);
+        return 0;
+}
+
 static int codegen_LOAD_FUNC_ARG0_IMM(codeblock_t *block, uop_t *uop)
 {
         host_x86_MOV32_STACK_IMM(block, STACK_ARG0, uop->imm_data);
@@ -622,6 +652,8 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
         if (REG_IS_B(dest_size))
         {
                 host_x86_CALL(block, codegen_mem_load_byte);
@@ -689,6 +721,8 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
         int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
 
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
         if (REG_IS_B(src_size))
         {
                 host_x86_MOV8_REG_REG(block, REG_ECX, src_reg);
@@ -1234,6 +1268,11 @@ const uOpFn uop_handlers[UOP_MAX] =
 
         [UOP_LOAD_SEG & UOP_MASK] = codegen_LOAD_SEG,
         
+        [UOP_LOAD_FUNC_ARG_0 & UOP_MASK] = codegen_LOAD_FUNC_ARG0,
+        [UOP_LOAD_FUNC_ARG_1 & UOP_MASK] = codegen_LOAD_FUNC_ARG1,
+        [UOP_LOAD_FUNC_ARG_2 & UOP_MASK] = codegen_LOAD_FUNC_ARG2,
+        [UOP_LOAD_FUNC_ARG_3 & UOP_MASK] = codegen_LOAD_FUNC_ARG3,
+
         [UOP_LOAD_FUNC_ARG_0_IMM & UOP_MASK] = codegen_LOAD_FUNC_ARG0_IMM,
         [UOP_LOAD_FUNC_ARG_1_IMM & UOP_MASK] = codegen_LOAD_FUNC_ARG1_IMM,
         [UOP_LOAD_FUNC_ARG_2_IMM & UOP_MASK] = codegen_LOAD_FUNC_ARG2_IMM,

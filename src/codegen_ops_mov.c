@@ -696,3 +696,17 @@ uint32_t ropXCHG_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 
         return op_pc + 1;
 }
+
+uint32_t ropXLAT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        
+        uop_MOVZX(ir, IREG_eaaddr, IREG_AL);
+        uop_ADD(ir, IREG_eaaddr, IREG_eaaddr, IREG_EBX);
+        if (!(op_32 & 0x200))
+                uop_AND_IMM(ir, IREG_eaaddr, IREG_eaaddr, 0xffff);
+
+        uop_MEM_LOAD_REG(ir, IREG_AL, ireg_seg_base(op_ea_seg), IREG_eaaddr);
+
+        return op_pc;
+}
