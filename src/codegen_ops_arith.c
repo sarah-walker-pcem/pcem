@@ -87,6 +87,7 @@ uint32_t ropADD_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOVZX(ir, IREG_flags_op1, IREG_8(dest_reg));
+                uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
                 uop_ADD(ir, IREG_8(dest_reg), IREG_8(dest_reg), IREG_8(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
         }
@@ -102,9 +103,9 @@ uint32_t ropADD_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_ADD(ir, IREG_temp1_B, IREG_temp0_B, IREG_8(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_B);
                 uop_MOVZX(ir, IREG_flags_op1, IREG_temp0_B);
+                uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_temp1_B);
         }
-        uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ADD8);
 
         codegen_flags_changed = 1;
@@ -150,6 +151,7 @@ uint32_t ropADD_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOVZX(ir, IREG_flags_op1, IREG_16(dest_reg));
+                uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
                 uop_ADD(ir, IREG_16(dest_reg), IREG_16(dest_reg), IREG_16(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
         }
@@ -165,9 +167,9 @@ uint32_t ropADD_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_ADD(ir, IREG_temp1_W, IREG_temp0_W, IREG_16(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
                 uop_MOVZX(ir, IREG_flags_op1, IREG_temp0_W);
+                uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_temp1_W);
         }
-        uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ADD16);
 
         codegen_flags_changed = 1;
@@ -212,6 +214,7 @@ uint32_t ropADD_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOV(ir, IREG_flags_op1, IREG_32(dest_reg));
+                uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
                 uop_ADD(ir, IREG_32(dest_reg), IREG_32(dest_reg), IREG_32(src_reg));
                 uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
         }
@@ -227,9 +230,9 @@ uint32_t ropADD_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_ADD(ir, IREG_temp1, IREG_temp0, IREG_32(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
                 uop_MOV(ir, IREG_flags_op1, IREG_temp0);
+                uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
                 uop_MOV(ir, IREG_flags_res, IREG_temp1);
         }
-        uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ADD32);
 
         codegen_flags_changed = 1;
@@ -538,6 +541,7 @@ uint32_t ropSUB_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOVZX(ir, IREG_flags_op1, IREG_8(dest_reg));
+                uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
                 uop_SUB(ir, IREG_8(dest_reg), IREG_8(dest_reg), IREG_8(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
         }
@@ -553,9 +557,9 @@ uint32_t ropSUB_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_SUB(ir, IREG_temp1_B, IREG_temp0_B, IREG_8(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_B);
                 uop_MOVZX(ir, IREG_flags_op1, IREG_temp0_B);
+                uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_temp1_B);
         }
-        uop_MOVZX(ir, IREG_flags_op2, IREG_8(src_reg));
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_SUB8);
 
         codegen_flags_changed = 1;
@@ -601,6 +605,7 @@ uint32_t ropSUB_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOVZX(ir, IREG_flags_op1, IREG_16(dest_reg));
+                uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
                 uop_SUB(ir, IREG_16(dest_reg), IREG_16(dest_reg), IREG_16(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
         }
@@ -616,9 +621,10 @@ uint32_t ropSUB_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_SUB(ir, IREG_temp1_W, IREG_temp0_W, IREG_16(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
                 uop_MOVZX(ir, IREG_flags_op1, IREG_temp0_W);
+                uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
                 uop_MOVZX(ir, IREG_flags_res, IREG_temp1_W);
         }
-        uop_MOVZX(ir, IREG_flags_op2, IREG_16(src_reg));
+
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_SUB16);
 
         codegen_flags_changed = 1;
@@ -663,6 +669,7 @@ uint32_t ropSUB_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 int dest_reg = fetchdat & 7;
 
                 uop_MOV(ir, IREG_flags_op1, IREG_32(dest_reg));
+                uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
                 uop_SUB(ir, IREG_32(dest_reg), IREG_32(dest_reg), IREG_32(src_reg));
                 uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
         }
@@ -678,9 +685,10 @@ uint32_t ropSUB_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_SUB(ir, IREG_temp1, IREG_temp0, IREG_32(src_reg));
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
                 uop_MOV(ir, IREG_flags_op1, IREG_temp0);
+                uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
                 uop_MOV(ir, IREG_flags_res, IREG_temp1);
         }
-        uop_MOV(ir, IREG_flags_op2, IREG_32(src_reg));
+
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_SUB32);
 
         codegen_flags_changed = 1;
