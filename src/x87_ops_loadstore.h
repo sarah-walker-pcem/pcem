@@ -96,7 +96,7 @@ static int opFILDiq_a16(uint32_t fetchdat)
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,cpu_state.eaaddr), readmeml(easeg,cpu_state.eaaddr+4));
         x87_push((double)temp64);
         cpu_state.MM[cpu_state.TOP].q = temp64;
-        cpu_state.tag[cpu_state.TOP] |= TAG_UINT64;
+        cpu_state.tag[cpu_state.TOP] = TAG_VALID | TAG_UINT64;
 
         CLOCK_CYCLES(10);
         return 0;
@@ -112,7 +112,7 @@ static int opFILDiq_a32(uint32_t fetchdat)
         if (fplog) pclog("  %f  %08X %08X\n", (double)temp64, readmeml(easeg,cpu_state.eaaddr), readmeml(easeg,cpu_state.eaaddr+4));
         x87_push((double)temp64);
         cpu_state.MM[cpu_state.TOP].q = temp64;
-        cpu_state.tag[cpu_state.TOP] |= TAG_UINT64;
+        cpu_state.tag[cpu_state.TOP] = TAG_VALID | TAG_UINT64;
 
         CLOCK_CYCLES(10);
         return 0;

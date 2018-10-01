@@ -40,7 +40,7 @@ static inline void x87_push(double i)
 {
         cpu_state.TOP=(cpu_state.TOP-1)&7;
         cpu_state.ST[cpu_state.TOP] = i;
-        cpu_state.tag[cpu_state.TOP&7] = (i == 0.0) ? 1 : 0;
+        cpu_state.tag[cpu_state.TOP&7] = TAG_VALID;
 }
 
 static inline void x87_push_u64(uint64_t i)
@@ -55,13 +55,13 @@ static inline void x87_push_u64(uint64_t i)
 
         cpu_state.TOP=(cpu_state.TOP-1)&7;
         cpu_state.ST[cpu_state.TOP] = td.d;
-        cpu_state.tag[cpu_state.TOP&7] = (td.d == 0.0) ? 1 : 0;
+        cpu_state.tag[cpu_state.TOP&7] = TAG_VALID;
 }
 
 static inline double x87_pop()
 {
         double t = cpu_state.ST[cpu_state.TOP];
-        cpu_state.tag[cpu_state.TOP&7] = 3;
+        cpu_state.tag[cpu_state.TOP&7] = TAG_EMPTY;
         cpu_state.TOP=(cpu_state.TOP+1)&7;
         return t;
 }
@@ -186,13 +186,15 @@ static inline void x87_ld_frstor(int reg)
         cpu_state.MM[reg].q = readmemq(easeg, cpu_state.eaaddr);
         cpu_state.MM_w4[reg] = readmemw(easeg, cpu_state.eaaddr + 8);
 
-        if (cpu_state.MM_w4[reg] == 0x5555 && cpu_state.tag[reg] == 2)
+        if ((cpu_state.MM_w4[reg] == 0x5555) && (cpu_state.tag[reg] & TAG_UINT64))
         {
-                cpu_state.tag[reg] = TAG_UINT64;
                 cpu_state.ST[reg] = (double)cpu_state.MM[reg].q;
         }
         else
+        {
+                cpu_state.tag[reg] = TAG_VALID;
                 cpu_state.ST[reg] = x87_ld80();
+        }
 }
 
 static inline void x87_ldmmx(MMX_REG *r, uint16_t *w4)

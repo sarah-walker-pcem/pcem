@@ -10,7 +10,7 @@ static inline void x87_set_mmx()
 
 static inline void x87_emms()
 {
-        *(uint64_t *)cpu_state.tag = 0x0303030303030303ll;
+        *(uint64_t *)cpu_state.tag = 0;
         cpu_state.ismmx = 0;
 }
 
@@ -19,5 +19,8 @@ void x87_settag(uint16_t new_tag);
 void x87_dumpregs();
 void x87_reset();
 
+#define TAG_EMPTY  0
+#define TAG_VALID  (1 << 0)
 /*Hack for FPU copy. If set then MM[].q contains the 64-bit integer loaded by FILD*/
-#define TAG_UINT64 (1 << 2)
+#define TAG_UINT64 (1 << 7)
+
