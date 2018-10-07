@@ -180,6 +180,12 @@ struct
         uint16_t old_npxc, new_npxc;
         
         x86seg seg_cs,seg_ds,seg_es,seg_ss,seg_fs,seg_gs;
+
+        union
+        {
+                uint32_t l;
+                uint16_t w;
+        } CR0;
 } cpu_state;
 
 #define cycles cpu_state._cycles
@@ -239,14 +245,8 @@ uint8_t *pccache2;
 int loadseg(uint16_t seg, x86seg *s);
 void loadcs(uint16_t seg);
 
-union
-{
-        uint32_t l;
-        uint16_t w;
-} CR0;
-
-#define cr0 CR0.l
-#define msw CR0.w
+#define cr0 cpu_state.CR0.l
+#define msw cpu_state.CR0.w
 
 uint32_t cr2, cr3, cr4;
 uint32_t dr[8];

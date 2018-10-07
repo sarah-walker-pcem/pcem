@@ -360,7 +360,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
 
                         case 0xd8:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d8_a32 : x86_dynarec_opcodes_d8_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_d8;
+                        recomp_op_table = recomp_opcodes_d8;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;
@@ -397,7 +397,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdc:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dc_a32 : x86_dynarec_opcodes_dc_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_dc;
+                        recomp_op_table = recomp_opcodes_dc;
                         opcode_shift = 3;
                         opcode_mask = 0x1f;
                         over = 1;

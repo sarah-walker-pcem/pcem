@@ -24,6 +24,23 @@
 
 #define REG_TEMP REG_R3
 
+#define REG_D0   0
+#define REG_D1   1
+#define REG_D2   2
+#define REG_D3   3
+#define REG_D4   4
+#define REG_D5   5
+#define REG_D6   6
+#define REG_D7   7
+#define REG_D8   8
+#define REG_D9   9
+#define REG_D10 10
+#define REG_D11 11
+#define REG_D12 12
+#define REG_D13 13
+#define REG_D14 14
+#define REG_D15 15
+
 #define REG_MASK_R0  (1 << REG_R0)
 #define REG_MASK_R1  (1 << REG_R1)
 #define REG_MASK_R2  (1 << REG_R2)
@@ -45,6 +62,7 @@
 			REG_MASK_R8 | REG_MASK_R9 | REG_MASK_R10 | REG_MASK_R11)
 
 #define CODEGEN_HOST_REGS 7
+#define CODEGEN_HOST_FP_REGS 8
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;

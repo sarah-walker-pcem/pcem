@@ -113,3 +113,10 @@ void host_arm_USUB16(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg
 
 void host_arm_UXTB(codeblock_t *block, int dst_reg, int src_reg, int rotate);
 void host_arm_UXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate);
+
+void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VLDR_D(codeblock_t *block, int dest_reg, int base_reg, int offset);
+void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset);
+void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);

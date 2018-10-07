@@ -10,7 +10,19 @@
 #define REG_ESI 6
 #define REG_EDI 7
 
+#define REG_XMM0 0
+#define REG_XMM1 1
+#define REG_XMM2 2
+#define REG_XMM3 3
+#define REG_XMM4 4
+#define REG_XMM5 5
+#define REG_XMM6 6
+#define REG_XMM7 7
+
+#define REG_XMM_TEMP REG_XMM7
+
 #define CODEGEN_HOST_REGS 3
+#define CODEGEN_HOST_FP_REGS 7
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;

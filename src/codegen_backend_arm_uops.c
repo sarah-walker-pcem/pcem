@@ -1,6 +1,8 @@
 #ifdef __ARM_EABI__
 
 #include "ibm.h"
+#include "x86.h"
+#include "386_common.h"
 #include "codegen.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm_defs.h"
@@ -73,6 +75,7 @@ void host_arm_nop(codeblock_t *block)
 #define REG_IS_W(size) (size == IREG_SIZE_W)
 #define REG_IS_B(size) (size == IREG_SIZE_B)
 #define REG_IS_BH(size) (size == IREG_SIZE_BH)
+#define REG_IS_D(size) (size == IREG_SIZE_D)
 
 static int codegen_ADD(codeblock_t *block, uop_t *uop)
 {
@@ -665,6 +668,85 @@ static int codegen_CMP_JZ_DEST(codeblock_t *block, uop_t *uop)
                 fatal("CMP_JZ_DEST %02x\n", uop->src_reg_a_real);
 
         uop->p = host_arm_BEQ_(block);
+
+        return 0;
+}
+
+static int codegen_FADD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+                host_arm_VADD_D(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("codegen_FADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_FDIV(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+                host_arm_VDIV_D(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("codegen_FDIV %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_FMUL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+                host_arm_VMUL_D(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("codegen_FMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_FSUB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+                host_arm_VSUB_D(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("codegen_FSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
+static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
+{
+        uint32_t *branch_ptr;
+
+	if (!in_range(&cr0, &cpu_state))
+		fatal("codegen_FP_ENTER - out of range\n");
+
+        host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cr0 - (uintptr_t)&cpu_state);
+        host_arm_TST_IMM(block, REG_TEMP, 0xc);
+        branch_ptr = host_arm_BEQ_(block);
+
+	host_arm_MOV_IMM(block, REG_TEMP, uop->imm_data);
+	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.oldpc - (uintptr_t)&cpu_state);
+        host_arm_MOV_IMM(block, REG_ARG0, 7);
+	host_arm_call(block, x86_int);
+        host_arm_B(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+
+	*branch_ptr |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
 
         return 0;
 }
@@ -1641,6 +1723,13 @@ const uOpFn uop_handlers[UOP_MAX] =
 
         [UOP_TEST_JNS_DEST & UOP_MASK] = codegen_TEST_JNS_DEST,
         [UOP_TEST_JS_DEST & UOP_MASK] = codegen_TEST_JS_DEST,
+
+        [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
+
+        [UOP_FADD & UOP_MASK] = codegen_FADD,
+        [UOP_FDIV & UOP_MASK] = codegen_FDIV,
+        [UOP_FMUL & UOP_MASK] = codegen_FMUL,
+        [UOP_FSUB & UOP_MASK] = codegen_FSUB
 };
 
 void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p)
@@ -1659,6 +1748,18 @@ void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)
 		host_arm_LDR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
 	else
 		fatal("codegen_direct_read_32 - not in range\n");
+}
+void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p)
+{
+	host_arm_VLDR_D(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+}
+void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx)
+{
+        host_arm_LDR_IMM(block, REG_TEMP, REG_HOST_SP, IREG_TOP_diff_stack_offset);
+        host_arm_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
+        host_arm_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
+	host_arm_ADD_REG_LSL(block, REG_TEMP, REG_CPUSTATE, REG_TEMP, 3);
+	host_arm_VLDR_D(block, host_reg, REG_TEMP, (uintptr_t)base - (uintptr_t)&cpu_state);
 }
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg)
@@ -1684,6 +1785,26 @@ void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg)
 		host_arm_STR_IMM(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
 	else
 		fatal("codegen_direct_write_32 - not in range\n");
+}
+void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg)
+{
+        host_arm_LDR_IMM(block, REG_TEMP, REG_HOST_SP, IREG_TOP_diff_stack_offset);
+        host_arm_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
+        host_arm_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
+	host_arm_ADD_REG_LSL(block, REG_TEMP, REG_CPUSTATE, REG_TEMP, 3);
+	host_arm_STRB_IMM(block, host_reg, REG_TEMP, (uintptr_t)base - (uintptr_t)&cpu_state);
+}
+void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg)
+{
+	host_arm_VSTR_D(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+}
+void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg)
+{
+        host_arm_LDR_IMM(block, REG_TEMP, REG_HOST_SP, IREG_TOP_diff_stack_offset);
+        host_arm_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
+        host_arm_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
+	host_arm_ADD_REG_LSL(block, REG_TEMP, REG_CPUSTATE, REG_TEMP, 3);
+	host_arm_VSTR_D(block, host_reg, REG_TEMP, (uintptr_t)base - (uintptr_t)&cpu_state);
 }
 
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg)

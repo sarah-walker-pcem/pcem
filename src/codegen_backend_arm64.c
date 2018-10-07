@@ -6,6 +6,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_arm64_defs.h"
 #include "codegen_backend_arm64_ops.h"
+#include "codegen_reg.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -36,6 +37,18 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 	REG_X26,
 	REG_X27,
 	REG_X28
+};
+
+int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+{
+        REG_V8,
+        REG_V9,
+        REG_V10,
+	REG_V11,
+	REG_V12,
+        REG_V13,
+        REG_V14,
+	REG_V15
 };
 
 static void build_load_routine(codeblock_t *block, int size)
@@ -237,7 +250,7 @@ void codegen_backend_prologue(codeblock_t *block)
 		host_arm64_NOP(block);
 
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 48);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
 	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
@@ -255,15 +268,22 @@ void codegen_backend_prologue(codeblock_t *block)
 	host_arm64_STP_PREIDX_X(block, REG_X25, REG_X26, REG_SP, -16);
 	host_arm64_STP_PREIDX_X(block, REG_X23, REG_X24, REG_SP, -16);
 	host_arm64_STP_PREIDX_X(block, REG_X21, REG_X22, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -48);
+	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -64);
 
 	offset = add_literal_q(block, (uintptr_t)&cpu_state);
 	host_arm64_LDR_LITERAL_X(block, REG_CPUSTATE, offset);
+
+        if (block->flags & CODEBLOCK_HAS_FPU)
+        {
+		host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
+		host_arm64_SUB_IMM(block, REG_TEMP, REG_TEMP, block->TOP);
+		host_arm64_STR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 48);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
 	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);

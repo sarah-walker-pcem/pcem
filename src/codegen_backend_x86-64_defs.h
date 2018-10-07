@@ -32,3 +32,25 @@
 #define REG_R13 13
 #define REG_R14 14
 #define REG_R15 15
+
+#define REG_XMM0 0
+#define REG_XMM1 1
+#define REG_XMM2 2
+#define REG_XMM3 3
+#define REG_XMM4 4
+#define REG_XMM5 5
+#define REG_XMM6 6
+#define REG_XMM7 7
+
+#define REG_XMM_TEMP REG_XMM7
+
+#define CODEGEN_HOST_REGS 3
+#define CODEGEN_HOST_FP_REGS 7
+
+extern void *codegen_mem_load_byte;
+extern void *codegen_mem_load_word;
+extern void *codegen_mem_load_long;
+
+extern void *codegen_mem_store_byte;
+extern void *codegen_mem_store_word;
+extern void *codegen_mem_store_long;

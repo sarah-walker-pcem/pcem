@@ -1,9 +1,9 @@
 #ifndef _CODEGEN_REG_H_
 #define _CODEGEN_REG_H_
 
-#define IREG_REG_MASK 0x3f
-#define IREG_SIZE_SHIFT 6
-#define IREG_SIZE_MASK (3 << IREG_SIZE_SHIFT)
+#define IREG_REG_MASK 0xff
+#define IREG_SIZE_SHIFT 8
+#define IREG_SIZE_MASK (7 << IREG_SIZE_SHIFT)
 
 #define IREG_GET_REG(reg)  ((reg) & IREG_REG_MASK)
 #define IREG_GET_SIZE(reg) ((reg) & IREG_SIZE_MASK)
@@ -12,6 +12,7 @@
 #define IREG_SIZE_W  (1 << IREG_SIZE_SHIFT)
 #define IREG_SIZE_B  (2 << IREG_SIZE_SHIFT)
 #define IREG_SIZE_BH (3 << IREG_SIZE_SHIFT)
+#define IREG_SIZE_D  (4 << IREG_SIZE_SHIFT)
 
 enum
 {
@@ -64,7 +65,33 @@ enum
 	IREG_temp2 = 35,
 	IREG_temp3 = 36,
 
-	IREG_COUNT,
+        IREG_FPU_TOP = 37,
+
+        /*FPU stack registers are physical registers. Use IREG_ST() / IREG_tag()
+          to access.
+          When CODEBLOCK_STATIC_TOP is set, the physical register number will be
+          used directly to index the stack. When it is clear, the difference
+          between the current value of TOP and the value when the block was
+          first compiled will be added to adjust for any changes in TOP.*/
+        IREG_ST0 = 40,
+        IREG_ST1 = 41,
+        IREG_ST2 = 42,
+        IREG_ST3 = 43,
+        IREG_ST4 = 44,
+        IREG_ST5 = 45,
+        IREG_ST6 = 46,
+        IREG_ST7 = 47,
+        
+        IREG_tag0 = 48,
+        IREG_tag1 = 49,
+        IREG_tag2 = 50,
+        IREG_tag3 = 51,
+        IREG_tag4 = 52,
+        IREG_tag5 = 53,
+        IREG_tag6 = 54,
+        IREG_tag7 = 55,
+
+	IREG_COUNT = 56,
 	
 	IREG_INVALID = 63,
 	
@@ -116,6 +143,11 @@ enum
 #define IREG_16(reg) ((reg) + IREG_AX)
 #define IREG_32(reg) ((reg) + IREG_EAX)
 
+#define IREG_ST(r)  (IREG_ST0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_D)
+#define IREG_tag(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7))
+
+#define IREG_TOP_diff_stack_offset 32
+
 static inline int ireg_seg_base(x86seg *seg)
 {
         if (seg == &cpu_state.seg_cs)
@@ -139,13 +171,13 @@ extern uint8_t reg_version_refcount[IREG_COUNT][256];
 
 typedef struct
 {
-        uint8_t reg;
-        uint8_t version;
+        uint16_t reg;
+        uint16_t version;
 } ir_reg_t;
 
 extern ir_reg_t invalid_ir_reg;
 
-typedef uint8_t ir_host_reg_t;
+typedef uint16_t ir_host_reg_t;
 
 #define REG_VERSION_MAX 250
 

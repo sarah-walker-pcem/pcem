@@ -78,7 +78,7 @@
 /*UOP_OR_IMM - dest_reg = src_reg_a | immediate*/
 #define UOP_OR_IMM                (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x36)
 /*UOP_SUB - dest_reg = src_reg_a - src_reg_b*/
-#define UOP_SUB                   (UOP_TYPE_PARAMS_REGS    | 0x37)
+#define UOP_SUB                   (UOP_TYPE_PARAMS_REGS | 0x37)
 /*UOP_SUB_IMM - dest_reg = src_reg_a - immediate*/
 #define UOP_SUB_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x38)
 /*UOP_XOR - dest_reg = src_reg_a ^ src_reg_b*/
@@ -151,7 +151,18 @@
 /*UOP_TEST_JS_DEST - if (src_reg_a positive) then jump to ptr*/
 #define UOP_TEST_JS_DEST          (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | UOP_TYPE_PARAMS_POINTER | 0x71 | UOP_TYPE_ORDER_BARRIER | UOP_TYPE_JUMP)
 
-#define UOP_MAX 0x72
+/*UOP_FP_ENTER - */
+#define UOP_FP_ENTER              (UOP_TYPE_PARAMS_IMM | 0x80 | UOP_TYPE_BARRIER)
+/*UOP_FADD - (floating point) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_FADD                  (UOP_TYPE_PARAMS_REGS | 0x81)
+/*UOP_FSUB - (floating point) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_FSUB                  (UOP_TYPE_PARAMS_REGS | 0x82)
+/*UOP_FMUL - (floating point) dest_reg = src_reg_a * src_reg_b*/
+#define UOP_FMUL                  (UOP_TYPE_PARAMS_REGS | 0x83)
+/*UOP_FDIV - (floating point) dest_reg = src_reg_a / src_reg_b*/
+#define UOP_FDIV                  (UOP_TYPE_PARAMS_REGS | 0x84)
+
+#define UOP_MAX 0x85
 
 #define UOP_MASK 0xffff
 
@@ -203,6 +214,15 @@ static inline void uop_set_jump_dest(ir_data_t *ir, int jump_uop)
         uop_t *uop = &ir->uops[jump_uop];
         
         uop->jump_dest_uop = ir->wr_pos;
+}
+
+static inline int uop_gen(uint32_t uop_type, ir_data_t *ir)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+
+        return ir->wr_pos-1;
 }
 
 static inline int uop_gen_reg_src1(uint32_t uop_type, ir_data_t *ir, int src_reg_a)
@@ -433,6 +453,13 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_CMP_JO_DEST(ir, src_reg_a, src_reg_b)   uop_gen_reg_src2(UOP_CMP_JO_DEST, ir, src_reg_a, src_reg_b)
 #define uop_CMP_JZ_DEST(ir, src_reg_a, src_reg_b)   uop_gen_reg_src2(UOP_CMP_JZ_DEST, ir, src_reg_a, src_reg_b)
 
+#define uop_FADD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FADD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_FDIV(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FDIV, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_FMUL(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FMUL, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_FSUB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FSUB, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_FP_ENTER(ir)                 do { if (!codegen_fpu_entered) uop_gen_imm(UOP_FP_ENTER, ir, cpu_state.oldpc); codegen_fpu_entered = 1; } while (0)
+
 #define uop_JMP(ir, p)                   uop_gen_pointer(UOP_JMP, ir, p)
 
 #define uop_LOAD_SEG(ir, p, src_reg) uop_gen_reg_src_pointer(UOP_LOAD_SEG, ir, src_reg, p)
@@ -461,11 +488,16 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p);
+void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p);
+void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx);
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_16(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg);
+void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg);
 
 void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);

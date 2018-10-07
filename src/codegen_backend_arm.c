@@ -6,6 +6,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_arm_defs.h"
 #include "codegen_backend_arm_ops.h"
+#include "codegen_reg.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -33,6 +34,18 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 	REG_R8,
 	REG_R9,
 	REG_R11,
+};
+
+int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+{
+        REG_D8,
+        REG_D9,
+        REG_D10,
+	REG_D11,
+	REG_D12,
+	REG_D13,
+	REG_D14,
+	REG_D15
 };
 
 static void build_load_routine(codeblock_t *block, int size)
@@ -220,7 +233,7 @@ void codegen_backend_prologue(codeblock_t *block)
 		host_arm_nop(block);
 
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
+	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x40);
 	host_arm_LDMIA_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_PC);
 	while (block_pos != BLOCK_START)
 		host_arm_nop(block);
@@ -228,13 +241,19 @@ void codegen_backend_prologue(codeblock_t *block)
 	/*Entry code*/
 
 	host_arm_STMDB_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_LR);
-	host_arm_SUB_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
+	host_arm_SUB_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x40);
 	host_arm_MOV_IMM(block, REG_CPUSTATE, (uint32_t)&cpu_state);
+        if (block->flags & CODEBLOCK_HAS_FPU)
+        {
+		host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
+		host_arm_SUB_IMM(block, REG_TEMP, REG_TEMP, block->TOP);
+		host_arm_STR_IMM(block, REG_TEMP, REG_HOST_SP, IREG_TOP_diff_stack_offset);
+        }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x20);
+	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x40);
 	host_arm_LDMIA_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_PC);
 
         if (block_pos > ARM_LITERAL_POOL_OFFSET)

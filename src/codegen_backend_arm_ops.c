@@ -97,6 +97,12 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_USUB16 0xe6500f70
 #define OPCODE_UXTB   0xe6ef0070
 #define OPCODE_UXTH   0xe6ff0070
+#define OPCODE_VADD   0xee300b00
+#define OPCODE_VDIV   0xee800b00
+#define OPCODE_VLDR   0xed900b00
+#define OPCODE_VMUL   0xee200b00
+#define OPCODE_VSTR   0xed800b00
+#define OPCODE_VSUB   0xee300b40
 
 #define B_OFFSET(x) (((x) >> 2) & 0xffffff)
 
@@ -722,6 +728,35 @@ void host_arm_UXTB(codeblock_t *block, int dst_reg, int src_reg, int rotate)
 void host_arm_UXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate)
 {
 	codegen_addlong(block, OPCODE_UXTH | Rd(dst_reg) | Rm(src_reg) | UXTB_ROTATE(rotate));
+}
+
+void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VADD | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VDIV | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VLDR_D(codeblock_t *block, int dest_reg, int base_reg, int offset)
+{
+	if ((offset > 1020) || (offset & 3))
+		fatal("VLDR bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VLDR | Rd(dest_reg) | Rn(base_reg) | (offset >> 2));
+}
+void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMUL | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)
+{
+	if ((offset > 1020) || (offset & 3))
+		fatal("VSTR bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VSTR | Rd(src_reg) | Rn(base_reg) | (offset >> 2));
+}
+void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VSUB | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 
 #endif

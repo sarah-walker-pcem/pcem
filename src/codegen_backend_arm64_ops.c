@@ -48,6 +48,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_SHIFT 24
 #define OPCODE_ADD_IMM       (0x11 << OPCODE_SHIFT)
 #define OPCODE_ADDX_IMM      (0x91 << OPCODE_SHIFT)
+#define OPCODE_B             (0x14 << OPCODE_SHIFT)
 #define OPCODE_BCOND         (0x54 << OPCODE_SHIFT)
 #define OPCODE_CBNZ          (0xb5 << OPCODE_SHIFT)
 #define OPCODE_CMN_IMM       (0x31 << OPCODE_SHIFT)
@@ -68,6 +69,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define OPCODE_BFI           (0x0cc << 22)
 #define OPCODE_LDR_IMM_W     (0x2e5 << 22)
+#define OPCODE_LDR_IMM_F64   (0x3f5 << 22)
 #define OPCODE_LDRB_IMM_W    (0x0e5 << 22)
 #define OPCODE_LDRH_IMM      (0x1e5 << 22)
 #define OPCODE_LDP_POSTIDX_X (0x2a3 << 22)
@@ -75,6 +77,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_STP_PREIDX_X  (0x2a6 << 22)
 #define OPCODE_STR_IMM_W     (0x2e4 << 22)
 #define OPCODE_STR_IMM_Q     (0x3e4 << 22)
+#define OPCODE_STR_IMM_F64   (0x3f4 << 22)
 #define OPCODE_STRB_IMM      (0x0e4 << 22)
 #define OPCODE_STRH_IMM      (0x1e4 << 22)
 #define OPCODE_UBFX          (0x14c << 22)
@@ -99,10 +102,15 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_ASR           (0x1ac02800)
 #define OPCODE_BLR           (0xd63f0000)
 #define OPCODE_BR            (0xd61f0000)
+#define OPCODE_FADD_D        (0x1e602800)
+#define OPCODE_FDIV_D        (0x1e601800)
+#define OPCODE_FMUL_D        (0x1e600800)
+#define OPCODE_FSUB_D        (0x1e603800)
 #define OPCODE_LDR_REG       (0xb8606800)
 #define OPCODE_LDRB_REG      (0x38606800)
 #define OPCODE_LDRH_REG      (0x78606800)
 #define OPCODE_LDRX_REG_LSL3 (0xf8607800)
+#define OPCODE_LDR_REG_F64_S (0xfc607800)
 #define OPCODE_LSL           (0x1ac02000)
 #define OPCODE_LSR           (0x1ac02400)
 #define OPCODE_NOP           (0xd503201f)
@@ -110,6 +118,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_STR_REG       (0xb8206800)
 #define OPCODE_STRB_REG      (0x38206800)
 #define OPCODE_STRH_REG      (0x78206800)
+#define OPCODE_STR_REG_F64_S (0xfc207800)
 
 #define DATPROC_SHIFT(sh) (sh << 10)
 #define DATPROC_IMM_SHIFT(sh) (sh << 22)
@@ -124,6 +133,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define IMMS(imms) ((imms) << 10)
 
 #define OFFSET19(offset) (((offset >> 2) << 5) & 0x00ffffe0)
+#define OFFSET26(offset) ((offset >> 2) & 0x03ffffff)
 
 #define OFFSET12_B(offset)    (offset << 10)
 #define OFFSET12_H(offset) ((offset >> 1) << 10)
@@ -142,6 +152,16 @@ static int offset_is_19bit(int offset)
 	if (offset >= (1 << (18+2)))
 		return 0;
 	if (offset < -(1 << (18+2)))
+		return 0;
+	return 1;
+}
+
+/*Returns true if offset fits into 26 bits*/
+static int offset_is_26bit(int offset)
+{
+	if (offset >= (1 << (25+2)))
+		return 0;
+	if (offset < -(1 << (25+2)))
 		return 0;
 	return 1;
 }
@@ -294,6 +314,15 @@ void host_arm64_ANDS_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_
 void host_arm64_ASR(codeblock_t *block, int dst_reg, int src_n_reg, int shift_reg)
 {
 	codegen_addlong(block, OPCODE_ASR | Rd(dst_reg) | Rn(src_n_reg) | Rm(shift_reg));
+}
+
+void host_arm64_B(codeblock_t *block, void *dest)
+{
+	int offset = (uintptr_t)dest - (uintptr_t)&block->data[block_pos];
+
+	if (!offset_is_26bit(offset))
+		fatal("host_arm64_B - offset out of range %x\n", offset);
+	codegen_addlong(block, OPCODE_B | OFFSET26(offset));
 }
 
 void host_arm64_BFI(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width)
@@ -461,6 +490,26 @@ void host_arm64_CMP_REG_LSL(codeblock_t *block, int src_n_reg, int src_m_reg, in
 	codegen_addlong(block, OPCODE_CMP_LSL | Rd(0x1f) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
 }
 
+void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FADD_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
+void host_arm64_FDIV_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FDIV_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
+void host_arm64_FMUL_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FMUL_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
+void host_arm64_FSUB_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FSUB_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
 	if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
@@ -513,6 +562,15 @@ void host_arm64_LDR_LITERAL_X(codeblock_t *block, int dest_reg, int literal_offs
 void host_arm64_LDR_REG(codeblock_t *block, int dest_reg, int base_reg, int offset_reg)
 {
 	codegen_addlong(block, OPCODE_LDR_REG | Rn(base_reg) | Rm(offset_reg) | Rt(dest_reg));
+}
+
+void host_arm64_LDR_IMM_F64(codeblock_t *block, int dest_reg, int base_reg, int offset)
+{
+	codegen_addlong(block, OPCODE_LDR_IMM_F64 | OFFSET12_Q(offset) | Rn(base_reg) | Rt(dest_reg));
+}
+void host_arm64_LDR_REG_F64_S(codeblock_t *block, int dest_reg, int base_reg, int offset_reg)
+{
+	codegen_addlong(block, OPCODE_LDR_REG_F64_S | Rn(base_reg) | Rm(offset_reg) | Rt(dest_reg));
 }
 
 void host_arm64_LDRB_IMM_W(codeblock_t *block, int dest_reg, int base_reg, int offset)
@@ -668,6 +726,15 @@ void host_arm64_STR_IMM_Q(codeblock_t *block, int dest_reg, int base_reg, int of
 void host_arm64_STR_REG(codeblock_t *block, int src_reg, int base_reg, int offset_reg)
 {
 	codegen_addlong(block, OPCODE_STR_REG | Rn(base_reg) | Rm(offset_reg) | Rt(src_reg));
+}
+
+void host_arm64_STR_IMM_F64(codeblock_t *block, int src_reg, int base_reg, int offset)
+{
+	codegen_addlong(block, OPCODE_STR_IMM_F64 | OFFSET12_Q(offset) | Rn(base_reg) | Rt(src_reg));
+}
+void host_arm64_STR_REG_F64_S(codeblock_t *block, int src_reg, int base_reg, int offset_reg)
+{
+	codegen_addlong(block, OPCODE_STR_REG_F64_S | Rn(base_reg) | Rm(offset_reg) | Rt(src_reg));
 }
 
 void host_arm64_STRB_IMM(codeblock_t *block, int dest_reg, int base_reg, int offset)

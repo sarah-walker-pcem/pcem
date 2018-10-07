@@ -5,6 +5,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_x86_defs.h"
 #include "codegen_backend_x86_ops.h"
+#include "codegen_reg.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -30,12 +31,23 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
         REG_EDX
 };
 
+int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+{
+        REG_XMM0,
+        REG_XMM1,
+        REG_XMM2,
+        REG_XMM3,
+        REG_XMM4,
+        REG_XMM5,
+        REG_XMM6
+};
+
 static void *mem_abrt_rout;
 
 static void build_load_routine(codeblock_t *block, int size)
 {
         uint8_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint8_t *misaligned_offset = NULL;
         
         /*In - ESI = address
           Out - ECX = data, ESI = abrt*/
@@ -107,7 +119,7 @@ static void build_load_routine(codeblock_t *block, int size)
 static void build_store_routine(codeblock_t *block, int size)
 {
         uint8_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint8_t *misaligned_offset = NULL;
         
         /*In - ECX = data, ESI = address
           Out - ESI = abrt
@@ -253,18 +265,24 @@ void codegen_backend_prologue(codeblock_t *block)
         addbyte(0x55); /*PUSH EBP*/
         addbyte(0x56); /*PUSH ESI*/
         addbyte(0x57); /*PUSH EDI*/
-        addbyte(0x83); /*SUBL $32,%esp*/
+        addbyte(0x83); /*SUBL $64,%esp*/
         addbyte(0xEC);
-        addbyte(0x20);
+        addbyte(0x40);
         addbyte(0xBD); /*MOVL EBP, &cpu_state*/
         addlong(((uintptr_t)&cpu_state) + 128);
+        if (block->flags & CODEBLOCK_HAS_FPU)
+        {
+                host_x86_MOV32_REG_ABS(block, REG_EAX, &cpu_state.TOP);
+                host_x86_SUB32_REG_IMM(block, REG_EAX, REG_EAX, block->TOP);
+                host_x86_MOV32_BASE_OFFSET_REG(block, REG_ESP, IREG_TOP_diff_stack_offset, REG_EAX);
+        }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-        addbyte(0x83); /*ADDL $32,%esp*/
+        addbyte(0x83); /*ADDL $64,%esp*/
         addbyte(0xC4);
-        addbyte(0x20);
+        addbyte(0x40);
         addbyte(0x5f); /*POP EDI*/
         addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/
@@ -287,9 +305,9 @@ void codegen_backend_epilogue(codeblock_t *block)
         addbyte(0xe8); /*CALL x86gpf*/
         addlong((uint32_t)x86gpf - (uint32_t)(&codeblock[block_current].data[block_pos + 4]));
         block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        addbyte(0x83); /*ADDL $32,%esp*/
+        addbyte(0x83); /*ADDL $64,%esp*/
         addbyte(0xC4);
-        addbyte(0x20);
+        addbyte(0x40);
         addbyte(0x5f); /*POP EDI*/
         addbyte(0x5e); /*POP ESI*/
         addbyte(0x5d); /*POP EBP*/

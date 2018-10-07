@@ -5,6 +5,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_x86-64_defs.h"
 #include "codegen_backend_x86-64_ops.h"
+#include "codegen_reg.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -28,6 +29,17 @@ int codegen_host_reg_list[CODEGEN_HOST_REGS] =
         REG_EAX,
         REG_EBX,
         REG_EDX
+};
+
+int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+{
+        REG_XMM0,
+        REG_XMM1,
+        REG_XMM2,
+        REG_XMM3,
+        REG_XMM4,
+        REG_XMM5,
+        REG_XMM6
 };
 
 static void *mem_abrt_rout;
@@ -286,10 +298,16 @@ void codegen_backend_prologue(codeblock_t *block)
         addbyte(0x48); /*SUBL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xEC);
-        addbyte(0x28);
+        addbyte(0x38);
         addbyte(0x48); /*MOVL RBP, &cpu_state*/
         addbyte(0xBD);
         addquad(((uintptr_t)&cpu_state) + 128);
+        if (block->flags & CODEBLOCK_HAS_FPU)
+        {
+                host_x86_MOV32_REG_ABS(block, REG_EAX, &cpu_state.TOP);
+                host_x86_SUB32_REG_IMM(block, REG_EAX, REG_EAX, block->TOP);
+                host_x86_MOV32_BASE_OFFSET_REG(block, REG_ESP, IREG_TOP_diff_stack_offset, REG_EAX);
+        }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
@@ -297,7 +315,7 @@ void codegen_backend_epilogue(codeblock_t *block)
         addbyte(0x48); /*ADDL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xC4);
-        addbyte(0x28);
+        addbyte(0x38);
         addbyte(0x41); /*POP R15*/
         addbyte(0x5f);
         addbyte(0x41); /*POP R14*/
@@ -336,7 +354,7 @@ void codegen_backend_epilogue(codeblock_t *block)
         addbyte(0x48); /*ADDL $40,%rsp*/
         addbyte(0x83);
         addbyte(0xC4);
-        addbyte(0x28);
+        addbyte(0x38);
         addbyte(0x41); /*POP R15*/
         addbyte(0x5f);
         addbyte(0x41); /*POP R14*/
