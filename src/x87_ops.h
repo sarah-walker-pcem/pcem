@@ -38,8 +38,8 @@ static inline void x87_checkexceptions()
 
 static inline void x87_push(double i)
 {
-        cpu_state.TOP=(cpu_state.TOP-1)&7;
-        cpu_state.ST[cpu_state.TOP] = i;
+        cpu_state.TOP--;
+        cpu_state.ST[cpu_state.TOP&7] = i;
         cpu_state.tag[cpu_state.TOP&7] = TAG_VALID;
 }
 
@@ -53,16 +53,16 @@ static inline void x87_push_u64(uint64_t i)
                 
         td.ll = i;
 
-        cpu_state.TOP=(cpu_state.TOP-1)&7;
-        cpu_state.ST[cpu_state.TOP] = td.d;
+        cpu_state.TOP--;
+        cpu_state.ST[cpu_state.TOP&7] = td.d;
         cpu_state.tag[cpu_state.TOP&7] = TAG_VALID;
 }
 
 static inline double x87_pop()
 {
-        double t = cpu_state.ST[cpu_state.TOP];
+        double t = cpu_state.ST[cpu_state.TOP&7];
         cpu_state.tag[cpu_state.TOP&7] = TAG_EMPTY;
-        cpu_state.TOP=(cpu_state.TOP+1)&7;
+        cpu_state.TOP++;
         return t;
 }
 

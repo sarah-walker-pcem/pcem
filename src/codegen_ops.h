@@ -14,9 +14,9 @@ extern RecompOpFn recomp_opcodes_d8[512];
 extern RecompOpFn recomp_opcodes_da[512];
 extern RecompOpFn recomp_opcodes_db[512];*/
 extern RecompOpFn recomp_opcodes_dc[512];
-/*extern RecompOpFn recomp_opcodes_dd[512];
+/*extern RecompOpFn recomp_opcodes_dd[512];*/
 extern RecompOpFn recomp_opcodes_de[512];
-extern RecompOpFn recomp_opcodes_df[512];
+/*extern RecompOpFn recomp_opcodes_df[512];
 extern RecompOpFn recomp_opcodes_REPE[512];
 extern RecompOpFn recomp_opcodes_REPNE[512];*/
 

@@ -416,7 +416,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xde:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_de_a32 : x86_dynarec_opcodes_de_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_de;
+                        recomp_op_table = recomp_opcodes_de;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
