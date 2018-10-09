@@ -18,15 +18,15 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
         {                                                       \
                 if (((double)src2) == 0.0)                      \
                 {                                               \
-                        cpu_state.npxs |= STATUS_ZERODIVIDE;              \
-                        if (cpu_state.npxc & STATUS_ZERODIVIDE)           \
+                        cpu_state.npxs |= STATUS_ZERODIVIDE;    \
+                        if (cpu_state.npxc & STATUS_ZERODIVIDE) \
                                 dst = src1 / (double)src2;      \
                         else                                    \
                         {                                       \
                                 pclog("FPU : divide by zero\n"); \
                                 picint(1 << 13);                \
+                                return 1;                       \
                         }                                       \
-                        return 1;                               \
                 }                                               \
                 else                                            \
                         dst = src1 / (double)src2;              \
