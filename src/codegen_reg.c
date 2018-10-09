@@ -473,18 +473,22 @@ void codegen_reg_flush_invalidate(ir_data_t *ir, codeblock_t *block)
         reg_set = &host_reg_set;
         for (c = 0; c < reg_set->nr_regs; c++)
         {
-                if (!ir_reg_is_invalid(reg_set->regs[c]))
+                if (!ir_reg_is_invalid(reg_set->regs[c]) && reg_set->dirty[c])
                 {
                         codegen_reg_writeback(reg_set, block, c, 1);
                 }
+                reg_set->regs[c] = invalid_ir_reg;
+                reg_set->dirty[c] = 0;
         }
 
         reg_set = &host_fp_reg_set;
         for (c = 0; c < reg_set->nr_regs; c++)
         {
-                if (!ir_reg_is_invalid(reg_set->regs[c]))
+                if (!ir_reg_is_invalid(reg_set->regs[c]) && reg_set->dirty[c])
                 {
                         codegen_reg_writeback(reg_set, block, c, 1);
                 }
+                reg_set->regs[c] = invalid_ir_reg;
+                reg_set->dirty[c] = 0;
         }
 }
