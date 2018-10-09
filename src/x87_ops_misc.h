@@ -144,7 +144,7 @@ static int FSAVE()
 {
         FP_ENTER();
         if (fplog) pclog("FSAVE %08X:%08X %i\n", easeg, cpu_state.eaaddr, cpu_state.ismmx);
-        cpu_state.npxs = (cpu_state.npxs & ~(7 << 11)) | (cpu_state.TOP << 11);
+        cpu_state.npxs = (cpu_state.npxs & ~(7 << 11)) | ((cpu_state.TOP & 7) << 11);
 
         switch ((cr0 & 1) | (cpu_state.op32 & 0x100))
         {
@@ -308,7 +308,7 @@ static int opFSTSW_a16(uint32_t fetchdat)
         fetch_ea_16(fetchdat);
         SEG_CHECK_WRITE(cpu_state.ea_seg);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw((cpu_state.npxs & 0xC7FF) | (cpu_state.TOP << 11));
+        seteaw((cpu_state.npxs & 0xC7FF) | ((cpu_state.TOP & 7) << 11));
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }
@@ -318,7 +318,7 @@ static int opFSTSW_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         SEG_CHECK_WRITE(cpu_state.ea_seg);
         if (fplog) pclog("FSTSW %08X:%08X\n", easeg, cpu_state.eaaddr);
-        seteaw((cpu_state.npxs & 0xC7FF) | (cpu_state.TOP << 11));
+        seteaw((cpu_state.npxs & 0xC7FF) | ((cpu_state.TOP & 7) << 11));
         CLOCK_CYCLES(3);
         return cpu_state.abrt;
 }
