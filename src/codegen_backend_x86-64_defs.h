@@ -50,7 +50,11 @@
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;
 extern void *codegen_mem_load_long;
+extern void *codegen_mem_load_single;
+extern void *codegen_mem_load_double;
 
 extern void *codegen_mem_store_byte;
 extern void *codegen_mem_store_word;
 extern void *codegen_mem_store_long;
+extern void *codegen_mem_store_single;
+extern void *codegen_mem_store_double;

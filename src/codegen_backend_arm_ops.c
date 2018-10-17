@@ -17,10 +17,16 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
         }
 }
 
-#define Rm(x) (x)
-#define Rs(x) ((x) << 8)
-#define Rd(x) ((x) << 12)
-#define Rn(x) ((x) << 16)
+#define Rm(x)  (x)
+#define Rs(x)  ((x) << 8)
+#define Rd(x)  ((x) << 12)
+#define Rt(x)  ((x) << 12)
+#define Rn(x)  ((x) << 16)
+#define Rt2(x) ((x) << 16)
+
+#define Vm(x)  (x)
+#define Vd(x)  ((x) << 12)
+#define Vn(x)  ((x) << 16)
 
 #define DATA_OFFSET_UP   (1 << 23)
 #define DATA_OFFSET_DOWN (0 << 23)
@@ -98,10 +104,20 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_UXTB   0xe6ef0070
 #define OPCODE_UXTH   0xe6ff0070
 #define OPCODE_VADD   0xee300b00
+#define OPCODE_VCVT_D_IS 0xeeb80bc0
+#define OPCODE_VCVT_D_S 0xeeb70ac0
+#define OPCODE_VCVT_S_D 0xeeb70bc0
 #define OPCODE_VDIV   0xee800b00
-#define OPCODE_VLDR   0xed900b00
+#define OPCODE_VLDR_D 0xed900b00
+#define OPCODE_VLDR_S 0xed900a00
+#define OPCODE_VMOV_32_S 0xee100a10
+#define OPCODE_VMOV_64_D 0xec500b10
+#define OPCODE_VMOV_D_64 0xec400b10
+#define OPCODE_VMOV_S_32 0xee000a10
+#define OPCODE_VMOV_D_D  0xeeb00b40
 #define OPCODE_VMUL   0xee200b00
-#define OPCODE_VSTR   0xed800b00
+#define OPCODE_VSTR_D 0xed800b00
+#define OPCODE_VSTR_S 0xed800a00
 #define OPCODE_VSUB   0xee300b40
 
 #define B_OFFSET(x) (((x) >> 2) & 0xffffff)
@@ -301,6 +317,18 @@ void host_arm_BL(codeblock_t *block, uintptr_t dest_addr)
 	{
 		host_arm_MOV_IMM(block, REG_R3, dest_addr);
 		host_arm_BLX(block, REG_R3);
+	}
+	else
+		codegen_addlong(block, COND_AL | OPCODE_BL | B_OFFSET(offset));
+}
+void host_arm_BL_r1(codeblock_t *block, uintptr_t dest_addr)
+{
+	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+
+	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
+	{
+		host_arm_MOV_IMM(block, REG_R1, dest_addr);
+		host_arm_BLX(block, REG_R1);
 	}
 	else
 		codegen_addlong(block, COND_AL | OPCODE_BL | B_OFFSET(offset));
@@ -734,6 +762,18 @@ void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 {
 	codegen_addlong(block, COND_AL | OPCODE_VADD | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
+void host_arm_VCVT_D_IS(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VCVT_D_IS | Vd(dest_reg) | Vm(src_reg));
+}
+void host_arm_VCVT_D_S(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VCVT_D_S | Vd(dest_reg) | Vm(src_reg));
+}
+void host_arm_VCVT_S_D(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VCVT_S_D | Vd(dest_reg) | Vm(src_reg));
+}
 void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VDIV | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -741,8 +781,34 @@ void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 void host_arm_VLDR_D(codeblock_t *block, int dest_reg, int base_reg, int offset)
 {
 	if ((offset > 1020) || (offset & 3))
-		fatal("VLDR bad offset %i\n", offset);
-	codegen_addlong(block, COND_AL | OPCODE_VLDR | Rd(dest_reg) | Rn(base_reg) | (offset >> 2));
+		fatal("VLDR_D bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VLDR_D | Rd(dest_reg) | Rn(base_reg) | (offset >> 2));
+}
+void host_arm_VLDR_S(codeblock_t *block, int dest_reg, int base_reg, int offset)
+{
+	if ((offset > 1020) || (offset & 3))
+		fatal("VLDR_S bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VLDR_S | Rd(dest_reg) | Rn(base_reg) | (offset >> 2));
+}
+void host_arm_VMOV_32_S(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_32_S | Rt(dest_reg) | Vn(src_reg));
+}
+void host_arm_VMOV_64_D(codeblock_t *block, int dest_reg_low, int dest_reg_high, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_64_D | Rt(dest_reg_low) | Rt2(dest_reg_high) | Vm(src_reg));
+}
+void host_arm_VMOV_D_64(codeblock_t *block, int dest_reg, int src_reg_low, int src_reg_high)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_D_64 | Vm(dest_reg) | Rt(src_reg_low) | Rt2(src_reg_high));
+}
+void host_arm_VMOV_S_32(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_S_32 | Vn(dest_reg) | Rt(src_reg));
+}
+void host_arm_VMOV_D_D(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_D_D | Vd(dest_reg) | Vm(src_reg));
 }
 void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
@@ -751,8 +817,14 @@ void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)
 {
 	if ((offset > 1020) || (offset & 3))
-		fatal("VSTR bad offset %i\n", offset);
-	codegen_addlong(block, COND_AL | OPCODE_VSTR | Rd(src_reg) | Rn(base_reg) | (offset >> 2));
+		fatal("VSTR_D bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VSTR_D | Rd(src_reg) | Rn(base_reg) | (offset >> 2));
+}
+void host_arm_VSTR_S(codeblock_t *block, int src_reg, int base_reg, int offset)
+{
+	if ((offset > 1020) || (offset & 3))
+		fatal("VSTR_S bad offset %i\n", offset);
+	codegen_addlong(block, COND_AL | OPCODE_VSTR_S | Rd(src_reg) | Rn(base_reg) | (offset >> 2));
 }
 void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {

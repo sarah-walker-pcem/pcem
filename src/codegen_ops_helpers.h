@@ -41,3 +41,12 @@ static inline void SUB_SP(ir_data_t *ir, int offset)
         else
                 uop_SUB_IMM(ir, IREG_SP, IREG_SP, offset);
 }
+
+static inline void fpu_POP(ir_data_t *ir)
+{
+        uop_ADD_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
+}
+static inline void fpu_PUSH(ir_data_t *ir)
+{
+        uop_SUB_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
+}

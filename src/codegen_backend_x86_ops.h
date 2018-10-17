@@ -8,7 +8,7 @@ void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int s
 void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 
-void host_x86_ADDSD_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
 void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
@@ -27,7 +27,14 @@ void host_x86_CMP8_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 void host_x86_CMP16_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 
-void host_x86_DIVSD_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
+void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dest_reg, int src_reg);
+
+void host_x86_CVTSS2SD_XREG_XREG(codeblock_t *block, int dest_reg, int src_reg);
+void host_x86_CVTSS2SD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
+
+void host_x86_DIVSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_JMP(codeblock_t *block, void *p);
 
@@ -94,12 +101,20 @@ void host_x86_MOV32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_MOV32_STACK_IMM(codeblock_t *block, int32_t offset, uint32_t imm_data);
 
-void host_x86_MOVQ_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_MOVD_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg);
+void host_x86_MOVD_REG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_MOVD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
+void host_x86_MOVD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
-void host_x86_MOVQ_REG_ABS(codeblock_t *block, int dst_reg, void *p);
-void host_x86_MOVQ_REG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int src_reg_a, int src_reg_b, int shift);
-void host_x86_MOVQ_ABS_REG(codeblock_t *block, void *p, int src_reg);
-void host_x86_MOVQ_ABS_REG_REG_SHIFT_REG(codeblock_t *block, uint32_t addr, int src_reg_a, int src_reg_b, int shift, int src_reg);
+void host_x86_MOVQ_ABS_XREG(codeblock_t *block, void *p, int src_reg);
+void host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(codeblock_t *block, uint32_t addr, int src_reg_a, int src_reg_b, int shift, int src_reg);
+void host_x86_MOVQ_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg);
+void host_x86_MOVQ_STACK_OFFSET_XREG(codeblock_t *block, int offset, int src_reg);
+
+void host_x86_MOVQ_XREG_ABS(codeblock_t *block, int dst_reg, void *p);
+void host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int src_reg_a, int src_reg_b, int shift);
+void host_x86_MOVQ_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
+void host_x86_MOVQ_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_MOVSX_REG_16_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVSX_REG_32_8(codeblock_t *block, int dst_reg, int src_reg);
@@ -114,7 +129,7 @@ void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p);
 void host_x86_MOVZX_BASE_INDEX_32_8(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
 void host_x86_MOVZX_BASE_INDEX_32_16(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
 
-void host_x86_MULSD_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_MULSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
@@ -162,13 +177,15 @@ void host_x86_SUB8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int s
 void host_x86_SUB16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 
-void host_x86_SUBSD_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_SUBSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_TEST8_REG(codeblock_t *block, int src_host_reg, int dst_host_reg);
 void host_x86_TEST16_REG(codeblock_t *block, int src_host_reg, int dst_host_reg);
 void host_x86_TEST32_REG(codeblock_t *block, int src_host_reg, int dst_host_reg);
 
 void host_x86_TEST32_REG_IMM(codeblock_t *block, int src_host_reg, uint32_t imm_data);
+
+void host_x86_UNPCKLPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);

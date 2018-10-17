@@ -771,7 +771,6 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         if (REG_IS_B(dest_size))
         {
                 host_x86_MOV8_REG_REG(block, dest_reg, REG_ECX);
-//                fatal("Here\n");
         }
         else if (REG_IS_W(dest_size))
         {
@@ -781,6 +780,42 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOV32_REG_REG(block, dest_reg, REG_ECX);
         }
+
+        return 0;
+}
+static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (!REG_IS_D(dest_size))
+                fatal("MEM_LOAD_SINGLE - %02x\n", uop->dest_reg_a_real);
+
+        host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+        host_x86_CALL(block, codegen_mem_load_single);
+        host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
+        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
+
+        return 0;
+}
+static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (!REG_IS_D(dest_size))
+                fatal("MEM_LOAD_DOUBLE - %02x\n", uop->dest_reg_a_real);
+
+        host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+        host_x86_CALL(block, codegen_mem_load_double);
+        host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
+        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
 
         return 0;
 }
@@ -882,6 +917,43 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
+{
+        int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
+
+        if (!REG_IS_D(src_size))
+                fatal("MEM_STORE_SINGLE - %02x\n", uop->src_reg_b_real);
+
+        host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+        host_x86_CVTSD2SS_XREG_XREG(block, REG_XMM_TEMP, src_reg);
+        host_x86_CALL(block, codegen_mem_store_single);
+        host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
+        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+
+        return 0;
+}
+static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
+
+        if (!REG_IS_D(src_size))
+                fatal("MEM_STORE_DOUBLE - %02x\n", uop->src_reg_b_real);
+
+        host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+        host_x86_MOVQ_REG_REG(block, REG_XMM_TEMP, src_reg);
+        host_x86_CALL(block, codegen_mem_store_double);
+        host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
+        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+
+        return 0;
+}
+
 static int codegen_MOV(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
@@ -971,6 +1043,26 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MOVZX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+        return 0;
+}
+
+static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_L(src_size))
+        {
+                host_x86_CVTSI2SD_XREG_REG(block, dest_reg, src_reg);
+        }
+        else if (REG_IS_D(dest_size) && REG_IS_W(src_size))
+        {
+                host_x86_MOVSX_REG_32_16(block, REG_ECX, src_reg);
+                host_x86_CVTSI2SD_XREG_REG(block, dest_reg, REG_ECX);
+        }
+        else
+                fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
         return 0;
 }
 
@@ -1386,18 +1478,23 @@ const uOpFn uop_handlers[UOP_MAX] =
 
         [UOP_MEM_LOAD_ABS & UOP_MASK] = codegen_MEM_LOAD_ABS,
         [UOP_MEM_LOAD_REG & UOP_MASK] = codegen_MEM_LOAD_REG,
+        [UOP_MEM_LOAD_SINGLE & UOP_MASK] = codegen_MEM_LOAD_SINGLE,
+        [UOP_MEM_LOAD_DOUBLE & UOP_MASK] = codegen_MEM_LOAD_DOUBLE,
 
         [UOP_MEM_STORE_ABS & UOP_MASK] = codegen_MEM_STORE_ABS,
         [UOP_MEM_STORE_REG & UOP_MASK] = codegen_MEM_STORE_REG,
         [UOP_MEM_STORE_IMM_8 & UOP_MASK] = codegen_MEM_STORE_IMM_8,
         [UOP_MEM_STORE_IMM_16 & UOP_MASK] = codegen_MEM_STORE_IMM_16,
         [UOP_MEM_STORE_IMM_32 & UOP_MASK] = codegen_MEM_STORE_IMM_32,
+        [UOP_MEM_STORE_SINGLE & UOP_MASK] = codegen_MEM_STORE_SINGLE,
+        [UOP_MEM_STORE_DOUBLE & UOP_MASK] = codegen_MEM_STORE_DOUBLE,
 
         [UOP_MOV     & UOP_MASK] = codegen_MOV,
         [UOP_MOV_PTR & UOP_MASK] = codegen_MOV_PTR,
         [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM,
         [UOP_MOVSX   & UOP_MASK] = codegen_MOVSX,
         [UOP_MOVZX   & UOP_MASK] = codegen_MOVZX,
+        [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
         
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

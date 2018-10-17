@@ -370,7 +370,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xd9:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_d9_a32 : x86_dynarec_opcodes_d9_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_d9;
+                        recomp_op_table = recomp_opcodes_d9;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -388,7 +388,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdb:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_db_a32 : x86_dynarec_opcodes_db_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_db;
+                        recomp_op_table = recomp_opcodes_db;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -407,7 +407,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdd:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_dd_a32 : x86_dynarec_opcodes_dd_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_dd;
+                        recomp_op_table = recomp_opcodes_dd;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;
@@ -425,7 +425,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
                         break;
                         case 0xdf:
                         op_table = (op_32 & 0x200) ? x86_dynarec_opcodes_df_a32 : x86_dynarec_opcodes_df_a16;
-                        recomp_op_table = NULL;//recomp_opcodes_df;
+                        recomp_op_table = recomp_opcodes_df;
                         opcode_mask = 0xff;
                         over = 1;
                         pc_off = -1;

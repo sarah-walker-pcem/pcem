@@ -109,13 +109,19 @@
 #define REG_TEMP  REG_X7
 #define REG_TEMP2 REG_X6
 
+#define REG_V_TEMP REG_V0
+
 #define CODEGEN_HOST_REGS 10
 #define CODEGEN_HOST_FP_REGS 8
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;
 extern void *codegen_mem_load_long;
+extern void *codegen_mem_load_single;
+extern void *codegen_mem_load_double;
 
 extern void *codegen_mem_store_byte;
 extern void *codegen_mem_store_word;
 extern void *codegen_mem_store_long;
+extern void *codegen_mem_store_single;
+extern void *codegen_mem_store_double;

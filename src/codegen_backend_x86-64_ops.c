@@ -341,6 +341,26 @@ void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
         codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
 }
 
+void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x5a, 0xc0 | src_reg | (dst_reg << 3));
+}
+
+void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3));
+}
+
+void host_x86_CVTSS2SD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x5a, 0xc0 | src_reg | (dst_reg << 3));
+}
+void host_x86_CVTSS2SD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x5a, 0x04 | (dst_reg << 3)); /*CVTSS2SD XMMx, [base_reg + idx_reg]*/
+        codegen_addbyte(block, base_reg | (idx_reg << 3));
+}
+
 void host_x86_DIVSD_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x5e, 0xc0 | src_reg | (dst_reg << 3));
@@ -837,6 +857,25 @@ void host_x86_MOV32_STACK_IMM(codeblock_t *block, int32_t offset, uint32_t imm_d
         }
 }
 
+void host_x86_MOVD_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x7e, 0x04 | (src_reg << 3)); /*MOVD XMMx, [base_reg + idx_reg]*/
+        codegen_addbyte(block, base_reg | (idx_reg << 3));
+}
+void host_x86_MOVD_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x7e, 0xc0 | dst_reg | (src_reg << 3));
+}
+void host_x86_MOVD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x6e, 0x04 | (dst_reg << 3)); /*MOVD XMMx, [base_reg + idx_reg]*/
+        codegen_addbyte(block, base_reg | (idx_reg << 3));
+}
+void host_x86_MOVD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x6e, 0xc0 | src_reg | (dst_reg << 3));
+}
+
 void host_x86_MOVQ_ABS_REG(codeblock_t *block, void *p, int src_reg)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -873,6 +912,12 @@ void host_x86_MOVQ_ABS_REG_REG_SHIFT_REG(codeblock_t *block, uint32_t addr, int 
                 codegen_addbyte2(block, 0x84 | (src_reg << 3), src_reg_a | (src_reg_b << 3) | (shift << 6));
                 codegen_addlong(block, addr);
         }
+}
+
+void host_x86_MOVQ_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xd6, 0x04 | (src_reg << 3)); /*MOVD XMMx, [base_reg + idx_reg]*/
+        codegen_addbyte(block, base_reg | (idx_reg << 3));
 }
 
 void host_x86_MOVQ_REG_ABS(codeblock_t *block, int dst_reg, void *p)
@@ -912,9 +957,26 @@ void host_x86_MOVQ_REG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32
                 codegen_addlong(block, addr);
         }
 }
+
+void host_x86_MOVQ_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x7e, 0x04 | (dst_reg << 3)); /*MOVQ XMMx, [base_reg + idx_reg]*/
+        codegen_addbyte(block, base_reg | (idx_reg << 3));
+}
 void host_x86_MOVQ_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf3, 0x0f, 0x7e, 0xc0 | src_reg | (dst_reg << 3)); /*MOVQ dst_reg, src_reg*/
+}
+
+void host_x86_MOVQ_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x48, 0x0f, 0x7e); /*MOVQ dst_reg, src_reg*/
+        codegen_addbyte(block, 0xc0 | dst_reg | (src_reg << 3));
+}
+void host_x86_MOVQ_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x48, 0x0f, 0x6e); /*MOVQ dst_reg, src_reg*/
+        codegen_addbyte(block, 0xc0 | src_reg | (dst_reg << 3));
 }
 
 void host_x86_MOVSX_REG_16_8(codeblock_t *block, int dst_reg, int src_reg)

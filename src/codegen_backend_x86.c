@@ -19,10 +19,14 @@
 void *codegen_mem_load_byte;
 void *codegen_mem_load_word;
 void *codegen_mem_load_long;
+void *codegen_mem_load_single;
+void *codegen_mem_load_double;
 
 void *codegen_mem_store_byte;
 void *codegen_mem_store_word;
 void *codegen_mem_store_long;
+void *codegen_mem_store_single;
+void *codegen_mem_store_double;
 
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
@@ -38,13 +42,12 @@ int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
         REG_XMM2,
         REG_XMM3,
         REG_XMM4,
-        REG_XMM5,
-        REG_XMM6
+        REG_XMM5
 };
 
 static void *mem_abrt_rout;
 
-static void build_load_routine(codeblock_t *block, int size)
+static void build_load_routine(codeblock_t *block, int size, int is_float)
 {
         uint8_t *branch_offset;
         uint8_t *misaligned_offset = NULL;
@@ -79,12 +82,16 @@ static void build_load_routine(codeblock_t *block, int size)
         }
         host_x86_CMP32_REG_IMM(block, REG_ESI, (uint32_t)-1);
         branch_offset = host_x86_JZ_short(block);
-        if (size == 1)
+        if (size == 1 && !is_float)
                 host_x86_MOVZX_BASE_INDEX_32_8(block, REG_ECX, REG_ESI, REG_ECX);
-        else if (size == 2)
+        else if (size == 2 && !is_float)
                 host_x86_MOVZX_BASE_INDEX_32_16(block, REG_ECX, REG_ESI, REG_ECX);
-        else if (size == 4)
+        else if (size == 4 && !is_float)
                 host_x86_MOV32_REG_BASE_INDEX(block, REG_ECX, REG_ESI, REG_ECX);
+        else if (size == 4 && is_float)
+                host_x86_CVTSS2SD_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
+        else if (size == 8 && is_float)
+                host_x86_MOVQ_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
         else
                 fatal("build_load_routine: size=%i\n", size);
         host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
@@ -102,13 +109,26 @@ static void build_load_routine(codeblock_t *block, int size)
                 host_x86_CALL(block, (void *)readmemwl);
         else if (size == 4)
                 host_x86_CALL(block, (void *)readmemll);
+        else if (size == 8)
+                host_x86_CALL(block, (void *)readmemql);
         host_x86_POP(block, REG_ECX);
-        if (size == 1)
+        if (size == 1 && !is_float)
                 host_x86_MOVZX_REG_32_8(block, REG_ECX, REG_EAX);
-        else if (size == 2)
+        else if (size == 2 && !is_float)
                 host_x86_MOVZX_REG_32_16(block, REG_ECX, REG_EAX);
-        else if (size == 4)
+        else if (size == 4 && !is_float)
                 host_x86_MOV32_REG_REG(block, REG_ECX, REG_EAX);
+        else if (size == 4 && is_float)
+        {
+                host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
+                host_x86_CVTSS2SD_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP);
+        }
+        else if (size == 8 && is_float)
+        {
+                host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
+                host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP2, REG_EDX);
+                host_x86_UNPCKLPS_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP2);
+        }
         host_x86_POP(block, REG_EDX);
         host_x86_POP(block, REG_EAX);
         host_x86_MOVZX_REG_ABS_32_8(block, REG_ESI, &cpu_state.abrt);
@@ -116,7 +136,7 @@ static void build_load_routine(codeblock_t *block, int size)
         block_pos = (block_pos + 63) & ~63;
 }
 
-static void build_store_routine(codeblock_t *block, int size)
+static void build_store_routine(codeblock_t *block, int size, int is_float)
 {
         uint8_t *branch_offset;
         uint8_t *misaligned_offset = NULL;
@@ -152,23 +172,34 @@ static void build_store_routine(codeblock_t *block, int size)
         }
         host_x86_CMP32_REG_IMM(block, REG_ESI, (uint32_t)-1);
         branch_offset = host_x86_JZ_short(block);
-        if (size == 1)
+        if (size == 1 && !is_float)
                 host_x86_MOV8_BASE_INDEX_REG(block, REG_ESI, REG_EDI, REG_ECX);
-        else if (size == 2)
+        else if (size == 2 && !is_float)
                 host_x86_MOV16_BASE_INDEX_REG(block, REG_ESI, REG_EDI, REG_ECX);
-        else if (size == 4)
+        else if (size == 4 && !is_float)
                 host_x86_MOV32_BASE_INDEX_REG(block, REG_ESI, REG_EDI, REG_ECX);
+        else if (size == 4 && is_float)
+                host_x86_MOVD_BASE_INDEX_XREG(block, REG_ESI, REG_EDI, REG_XMM_TEMP);
+        else if (size == 8 && is_float)
+                host_x86_MOVQ_BASE_INDEX_XREG(block, REG_ESI, REG_EDI, REG_XMM_TEMP);
         else
-                fatal("build_store_routine: size=%i\n", size);
+                fatal("build_store_routine: size=%i is_float=%i\n", size, is_float);
         host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
         host_x86_RET(block);
 
         *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
         if (size != 1)
                 *misaligned_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)misaligned_offset) - 1;
+        if (size == 4 && is_float)
+                host_x86_MOVD_REG_XREG(block, REG_ECX, REG_XMM_TEMP);
         host_x86_PUSH(block, REG_EAX);
         host_x86_PUSH(block, REG_EDX);
         host_x86_PUSH(block, REG_ECX);
+        if (size == 8 && is_float)
+        {
+                host_x86_MOVQ_STACK_OFFSET_XREG(block, -8, REG_XMM_TEMP);
+                host_x86_SUB32_REG_IMM(block, REG_ESP, REG_ESP, 8);
+        }
         host_x86_PUSH(block, REG_EDI);
         if (size == 1)
                 host_x86_CALL(block, (void *)writememb386l);
@@ -176,7 +207,11 @@ static void build_store_routine(codeblock_t *block, int size)
                 host_x86_CALL(block, (void *)writememwl);
         else if (size == 4)
                 host_x86_CALL(block, (void *)writememll);
+        else if (size == 8)
+                host_x86_CALL(block, (void *)writememql);
         host_x86_POP(block, REG_EDI);
+        if (size == 8 && is_float)
+                host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 8);
         host_x86_POP(block, REG_ECX);
         host_x86_POP(block, REG_EDX);
         host_x86_POP(block, REG_EAX);
@@ -188,18 +223,26 @@ static void build_store_routine(codeblock_t *block, int size)
 static void build_loadstore_routines(codeblock_t *block)
 {
         codegen_mem_load_byte = &codeblock[block_current].data[block_pos];
-        build_load_routine(block, 1);
+        build_load_routine(block, 1, 0);
         codegen_mem_load_word = &codeblock[block_current].data[block_pos];
-        build_load_routine(block, 2);
+        build_load_routine(block, 2, 0);
         codegen_mem_load_long = &codeblock[block_current].data[block_pos];
-        build_load_routine(block, 4);
+        build_load_routine(block, 4, 0);
+        codegen_mem_load_single = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 4, 1);
+        codegen_mem_load_double = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 8, 1);
 
         codegen_mem_store_byte = &codeblock[block_current].data[block_pos];
-        build_store_routine(block, 1);
+        build_store_routine(block, 1, 0);
         codegen_mem_store_word = &codeblock[block_current].data[block_pos];
-        build_store_routine(block, 2);
+        build_store_routine(block, 2, 0);
         codegen_mem_store_long = &codeblock[block_current].data[block_pos];
-        build_store_routine(block, 4);
+        build_store_routine(block, 4, 0);
+        codegen_mem_store_single = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 4, 1);
+        codegen_mem_store_double = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 8, 1);
 }
 
 void codegen_backend_init()

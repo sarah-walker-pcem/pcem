@@ -5,6 +5,7 @@
 #include "codegen_ops_arith.h"
 #include "codegen_ops_branch.h"
 #include "codegen_ops_fpu_arith.h"
+#include "codegen_ops_fpu_loadstore.h"
 #include "codegen_ops_jump.h"
 #include "codegen_ops_logic.h"
 #include "codegen_ops_misc.h"
@@ -154,6 +155,100 @@ RecompOpFn recomp_opcodes_d8[512] =
 /*f0*/  ropFDIV,        ropFDIV,        ropFDIV,        ropFDIV,        ropFDIV,        ropFDIV,        ropFDIV,        ropFDIV,        ropFDIVR,       ropFDIVR,       ropFDIVR,       ropFDIVR,       ropFDIVR,       ropFDIVR,       ropFDIVR,       ropFDIVR,
 };
 
+RecompOpFn recomp_opcodes_d9[512] =
+{
+        /*16-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+        /*32-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        ropFLDs,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTs,        ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,       ropFSTPs,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+};
+
+RecompOpFn recomp_opcodes_db[512] =
+{
+        /*16-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+        /*32-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       ropFILDl,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+};
+
 RecompOpFn recomp_opcodes_dc[512] =
 {
         /*16-bit data*/
@@ -201,6 +296,53 @@ RecompOpFn recomp_opcodes_dc[512] =
 /*f0*/  ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVRr,      ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,       ropFDIVr,
 };
 
+RecompOpFn recomp_opcodes_dd[512] =
+{
+        /*16-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+        /*32-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        ropFLDd,        NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTd,        ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,       ropFSTPd,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+};
+
 RecompOpFn recomp_opcodes_de[512] =
 {
         /*16-bit data*/
@@ -246,4 +388,51 @@ RecompOpFn recomp_opcodes_de[512] =
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*e0*/  ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBRP,      ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,       ropFSUBP,
 /*f0*/  ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVRP,      ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,       ropFDIVP,
+};
+
+RecompOpFn recomp_opcodes_df[512] =
+{
+        /*16-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+        /*32-bit data*/
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       ropFILDw,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };

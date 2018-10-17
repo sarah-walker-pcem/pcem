@@ -910,6 +910,42 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+	if (!REG_IS_D(dest_size))
+                fatal("MEM_LOAD_SINGLE - %02x\n", uop->dest_reg_a_real);
+
+	host_arm_ADD_REG(block, REG_R0, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_arm_ADD_IMM(block, REG_R0, REG_R0, uop->imm_data);
+        host_arm_BL(block, (uintptr_t)codegen_mem_load_single);
+        host_arm_TST_REG(block, REG_R1, REG_R1);
+        host_arm_BNE(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm_VCVT_D_S(block, dest_reg, REG_D_TEMP);
+
+        return 0;
+}
+static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+	if (!REG_IS_D(dest_size))
+                fatal("MEM_LOAD_DOUBLE - %02x\n", uop->dest_reg_a_real);
+
+	host_arm_ADD_REG(block, REG_R0, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_arm_ADD_IMM(block, REG_R0, REG_R0, uop->imm_data);
+        host_arm_BL(block, (uintptr_t)codegen_mem_load_double);
+        host_arm_TST_REG(block, REG_R1, REG_R1);
+        host_arm_BNE(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm_VMOV_D_D(block, dest_reg, REG_D_TEMP);
+
+        return 0;
+}
 
 static int codegen_MEM_STORE_ABS(codeblock_t *block, uop_t *uop)
 {
@@ -1007,6 +1043,42 @@ static int codegen_MEM_STORE_IMM_32(codeblock_t *block, uop_t *uop)
 	host_arm_ADD_REG(block, REG_R0, seg_reg, addr_reg);
         host_arm_MOV_IMM(block, REG_R1, uop->imm_data);
         host_arm_BL(block, (uintptr_t)codegen_mem_store_long);
+        host_arm_TST_REG(block, REG_R1, REG_R1);
+        host_arm_BNE(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+
+        return 0;
+}
+static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
+{
+        int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
+
+	if (!REG_IS_D(src_size))
+                fatal("MEM_STORE_REG - %02x\n", uop->dest_reg_a_real);
+
+	host_arm_ADD_REG(block, REG_R0, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_arm_ADD_IMM(block, REG_R0, REG_R0, uop->imm_data);
+	host_arm_VCVT_S_D(block, REG_D_TEMP, src_reg);
+        host_arm_BL(block, (uintptr_t)codegen_mem_store_single);
+        host_arm_TST_REG(block, REG_R1, REG_R1);
+        host_arm_BNE(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+
+        return 0;
+}
+static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
+
+	if (!REG_IS_D(src_size))
+                fatal("MEM_STORE_REG - %02x\n", uop->dest_reg_a_real);
+
+	host_arm_ADD_REG(block, REG_R0, seg_reg, addr_reg);
+        if (uop->imm_data)
+                host_arm_ADD_IMM(block, REG_R0, REG_R0, uop->imm_data);
+	host_arm_VMOV_D_D(block, REG_D_TEMP, src_reg);
+        host_arm_BL(block, (uintptr_t)codegen_mem_store_double);
         host_arm_TST_REG(block, REG_R1, REG_R1);
         host_arm_BNE(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
 
@@ -1153,6 +1225,27 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
 	}
 	else
 		fatal("MOVZX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_L(src_size))
+        {
+		host_arm_VMOV_S_32(block, REG_D_TEMP, src_reg);
+		host_arm_VCVT_D_IS(block, dest_reg, REG_D_TEMP);
+        }
+        else if (REG_IS_D(dest_size) && REG_IS_W(src_size))
+        {
+		host_arm_SXTH(block, REG_TEMP, src_reg, 0);
+		host_arm_VMOV_S_32(block, REG_D_TEMP, REG_TEMP);
+		host_arm_VCVT_D_IS(block, dest_reg, REG_D_TEMP);
+        }
+        else
+                fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 
         return 0;
 }
@@ -1671,18 +1764,23 @@ const uOpFn uop_handlers[UOP_MAX] =
 
         [UOP_MEM_LOAD_ABS & UOP_MASK] = codegen_MEM_LOAD_ABS,
         [UOP_MEM_LOAD_REG & UOP_MASK] = codegen_MEM_LOAD_REG,
+        [UOP_MEM_LOAD_SINGLE & UOP_MASK] = codegen_MEM_LOAD_SINGLE,
+        [UOP_MEM_LOAD_DOUBLE & UOP_MASK] = codegen_MEM_LOAD_DOUBLE,
 
         [UOP_MEM_STORE_ABS & UOP_MASK] = codegen_MEM_STORE_ABS,
         [UOP_MEM_STORE_REG & UOP_MASK] = codegen_MEM_STORE_REG,
         [UOP_MEM_STORE_IMM_8 & UOP_MASK] = codegen_MEM_STORE_IMM_8,
         [UOP_MEM_STORE_IMM_16 & UOP_MASK] = codegen_MEM_STORE_IMM_16,
         [UOP_MEM_STORE_IMM_32 & UOP_MASK] = codegen_MEM_STORE_IMM_32,
+        [UOP_MEM_STORE_SINGLE & UOP_MASK] = codegen_MEM_STORE_SINGLE,
+        [UOP_MEM_STORE_DOUBLE & UOP_MASK] = codegen_MEM_STORE_DOUBLE,
 
         [UOP_MOV     & UOP_MASK] = codegen_MOV,
         [UOP_MOV_PTR & UOP_MASK] = codegen_MOV_PTR,
         [UOP_MOV_IMM & UOP_MASK] = codegen_MOV_IMM,
         [UOP_MOVSX   & UOP_MASK] = codegen_MOVSX,
         [UOP_MOVZX   & UOP_MASK] = codegen_MOVZX,
+        [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
 
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

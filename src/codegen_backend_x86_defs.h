@@ -19,17 +19,22 @@
 #define REG_XMM6 6
 #define REG_XMM7 7
 
-#define REG_XMM_TEMP REG_XMM7
+#define REG_XMM_TEMP  REG_XMM7
+#define REG_XMM_TEMP2 REG_XMM6
 
 #define CODEGEN_HOST_REGS 3
-#define CODEGEN_HOST_FP_REGS 7
+#define CODEGEN_HOST_FP_REGS 6
 
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;
 extern void *codegen_mem_load_long;
+extern void *codegen_mem_load_single;
+extern void *codegen_mem_load_double;
 
 extern void *codegen_mem_store_byte;
 extern void *codegen_mem_store_word;
 extern void *codegen_mem_store_long;
+extern void *codegen_mem_store_single;
+extern void *codegen_mem_store_double;
 
 #endif

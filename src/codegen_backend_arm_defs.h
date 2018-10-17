@@ -41,6 +41,8 @@
 #define REG_D14 14
 #define REG_D15 15
 
+#define REG_D_TEMP REG_D0
+
 #define REG_MASK_R0  (1 << REG_R0)
 #define REG_MASK_R1  (1 << REG_R1)
 #define REG_MASK_R2  (1 << REG_R2)
@@ -67,7 +69,11 @@
 extern void *codegen_mem_load_byte;
 extern void *codegen_mem_load_word;
 extern void *codegen_mem_load_long;
+extern void *codegen_mem_load_single;
+extern void *codegen_mem_load_double;
 
 extern void *codegen_mem_store_byte;
 extern void *codegen_mem_store_word;
 extern void *codegen_mem_store_long;
+extern void *codegen_mem_store_single;
+extern void *codegen_mem_store_double;
