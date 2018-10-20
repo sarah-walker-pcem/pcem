@@ -1601,10 +1601,18 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 {
         host_x86_MOV32_REG_BASE_OFFSET(block, host_reg, REG_ESP, stack_offset);
 }
+void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_ESP, stack_offset);
+}
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
         host_x86_MOV32_BASE_OFFSET_REG(block, REG_ESP, stack_offset, host_reg);
+}
+void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_x86_MOVQ_BASE_OFFSET_XREG(block, REG_ESP, stack_offset, host_reg);
 }
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)

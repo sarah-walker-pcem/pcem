@@ -33,6 +33,7 @@ enum
         REG_DWORD,
         REG_QWORD,
         REG_POINTER,
+        REG_DOUBLE,
         REG_FPU_ST_BYTE,
         REG_FPU_ST_DOUBLE
 };
@@ -119,6 +120,8 @@ struct
 	[IREG_temp1] = {REG_DWORD, (void *)20, REG_INTEGER},
 	[IREG_temp2] = {REG_DWORD, (void *)24, REG_INTEGER},
 	[IREG_temp3] = {REG_DWORD, (void *)28, REG_INTEGER},
+	
+	[IREG_temp0d] = {REG_DOUBLE, (void *)48, REG_FP}
 };
 
 void codegen_reg_reset()
@@ -188,6 +191,15 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                         codegen_direct_read_32(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
                 
+                case REG_DOUBLE:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
+                        fatal("codegen_reg_load - REG_DOUBLE !REG_FP\n");
+                if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
+                        codegen_direct_read_double_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                else
+                        codegen_direct_read_double(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                break;
+                
                 case REG_FPU_ST_DOUBLE:
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_read_double(block, reg_set->reg_list[c], &cpu_state.ST[ir_reg.reg & 7]);
@@ -242,6 +254,15 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_POINTER %p\n", p);
                 codegen_direct_write_ptr(block, p, reg_set->reg_list[c]);
+                break;
+
+                case REG_DOUBLE:
+                if (ireg_data[ir_reg].type != REG_FP)
+                        fatal("codegen_reg_writeback - REG_DOUBLE !REG_FP\n");
+                if ((uintptr_t)p < 256)
+                        codegen_direct_write_double_stack(block, (int)p, reg_set->reg_list[c]);
+                else
+                        codegen_direct_write_double(block, p, reg_set->reg_list[c]);
                 break;
 
                 case REG_FPU_ST_BYTE:

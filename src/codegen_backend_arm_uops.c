@@ -1927,6 +1927,10 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 	else
 		fatal("codegen_direct_read_32 - not in range\n");
 }
+void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_arm_VLDR_D(block, host_reg, REG_HOST_SP, stack_offset);
+}
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
@@ -1934,6 +1938,10 @@ void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int hos
 		host_arm_STR_IMM(block, host_reg, REG_HOST_SP, stack_offset);
 	else
 		fatal("codegen_direct_write_32 - not in range\n");
+}
+void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_arm_VSTR_D(block, host_reg, REG_HOST_SP, stack_offset);
 }
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)

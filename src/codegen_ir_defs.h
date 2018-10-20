@@ -516,8 +516,10 @@ void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx,
 
 void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);
+void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset);
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg);
+void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg);
 
 void codegen_set_jump_dest(codeblock_t *block, void *p);
 

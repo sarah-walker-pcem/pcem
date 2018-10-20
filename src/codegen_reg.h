@@ -67,6 +67,8 @@ enum
 
         IREG_FPU_TOP = 37,
 
+	IREG_temp0d = 39,
+	
         /*FPU stack registers are physical registers. Use IREG_ST() / IREG_tag()
           to access.
           When CODEBLOCK_STATIC_TOP is set, the physical register number will be
@@ -128,6 +130,8 @@ enum
 	
 	IREG_temp0_B = IREG_temp0 + IREG_SIZE_B,
 	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B,
+	
+	IREG_temp0_D = IREG_temp0d + IREG_SIZE_D,
 	
 	IREG_eaaddr_W = IREG_eaaddr + IREG_SIZE_W,
 	

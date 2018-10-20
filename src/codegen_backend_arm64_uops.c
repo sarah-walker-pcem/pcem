@@ -1850,6 +1850,10 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 	else
 		fatal("codegen_direct_read_32_stack - not in range\n");
 }
+void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_arm64_LDR_IMM_F64(block, host_reg, REG_SP, stack_offset);
+}
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
@@ -1857,6 +1861,10 @@ void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int hos
 		host_arm64_STR_IMM_W(block, host_reg, REG_SP, stack_offset);
 	else
 		fatal("codegen_direct_write_32_stack - not in range\n");
+}
+void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_arm64_STR_IMM_F64(block, host_reg, REG_SP, stack_offset);
 }
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)

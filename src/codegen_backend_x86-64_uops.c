@@ -534,7 +534,7 @@ static int codegen_FADD(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b) && dest_reg == src_reg_a)
         {
-                host_x86_ADDSD_REG_REG(block, dest_reg, src_reg_b);
+                host_x86_ADDSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
         else
                 fatal("codegen_FADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -548,13 +548,13 @@ static int codegen_FDIV(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b) && dest_reg == src_reg_a)
         {
-                host_x86_DIVSD_REG_REG(block, dest_reg, src_reg_b);
+                host_x86_DIVSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
         {
-                host_x86_MOVQ_REG_REG(block, REG_XMM_TEMP, src_reg_a);
-                host_x86_DIVSD_REG_REG(block, REG_XMM_TEMP, src_reg_b);
-                host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
+                host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg_a);
+                host_x86_DIVSD_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
+                host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
         else
                 fatal("codegen_FDIV %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -568,7 +568,7 @@ static int codegen_FMUL(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b) && dest_reg == src_reg_a)
         {
-                host_x86_MULSD_REG_REG(block, dest_reg, src_reg_b);
+                host_x86_MULSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
         else
                 fatal("codegen_FMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -582,13 +582,13 @@ static int codegen_FSUB(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b) && dest_reg == src_reg_a)
         {
-                host_x86_SUBSD_REG_REG(block, dest_reg, src_reg_b);
+                host_x86_SUBSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_D(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
         {
-                host_x86_MOVQ_REG_REG(block, REG_XMM_TEMP, src_reg_a);
-                host_x86_SUBSD_REG_REG(block, REG_XMM_TEMP, src_reg_b);
-                host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
+                host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg_a);
+                host_x86_SUBSD_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
+                host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
         else
                 fatal("codegen_FSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -797,7 +797,7 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
         host_x86_CALL(block, codegen_mem_load_single);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
-        host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
+        host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
 
         return 0;
 }
@@ -815,7 +815,7 @@ static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
         host_x86_CALL(block, codegen_mem_load_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
-        host_x86_MOVQ_REG_REG(block, dest_reg, REG_XMM_TEMP);
+        host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
 
         return 0;
 }
@@ -946,7 +946,7 @@ static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
-        host_x86_MOVQ_REG_REG(block, REG_XMM_TEMP, src_reg);
+        host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg);
         host_x86_CALL(block, codegen_mem_store_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
@@ -1554,7 +1554,7 @@ void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)
 }
 void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p)
 {
-        host_x86_MOVQ_REG_ABS(block, host_reg, p);
+        host_x86_MOVQ_XREG_ABS(block, host_reg, p);
 }
 void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx)
 {
@@ -1563,7 +1563,7 @@ void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base,
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
         host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
         host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
-        host_x86_MOVQ_REG_ABS_REG_REG_SHIFT(block, host_reg, offset, REG_RBP, REG_ECX, 3);
+        host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(block, host_reg, offset, REG_RBP, REG_ECX, 3);
 }
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg)
@@ -1589,7 +1589,7 @@ void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int 
 }
 void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg)
 {
-        host_x86_MOVQ_ABS_REG(block, p, host_reg);
+        host_x86_MOVQ_ABS_XREG(block, p, host_reg);
 }
 void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg)
 {
@@ -1598,7 +1598,7 @@ void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx,
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
         host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
         host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
-        host_x86_MOVQ_ABS_REG_REG_SHIFT_REG(block, offset, REG_RBP, REG_ECX, 3, host_reg);
+        host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(block, offset, REG_RBP, REG_ECX, 3, host_reg);
 }
 
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg)
@@ -1614,10 +1614,18 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 {
         host_x86_MOV32_REG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
 }
+void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
+}
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
         host_x86_MOV32_BASE_OFFSET_REG(block, REG_RSP, stack_offset, host_reg);
+}
+void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_x86_MOVQ_BASE_OFFSET_XREG(block, REG_RSP, stack_offset, host_reg);
 }
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)
