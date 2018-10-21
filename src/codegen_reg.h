@@ -13,6 +13,7 @@
 #define IREG_SIZE_B  (2 << IREG_SIZE_SHIFT)
 #define IREG_SIZE_BH (3 << IREG_SIZE_SHIFT)
 #define IREG_SIZE_D  (4 << IREG_SIZE_SHIFT)
+#define IREG_SIZE_Q  (5 << IREG_SIZE_SHIFT)
 
 enum
 {
@@ -67,7 +68,8 @@ enum
 
         IREG_FPU_TOP = 37,
 
-	IREG_temp0d = 39,
+	IREG_temp0d = 38,
+	IREG_temp1d = 39,
 	
         /*FPU stack registers are physical registers. Use IREG_ST() / IREG_tag()
           to access.
@@ -93,9 +95,18 @@ enum
         IREG_tag6 = 54,
         IREG_tag7 = 55,
 
-	IREG_COUNT = 56,
+        IREG_MM0 = 56,
+        IREG_MM1 = 57,
+        IREG_MM2 = 58,
+        IREG_MM3 = 59,
+        IREG_MM4 = 60,
+        IREG_MM5 = 61,
+        IREG_MM6 = 62,
+        IREG_MM7 = 63,
+
+	IREG_COUNT = 64,
 	
-	IREG_INVALID = 63,
+	IREG_INVALID = 255,
 	
 	IREG_AX = IREG_EAX + IREG_SIZE_W,
 	IREG_CX = IREG_ECX + IREG_SIZE_W,
@@ -130,9 +141,13 @@ enum
 	
 	IREG_temp0_B = IREG_temp0 + IREG_SIZE_B,
 	IREG_temp1_B = IREG_temp1 + IREG_SIZE_B,
-	
+
 	IREG_temp0_D = IREG_temp0d + IREG_SIZE_D,
-	
+	IREG_temp1_D = IREG_temp1d + IREG_SIZE_D,
+
+	IREG_temp0_Q = IREG_temp0d + IREG_SIZE_Q,
+	IREG_temp1_Q = IREG_temp1d + IREG_SIZE_Q,
+
 	IREG_eaaddr_W = IREG_eaaddr + IREG_SIZE_W,
 	
         IREG_CS_seg_W = IREG_CS_seg + IREG_SIZE_W,
@@ -148,6 +163,7 @@ enum
 #define IREG_32(reg) ((reg) + IREG_EAX)
 
 #define IREG_ST(r)  (IREG_ST0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_D)
+#define IREG_MM(r)  (IREG_MM0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_Q)
 #define IREG_tag(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7))
 
 #define IREG_TOP_diff_stack_offset 32

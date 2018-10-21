@@ -35,7 +35,8 @@ enum
         REG_POINTER,
         REG_DOUBLE,
         REG_FPU_ST_BYTE,
-        REG_FPU_ST_DOUBLE
+        REG_FPU_ST_DOUBLE,
+        REG_FPU_ST_QWORD
 };
 
 enum
@@ -113,6 +114,15 @@ struct
 	[IREG_tag6] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
 	[IREG_tag7] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
 
+	[IREG_MM0] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM1] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM2] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM3] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM4] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM5] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM6] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM7] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
@@ -121,7 +131,8 @@ struct
 	[IREG_temp2] = {REG_DWORD, (void *)24, REG_INTEGER},
 	[IREG_temp3] = {REG_DWORD, (void *)28, REG_INTEGER},
 	
-	[IREG_temp0d] = {REG_DOUBLE, (void *)48, REG_FP}
+	[IREG_temp0d] = {REG_DOUBLE, (void *)40, REG_FP},
+	[IREG_temp1d] = {REG_DOUBLE, (void *)48, REG_FP},
 };
 
 void codegen_reg_reset()
@@ -200,7 +211,27 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                         codegen_direct_read_double(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
                 
+                case REG_FPU_ST_BYTE:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
+                        fatal("codegen_reg_load - REG_FPU_ST_BYTE !REG_INTEGER\n");
+                if (block->flags & CODEBLOCK_STATIC_TOP)
+                        codegen_direct_read_8(block, reg_set->reg_list[c], &cpu_state.tag[ir_reg.reg & 7]);
+                else
+                        codegen_direct_read_st_8(block, reg_set->reg_list[c], &cpu_state.tag[0], ir_reg.reg & 7);
+                break;
+
+                case REG_FPU_ST_QWORD:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
+                        fatal("codegen_reg_load - REG_FPU_ST_QWORD !REG_FP\n");
+                if (block->flags & CODEBLOCK_STATIC_TOP)
+                        codegen_direct_read_64(block, reg_set->reg_list[c], &cpu_state.MM[ir_reg.reg & 7]);
+                else
+                        codegen_direct_read_st_64(block, reg_set->reg_list[c], &cpu_state.MM[0], ir_reg.reg & 7);
+                break;
+
                 case REG_FPU_ST_DOUBLE:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
+                        fatal("codegen_reg_load - REG_FPU_ST_DOUBLE !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_read_double(block, reg_set->reg_list[c], &cpu_state.ST[ir_reg.reg & 7]);
                 else
@@ -266,13 +297,26 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_FPU_ST_BYTE:
+                if (ireg_data[ir_reg].type != REG_INTEGER)
+                        fatal("codegen_reg_writeback - REG_FPU_ST_BYTE !REG_INTEGER\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_write_8(block, &cpu_state.tag[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
                 else
                         codegen_direct_write_st_8(block, &cpu_state.tag[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c]);
                 break;
 
+                case REG_FPU_ST_QWORD:
+                if (ireg_data[ir_reg].type != REG_FP)
+                        fatal("codegen_reg_writeback - REG_FPU_ST_QWORD !REG_FP\n");
+                if (block->flags & CODEBLOCK_STATIC_TOP)
+                        codegen_direct_write_64(block, &cpu_state.MM[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
+                else
+                        codegen_direct_write_st_64(block, &cpu_state.MM[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c]);
+                break;
+
                 case REG_FPU_ST_DOUBLE:
+                if (ireg_data[ir_reg].type != REG_FP)
+                        fatal("codegen_reg_writeback - REG_FPU_ST_DOUBLE !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_write_double(block, &cpu_state.ST[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
                 else

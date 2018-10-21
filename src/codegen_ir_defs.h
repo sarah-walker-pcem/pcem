@@ -501,21 +501,28 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_TEST_JNS_DEST(ir, src_reg) uop_gen_reg_src1(UOP_TEST_JNS_DEST, ir, src_reg)
 #define uop_TEST_JS_DEST(ir, src_reg)  uop_gen_reg_src1(UOP_TEST_JS_DEST, ir, src_reg)
 
+void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p);
+void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p);
+void codegen_direct_read_st_8(codeblock_t *block, int host_reg, void *base, int reg_idx);
+void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int reg_idx);
 void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx);
 
 void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_16(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_64(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg);
-void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg);
 void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg);
+void codegen_direct_write_st_64(codeblock_t *block, void *base, int reg_idx, int host_reg);
 void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg);
 
 void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);
+void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset);
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg);

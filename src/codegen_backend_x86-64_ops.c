@@ -663,6 +663,27 @@ void host_x86_MOV32_BASE_INDEX_REG(codeblock_t *block, int base_reg, int index_r
         codegen_addbyte3(block, 0x89, 0x04 | (src_reg << 3), (index_reg << 3) | base_reg); /*MOV L[base_reg + index_reg], src_reg*/
 }
 
+void host_x86_MOV8_REG_ABS(codeblock_t *block, int dst_reg, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (dst_reg & 8)
+                fatal("host_x86_MOV8_REG_ABS reg & 8\n");
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte3(block, 0x8a, 0x45 | ((dst_reg & 7) << 3), offset); /*MOV dst_reg, offset[RBP]*/
+        }
+        else if (offset < (1ull << 32))
+        {
+                codegen_addbyte2(block, 0x8a, 0x85 | ((dst_reg & 7) << 3)); /*MOV dst_reg, offset[RBP]*/
+                codegen_addlong(block, offset);
+        }
+        else
+        {
+                fatal("host_x86_MOV8_REG_ABS - out of range\n");
+        }
+}
 void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -706,6 +727,21 @@ void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
                 codegen_addbyte(block, 0x8b); /*MOV [p], src_reg*/
                 codegen_addbyte(block, 0x05 | ((dst_reg & 7) << 3));
                 codegen_addlong(block, (uint32_t)(uintptr_t)p);
+        }
+}
+
+void host_x86_MOV8_REG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int base_reg, int index_reg, int shift)
+{
+        if ((dst_reg & 8) || (base_reg & 8) | (index_reg & 8))
+                fatal("host_x86_MOV8_REG_ABS_REG_REG_SHIFT reg & 8\n");
+        if (addr < 0x80 || addr >= 0xffffff80)
+        {
+                codegen_addbyte4(block, 0x8a, 0x44 | (dst_reg << 3), base_reg | (index_reg << 3) | (shift << 6), addr & 0xff); /*MOV addr[base_reg + idx_reg << shift], src_reg*/
+        }
+        else
+        {
+                codegen_addbyte3(block, 0x8a, 0x84 | (dst_reg << 3), base_reg | (index_reg << 3) | (shift << 6)); /*MOV addr[base_reg + idx_reg << shift], src_reg*/
+                codegen_addlong(block, addr);
         }
 }
 

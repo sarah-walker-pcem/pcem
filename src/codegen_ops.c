@@ -6,6 +6,7 @@
 #include "codegen_ops_branch.h"
 #include "codegen_ops_fpu_arith.h"
 #include "codegen_ops_fpu_loadstore.h"
+#include "codegen_ops_fpu_misc.h"
 #include "codegen_ops_jump.h"
 #include "codegen_ops_logic.h"
 #include "codegen_ops_misc.h"
@@ -174,8 +175,8 @@ RecompOpFn recomp_opcodes_d9[512] =
 /*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
-/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*c0*/  ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,
 /*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
@@ -196,8 +197,8 @@ RecompOpFn recomp_opcodes_d9[512] =
 /*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
-/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*c0*/  ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFLD,         ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,        ropFXCH,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,
 /*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
@@ -362,8 +363,8 @@ RecompOpFn recomp_opcodes_dd[512] =
 /*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
-/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*c0*/  ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,
 /*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
@@ -384,8 +385,8 @@ RecompOpFn recomp_opcodes_dd[512] =
 /*a0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*b0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 
-/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
-/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*c0*/  ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       ropFFREE,       NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFST,         ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,        ropFSTP,
 /*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
