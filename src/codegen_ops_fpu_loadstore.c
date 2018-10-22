@@ -132,3 +132,19 @@ uint32_t ropFILDl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 
         return op_pc+1;
 }
+uint32_t ropFILDq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_read(block, ir, target_seg);
+        uop_MEM_LOAD_REG(ir, IREG_MM(-1), ireg_seg_base(target_seg), IREG_eaaddr);
+        uop_MOV_DOUBLE_INT(ir, IREG_ST(-1), IREG_MM(-1));
+        uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID | TAG_UINT64);
+        fpu_PUSH(ir);
+
+        return op_pc+1;
+}

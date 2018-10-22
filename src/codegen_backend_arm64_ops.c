@@ -124,6 +124,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_LSR           (0x1ac02400)
 #define OPCODE_NOP           (0xd503201f)
 #define OPCODE_RET           (0xd65f0000)
+#define OPCODE_SCVTF_D_Q     (0x9e620000)
 #define OPCODE_SCVTF_D_W     (0x1e620000)
 #define OPCODE_STR_REG       (0xb8206800)
 #define OPCODE_STRB_REG      (0x38206800)
@@ -754,6 +755,10 @@ void host_arm64_SBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int 
 	codegen_addlong(block, OPCODE_SBFX | Rd(dst_reg) | Rn(src_reg) | IMMN(0) | IMMR(lsb) | IMMS((lsb+width-1) & 31));
 }
 
+void host_arm64_SCVTF_D_Q(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_SCVTF_D_Q | Rd(dst_reg) | Rn(src_reg));
+}
 void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_SCVTF_D_W | Rd(dst_reg) | Rn(src_reg));

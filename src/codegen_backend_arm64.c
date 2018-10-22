@@ -20,6 +20,7 @@
 void *codegen_mem_load_byte;
 void *codegen_mem_load_word;
 void *codegen_mem_load_long;
+void *codegen_mem_load_quad;
 void *codegen_mem_load_single;
 void *codegen_mem_load_double;
 
@@ -96,7 +97,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_LDR_REG(block, REG_W0, REG_W1, REG_W0);
 	else if (size == 4 && is_float)
 		host_arm64_LDR_REG_F32(block, REG_V_TEMP, REG_W1, REG_W0);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm64_LDR_REG_F64(block, REG_V_TEMP, REG_W1, REG_W0);
 	host_arm64_MOVZ_IMM(block, REG_W1, 0);
 	host_arm64_RET(block, REG_X30);
@@ -118,7 +119,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
 	if (size == 4 && is_float)
 		host_arm64_FMOV_S_W(block, REG_V_TEMP, REG_W0);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm64_FMOV_D_Q(block, REG_V_TEMP, REG_X0);
 	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
 	host_arm64_RET(block, REG_X30);
@@ -205,6 +206,8 @@ static void build_loadstore_routines(codeblock_t *block)
         build_load_routine(block, 2, 0);
         codegen_mem_load_long = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 0);
+        codegen_mem_load_quad = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 8, 0);
         codegen_mem_load_single = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 1);
         codegen_mem_load_double = &codeblock[block_current].data[block_pos];

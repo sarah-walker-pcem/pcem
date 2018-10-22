@@ -199,3 +199,6 @@ void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int 
 void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
 void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
 void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+
+void host_x87_FILDq_BASE(codeblock_t *block, int base_reg);
+void host_x87_FSTPd_BASE(codeblock_t *block, int base_reg);

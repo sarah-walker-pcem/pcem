@@ -348,7 +348,12 @@ void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 
 void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3));
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSI2SD dst_reg, src_reg*/
+}
+void host_x86_CVTSI2SD_XREG_REG64(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x48, 0x0f, 0x2a); /*CVTSI2SD dst_reg, src_reg*/
+        codegen_addbyte(block, 0xc0 | src_reg | (dst_reg << 3));
 }
 
 void host_x86_CVTSS2SD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)

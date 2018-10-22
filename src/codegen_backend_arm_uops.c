@@ -888,6 +888,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         {
                 host_arm_BL(block, (uintptr_t)codegen_mem_load_long);
         }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_arm_BL(block, (uintptr_t)codegen_mem_load_quad);
+        }
         else
                 fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
         host_arm_TST_REG(block, REG_R1, REG_R1);
@@ -907,6 +911,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         else if (REG_IS_L(dest_size))
         {
                 host_arm_MOV_REG(block, dest_reg, REG_R0);
+        }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_arm_VMOV_D_D(block, dest_reg, REG_D_TEMP);
         }
 
         return 0;
@@ -1237,6 +1245,10 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static double int64_to_double(int64_t a)
+{
+	return (double)a;
+}
 static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
@@ -1253,6 +1265,14 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
 		host_arm_VMOV_S_32(block, REG_D_TEMP, REG_TEMP);
 		host_arm_VCVT_D_IS(block, dest_reg, REG_D_TEMP);
         }
+        else if (REG_IS_D(dest_size) && REG_IS_Q(src_size))
+        {
+		/*ARMv7 has no instructions to convert a 64-bit integer to a double.
+		  For simplicity, call a C function and let the compiler do it.*/
+		host_arm_VMOV_64_D(block, REG_R0, REG_R1, src_reg);
+		host_arm_BL(block, (uintptr_t)int64_to_double); /*Input - R0/R1, Output - D0*/
+		host_arm_VMOV_D_D(block, dest_reg, REG_D0);
+	}
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 

@@ -20,6 +20,7 @@
 void *codegen_mem_load_byte;
 void *codegen_mem_load_word;
 void *codegen_mem_load_long;
+void *codegen_mem_load_quad;
 void *codegen_mem_load_single;
 void *codegen_mem_load_double;
 
@@ -93,7 +94,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm_ADD_REG(block, REG_R0, REG_R0, REG_R1);
 		host_arm_VLDR_S(block, REG_D_TEMP, REG_R0, 0);
 	}
-	else if (size == 8 && is_float)
+	else if (size == 8)
 	{
 		host_arm_ADD_REG(block, REG_R0, REG_R0, REG_R1);
 		host_arm_VLDR_D(block, REG_D_TEMP, REG_R0, 0);
@@ -117,7 +118,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		fatal("build_load_routine - unknown size %i\n", size);
 	if (size == 4 && is_float)
 		host_arm_VMOV_S_32(block, REG_D_TEMP, REG_R0);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm_VMOV_D_64(block, REG_D_TEMP, REG_R0, REG_R1);
 	host_arm_LDRB_ABS(block, REG_R1, &cpu_state.abrt);
 	host_arm_LDR_IMM_POST(block, REG_PC, REG_HOST_SP, 4);
@@ -206,6 +207,8 @@ static void build_loadstore_routines(codeblock_t *block)
         build_load_routine(block, 2, 0);
         codegen_mem_load_long = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 0);
+        codegen_mem_load_quad = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 8, 0);
         codegen_mem_load_single = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 1);
         codegen_mem_load_double = &codeblock[block_current].data[block_pos];

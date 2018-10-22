@@ -19,6 +19,7 @@
 void *codegen_mem_load_byte;
 void *codegen_mem_load_word;
 void *codegen_mem_load_long;
+void *codegen_mem_load_quad;
 void *codegen_mem_load_single;
 void *codegen_mem_load_double;
 
@@ -90,7 +91,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOV32_REG_BASE_INDEX(block, REG_ECX, REG_ESI, REG_ECX);
         else if (size == 4 && is_float)
                 host_x86_CVTSS2SD_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
-        else if (size == 8 && is_float)
+        else if (size == 8/* && is_float*/)
                 host_x86_MOVQ_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
         else
                 fatal("build_load_routine: size=%i\n", size);
@@ -123,7 +124,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
                 host_x86_CVTSS2SD_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP);
         }
-        else if (size == 8 && is_float)
+        else if (size == 8)// && is_float)
         {
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP2, REG_EDX);
@@ -228,6 +229,8 @@ static void build_loadstore_routines(codeblock_t *block)
         build_load_routine(block, 2, 0);
         codegen_mem_load_long = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 0);
+        codegen_mem_load_quad = &codeblock[block_current].data[block_pos];
+        build_load_routine(block, 8, 0);
         codegen_mem_load_single = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 4, 1);
         codegen_mem_load_double = &codeblock[block_current].data[block_pos];

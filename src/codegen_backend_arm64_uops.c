@@ -817,8 +817,12 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         {
                 host_arm64_call(block, codegen_mem_load_long);
         }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_arm64_call(block, codegen_mem_load_quad);
+        }
         else
-                fatal("MEM_LOAD_ABS - %02x\n", uop->dest_reg_a_real);
+                fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
 	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
         if (REG_IS_B(dest_size))
         {
@@ -835,6 +839,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         else if (REG_IS_L(dest_size))
         {
                 host_arm64_MOV_REG(block, dest_reg, REG_X0, 0);
+        }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_arm64_FMOV_D_D(block, dest_reg, REG_V_TEMP);
         }
 
         return 0;
@@ -1168,6 +1176,11 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
         {
 		host_arm64_SBFX(block, REG_TEMP, src_reg, 0, 16);
                 host_arm64_SCVTF_D_W(block, dest_reg, REG_TEMP);
+        }
+        else if (REG_IS_D(dest_size) && REG_IS_Q(src_size))
+        {
+		host_arm64_FMOV_Q_D(block, REG_TEMP, src_reg);
+                host_arm64_SCVTF_D_Q(block, dest_reg, REG_TEMP);
         }
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);

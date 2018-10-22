@@ -1316,4 +1316,20 @@ void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32
         }
 }
 
+void host_x87_FILDq_BASE(codeblock_t *block, int base_reg)
+{
+        if (base_reg == REG_ESP)
+                codegen_addbyte3(block, 0xdf, 0x2c, 0x24); /*FILDq [ESP]*/
+        else
+                codegen_addbyte2(block, 0xdf, 0x28 | base_reg); /*FILDq [base_reg]*/
+}
+
+void host_x87_FSTPd_BASE(codeblock_t *block, int base_reg)
+{
+        if (base_reg == REG_ESP)
+                codegen_addbyte3(block, 0xdd, 0x1c, 0x24); /*FILDq [ESP]*/
+        else
+                codegen_addbyte2(block, 0xdd, 0x18 | base_reg); /*FILDq [base_reg]*/
+}
+
 #endif

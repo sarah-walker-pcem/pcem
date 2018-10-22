@@ -765,6 +765,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CALL(block, codegen_mem_load_long);
         }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_x86_CALL(block, codegen_mem_load_quad);
+        }
         else
                 fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
@@ -780,6 +784,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         else if (REG_IS_L(dest_size))
         {
                 host_x86_MOV32_REG_REG(block, dest_reg, REG_ECX);
+        }
+        else if (REG_IS_Q(dest_size))
+        {
+                host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
 
         return 0;
@@ -1068,6 +1076,11 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOVSX_REG_32_16(block, REG_ECX, src_reg);
                 host_x86_CVTSI2SD_XREG_REG(block, dest_reg, REG_ECX);
+        }
+        else if (REG_IS_D(dest_size) && REG_IS_Q(src_size))
+        {
+                host_x86_MOVQ_REG_XREG(block, REG_RCX, src_reg);
+                host_x86_CVTSI2SD_XREG_REG64(block, dest_reg, REG_RCX);
         }
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);

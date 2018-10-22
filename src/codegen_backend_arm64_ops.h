@@ -106,6 +106,7 @@ void host_arm64_RET(codeblock_t *block, int reg);
 
 void host_arm64_SBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int width);
 
+void host_arm64_SCVTF_D_Q(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset);
