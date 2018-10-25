@@ -103,8 +103,11 @@ enum
         IREG_MM5 = 61,
         IREG_MM6 = 62,
         IREG_MM7 = 63,
+        
+        IREG_NPXCx = 64,
+        IREG_NPXSx = 65,
 
-	IREG_COUNT = 64,
+	IREG_COUNT = 66,
 	
 	IREG_INVALID = 255,
 	
@@ -155,7 +158,10 @@ enum
         IREG_ES_seg_W = IREG_ES_seg + IREG_SIZE_W,
         IREG_FS_seg_W = IREG_FS_seg + IREG_SIZE_W,
         IREG_GS_seg_W = IREG_GS_seg + IREG_SIZE_W,
-        IREG_SS_seg_W = IREG_SS_seg + IREG_SIZE_W
+        IREG_SS_seg_W = IREG_SS_seg + IREG_SIZE_W,
+        
+        IREG_NPXC = IREG_NPXCx + IREG_SIZE_W,
+        IREG_NPXS = IREG_NPXSx + IREG_SIZE_W
 };
 
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))
