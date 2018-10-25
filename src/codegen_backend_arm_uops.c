@@ -1,7 +1,9 @@
 #ifdef __ARM_EABI__
 
+#include <math.h>
 #include "ibm.h"
 #include "x86.h"
+#include "x87.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_backend.h"
@@ -1013,6 +1015,11 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
                 host_arm_MOV_REG(block, REG_R1, src_reg);
                 host_arm_BL(block, (uintptr_t)codegen_mem_store_long);
         }
+        else if (REG_IS_Q(src_size))
+        {
+                host_arm_VMOV_D_D(block, REG_D_TEMP, src_reg);
+                host_arm_BL(block, (uintptr_t)codegen_mem_store_quad);
+        }
         else
                 fatal("MEM_STORE_REG - %02x\n", uop->src_reg_c_real);
         host_arm_TST_REG(block, REG_R1, REG_R1);
@@ -1275,6 +1282,81 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
 	}
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOV_INT_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_D(src_size))
+        {
+		host_arm_VMOV_D_D(block, REG_D_TEMP, src_reg);
+	        host_arm_BL(block, (uintptr_t)codegen_fp_round);
+		host_arm_VMOV_32_S(block, dest_reg, REG_D_TEMP);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_D(src_size))
+        {
+		host_arm_VMOV_D_D(block, REG_D_TEMP, src_reg);
+	        host_arm_BL(block, (uintptr_t)codegen_fp_round);
+		host_arm_VMOV_32_S(block, REG_TEMP, REG_D_TEMP);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+        else
+                fatal("MOV_INT_DOUBLE %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int64_t x87_fround64(double b)
+{
+        int64_t a, c;
+        
+        switch ((cpu_state.npxc >> 10) & 3)
+        {
+                case 0: /*Nearest*/
+                a = (int64_t)floor(b);
+                c = (int64_t)floor(b + 1.0);
+                if ((b - a) < (c - b))
+                        return a;
+                else if ((b - a) > (c - b))
+                        return c;
+                else
+                        return (a & 1) ? c : a;
+                case 1: /*Down*/
+                return (int64_t)floor(b);
+                case 2: /*Up*/
+                return (int64_t)ceil(b);
+                case 3: /*Chop*/
+                return (int64_t)b;
+        }
+        
+        return 0;
+}
+static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), src_64_reg = HOST_REG_GET(uop->src_reg_b_real), tag_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real), src_64_size = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_D(src_size) && REG_IS_Q(src_64_size))
+        {
+                uint32_t *branch_offset;
+
+                /*If TAG_UINT64 is set then the source is MM[]. Otherwise it is a double in ST()*/
+                host_arm_VMOV_D_D(block, dest_reg, src_64_reg);
+		host_arm_TST_IMM(block, tag_reg, TAG_UINT64);
+                branch_offset = host_arm_BNE_(block);
+
+		/*VFP/NEON has no instructions to convert a float to 64-bit integer,
+		  so call out to C.*/
+		host_arm_VMOV_D_D(block, REG_D0, src_reg);
+	        host_arm_call(block, x87_fround64);
+                host_arm_VMOV_D_64(block, REG_D_TEMP, REG_R0, REG_R1);
+                
+		*branch_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 8) & 0x3fffffc) >> 2;
+        }
+        else
+                fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 
         return 0;
 }
@@ -1810,6 +1892,8 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOVSX   & UOP_MASK] = codegen_MOVSX,
         [UOP_MOVZX   & UOP_MASK] = codegen_MOVZX,
         [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
+        [UOP_MOV_INT_DOUBLE    & UOP_MASK] = codegen_MOV_INT_DOUBLE,
+        [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
 
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

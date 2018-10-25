@@ -630,6 +630,12 @@ static int codegen_JMP(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_JMP_DEST(codeblock_t *block, uop_t *uop)
+{
+        uop->p = host_x86_JMP_long(block);
+
+        return 0;
+}
 
 static int codegen_LOAD_FUNC_ARG0(codeblock_t *block, uop_t *uop)
 {
@@ -872,8 +878,13 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
                 host_x86_MOV32_REG_REG(block, REG_ECX, src_reg);
                 host_x86_CALL(block, codegen_mem_store_long);
         }
+        else if (REG_IS_Q(src_size))
+        {
+                host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg);
+                host_x86_CALL(block, codegen_mem_store_quad);
+        }
         else
-                fatal("MEM_STORE_ABS - %02x\n", uop->src_reg_b_real);
+                fatal("MEM_STORE_REG - %02x\n", uop->src_reg_b_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
 
@@ -1079,6 +1090,60 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOV_INT_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_D(src_size))
+        {
+                host_x86_LDMXCSR(block, &cpu_state.new_fp_control);
+                host_x86_CVTSD2SI_REG_XREG(block, dest_reg, src_reg);
+                host_x86_LDMXCSR(block, &cpu_state.old_fp_control);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_D(src_size))
+        {
+                host_x86_LDMXCSR(block, &cpu_state.new_fp_control);
+                host_x86_CVTSD2SI_REG_XREG(block, REG_ECX, src_reg);
+                host_x86_MOV16_REG_REG(block, dest_reg, REG_ECX);
+                host_x86_LDMXCSR(block, &cpu_state.old_fp_control);
+        }
+        else
+                fatal("MOV_INT_DOUBLE %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+
+static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), src_64_reg = HOST_REG_GET(uop->src_reg_b_real), tag_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real), src_64_size = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_D(src_size) && REG_IS_Q(src_64_size))
+        {
+                uint8_t *branch_offset;
+
+                /*If TAG_UINT64 is set then the source is MM[]. Otherwise it is a double in ST()*/
+                host_x86_MOVQ_XREG_XREG(block, dest_reg, src_64_reg);
+                host_x86_TEST8_REG(block, tag_reg, tag_reg);
+                branch_offset = host_x86_JS_short(block);
+
+                /*There is no SSE instruction to convert a floating point value to a 64-bit integer.
+                  Instead we have to bounce through memory via x87.*/
+                host_x87_FLDCW(block, &cpu_state.new_fp_control2);
+                host_x86_MOVQ_BASE_OFFSET_XREG(block, REG_ESP, 0, src_reg);
+                host_x87_FLDd_BASE(block, REG_ESP);
+                host_x87_FISTPq_BASE(block, REG_ESP);
+                host_x86_MOVQ_XREG_BASE_OFFSET(block, dest_reg, REG_ESP, 0);
+                host_x87_FLDCW(block, &cpu_state.old_fp_control2);
+
+                *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        }
+        else
+                fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 
         return 0;
 }
@@ -1473,6 +1538,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_CALL_INSTRUCTION_FUNC & UOP_MASK] = codegen_CALL_INSTRUCTION_FUNC,
 
         [UOP_JMP & UOP_MASK] = codegen_JMP,
+        [UOP_JMP_DEST & UOP_MASK] = codegen_JMP_DEST,
 
         [UOP_LOAD_SEG & UOP_MASK] = codegen_LOAD_SEG,
         
@@ -1502,12 +1568,14 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MEM_STORE_SINGLE & UOP_MASK] = codegen_MEM_STORE_SINGLE,
         [UOP_MEM_STORE_DOUBLE & UOP_MASK] = codegen_MEM_STORE_DOUBLE,
         
-        [UOP_MOV            & UOP_MASK] = codegen_MOV,
-        [UOP_MOV_PTR        & UOP_MASK] = codegen_MOV_PTR,
-        [UOP_MOV_IMM        & UOP_MASK] = codegen_MOV_IMM,
-        [UOP_MOVSX          & UOP_MASK] = codegen_MOVSX,
-        [UOP_MOVZX          & UOP_MASK] = codegen_MOVZX,
-        [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
+        [UOP_MOV               & UOP_MASK] = codegen_MOV,
+        [UOP_MOV_PTR           & UOP_MASK] = codegen_MOV_PTR,
+        [UOP_MOV_IMM           & UOP_MASK] = codegen_MOV_IMM,
+        [UOP_MOVSX             & UOP_MASK] = codegen_MOVSX,
+        [UOP_MOVZX             & UOP_MASK] = codegen_MOVZX,
+        [UOP_MOV_DOUBLE_INT    & UOP_MASK] = codegen_MOV_DOUBLE_INT,
+        [UOP_MOV_INT_DOUBLE    & UOP_MASK] = codegen_MOV_INT_DOUBLE,
+        [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
         
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

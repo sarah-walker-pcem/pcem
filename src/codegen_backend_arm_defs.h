@@ -22,7 +22,8 @@
 
 #define REG_CPUSTATE REG_R10
 
-#define REG_TEMP REG_R3
+#define REG_TEMP  REG_R3
+#define REG_TEMP2 REG_R2
 
 #define REG_D0   0
 #define REG_D1   1
@@ -76,5 +77,8 @@ extern void *codegen_mem_load_double;
 extern void *codegen_mem_store_byte;
 extern void *codegen_mem_store_word;
 extern void *codegen_mem_store_long;
+extern void *codegen_mem_store_quad;
 extern void *codegen_mem_store_single;
 extern void *codegen_mem_store_double;
+
+extern void *codegen_fp_round;

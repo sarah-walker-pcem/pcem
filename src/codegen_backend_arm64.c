@@ -8,6 +8,7 @@
 #include "codegen_backend_arm64_ops.h"
 #include "codegen_reg.h"
 #include "x86.h"
+#include "x87.h"
 
 #if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
@@ -27,8 +28,12 @@ void *codegen_mem_load_double;
 void *codegen_mem_store_byte;
 void *codegen_mem_store_word;
 void *codegen_mem_store_long;
+void *codegen_mem_store_quad;
 void *codegen_mem_store_single;
 void *codegen_mem_store_double;
+
+void *codegen_fp_round;
+void *codegen_fp_round_quad;
 
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
@@ -168,7 +173,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_STR_REG(block, REG_X1, REG_X2, REG_X0);
 	else if (size == 4 && is_float)
 		host_arm64_STR_REG_F32(block, REG_V_TEMP, REG_X2, REG_X0);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm64_STR_REG_F64(block, REG_V_TEMP, REG_X2, REG_X0);
 	host_arm64_MOVZ_IMM(block, REG_X1, 0);
 	host_arm64_RET(block, REG_X30);
@@ -179,7 +184,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
 	if (size == 4 && is_float)
 		host_arm64_FMOV_W_S(block, REG_W1, REG_V_TEMP);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm64_FMOV_Q_D(block, REG_X1, REG_V_TEMP);
 	if (size == 1)
 		host_arm64_call(block, (uintptr_t)writememb386l);
@@ -219,10 +224,58 @@ static void build_loadstore_routines(codeblock_t *block)
         build_store_routine(block, 2, 0);
         codegen_mem_store_long = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 0);
+        codegen_mem_store_quad = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 8, 0);
         codegen_mem_store_single = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 1);
         codegen_mem_store_double = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 8, 1);
+}
+
+static void build_fp_round_routine(codeblock_t *block, int is_quad)
+{
+	uint64_t *jump_table;
+
+	host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.new_fp_control - (uintptr_t)&cpu_state);
+	host_arm64_ADR(block, REG_TEMP2, 12);
+	host_arm64_LDR_REG_X(block, REG_TEMP2, REG_TEMP2, REG_TEMP);
+	host_arm64_BR(block, REG_TEMP2);
+
+	jump_table = &block->data[block_pos];
+	addquad(0);
+	addquad(0);
+	addquad(0);
+	addquad(0);
+
+	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block->data[block_pos]; //tie even
+	if (is_quad)
+		host_arm64_FCVTNS_X_D(block, REG_TEMP, REG_V_TEMP);
+	else
+		host_arm64_FCVTNS_W_D(block, REG_TEMP, REG_V_TEMP);
+	host_arm64_RET(block, REG_X30);
+
+	jump_table[X87_ROUNDING_UP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //pos inf
+	if (is_quad)
+		host_arm64_FCVTPS_X_D(block, REG_TEMP, REG_V_TEMP);
+	else
+		host_arm64_FCVTPS_W_D(block, REG_TEMP, REG_V_TEMP);
+	host_arm64_RET(block, REG_X30);
+
+	jump_table[X87_ROUNDING_DOWN] = (uint64_t)(uintptr_t)&block->data[block_pos]; //neg inf
+	if (is_quad)
+		host_arm64_FCVTMS_X_D(block, REG_TEMP, REG_V_TEMP);
+	else
+		host_arm64_FCVTMS_W_D(block, REG_TEMP, REG_V_TEMP);
+	host_arm64_RET(block, REG_X30);
+	
+	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //zero
+	if (is_quad)
+		host_arm64_FCVTZS_X_D(block, REG_TEMP, REG_V_TEMP);
+	else
+		host_arm64_FCVTZS_W_D(block, REG_TEMP, REG_V_TEMP);
+	host_arm64_RET(block, REG_X30);
+
+        block_pos = (block_pos + 63) & ~63;
 }
 
 void codegen_backend_init()
@@ -265,6 +318,22 @@ void codegen_backend_init()
         block_pos = 0;
 	codegen_reset_literal_pool(&codeblock[block_current]);
         build_loadstore_routines(&codeblock[block_current]);
+
+        codegen_fp_round = &codeblock[block_current].data[block_pos];
+	build_fp_round_routine(&codeblock[block_current], 0);
+        codegen_fp_round_quad = &codeblock[block_current].data[block_pos];
+	build_fp_round_routine(&codeblock[block_current], 1);
+
+	asm("mrs %0, fpcr\n"
+                : "=r" (cpu_state.old_fp_control)
+	);
+}
+
+void codegen_set_rounding_mode(int mode)
+{
+	if (mode < 0 || mode > 3)
+		fatal("codegen_set_rounding_mode - invalid mode\n");
+        cpu_state.new_fp_control = mode << 3;
 }
 
 /*R11 - literal pool

@@ -8,6 +8,7 @@
 #include "codegen_backend_arm_ops.h"
 #include "codegen_reg.h"
 #include "x86.h"
+#include "x87.h"
 
 #if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
@@ -27,8 +28,11 @@ void *codegen_mem_load_double;
 void *codegen_mem_store_byte;
 void *codegen_mem_store_word;
 void *codegen_mem_store_long;
+void *codegen_mem_store_quad;
 void *codegen_mem_store_single;
 void *codegen_mem_store_double;
+
+void *codegen_fp_round;
 
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
@@ -167,7 +171,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 		host_arm_ADD_REG(block, REG_R0, REG_R0, REG_R2);
 		host_arm_VSTR_S(block, REG_D_TEMP, REG_R0, 0);
 	}
-	else if (size == 8 && is_float)
+	else if (size == 8)
 	{
 		host_arm_ADD_REG(block, REG_R0, REG_R0, REG_R2);
 		host_arm_VSTR_D(block, REG_D_TEMP, REG_R0, 0);
@@ -181,7 +185,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	host_arm_STR_IMM_WB(block, REG_LR, REG_HOST_SP, -4);
 	if (size == 4 && is_float)
 		host_arm_VMOV_32_S(block, REG_R1, REG_D_TEMP);
-	else if (size == 8 && is_float)
+	else if (size == 8)
 		host_arm_VMOV_64_D(block, REG_R2, REG_R3, REG_D_TEMP);
 	if (size == 1)
 		host_arm_BL(block, (uintptr_t)writememb386l);
@@ -220,10 +224,63 @@ static void build_loadstore_routines(codeblock_t *block)
         build_store_routine(block, 2, 0);
         codegen_mem_store_long = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 0);
+        codegen_mem_store_quad = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 8, 0);
         codegen_mem_store_single = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 1);
         codegen_mem_store_double = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 8, 1);
+}
+
+/*VFP has a specific round-to-zero instruction, and the default rounding mode
+  is nearest. For round up/down, temporarily change the rounding mode in FPCSR*/
+#define FPCSR_ROUNDING_MASK (3 << 22)
+#define FPCSR_ROUNDING_UP   (1 << 22)
+#define FPCSR_ROUNDING_DOWN (2 << 22)
+
+static void build_fp_round_routine(codeblock_t *block)
+{
+	uint32_t *jump_table;
+
+	host_arm_MOV_REG(block, REG_TEMP2, REG_LR);
+	host_arm_MOV_REG(block, REG_LR, REG_TEMP2);
+	host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.new_fp_control - (uintptr_t)&cpu_state);
+	host_arm_LDR_REG(block, REG_PC, REG_PC, REG_TEMP);
+	addlong(0);
+
+	jump_table = (uint32_t *)&block->data[block_pos];
+	addlong(0);
+	addlong(0);
+	addlong(0);
+	addlong(0);
+
+	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block->data[block_pos]; //tie even
+	host_arm_VCVTR_IS_D(block, REG_D_TEMP, REG_D_TEMP);
+	host_arm_MOV_REG(block, REG_PC, REG_LR);
+
+	jump_table[X87_ROUNDING_UP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //pos inf
+	host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.old_fp_control - (uintptr_t)&cpu_state);
+	host_arm_BIC_IMM(block, REG_TEMP2, REG_TEMP, FPCSR_ROUNDING_MASK);
+	host_arm_ORR_IMM(block, REG_TEMP2, REG_TEMP2, FPCSR_ROUNDING_UP);
+	host_arm_VMSR_FPSCR(block, REG_TEMP2);
+	host_arm_VCVTR_IS_D(block, REG_D_TEMP, REG_D_TEMP);
+	host_arm_VMSR_FPSCR(block, REG_TEMP);
+	host_arm_MOV_REG(block, REG_PC, REG_LR);
+
+	jump_table[X87_ROUNDING_DOWN] = (uint64_t)(uintptr_t)&block->data[block_pos]; //neg inf
+	host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.old_fp_control - (uintptr_t)&cpu_state);
+	host_arm_BIC_IMM(block, REG_TEMP2, REG_TEMP, FPCSR_ROUNDING_MASK);
+	host_arm_ORR_IMM(block, REG_TEMP2, REG_TEMP, FPCSR_ROUNDING_DOWN);
+	host_arm_VMSR_FPSCR(block, REG_TEMP2);
+	host_arm_VCVTR_IS_D(block, REG_D_TEMP, REG_D_TEMP);
+	host_arm_VMSR_FPSCR(block, REG_TEMP);
+	host_arm_MOV_REG(block, REG_PC, REG_LR);
+	
+	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //zero
+	host_arm_VCVT_IS_D(block, REG_D_TEMP, REG_D_TEMP);
+	host_arm_MOV_REG(block, REG_PC, REG_LR);
+
+        block_pos = (block_pos + 63) & ~63;
 }
 
 void codegen_backend_init()
@@ -265,6 +322,22 @@ void codegen_backend_init()
         block_current = BLOCK_SIZE;
         block_pos = 0;
         build_loadstore_routines(&codeblock[block_current]);
+
+        codegen_fp_round = &codeblock[block_current].data[block_pos];
+	build_fp_round_routine(&codeblock[block_current]);
+
+	asm("vmrs %0, fpscr\n"
+                : "=r" (cpu_state.old_fp_control)
+	);
+	if ((cpu_state.old_fp_control >> 22) & 3)
+		fatal("VFP not in nearest rounding mode\n");
+}
+
+void codegen_set_rounding_mode(int mode)
+{
+	if (mode < 0 || mode > 3)
+		fatal("codegen_set_rounding_mode - invalid mode\n");
+        cpu_state.new_fp_control = mode << 2;
 }
 
 /*R10 - cpu_state*/

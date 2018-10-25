@@ -309,14 +309,18 @@ void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
         codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
 }
 
+void host_x86_CVTSD2SI_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x2d, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSD2SI dst_reg, src_reg*/
+}
 void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        codegen_addbyte4(block, 0xf2, 0x0f, 0x5a, 0xc0 | src_reg | (dst_reg << 3));
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x5a, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSD2SS dst_reg, src_reg*/
 }
 
 void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3));
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSI2SD dst_reg, src_reg*/
 }
 
 void host_x86_CVTSS2SD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
@@ -339,6 +343,12 @@ void host_x86_JMP(codeblock_t *block, void *p)
         codegen_addbyte(block, 0xe9); /*JMP*/
         codegen_addlong(block, (uintptr_t)p - (uintptr_t)&block->data[block_pos + 4]);
 }
+uint32_t *host_x86_JMP_long(codeblock_t *block)
+{
+        codegen_addbyte(block, 0xe9); /*JMP*/
+        codegen_addlong(block, 0);
+        return (uint32_t *)&block->data[block_pos-4];
+}
 
 void host_x86_JNZ(codeblock_t *block, void *p)
 {
@@ -354,6 +364,11 @@ void host_x86_JZ(codeblock_t *block, void *p)
 uint8_t *host_x86_JNZ_short(codeblock_t *block)
 {
         codegen_addbyte2(block, 0x75, 0); /*JNZ*/
+        return &block->data[block_pos-1];
+}
+uint8_t *host_x86_JS_short(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x78, 0); /*JS*/
         return &block->data[block_pos-1];
 }
 uint8_t *host_x86_JZ_short(codeblock_t *block)
@@ -445,6 +460,21 @@ uint32_t *host_x86_JZ_long(codeblock_t *block)
         codegen_addbyte2(block, 0x0f, 0x84); /*JZ*/
         codegen_addlong(block, 0);
         return (uint32_t *)&block->data[block_pos-4];
+}
+
+void host_x86_LDMXCSR(codeblock_t *block, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x0f, 0xae, 0x50 | REG_EBP, offset); /*LDMXCSR offset[EBP]*/
+        }
+        else
+        {
+                codegen_addbyte3(block, 0x0f, 0xae, 0x15); /*LDMXCSR [p]*/
+                codegen_addlong(block, (uint32_t)p);
+        }
 }
 
 void host_x86_LEA_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t offset)
@@ -1323,7 +1353,34 @@ void host_x87_FILDq_BASE(codeblock_t *block, int base_reg)
         else
                 codegen_addbyte2(block, 0xdf, 0x28 | base_reg); /*FILDq [base_reg]*/
 }
+void host_x87_FISTPq_BASE(codeblock_t *block, int base_reg)
+{
+        if (base_reg == REG_ESP)
+                codegen_addbyte3(block, 0xdf, 0x3c, 0x24); /*FISTPq [ESP]*/
+        else
+                codegen_addbyte2(block, 0xdf, 0x38 | base_reg); /*FISTPq [base_reg]*/
+}
+void host_x87_FLDCW(codeblock_t *block, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte3(block, 0xd9, 0x68 | REG_EBP, offset); /*FLDCW offset[EBP]*/
+        }
+        else
+        {
+                codegen_addbyte2(block, 0xd9, 0x2d); /*FLDCW [p]*/
+                codegen_addlong(block, (uint32_t)p);
+        }
+}
+void host_x87_FLDd_BASE(codeblock_t *block, int base_reg)
+{
+        if (base_reg == REG_ESP)
+                codegen_addbyte3(block, 0xdd, 0x04, 0x24); /*FILDq [ESP]*/
+        else
+                codegen_addbyte2(block, 0xdd, 0x08 | base_reg); /*FILDq [base_reg]*/
+}
 void host_x87_FSTPd_BASE(codeblock_t *block, int base_reg)
 {
         if (base_reg == REG_ESP)

@@ -165,6 +165,7 @@ enum
 #define IREG_ST(r)  (IREG_ST0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_D)
 #define IREG_MM(r)  (IREG_MM0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_Q)
 #define IREG_tag(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7))
+#define IREG_tag_B(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_B)
 
 #define IREG_TOP_diff_stack_offset 32
 

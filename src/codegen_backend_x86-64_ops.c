@@ -341,6 +341,15 @@ void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
         codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
 }
 
+void host_x86_CVTSD2SI_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x2d, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSD2SI dst_reg, src_reg*/
+}
+void host_x86_CVTSD2SI_REG64_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x48, 0x0f, 0x2d); /*CVTSD2SI dst_reg, src_reg*/
+        codegen_addbyte(block, 0xc0 | src_reg | (dst_reg << 3));
+}
 void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x5a, 0xc0 | src_reg | (dst_reg << 3));
@@ -390,6 +399,11 @@ void host_x86_JZ(codeblock_t *block, void *p)
 uint8_t *host_x86_JNZ_short(codeblock_t *block)
 {
         codegen_addbyte2(block, 0x75, 0); /*JNZ*/
+        return &block->data[block_pos-1];
+}
+uint8_t *host_x86_JS_short(codeblock_t *block)
+{
+        codegen_addbyte2(block, 0x78, 0); /*JS*/
         return &block->data[block_pos-1];
 }
 uint8_t *host_x86_JZ_short(codeblock_t *block)
@@ -481,6 +495,20 @@ uint32_t *host_x86_JZ_long(codeblock_t *block)
         codegen_addbyte2(block, 0x0f, 0x84); /*JZ*/
         codegen_addlong(block, 0);
         return (uint32_t *)&block->data[block_pos-4];
+}
+
+void host_x86_LDMXCSR(codeblock_t *block, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_addbyte4(block, 0x0f, 0xae, 0x50 | REG_EBP, offset); /*LDMXCSR offset[EBP]*/
+        }
+        else
+        {
+                fatal("host_x86_LDMXCSR - out of range %p\n", p);
+        }
 }
 
 void host_x86_LEA_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t offset)

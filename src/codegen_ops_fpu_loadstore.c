@@ -148,3 +148,82 @@ uint32_t ropFILDq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 
         return op_pc+1;
 }
+
+uint32_t ropFISTw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_write(block, ir, target_seg);
+        uop_MOV_INT_DOUBLE(ir, IREG_temp0_W, IREG_ST(0));
+        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
+
+        return op_pc+1;
+}
+uint32_t ropFISTPw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_write(block, ir, target_seg);
+        uop_MOV_INT_DOUBLE(ir, IREG_temp0_W, IREG_ST(0));
+        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
+        fpu_POP(ir);
+
+        return op_pc+1;
+}
+uint32_t ropFISTl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_write(block, ir, target_seg);
+        uop_MOV_INT_DOUBLE(ir, IREG_temp0, IREG_ST(0));
+        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
+
+        return op_pc+1;
+}
+uint32_t ropFISTPl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_write(block, ir, target_seg);
+        uop_MOV_INT_DOUBLE(ir, IREG_temp0, IREG_ST(0));
+        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
+        fpu_POP(ir);
+
+        return op_pc+1;
+}
+uint32_t ropFISTPq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        x86seg *target_seg;
+
+        uop_FP_ENTER(ir);
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        op_pc--;
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+        codegen_check_seg_write(block, ir, target_seg);
+        uop_MOV_INT_DOUBLE_64(ir, IREG_temp0_Q, IREG_ST(0), IREG_MM(0), IREG_tag(0));
+        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_Q);
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
+        fpu_POP(ir);
+
+        return op_pc+1;
+}

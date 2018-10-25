@@ -26,6 +26,7 @@ void *codegen_mem_load_double;
 void *codegen_mem_store_byte;
 void *codegen_mem_store_word;
 void *codegen_mem_store_long;
+void *codegen_mem_store_quad;
 void *codegen_mem_store_single;
 void *codegen_mem_store_double;
 
@@ -91,7 +92,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOV32_REG_BASE_INDEX(block, REG_ECX, REG_ESI, REG_ECX);
         else if (size == 4 && is_float)
                 host_x86_CVTSS2SD_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
-        else if (size == 8/* && is_float*/)
+        else if (size == 8)
                 host_x86_MOVQ_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_ESI, REG_ECX);
         else
                 fatal("build_load_routine: size=%i\n", size);
@@ -124,7 +125,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
                 host_x86_CVTSS2SD_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP);
         }
-        else if (size == 8)// && is_float)
+        else if (size == 8)
         {
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP2, REG_EDX);
@@ -181,7 +182,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOV32_BASE_INDEX_REG(block, REG_ESI, REG_EDI, REG_ECX);
         else if (size == 4 && is_float)
                 host_x86_MOVD_BASE_INDEX_XREG(block, REG_ESI, REG_EDI, REG_XMM_TEMP);
-        else if (size == 8 && is_float)
+        else if (size == 8)
                 host_x86_MOVQ_BASE_INDEX_XREG(block, REG_ESI, REG_EDI, REG_XMM_TEMP);
         else
                 fatal("build_store_routine: size=%i is_float=%i\n", size, is_float);
@@ -196,7 +197,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         host_x86_PUSH(block, REG_EAX);
         host_x86_PUSH(block, REG_EDX);
         host_x86_PUSH(block, REG_ECX);
-        if (size == 8 && is_float)
+        if (size == 8)
         {
                 host_x86_MOVQ_STACK_OFFSET_XREG(block, -8, REG_XMM_TEMP);
                 host_x86_SUB32_REG_IMM(block, REG_ESP, REG_ESP, 8);
@@ -211,7 +212,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         else if (size == 8)
                 host_x86_CALL(block, (void *)writememql);
         host_x86_POP(block, REG_EDI);
-        if (size == 8 && is_float)
+        if (size == 8)
                 host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 8);
         host_x86_POP(block, REG_ECX);
         host_x86_POP(block, REG_EDX);
@@ -242,6 +243,8 @@ static void build_loadstore_routines(codeblock_t *block)
         build_store_routine(block, 2, 0);
         codegen_mem_store_long = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 0);
+        codegen_mem_store_quad = &codeblock[block_current].data[block_pos];
+        build_store_routine(block, 8, 0);
         codegen_mem_store_single = &codeblock[block_current].data[block_pos];
         build_store_routine(block, 4, 1);
         codegen_mem_store_double = &codeblock[block_current].data[block_pos];
@@ -298,10 +301,21 @@ void codegen_backend_init()
         build_loadstore_routines(&codeblock[block_current]);
         //fatal("Here\n");
 
+        cpu_state.old_fp_control = 0;
         asm(
                 "fstcw %0\n"
-                : "=m" (cpu_state.old_npxc)
+                "stmxcsr %1\n"
+                : "=m" (cpu_state.old_fp_control2),
+                  "=m" (cpu_state.old_fp_control)
         );
+}
+
+void codegen_set_rounding_mode(int mode)
+{
+        /*SSE*/
+        cpu_state.new_fp_control = (cpu_state.old_fp_control & ~0x6000) | (mode << 13);
+        /*x87 - used for double -> i64 conversions*/
+        cpu_state.new_fp_control2 = (cpu_state.old_fp_control2 & ~0x0c00) | (mode << 10);
 }
 
 void codegen_backend_prologue(codeblock_t *block)

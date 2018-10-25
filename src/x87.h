@@ -24,3 +24,9 @@ void x87_reset();
 /*Hack for FPU copy. If set then MM[].q contains the 64-bit integer loaded by FILD*/
 #define TAG_UINT64 (1 << 7)
 
+#define X87_ROUNDING_NEAREST 0
+#define X87_ROUNDING_DOWN    1
+#define X87_ROUNDING_UP      2
+#define X87_ROUNDING_CHOP    3
+
+void codegen_set_rounding_mode(int mode);

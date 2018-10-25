@@ -66,7 +66,7 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 }
                 
                 if (!uop_handlers[uop->type & UOP_MASK])
-                        fatal("!uop_handlers[uop->type & UOP_MASK]\n");
+                        fatal("!uop_handlers[uop->type & UOP_MASK] %08x\n", uop->type);
                 uop_handlers[uop->type & UOP_MASK](block, uop);
 
                 if (uop->type & UOP_TYPE_JUMP)

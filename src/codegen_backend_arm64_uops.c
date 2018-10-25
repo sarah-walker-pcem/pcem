@@ -942,8 +942,13 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
 		host_arm64_MOV_REG(block, REG_W1, src_reg, 0);
                 host_arm64_call(block, codegen_mem_store_long);
         }
+        else if (REG_IS_Q(src_size))
+        {
+		host_arm64_FMOV_D_D(block, REG_V_TEMP, src_reg);
+                host_arm64_call(block, codegen_mem_store_quad);
+        }
         else
-                fatal("MEM_STORE_REG - %02x\n", uop->dest_reg_a_real);
+                fatal("MEM_STORE_REG - %02x\n", uop->src_reg_c_real);
 	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
 
         return 0;
@@ -1184,6 +1189,52 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOV_INT_DOUBLE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_D(src_size))
+        {
+		host_arm64_FMOV_D_D(block, REG_V_TEMP, src_reg);
+	        host_arm64_call(block, codegen_fp_round);
+		host_arm64_MOV_REG(block, dest_reg, REG_TEMP, 0);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_D(src_size))
+        {
+		host_arm64_FMOV_D_D(block, REG_V_TEMP, src_reg);
+	        host_arm64_call(block, codegen_fp_round);
+		host_arm64_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+        else
+                fatal("MOV_INT_DOUBLE %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), src_64_reg = HOST_REG_GET(uop->src_reg_b_real), tag_reg = HOST_REG_GET(uop->src_reg_c_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real), src_64_size = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_D(src_size) && REG_IS_Q(src_64_size))
+        {
+                uint8_t *branch_offset;
+
+                /*If TAG_UINT64 is set then the source is MM[]. Otherwise it is a double in ST()*/
+                host_arm64_FMOV_D_D(block, dest_reg, src_64_reg);
+                branch_offset = host_arm64_TBNZ(block, tag_reg, 7);
+
+		host_arm64_FMOV_D_D(block, REG_V_TEMP, src_reg);
+	        host_arm64_call(block, codegen_fp_round_quad);
+                host_arm64_FMOV_D_Q(block, dest_reg, REG_TEMP);
+                
+		host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+        }
+        else
+                fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
 
         return 0;
 }
@@ -1719,6 +1770,8 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOVSX   & UOP_MASK] = codegen_MOVSX,
         [UOP_MOVZX   & UOP_MASK] = codegen_MOVZX,
         [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
+        [UOP_MOV_INT_DOUBLE   & UOP_MASK] = codegen_MOV_INT_DOUBLE,
+        [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
 
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

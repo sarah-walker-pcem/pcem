@@ -27,6 +27,8 @@ void host_x86_CMP8_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 void host_x86_CMP16_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b);
 
+void host_x86_CVTSD2SI_REG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_CVTSD2SI_REG64_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_CVTSD2SS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_CVTSI2SD_XREG_REG64(codeblock_t *block, int dst_reg, int src_reg);
@@ -41,6 +43,7 @@ void host_x86_JNZ(codeblock_t *block, void *p);
 void host_x86_JZ(codeblock_t *block, void *p);
 
 uint8_t *host_x86_JNZ_short(codeblock_t *block);
+uint8_t *host_x86_JS_short(codeblock_t *block);
 uint8_t *host_x86_JZ_short(codeblock_t *block);
 
 uint32_t *host_x86_JNB_long(codeblock_t *block);
@@ -57,6 +60,8 @@ uint32_t *host_x86_JLE_long(codeblock_t *block);
 uint32_t *host_x86_JO_long(codeblock_t *block);
 uint32_t *host_x86_JS_long(codeblock_t *block);
 uint32_t *host_x86_JZ_long(codeblock_t *block);
+
+void host_x86_LDMXCSR(codeblock_t *block, void *p);
 
 void host_x86_LEA_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t offset);
 void host_x86_LEA_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
@@ -111,6 +116,7 @@ void host_x86_MOVD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVQ_ABS_XREG(codeblock_t *block, void *p, int src_reg);
 void host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(codeblock_t *block, uint32_t addr, int src_reg_a, int src_reg_b, int shift, int src_reg);
 void host_x86_MOVQ_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg);
+void host_x86_MOVQ_BASE_OFFSET_XREG(codeblock_t *block, int base_reg, int offset, int src_reg);
 void host_x86_MOVQ_XREG_ABS(codeblock_t *block, int dst_reg, void *p);
 void host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int src_reg_a, int src_reg_b, int shift);
 void host_x86_MOVQ_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);

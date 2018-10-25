@@ -52,6 +52,8 @@
 #define UOP_JMP                   (UOP_TYPE_PARAMS_POINTER | 0x15 | UOP_TYPE_ORDER_BARRIER)
 /*UOP_CALL_FUNC - call instruction handler at p, dest_reg = return value*/
 #define UOP_CALL_FUNC_RESULT      (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x16 | UOP_TYPE_BARRIER)
+/*UOP_JMP_DEST - jump to ptr*/
+#define UOP_JMP_DEST              (UOP_TYPE_PARAMS_IMM | UOP_TYPE_PARAMS_POINTER | 0x17 | UOP_TYPE_ORDER_BARRIER | UOP_TYPE_JUMP)
 /*UOP_MOV_PTR - dest_reg = p*/
 #define UOP_MOV_PTR               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x20)
 /*UOP_MOV_IMM - dest_reg = imm_data*/
@@ -64,6 +66,10 @@
 #define UOP_MOVSX                 (UOP_TYPE_PARAMS_REGS    | 0x24)
 /*UOP_MOV_DOUBLE_INT - dest_reg = (double)src_reg_a*/
 #define UOP_MOV_DOUBLE_INT        (UOP_TYPE_PARAMS_REGS    | 0x25)
+/*UOP_MOV_INT_DOUBLE - dest_reg = (int)src_reg_a. New rounding control in src_reg_b, old rounding control in src_reg_c*/
+#define UOP_MOV_INT_DOUBLE        (UOP_TYPE_PARAMS_REGS    | 0x26)
+/*UOP_MOV_INT_DOUBLE_64 - dest_reg = (int)src_reg_a. New rounding control in src_reg_b, old rounding control in src_reg_c*/
+#define UOP_MOV_INT_DOUBLE_64     (UOP_TYPE_PARAMS_REGS    | 0x27)
 /*UOP_ADD - dest_reg = src_reg_a + src_reg_b*/
 #define UOP_ADD                   (UOP_TYPE_PARAMS_REGS    | 0x30)
 /*UOP_ADD_IMM - dest_reg = src_reg_a + immediate*/
@@ -322,6 +328,17 @@ static inline void uop_gen_reg_dst_src2_imm(uint32_t uop_type, ir_data_t *ir, in
         uop->imm_data = imm;
 }
 
+static inline void uop_gen_reg_dst_src3(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b, int src_reg_c)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->src_reg_b = codegen_reg_read(src_reg_b);
+        uop->src_reg_c = codegen_reg_read(src_reg_c);
+        uop->dest_reg_a = codegen_reg_write(dest_reg);
+}
+
 static inline void uop_gen_reg_dst_src_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg, uint32_t imm)
 {
         uop_t *uop = uop_alloc(ir);
@@ -471,6 +488,7 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_FP_ENTER(ir)                 do { if (!codegen_fpu_entered) uop_gen_imm(UOP_FP_ENTER, ir, cpu_state.oldpc); codegen_fpu_entered = 1; } while (0)
 
 #define uop_JMP(ir, p)                   uop_gen_pointer(UOP_JMP, ir, p)
+#define uop_JMP_DEST(ir)                 uop_gen(UOP_JMP_DEST, ir)
 
 #define uop_LOAD_SEG(ir, p, src_reg) uop_gen_reg_src_pointer(UOP_LOAD_SEG, ir, src_reg, p)
 
@@ -494,6 +512,8 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_MOVSX(ir, dst_reg, src_reg)          uop_gen_reg_dst_src1(UOP_MOVSX, ir, dst_reg, src_reg)
 #define uop_MOVZX(ir, dst_reg, src_reg)          uop_gen_reg_dst_src1(UOP_MOVZX, ir, dst_reg, src_reg)
 #define uop_MOV_DOUBLE_INT(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_MOV_DOUBLE_INT, ir, dst_reg, src_reg)
+#define uop_MOV_INT_DOUBLE(ir, dst_reg, src_reg/*, nrc, orc*/) uop_gen_reg_dst_src1(UOP_MOV_INT_DOUBLE, ir, dst_reg, src_reg/*, nrc, orc*/)
+#define uop_MOV_INT_DOUBLE_64(ir, dst_reg, src_reg_d, src_reg_q, tag) uop_gen_reg_dst_src3(UOP_MOV_INT_DOUBLE_64, ir, dst_reg, src_reg_d, src_reg_q, tag)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)
