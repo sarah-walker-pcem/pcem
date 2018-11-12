@@ -919,6 +919,21 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+								
+                case ROM_TULIP_TC7:
+                f  = romfopen("tulip_tc7/tc7be.bin", "rb");
+                ff = romfopen("tulip_tc7/tc7bo.bin", "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x8000; c += 2)
+                {
+                         rom[c]     = getc(f);
+                         rom[c + 1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                biosmask = 0x7fff;
+                return 1;
+				
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

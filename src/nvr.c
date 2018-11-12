@@ -310,6 +310,7 @@ void loadnvr()
 		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "rb"); nvrmask = 127; break;
                 case ROM_IBMPS2_M70_TYPE3: f = nvrfopen("ibmps2_m70_type3.nvr","rb"); break;
                 case ROM_IBMPS2_M70_TYPE4: f = nvrfopen("ibmps2_m70_type4.nvr","rb"); break;
+		case ROM_TULIP_TC7:        f = nvrfopen("tulip_tc7.nvr",       "rb"); break;
                                                 		
                 default: return;
         }
@@ -402,6 +403,7 @@ void savenvr()
 		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "wb"); break;
                 case ROM_IBMPS2_M70_TYPE3: f = nvrfopen("ibmps2_m70_type3.nvr","wb"); break;
                 case ROM_IBMPS2_M70_TYPE4: f = nvrfopen("ibmps2_m70_type4.nvr","wb"); break;
+		case ROM_TULIP_TC7:    	   f = nvrfopen("tulip_tc7.nvr",       "wb"); break;
                 		
                 default: return;
         }
