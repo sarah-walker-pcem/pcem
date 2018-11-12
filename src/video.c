@@ -191,6 +191,9 @@ device_t *video_card_getdevice(int card)
                         
                 case ROM_ACER386:
                 return &oti067_acer386_device;
+                        
+                case ROM_AMA932J:
+                return &oti067_ama932j_device;
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
@@ -391,6 +394,7 @@ int video_is_ega_vga()
                 case ROM_PC3086:
                 case ROM_MEGAPC:
                 case ROM_ACER386:
+                case ROM_AMA932J:
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
                 case ROM_IBMPS2_M50:
@@ -519,6 +523,11 @@ void video_updatetiming()
                         break;
                         
                         case ROM_ACER386:
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_oti067;
+                        break;
+                        
+                        case ROM_AMA932J:
                         if (gfxcard == GFX_BUILTIN)
                                 timing = &timing_oti067;
                         break;
@@ -688,6 +697,10 @@ void video_init()
                         svga_set_override(svga_get_pri(), 1);
                         break;
                 }
+                return;
+                        
+                case ROM_AMA932J:
+                device_add(&oti067_ama932j_device);
                 return;
                 
                 case ROM_IBMPS1_2011:

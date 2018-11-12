@@ -265,6 +265,7 @@ void loadnvr()
                 case ROM_IBMPS2_M80:  f = nvrfopen("ibmps2_m80.nvr",  "rb"); break;
                 case ROM_CMDPC30:     f = nvrfopen("cmdpc30.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_AMI286:      f = nvrfopen("ami286.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_TG286M:      f = nvrfopen("tg286m.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AWARD286:    f = nvrfopen("award286.nvr",    "rb"); nvrmask = 127; break;
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "rb"); nvrmask = 127; break;
@@ -275,6 +276,7 @@ void loadnvr()
                 case ROM_ACER386:     f = nvrfopen("acer386.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_KMXC02:      f = nvrfopen("kmxc02.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_MEGAPC:      f = nvrfopen("megapc.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_AMA932J:     f = nvrfopen("ama932j.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_AMI386SX:    f = nvrfopen("ami386.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AMI486:      f = nvrfopen("ami486.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_WIN486:      f = nvrfopen("win486.nvr",      "rb"); nvrmask = 127; break;
@@ -355,6 +357,7 @@ void savenvr()
                 case ROM_IBMPS2_M80:  f = nvrfopen("ibmps2_m80.nvr",  "wb"); break;
                 case ROM_CMDPC30:     f = nvrfopen("cmdpc30.nvr",     "wb"); break;
                 case ROM_AMI286:      f = nvrfopen("ami286.nvr",      "wb"); break;
+                case ROM_TG286M:      f = nvrfopen("tg286m.nvr",      "wb"); break;
                 case ROM_AWARD286:    f = nvrfopen("award286.nvr",    "wb"); break;
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "wb"); break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "wb"); break;
@@ -365,6 +368,7 @@ void savenvr()
                 case ROM_ACER386:     f = nvrfopen("acer386.nvr",     "wb"); break;
                 case ROM_KMXC02:      f = nvrfopen("kmxc02.nvr",      "wb"); break;
                 case ROM_MEGAPC:      f = nvrfopen("megapc.nvr",      "wb"); break;
+                case ROM_AMA932J:     f = nvrfopen("ama932j.nvr",     "wb"); break;
                 case ROM_AMI386SX:    f = nvrfopen("ami386.nvr",      "wb"); break;
                 case ROM_AMI486:      f = nvrfopen("ami486.nvr",      "wb"); break;
                 case ROM_WIN486:      f = nvrfopen("win486.nvr",      "wb"); break;

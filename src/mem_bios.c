@@ -284,6 +284,17 @@ int loadbios()
                 romfread(rom,65536,1,f);
                 fclose(f);
                 return 1;*/
+                case ROM_AMA932J:
+//                f=romfopen("at386/at386.bin","rb");
+                f=romfopen("ama932j/ami.bin","rb");
+                if (!f) break;
+                romfread(rom,65536,1,f);
+                fclose(f);
+                f=romfopen("ama932j/oti067.bin","rb");
+                if (!f) break;
+                fclose(f);
+                return 1;
+
                 case ROM_AMI386SX:
 //                f=romfopen("at386/at386.bin","rb");
                 f=romfopen("ami386/ami386.bin","rb");
@@ -326,6 +337,14 @@ int loadbios()
 
                 case ROM_AMI286:
                 f=romfopen("ami286/amic206.bin","rb");
+                if (!f) break;
+                romfread(rom,65536,1,f);
+                fclose(f);
+//                memset(romext,0x63,0x8000);
+                return 1;
+
+                case ROM_TG286M:
+                f=romfopen("tg286m/ami.bin","rb");
                 if (!f) break;
                 romfread(rom,65536,1,f);
                 fclose(f);

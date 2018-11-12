@@ -20,10 +20,13 @@ typedef struct oti067_t
         uint8_t regs[32];
         
         uint8_t pos;
+        uint8_t dipswitch_val;
         
         uint32_t vram_size;
         uint32_t vram_mask;
 } oti067_t;
+
+static uint8_t oti067_dipswitch_val = 0x18;
 
 void oti067_out(uint16_t addr, uint8_t val, void *p)
 {
@@ -111,7 +114,7 @@ uint8_t oti067_in(uint16_t addr, void *p)
                 temp = oti067->index | (2 << 5);
                 break;               
                 case 0x3DF: 
-                if (oti067->index==0x10)     temp = 0x18;
+                if (oti067->index==0x10)     temp = oti067_dipswitch_val;
                 else                         temp = oti067->regs[oti067->index];
                 break;
 
@@ -192,6 +195,8 @@ void oti067_enable_disable(void *p, int enable)
                 io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
                 mem_mapping_enable(&oti067->svga.mapping);
         }
+        
+        oti067->dipswitch_val = 0x18;
 }
 
 void *oti067_init()
@@ -206,6 +211,14 @@ void *oti067_acer386_init()
         
         acer386sx_set_oti067(oti067);
                         
+        return oti067;
+}
+
+void *oti067_ama932j_init()
+{
+        oti067_t *oti067 = oti067_common_init("ama932j/oti067.bin", 512);
+
+        oti067->dipswitch_val |= 0x20;
         return oti067;
 }
 
@@ -288,6 +301,17 @@ device_t oti067_acer386_device =
         "Oak OTI-067 (Acermate 386SX/25N)",
         0,
         oti067_acer386_init,
+        oti067_close,
+        oti067_available,
+        oti067_speed_changed,
+        oti067_force_redraw,
+        oti067_add_status_info
+};
+device_t oti067_ama932j_device =
+{
+        "Oak OTI-067 (AMA-932J)",
+        0,
+        oti067_ama932j_init,
         oti067_close,
         oti067_available,
         oti067_speed_changed,
