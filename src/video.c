@@ -37,6 +37,7 @@
 #include "vid_ps1_svga.h"
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
+#include "vid_sigma.h"
 #include "vid_tandy.h"
 #include "vid_tandysl.h"
 #include "vid_tgui9440.h"
@@ -103,6 +104,7 @@ static VIDEO_CARD video_cards[] =
         {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,         GFX_PHOENIX_TRIO64,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
         {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,                 GFX_COLORPLUS,       VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"S3 ViRGE/DX",                            "virge375",       &s3_virge_375_device,              GFX_VIRGEDX,         VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  3,  28, 28, 45}},
+        {"Sigma Color 400",                        "sigma400",       &sigma_device,                     GFX_SIGMA400,        VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Trident TVGA8900D",                      "tvga8900d",      &tvga8900d_device,                 GFX_TVGA,            VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   8,  8, 12}},
         {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,                    GFX_ET4000,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"Trident TGUI9400CXi",                    "tgui9400cxi",    &tgui9400cxi_device,               GFX_TGUI9400CXI,     VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  8, 16,   4,  8, 16}},
@@ -891,7 +893,19 @@ void loadfont(char *s, int format)
                         }
                 }
                 break;
-
+		case 7: /* Sigma Color 400 */
+		/* The first 4k of the character ROM holds an 8x8 font */
+		for (c = 0; c < 256; c++)
+		{
+			fread(&fontdat[c][0], 1, 8, f);
+			fseek(f, 8, SEEK_CUR);
+		}
+		/* The second 4k holds an 8x16 font */
+		for (c = 0; c < 256; c++)
+		{
+			fread(&fontdatm[c][0], 1, 16, f);
+		}
+		break;
         }
         fclose(f);
 }

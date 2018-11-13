@@ -507,6 +507,7 @@ enum
         GFX_CL_GD5434,  /*Cirrus Logic CL-GD5434*/
         GFX_OTI037,     /*Oak OTI-037*/
         GFX_COMPAQ_CGA,	/*Compaq CGA*/
+	GFX_SIGMA400,	/*Sigma Designs Color 400 */
         GFX_MAX
 };
 
