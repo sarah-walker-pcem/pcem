@@ -2,6 +2,7 @@
 
 #include "ibm.h"
 #include "x86.h"
+#include "x87.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_backend.h"
@@ -610,6 +611,27 @@ static int codegen_FADD(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("codegen_FADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_FCOM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_W(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+		host_arm64_MOVZ_IMM(block, dest_reg, 0);
+                host_arm64_FCMP_D(block, src_reg_a, src_reg_b);
+		host_arm64_ORR_IMM(block, REG_TEMP, dest_reg, C3);
+		host_arm64_ORR_IMM(block, REG_TEMP2, dest_reg, C0);
+		host_arm64_CSEL_EQ(block, dest_reg, REG_TEMP, dest_reg);
+		host_arm64_ORR_IMM(block, REG_TEMP, dest_reg, C0|C2|C3);
+		host_arm64_CSEL_CC(block, dest_reg, REG_TEMP2, dest_reg);
+		host_arm64_CSEL_VS(block, dest_reg, REG_TEMP, dest_reg);
+        }
+        else
+                fatal("codegen_FCOM %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
 
         return 0;
 }
@@ -1816,6 +1838,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
 
         [UOP_FADD & UOP_MASK] = codegen_FADD,
+        [UOP_FCOM & UOP_MASK] = codegen_FCOM,
         [UOP_FDIV & UOP_MASK] = codegen_FDIV,
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
         [UOP_FSUB & UOP_MASK] = codegen_FSUB

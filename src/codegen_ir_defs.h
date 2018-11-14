@@ -177,8 +177,10 @@
 #define UOP_FMUL                  (UOP_TYPE_PARAMS_REGS | 0x83)
 /*UOP_FDIV - (floating point) dest_reg = src_reg_a / src_reg_b*/
 #define UOP_FDIV                  (UOP_TYPE_PARAMS_REGS | 0x84)
+/*UOP_FCOM - dest_reg = flags from compare(src_reg_a, src_reg_b)*/
+#define UOP_FCOM                  (UOP_TYPE_PARAMS_REGS | 0x85)
 
-#define UOP_MAX 0x85
+#define UOP_MAX 0x86
 
 #define UOP_MASK 0xffff
 
@@ -481,6 +483,7 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_CMP_JZ_DEST(ir, src_reg_a, src_reg_b)   uop_gen_reg_src2(UOP_CMP_JZ_DEST, ir, src_reg_a, src_reg_b)
 
 #define uop_FADD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FADD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_FCOM(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FCOM, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_FDIV(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FDIV, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_FMUL(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FMUL, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_FSUB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FSUB, ir, dst_reg, src_reg_a, src_reg_b)

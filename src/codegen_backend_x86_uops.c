@@ -2,6 +2,7 @@
 
 #include "ibm.h"
 #include "x86.h"
+#include "x87.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_backend.h"
@@ -550,6 +551,30 @@ static int codegen_FADD(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("codegen_FADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_FCOM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_W(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+                if (dest_reg != REG_EAX)
+                        host_x86_MOV32_REG_REG(block, REG_ECX, REG_EAX);
+                host_x86_XOR32_REG_REG(block, REG_EAX, REG_EAX, REG_EAX);
+                host_x86_COMISD_XREG_XREG(block, src_reg_a, src_reg_b);
+                host_x86_LAHF(block);
+                host_x86_AND16_REG_IMM(block, REG_EAX, REG_EAX, C0|C2|C3);
+                if (dest_reg != REG_EAX)
+                {
+                        host_x86_MOV16_REG_REG(block, dest_reg, REG_EAX);
+                        host_x86_MOV32_REG_REG(block, REG_EAX, REG_ECX);
+                }
+        }
+        else
+                fatal("codegen_FCOM %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
 
         return 0;
 }
@@ -1622,7 +1647,8 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FADD & UOP_MASK] = codegen_FADD,
         [UOP_FDIV & UOP_MASK] = codegen_FDIV,
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
-        [UOP_FSUB & UOP_MASK] = codegen_FSUB
+        [UOP_FSUB & UOP_MASK] = codegen_FSUB,
+        [UOP_FCOM & UOP_MASK] = codegen_FCOM
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)

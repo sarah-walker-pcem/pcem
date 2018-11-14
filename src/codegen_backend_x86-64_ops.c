@@ -341,6 +341,11 @@ void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
         codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
 }
 
+void host_x86_COMISD_XREG_XREG(codeblock_t *block, int src_reg_a, int src_reg_b)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x2e, 0xc0 | src_reg_b | (src_reg_a << 3));
+}
+
 void host_x86_CVTSD2SI_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x2d, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSD2SI dst_reg, src_reg*/
@@ -495,6 +500,11 @@ uint32_t *host_x86_JZ_long(codeblock_t *block)
         codegen_addbyte2(block, 0x0f, 0x84); /*JZ*/
         codegen_addlong(block, 0);
         return (uint32_t *)&block->data[block_pos-4];
+}
+
+void host_x86_LAHF(codeblock_t *block)
+{
+        codegen_addbyte(block, 0x9f); /*LAHF*/
 }
 
 void host_x86_LDMXCSR(codeblock_t *block, void *p)

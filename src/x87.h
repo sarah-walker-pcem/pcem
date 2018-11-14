@@ -1,3 +1,8 @@
+#define C0 (1<<8)
+#define C1 (1<<9)
+#define C2 (1<<10)
+#define C3 (1<<14)
+
 uint32_t x87_pc_off,x87_op_off;
 uint16_t x87_pc_seg,x87_op_seg;
 

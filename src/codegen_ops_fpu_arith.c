@@ -43,6 +43,41 @@ uint32_t ropFADDP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         return op_pc;
 }
 
+uint32_t ropFCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int src_reg = fetchdat & 7;
+
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+
+        return op_pc;
+}
+uint32_t ropFCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int src_reg = fetchdat & 7;
+
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+        fpu_POP(ir);
+
+        return op_pc;
+}
+uint32_t ropFCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+        fpu_POP(ir);
+        fpu_POP(ir);
+
+        return op_pc;
+}
+
 uint32_t ropFDIV(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int src_reg = fetchdat & 7;
@@ -201,6 +236,41 @@ uint32_t ropFSUBRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         return op_pc;
 }
 
+uint32_t ropFUCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int src_reg = fetchdat & 7;
+
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+
+        return op_pc;
+}
+uint32_t ropFUCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int src_reg = fetchdat & 7;
+
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+        fpu_POP(ir);
+
+        return op_pc;
+}
+uint32_t ropFUCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+        fpu_POP(ir);
+        fpu_POP(ir);
+
+        return op_pc;
+}
+
 #define ropF_arith_mem(name, load_uop)                                                                                          \
 uint32_t ropFADD ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)  \
 {                                                                                                                               \
@@ -214,6 +284,39 @@ uint32_t ropFADD ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint
         load_uop(ir, IREG_temp0_D, ireg_seg_base(target_seg), IREG_eaaddr);                                                     \
         uop_FADD(ir, IREG_ST(0), IREG_ST(0), IREG_temp0_D);                                                                     \
         uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);                                                                                \
+                                                                                                                                \
+        return op_pc+1;                                                                                                         \
+}                                                                                                                               \
+uint32_t ropFCOM ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)  \
+{                                                                                                                               \
+        x86seg *target_seg;                                                                                                     \
+                                                                                                                                \
+        uop_FP_ENTER(ir);                                                                                                       \
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                           \
+        op_pc--;                                                                                                                \
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                  \
+        codegen_check_seg_read(block, ir, target_seg);                                                                          \
+        load_uop(ir, IREG_temp0_D, ireg_seg_base(target_seg), IREG_eaaddr);                                                     \
+        uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
+                                                                                                                                \
+        return op_pc+1;                                                                                                         \
+}                                                                                                                               \
+uint32_t ropFCOMP ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)  \
+{                                                                                                                               \
+        x86seg *target_seg;                                                                                                     \
+                                                                                                                                \
+        uop_FP_ENTER(ir);                                                                                                       \
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                           \
+        op_pc--;                                                                                                                \
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                  \
+        codegen_check_seg_read(block, ir, target_seg);                                                                          \
+        load_uop(ir, IREG_temp0_D, ireg_seg_base(target_seg), IREG_eaaddr);                                                     \
+        uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
+        fpu_POP(ir);                                                                                                            \
                                                                                                                                 \
         return op_pc+1;                                                                                                         \
 }                                                                                                                               \
@@ -310,6 +413,41 @@ uint32_t ropFIADD ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uin
         uop_MOV_DOUBLE_INT(ir, IREG_temp0_D, temp_reg);                                                                         \
         uop_FADD(ir, IREG_ST(0), IREG_ST(0), IREG_temp0_D);                                                                     \
         uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);                                                                                \
+                                                                                                                                \
+        return op_pc+1;                                                                                                         \
+}                                                                                                                               \
+uint32_t ropFICOM ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) \
+{                                                                                                                               \
+        x86seg *target_seg;                                                                                                     \
+                                                                                                                                \
+        uop_FP_ENTER(ir);                                                                                                       \
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                           \
+        op_pc--;                                                                                                                \
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                  \
+        codegen_check_seg_read(block, ir, target_seg);                                                                          \
+        uop_MEM_LOAD_REG(ir, temp_reg, ireg_seg_base(target_seg), IREG_eaaddr);                                                 \
+        uop_MOV_DOUBLE_INT(ir, IREG_temp0_D, temp_reg);                                                                         \
+        uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
+                                                                                                                                \
+        return op_pc+1;                                                                                                         \
+}                                                                                                                               \
+uint32_t ropFICOMP ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) \
+{                                                                                                                               \
+        x86seg *target_seg;                                                                                                     \
+                                                                                                                                \
+        uop_FP_ENTER(ir);                                                                                                       \
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                           \
+        op_pc--;                                                                                                                \
+        target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                  \
+        codegen_check_seg_read(block, ir, target_seg);                                                                          \
+        uop_MEM_LOAD_REG(ir, temp_reg, ireg_seg_base(target_seg), IREG_eaaddr);                                                 \
+        uop_MOV_DOUBLE_INT(ir, IREG_temp0_D, temp_reg);                                                                         \
+        uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
+        fpu_POP(ir);                                                                                                            \
                                                                                                                                 \
         return op_pc+1;                                                                                                         \
 }                                                                                                                               \

@@ -689,6 +689,25 @@ static int codegen_FADD(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_FCOM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_W(dest_size) && REG_IS_D(src_size_a) && REG_IS_D(src_size_b))
+        {
+		host_arm_VCMP_D(block, src_reg_a, src_reg_b);
+		host_arm_MOV_IMM(block, dest_reg, 0);
+		host_arm_VMRS_APSR(block);
+		host_arm_ORREQ_IMM(block, dest_reg, dest_reg, C3);
+		host_arm_ORRCC_IMM(block, dest_reg, dest_reg, C0);
+		host_arm_ORRVS_IMM(block, dest_reg, dest_reg, C0|C2|C3);
+        }
+        else
+                fatal("codegen_FCOM %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
 static int codegen_FDIV(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -1938,6 +1957,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
 
         [UOP_FADD & UOP_MASK] = codegen_FADD,
+        [UOP_FCOM & UOP_MASK] = codegen_FCOM,
         [UOP_FDIV & UOP_MASK] = codegen_FDIV,
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
         [UOP_FSUB & UOP_MASK] = codegen_FSUB

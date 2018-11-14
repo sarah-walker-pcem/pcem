@@ -7,11 +7,6 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
 
 #define ST(x) cpu_state.ST[((cpu_state.TOP+(x))&7)]
 
-#define C0 (1<<8)
-#define C1 (1<<9)
-#define C2 (1<<10)
-#define C3 (1<<14)
-
 #define STATUS_ZERODIVIDE 4
 
 #define x87_div(dst, src1, src2) do                             \
