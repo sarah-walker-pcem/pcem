@@ -26,8 +26,6 @@ typedef struct oti067_t
         uint32_t vram_mask;
 } oti067_t;
 
-static uint8_t oti067_dipswitch_val = 0x18;
-
 void oti067_out(uint16_t addr, uint8_t val, void *p)
 {
         oti067_t *oti067 = (oti067_t *)p;
@@ -114,7 +112,7 @@ uint8_t oti067_in(uint16_t addr, void *p)
                 temp = oti067->index | (2 << 5);
                 break;               
                 case 0x3DF: 
-                if (oti067->index==0x10)     temp = oti067_dipswitch_val;
+                if (oti067->index==0x10)     temp = oti067->dipswitch_val;
                 else                         temp = oti067->regs[oti067->index];
                 break;
 
@@ -177,6 +175,8 @@ void *oti067_common_init(char *bios_fn, int vram_size)
         io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
         
         oti067->svga.miscout = 1;
+        
+        oti067->dipswitch_val = 0x18;
         return oti067;
 }
 
@@ -195,8 +195,6 @@ void oti067_enable_disable(void *p, int enable)
                 io_sethandler(0x46e8, 0x0001, oti067_pos_in, NULL, NULL, oti067_pos_out, NULL, NULL, oti067);
                 mem_mapping_enable(&oti067->svga.mapping);
         }
-        
-        oti067->dipswitch_val = 0x18;
 }
 
 void *oti067_init()
