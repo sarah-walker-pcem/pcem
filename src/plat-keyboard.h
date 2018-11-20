@@ -1,10 +1,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+        #include <stdint.h>
+        
         void keyboard_init();
         void keyboard_close();
         void keyboard_poll_host();
-        extern int pcem_key[272];
+        extern uint8_t pcem_key[272];
 	extern int rawinputkey[272];
 	
 #ifndef __unix

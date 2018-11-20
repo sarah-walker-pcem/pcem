@@ -1,7 +1,7 @@
 #include "plat-keyboard.h"
 #include <string.h>
 
-int pcem_key[272];
+uint8_t pcem_key[272];
 int rawinputkey[272];
 
 void keyboard_init()

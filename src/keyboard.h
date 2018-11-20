@@ -3,4 +3,4 @@ extern void (*keyboard_poll)();
 void keyboard_process();
 extern int keyboard_scan;
 
-extern int pcem_key[272];
+extern uint8_t pcem_key[272];
