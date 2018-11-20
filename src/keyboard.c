@@ -283,13 +283,13 @@ void keyboard_process()
                 if (keydelay[c] >= 30)
                 {
                         keydelay[c] -= 10;
-                        if (scancode_set1[c].scancodes_make[0] == -1)
+                        if (scancodes[c].scancodes_make[0] == -1)
                            continue;
                            
                         d = 0;
 
-                        while (scancode_set1[c].scancodes_make[d] != -1)
-                              keyboard_send(scancode_set1[c].scancodes_make[d++]);
+                        while (scancodes[c].scancodes_make[d] != -1)
+                              keyboard_send(scancodes[c].scancodes_make[d++]);
                 }
         }
 }
