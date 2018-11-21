@@ -641,6 +641,29 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
+{
+        uint8_t *branch_offset;
+
+        host_x86_MOV32_REG_ABS(block, REG_ECX, &cr0);
+        host_x86_TEST32_REG_IMM(block, REG_ECX, 0xc);
+        branch_offset = host_x86_JZ_short(block);
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.oldpc, uop->imm_data);
+#if WIN64
+        host_x86_MOV32_REG_IMM(block, REG_ECX, 7);
+#else
+        host_x86_MOV32_REG_IMM(block, REG_EDI, 7);
+#endif
+        host_x86_CALL(block, x86_int);
+        host_x86_JMP(block, &block->data[BLOCK_EXIT_OFFSET]);
+        *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[0], 0);
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[4], 0);
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.TOP, 0);
+        host_x86_MOV8_ABS_IMM(block, &cpu_state.ismmx, 1);
+
+        return 0;
+}
 
 static int codegen_JMP(codeblock_t *block, uop_t *uop)
 {
@@ -1076,7 +1099,15 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
-        if (REG_IS_L(dest_size) && REG_IS_W(src_size))
+        if (REG_IS_Q(dest_size) && REG_IS_L(src_size))
+        {
+                host_x86_MOVD_XREG_REG(block, dest_reg, src_reg);
+        }
+        else if (REG_IS_L(dest_size) && REG_IS_Q(src_size))
+        {
+                host_x86_MOVD_REG_XREG(block, dest_reg, src_reg);
+        }
+        else if (REG_IS_L(dest_size) && REG_IS_W(src_size))
         {
                 host_x86_MOVZX_REG_32_16(block, dest_reg, src_reg);
         }
@@ -1640,6 +1671,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_TEST_JS_DEST & UOP_MASK] = codegen_TEST_JS_DEST,
 
         [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
+        [UOP_MMX_ENTER & UOP_MASK] = codegen_MMX_ENTER,
 
         [UOP_FADD & UOP_MASK] = codegen_FADD,
         [UOP_FCOM & UOP_MASK] = codegen_FCOM,
@@ -1757,6 +1789,10 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 {
         host_x86_MOV32_REG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
 }
+void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
+}
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
         host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
@@ -1765,6 +1801,10 @@ void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stac
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
         host_x86_MOV32_BASE_OFFSET_REG(block, REG_RSP, stack_offset, host_reg);
+}
+void codegen_direct_write_64_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_x86_MOVQ_BASE_OFFSET_XREG(block, REG_RSP, stack_offset, host_reg);
 }
 void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
 {

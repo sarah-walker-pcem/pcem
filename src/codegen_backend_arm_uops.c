@@ -772,6 +772,33 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
+{
+        uint32_t *branch_ptr;
+
+	if (!in_range(&cr0, &cpu_state))
+		fatal("codegen_MMX_ENTER - out of range\n");
+
+        host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cr0 - (uintptr_t)&cpu_state);
+        host_arm_TST_IMM(block, REG_TEMP, 0xc);
+        branch_ptr = host_arm_BEQ_(block);
+
+	host_arm_MOV_IMM(block, REG_TEMP, uop->imm_data);
+	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.oldpc - (uintptr_t)&cpu_state);
+        host_arm_MOV_IMM(block, REG_ARG0, 7);
+	host_arm_call(block, x86_int);
+        host_arm_B(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+
+	*branch_ptr |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
+
+        host_arm_MOV_IMM(block, REG_TEMP, 0);
+	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[0] - (uintptr_t)&cpu_state);
+	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[4] - (uintptr_t)&cpu_state);
+	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
+	host_arm_STRB_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.ismmx - (uintptr_t)&cpu_state);
+
+        return 0;
+}
 
 static int codegen_JMP(codeblock_t *block, uop_t *uop)
 {
@@ -1238,7 +1265,16 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
-	if (REG_IS_L(dest_size) && REG_IS_B(src_size))
+	if (REG_IS_Q(dest_size) && REG_IS_L(src_size))
+	{
+                host_arm_MOV_IMM(block, REG_TEMP, 0);
+                host_arm_VMOV_D_64(block, dest_reg, src_reg, REG_TEMP);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_Q(src_size))
+	{
+                host_arm_VMOV_32_S(block, dest_reg, src_reg, REG_TEMP);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_B(src_size))
 	{
 		host_arm_UXTB(block, dest_reg, src_reg, 0);
 	}
@@ -1955,6 +1991,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_TEST_JS_DEST & UOP_MASK] = codegen_TEST_JS_DEST,
 
         [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
+        [UOP_MMX_ENTER & UOP_MASK] = codegen_MMX_ENTER,
 
         [UOP_FADD & UOP_MASK] = codegen_FADD,
         [UOP_FCOM & UOP_MASK] = codegen_FCOM,

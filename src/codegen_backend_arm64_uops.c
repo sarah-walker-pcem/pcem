@@ -699,6 +699,32 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
+{
+        uint32_t *branch_ptr;
+
+	if (!in_range12_w((uintptr_t)&cr0 - (uintptr_t)&cpu_state))
+		fatal("codegen_MMX_ENTER - out of range\n");
+
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cr0 - (uintptr_t)&cpu_state);
+        host_arm64_TST_IMM(block, REG_TEMP, 0xc);
+        branch_ptr = host_arm64_BEQ_(block);
+
+	host_arm64_mov_imm(block, REG_TEMP, uop->imm_data);
+	host_arm64_STR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.oldpc - (uintptr_t)&cpu_state);
+        host_arm64_mov_imm(block, REG_ARG0, 7);
+	host_arm64_call(block, x86_int);
+        host_arm64_B(block, &block->data[BLOCK_EXIT_OFFSET]);
+
+	host_arm64_branch_set_offset(branch_ptr, &block->data[block_pos]);
+
+	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[0] - (uintptr_t)&cpu_state);
+	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[4] - (uintptr_t)&cpu_state);
+	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
+	host_arm64_STRB_IMM(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.ismmx - (uintptr_t)&cpu_state);
+
+        return 0;
+}
 
 static int codegen_JMP(codeblock_t *block, uop_t *uop)
 {
@@ -1162,7 +1188,15 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
-	if (REG_IS_L(dest_size) && REG_IS_B(src_size))
+	if (REG_IS_Q(dest_size) && REG_IS_L(src_size))
+	{
+                host_arm64_FMOV_D_Q(block, dest_reg, src_reg);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_Q(src_size))
+	{
+                host_arm64_FMOV_W_S(block, dest_reg, src_reg);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_B(src_size))
 	{
 		host_arm64_AND_IMM(block, dest_reg, src_reg, 0xff);
 	}
@@ -1836,6 +1870,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_TEST_JS_DEST & UOP_MASK] = codegen_TEST_JS_DEST,
 
         [UOP_FP_ENTER & UOP_MASK] = codegen_FP_ENTER,
+        [UOP_MMX_ENTER & UOP_MASK] = codegen_MMX_ENTER,
 
         [UOP_FADD & UOP_MASK] = codegen_FADD,
         [UOP_FCOM & UOP_MASK] = codegen_FCOM,

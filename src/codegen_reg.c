@@ -123,6 +123,15 @@ struct
 	[IREG_ST6_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
 	[IREG_ST7_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
 
+	[IREG_MM0x] = {REG_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_MM1x] = {REG_QWORD, &cpu_state.MM[1], REG_FP},
+	[IREG_MM2x] = {REG_QWORD, &cpu_state.MM[2], REG_FP},
+	[IREG_MM3x] = {REG_QWORD, &cpu_state.MM[3], REG_FP},
+	[IREG_MM4x] = {REG_QWORD, &cpu_state.MM[4], REG_FP},
+	[IREG_MM5x] = {REG_QWORD, &cpu_state.MM[5], REG_FP},
+	[IREG_MM6x] = {REG_QWORD, &cpu_state.MM[6], REG_FP},
+	[IREG_MM7x] = {REG_QWORD, &cpu_state.MM[7], REG_FP},
+	
 	[IREG_NPXCx] = {REG_WORD, &cpu_state.npxc, REG_INTEGER},
 	[IREG_NPXSx] = {REG_WORD, &cpu_state.npxs, REG_INTEGER},
 	
@@ -204,6 +213,15 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 else
                         codegen_direct_read_32(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
+
+                case REG_QWORD:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
+                        fatal("codegen_reg_load - REG_QWORD !REG_FP\n");
+                if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
+                        codegen_direct_read_64_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                else
+                        codegen_direct_read_64(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                break;
                 
                 case REG_DOUBLE:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
@@ -280,6 +298,15 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                         codegen_direct_write_32_stack(block, (int)p, reg_set->reg_list[c]);
                 else
                         codegen_direct_write_32(block, p, reg_set->reg_list[c]);
+                break;
+
+                case REG_QWORD:
+                if (ireg_data[ir_reg].type != REG_FP)
+                        fatal("codegen_reg_writeback - REG_QWORD !REG_FP\n");
+                if ((uintptr_t)p < 256)
+                        codegen_direct_write_64_stack(block, (int)p, reg_set->reg_list[c]);
+                else
+                        codegen_direct_write_64(block, p, reg_set->reg_list[c]);
                 break;
 
                 case REG_POINTER:
