@@ -153,6 +153,11 @@ void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int sr
 void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 
+void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PANDN_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_x86_POP(codeblock_t *block, int src_reg);
 
 void host_x86_PUSH(codeblock_t *block, int src_reg);

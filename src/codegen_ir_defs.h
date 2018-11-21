@@ -93,6 +93,8 @@
 #define UOP_XOR                   (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x39)
 /*UOP_XOR_IMM - dest_reg = src_reg_a ^ immediate*/
 #define UOP_XOR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x3a)
+/*UOP_ANDN - dest_reg = ~src_reg_a & src_reg_b*/
+#define UOP_ANDN                  (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x3b)
 /*UOP_MEM_LOAD_ABS - dest_reg = src_reg_a:[immediate]*/
 #define UOP_MEM_LOAD_ABS          (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x40 | UOP_TYPE_ORDER_BARRIER)
 /*UOP_MEM_LOAD_REG - dest_reg = src_reg_a:[src_reg_b]*/
@@ -444,17 +446,18 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 #define uop_LOAD_FUNC_ARG_IMM(ir, arg, imm)  uop_gen_imm(UOP_LOAD_FUNC_ARG_0_IMM + arg, ir, imm)
 
-#define uop_ADD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_ADD, ir, dst_reg, src_reg_a, src_reg_b)
-#define uop_ADD_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_ADD_IMM, ir, dst_reg, src_reg, imm)
+#define uop_ADD(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_ADD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_ADD_IMM(ir, dst_reg, src_reg, imm)      uop_gen_reg_dst_src_imm(UOP_ADD_IMM, ir, dst_reg, src_reg, imm)
 #define uop_ADD_LSHIFT(ir, dst_reg, src_reg_a, src_reg_b, shift) uop_gen_reg_dst_src2_imm(UOP_ADD_LSHIFT, ir, dst_reg, src_reg_a, src_reg_b, shift)
-#define uop_AND(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_AND, ir, dst_reg, src_reg_a, src_reg_b)
-#define uop_AND_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_AND_IMM, ir, dst_reg, src_reg, imm)
-#define uop_OR(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_OR, ir, dst_reg, src_reg_a, src_reg_b)
-#define uop_OR_IMM(ir, dst_reg, src_reg, imm)      uop_gen_reg_dst_src_imm(UOP_OR_IMM, ir, dst_reg, src_reg, imm)
-#define uop_SUB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_SUB, ir, dst_reg, src_reg_a, src_reg_b)
-#define uop_SUB_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SUB_IMM, ir, dst_reg, src_reg, imm)
-#define uop_XOR(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_XOR, ir, dst_reg, src_reg_a, src_reg_b)
-#define uop_XOR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_XOR_IMM, ir, dst_reg, src_reg, imm)
+#define uop_AND(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_AND, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_AND_IMM(ir, dst_reg, src_reg, imm)      uop_gen_reg_dst_src_imm(UOP_AND_IMM, ir, dst_reg, src_reg, imm)
+#define uop_ANDN(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_ANDN, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_OR(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_OR, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_OR_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_OR_IMM, ir, dst_reg, src_reg, imm)
+#define uop_SUB(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_SUB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_SUB_IMM(ir, dst_reg, src_reg, imm)      uop_gen_reg_dst_src_imm(UOP_SUB_IMM, ir, dst_reg, src_reg, imm)
+#define uop_XOR(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_XOR, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_XOR_IMM(ir, dst_reg, src_reg, imm)      uop_gen_reg_dst_src_imm(UOP_XOR_IMM, ir, dst_reg, src_reg, imm)
 
 #define uop_SAR(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_SAR, ir, dst_reg, src_reg, shift_reg)
 #define uop_SAR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SAR_IMM, ir, dst_reg, src_reg, imm)

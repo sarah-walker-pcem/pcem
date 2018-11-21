@@ -1087,6 +1087,23 @@ void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_
         }
 }
 
+void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xdb, 0xc0 | src_reg | (dst_reg << 3)); /*PAND dst_reg, src_reg*/
+}
+void host_x86_PANDN_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xdf, 0xc0 | src_reg | (dst_reg << 3)); /*PANDN dst_reg, src_reg*/
+}
+void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xeb, 0xc0 | src_reg | (dst_reg << 3)); /*POR dst_reg, src_reg*/
+}
+void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xef, 0xc0 | src_reg | (dst_reg << 3)); /*PXOR dst_reg, src_reg*/
+}
+
 void host_x86_POP(codeblock_t *block, int src_reg)
 {
         codegen_addbyte(block, 0x58 | src_reg); /*POP reg*/

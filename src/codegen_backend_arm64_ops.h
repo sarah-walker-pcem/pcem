@@ -8,6 +8,7 @@ void host_arm64_AND_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t
 void host_arm64_AND_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_AND_REG_ASR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_AND_REG_ROR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_AND_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
 void host_arm64_ANDS_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 
@@ -40,6 +41,8 @@ void host_arm64_branch_set_offset(uint32_t *opcode, void *dest);
 
 void host_arm64_BR(codeblock_t *block, int addr_reg);
 
+void host_arm64_BIC_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+
 void host_arm64_CBNZ(codeblock_t *block, int reg, uintptr_t dest);
 
 void host_arm64_CMN_IMM(codeblock_t *block, int src_n_reg, uint32_t imm_data);
@@ -57,6 +60,7 @@ void host_arm64_CSEL_VS(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_EOR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_EOR_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
 void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FCMP_D(codeblock_t *block, int src_n_reg, int src_m_reg);
@@ -124,6 +128,7 @@ void host_arm64_NOP(codeblock_t *block);
 
 void host_arm64_ORR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_ORR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_ORR_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
 void host_arm64_RET(codeblock_t *block, int reg);
 

@@ -169,7 +169,11 @@ static int codegen_AND(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-	if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
+	if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+	{
+		host_arm_VAND_D(block, dest_reg, src_reg_a, src_reg_b);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
 	{
 		host_arm_AND_REG_LSL(block, dest_reg, src_reg_a, src_reg_b, 0);
 	}
@@ -270,6 +274,20 @@ static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
 	}
 	else
                 fatal("AND_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_ANDN(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+	if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+	{
+		host_arm_VBIC_D(block, dest_reg, src_reg_b, src_reg_a);
+	}
+	else
+                fatal("ANDN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
 
         return 0;
 }
@@ -1421,7 +1439,11 @@ static int codegen_OR(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-	if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
+	if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+	{
+		host_arm_VORR_D(block, dest_reg, src_reg_a, src_reg_b);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
 	{
 		host_arm_ORR_REG_LSL(block, dest_reg, src_reg_a, src_reg_b, 0);
 	}
@@ -1844,7 +1866,11 @@ static int codegen_XOR(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-	if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
+	if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+	{
+		host_arm_VEOR_D(block, dest_reg, src_reg_a, src_reg_b);
+	}
+	else if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
 	{
 		host_arm_EOR_REG_LSL(block, dest_reg, src_reg_a, src_reg_b, 0);
 	}
@@ -1955,6 +1981,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_ADD_LSHIFT & UOP_MASK] = codegen_ADD_LSHIFT,
         [UOP_AND     & UOP_MASK] = codegen_AND,
         [UOP_AND_IMM & UOP_MASK] = codegen_AND_IMM,
+        [UOP_ANDN    & UOP_MASK] = codegen_ANDN,
         [UOP_OR      & UOP_MASK] = codegen_OR,
         [UOP_OR_IMM  & UOP_MASK] = codegen_OR_IMM,
         [UOP_SUB     & UOP_MASK] = codegen_SUB,
