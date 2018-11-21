@@ -27,7 +27,7 @@ uint32_t ropFLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
 
         uop_FP_ENTER(ir);
         uop_MOV(ir, IREG_ST(-1), IREG_ST(src_reg));
-        uop_MOV(ir, IREG_MM(-1), IREG_MM(src_reg));
+        uop_MOV(ir, IREG_ST_i64(-1), IREG_ST_i64(src_reg));
         uop_MOV(ir, IREG_tag(-1), IREG_tag(src_reg));
         fpu_PUSH(ir);
 
@@ -40,7 +40,7 @@ uint32_t ropFST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
 
         uop_FP_ENTER(ir);
         uop_MOV(ir, IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV(ir, IREG_MM(dest_reg), IREG_MM(0));
+        uop_MOV(ir, IREG_ST_i64(dest_reg), IREG_ST_i64(0));
         uop_MOV(ir, IREG_tag(dest_reg), IREG_tag(0));
 
         return op_pc;
@@ -51,7 +51,7 @@ uint32_t ropFSTP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
         uop_FP_ENTER(ir);
         uop_MOV(ir, IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV(ir, IREG_MM(dest_reg), IREG_MM(0));
+        uop_MOV(ir, IREG_ST_i64(dest_reg), IREG_ST_i64(0));
         uop_MOV(ir, IREG_tag(dest_reg), IREG_tag(0));
         fpu_POP(ir);
 
@@ -98,13 +98,13 @@ uint32_t ropFXCH(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
         uop_FP_ENTER(ir);
         uop_MOV(ir, IREG_temp0_D, IREG_ST(0));
-        uop_MOV(ir, IREG_temp1_Q, IREG_MM(0));
+        uop_MOV(ir, IREG_temp1_Q, IREG_ST_i64(0));
         uop_MOV(ir, IREG_temp2, IREG_tag(0));
         uop_MOV(ir, IREG_ST(0), IREG_ST(dest_reg));
-        uop_MOV(ir, IREG_MM(0), IREG_MM(dest_reg));
+        uop_MOV(ir, IREG_ST_i64(0), IREG_ST_i64(dest_reg));
         uop_MOV(ir, IREG_tag(0), IREG_tag(dest_reg));
         uop_MOV(ir, IREG_ST(dest_reg), IREG_temp0_D);
-        uop_MOV(ir, IREG_MM(dest_reg), IREG_temp1_Q);
+        uop_MOV(ir, IREG_ST_i64(dest_reg), IREG_temp1_Q);
         uop_MOV(ir, IREG_tag(dest_reg), IREG_temp2);
 
         return op_pc;

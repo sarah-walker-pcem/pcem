@@ -95,14 +95,14 @@ enum
         IREG_tag6 = 54,
         IREG_tag7 = 55,
 
-        IREG_MM0 = 56,
-        IREG_MM1 = 57,
-        IREG_MM2 = 58,
-        IREG_MM3 = 59,
-        IREG_MM4 = 60,
-        IREG_MM5 = 61,
-        IREG_MM6 = 62,
-        IREG_MM7 = 63,
+        IREG_ST0_i64 = 56,
+        IREG_ST1_i64 = 57,
+        IREG_ST2_i64 = 58,
+        IREG_ST3_i64 = 59,
+        IREG_ST4_i64 = 60,
+        IREG_ST5_i64 = 61,
+        IREG_ST6_i64 = 62,
+        IREG_ST7_i64 = 63,
         
         IREG_NPXCx = 64,
         IREG_NPXSx = 65,
@@ -168,8 +168,8 @@ enum
 #define IREG_16(reg) ((reg) + IREG_AX)
 #define IREG_32(reg) ((reg) + IREG_EAX)
 
-#define IREG_ST(r)  (IREG_ST0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_D)
-#define IREG_MM(r)  (IREG_MM0  + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_Q)
+#define IREG_ST(r)      (IREG_ST0     + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_D)
+#define IREG_ST_i64(r)  (IREG_ST0_i64 + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_Q)
 #define IREG_tag(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7))
 #define IREG_tag_B(r) (IREG_tag0 + ((cpu_state.TOP + (r)) & 7) + IREG_SIZE_B)
 
