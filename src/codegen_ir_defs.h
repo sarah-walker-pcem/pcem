@@ -212,8 +212,26 @@
 #define UOP_PSUBUSB               (UOP_TYPE_PARAMS_REGS | 0x9d)
 /*UOP_PSUBUSW - (packed word with unsigned saturation) dest_reg = src_reg_a - src_reg_b*/
 #define UOP_PSUBUSW               (UOP_TYPE_PARAMS_REGS | 0x9e)
+/*UOP_PSLLW_IMM - (packed word) dest_reg = src_reg_a << immediate*/
+#define UOP_PSLLW_IMM             (UOP_TYPE_PARAMS_REGS | 0x9f)
+/*UOP_PSLLD_IMM - (packed long) dest_reg = src_reg_a << immediate*/
+#define UOP_PSLLD_IMM             (UOP_TYPE_PARAMS_REGS | 0xa0)
+/*UOP_PSLLQ_IMM - (packed quad) dest_reg = src_reg_a << immediate*/
+#define UOP_PSLLQ_IMM             (UOP_TYPE_PARAMS_REGS | 0xa1)
+/*UOP_PSRAW_IMM - (packed word) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRAW_IMM             (UOP_TYPE_PARAMS_REGS | 0xa2)
+/*UOP_PSRAD_IMM - (packed long) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRAD_IMM             (UOP_TYPE_PARAMS_REGS | 0xa3)
+/*UOP_PSRAQ_IMM - (packed quad) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRAQ_IMM             (UOP_TYPE_PARAMS_REGS | 0xa4)
+/*UOP_PSRLW_IMM - (packed word) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRLW_IMM             (UOP_TYPE_PARAMS_REGS | 0xa5)
+/*UOP_PSRLD_IMM - (packed long) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRLD_IMM             (UOP_TYPE_PARAMS_REGS | 0xa6)
+/*UOP_PSRLQ_IMM - (packed quad) dest_reg = src_reg_a >> immediate*/
+#define UOP_PSRLQ_IMM             (UOP_TYPE_PARAMS_REGS | 0xa7)
 
-#define UOP_MAX 0x9f
+#define UOP_MAX 0xb0
 
 #define UOP_MASK 0xffff
 
@@ -560,6 +578,16 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_PADDSW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PADDSW, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDUSB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDUSW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSW, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_PSLLW_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLW_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSLLD_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLD_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSLLQ_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLQ_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRAW_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRAW_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRAD_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRAD_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRAQ_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRAQ_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRLW_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRLW_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRLD_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRLD_IMM, ir, dst_reg, src_reg, imm)
+#define uop_PSRLQ_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSRLQ_IMM, ir, dst_reg, src_reg, imm)
 
 #define uop_PSUBB(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PSUBB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PSUBW(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PSUBW, ir, dst_reg, src_reg_a, src_reg_b)

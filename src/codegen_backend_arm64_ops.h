@@ -1,9 +1,9 @@
 void host_arm64_ADD_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_ADD_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_ADD_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_ADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_ADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_ADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_ADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_ADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_ADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
 void host_arm64_ADR(codeblock_t *block, int dst_reg, int offset);
 
@@ -140,10 +140,18 @@ void host_arm64_SBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int 
 void host_arm64_SCVTF_D_Q(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg);
 
-void host_arm64_SQADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SQADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SQSUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_SQADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_SQADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_SQSUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_SQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+
+void host_arm64_SHL_V4H(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_SHL_V2S(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_SHL_V2D(codeblock_t *block, int dst_reg, int src_reg, int shift);
+
+void host_arm64_SSHR_V4H(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_SSHR_V2S(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_SSHR_V2D(codeblock_t *block, int dst_reg, int src_reg, int shift);
 
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset);
 
@@ -165,9 +173,9 @@ void host_arm64_STRH_REG(codeblock_t *block, int src_reg, int base_reg, int offs
 void host_arm64_SUB_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_SUB_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_SUB_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
-void host_arm64_SUB_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+void host_arm64_SUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_SUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_SUB_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
 uint32_t *host_arm64_TBNZ(codeblock_t *block, int reg, int bit);
 
@@ -179,6 +187,10 @@ void host_arm64_UQADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 void host_arm64_UQADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_UQSUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_UQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
+
+void host_arm64_USHR_V4H(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_USHR_V2S(codeblock_t *block, int dst_reg, int src_reg, int shift);
+void host_arm64_USHR_V2D(codeblock_t *block, int dst_reg, int src_reg, int shift);
 
 void host_arm64_call(codeblock_t *block, void *dst_addr);
 void host_arm64_jump(codeblock_t *block, uintptr_t dst_addr);

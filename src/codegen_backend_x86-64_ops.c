@@ -1257,6 +1257,7 @@ void host_x86_PADDUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xdd, 0xc0 | src_reg | (dst_reg << 3)); /*PADDUSW dst_reg, src_reg*/
 }
+
 void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xdb, 0xc0 | src_reg | (dst_reg << 3)); /*PAND dst_reg, src_reg*/
@@ -1269,6 +1270,53 @@ void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xeb, 0xc0 | src_reg | (dst_reg << 3)); /*POR dst_reg, src_reg*/
 }
+
+void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x71, 0xc0 | 0x30 | dst_reg); /*PSLLW dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSLLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x72, 0xc0 | 0x30 | dst_reg); /*PSLLD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSLLQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x73, 0xc0 | 0x30 | dst_reg); /*PSLLD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRAW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x71, 0xc0 | 0x20 | dst_reg); /*PSRAW dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRAD_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x72, 0xc0 | 0x20 | dst_reg); /*PSRAD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRAQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x73, 0xc0 | 0x20 | dst_reg); /*PSRAD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x71, 0xc0 | 0x10 | dst_reg); /*PSRLW dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x72, 0xc0 | 0x10 | dst_reg); /*PSRLD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+void host_x86_PSRLQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x73, 0xc0 | 0x10 | dst_reg); /*PSRLD dst_reg, imm*/
+        codegen_addbyte(block, shift);
+}
+
 void host_x86_PSUBB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xf8, 0xc0 | src_reg | (dst_reg << 3)); /*PADDB dst_reg, src_reg*/
@@ -1297,6 +1345,7 @@ void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xd9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSW dst_reg, src_reg*/
 }
+
 void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xef, 0xc0 | src_reg | (dst_reg << 3)); /*PXOR dst_reg, src_reg*/

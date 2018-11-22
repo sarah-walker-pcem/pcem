@@ -1372,6 +1372,133 @@ static int codegen_PADDUSW(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PSLLW_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSLLW_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSLLW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSLLD_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSLLD_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSLLD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSLLQ_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSLLQ_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSLLQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRAW_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRAW_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRAW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRAD_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRAD_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRAD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRAQ_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRAQ_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRAQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRLW_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRLW_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRLW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRLD_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRLD_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRLD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_PSRLQ_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSRLQ_XREG_IMM(block, dest_reg, uop->imm_data);
+        }
+        else
+                fatal("PSRLQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+
 static int codegen_PSUBB(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -1913,6 +2040,16 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PADDUSB & UOP_MASK] = codegen_PADDUSB,
         [UOP_PADDUSW & UOP_MASK] = codegen_PADDUSW,
 
+        [UOP_PSLLW_IMM & UOP_MASK] = codegen_PSLLW_IMM,
+        [UOP_PSLLD_IMM & UOP_MASK] = codegen_PSLLD_IMM,
+        [UOP_PSLLQ_IMM & UOP_MASK] = codegen_PSLLQ_IMM,
+        [UOP_PSRAW_IMM & UOP_MASK] = codegen_PSRAW_IMM,
+        [UOP_PSRAD_IMM & UOP_MASK] = codegen_PSRAD_IMM,
+        [UOP_PSRAQ_IMM & UOP_MASK] = codegen_PSRAQ_IMM,
+        [UOP_PSRLW_IMM & UOP_MASK] = codegen_PSRLW_IMM,
+        [UOP_PSRLD_IMM & UOP_MASK] = codegen_PSRLD_IMM,
+        [UOP_PSRLQ_IMM & UOP_MASK] = codegen_PSRLQ_IMM,
+        
         [UOP_PSUBB & UOP_MASK]   = codegen_PSUBB,
         [UOP_PSUBW & UOP_MASK]   = codegen_PSUBW,
         [UOP_PSUBD & UOP_MASK]   = codegen_PSUBD,

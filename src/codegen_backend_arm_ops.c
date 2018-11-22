@@ -119,6 +119,15 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VQSUB_S16 0xf2100210
 #define OPCODE_VQSUB_U8  0xf3000210
 #define OPCODE_VQSUB_U16 0xf3100210
+#define OPCODE_VSHL_D_IMM_16 0xf2900510
+#define OPCODE_VSHL_D_IMM_32 0xf2a00510
+#define OPCODE_VSHL_D_IMM_64 0xf2800590
+#define OPCODE_VSHR_D_S16    0xf2900010
+#define OPCODE_VSHR_D_S32    0xf2a00010
+#define OPCODE_VSHR_D_S64    0xf2800090
+#define OPCODE_VSHR_D_U16    0xf3900010
+#define OPCODE_VSHR_D_U32    0xf3a00010
+#define OPCODE_VSHR_D_U64    0xf3800090
 #define OPCODE_VSTR_D 0xed800b00
 #define OPCODE_VSTR_S 0xed800a00
 #define OPCODE_VSUB   0xee300b40
@@ -157,6 +166,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define LDRH_IMM(imm) (((imm) & 0xf) | (((imm) & 0xf0) << 4))
 #define STRH_IMM(imm) LDRH_IMM(imm)
 
+#define VSHIFT_IMM(shift) ((shift) << 16)
 
 static inline uint32_t arm_data_offset(int offset)
 {
@@ -868,6 +878,7 @@ void host_arm_VORR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 {
 	codegen_addlong(block, OPCODE_VORR_D | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
+
 void host_arm_VQADD_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VQADD_S8 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -900,6 +911,62 @@ void host_arm_VQSUB_U16(codeblock_t *block, int dst_reg, int src_reg_n, int src_
 {
 	codegen_addlong(block, OPCODE_VQSUB_U16 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
+
+void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 15)
+                fatal("host_arm_VSHL_D_IMM_16 : shift > 15\n");
+	codegen_addlong(block, OPCODE_VSHL_D_IMM_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHL_D_IMM_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 31)
+                fatal("host_arm_VSHL_D_IMM_32 : shift > 31\n");
+	codegen_addlong(block, OPCODE_VSHL_D_IMM_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHL_D_IMM_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 63)
+                fatal("host_arm_VSHL_D_IMM_64 : shift > 63\n");
+	codegen_addlong(block, OPCODE_VSHL_D_IMM_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_SD_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 15)
+                fatal("host_arm_VSHR_SD_IMM_16 : shift > 15\n");
+	codegen_addlong(block, OPCODE_VSHR_SD_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_SD_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 31)
+                fatal("host_arm_VSHR_SD_IMM_32 : shift > 31\n");
+	codegen_addlong(block, OPCODE_VSHR_SD_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_SD_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 63)
+                fatal("host_arm_VSHR_SD_IMM_64 : shift > 63\n");
+	codegen_addlong(block, OPCODE_VSHR_SD_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_UD_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 15)
+                fatal("host_arm_VSHR_UD_IMM_16 : shift > 15\n");
+	codegen_addlong(block, OPCODE_VSHR_UD_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_UD_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 31)
+                fatal("host_arm_VSHR_UD_IMM_32 : shift > 31\n");
+	codegen_addlong(block, OPCODE_VSHR_UD_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+void host_arm_VSHR_UD_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+{
+        if (shift > 63)
+                fatal("host_arm_VSHR_UD_IMM_64 : shift > 63\n");
+	codegen_addlong(block, OPCODE_VSHR_UD_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+}
+
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)
 {
 	if ((offset > 1020) || (offset & 3))

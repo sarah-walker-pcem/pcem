@@ -161,9 +161,21 @@ void host_x86_PADDSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PADDSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PADDUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PADDUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PANDN_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
+void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSLLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSLLQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRAW_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRAD_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRAQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_PSRLQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
+
 void host_x86_PSUBB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
@@ -171,6 +183,7 @@ void host_x86_PSUBSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_POP(codeblock_t *block, int src_reg);
