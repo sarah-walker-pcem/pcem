@@ -104,6 +104,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_SUB_LSR       (0x25a << 21)
 #define OPCODE_SUBX_LSL      (0x658 << 21)
 
+#define OPCODE_ADD_V8B       (0x0e208400)
+#define OPCODE_ADD_V4H       (0x0e608400)
+#define OPCODE_ADD_V2S       (0x0ea08400)
 #define OPCODE_AND_V         (0x0e201c00)
 #define OPCODE_ASR           (0x1ac02800)
 #define OPCODE_BIC_V         (0x0e601c00)
@@ -147,12 +150,23 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_RET           (0xd65f0000)
 #define OPCODE_SCVTF_D_Q     (0x9e620000)
 #define OPCODE_SCVTF_D_W     (0x1e620000)
+#define OPCODE_SQADD_V8B     (0x0e200c00)
+#define OPCODE_SQADD_V4H     (0x0e600c00)
+#define OPCODE_SQSUB_V8B     (0x0e202c00)
+#define OPCODE_SQSUB_V4H     (0x0e602c00)
 #define OPCODE_STR_REG       (0xb8206800)
 #define OPCODE_STRB_REG      (0x38206800)
 #define OPCODE_STRH_REG      (0x78206800)
 #define OPCODE_STR_REG_F32   (0xbc206800)
 #define OPCODE_STR_REG_F64   (0xfc206800)
 #define OPCODE_STR_REG_F64_S (0xfc207800)
+#define OPCODE_SUB_V8B       (0x2e208400)
+#define OPCODE_SUB_V4H       (0x2e608400)
+#define OPCODE_SUB_V2S       (0x2ea08400)
+#define OPCODE_UQADD_V8B     (0x2e200c00)
+#define OPCODE_UQADD_V4H     (0x2e600c00)
+#define OPCODE_UQSUB_V8B     (0x2e202c00)
+#define OPCODE_UQSUB_V4H     (0x2e602c00)
 
 #define DATPROC_SHIFT(sh) (sh << 10)
 #define DATPROC_IMM_SHIFT(sh) (sh << 22)
@@ -276,6 +290,18 @@ void host_arm64_ADD_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 void host_arm64_ADD_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
 {
 	codegen_addlong(block, OPCODE_ADD_LSR | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_ADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_ADD_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_ADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_ADD_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_ADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_ADD_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
 }
 
 void host_arm64_ADR(codeblock_t *block, int dst_reg, int offset)
@@ -881,6 +907,23 @@ void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg)
 	codegen_addlong(block, OPCODE_SCVTF_D_W | Rd(dst_reg) | Rn(src_reg));
 }
 
+void host_arm64_SQADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SQADD_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_SQADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SQADD_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_SQSUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SQSUB_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_SQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SQSUB_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset)
 {
 	if (!in_range7_x(offset))
@@ -978,6 +1021,18 @@ void host_arm64_SUB_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int 
 {
 	codegen_addlong(block, OPCODE_SUB_LSR | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
 }
+void host_arm64_SUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SUB_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_SUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SUB_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_SUB_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_SUB_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
 
 uint32_t *host_arm64_TBNZ(codeblock_t *block, int reg, int bit)
 {
@@ -990,6 +1045,22 @@ void host_arm64_UBFX(codeblock_t *block, int dst_reg, int src_reg, int lsb, int 
 	codegen_addlong(block, OPCODE_UBFX | Rd(dst_reg) | Rn(src_reg) | IMMN(0) | IMMR(lsb) | IMMS((lsb+width-1) & 31));
 }
 
+void host_arm64_UQADD_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_UQADD_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_UQADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_UQADD_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_UQSUB_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_UQSUB_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
+void host_arm64_UQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+{
+	codegen_addlong(block, OPCODE_UQSUB_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
+}
 
 void host_arm64_call(codeblock_t *block, void *dst_addr)
 {

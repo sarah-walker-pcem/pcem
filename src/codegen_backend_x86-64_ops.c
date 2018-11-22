@@ -1229,6 +1229,34 @@ void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int s
         codegen_addbyte2(block, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*OR dst_reg, src_reg_b*/
 }
 
+void host_x86_PADDB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xfc, 0xc0 | src_reg | (dst_reg << 3)); /*PADDB dst_reg, src_reg*/
+}
+void host_x86_PADDW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xfd, 0xc0 | src_reg | (dst_reg << 3)); /*PADDW dst_reg, src_reg*/
+}
+void host_x86_PADDD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xfe, 0xc0 | src_reg | (dst_reg << 3)); /*PADDD dst_reg, src_reg*/
+}
+void host_x86_PADDSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xec, 0xc0 | src_reg | (dst_reg << 3)); /*PADDSB dst_reg, src_reg*/
+}
+void host_x86_PADDSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xed, 0xc0 | src_reg | (dst_reg << 3)); /*PADDSW dst_reg, src_reg*/
+}
+void host_x86_PADDUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xdc, 0xc0 | src_reg | (dst_reg << 3)); /*PADDUSB dst_reg, src_reg*/
+}
+void host_x86_PADDUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xdd, 0xc0 | src_reg | (dst_reg << 3)); /*PADDUSW dst_reg, src_reg*/
+}
 void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xdb, 0xc0 | src_reg | (dst_reg << 3)); /*PAND dst_reg, src_reg*/
@@ -1240,6 +1268,34 @@ void host_x86_PANDN_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xeb, 0xc0 | src_reg | (dst_reg << 3)); /*POR dst_reg, src_reg*/
+}
+void host_x86_PSUBB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xf8, 0xc0 | src_reg | (dst_reg << 3)); /*PADDB dst_reg, src_reg*/
+}
+void host_x86_PSUBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xf9, 0xc0 | src_reg | (dst_reg << 3)); /*PADDW dst_reg, src_reg*/
+}
+void host_x86_PSUBD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xfa, 0xc0 | src_reg | (dst_reg << 3)); /*PADDD dst_reg, src_reg*/
+}
+void host_x86_PSUBSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xe8, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBSB dst_reg, src_reg*/
+}
+void host_x86_PSUBSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xe9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBSW dst_reg, src_reg*/
+}
+void host_x86_PSUBUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xd8, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSB dst_reg, src_reg*/
+}
+void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xd9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSW dst_reg, src_reg*/
 }
 void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {

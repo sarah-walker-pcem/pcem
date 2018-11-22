@@ -1273,6 +1273,204 @@ static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PADDB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDD_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDSB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDSB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDSW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDSW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDUSB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDUSB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDUSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PADDUSW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PADDUSW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PADDUSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
+static int codegen_PSUBB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBD_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBSB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBSB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBSW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBSW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBUSB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBUSB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBUSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PSUBUSW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PSUBUSW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PSUBUSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
 static int codegen_SAR(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
@@ -1705,7 +1903,23 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FDIV & UOP_MASK] = codegen_FDIV,
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
         [UOP_FSUB & UOP_MASK] = codegen_FSUB,
-        [UOP_FCOM & UOP_MASK] = codegen_FCOM
+        [UOP_FCOM & UOP_MASK] = codegen_FCOM,
+        
+        [UOP_PADDB & UOP_MASK]   = codegen_PADDB,
+        [UOP_PADDW & UOP_MASK]   = codegen_PADDW,
+        [UOP_PADDD & UOP_MASK]   = codegen_PADDD,
+        [UOP_PADDSB & UOP_MASK]  = codegen_PADDSB,
+        [UOP_PADDSW & UOP_MASK]  = codegen_PADDSW,
+        [UOP_PADDUSB & UOP_MASK] = codegen_PADDUSB,
+        [UOP_PADDUSW & UOP_MASK] = codegen_PADDUSW,
+
+        [UOP_PSUBB & UOP_MASK]   = codegen_PSUBB,
+        [UOP_PSUBW & UOP_MASK]   = codegen_PSUBW,
+        [UOP_PSUBD & UOP_MASK]   = codegen_PSUBD,
+        [UOP_PSUBSB & UOP_MASK]  = codegen_PSUBSB,
+        [UOP_PSUBSW & UOP_MASK]  = codegen_PSUBSW,
+        [UOP_PSUBUSB & UOP_MASK] = codegen_PSUBUSB,
+        [UOP_PSUBUSW & UOP_MASK] = codegen_PSUBUSW
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)

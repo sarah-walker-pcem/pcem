@@ -184,8 +184,36 @@
 
 /*UOP_MMX_ENTER - must be called before any MMX registers accessed*/
 #define UOP_MMX_ENTER             (UOP_TYPE_PARAMS_IMM | 0x90 | UOP_TYPE_BARRIER)
+/*UOP_PADDB - (packed byte) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDB                 (UOP_TYPE_PARAMS_REGS | 0x91)
+/*UOP_PADDW - (packed word) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDW                 (UOP_TYPE_PARAMS_REGS | 0x92)
+/*UOP_PADDD - (packed long) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDD                 (UOP_TYPE_PARAMS_REGS | 0x93)
+/*UOP_PADDSB - (packed byte with signed saturation) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDSB                (UOP_TYPE_PARAMS_REGS | 0x94)
+/*UOP_PADDSW - (packed word with signed saturation) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDSW                (UOP_TYPE_PARAMS_REGS | 0x95)
+/*UOP_PADDUSB - (packed byte with unsigned saturation) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDUSB               (UOP_TYPE_PARAMS_REGS | 0x96)
+/*UOP_PADDUSW - (packed word with unsigned saturation) dest_reg = src_reg_a + src_reg_b*/
+#define UOP_PADDUSW               (UOP_TYPE_PARAMS_REGS | 0x97)
+/*UOP_PSUBB - (packed byte) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBB                 (UOP_TYPE_PARAMS_REGS | 0x98)
+/*UOP_PSUBW - (packed word) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBW                 (UOP_TYPE_PARAMS_REGS | 0x99)
+/*UOP_PSUBD - (packed long) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBD                 (UOP_TYPE_PARAMS_REGS | 0x9a)
+/*UOP_PSUBSB - (packed byte with signed saturation) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBSB                (UOP_TYPE_PARAMS_REGS | 0x9b)
+/*UOP_PSUBSW - (packed word with signed saturation) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBSW                (UOP_TYPE_PARAMS_REGS | 0x9c)
+/*UOP_PSUBUSB - (packed byte with unsigned saturation) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBUSB               (UOP_TYPE_PARAMS_REGS | 0x9d)
+/*UOP_PSUBUSW - (packed word with unsigned saturation) dest_reg = src_reg_a - src_reg_b*/
+#define UOP_PSUBUSW               (UOP_TYPE_PARAMS_REGS | 0x9e)
 
-#define UOP_MAX 0x91
+#define UOP_MAX 0x9f
 
 #define UOP_MASK 0xffff
 
@@ -524,6 +552,22 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_MOV_DOUBLE_INT(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_MOV_DOUBLE_INT, ir, dst_reg, src_reg)
 #define uop_MOV_INT_DOUBLE(ir, dst_reg, src_reg/*, nrc, orc*/) uop_gen_reg_dst_src1(UOP_MOV_INT_DOUBLE, ir, dst_reg, src_reg/*, nrc, orc*/)
 #define uop_MOV_INT_DOUBLE_64(ir, dst_reg, src_reg_d, src_reg_q, tag) uop_gen_reg_dst_src3(UOP_MOV_INT_DOUBLE_64, ir, dst_reg, src_reg_d, src_reg_q, tag)
+
+#define uop_PADDB(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDW(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDD(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDSB(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PADDSB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDSW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PADDSW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDUSB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PADDUSW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSW, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_PSUBB(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PSUBB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBW(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PSUBW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBD(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PSUBD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBSB(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PSUBSB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBSW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PSUBSW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBUSB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PSUBUSB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PSUBUSW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PSUBUSW, ir, dst_reg, src_reg_a, src_reg_b)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)
