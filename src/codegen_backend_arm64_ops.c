@@ -112,6 +112,12 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_BIC_V         (0x0e601c00)
 #define OPCODE_BLR           (0xd63f0000)
 #define OPCODE_BR            (0xd61f0000)
+#define OPCODE_CMEQ_V8B      (0x2e208c00)
+#define OPCODE_CMEQ_V4H      (0x2e608c00)
+#define OPCODE_CMEQ_V2S      (0x2ea08c00)
+#define OPCODE_CMGT_V8B      (0x0e203400)
+#define OPCODE_CMGT_V4H      (0x0e603400)
+#define OPCODE_CMGT_V2S      (0x0ea03400)
 #define OPCODE_EOR_V         (0x2e201c00)
 #define OPCODE_FADD_D        (0x1e602800)
 #define OPCODE_FCMP_D        (0x1e602000)
@@ -516,6 +522,31 @@ void host_arm64_CBNZ(codeblock_t *block, int reg, uintptr_t dest)
 	if (!offset_is_19bit(offset))
 		fatal("host_arm64_CBNZ - offset out of range %x\n", offset);
 	codegen_addlong(block, OPCODE_CBNZ | OFFSET19(offset) | Rt(reg));
+}
+
+void host_arm64_CMEQ_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMEQ_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_CMEQ_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMEQ_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_CMEQ_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMEQ_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_CMGT_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMGT_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_CMGT_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMGT_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_CMGT_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_CMGT_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_CMN_IMM(codeblock_t *block, int src_n_reg, uint32_t imm_data)

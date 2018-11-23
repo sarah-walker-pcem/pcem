@@ -48,6 +48,13 @@ void host_arm64_BIC_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 
 void host_arm64_CBNZ(codeblock_t *block, int reg, uintptr_t dest);
 
+void host_arm64_CMEQ_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_CMEQ_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_CMEQ_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_CMGT_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_CMGT_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_CMGT_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+
 void host_arm64_CMN_IMM(codeblock_t *block, int src_n_reg, uint32_t imm_data);
 void host_arm64_CMNX_IMM(codeblock_t *block, int src_n_reg, uint64_t imm_data);
 

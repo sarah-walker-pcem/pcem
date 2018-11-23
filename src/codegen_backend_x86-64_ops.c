@@ -1270,6 +1270,35 @@ void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xeb, 0xc0 | src_reg | (dst_reg << 3)); /*POR dst_reg, src_reg*/
 }
+void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xef, 0xc0 | src_reg | (dst_reg << 3)); /*PXOR dst_reg, src_reg*/
+}
+
+void host_x86_PCMPEQB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x74, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPEQB dst_reg, src_reg*/
+}
+void host_x86_PCMPEQW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x75, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPEQW dst_reg, src_reg*/
+}
+void host_x86_PCMPEQD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x76, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPEQD dst_reg, src_reg*/
+}
+void host_x86_PCMPGTB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x64, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPGTB dst_reg, src_reg*/
+}
+void host_x86_PCMPGTW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x65, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPGTW dst_reg, src_reg*/
+}
+void host_x86_PCMPGTD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x66, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPGTD dst_reg, src_reg*/
+}
 
 void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
 {
@@ -1344,11 +1373,6 @@ void host_x86_PSUBUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xd9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSW dst_reg, src_reg*/
-}
-
-void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
-{
-        codegen_addbyte4(block, 0x66, 0x0f, 0xef, 0xc0 | src_reg | (dst_reg << 3)); /*PXOR dst_reg, src_reg*/
 }
 
 void host_x86_POP(codeblock_t *block, int dst_reg)

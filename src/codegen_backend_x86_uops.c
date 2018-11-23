@@ -1372,6 +1372,91 @@ static int codegen_PADDUSW(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PCMPEQB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPEQB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPEQB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PCMPEQW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPEQW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPEQW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PCMPEQD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPEQD_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPEQD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PCMPGTB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPGTB_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPGTB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PCMPGTW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPGTW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPGTW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PCMPGTD_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PCMPGTD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
 static int codegen_PSLLW_IMM(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
@@ -2039,6 +2124,13 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PADDSW & UOP_MASK]  = codegen_PADDSW,
         [UOP_PADDUSB & UOP_MASK] = codegen_PADDUSB,
         [UOP_PADDUSW & UOP_MASK] = codegen_PADDUSW,
+
+        [UOP_PCMPEQB & UOP_MASK] = codegen_PCMPEQB,
+        [UOP_PCMPEQW & UOP_MASK] = codegen_PCMPEQW,
+        [UOP_PCMPEQD & UOP_MASK] = codegen_PCMPEQD,
+        [UOP_PCMPGTB & UOP_MASK] = codegen_PCMPGTB,
+        [UOP_PCMPGTW & UOP_MASK] = codegen_PCMPGTW,
+        [UOP_PCMPGTD & UOP_MASK] = codegen_PCMPGTD,
 
         [UOP_PSLLW_IMM & UOP_MASK] = codegen_PSLLW_IMM,
         [UOP_PSLLD_IMM & UOP_MASK] = codegen_PSLLD_IMM,

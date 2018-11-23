@@ -165,6 +165,14 @@ void host_x86_PADDUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PAND_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PANDN_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_POR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
+void host_x86_PCMPEQB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PCMPEQW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PCMPEQD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PCMPGTB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PCMPGTW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PCMPGTD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_PSLLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
@@ -183,8 +191,6 @@ void host_x86_PSUBSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
-
-void host_x86_PXOR_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_POP(codeblock_t *block, int src_reg);
 

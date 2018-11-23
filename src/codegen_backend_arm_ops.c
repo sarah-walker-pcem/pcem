@@ -92,6 +92,12 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VADD_I32 0xf2200800
 #define OPCODE_VAND_D 0xf2000110
 #define OPCODE_VBIC_D 0xf2100110
+#define OPCODE_VCEQ_I8  0xf3000810
+#define OPCODE_VCEQ_I16 0xf3100810
+#define OPCODE_VCEQ_I32 0xf3200810
+#define OPCODE_VCGT_S8  0xf2000300
+#define OPCODE_VCGT_S16 0xf2100300
+#define OPCODE_VCGT_S32 0xf2200300
 #define OPCODE_VCMP_D 0xeeb40b40
 #define OPCODE_VCVT_D_IS  0xeeb80bc0
 #define OPCODE_VCVT_D_S   0xeeb70ac0
@@ -802,6 +808,32 @@ void host_arm_VCMP_D(codeblock_t *block, int src_reg_d, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCMP_D | Rd(src_reg_d) | Rm(src_reg_m));
 }
+
+void host_arm_VCEQ_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCEQ_I8 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCEQ_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCEQ_I16 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCEQ_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCEQ_I32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCGT_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCGT_S8 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCGT_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCGT_S16 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCGT_S32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCGT_S32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+
 void host_arm_VCVT_D_IS(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCVT_D_IS | Vd(dest_reg) | Vm(src_reg));

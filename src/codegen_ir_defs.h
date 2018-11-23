@@ -230,6 +230,18 @@
 #define UOP_PSRLD_IMM             (UOP_TYPE_PARAMS_REGS | 0xa6)
 /*UOP_PSRLQ_IMM - (packed quad) dest_reg = src_reg_a >> immediate*/
 #define UOP_PSRLQ_IMM             (UOP_TYPE_PARAMS_REGS | 0xa7)
+/*UOP_PCMPEQB - (packed byte) dest_reg = (src_reg_a == src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPEQB               (UOP_TYPE_PARAMS_REGS | 0xa8)
+/*UOP_PCMPEQW - (packed word) dest_reg = (src_reg_a == src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPEQW               (UOP_TYPE_PARAMS_REGS | 0xa9)
+/*UOP_PCMPEQD - (packed long) dest_reg = (src_reg_a == src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPEQD               (UOP_TYPE_PARAMS_REGS | 0xaa)
+/*UOP_PCMPGTB - (packed signed byte) dest_reg = (src_reg_a > src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPGTB               (UOP_TYPE_PARAMS_REGS | 0xab)
+/*UOP_PCMPGTW - (packed signed word) dest_reg = (src_reg_a > src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPGTW               (UOP_TYPE_PARAMS_REGS | 0xac)
+/*UOP_PCMPGTD - (packed signed long) dest_reg = (src_reg_a > src_reg_b) ? ~0 : 0*/
+#define UOP_PCMPGTD               (UOP_TYPE_PARAMS_REGS | 0xad)
 
 #define UOP_MAX 0xb0
 
@@ -578,6 +590,13 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_PADDSW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PADDSW, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDUSB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDUSW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PADDUSW, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_PCMPEQB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPEQB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PCMPEQW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPEQW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PCMPEQD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPEQD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PCMPGTB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PCMPGTW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PCMPGTD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTD, ir, dst_reg, src_reg_a, src_reg_b)
 
 #define uop_PSLLW_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLW_IMM, ir, dst_reg, src_reg, imm)
 #define uop_PSLLD_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLD_IMM, ir, dst_reg, src_reg, imm)
