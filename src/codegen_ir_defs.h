@@ -242,8 +242,26 @@
 #define UOP_PCMPGTW               (UOP_TYPE_PARAMS_REGS | 0xac)
 /*UOP_PCMPGTD - (packed signed long) dest_reg = (src_reg_a > src_reg_b) ? ~0 : 0*/
 #define UOP_PCMPGTD               (UOP_TYPE_PARAMS_REGS | 0xad)
+/*UOP_PUNPCKLBW - (packed byte) dest_reg = interleave low src_reg_a/src_reg_b*/
+#define UOP_PUNPCKLBW             (UOP_TYPE_PARAMS_REGS | 0xae)
+/*UOP_PUNPCKLWD - (packed word) dest_reg = interleave low src_reg_a/src_reg_b*/
+#define UOP_PUNPCKLWD             (UOP_TYPE_PARAMS_REGS | 0xaf)
+/*UOP_PUNPCKLDQ - (packed long) dest_reg = interleave low src_reg_a/src_reg_b*/
+#define UOP_PUNPCKLDQ             (UOP_TYPE_PARAMS_REGS | 0xb0)
+/*UOP_PUNPCKHBW - (packed byte) dest_reg = interleave high src_reg_a/src_reg_b*/
+#define UOP_PUNPCKHBW             (UOP_TYPE_PARAMS_REGS | 0xb1)
+/*UOP_PUNPCKHWD - (packed word) dest_reg = interleave high src_reg_a/src_reg_b*/
+#define UOP_PUNPCKHWD             (UOP_TYPE_PARAMS_REGS | 0xb2)
+/*UOP_PUNPCKHDQ - (packed long) dest_reg = interleave high src_reg_a/src_reg_b*/
+#define UOP_PUNPCKHDQ             (UOP_TYPE_PARAMS_REGS | 0xb3)
+/*UOP_PACKSSWB - dest_reg = interleave src_reg_a/src_reg_b, converting words to bytes with signed saturation*/
+#define UOP_PACKSSWB              (UOP_TYPE_PARAMS_REGS | 0xb4)
+/*UOP_PACKSSDW - dest_reg = interleave src_reg_a/src_reg_b, converting longs to words with signed saturation*/
+#define UOP_PACKSSDW              (UOP_TYPE_PARAMS_REGS | 0xb5)
+/*UOP_PACKUSWB - dest_reg = interleave src_reg_a/src_reg_b, converting words to bytes with unsigned saturation*/
+#define UOP_PACKUSWB              (UOP_TYPE_PARAMS_REGS | 0xb6)
 
-#define UOP_MAX 0xb0
+#define UOP_MAX 0xb7
 
 #define UOP_MASK 0xffff
 
@@ -583,6 +601,10 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_MOV_INT_DOUBLE(ir, dst_reg, src_reg/*, nrc, orc*/) uop_gen_reg_dst_src1(UOP_MOV_INT_DOUBLE, ir, dst_reg, src_reg/*, nrc, orc*/)
 #define uop_MOV_INT_DOUBLE_64(ir, dst_reg, src_reg_d, src_reg_q, tag) uop_gen_reg_dst_src3(UOP_MOV_INT_DOUBLE_64, ir, dst_reg, src_reg_d, src_reg_q, tag)
 
+#define uop_PACKSSWB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PACKSSWB, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PACKSSDW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PACKSSDW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PACKUSWB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PACKUSWB, ir, dst_reg, src_reg_a, src_reg_b)
+
 #define uop_PADDB(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDW(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDW, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PADDD(ir, dst_reg, src_reg_a, src_reg_b)   uop_gen_reg_dst_src2(UOP_PADDD, ir, dst_reg, src_reg_a, src_reg_b)
@@ -615,6 +637,13 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_PSUBSW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PSUBSW, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PSUBUSB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PSUBUSB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PSUBUSW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PSUBUSW, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_PUNPCKHBW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKHBW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PUNPCKHWD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKHWD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PUNPCKHDQ(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKHDQ, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PUNPCKLBW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKLBW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PUNPCKLWD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKLWD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PUNPCKLDQ(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PUNPCKLDQ, ir, dst_reg, src_reg_a, src_reg_b)
 
 #define uop_STORE_PTR_IMM(ir, p, imm)    uop_gen_pointer_imm(UOP_STORE_P_IMM, ir, p, imm)
 #define uop_STORE_PTR_IMM_8(ir, p, imm)  uop_gen_pointer_imm(UOP_STORE_P_IMM_8, ir, p, imm)

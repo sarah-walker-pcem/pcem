@@ -1229,6 +1229,25 @@ void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int s
         codegen_addbyte2(block, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*OR dst_reg, src_reg_b*/
 }
 
+void host_x86_PACKSSWB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x63, 0xc0 | src_reg | (dst_reg << 3)); /*PACKSSWB dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0x88 (move bits 64-95 to 32-63)*/
+        codegen_addbyte(block, 0x88);
+}
+void host_x86_PACKSSDW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x6b, 0xc0 | src_reg | (dst_reg << 3)); /*PACKSSDW dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0x88 (move bits 64-95 to 32-63)*/
+        codegen_addbyte(block, 0x88);
+}
+void host_x86_PACKUSWB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x67, 0xc0 | src_reg | (dst_reg << 3)); /*PACKUSWB dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0x88 (move bits 64-95 to 32-63)*/
+        codegen_addbyte(block, 0x88);
+}
+
 void host_x86_PADDB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xfc, 0xc0 | src_reg | (dst_reg << 3)); /*PADDB dst_reg, src_reg*/
@@ -1373,6 +1392,37 @@ void host_x86_PSUBUSB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0xd9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSW dst_reg, src_reg*/
+}
+
+void host_x86_PUNPCKHBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x60, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLBW dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
+        codegen_addbyte(block, 0xee);
+}
+void host_x86_PUNPCKHWD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x61, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLWD dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
+        codegen_addbyte(block, 0xee);
+}
+void host_x86_PUNPCKHDQ_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x62, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLDQ dst_reg, src_reg*/
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
+        codegen_addbyte(block, 0xee);
+}
+void host_x86_PUNPCKLBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x60, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLBW dst_reg, src_reg*/
+}
+void host_x86_PUNPCKLWD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x61, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLWD dst_reg, src_reg*/
+}
+void host_x86_PUNPCKLDQ_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x62, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLDQ dst_reg, src_reg*/
 }
 
 void host_x86_POP(codeblock_t *block, int dst_reg)

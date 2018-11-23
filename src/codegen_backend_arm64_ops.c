@@ -160,6 +160,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_SQADD_V4H     (0x0e600c00)
 #define OPCODE_SQSUB_V8B     (0x0e202c00)
 #define OPCODE_SQSUB_V4H     (0x0e602c00)
+#define OPCODE_SQXTN_V8B_8H  (0x0e214800)
+#define OPCODE_SQXTN_V4H_4S  (0x0e614800)
 #define OPCODE_SHL_VD        (0x0e005400)
 #define OPCODE_SHL_VQ        (0x4e005400)
 #define OPCODE_SSHR_VD       (0x0e004400)
@@ -177,8 +179,15 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_UQADD_V4H     (0x2e600c00)
 #define OPCODE_UQSUB_V8B     (0x2e202c00)
 #define OPCODE_UQSUB_V4H     (0x2e602c00)
+#define OPCODE_UQXTN_V8B_8H  (0x2e214800)
 #define OPCODE_USHR_VD       (0x2e004400)
 #define OPCODE_USHR_VQ       (0x6e004400)
+#define OPCODE_ZIP1_V8B      (0x0e003800)
+#define OPCODE_ZIP1_V4H      (0x0e403800)
+#define OPCODE_ZIP1_V2S      (0x0e803800)
+#define OPCODE_ZIP2_V8B      (0x0e007800)
+#define OPCODE_ZIP2_V4H      (0x0e407800)
+#define OPCODE_ZIP2_V2S      (0x0e807800)
 
 #define DATPROC_SHIFT(sh) (sh << 10)
 #define DATPROC_IMM_SHIFT(sh) (sh << 22)
@@ -965,6 +974,15 @@ void host_arm64_SQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 	codegen_addlong(block, OPCODE_SQSUB_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
+void host_arm64_SQXTN_V8B_8H(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_SQXTN_V8B_8H | Rd(dst_reg) | Rn(src_reg));
+}
+void host_arm64_SQXTN_V4B_4H(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_SQXTN_V4B_4H | Rd(dst_reg) | Rn(src_reg));
+}
+
 void host_arm64_SHL_V4H(codeblock_t *block, int dst_reg, int src_n_reg, shift)
 {
 	codegen_addlong(block, OPCODE_SHL_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(shift));
@@ -1129,6 +1147,11 @@ void host_arm64_UQSUB_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 	codegen_addlong(block, OPCODE_UQSUB_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
+void host_arm64_UQXTN_V8B_8H(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_UQXTN_V8B_8H | Rd(dst_reg) | Rn(src_reg));
+}
+
 void host_arm64_USHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, shift)
 {
 	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(shift));
@@ -1140,6 +1163,31 @@ void host_arm64_USHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, shift)
 void host_arm64_USHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, shift)
 {
 	codegen_addlong(block, OPCODE_USHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(shift));
+}
+
+void host_arm64_ZIP1_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP1_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_ZIP1_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP1_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_ZIP1_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP1_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_ZIP2_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP2_V8B | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_ZIP2_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP2_V4H | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_ZIP2_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ZIP2_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_call(codeblock_t *block, void *dst_addr)

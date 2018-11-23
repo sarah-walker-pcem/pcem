@@ -121,6 +121,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VQADD_S16 0xf2100010
 #define OPCODE_VQADD_U8  0xf3000010
 #define OPCODE_VQADD_U16 0xf3100010
+#define OPCODE_VQMOVN_S16 0xf3b20280
+#define OPCODE_VQMOVN_S32 0xf3b60280
+#define OPCODE_VQMOVN_U16 0xf3b202c0
 #define OPCODE_VQSUB_S8  0xf2000210
 #define OPCODE_VQSUB_S16 0xf2100210
 #define OPCODE_VQSUB_U8  0xf3000210
@@ -140,6 +143,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VSUB_I8  0xf3000800
 #define OPCODE_VSUB_I16 0xf3100800
 #define OPCODE_VSUB_I32 0xf3200800
+#define OPCODE_VZIP_D16 0xf3b60180
+#define OPCODE_VZIP_D32 0xf3ba0180
 
 #define B_OFFSET(x) (((x) >> 2) & 0xffffff)
 
@@ -944,6 +949,19 @@ void host_arm_VQSUB_U16(codeblock_t *block, int dst_reg, int src_reg_n, int src_
 	codegen_addlong(block, OPCODE_VQSUB_U16 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 
+void host_arm_VQMOVN_S16(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VQMOVN_S16 | Vd(dst_reg) | Vm(src_reg));
+}
+void host_arm_VQMOVN_S32(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VQMOVN_S32 | Vd(dst_reg) | Vm(src_reg));
+}
+void host_arm_VQMOVN_U16(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VQMOVN_U16 | Vd(dst_reg) | Vm(src_reg));
+}
+
 void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
 {
         if (shift > 15)
@@ -1026,6 +1044,15 @@ void host_arm_VSUB_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VSUB_I32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+
+void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg)
+{
+	codegen_addlong(block, OPCODE_VZIP_D16 | Vd(d_reg) | Vm(m_reg));
+}
+void host_arm_VZIP_D32(codeblock_t *block, int d_reg, int m_reg)
+{
+	codegen_addlong(block, OPCODE_VZIP_D32 | Vd(d_reg) | Vm(m_reg));
 }
 
 #endif

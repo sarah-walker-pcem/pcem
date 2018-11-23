@@ -181,6 +181,10 @@ void host_arm_VQSUB_U8(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VQSUB_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VQSUB_U16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 
+void host_arm_VQMOVN_S16(codeblock_t *block, int dst_reg, int src_reg);
+void host_arm_VQMOVN_S32(codeblock_t *block, int dst_reg, int src_reg);
+void host_arm_VQMOVN_U16(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dest_reg, int src_reg, int shift);
 void host_arm_VSHL_D_IMM_32(codeblock_t *block, int dest_reg, int src_reg, int shift);
 void host_arm_VSHL_D_IMM_64(codeblock_t *block, int dest_reg, int src_reg, int shift);
@@ -197,3 +201,6 @@ void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 void host_arm_VSUB_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VSUB_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+
+void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg);
+void host_arm_VZIP_D32(codeblock_t *block, int d_reg, int m_reg);

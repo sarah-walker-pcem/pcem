@@ -1384,6 +1384,55 @@ static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PACKSSWB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_SQXTN_V8B_8H(block, dest_reg, dest_reg);
+                host_arm64_SQXTN_V8B_8H(block, REG_V_TEMP, src_reg_b);
+                host_arm64_VZIP1_V2S(block, dest_reg, dest_reg, REG_V_TEMP);
+        }
+        else
+                fatal("PACKSSWB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PACKSSDW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_arm64_UQXTN_V4H_4D(block, dest_reg, dest_reg);
+                host_arm64_UQXTN_V4H_4D(block, REG_V_TEMP, src_reg_b);
+                host_arm64_VZIP1_V2S(block, dest_reg, dest_reg, REG_V_TEMP);
+        }
+        else
+                fatal("PACKSSDW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PACKUSWB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_arm64_UQXTN_V8B_8H(block, dest_reg, dest_reg);
+                host_arm64_UQXTN_V8B_8H(block, REG_V_TEMP, src_reg_b);
+                host_arm64_VZIP1_V2S(block, dest_reg, dest_reg, REG_V_TEMP);
+        }
+        else
+                fatal("PACKUSWB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
 static int codegen_PADDB(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -1820,6 +1869,91 @@ static int codegen_PSUBUSW(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("PSUBUSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
+static int codegen_PUNPCKHBW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP2_V8B(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKHBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PUNPCKHWD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP2_V4H(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKHWD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PUNPCKHDQ(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP2_V2S(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKHDQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PUNPCKLBW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP1_V8B(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKLBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PUNPCKLWD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP1_V4H(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKLWD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PUNPCKLDQ(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm64_VZIP1_V2S(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PUNPCKLDQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
 
         return 0;
 }
@@ -2346,6 +2480,10 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
         [UOP_FSUB & UOP_MASK] = codegen_FSUB,
 
+        [UOP_PACKSSWB & UOP_MASK] = codegen_PACKSSWB,
+        [UOP_PACKSSDW & UOP_MASK] = codegen_PACKSSDW,
+        [UOP_PACKUSWB & UOP_MASK] = codegen_PACKUSWB,
+
         [UOP_PADDB & UOP_MASK]   = codegen_PADDB,
         [UOP_PADDW & UOP_MASK]   = codegen_PADDW,
         [UOP_PADDD & UOP_MASK]   = codegen_PADDD,
@@ -2377,7 +2515,14 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PSUBSB & UOP_MASK]  = codegen_PSUBSB,
         [UOP_PSUBSW & UOP_MASK]  = codegen_PSUBSW,
         [UOP_PSUBUSB & UOP_MASK] = codegen_PSUBUSB,
-        [UOP_PSUBUSW & UOP_MASK] = codegen_PSUBUSW
+        [UOP_PSUBUSW & UOP_MASK] = codegen_PSUBUSW,
+
+        [UOP_PUNPCKHBW & UOP_MASK] = codegen_PUNPCKHBW,
+        [UOP_PUNPCKHWD & UOP_MASK] = codegen_PUNPCKHWD,
+        [UOP_PUNPCKHDQ & UOP_MASK] = codegen_PUNPCKHDQ,
+        [UOP_PUNPCKLBW & UOP_MASK] = codegen_PUNPCKLBW,
+        [UOP_PUNPCKLWD & UOP_MASK] = codegen_PUNPCKLWD,
+        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)
