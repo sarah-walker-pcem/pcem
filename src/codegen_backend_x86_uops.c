@@ -1500,6 +1500,49 @@ static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PMADDWD_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PMULHW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PMULHW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PMULLW(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_PMULLW_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PMULLW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
 static int codegen_PSLLW_IMM(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
@@ -2264,6 +2307,10 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PCMPGTW & UOP_MASK] = codegen_PCMPGTW,
         [UOP_PCMPGTD & UOP_MASK] = codegen_PCMPGTD,
 
+        [UOP_PMADDWD & UOP_MASK] = codegen_PMADDWD,
+        [UOP_PMULHW & UOP_MASK]  = codegen_PMULHW,
+        [UOP_PMULLW & UOP_MASK]  = codegen_PMULLW,
+        
         [UOP_PSLLW_IMM & UOP_MASK] = codegen_PSLLW_IMM,
         [UOP_PSLLD_IMM & UOP_MASK] = codegen_PSLLD_IMM,
         [UOP_PSLLQ_IMM & UOP_MASK] = codegen_PSLLQ_IMM,

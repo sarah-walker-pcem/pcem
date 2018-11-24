@@ -170,8 +170,15 @@ void host_arm_VMOV_S_32(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VMOV_D_D(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VMRS_APSR(codeblock_t *block);
 void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg);
+
 void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VMUL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
+void host_arm_VMULL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
+
 void host_arm_VORR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+
+void host_arm_VPADDL_S16(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_arm_VQADD_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VQADD_U8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VQADD_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);

@@ -260,8 +260,14 @@
 #define UOP_PACKSSDW              (UOP_TYPE_PARAMS_REGS | 0xb5)
 /*UOP_PACKUSWB - dest_reg = interleave src_reg_a/src_reg_b, converting words to bytes with unsigned saturation*/
 #define UOP_PACKUSWB              (UOP_TYPE_PARAMS_REGS | 0xb6)
+/*UOP_PMULLW - (packed word) dest_reg = (src_reg_a * src_reg_b) & 0xffff*/
+#define UOP_PMULLW                (UOP_TYPE_PARAMS_REGS | 0xb7)
+/*UOP_PMULHW - (packed word) dest_reg = (src_reg_a * src_reg_b) >> 16*/
+#define UOP_PMULHW                (UOP_TYPE_PARAMS_REGS | 0xb8)
+/*UOP_PMADDWD - (packed word) dest_reg = (src_reg_a * src_reg_b) >> 16*/
+#define UOP_PMADDWD               (UOP_TYPE_PARAMS_REGS | 0xb9)
 
-#define UOP_MAX 0xb7
+#define UOP_MAX 0xba
 
 #define UOP_MASK 0xffff
 
@@ -619,6 +625,10 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_PCMPGTB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTB, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PCMPGTW(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTW, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_PCMPGTD(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_PCMPGTD, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_PMADDWD(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PMADDWD, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PMULHW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PMULHW, ir, dst_reg, src_reg_a, src_reg_b)
+#define uop_PMULLW(ir, dst_reg, src_reg_a, src_reg_b)  uop_gen_reg_dst_src2(UOP_PMULLW, ir, dst_reg, src_reg_a, src_reg_b)
 
 #define uop_PSLLW_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLW_IMM, ir, dst_reg, src_reg, imm)
 #define uop_PSLLD_IMM(ir, dst_reg, src_reg, imm)       uop_gen_reg_dst_src_imm(UOP_PSLLD_IMM, ir, dst_reg, src_reg, imm)

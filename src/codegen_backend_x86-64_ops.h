@@ -177,6 +177,10 @@ void host_x86_PCMPGTB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PCMPGTW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PCMPGTD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
+void host_x86_PMADDWD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PMULHW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_PMULLW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_PSLLD_XREG_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_PSLLQ_XREG_IMM(codeblock_t *block, int dst_reg, int shift);

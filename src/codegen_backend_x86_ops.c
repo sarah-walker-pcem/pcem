@@ -1177,6 +1177,19 @@ void host_x86_PCMPGTD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0x66, 0x0f, 0x66, 0xc0 | src_reg | (dst_reg << 3)); /*PCMPGTD dst_reg, src_reg*/
 }
 
+void host_x86_PMADDWD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xf5, 0xc0 | src_reg | (dst_reg << 3)); /*PMULLW dst_reg, src_reg*/
+}
+void host_x86_PMULHW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xe5, 0xc0 | src_reg | (dst_reg << 3)); /*PMULLW dst_reg, src_reg*/
+}
+void host_x86_PMULLW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0xd5, 0xc0 | src_reg | (dst_reg << 3)); /*PMULLW dst_reg, src_reg*/
+}
+
 void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0x71, 0xc0 | 0x30 | dst_reg); /*PSLLW dst_reg, imm*/

@@ -50,3 +50,7 @@ ropParith(PSUBSB)
 ropParith(PSUBSW)
 ropParith(PSUBUSB)
 ropParith(PSUBUSW)
+
+ropParith(PMADDWD)
+ropParith(PMULHW)
+ropParith(PMULLW)
