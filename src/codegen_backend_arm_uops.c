@@ -1290,7 +1290,7 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
 	}
 	else if (REG_IS_L(dest_size) && REG_IS_Q(src_size))
 	{
-                host_arm_VMOV_32_S(block, dest_reg, src_reg, REG_TEMP);
+                host_arm_VMOV_32_S(block, dest_reg, src_reg);
 	}
 	else if (REG_IS_L(dest_size) && REG_IS_B(src_size))
 	{
@@ -1511,8 +1511,10 @@ static int codegen_PACKSSWB(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_VQMOVN_S16(block, dest_reg, dest_reg);
-                host_arm_VQMOVN_S16(block, REG_D_TEMP, src_reg_b);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP, src_reg_a);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP_2, src_reg_b);
+                host_arm_VQMOVN_S16(block, dest_reg, REG_Q_TEMP);
+                host_arm_VQMOVN_S16(block, REG_D_TEMP, REG_Q_TEMP_2);
                 host_arm_VZIP_D32(block, dest_reg, REG_D_TEMP);
         }
         else
@@ -1522,13 +1524,15 @@ static int codegen_PACKSSWB(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PACKSSDW(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_VQMOVN_S32(block, dest_reg, dest_reg);
-                host_arm_VQMOVN_S32(block, REG_D_TEMP, src_reg_b);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP, src_reg_a);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP_2, src_reg_b);
+                host_arm_VQMOVN_S32(block, dest_reg, REG_Q_TEMP);
+                host_arm_VQMOVN_S32(block, REG_D_TEMP, REG_Q_TEMP_2);
                 host_arm_VZIP_D32(block, dest_reg, REG_D_TEMP);
         }
         else
@@ -1538,13 +1542,15 @@ static int codegen_PACKSSDW(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PACKUSWB(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_VQMOVN_U16(block, dest_reg, dest_reg);
-                host_arm_VQMOVN_U16(block, REG_D_TEMP, src_reg_b);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP, src_reg_a);
+		host_arm_VMOV_D_D(block, REG_Q_TEMP_2, src_reg_b);
+                host_arm_VQMOVN_U16(block, dest_reg, REG_Q_TEMP);
+                host_arm_VQMOVN_U16(block, REG_D_TEMP, REG_Q_TEMP_2);
                 host_arm_VZIP_D32(block, dest_reg, REG_D_TEMP);
         }
         else
@@ -1739,13 +1745,14 @@ static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
 
 static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_VMUL_S16(block, dest_reg, src_reg_a, src_reg_b);
-                host_arm_VPADDL_S16(block, dest_reg, dest_reg);
+                host_arm_VMULL_S16(block, REG_Q_TEMP, src_reg_a, src_reg_b);
+                host_arm_VPADDL_Q_S32(block, REG_Q_TEMP, REG_Q_TEMP);
+		host_arm_VMOVN_I64(block, dest_reg, REG_Q_TEMP);
         }
         else
                 fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1754,13 +1761,13 @@ static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PMULHW(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_VMULL_S16(block, dest_reg, src_reg_a, src_reg_b);
-                host_arm_VSHRN_16(block, dest_reg, dest_reg, 16);
+                host_arm_VMULL_S16(block, REG_Q_TEMP, src_reg_a, src_reg_b);
+                host_arm_VSHRN_32(block, dest_reg, REG_Q_TEMP, 16);
         }
         else
                 fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1769,10 +1776,10 @@ static int codegen_PMULHW(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PMULLW(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
-        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
                 host_arm_VMUL_S16(block, dest_reg, src_reg_a, src_reg_b);
         }
@@ -1789,7 +1796,9 @@ static int codegen_PSLLW_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 15)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 15)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHL_D_IMM_16(block, dest_reg, src_reg, uop->imm_data);
@@ -1806,7 +1815,9 @@ static int codegen_PSLLD_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 31)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 31)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHL_D_IMM_32(block, dest_reg, src_reg, uop->imm_data);
@@ -1823,7 +1834,9 @@ static int codegen_PSLLQ_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 63)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 63)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHL_D_IMM_64(block, dest_reg, src_reg, uop->imm_data);
@@ -1840,7 +1853,9 @@ static int codegen_PSRAW_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 15)
+		if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 15)
                         host_arm_VSHR_D_S16(block, dest_reg, src_reg, 15);
                 else
                         host_arm_VSHR_D_S16(block, dest_reg, src_reg, uop->imm_data);
@@ -1857,7 +1872,9 @@ static int codegen_PSRAD_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 31)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 31)
                         host_arm_VSHR_D_S32(block, dest_reg, src_reg, 31);
                 else
                         host_arm_VSHR_D_S32(block, dest_reg, src_reg, uop->imm_data);
@@ -1874,7 +1891,9 @@ static int codegen_PSRAQ_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 63)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 63)
                         host_arm_VSHR_D_S64(block, dest_reg, src_reg, 63);
                 else
                         host_arm_VSHR_D_S64(block, dest_reg, src_reg, uop->imm_data);
@@ -1891,7 +1910,9 @@ static int codegen_PSRLW_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 15)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 15)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHR_D_U16(block, dest_reg, src_reg, uop->imm_data);
@@ -1908,7 +1929,9 @@ static int codegen_PSRLD_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 31)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 31)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHR_D_U32(block, dest_reg, src_reg, uop->imm_data);
@@ -1925,7 +1948,9 @@ static int codegen_PSRLQ_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size))
         {
-                if (uop->imm_data > 63)
+                if (uop->imm_data == 0)
+			host_arm_VMOV_D_D(block, dest_reg, src_reg);
+		else if (uop->imm_data > 63)
                         host_arm_VEOR_D(block, dest_reg, dest_reg, dest_reg);
                 else
                         host_arm_VSHR_D_U64(block, dest_reg, src_reg, uop->imm_data);
@@ -1966,9 +1991,6 @@ static int codegen_PSUBW(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PSUBD(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
-
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
@@ -2851,6 +2873,10 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 	else
 		fatal("codegen_direct_read_32 - not in range\n");
 }
+void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+	host_arm_VLDR_D(block, host_reg, REG_HOST_SP, stack_offset);
+}
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
         host_arm_VLDR_D(block, host_reg, REG_HOST_SP, stack_offset);
@@ -2862,6 +2888,10 @@ void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int hos
 		host_arm_STR_IMM(block, host_reg, REG_HOST_SP, stack_offset);
 	else
 		fatal("codegen_direct_write_32 - not in range\n");
+}
+void codegen_direct_write_64_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+	host_arm_VSTR_D(block, host_reg, REG_HOST_SP, stack_offset);
 }
 void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
 {

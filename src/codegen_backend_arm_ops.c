@@ -113,13 +113,17 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VMOV_D_64 0xec400b10
 #define OPCODE_VMOV_S_32 0xee000a10
 #define OPCODE_VMOV_D_D  0xeeb00b40
+#define OPCODE_VMOVN_I32 0xf3b60200
+#define OPCODE_VMOVN_I64 0xf3ba0200
 #define OPCODE_VMRS_APSR 0xeef1fa10
 #define OPCODE_VMSR_FPSCR 0xeee10a10
 #define OPCODE_VMUL   0xee200b00
-#define OPCODE_VMUL_S16  0xf2100510
+#define OPCODE_VMUL_S16  0xf2100910
 #define OPCODE_VMULL_S16 0xf2900c00
 #define OPCODE_VORR_D 0xf2200110
 #define OPCODE_VPADDL_S16 0xf3b40200
+#define OPCODE_VPADDL_S32 0xf3b80200
+#define OPCODE_VPADDL_Q_S32 0xf3b80240
 #define OPCODE_VQADD_S8  0xf2000010
 #define OPCODE_VQADD_S16 0xf2100010
 #define OPCODE_VQADD_U8  0xf3000010
@@ -140,14 +144,16 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VSHR_D_U16    0xf3900010
 #define OPCODE_VSHR_D_U32    0xf3a00010
 #define OPCODE_VSHR_D_U64    0xf3800090
+#define OPCODE_VSHRN         0xf2800810
 #define OPCODE_VSTR_D 0xed800b00
 #define OPCODE_VSTR_S 0xed800a00
 #define OPCODE_VSUB   0xee300b40
 #define OPCODE_VSUB_I8  0xf3000800
 #define OPCODE_VSUB_I16 0xf3100800
 #define OPCODE_VSUB_I32 0xf3200800
+#define OPCODE_VZIP_D8  0xf3b20180
 #define OPCODE_VZIP_D16 0xf3b60180
-#define OPCODE_VZIP_D32 0xf3ba0180
+#define OPCODE_VZIP_D32 0xf3ba0080
 
 #define B_OFFSET(x) (((x) >> 2) & 0xffffff)
 
@@ -181,6 +187,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define STRH_IMM(imm) LDRH_IMM(imm)
 
 #define VSHIFT_IMM(shift) ((shift) << 16)
+
+#define VSHIFT_IMM_32(shift) (((16 - (shift)) | 0x10) << 16)
 
 static inline uint32_t arm_data_offset(int offset)
 {
@@ -902,6 +910,14 @@ void host_arm_VMOV_D_D(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VMOV_D_D | Vd(dest_reg) | Vm(src_reg));
 }
+void host_arm_VMOVN_I32(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VMOVN_I32 | Vd(dest_reg) | Vm(src_reg));
+}
+void host_arm_VMOVN_I64(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VMOVN_I64 | Vd(dest_reg) | Vm(src_reg));
+}
 void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VMSR_FPSCR | Rd(src_reg));
@@ -932,6 +948,14 @@ void host_arm_VORR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 void host_arm_VPADDL_S16(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_VPADDL_S16 | Vd(dst_reg) | Vm(src_reg));
+}
+void host_arm_VPADDL_S32(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VPADDL_S32 | Vd(dst_reg) | Vm(src_reg));
+}
+void host_arm_VPADDL_Q_S32(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_VPADDL_Q_S32 | Vd(dst_reg) | Vm(src_reg));
 }
 
 void host_arm_VQADD_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
@@ -980,59 +1004,65 @@ void host_arm_VQMOVN_U16(codeblock_t *block, int dst_reg, int src_reg)
 	codegen_addlong(block, OPCODE_VQMOVN_U16 | Vd(dst_reg) | Vm(src_reg));
 }
 
-void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 15)
                 fatal("host_arm_VSHL_D_IMM_16 : shift > 15\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
-void host_arm_VSHL_D_IMM_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHL_D_IMM_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 31)
                 fatal("host_arm_VSHL_D_IMM_32 : shift > 31\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
-void host_arm_VSHL_D_IMM_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHL_D_IMM_64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 63)
                 fatal("host_arm_VSHL_D_IMM_64 : shift > 63\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
-void host_arm_VSHR_SD_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_S16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 15)
                 fatal("host_arm_VSHR_SD_IMM_16 : shift > 15\n");
-	codegen_addlong(block, OPCODE_VSHR_SD_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_S16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(16-shift));
 }
-void host_arm_VSHR_SD_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_S32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 31)
                 fatal("host_arm_VSHR_SD_IMM_32 : shift > 31\n");
-	codegen_addlong(block, OPCODE_VSHR_SD_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_S32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(32-shift));
 }
-void host_arm_VSHR_SD_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_S64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 63)
                 fatal("host_arm_VSHR_SD_IMM_64 : shift > 63\n");
-	codegen_addlong(block, OPCODE_VSHR_SD_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_S64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(64-shift));
 }
-void host_arm_VSHR_UD_16(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_U16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 15)
                 fatal("host_arm_VSHR_UD_IMM_16 : shift > 15\n");
-	codegen_addlong(block, OPCODE_VSHR_UD_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_U16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(16-shift));
 }
-void host_arm_VSHR_UD_32(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_U32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 31)
                 fatal("host_arm_VSHR_UD_IMM_32 : shift > 31\n");
-	codegen_addlong(block, OPCODE_VSHR_UD_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_U32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(32-shift));
 }
-void host_arm_VSHR_UD_64(codeblock_t *block, int dest_reg, int src_reg, int shift)
+void host_arm_VSHR_D_U64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
         if (shift > 63)
                 fatal("host_arm_VSHR_UD_IMM_64 : shift > 63\n");
-	codegen_addlong(block, OPCODE_VSHR_UD_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
+	codegen_addlong(block, OPCODE_VSHR_D_U64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(64-shift));
+}
+void host_arm_VSHRN_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
+{
+        if (shift > 16)
+                fatal("host_arm_VSHRN_32 : shift > 16\n");
+	codegen_addlong(block, OPCODE_VSHRN | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM_32(16-shift));
 }
 
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)
@@ -1064,6 +1094,10 @@ void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 	codegen_addlong(block, OPCODE_VSUB_I32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 
+void host_arm_VZIP_D8(codeblock_t *block, int d_reg, int m_reg)
+{
+	codegen_addlong(block, OPCODE_VZIP_D8 | Vd(d_reg) | Vm(m_reg));
+}
 void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg)
 {
 	codegen_addlong(block, OPCODE_VZIP_D16 | Vd(d_reg) | Vm(m_reg));

@@ -43,6 +43,8 @@
 #define REG_D15 15
 
 #define REG_D_TEMP REG_D0
+#define REG_Q_TEMP   REG_D0
+#define REG_Q_TEMP_2 REG_D2
 
 #define REG_MASK_R0  (1 << REG_R0)
 #define REG_MASK_R1  (1 << REG_R1)
