@@ -343,6 +343,12 @@ void host_x86_DIVSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0xf2, 0x0f, 0x5e, 0xc0 | src_reg | (dst_reg << 3));
 }
 
+void host_x86_INC32_ABS(codeblock_t *block, void *p)
+{
+        codegen_addbyte2(block, 0xff, 0x05); /*INC p*/
+        codegen_addlong(block, (uint32_t)p);
+}
+
 void host_x86_JMP(codeblock_t *block, void *p)
 {
         codegen_addbyte(block, 0xe9); /*JMP*/

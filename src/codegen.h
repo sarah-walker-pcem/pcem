@@ -252,6 +252,7 @@ extern codeblock_t *codeblock;
 extern codeblock_t **codeblock_hash;
 
 void codegen_init();
+void codegen_close();
 void codegen_reset();
 void codegen_block_init(uint32_t phys_addr);
 void codegen_block_remove();
@@ -330,4 +331,10 @@ extern int codegen_reg_loaded[8];
 extern int codegen_in_recompile;
 
 void codegen_generate_reset();
+
+
+#ifdef DEBUG_EXTRA
+extern uint32_t instr_counts[256*256];
+#endif
+
 #endif

@@ -54,6 +54,12 @@
 #define UOP_CALL_FUNC_RESULT      (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x16 | UOP_TYPE_BARRIER)
 /*UOP_JMP_DEST - jump to ptr*/
 #define UOP_JMP_DEST              (UOP_TYPE_PARAMS_IMM | UOP_TYPE_PARAMS_POINTER | 0x17 | UOP_TYPE_ORDER_BARRIER | UOP_TYPE_JUMP)
+
+#ifdef DEBUG_EXTRA
+/*UOP_LOG_INSTR - log non-recompiled instruction in imm_data*/
+#define UOP_LOG_INSTR             (UOP_TYPE_PARAMS_IMM | 0x1f)
+#endif
+
 /*UOP_MOV_PTR - dest_reg = p*/
 #define UOP_MOV_PTR               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x20)
 /*UOP_MOV_IMM - dest_reg = imm_data*/
@@ -660,6 +666,10 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 #define uop_TEST_JNS_DEST(ir, src_reg) uop_gen_reg_src1(UOP_TEST_JNS_DEST, ir, src_reg)
 #define uop_TEST_JS_DEST(ir, src_reg)  uop_gen_reg_src1(UOP_TEST_JS_DEST, ir, src_reg)
+
+#ifdef DEBUG_EXTRA
+#define uop_LOG_INSTR(ir, imm) uop_gen_imm(UOP_LOG_INSTR, ir, imm)
+#endif
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p);

@@ -2192,6 +2192,16 @@ static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+#ifdef DEBUG_EXTRA
+static int codegen_LOG_INSTR(codeblock_t *block, uop_t *uop)
+{
+        if (uop->imm_data > 256*256)
+                fatal("LOG_INSTR %08x\n", uop->imm_data);
+        host_x86_INC32_ABS(block, &instr_counts[uop->imm_data]);
+        return 0;
+}
+#endif
+
 const uOpFn uop_handlers[UOP_MAX] =
 {
         [UOP_CALL_FUNC & UOP_MASK] = codegen_CALL_FUNC,
@@ -2334,7 +2344,11 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PUNPCKHDQ & UOP_MASK] = codegen_PUNPCKHDQ,
         [UOP_PUNPCKLBW & UOP_MASK] = codegen_PUNPCKLBW,
         [UOP_PUNPCKLWD & UOP_MASK] = codegen_PUNPCKLWD,
-        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ
+        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ,
+
+#ifdef DEBUG_EXTRA
+        [UOP_LOG_INSTR & UOP_MASK] = codegen_LOG_INSTR
+#endif
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)

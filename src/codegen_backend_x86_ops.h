@@ -39,6 +39,8 @@ void host_x86_CVTSS2SD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base
 
 void host_x86_DIVSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
+void host_x86_INC32_ABS(codeblock_t *block, void *p);
+
 void host_x86_JMP(codeblock_t *block, void *p);
 uint32_t *host_x86_JMP_short(codeblock_t *block);
 uint32_t *host_x86_JMP_long(codeblock_t *block);
