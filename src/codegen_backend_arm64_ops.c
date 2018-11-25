@@ -107,6 +107,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_ADD_V8B       (0x0e208400)
 #define OPCODE_ADD_V4H       (0x0e608400)
 #define OPCODE_ADD_V2S       (0x0ea08400)
+#define OPCODE_ADDP_V4S      (0x4ea0bc00)
 #define OPCODE_AND_V         (0x0e201c00)
 #define OPCODE_ASR           (0x1ac02800)
 #define OPCODE_BIC_V         (0x0e601c00)
@@ -164,12 +165,12 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_SQSUB_V4H     (0x0e602c00)
 #define OPCODE_SQXTN_V8B_8H  (0x0e214800)
 #define OPCODE_SQXTN_V4H_4S  (0x0e614800)
-#define OPCODE_SHL_VD        (0x0e005400)
-#define OPCODE_SHL_VQ        (0x4e005400)
+#define OPCODE_SHL_VD        (0x0f005400)
+#define OPCODE_SHL_VQ        (0x4f005400)
 #define OPCODE_SHRN          (0x0f008400)
 #define OPCODE_SMULL_V4S_4H  (0x0e60c000)
-#define OPCODE_SSHR_VD       (0x0e004400)
-#define OPCODE_SSHR_VQ       (0x4e004400)
+#define OPCODE_SSHR_VD       (0x0f000400)
+#define OPCODE_SSHR_VQ       (0x4f000400)
 #define OPCODE_STR_REG       (0xb8206800)
 #define OPCODE_STRB_REG      (0x38206800)
 #define OPCODE_STRH_REG      (0x78206800)
@@ -184,8 +185,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_UQSUB_V8B     (0x2e202c00)
 #define OPCODE_UQSUB_V4H     (0x2e602c00)
 #define OPCODE_UQXTN_V8B_8H  (0x2e214800)
-#define OPCODE_USHR_VD       (0x2e004400)
-#define OPCODE_USHR_VQ       (0x6e004400)
+#define OPCODE_UQXTN_V4H_4S  (0x2e614800)
+#define OPCODE_USHR_VD       (0x2f000400)
+#define OPCODE_USHR_VQ       (0x6f000400)
 #define OPCODE_ZIP1_V8B      (0x0e003800)
 #define OPCODE_ZIP1_V4H      (0x0e403800)
 #define OPCODE_ZIP1_V2S      (0x0e803800)
@@ -219,6 +221,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define SHIFT_IMM_V4H(shift) (((shift) | 0x10) << 16)
 #define SHIFT_IMM_V2S(shift) (((shift) | 0x20) << 16)
 #define SHIFT_IMM_V2D(shift) (((shift) | 0x40) << 16)
+
+#define SHRN_SHIFT_IMM_V4S(shift) (((shift) | 0x10) << 16)
 
 static int literal_offset = 0;
 void codegen_reset_literal_pool(codeblock_t *block)
@@ -312,6 +316,22 @@ void host_arm64_ADD_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t
 		codegen_addlong(block, OPCODE_ADD_LSL | Rd(dst_reg) | Rn(src_n_reg) | Rm(REG_W16) | DATPROC_SHIFT(0));
 	}
 }
+void host_arm64_ADDX_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint64_t imm_data)
+{
+	if (!(imm_data & ~0xffffffull))
+	{
+		if (imm_data & 0xfff)
+		{
+			codegen_addlong(block, OPCODE_ADDX_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM12(imm_data & 0xfff) | DATPROC_IMM_SHIFT(0));
+			if (imm_data & 0xfff000)
+				codegen_addlong(block, OPCODE_ADDX_IMM | Rd(dst_reg) | Rn(dst_reg) | IMM12((imm_data >> 12) & 0xfff) | DATPROC_IMM_SHIFT(1));
+		}
+		else if (imm_data & 0xfff000)
+			codegen_addlong(block, OPCODE_ADDX_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM12((imm_data >> 12) & 0xfff) | DATPROC_IMM_SHIFT(1));
+	}
+	else
+		fatal("ADD_IMM_X %016llx\n", imm_data);
+}
 void host_arm64_ADD_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
 {
 	codegen_addlong(block, OPCODE_ADD_LSL | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | DATPROC_SHIFT(shift));
@@ -331,6 +351,11 @@ void host_arm64_ADD_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 void host_arm64_ADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_ADD_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
+void host_arm64_ADDP_V4S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_ADDP_V4S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_ADR(codeblock_t *block, int dst_reg, int offset)
@@ -971,9 +996,11 @@ void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg)
 	codegen_addlong(block, OPCODE_SCVTF_D_W | Rd(dst_reg) | Rn(src_reg));
 }
 
-void host_arm64_SHRN_V4S_4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift)
+void host_arm64_SHRN_V4H_4S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_SHRN | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg) | SHIFT_IMM_V2S(shift));
+	if (shift > 16)
+                fatal("host_arm64_SHRN_V4H_4S : shift > 16\n");
+	codegen_addlong(block, OPCODE_SHRN | Rd(dst_reg) | Rn(src_n_reg) | SHRN_SHIFT_IMM_V4S(16-shift));
 }
 
 void host_arm64_SMULL_V4S_4H(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
@@ -1002,9 +1029,9 @@ void host_arm64_SQXTN_V8B_8H(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_SQXTN_V8B_8H | Rd(dst_reg) | Rn(src_reg));
 }
-void host_arm64_SQXTN_V4B_4H(codeblock_t *block, int dst_reg, int src_reg)
+void host_arm64_SQXTN_V4H_4S(codeblock_t *block, int dst_reg, int src_reg)
 {
-	codegen_addlong(block, OPCODE_SQXTN_V4B_4H | Rd(dst_reg) | Rn(src_reg));
+	codegen_addlong(block, OPCODE_SQXTN_V4H_4S | Rd(dst_reg) | Rn(src_reg));
 }
 
 void host_arm64_SHL_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
@@ -1022,15 +1049,21 @@ void host_arm64_SHL_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shif
 
 void host_arm64_SSHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(shift));
+        if (shift > 16)
+                fatal("host_arm_USHR_V4H : shift > 16\n");
+	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(16-shift));
 }
 void host_arm64_SSHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(shift));
+        if (shift > 32)
+                fatal("host_arm_SSHR_V2S : shift > 32\n");
+	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(32-shift));
 }
 void host_arm64_SSHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_SSHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(shift));
+        if (shift > 64)
+                fatal("host_arm_SSHR_V2D : shift > 64\n");
+	codegen_addlong(block, OPCODE_SSHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(64-shift));
 }
 
 void host_arm64_STP_PREIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset)
@@ -1175,18 +1208,28 @@ void host_arm64_UQXTN_V8B_8H(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_UQXTN_V8B_8H | Rd(dst_reg) | Rn(src_reg));
 }
+void host_arm64_UQXTN_V4H_4S(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_UQXTN_V4H_4S | Rd(dst_reg) | Rn(src_reg));
+}
 
-void host_arm64_USHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, shift)
+void host_arm64_USHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(shift));
+        if (shift > 16)
+                fatal("host_arm_USHR_V4H : shift > 16\n");
+	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(16-shift));
 }
-void host_arm64_USHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, shift)
+void host_arm64_USHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(shift));
+        if (shift > 32)
+                fatal("host_arm_USHR_V4S : shift > 32\n");
+	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(32-shift));
 }
-void host_arm64_USHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, shift)
+void host_arm64_USHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-	codegen_addlong(block, OPCODE_USHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(shift));
+        if (shift > 64)
+                fatal("host_arm_USHR_V2D : shift > 64\n");
+	codegen_addlong(block, OPCODE_USHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(64-shift));
 }
 
 void host_arm64_ZIP1_V8B(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
