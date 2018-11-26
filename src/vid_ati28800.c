@@ -376,6 +376,7 @@ void *ati28800k_init()
         io_sethandler(0x03c0, 0x0020, ati28800k_in, NULL, NULL, ati28800k_out, NULL, NULL, ati28800);
 
         ati28800->svga.miscout = 1;
+        ati28800->svga.ksc5601_sbyte_mask = 0;
 
         ati_eeprom_load(&ati28800->eeprom, "atikorvga.nvr", 0);
 

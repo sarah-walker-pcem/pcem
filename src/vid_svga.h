@@ -127,6 +127,8 @@ typedef struct svga_t
           card should not attempt to display anything */
         int override;
         void *p;
+
+        uint8_t ksc5601_sbyte_mask;
 } svga_t;
 
 extern int svga_init(svga_t *svga, void *p, int memsize, 
