@@ -548,6 +548,11 @@ void host_x86_LEA_REG_REG_SHIFT(codeblock_t *block, int dst_reg, int src_reg_a, 
                          (shift << 6) | ((src_reg_b & 7) << 3) | (src_reg_a & 7));
 }
 
+void host_x86_MAXSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x5f, 0xc0 | src_reg | (dst_reg << 3)); /*MAXSD dst_reg, src_reg*/
+}
+
 void host_x86_MOV8_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
@@ -1569,6 +1574,11 @@ void host_x86_SHR32_IMM(codeblock_t *block, int dst_reg, int shift)
         if (dst_reg & 8)
                 fatal("SHR32 imm & 8\n");
         codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_SHR | dst_reg, shift); /*SHR dst_reg, shift*/
+}
+
+void host_x86_SQRTSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x51, 0xc0 | src_reg | (dst_reg << 3)); /*SQRTSD dst_reg, src_reg*/
 }
 
 void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)

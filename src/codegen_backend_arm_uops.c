@@ -693,6 +693,69 @@ static int codegen_CMP_JZ_DEST(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_FABS(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a))
+        {
+                host_arm_VABS_D(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("codegen_FABS %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_FCHS(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a))
+        {
+                host_arm_VNEG_D(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("codegen_FCHS %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_FSQRT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_D(dest_size) && REG_IS_D(src_size_a))
+        {
+                host_arm_VSQRT_D(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("codegen_FSQRT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_FTST(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_W(dest_size) && REG_IS_D(src_size_a))
+        {
+		host_arm_VSUB_D(block, REG_D_TEMP, REG_D_TEMP, REG_D_TEMP);
+		host_arm_VCMP_D(block, src_reg_a, REG_D_TEMP);
+		host_arm_MOV_IMM(block, dest_reg, 0);
+		host_arm_VMRS_APSR(block);
+		host_arm_ORREQ_IMM(block, dest_reg, dest_reg, C3);
+		host_arm_ORRCC_IMM(block, dest_reg, dest_reg, C0);
+		host_arm_ORRVS_IMM(block, dest_reg, dest_reg, C0|C2|C3);
+        }
+        else
+                fatal("codegen_FTST %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+
 static int codegen_FADD(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -2687,6 +2750,11 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_FDIV & UOP_MASK] = codegen_FDIV,
         [UOP_FMUL & UOP_MASK] = codegen_FMUL,
         [UOP_FSUB & UOP_MASK] = codegen_FSUB,
+
+        [UOP_FABS & UOP_MASK] = codegen_FABS,
+        [UOP_FCHS & UOP_MASK] = codegen_FCHS,
+        [UOP_FSQRT & UOP_MASK] = codegen_FSQRT,
+        [UOP_FTST & UOP_MASK] = codegen_FTST,
 
         [UOP_PACKSSWB & UOP_MASK] = codegen_PACKSSWB,
         [UOP_PACKSSDW & UOP_MASK] = codegen_PACKSSDW,

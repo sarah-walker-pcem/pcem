@@ -75,6 +75,8 @@ void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t
 void host_arm64_EOR_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_EOR_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 
+void host_arm64_FABS_D(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FCMP_D(codeblock_t *block, int src_n_reg, int src_m_reg);
 void host_arm64_FDIV_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
@@ -100,6 +102,8 @@ void host_arm64_FMOV_S_W(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_FMOV_W_S(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_arm64_FRINTX_D(codeblock_t *block, int dst_reg, int src_reg);
+
+void host_arm64_FSQRT_D(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_arm64_LDP_POSTIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset);
 

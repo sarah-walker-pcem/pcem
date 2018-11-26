@@ -120,6 +120,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_CMGT_V4H      (0x0e603400)
 #define OPCODE_CMGT_V2S      (0x0ea03400)
 #define OPCODE_EOR_V         (0x2e201c00)
+#define OPCODE_FABS_D        (0x1e60c000)
 #define OPCODE_FADD_D        (0x1e602800)
 #define OPCODE_FCMP_D        (0x1e602000)
 #define OPCODE_FCVT_D_S      (0x1e22c000)
@@ -139,7 +140,9 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_FMOV_S_W      (0x1e270000)
 #define OPCODE_FMOV_W_S      (0x1e260000)
 #define OPCODE_FMUL_D        (0x1e600800)
+#define OPCODE_FNEG_D        (0x1e614000)
 #define OPCODE_FRINTX_D      (0x1e674000)
+#define OPCODE_FSQRT_D       (0x1e61c000)
 #define OPCODE_FSUB_D        (0x1e603800)
 #define OPCODE_LDR_REG       (0xb8606800)
 #define OPCODE_LDRX_REG      (0xf8606800)
@@ -680,6 +683,11 @@ void host_arm64_EOR_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 	codegen_addlong(block, OPCODE_EOR_V | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
+void host_arm64_FABS_D(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_FABS_D | Rd(dst_reg) | Rn(src_reg));
+}
+
 void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_FADD_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
@@ -768,9 +776,19 @@ void host_arm64_FMOV_W_S(codeblock_t *block, int dst_reg, int src_reg)
 	codegen_addlong(block, OPCODE_FMOV_W_S | Rd(dst_reg) | Rn(src_reg));
 }
 
+void host_arm64_FNEG_D(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_FNEG_D | Rd(dst_reg) | Rn(src_reg));
+}
+
 void host_arm64_FRINTX_D(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_FRINTX_D | Rd(dst_reg) | Rn(src_reg));
+}
+
+void host_arm64_FSQRT_D(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_FSQRT_D | Rd(dst_reg) | Rn(src_reg));
 }
 
 void host_arm64_LDP_POSTIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset)

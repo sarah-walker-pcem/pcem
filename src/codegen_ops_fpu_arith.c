@@ -534,3 +534,39 @@ uint32_t ropFISUBR ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, ui
 
 ropFI_arith_mem(l, IREG_temp0)
 ropFI_arith_mem(w, IREG_temp0_W)
+
+
+uint32_t ropFABS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FABS(ir, IREG_ST(0), IREG_ST(0));
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+
+        return op_pc;
+}
+
+uint32_t ropFCHS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FCHS(ir, IREG_ST(0), IREG_ST(0));
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+
+        return op_pc;
+}
+uint32_t ropFSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FSQRT(ir, IREG_ST(0), IREG_ST(0));
+        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+
+        return op_pc;
+}
+uint32_t ropFTST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_FP_ENTER(ir);
+        uop_FTST(ir, IREG_temp0_W, IREG_ST(0));
+        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
+        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+
+        return op_pc;
+}

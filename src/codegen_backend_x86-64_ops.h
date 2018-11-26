@@ -71,6 +71,8 @@ void host_x86_LEA_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t
 void host_x86_LEA_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
 void host_x86_LEA_REG_REG_SHIFT(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b, int shift);
 
+void host_x86_MAXSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
 void host_x86_MOV8_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data);
 void host_x86_MOV32_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data);
 
@@ -235,6 +237,8 @@ void host_x86_SHR32_CL(codeblock_t *block, int dst_reg);
 void host_x86_SHR8_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_SHR16_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_SHR32_IMM(codeblock_t *block, int dst_reg, int shift);
+
+void host_x86_SQRTSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
 void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);

@@ -139,6 +139,8 @@ void host_arm_USUB16(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg
 void host_arm_UXTB(codeblock_t *block, int dst_reg, int src_reg, int rotate);
 void host_arm_UXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate);
 
+void host_arm_VABS_D(codeblock_t *block, int dest_reg, int src_reg);
+
 void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VADD_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VADD_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
@@ -153,6 +155,8 @@ void host_arm_VCEQ_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VCGT_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCGT_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCGT_S32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+
+void host_arm_VCHS_D(codeblock_t *block, int dest_reg, int src_reg);
 
 void host_arm_VCVT_D_IS(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVT_D_S(codeblock_t *block, int dest_reg, int src_reg);
@@ -178,6 +182,8 @@ void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg);
 void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VMUL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
 void host_arm_VMULL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
+
+void host_arm_VNEG_D(codeblock_t *block, int dest_reg, int src_reg);
 
 void host_arm_VORR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 

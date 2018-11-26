@@ -187,6 +187,14 @@
 #define UOP_FDIV                  (UOP_TYPE_PARAMS_REGS | 0x84)
 /*UOP_FCOM - dest_reg = flags from compare(src_reg_a, src_reg_b)*/
 #define UOP_FCOM                  (UOP_TYPE_PARAMS_REGS | 0x85)
+/*UOP_FABS - dest_reg = fabs(src_reg_a)*/
+#define UOP_FABS                  (UOP_TYPE_PARAMS_REGS | 0x86)
+/*UOP_FCHS - dest_reg = fabs(src_reg_a)*/
+#define UOP_FCHS                  (UOP_TYPE_PARAMS_REGS | 0x87)
+/*UOP_FTST - dest_reg = flags from compare(src_reg_a, 0)*/
+#define UOP_FTST                  (UOP_TYPE_PARAMS_REGS | 0x88)
+/*UOP_FSQRT - dest_reg = fsqrt(src_reg_a)*/
+#define UOP_FSQRT                 (UOP_TYPE_PARAMS_REGS | 0x89)
 
 /*UOP_MMX_ENTER - must be called before any MMX registers accessed*/
 #define UOP_MMX_ENTER             (UOP_TYPE_PARAMS_IMM | 0x90 | UOP_TYPE_BARRIER)
@@ -581,6 +589,11 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 #define uop_FDIV(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FDIV, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_FMUL(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FMUL, ir, dst_reg, src_reg_a, src_reg_b)
 #define uop_FSUB(ir, dst_reg, src_reg_a, src_reg_b) uop_gen_reg_dst_src2(UOP_FSUB, ir, dst_reg, src_reg_a, src_reg_b)
+
+#define uop_FABS(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_FABS, ir, dst_reg, src_reg)
+#define uop_FCHS(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_FCHS, ir, dst_reg, src_reg)
+#define uop_FSQRT(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_FSQRT, ir, dst_reg, src_reg)
+#define uop_FTST(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_FTST, ir, dst_reg, src_reg)
 
 #define uop_FP_ENTER(ir)                 do { if (!codegen_fpu_entered) uop_gen_imm(UOP_FP_ENTER,  ir, cpu_state.oldpc); codegen_fpu_entered = 1; codegen_mmx_entered = 0; } while (0)
 #define uop_MMX_ENTER(ir)                do { if (!codegen_mmx_entered) uop_gen_imm(UOP_MMX_ENTER, ir, cpu_state.oldpc); codegen_mmx_entered = 1; codegen_fpu_entered = 0; } while (0)

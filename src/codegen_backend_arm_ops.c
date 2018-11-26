@@ -86,6 +86,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_USUB16 0xe6500f70
 #define OPCODE_UXTB   0xe6ef0070
 #define OPCODE_UXTH   0xe6ff0070
+#define OPCODE_VABS_D 0xeeb00bc0
 #define OPCODE_VADD   0xee300b00
 #define OPCODE_VADD_I8  0xf2000800
 #define OPCODE_VADD_I16 0xf2100800
@@ -120,6 +121,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VMUL   0xee200b00
 #define OPCODE_VMUL_S16  0xf2100910
 #define OPCODE_VMULL_S16 0xf2900c00
+#define OPCODE_VNEG_D 0xeeb10b40
 #define OPCODE_VORR_D 0xf2200110
 #define OPCODE_VPADDL_S16 0xf3b40200
 #define OPCODE_VPADDL_S32 0xf3b80200
@@ -145,6 +147,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VSHR_D_U32    0xf3a00010
 #define OPCODE_VSHR_D_U64    0xf3800090
 #define OPCODE_VSHRN         0xf2800810
+#define OPCODE_VSQRT_D 0xeeb10bc0
 #define OPCODE_VSTR_D 0xed800b00
 #define OPCODE_VSTR_S 0xed800a00
 #define OPCODE_VSUB   0xee300b40
@@ -796,6 +799,11 @@ void host_arm_UXTH(codeblock_t *block, int dst_reg, int src_reg, int rotate)
 	codegen_addlong(block, OPCODE_UXTH | Rd(dst_reg) | Rm(src_reg) | UXTB_ROTATE(rotate));
 }
 
+void host_arm_VABS_D(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VABS_D | Vd(dest_reg) | Vm(src_reg));
+}
+
 void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VADD | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -940,6 +948,11 @@ void host_arm_VMULL_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_
 	codegen_addlong(block, OPCODE_VMULL_S16 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 
+void host_arm_VNEG_D(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VNEG_D | Vd(dest_reg) | Vm(src_reg));
+}
+
 void host_arm_VORR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VORR_D | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -1063,6 +1076,11 @@ void host_arm_VSHRN_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
         if (shift > 16)
                 fatal("host_arm_VSHRN_32 : shift > 16\n");
 	codegen_addlong(block, OPCODE_VSHRN | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM_32(16-shift));
+}
+
+void host_arm_VSQRT_D(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VSQRT_D | Vd(dest_reg) | Vm(src_reg));
 }
 
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)
