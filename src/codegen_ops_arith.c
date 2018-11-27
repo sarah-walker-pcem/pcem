@@ -1416,6 +1416,8 @@ uint32_t ropDEC_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 
 uint32_t ropINCDEC(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
+        rebuild_c(ir);
+        
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 uop_MOVZX(ir, IREG_flags_op1, IREG_8(fetchdat & 7));
