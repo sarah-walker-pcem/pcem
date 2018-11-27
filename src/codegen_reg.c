@@ -73,7 +73,7 @@ struct
 	[IREG_ea_seg] = {REG_POINTER, &cpu_state.ea_seg, REG_INTEGER},
 
 	[IREG_op32] = {REG_DWORD, &cpu_state.op32,  REG_INTEGER},
-	[IREG_ssegs] = {REG_BYTE, &cpu_state.ssegs, REG_INTEGER},
+	[IREG_ssegsx] = {REG_BYTE, &cpu_state.ssegs, REG_INTEGER},
 	
 	[IREG_rm_mod_reg] = {REG_DWORD, &cpu_state.rm_data.rm_mod_reg_data, REG_INTEGER},
 
@@ -146,6 +146,33 @@ struct
 	[IREG_temp0d] = {REG_DOUBLE, (void *)40, REG_FP},
 	[IREG_temp1d] = {REG_DOUBLE, (void *)48, REG_FP},
 };
+
+static int reg_is_native_size(ir_reg_t ir_reg)
+{
+        int native_size = ireg_data[IREG_GET_REG(ir_reg.reg)].native_size;
+        int requested_size = IREG_GET_SIZE(ir_reg.reg);
+        
+        switch (native_size)
+        {
+                case REG_BYTE: case REG_FPU_ST_BYTE:
+                return (requested_size == IREG_SIZE_B);
+                case REG_WORD:
+                return (requested_size == IREG_SIZE_W);
+                case REG_DWORD:
+                return (requested_size == IREG_SIZE_L);
+                case REG_QWORD: case REG_FPU_ST_QWORD: case REG_DOUBLE: case REG_FPU_ST_DOUBLE:
+                return ((requested_size == IREG_SIZE_D) || (requested_size == IREG_SIZE_Q));
+                case REG_POINTER:
+                if (sizeof(void *) == 4)
+                        return (requested_size == IREG_SIZE_L);
+                return (requested_size == IREG_SIZE_Q);
+                
+                default:
+                fatal("get_reg_is_native_size: unknown native size %i\n", native_size);
+        }
+        
+        return 0;
+}
 
 void codegen_reg_reset()
 {
@@ -260,7 +287,7 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 default:
-                fatal("codegen_reg_load - native_size=%i\n", ireg_data[IREG_GET_REG(ir_reg.reg)].native_size);
+                fatal("codegen_reg_load - native_size=%i reg=%i\n", ireg_data[IREG_GET_REG(ir_reg.reg)].native_size, IREG_GET_REG(ir_reg.reg));
         }
 
         reg_set->regs[c] = ir_reg;
@@ -469,7 +496,7 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
         host_reg_set_t *reg_set = get_reg_set(ir_reg);
         int c;
         
-        if (IREG_GET_SIZE(ir_reg.reg) != IREG_SIZE_L)
+        if (!reg_is_native_size(ir_reg))
         {
                 /*Read in parent register so we can do partial accesses to it*/
                 ir_reg_t parent_reg;

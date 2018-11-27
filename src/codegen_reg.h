@@ -37,7 +37,7 @@ enum
 	IREG_eaaddr = 14,
 	IREG_ea_seg = 15,
 	IREG_op32   = 16,
-	IREG_ssegs  = 17,
+	IREG_ssegsx = 17,
 	
 	IREG_rm_mod_reg = 18,
 	
@@ -179,7 +179,9 @@ enum
         IREG_MM7 = IREG_MM7x + IREG_SIZE_Q,
         
         IREG_NPXC = IREG_NPXCx + IREG_SIZE_W,
-        IREG_NPXS = IREG_NPXSx + IREG_SIZE_W
+        IREG_NPXS = IREG_NPXSx + IREG_SIZE_W,
+        
+        IREG_ssegs = IREG_ssegsx + IREG_SIZE_B
 };
 
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))
