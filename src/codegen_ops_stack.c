@@ -288,3 +288,76 @@ uint32_t ropLEAVE_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 
         return op_pc;
 }
+
+
+uint32_t ropPUSHA_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -16);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 14, IREG_AX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 12, IREG_CX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 10, IREG_DX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  8, IREG_BX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  6, IREG_SP);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  4, IREG_BP);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  2, IREG_SI);
+        uop_MEM_STORE_REG(ir, IREG_SS_base, sp_reg, IREG_DI);
+        SUB_SP(ir, 16);
+
+        return op_pc;
+}
+uint32_t ropPUSHA_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -32);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 28, IREG_EAX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 24, IREG_ECX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 20, IREG_EDX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 16, IREG_EBX);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 12, IREG_ESP);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  8, IREG_EBP);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg,  4, IREG_ESI);
+        uop_MEM_STORE_REG(ir, IREG_SS_base, sp_reg, IREG_EDI);
+        SUB_SP(ir, 32);
+
+        return op_pc;
+}
+
+uint32_t ropPOPA_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+        
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP(ir);
+        uop_MEM_LOAD_REG(ir, IREG_DI, IREG_SS_base, sp_reg);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_SI, IREG_SS_base, sp_reg,  2);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_BP, IREG_SS_base, sp_reg,  4);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_BX, IREG_SS_base, sp_reg,  8);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_DX, IREG_SS_base, sp_reg, 10);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_CX, IREG_SS_base, sp_reg, 12);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_AX, IREG_SS_base, sp_reg, 14);
+        ADD_SP(ir, 16);
+
+        return op_pc;
+}
+uint32_t ropPOPA_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        sp_reg = LOAD_SP(ir);
+        uop_MEM_LOAD_REG(ir, IREG_EDI, IREG_SS_base, sp_reg);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_ESI, IREG_SS_base, sp_reg,  4);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_EBP, IREG_SS_base, sp_reg,  8);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_EBX, IREG_SS_base, sp_reg, 16);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_EDX, IREG_SS_base, sp_reg, 20);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_ECX, IREG_SS_base, sp_reg, 24);
+        uop_MEM_LOAD_REG_OFFSET(ir, IREG_EAX, IREG_SS_base, sp_reg, 28);
+        ADD_SP(ir, 32);
+
+        return op_pc;
+}

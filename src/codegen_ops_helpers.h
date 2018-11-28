@@ -24,7 +24,11 @@ static inline int LOAD_SP_WITH_OFFSET(ir_data_t *ir, int offset)
                         return IREG_eaaddr;
                 }
         }
+}
 
+static inline int LOAD_SP(ir_data_t *ir)
+{
+        return LOAD_SP_WITH_OFFSET(ir, 0);
 }
 
 static inline void ADD_SP(ir_data_t *ir, int offset)
