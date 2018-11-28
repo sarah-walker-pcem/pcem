@@ -115,8 +115,10 @@ enum
         
         IREG_NPXCx = 72,
         IREG_NPXSx = 73,
+        
+        IREG_flagsx = 74,
 
-	IREG_COUNT = 74,
+	IREG_COUNT = 75,
 	
 	IREG_INVALID = 255,
 	
@@ -181,7 +183,9 @@ enum
         IREG_NPXC = IREG_NPXCx + IREG_SIZE_W,
         IREG_NPXS = IREG_NPXSx + IREG_SIZE_W,
         
-        IREG_ssegs = IREG_ssegsx + IREG_SIZE_B
+        IREG_ssegs = IREG_ssegsx + IREG_SIZE_B,
+        
+        IREG_flags = IREG_flagsx + IREG_SIZE_W
 };
 
 #define IREG_8(reg)  (((reg) & 4) ? (((reg) & 3) + IREG_AH) : ((reg) + IREG_AL))

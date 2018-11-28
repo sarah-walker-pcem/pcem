@@ -551,3 +551,50 @@ ropLxS(LES, &cpu_state.seg_es)
 ropLxS(LFS, &cpu_state.seg_fs)
 ropLxS(LGS, &cpu_state.seg_gs)
 ropLxS(LSS, &cpu_state.seg_ss)
+
+uint32_t ropCLC(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_CALL_FUNC(ir, flags_rebuild);
+        uop_AND_IMM(ir, IREG_flags, IREG_flags, ~C_FLAG);
+        return op_pc;
+}
+uint32_t ropCMC(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_CALL_FUNC(ir, flags_rebuild);
+        uop_XOR_IMM(ir, IREG_flags, IREG_flags, C_FLAG);
+        return op_pc;
+}
+uint32_t ropSTC(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_CALL_FUNC(ir, flags_rebuild);
+        uop_OR_IMM(ir, IREG_flags, IREG_flags, C_FLAG);
+        return op_pc;
+}
+
+uint32_t ropCLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_AND_IMM(ir, IREG_flags, IREG_flags, ~D_FLAG);
+        return op_pc;
+}
+uint32_t ropSTD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        uop_OR_IMM(ir, IREG_flags, IREG_flags, D_FLAG);
+        return op_pc;
+}
+
+uint32_t ropCLI(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        if (!IOPLp && (cr4 & (CR4_VME | CR4_PVI)))
+                return 0;
+
+        uop_AND_IMM(ir, IREG_flags, IREG_flags, ~I_FLAG);
+        return op_pc;
+}
+uint32_t ropSTI(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        if (!IOPLp && (cr4 & (CR4_VME | CR4_PVI)))
+                return 0;
+
+        uop_OR_IMM(ir, IREG_flags, IREG_flags, I_FLAG);
+        return op_pc;
+}
