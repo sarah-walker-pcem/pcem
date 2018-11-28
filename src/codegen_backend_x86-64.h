@@ -10,7 +10,7 @@
 #define HASH(l) ((l) & 0x1ffff)
 
 /*Hack until better memory management written*/
-#define BLOCK_EXIT_OFFSET 0xffe0
+#define BLOCK_EXIT_OFFSET (BLOCK_DATA_SIZE - 32)
 /*#define BLOCK_EXIT_OFFSET 0x7f0*/
 #define BLOCK_GPF_OFFSET (BLOCK_EXIT_OFFSET - 20)
 

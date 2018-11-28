@@ -30,7 +30,10 @@
 */
 
 /*Hack until better memory management written*/
-#define BLOCK_DATA_SIZE 0x10000
+/*This is deliberately _not_ a power of two, to avoid cache aliasing problems.
+  Try changing this to a power of two, and watch the performance plummet :)
+  It's probably best for this to be a multiple of the cache line size though*/
+#define BLOCK_DATA_SIZE 0xff80
 
 typedef struct codeblock_t
 {
@@ -61,8 +64,10 @@ typedef struct codeblock_t
         uint32_t status;
         uint32_t flags;
 
-        uint8_t data[BLOCK_DATA_SIZE];
+        uint8_t *data;
 } codeblock_t;
+
+uint8_t *codeblock_data;
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1

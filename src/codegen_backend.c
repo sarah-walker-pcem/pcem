@@ -96,7 +96,10 @@ void codegen_reset()
         mem_reset_page_blocks();
         
         for (c = 0; c < BLOCK_SIZE; c++)
+        {
                 codeblock[c].pc = BLOCK_PC_INVALID;
+                codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
+        }
 }
 
 void dump_block()
