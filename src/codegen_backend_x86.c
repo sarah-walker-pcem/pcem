@@ -1,5 +1,6 @@
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
 
+#include <stddef.h>
 #include "ibm.h"
 #include "codegen.h"
 #include "codegen_backend.h"
@@ -260,7 +261,28 @@ void codegen_backend_init()
 	long pagesize = sysconf(_SC_PAGESIZE);
 	long pagemask = ~(pagesize - 1);
 #endif
-
+pclog("sizeof(codeblock_t)=%i\n", sizeof(codeblock_t));
+pclog("  offsetof(codeblock_t, pc)=%i\n", offsetof(codeblock_t, pc));
+pclog("  offsetof(codeblock_t, _cs)=%i\n", offsetof(codeblock_t, _cs));
+pclog("  offsetof(codeblock_t, phys)=%i\n", offsetof(codeblock_t, phys));
+pclog("  offsetof(codeblock_t, phys_2)=%i\n", offsetof(codeblock_t, phys_2));
+pclog("  offsetof(codeblock_t, status)=%i\n", offsetof(codeblock_t, status));
+pclog("  offsetof(codeblock_t, flags)=%i\n", offsetof(codeblock_t, flags));
+pclog("  offsetof(codeblock_t, ins)=%i\n", offsetof(codeblock_t, ins));
+pclog("  offsetof(codeblock_t, TOP)=%i\n", offsetof(codeblock_t, TOP));
+pclog("  offsetof(codeblock_t, endpc)=%i\n", offsetof(codeblock_t, endpc));
+pclog("  offsetof(codeblock_t, data)=%i\n", offsetof(codeblock_t, data));
+pclog("  offsetof(codeblock_t, page_mask=%i\n", offsetof(codeblock_t, page_mask));
+pclog("  offsetof(codeblock_t, page_mask2=%i\n", offsetof(codeblock_t, page_mask2));
+pclog("  offsetof(codeblock_t, dirty_mask=%i\n", offsetof(codeblock_t, dirty_mask));
+pclog("  offsetof(codeblock_t, dirty_mask2=%i\n", offsetof(codeblock_t, dirty_mask2));
+pclog("  offsetof(codeblock_t, prev=%i\n", offsetof(codeblock_t, prev));
+pclog("  offsetof(codeblock_t, next=%i\n", offsetof(codeblock_t, next));
+pclog("  offsetof(codeblock_t, prev_2=%i\n", offsetof(codeblock_t, prev_2));
+pclog("  offsetof(codeblock_t, next_2=%i\n", offsetof(codeblock_t, next_2));
+pclog("  offsetof(codeblock_t, parent=%i\n", offsetof(codeblock_t, parent));
+pclog("  offsetof(codeblock_t, left=%i\n", offsetof(codeblock_t, left));
+pclog("  offsetof(codeblock_t, right=%i\n", offsetof(codeblock_t, right));
         codeblock = malloc((BLOCK_SIZE+1) * sizeof(codeblock_t));
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         codeblock_data = VirtualAlloc(NULL, (BLOCK_SIZE+1) * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);

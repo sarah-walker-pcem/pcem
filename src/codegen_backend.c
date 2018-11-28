@@ -277,7 +277,6 @@ void codegen_block_init(uint32_t phys_addr)
         block->ins = 0;
         block->pc = cs + cpu_state.pc;
         block->_cs = cs;
-        block->pnt = block_current;
         block->phys = phys_addr;
         block->dirty_mask = &page->dirty_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK];
         block->dirty_mask2 = NULL;
@@ -287,8 +286,6 @@ void codegen_block_init(uint32_t phys_addr)
         block->flags = CODEBLOCK_STATIC_TOP;
         block->status = cpu_cur_status;
         
-        block->was_recompiled = 0;
-
         recomp_page = block->phys & ~0xfff;
         
         codeblock_tree_add(block);
@@ -301,6 +298,11 @@ ir_data_t *codegen_get_ir_data()
         return ir_data;
 }
 
+static int get_block_nr(codeblock_t *block)
+{
+        return ((uintptr_t)block - (uintptr_t)codeblock) / sizeof(codeblock_t);
+}
+
 void codegen_block_start_recompile(codeblock_t *block)
 {
         page_t *page = &pages[block->phys >> 12];
@@ -309,9 +311,9 @@ void codegen_block_start_recompile(codeblock_t *block)
                 mem_flush_write_page(block->phys, cs+cpu_state.pc);
 
         block_num = HASH(block->phys);
-        block_current = block->pnt;
+        block_current = get_block_nr(block);//block->pnt;
 
-        if (block->pc != cs + cpu_state.pc || block->was_recompiled)
+        if (block->pc != cs + cpu_state.pc || (block->flags & CODEBLOCK_WAS_RECOMPILED))
                 fatal("Recompile to used block!\n");
 
         block->status = cpu_cur_status;
@@ -342,7 +344,7 @@ void codegen_block_start_recompile(codeblock_t *block)
         cpu_state.seg_ds.checked = cpu_state.seg_es.checked = cpu_state.seg_fs.checked = cpu_state.seg_gs.checked = (cr0 & 1) ? 0 : 1;
 
         block->TOP = cpu_state.TOP & 7;
-        block->was_recompiled = 1;
+        block->flags |= CODEBLOCK_WAS_RECOMPILED;
 
         codegen_flat_ds = !(cpu_cur_status & CPU_STATUS_NOTFLATDS);
         codegen_flat_ss = !(cpu_cur_status & CPU_STATUS_NOTFLATSS);       

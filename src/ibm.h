@@ -194,7 +194,7 @@ struct
 
 #define cycles cpu_state._cycles
 
-extern uint32_t cpu_cur_status;
+extern uint16_t cpu_cur_status;
 
 /*The flags below must match in both cpu_cur_status and block->status for a block
   to be valid*/
@@ -202,13 +202,13 @@ extern uint32_t cpu_cur_status;
 #define CPU_STATUS_STACK32 (1 << 1)
 #define CPU_STATUS_PMODE   (1 << 2)
 #define CPU_STATUS_V86     (1 << 3)
-#define CPU_STATUS_FLAGS 0xffff
+#define CPU_STATUS_FLAGS 0xff
 
 /*If the flags below are set in cpu_cur_status, they must be set in block->status.
   Otherwise they are ignored*/
-#define CPU_STATUS_NOTFLATDS  (1 << 16)
-#define CPU_STATUS_NOTFLATSS  (1 << 17)
-#define CPU_STATUS_MASK 0xffff0000
+#define CPU_STATUS_NOTFLATDS  (1 << 8)
+#define CPU_STATUS_NOTFLATSS  (1 << 9)
+#define CPU_STATUS_MASK 0xff00
 
 #define COMPILE_TIME_ASSERT(expr) typedef char COMP_TIME_ASSERT[(expr) ? 1 : 0];
 

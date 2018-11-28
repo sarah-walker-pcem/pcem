@@ -19,7 +19,7 @@
 
 #define CPU_BLOCK_END() cpu_block_end = 1
 
-uint32_t cpu_cur_status = 0;
+uint16_t cpu_cur_status = 0;
 
 int cpu_reps, cpu_reps_latched;
 int cpu_notreps, cpu_notreps_latched;
@@ -663,16 +663,15 @@ void exec386_dynarec(int cycs)
                                                 valid_block = 0;
                                 }
                         }
-                        if (valid_block && block->was_recompiled && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
+                        if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED) && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
                         {
                                 /*FPU top-of-stack does not match the value this block was compiled
                                   with, re-compile using dynamic top-of-stack*/
-                                block->flags &= ~CODEBLOCK_STATIC_TOP;
-                                block->was_recompiled = 0;
+                                block->flags &= ~(CODEBLOCK_STATIC_TOP | CODEBLOCK_WAS_RECOMPILED);
                         }
                 }
 
-                if (valid_block && block->was_recompiled)
+                if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED))
                 {
                         void (*code)() = (void *)&block->data[BLOCK_START];
 

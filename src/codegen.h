@@ -37,10 +37,19 @@
 
 typedef struct codeblock_t
 {
+        uint32_t pc;
+        uint32_t _cs;
+        uint32_t phys, phys_2;
+        uint16_t status;
+        uint16_t flags;
+        uint16_t ins;
+        uint8_t TOP;
+        uint32_t endpc;
+        uint8_t *data;
+        
         uint64_t page_mask, page_mask2;
         uint64_t *dirty_mask, *dirty_mask2;
-        uint64_t cmp;
-        
+
         /*Previous and next pointers, for the codeblock list associated with
           each physical page. Two sets of pointers, as a codeblock can be
           present in two pages.*/
@@ -50,21 +59,6 @@ typedef struct codeblock_t
         /*Pointers for codeblock tree, used to search for blocks when hash lookup
           fails.*/
         struct codeblock_t *parent, *left, *right;
-        
-        int pnt;
-        int ins;
-        
-        int was_recompiled;
-        int TOP;
-
-        uint32_t pc;
-        uint32_t _cs;
-        uint32_t endpc;
-        uint32_t phys, phys_2;
-        uint32_t status;
-        uint32_t flags;
-
-        uint8_t *data;
 } codeblock_t;
 
 uint8_t *codeblock_data;
@@ -73,6 +67,8 @@ uint8_t *codeblock_data;
 #define CODEBLOCK_HAS_FPU 1
 /*Code block is always entered with the same FPU top-of-stack*/
 #define CODEBLOCK_STATIC_TOP 2
+/*Code block has been compiled*/
+#define CODEBLOCK_WAS_RECOMPILED 4
 
 #define BLOCK_PC_INVALID 0xffffffff
 
@@ -83,13 +79,14 @@ static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
         
         while (block)
         {
-                if (a == block->cmp)
+                uint64_t block_cmp = block->_cs | ((uint64_t)block->phys << 32);
+                if (a == block_cmp)
                 {
                         if (!((block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
                              ((block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK)))
                                 break;
                 }
-                if (a < block->cmp)
+                if (a < block_cmp)
                         block = block->left;
                 else
                         block = block->right;
@@ -102,8 +99,7 @@ static inline void codeblock_tree_add(codeblock_t *new_block)
 {
         codeblock_t *block = pages[new_block->phys >> 12].head;
         uint64_t a = new_block->_cs | ((uint64_t)new_block->phys << 32);
-        new_block->cmp = a;
-                
+
         if (!block)
         {
                 pages[new_block->phys >> 12].head = new_block;
@@ -112,17 +108,20 @@ static inline void codeblock_tree_add(codeblock_t *new_block)
         else
         {
                 codeblock_t *old_block = NULL;
+                uint64_t old_block_cmp;
                 
                 while (block)
                 {
                         old_block = block;
-                        if (a < old_block->cmp)
+                        old_block_cmp = old_block->_cs | ((uint64_t)old_block->phys << 32);
+                        
+                        if (a < old_block_cmp)
                                 block = block->left;
                         else
                                 block = block->right;
                 }
                 
-                if (a < old_block->cmp)
+                if (a < old_block_cmp)
                         old_block->left = new_block;
                 else
                         old_block->right = new_block;
