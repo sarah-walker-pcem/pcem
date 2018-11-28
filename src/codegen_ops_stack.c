@@ -1,6 +1,7 @@
 #include "ibm.h"
 
 #include "x86.h"
+#include "x86_flags.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_ir.h"
@@ -358,6 +359,45 @@ uint32_t ropPOPA_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         uop_MEM_LOAD_REG_OFFSET(ir, IREG_ECX, IREG_SS_base, sp_reg, 24);
         uop_MEM_LOAD_REG_OFFSET(ir, IREG_EAX, IREG_SS_base, sp_reg, 28);
         ADD_SP(ir, 32);
+
+        return op_pc;
+}
+
+uint32_t ropPUSHF(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+
+        if ((cpu_state.eflags & VM_FLAG) && (IOPL < 3))
+                return 0;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        uop_CALL_FUNC(ir, flags_rebuild);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -2);
+        uop_MEM_STORE_REG(ir, IREG_SS_base, sp_reg, IREG_flags);
+        SUB_SP(ir, 2);
+
+        return op_pc;
+}
+uint32_t ropPUSHFD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
+{
+        int sp_reg;
+
+        if ((cpu_state.eflags & VM_FLAG) && (IOPL < 3))
+                return 0;
+
+        uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+        uop_CALL_FUNC(ir, flags_rebuild);
+
+        if (cpu_CR4_mask & CR4_VME)
+                uop_AND_IMM(ir, IREG_temp0_W, IREG_eflags, 0x3c);
+        else if (CPUID)
+                uop_AND_IMM(ir, IREG_temp0_W, IREG_eflags, 0x24);
+        else
+                uop_AND_IMM(ir, IREG_temp0_W, IREG_eflags, 4);
+        sp_reg = LOAD_SP_WITH_OFFSET(ir, -4);
+        uop_MEM_STORE_REG(ir, IREG_SS_base, sp_reg, IREG_flags);
+        uop_MEM_STORE_REG_OFFSET(ir, IREG_SS_base, sp_reg, 2, IREG_temp0_W);
+        SUB_SP(ir, 4);
 
         return op_pc;
 }

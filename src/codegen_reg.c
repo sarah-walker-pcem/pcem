@@ -136,7 +136,8 @@ struct
 	[IREG_NPXSx] = {REG_WORD, &cpu_state.npxs, REG_INTEGER},
 
 	[IREG_flagsx] = {REG_WORD, &cpu_state.flags, REG_INTEGER},
-	
+	[IREG_eflagsx] = {REG_WORD, &cpu_state.eflags, REG_INTEGER},
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
