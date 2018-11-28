@@ -12,8 +12,8 @@ static int opIMUL_w_iw_a16(uint32_t fetchdat)
         
         templ = ((int)tempw) * ((int)tempw2);
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].w = templ & 0xffff;
 
         CLOCK_CYCLES((cpu_mod == 3) ? 14 : 17);
@@ -34,8 +34,8 @@ static int opIMUL_w_iw_a32(uint32_t fetchdat)
         
         templ = ((int)tempw) * ((int)tempw2);
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].w = templ & 0xffff;
 
         CLOCK_CYCLES((cpu_mod == 3) ? 14 : 17);
@@ -57,8 +57,8 @@ static int opIMUL_l_il_a16(uint32_t fetchdat)
         
         temp64 = ((int64_t)templ) * ((int64_t)templ2);
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].l = temp64 & 0xffffffff;
         
         CLOCK_CYCLES(25);
@@ -79,8 +79,8 @@ static int opIMUL_l_il_a32(uint32_t fetchdat)
         
         temp64 = ((int64_t)templ) * ((int64_t)templ2);
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].l = temp64 & 0xffffffff;
         
         CLOCK_CYCLES(25);
@@ -103,8 +103,8 @@ static int opIMUL_w_ib_a16(uint32_t fetchdat)
         
         templ = ((int)tempw) * ((int)tempw2);
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].w = templ & 0xffff;
         
         CLOCK_CYCLES((cpu_mod == 3) ? 14 : 17);
@@ -126,8 +126,8 @@ static int opIMUL_w_ib_a32(uint32_t fetchdat)
         
         templ = ((int)tempw) * ((int)tempw2);
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].w = templ & 0xffff;
         
         CLOCK_CYCLES((cpu_mod == 3) ? 14 : 17);
@@ -150,8 +150,8 @@ static int opIMUL_l_ib_a16(uint32_t fetchdat)
         
         temp64 = ((int64_t)templ)*((int64_t)templ2);
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].l = temp64 & 0xffffffff;
         
         CLOCK_CYCLES(20);
@@ -173,8 +173,8 @@ static int opIMUL_l_ib_a32(uint32_t fetchdat)
         
         temp64 = ((int64_t)templ)*((int64_t)templ2);
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         cpu_state.regs[cpu_reg].l = temp64 & 0xffffffff;
         
         CLOCK_CYCLES(20);
@@ -196,8 +196,8 @@ static int opIMUL_w_w_a16(uint32_t fetchdat)
         if (cpu_state.abrt) return 1;
         cpu_state.regs[cpu_reg].w = templ & 0xFFFF;
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         
         CLOCK_CYCLES(18);
         PREFETCH_RUN(18, 2, rmdat, 1,0,0,0, 0);
@@ -215,8 +215,8 @@ static int opIMUL_w_w_a32(uint32_t fetchdat)
         if (cpu_state.abrt) return 1;
         cpu_state.regs[cpu_reg].w = templ & 0xFFFF;
         flags_rebuild();
-        if ((templ >> 15) != 0 && (templ >> 15) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                           flags &= ~(C_FLAG | V_FLAG);
+        if ((templ >> 15) != 0 && (templ >> 15) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                           cpu_state.flags &= ~(C_FLAG | V_FLAG);
         
         CLOCK_CYCLES(18);
         PREFETCH_RUN(18, 2, rmdat, 1,0,0,0, 1);
@@ -235,8 +235,8 @@ static int opIMUL_l_l_a16(uint32_t fetchdat)
         if (cpu_state.abrt) return 1;
         cpu_state.regs[cpu_reg].l = temp64 & 0xFFFFFFFF;
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         
         CLOCK_CYCLES(30);
         PREFETCH_RUN(30, 2, rmdat, 0,1,0,0, 0);
@@ -254,8 +254,8 @@ static int opIMUL_l_l_a32(uint32_t fetchdat)
         if (cpu_state.abrt) return 1;
         cpu_state.regs[cpu_reg].l = temp64 & 0xFFFFFFFF;
         flags_rebuild();
-        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) flags |=   C_FLAG | V_FLAG;
-        else                                             flags &= ~(C_FLAG | V_FLAG);
+        if ((temp64 >> 31) != 0 && (temp64 >> 31) != -1) cpu_state.flags |=   C_FLAG | V_FLAG;
+        else                                             cpu_state.flags &= ~(C_FLAG | V_FLAG);
         
         CLOCK_CYCLES(30);
         PREFETCH_RUN(30, 2, rmdat, 0,1,0,0, 1);

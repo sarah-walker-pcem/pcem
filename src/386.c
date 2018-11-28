@@ -250,13 +250,13 @@ dontprint=0;
 
                 if (!cpu_state.abrt)
                 {               
-                        trap = flags & T_FLAG;
+                        trap = cpu_state.flags & T_FLAG;
                         opcode = fetchdat & 0xFF;
                         fetchdat >>= 8;
 
                         if (output == 3)
                         {
-                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X\n",CS,cs,cpu_state.pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask);
+                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X\n",CS,cs,cpu_state.pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,cpu_state.flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask);
                         }
                         cpu_state.pc++;
                         x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
@@ -312,13 +312,13 @@ dontprint=0;
                         }
                         else
                         {
-                                writememw(ss,(SP-2)&0xFFFF,flags);
+                                writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
                                 writememw(ss,(SP-4)&0xFFFF,CS);
                                 writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                 SP-=6;
                                 addr = (1 << 2) + idt.base;
-                                flags&=~I_FLAG;
-                                flags&=~T_FLAG;
+                                cpu_state.flags &= ~I_FLAG;
+                                cpu_state.flags &= ~T_FLAG;
                                 cpu_state.pc=readmemw(0,addr);
                                 loadcs(readmemw(0,addr+2));
                         }
@@ -336,7 +336,7 @@ dontprint=0;
                                 nmi = 0;
                         }
                 }
-                else if ((flags&I_FLAG) && pic_intpending)
+                else if ((cpu_state.flags & I_FLAG) && pic_intpending)
                 {
                         temp=picinterrupt();
                         if (temp!=0xFF)
@@ -352,13 +352,13 @@ dontprint=0;
                                 }
                                 else
                                 {
-                                        writememw(ss,(SP-2)&0xFFFF,flags);
+                                        writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
                                         writememw(ss,(SP-4)&0xFFFF,CS);
                                         writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                         SP-=6;
                                         addr = (temp << 2) + idt.base;
-                                        flags&=~I_FLAG;
-                                        flags&=~T_FLAG;
+                                        cpu_state.flags &= ~I_FLAG;
+                                        cpu_state.flags &= ~T_FLAG;
                                         oxpc=cpu_state.pc;
                                         cpu_state.pc=readmemw(0,addr);
                                         loadcs(readmemw(0,addr+2));

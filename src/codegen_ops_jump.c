@@ -159,7 +159,7 @@ uint32_t ropRET_imm_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32
 
 uint32_t ropRETF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        if ((msw&1) && !(eflags&VM_FLAG))
+        if ((msw&1) && !(cpu_state.eflags&VM_FLAG))
                 return 0;
 
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -184,7 +184,7 @@ uint32_t ropRETF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 }
 uint32_t ropRETF_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        if ((msw&1) && !(eflags&VM_FLAG))
+        if ((msw&1) && !(cpu_state.eflags&VM_FLAG))
                 return 0;
 
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -212,7 +212,7 @@ uint32_t ropRETF_imm_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
 {
         uint16_t offset;
 
-        if ((msw&1) && !(eflags&VM_FLAG))
+        if ((msw&1) && !(cpu_state.eflags&VM_FLAG))
                 return 0;
 
         offset = fastreadw(cs + op_pc);
@@ -240,7 +240,7 @@ uint32_t ropRETF_imm_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
 {
         uint16_t offset;
 
-        if ((msw&1) && !(eflags&VM_FLAG))
+        if ((msw&1) && !(cpu_state.eflags&VM_FLAG))
                 return 0;
                 
         offset = fastreadw(cs + op_pc);

@@ -4,7 +4,7 @@
         if (temp)                                                               \
         {                                                                       \
                 int c;                                                          \
-                flags &= ~Z_FLAG;                                               \
+                cpu_state.flags &= ~Z_FLAG;                                               \
                 for (c = start; c != end; c += dir)                             \
                 {                                                               \
                         CLOCK_CYCLES(time);                                     \
@@ -17,7 +17,7 @@
                 }                                                               \
         }                                                                       \
         else                                                                    \
-                flags |= Z_FLAG;
+                cpu_state.flags |= Z_FLAG;
 
 static int opBSF_w_a16(uint32_t fetchdat)
 {

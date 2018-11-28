@@ -188,6 +188,8 @@ struct
                 uint32_t l;
                 uint16_t w;
         } CR0;
+        
+        uint16_t flags, eflags;
 } cpu_state;
 
 #define cycles cpu_state._cycles
@@ -214,7 +216,6 @@ COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
 
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
 
-uint16_t flags,eflags;
 uint32_t oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
 
 extern int ins,output;
@@ -273,7 +274,7 @@ uint32_t dr[8];
 #define CR4_PVI (1 << 1)
 #define CR4_PSE (1 << 4)
 
-#define IOPL ((flags>>12)&3)
+#define IOPL ((cpu_state.flags >> 12) & 3)
 
 #define IOPLp ((!(msw&1)) || (CPL<=IOPL))
 //#define IOPLp 1

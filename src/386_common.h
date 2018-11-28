@@ -15,7 +15,7 @@ extern uint16_t ea_rseg;
 
 int checkio(int port);
 
-#define check_io_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
+#define check_io_perm(port) if (!IOPLp || (cpu_state.eflags&VM_FLAG)) \
                         { \
                                 int tempi = checkio(port); \
                                 if (cpu_state.abrt) return 1; \
@@ -26,7 +26,7 @@ int checkio(int port);
                                 } \
                         }
 
-#define checkio_perm(port) if (!IOPLp || (eflags&VM_FLAG)) \
+#define checkio_perm(port) if (!IOPLp || (cpu_state.eflags&VM_FLAG)) \
                         { \
                                 int tempi = checkio(port); \
                                 if (cpu_state.abrt) break; \
@@ -58,14 +58,14 @@ int checkio(int port);
         } while (0)
 
 #define CHECK_READ(seg, low, high)  \
-        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || ((msw & 1) && !(eflags & VM_FLAG) && (((seg)->access & 10) == 8)))       \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || ((msw & 1) && !(cpu_state.eflags & VM_FLAG) && (((seg)->access & 10) == 8)))       \
         {                                       \
                 x86gpf("Limit check", 0);       \
                 return 1;                       \
         }
 
 #define CHECK_WRITE(seg, low, high)  \
-        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || !((seg)->access & 2) || ((msw & 1) && !(eflags & VM_FLAG) && ((seg)->access & 8)))       \
+        if ((low < (seg)->limit_low) || (high > (seg)->limit_high) || !((seg)->access & 2) || ((msw & 1) && !(cpu_state.eflags & VM_FLAG) && ((seg)->access & 8)))       \
         {                                       \
                 x86gpf("Limit check", 0);       \
                 return 1;                       \
@@ -79,7 +79,7 @@ int checkio(int port);
         }
 
 
-#define NOTRM   if (!(msw & 1) || (eflags & VM_FLAG))\
+#define NOTRM   if (!(msw & 1) || (cpu_state.eflags & VM_FLAG))\
                 { \
                         x86_int(6); \
                         return 1; \

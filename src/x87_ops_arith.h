@@ -206,9 +206,9 @@ static int opFCOMI(uint32_t fetchdat)
         cpu_state.pc++;
         if (fplog) pclog("FICOM\n");
         flags_rebuild();
-        flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-        if (ST(0) == ST(fetchdat & 7))     flags |= Z_FLAG;
-        else if (ST(0) < ST(fetchdat & 7)) flags |= C_FLAG;
+        cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
+        if (ST(0) == ST(fetchdat & 7))     cpu_state.flags |= Z_FLAG;
+        else if (ST(0) < ST(fetchdat & 7)) cpu_state.flags |= C_FLAG;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -218,9 +218,9 @@ static int opFCOMIP(uint32_t fetchdat)
         cpu_state.pc++;
         if (fplog) pclog("FICOMP\n");
         flags_rebuild();
-        flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-        if (ST(0) == ST(fetchdat & 7))     flags |= Z_FLAG;
-        else if (ST(0) < ST(fetchdat & 7)) flags |= C_FLAG;
+        cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
+        if (ST(0) == ST(fetchdat & 7))     cpu_state.flags |= Z_FLAG;
+        else if (ST(0) < ST(fetchdat & 7)) cpu_state.flags |= C_FLAG;
         x87_pop();
         CLOCK_CYCLES(4);
         return 0;
@@ -415,9 +415,9 @@ static int opFUCOMI(uint32_t fetchdat)
         cpu_state.pc++;
         if (fplog) pclog("FUCOMI\n");
         flags_rebuild();
-        flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-        if (ST(0) == ST(fetchdat & 7))     flags |= Z_FLAG;
-        else if (ST(0) < ST(fetchdat & 7)) flags |= C_FLAG;
+        cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
+        if (ST(0) == ST(fetchdat & 7))     cpu_state.flags |= Z_FLAG;
+        else if (ST(0) < ST(fetchdat & 7)) cpu_state.flags |= C_FLAG;
         CLOCK_CYCLES(4);
         return 0;
 }
@@ -427,9 +427,9 @@ static int opFUCOMIP(uint32_t fetchdat)
         cpu_state.pc++;
         if (fplog) pclog("FUCOMIP\n");
         flags_rebuild();
-        flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-        if (ST(0) == ST(fetchdat & 7))     flags |= Z_FLAG;
-        else if (ST(0) < ST(fetchdat & 7)) flags |= C_FLAG;
+        cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
+        if (ST(0) == ST(fetchdat & 7))     cpu_state.flags |= Z_FLAG;
+        else if (ST(0) < ST(fetchdat & 7)) cpu_state.flags |= C_FLAG;
         x87_pop();
         CLOCK_CYCLES(4);
         return 0;

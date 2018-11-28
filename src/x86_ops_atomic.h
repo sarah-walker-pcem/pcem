@@ -141,9 +141,9 @@ static int opCMPXCHG8B_a16(uint32_t fetchdat)
         if (cpu_state.abrt) return 0;
         flags_rebuild();
         if (temp == temp2 && temp_hi == temp2_hi)
-                flags |= Z_FLAG;
+                cpu_state.flags |= Z_FLAG;
         else
-                flags &= ~Z_FLAG;        
+                cpu_state.flags &= ~Z_FLAG;
         cycles -= (cpu_mod == 3) ? 6 : 10;
         return 0;
 }
@@ -173,9 +173,9 @@ static int opCMPXCHG8B_a32(uint32_t fetchdat)
         if (cpu_state.abrt) return 0;
         flags_rebuild();
         if (temp == temp2 && temp_hi == temp2_hi)
-                flags |= Z_FLAG;
+                cpu_state.flags |= Z_FLAG;
         else
-                flags &= ~Z_FLAG;        
+                cpu_state.flags &= ~Z_FLAG;
         cycles -= (cpu_mod == 3) ? 6 : 10;
         return 0;
 }

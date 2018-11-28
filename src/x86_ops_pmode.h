@@ -14,10 +14,10 @@ static int opARPL_a16(uint32_t fetchdat)
         {
                 temp_seg = (temp_seg & 0xfffc) | (cpu_state.regs[cpu_reg].w & 3);
                 seteaw(temp_seg);       if (cpu_state.abrt) return 1;
-                flags |= Z_FLAG;
+                cpu_state.flags |= Z_FLAG;
         }
         else
-                flags &= ~Z_FLAG;
+                cpu_state.flags &= ~Z_FLAG;
         
         CLOCK_CYCLES(is486 ? 9 : 20);
         PREFETCH_RUN(is486 ? 9 : 20, 2, rmdat, 1,0,1,0, 0);
@@ -39,10 +39,10 @@ static int opARPL_a32(uint32_t fetchdat)
         {
                 temp_seg = (temp_seg & 0xfffc) | (cpu_state.regs[cpu_reg].w & 3);
                 seteaw(temp_seg);       if (cpu_state.abrt) return 1;
-                flags |= Z_FLAG;
+                cpu_state.flags |= Z_FLAG;
         }
         else
-                flags &= ~Z_FLAG;
+                cpu_state.flags &= ~Z_FLAG;
         
         CLOCK_CYCLES(is486 ? 9 : 20);
         PREFETCH_RUN(is486 ? 9 : 20, 2, rmdat, 1,0,1,0, 1);
@@ -63,7 +63,7 @@ static int opARPL_a32(uint32_t fetchdat)
                 sel = geteaw();                 if (cpu_state.abrt) return 1;                                             \
                                                                                                                 \
                 flags_rebuild();                                                                                \
-                if (!(sel & 0xfffc)) { flags &= ~Z_FLAG; return 0; } /*Null selector*/                          \
+                if (!(sel & 0xfffc)) { cpu_state.flags &= ~Z_FLAG; return 0; } /*Null selector*/                          \
                 valid = (sel & ~7) < ((sel & 4) ? ldt.limit : gdt.limit);                                       \
                 if (valid)                                                                                      \
                 {                                                                                               \
@@ -71,7 +71,7 @@ static int opARPL_a32(uint32_t fetchdat)
                         desc = readmemw(0, ((sel & 4) ? ldt.base : gdt.base) + (sel & ~7) + 4);                 \
                         cpl_override = 0;       if (cpu_state.abrt) return 1;                                             \
                 }                                                                                               \
-                flags &= ~Z_FLAG;                                                                               \
+                cpu_state.flags &= ~Z_FLAG;                                                                               \
                 if ((desc & 0x1f00) == 0x000) valid = 0;                                                        \
                 if ((desc & 0x1f00) == 0x800) valid = 0;                                                        \
                 if ((desc & 0x1f00) == 0xa00) valid = 0;                                                        \
@@ -83,7 +83,7 @@ static int opARPL_a32(uint32_t fetchdat)
                 }                                                                                               \
                 if (valid)                                                                                      \
                 {                                                                                               \
-                        flags |= Z_FLAG;                                                                        \
+                        cpu_state.flags |= Z_FLAG;                                                                        \
                         cpl_override = 1;                                                                       \
                         if (is32)                                                                               \
                                 cpu_state.regs[cpu_reg].l = readmeml(0, ((sel & 4) ? ldt.base : gdt.base) + (sel & ~7) + 4) & 0xffff00;       \
@@ -114,7 +114,7 @@ opLAR(l_a32, fetch_ea_32, 1, 1)
                                                                                                                 \
                 sel = geteaw();                 if (cpu_state.abrt) return 1;                                             \
                 flags_rebuild();                                                                                \
-                flags &= ~Z_FLAG;                                                                               \
+                cpu_state.flags &= ~Z_FLAG;                                                                               \
                 if (!(sel & 0xfffc)) return 0; /*Null selector*/                                                \
                 valid = (sel & ~7) < ((sel & 4) ? ldt.limit : gdt.limit);                                       \
                 if (valid)                                                                                      \
@@ -133,7 +133,7 @@ opLAR(l_a32, fetch_ea_32, 1, 1)
                 }                                                                                               \
                 if (valid)                                                                                      \
                 {                                                                                               \
-                        flags |= Z_FLAG;                                                                        \
+                        cpu_state.flags |= Z_FLAG;                                                                        \
                         cpl_override = 1;                                                                       \
                         if (is32)                                                                               \
                         {                                                                                       \
@@ -185,7 +185,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 PREFETCH_RUN(4, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
                 break;
                 case 0x10: /*LLDT*/
-                if ((CPL || eflags&VM_FLAG) && (cr0&1))
+                if ((CPL || cpu_state.eflags&VM_FLAG) && (cr0&1))
                 {
                         pclog("Invalid LLDT!\n");
                         x86gpf(NULL,0);
@@ -213,7 +213,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 PREFETCH_RUN(20, 2, rmdat, (cpu_mod == 3) ? 0:1,2,0,0, ea32);
                 break;
                 case 0x18: /*LTR*/
-                if ((CPL || eflags&VM_FLAG) && (cr0&1))
+                if ((CPL || cpu_state.eflags&VM_FLAG) && (cr0&1))
                 {
                         pclog("Invalid LTR!\n");
                         x86gpf(NULL,0);
@@ -248,7 +248,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                         SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw();                 if (cpu_state.abrt) return 1;
                 flags_rebuild();
-                flags &= ~Z_FLAG;
+                cpu_state.flags &= ~Z_FLAG;
                 if (!(sel & 0xfffc)) return 0; /*Null selector*/
                 cpl_override = 1;
                 valid = (sel & ~7) < ((sel & 4) ? ldt.limit : gdt.limit);
@@ -261,7 +261,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                         if (dpl < CPL || dpl < (sel & 3)) valid = 0;
                 }
                 if ((desc & 0x0800) && !(desc & 0x0200)) valid = 0; /*Non-readable code*/
-                if (valid) flags |= Z_FLAG;
+                if (valid) cpu_state.flags |= Z_FLAG;
                 CLOCK_CYCLES(20);
                 PREFETCH_RUN(20, 2, rmdat, (cpu_mod == 3) ? 1:2,0,0,0, ea32);
                 break;
@@ -270,7 +270,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                         SEG_CHECK_READ(cpu_state.ea_seg);
                 sel = geteaw();                 if (cpu_state.abrt) return 1;
                 flags_rebuild();
-                flags &= ~Z_FLAG;
+                cpu_state.flags &= ~Z_FLAG;
                 if (!(sel & 0xfffc)) return 0; /*Null selector*/
                 cpl_override = 1;
                 valid  = (sel & ~7) < ((sel & 4) ? ldt.limit : gdt.limit);
@@ -281,7 +281,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 if (dpl < CPL || dpl < (sel & 3)) valid = 0;
                 if (desc & 0x0800) valid = 0; /*Code*/
                 if (!(desc & 0x0200)) valid = 0; /*Read-only data*/
-                if (valid) flags |= Z_FLAG;
+                if (valid) cpu_state.flags |= Z_FLAG;
                 CLOCK_CYCLES(20);
                 PREFETCH_RUN(20, 2, rmdat, (cpu_mod == 3) ? 1:2,0,0,0, ea32);
                 break;
@@ -342,7 +342,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 PREFETCH_RUN(7, 2, rmdat, 0,0,1,1, ea32);
                 break;
                 case 0x10: /*LGDT*/
-                if ((CPL || eflags&VM_FLAG) && (cr0&1))
+                if ((CPL || cpu_state.eflags&VM_FLAG) && (cr0&1))
                 {
                         pclog("Invalid LGDT!\n");
                         x86gpf(NULL,0);
@@ -361,7 +361,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 PREFETCH_RUN(11, 2, rmdat, 1,1,0,0, ea32);
                 break;
                 case 0x18: /*LIDT*/
-                if ((CPL || eflags&VM_FLAG) && (cr0&1))
+                if ((CPL || cpu_state.eflags&VM_FLAG) && (cr0&1))
                 {
                         pclog("Invalid LIDT!\n");
                         x86gpf(NULL,0);
@@ -390,7 +390,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 PREFETCH_RUN(2, 2, rmdat, 0,0,(cpu_mod == 3) ? 0:1,0, ea32);
                 break;
                 case 0x30: /*LMSW*/
-                if ((CPL || eflags&VM_FLAG) && (msw&1))
+                if ((CPL || cpu_state.eflags&VM_FLAG) && (msw&1))
                 {
                         pclog("LMSW - ring not zero!\n");
                         x86gpf(NULL, 0);
@@ -417,7 +417,7 @@ static int op0F01_common(uint32_t fetchdat, int is32, int is286, int ea32)
                 case 0x38: /*INVLPG*/
                 if (is486)
                 {
-                        if ((CPL || eflags&VM_FLAG) && (cr0&1))
+                        if ((CPL || cpu_state.eflags&VM_FLAG) && (cr0&1))
                         {
                                 pclog("Invalid INVLPG!\n");
                                 x86gpf(NULL, 0);

@@ -48,7 +48,7 @@ void codegen_generate_reset()
 void codegen_check_seg_read(codeblock_t *block, ir_data_t *ir, x86seg *seg)
 {
         /*Segments always valid in real/V86 mode*/
-        if (!(cr0 & 1) || (eflags & VM_FLAG))
+        if (!(cr0 & 1) || (cpu_state.eflags & VM_FLAG))
                 return;
         /*CS and SS must always be valid*/
         if (seg == &cpu_state.seg_cs || seg == &cpu_state.seg_ss)
@@ -65,7 +65,7 @@ void codegen_check_seg_read(codeblock_t *block, ir_data_t *ir, x86seg *seg)
 void codegen_check_seg_write(codeblock_t *block, ir_data_t *ir, x86seg *seg)
 {
         /*Segments always valid in real/V86 mode*/
-        if (!(cr0 & 1) || (eflags & VM_FLAG))
+        if (!(cr0 & 1) || (cpu_state.eflags & VM_FLAG))
                 return;
         /*CS and SS must always be valid*/
         if (seg == &cpu_state.seg_cs || seg == &cpu_state.seg_ss)

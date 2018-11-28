@@ -55,7 +55,7 @@ extern uint16_t *mod1add[2][8];
 extern uint32_t *mod1seg[8];
 
 
-#define IRQTEST ((flags&I_FLAG) && (pic.pend&~pic.mask) && !noint)
+#define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
 
 extern int cgate32;
 
