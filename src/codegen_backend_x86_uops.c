@@ -2440,6 +2440,10 @@ void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)
 {
         host_x86_MOV32_REG_ABS(block, host_reg, p);
 }
+void codegen_direct_read_pointer(codeblock_t *block, int host_reg, void *p)
+{
+        codegen_direct_read_32(block, host_reg, p);
+}
 void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p)
 {
         host_x86_MOVQ_XREG_ABS(block, host_reg, p);
@@ -2536,6 +2540,10 @@ void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_of
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
         host_x86_MOV32_REG_BASE_OFFSET(block, host_reg, REG_ESP, stack_offset);
+}
+void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        codegen_direct_read_32_stack(block, host_reg, stack_offset);
 }
 void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
 {

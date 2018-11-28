@@ -2829,6 +2829,10 @@ void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p)
 	else
 		fatal("codegen_direct_read_32 - not in range\n");
 }
+void codegen_direct_read_pointer(codeblock_t *block, int host_reg, void *p)
+{
+	codegen_direct_read_32(block, host_reg, p);
+}
 void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p)
 {
 	host_arm_VLDR_D(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
@@ -2940,6 +2944,10 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 		host_arm_LDR_IMM(block, host_reg, REG_HOST_SP, stack_offset);
 	else
 		fatal("codegen_direct_read_32 - not in range\n");
+}
+void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+	codegen_direct_read_32_stack(block, host_reg, stack_offset);
 }
 void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
 {

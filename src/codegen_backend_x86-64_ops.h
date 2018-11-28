@@ -92,6 +92,7 @@ void host_x86_MOV32_BASE_OFFSET_REG(codeblock_t *block, int base_reg, int offset
 void host_x86_MOV8_REG_ABS(codeblock_t *block, int dst_reg, void *p);
 void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p);
 void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p);
+void host_x86_MOV64_REG_ABS(codeblock_t *block, int dst_reg, void *p);
 
 void host_x86_MOV8_REG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int base_reg, int index_reg, int shift);
 

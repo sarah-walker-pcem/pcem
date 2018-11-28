@@ -2687,6 +2687,13 @@ void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p)
 	else
 		fatal("codegen_direct_read_double - not in range\n");
 }
+void codegen_direct_read_pointer(codeblock_t *block, int host_reg, void *p)
+{
+	if (in_range12_q((uintptr_t)p - (uintptr_t)&cpu_state))
+		host_arm64_LDR_IMM_X(block, host_reg, REG_CPUSTATE, (uintptr_t)p - (uintptr_t)&cpu_state);
+	else
+		fatal("codegen_direct_read_pointer - not in range\n");
+}
 void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p)
 {
 	if (in_range12_q((uintptr_t)p - (uintptr_t)&cpu_state))
@@ -2800,6 +2807,13 @@ void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_of
 		host_arm64_LDR_IMM_W(block, host_reg, REG_SP, stack_offset);
 	else
 		fatal("codegen_direct_read_32_stack - not in range\n");
+}
+void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+	if (in_range12_q(stack_offset))
+		host_arm64_LDR_IMM_X(block, host_reg, REG_SP, stack_offset);
+	else
+		fatal("codegen_direct_read_pointer_stack - not in range\n");
 }
 void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
 {

@@ -215,6 +215,8 @@ void host_arm_VSHR_D_U32(codeblock_t *block, int dest_reg, int src_reg, int shif
 void host_arm_VSHR_D_U64(codeblock_t *block, int dest_reg, int src_reg, int shift);
 void host_arm_VSHRN_32(codeblock_t *block, int dest_reg, int src_reg, int shift);
 
+void host_arm_VSQRT_D(codeblock_t *block, int dest_reg, int src_reg);
+
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset);
 void host_arm_VSTR_S(codeblock_t *block, int src_reg, int base_reg, int offset);
 void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);

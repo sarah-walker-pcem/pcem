@@ -688,6 +688,7 @@ void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_16(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_32(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p);
+void codegen_direct_read_pointer(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p);
 void codegen_direct_read_st_8(codeblock_t *block, int host_reg, void *base, int reg_idx);
 void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int reg_idx);
@@ -697,6 +698,7 @@ void codegen_direct_write_8(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_16(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_64(codeblock_t *block, void *p, int host_reg);
+void codegen_direct_write_pointer(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg);
 void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg);
@@ -706,10 +708,12 @@ void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx,
 void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset);
+void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset);
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset);
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg);
 void codegen_direct_write_64_stack(codeblock_t *block, int stack_offset, int host_reg);
+void codegen_direct_write_pointer_stack(codeblock_t *block, int stack_offset, int host_reg);
 void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg);
 
 void codegen_set_jump_dest(codeblock_t *block, void *p);

@@ -2430,6 +2430,10 @@ void codegen_direct_read_64(codeblock_t *block, int host_reg, void *p)
 {
         host_x86_MOVQ_XREG_ABS(block, host_reg, p);
 }
+void codegen_direct_read_pointer(codeblock_t *block, int host_reg, void *p)
+{
+        host_x86_MOV64_REG_ABS(block, host_reg, p);
+}
 void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p)
 {
         host_x86_MOVQ_XREG_ABS(block, host_reg, p);
@@ -2477,6 +2481,10 @@ void codegen_direct_write_32(codeblock_t *block, void *p, int host_reg)
 void codegen_direct_write_64(codeblock_t *block, void *p, int host_reg)
 {
         host_x86_MOVQ_ABS_XREG(block, p, host_reg);
+}
+void codegen_direct_write_pointer(codeblock_t *block, void *p, int host_reg)
+{
+        host_x86_MOV64_ABS_REG(block, p, host_reg);
 }
 void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg)
 {
@@ -2527,6 +2535,10 @@ void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_of
 {
         host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
 }
+void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset)
+{
+        host_x86_MOV64_REG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
+}
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
         host_x86_MOVQ_XREG_BASE_OFFSET(block, host_reg, REG_RSP, stack_offset);
@@ -2539,6 +2551,10 @@ void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int hos
 void codegen_direct_write_64_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
         host_x86_MOVQ_BASE_OFFSET_XREG(block, REG_RSP, stack_offset, host_reg);
+}
+void codegen_direct_write_pointer_stack(codeblock_t *block, int stack_offset, int host_reg)
+{
+        host_x86_MOV64_BASE_OFFSET_REG(block, REG_RSP, stack_offset, host_reg);
 }
 void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
 {

@@ -253,6 +253,15 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                         codegen_direct_read_64(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
                 
+                case REG_POINTER:
+                if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
+                        fatal("codegen_reg_load - REG_POINTER !REG_INTEGER\n");
+                if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
+                        codegen_direct_read_pointer_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                else
+                        codegen_direct_read_pointer(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                break;
+
                 case REG_DOUBLE:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_DOUBLE !REG_FP\n");
