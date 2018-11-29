@@ -1499,8 +1499,8 @@ void mem_reset_page_blocks()
                 pages[c].write_b = mem_write_ramb_page;
                 pages[c].write_w = mem_write_ramw_page;
                 pages[c].write_l = mem_write_raml_page;
-                pages[c].block[0] = pages[c].block[1] = pages[c].block[2] = pages[c].block[3] = NULL;
-                pages[c].block_2[0] = pages[c].block_2[1] = pages[c].block_2[2] = pages[c].block_2[3] = NULL;
+                pages[c].block[0] = pages[c].block[1] = pages[c].block[2] = pages[c].block[3] = BLOCK_INVALID;
+                pages[c].block_2[0] = pages[c].block_2[1] = pages[c].block_2[2] = pages[c].block_2[3] = BLOCK_INVALID;
         }
 }
 

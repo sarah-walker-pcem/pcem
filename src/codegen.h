@@ -42,9 +42,13 @@ typedef struct codeblock_t
         uint32_t phys, phys_2;
         uint16_t status;
         uint16_t flags;
-        uint16_t ins;
+        uint8_t ins;
         uint8_t TOP;
-        uint32_t endpc;
+
+        /*Pointers for codeblock tree, used to search for blocks when hash lookup
+          fails.*/
+        uint16_t parent, left, right;
+
         uint8_t *data;
         
         uint64_t page_mask, page_mask2;
@@ -53,15 +57,15 @@ typedef struct codeblock_t
         /*Previous and next pointers, for the codeblock list associated with
           each physical page. Two sets of pointers, as a codeblock can be
           present in two pages.*/
-        struct codeblock_t *prev, *next;
-        struct codeblock_t *prev_2, *next_2;
-        
-        /*Pointers for codeblock tree, used to search for blocks when hash lookup
-          fails.*/
-        struct codeblock_t *parent, *left, *right;
+        uint16_t prev, next;
+        uint16_t prev_2, next_2;
 } codeblock_t;
 
 uint8_t *codeblock_data;
+
+extern codeblock_t *codeblock;
+
+extern codeblock_t **codeblock_hash;
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1
@@ -72,11 +76,22 @@ uint8_t *codeblock_data;
 
 #define BLOCK_PC_INVALID 0xffffffff
 
+#define BLOCK_INVALID 0
+
+static inline int get_block_nr(codeblock_t *block)
+{
+        return ((uintptr_t)block - (uintptr_t)codeblock) / sizeof(codeblock_t);
+}
+
 static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
 {
-        codeblock_t *block = pages[phys >> 12].head;
+        codeblock_t *block;
         uint64_t a = _cs | ((uint64_t)phys << 32);
         
+        if (!pages[phys >> 12].head)
+                return NULL;
+                
+        block = &codeblock[pages[phys >> 12].head];
         while (block)
         {
                 uint64_t block_cmp = block->_cs | ((uint64_t)block->phys << 32);
@@ -87,9 +102,9 @@ static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
                                 break;
                 }
                 if (a < block_cmp)
-                        block = block->left;
+                        block = block->left ? &codeblock[block->left] : NULL;
                 else
-                        block = block->right;
+                        block = block->right ? &codeblock[block->right] : NULL;
         }
         
         return block;
@@ -97,18 +112,18 @@ static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
 
 static inline void codeblock_tree_add(codeblock_t *new_block)
 {
-        codeblock_t *block = pages[new_block->phys >> 12].head;
+        codeblock_t *block = &codeblock[pages[new_block->phys >> 12].head];
         uint64_t a = new_block->_cs | ((uint64_t)new_block->phys << 32);
 
-        if (!block)
+        if (!pages[new_block->phys >> 12].head)
         {
-                pages[new_block->phys >> 12].head = new_block;
-                new_block->parent = new_block->left = new_block->right = NULL;
+                pages[new_block->phys >> 12].head = get_block_nr(new_block);
+                new_block->parent = new_block->left = new_block->right = BLOCK_INVALID;
         }
         else
         {
                 codeblock_t *old_block = NULL;
-                uint64_t old_block_cmp;
+                uint64_t old_block_cmp = 0;
                 
                 while (block)
                 {
@@ -116,58 +131,68 @@ static inline void codeblock_tree_add(codeblock_t *new_block)
                         old_block_cmp = old_block->_cs | ((uint64_t)old_block->phys << 32);
                         
                         if (a < old_block_cmp)
-                                block = block->left;
+                                block = block->left ? &codeblock[block->left] : NULL;
                         else
-                                block = block->right;
+                                block = block->right ? &codeblock[block->right] : NULL;
                 }
                 
                 if (a < old_block_cmp)
-                        old_block->left = new_block;
+                        old_block->left = get_block_nr(new_block);
                 else
-                        old_block->right = new_block;
+                        old_block->right = get_block_nr(new_block);
                 
-                new_block->parent = old_block;
-                new_block->left = new_block->right = NULL;
+                new_block->parent = get_block_nr(old_block);
+                new_block->left = new_block->right = BLOCK_INVALID;
         }
 }
 
 static inline void codeblock_tree_delete(codeblock_t *block)
 {
-        codeblock_t *parent = block->parent;
+        uint16_t parent_nr = block->parent;
+        codeblock_t *parent;
+
+        if (block->parent)
+                parent = &codeblock[block->parent];
+        else
+                parent = NULL;
 
         if (!block->left && !block->right)
         {
                 /*Easy case - remove from parent*/
                 if (!parent)
-                        pages[block->phys >> 12].head = NULL;
+                        pages[block->phys >> 12].head = BLOCK_INVALID;
                 else
                 {
-                        if (parent->left == block)
-                                parent->left = NULL;
-                        if (parent->right == block)
-                                parent->right = NULL;
+                        uint16_t block_nr = get_block_nr(block);
+                        
+                        if (parent->left == block_nr)
+                                parent->left = BLOCK_INVALID;
+                        if (parent->right == block_nr)
+                                parent->right = BLOCK_INVALID;
                 }
                 return;
         }
         else if (!block->left)
         {
                 /*Only right node*/
-                if (!parent)
+                if (!parent_nr)
                 {
                         pages[block->phys >> 12].head = block->right;
-                        pages[block->phys >> 12].head->parent = NULL;
+                        codeblock[pages[block->phys >> 12].head].parent = BLOCK_INVALID;
                 }
                 else
                 {
-                        if (parent->left == block)
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
                         {
                                 parent->left = block->right;
-                                parent->left->parent = parent;
+                                codeblock[parent->left].parent = parent_nr;
                         }
-                        if (parent->right == block)
+                        if (parent->right == block_nr)
                         {
                                 parent->right = block->right;
-                                parent->right->parent = parent;
+                                codeblock[parent->right].parent = parent_nr;
                         }
                 }
                 return;
@@ -175,22 +200,24 @@ static inline void codeblock_tree_delete(codeblock_t *block)
         else if (!block->right)
         {
                 /*Only left node*/
-                if (!parent)
+                if (!parent_nr)
                 {
                         pages[block->phys >> 12].head = block->left;
-                        pages[block->phys >> 12].head->parent = NULL;
+                        codeblock[pages[block->phys >> 12].head].parent = BLOCK_INVALID;
                 }
                 else
                 {
-                        if (parent->left == block)
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
                         {
                                 parent->left = block->left;
-                                parent->left->parent = parent;
+                                codeblock[parent->left].parent = parent_nr;
                         }
-                        if (parent->right == block)
+                        if (parent->right == block_nr)
                         {
                                 parent->right = block->left;
-                                parent->right->parent = parent;
+                                codeblock[parent->right].parent = parent_nr;
                         }
                 }
                 return;
@@ -198,50 +225,54 @@ static inline void codeblock_tree_delete(codeblock_t *block)
         else
         {
                 /*Difficult case - node has two children. Walk right child to find lowest node*/
-                codeblock_t *lowest = block->right, *highest;
+                codeblock_t *lowest = &codeblock[block->right], *highest;
                 codeblock_t *old_parent;
+                uint16_t lowest_nr;
                         
                 while (lowest->left)
-                        lowest = lowest->left;
-
-                old_parent = lowest->parent;
+                        lowest = &codeblock[lowest->left];
+                lowest_nr = get_block_nr(lowest);
+                
+                old_parent = &codeblock[lowest->parent];
 
                 /*Replace deleted node with lowest node*/
-                if (!parent)
-                        pages[block->phys >> 12].head = lowest;
+                if (!parent_nr)
+                        pages[block->phys >> 12].head = lowest_nr;
                 else
                 {
-                        if (parent->left == block)
-                                parent->left = lowest;
-                        if (parent->right == block)
-                                parent->right = lowest;
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
+                                parent->left = lowest_nr;
+                        if (parent->right == block_nr)
+                                parent->right = lowest_nr;
                 }
 
-                lowest->parent = parent;
+                lowest->parent = parent_nr;
                 lowest->left = block->left;
                 if (lowest->left)
-                        lowest->left->parent = lowest;
+                        codeblock[lowest->left].parent = lowest_nr;
 
-                old_parent->left = NULL;
+                old_parent->left = BLOCK_INVALID;
                                 
-                highest = lowest->right;
-                if (!highest)
+                highest = &codeblock[lowest->right];
+                if (!lowest->right)
                 {
-                        if (lowest != block->right)
+                        if (lowest_nr != block->right)
                         {
                                 lowest->right = block->right;
-                                block->right->parent = lowest;
+                                codeblock[block->right].parent = lowest_nr;
                         }
                         return;
                 }
 
                 while (highest->right)
-                        highest = highest->right;
+                        highest = &codeblock[highest->right];
 
-                if (block->right && block->right != lowest)
+                if (block->right && block->right != lowest_nr)
                 {
                         highest->right = block->right;
-                        block->right->parent = highest;
+                        codeblock[block->right].parent = get_block_nr(highest);
                 }
         }
 }
@@ -250,10 +281,6 @@ static inline void codeblock_tree_delete(codeblock_t *block)
 #define PAGE_MASK_INDEX_SHIFT 10
 #define PAGE_MASK_MASK 63
 #define PAGE_MASK_SHIFT 4
-
-extern codeblock_t *codeblock;
-
-extern codeblock_t **codeblock_hash;
 
 void codegen_init();
 void codegen_close();

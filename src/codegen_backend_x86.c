@@ -270,31 +270,30 @@ pclog("  offsetof(codeblock_t, status)=%i\n", offsetof(codeblock_t, status));
 pclog("  offsetof(codeblock_t, flags)=%i\n", offsetof(codeblock_t, flags));
 pclog("  offsetof(codeblock_t, ins)=%i\n", offsetof(codeblock_t, ins));
 pclog("  offsetof(codeblock_t, TOP)=%i\n", offsetof(codeblock_t, TOP));
-pclog("  offsetof(codeblock_t, endpc)=%i\n", offsetof(codeblock_t, endpc));
+pclog("  offsetof(codeblock_t, parent)=%i\n", offsetof(codeblock_t, parent));
+pclog("  offsetof(codeblock_t, left)=%i\n", offsetof(codeblock_t, left));
+pclog("  offsetof(codeblock_t, right)=%i\n", offsetof(codeblock_t, right));
 pclog("  offsetof(codeblock_t, data)=%i\n", offsetof(codeblock_t, data));
-pclog("  offsetof(codeblock_t, page_mask=%i\n", offsetof(codeblock_t, page_mask));
-pclog("  offsetof(codeblock_t, page_mask2=%i\n", offsetof(codeblock_t, page_mask2));
-pclog("  offsetof(codeblock_t, dirty_mask=%i\n", offsetof(codeblock_t, dirty_mask));
-pclog("  offsetof(codeblock_t, dirty_mask2=%i\n", offsetof(codeblock_t, dirty_mask2));
-pclog("  offsetof(codeblock_t, prev=%i\n", offsetof(codeblock_t, prev));
-pclog("  offsetof(codeblock_t, next=%i\n", offsetof(codeblock_t, next));
-pclog("  offsetof(codeblock_t, prev_2=%i\n", offsetof(codeblock_t, prev_2));
-pclog("  offsetof(codeblock_t, next_2=%i\n", offsetof(codeblock_t, next_2));
-pclog("  offsetof(codeblock_t, parent=%i\n", offsetof(codeblock_t, parent));
-pclog("  offsetof(codeblock_t, left=%i\n", offsetof(codeblock_t, left));
-pclog("  offsetof(codeblock_t, right=%i\n", offsetof(codeblock_t, right));
-        codeblock = malloc((BLOCK_SIZE+1) * sizeof(codeblock_t));
+pclog("  offsetof(codeblock_t, page_mask)=%i\n", offsetof(codeblock_t, page_mask));
+pclog("  offsetof(codeblock_t, page_mask2)=%i\n", offsetof(codeblock_t, page_mask2));
+pclog("  offsetof(codeblock_t, dirty_mask)=%i\n", offsetof(codeblock_t, dirty_mask));
+pclog("  offsetof(codeblock_t, dirty_mask2)=%i\n", offsetof(codeblock_t, dirty_mask2));
+pclog("  offsetof(codeblock_t, prev)=%i\n", offsetof(codeblock_t, prev));
+pclog("  offsetof(codeblock_t, next)=%i\n", offsetof(codeblock_t, next));
+pclog("  offsetof(codeblock_t, prev_2)=%i\n", offsetof(codeblock_t, prev_2));
+pclog("  offsetof(codeblock_t, next_2)=%i\n", offsetof(codeblock_t, next_2));
+        codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
 #if defined WIN32 || defined _WIN32 || defined _WIN32
-        codeblock_data = VirtualAlloc(NULL, (BLOCK_SIZE+1) * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        codeblock_data = malloc((BLOCK_SIZE+1) * BLOCK_DATA_SIZE;
+        codeblock_data = malloc(BLOCK_SIZE * BLOCK_DATA_SIZE;
 #endif
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
-        memset(codeblock, 0, (BLOCK_SIZE+1) * sizeof(codeblock_t));
+        memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 
-        for (c = 0; c < BLOCK_SIZE + 1; c++)
+        for (c = 0; c < BLOCK_SIZE; c++)
         {
                 codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
                 codeblock[c].pc = BLOCK_PC_INVALID;
@@ -302,7 +301,7 @@ pclog("  offsetof(codeblock_t, right=%i\n", offsetof(codeblock_t, right));
 
 #if defined(__linux__) || defined(__APPLE__)
 	start = (void *)((long)codeblock_data & pagemask);
-	len = (((BLOCK_SIZE+1) * BLOCK_DATA_SIZE) + pagesize) & pagemask;
+	len = ((BLOCK_SIZE * BLOCK_DATA_SIZE) + pagesize) & pagemask;
 	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
 	{
 		perror("mprotect");
@@ -311,7 +310,7 @@ pclog("  offsetof(codeblock_t, right=%i\n", offsetof(codeblock_t, right));
 #endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
-        block_current = BLOCK_SIZE;
+        block_current = 0;
         block_pos = 0;
         mem_abrt_rout = &codeblock[block_current].data[block_pos];
         addbyte(0x83); /*ADDL $16+4,%esp*/

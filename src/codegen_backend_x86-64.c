@@ -276,17 +276,17 @@ void codegen_backend_init()
 #endif
 
 #if defined WIN32 || defined _WIN32 || defined _WIN32
-        codeblock_data = VirtualAlloc(NULL, (BLOCK_SIZE+1) * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        codeblock_data = malloc((BLOCK_SIZE+1) * BLOCK_DATA_SIZE);
+        codeblock_data = malloc(BLOCK_SIZE * BLOCK_DATA_SIZE);
 #endif
-        codeblock = malloc((BLOCK_SIZE+1) * sizeof(codeblock_t));
+        codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
-        memset(codeblock, 0, (BLOCK_SIZE+1) * sizeof(codeblock_t));
+        memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 
-        for (c = 0; c < BLOCK_SIZE+1; c++)
+        for (c = 0; c < BLOCK_SIZE; c++)
         {
                 codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
                 codeblock[c].pc = BLOCK_PC_INVALID;
@@ -294,7 +294,7 @@ void codegen_backend_init()
 
 #if defined(__linux__) || defined(__APPLE__)
 	start = (void *)((long)codeblock & pagemask);
-	len = (((BLOCK_SIZE+1) * sizeof(codeblock_t)) + pagesize) & pagemask;
+	len = ((BLOCK_SIZE * sizeof(codeblock_t)) + pagesize) & pagemask;
 	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
 	{
 		perror("mprotect");
@@ -303,7 +303,7 @@ void codegen_backend_init()
 #endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
-        block_current = BLOCK_SIZE;
+        block_current = 0;
         block_pos = 0;
         build_loadstore_routines(&codeblock[block_current]);
 //        fatal("Here\n");

@@ -651,7 +651,7 @@ void exec386_dynarec(int cycs)
                                   allow the first page to be interpreted and for
                                   the page fault to occur when the page boundary
                                   is actually crossed.*/
-                                uint32_t phys_addr_2 = get_phys_noabrt(block->endpc);
+                                uint32_t phys_addr_2 = get_phys_noabrt(block->pc + 0x400);
                                 page_t *page_2 = &pages[phys_addr_2 >> 12];
                                 if ((block->phys_2 ^ phys_addr_2) & ~0xfff)
                                         valid_block = 0;
