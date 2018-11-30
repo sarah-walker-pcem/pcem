@@ -639,6 +639,8 @@ int render()
 
         if (win_doresize)
         {
+		int flags = SDL_GetWindowFlags(window);
+
                 win_doresize = 0;
                 if (!vid_resize || (flags&SDL_WINDOW_FULLSCREEN)) {
                         SDL_GetWindowSize(window, &rect.w, &rect.h);
