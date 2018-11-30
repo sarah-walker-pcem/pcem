@@ -602,7 +602,7 @@ void exec386_dynarec(int cycs)
                 {
                 uint32_t phys_addr = get_phys(cs+cpu_state.pc);
                 int hash = HASH(phys_addr);
-                codeblock_t *block = codeblock_hash[hash];
+                codeblock_t *block = &codeblock[codeblock_hash[hash]];
                 int valid_block = 0;
                 trap = 0;
 
@@ -630,7 +630,10 @@ void exec386_dynarec(int cycs)
                                                                 (new_block->phys == phys_addr) && !((new_block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
                                                                 ((new_block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK));
                                                 if (valid_block)
+                                                {
                                                         block = new_block;
+                                                        codeblock_hash[hash] = get_block_nr(block);
+                                                }
                                         }
                                 }
                         }
@@ -675,7 +678,6 @@ void exec386_dynarec(int cycs)
                 {
                         void (*code)() = (void *)&block->data[BLOCK_START];
 
-                        codeblock_hash[hash] = block;
 //                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
 
 inrecomp=1;

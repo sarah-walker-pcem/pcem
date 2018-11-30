@@ -65,7 +65,7 @@ uint8_t *codeblock_data;
 
 extern codeblock_t *codeblock;
 
-extern codeblock_t **codeblock_hash;
+extern uint16_t *codeblock_hash;
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1

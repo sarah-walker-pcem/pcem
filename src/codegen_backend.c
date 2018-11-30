@@ -92,7 +92,7 @@ void codegen_reset()
         int c;
         
         memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
-        memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
+        memset(codeblock_hash, 0, HASH_SIZE * sizeof(uint16_t));
         mem_reset_page_blocks();
         
         for (c = 0; c < BLOCK_SIZE; c++)
@@ -211,8 +211,8 @@ static void delete_block(codeblock_t *block)
 {
         uint32_t old_pc = block->pc;
 
-        if (block == codeblock_hash[HASH(block->phys)])
-                codeblock_hash[HASH(block->phys)] = NULL;
+        if (block == &codeblock[codeblock_hash[HASH(block->phys)]])
+                codeblock_hash[HASH(block->phys)] = BLOCK_INVALID;
 
         if (block->pc == BLOCK_PC_INVALID)
                 fatal("Deleting deleted block\n");
@@ -279,7 +279,7 @@ void codegen_block_init(uint32_t phys_addr)
                 cpu_recomp_reuse++;
         }
         block_num = HASH(phys_addr);
-        codeblock_hash[block_num] = &codeblock[block_current];
+        codeblock_hash[block_num] = block_current;
 
         block->ins = 0;
         block->pc = cs + cpu_state.pc;

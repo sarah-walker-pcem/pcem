@@ -14,7 +14,7 @@
 int has_ea;
 
 codeblock_t *codeblock;
-codeblock_t **codeblock_hash;
+uint16_t *codeblock_hash;
 
 void (*codegen_timing_start)();
 void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
