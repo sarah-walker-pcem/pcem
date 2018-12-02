@@ -465,6 +465,7 @@ enum
 	ROM_XI8088,
 	ROM_IBMPS2_M70_TYPE3,
 	ROM_IBMPS2_M70_TYPE4,
+	ROM_FIC_VA503P,
                 	
         ROM_MAX
 };

@@ -900,6 +900,14 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+
+                case ROM_FIC_VA503P:
+                f = romfopen("fic_va503p/je4333.bin","rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

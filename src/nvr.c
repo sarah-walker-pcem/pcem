@@ -306,7 +306,8 @@ void loadnvr()
 		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "rb"); nvrmask = 127; break;
                 case ROM_IBMPS2_M70_TYPE3: f = nvrfopen("ibmps2_m70_type3.nvr","rb"); break;
                 case ROM_IBMPS2_M70_TYPE4: f = nvrfopen("ibmps2_m70_type4.nvr","rb"); break;
-                                                		
+                case ROM_FIC_VA503P:       f = nvrfopen("fic_va503p.nvr",      "rb"); nvrmask = 127; break;
+                
                 default: return;
         }
         if (!f)
@@ -396,7 +397,8 @@ void savenvr()
 		case ROM_XI8088:           f = nvrfopen("xi8088.nvr",          "wb"); break;
                 case ROM_IBMPS2_M70_TYPE3: f = nvrfopen("ibmps2_m70_type3.nvr","wb"); break;
                 case ROM_IBMPS2_M70_TYPE4: f = nvrfopen("ibmps2_m70_type4.nvr","wb"); break;
-                		
+                case ROM_FIC_VA503P:       f = nvrfopen("fic_va503p.nvr",      "wb"); break;
+                
                 default: return;
         }
         fwrite(nvrram,128,1,f);

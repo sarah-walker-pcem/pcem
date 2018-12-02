@@ -34,6 +34,7 @@
 #include "lpt.h"
 #include "mem.h"
 #include "mouse_ps2.h"
+#include "mvp3.h"
 #include "neat.h"
 #include "nmi.h"
 #include "nvr.h"
@@ -61,6 +62,8 @@
 #include "vid_pcjr.h"
 #include "vid_tandy.h"
 #include "vid_t1000.h"
+#include "vt82c586b.h"
+#include "w83877tf.h"
 #include "wd76c10.h"
 #include "xi8088.h"
 
@@ -106,6 +109,7 @@ void      at_pb520r_init();
 void       at_pb570_init();
 void     compaq_pip_init();
 void      xt_xi8088_init();
+void        at_mvp3_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -189,6 +193,8 @@ MODEL models[] =
 
         {"[Socket 7] Award 430VX PCI",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  256,   1,      at_i430vx_init, NULL},
 
+        {"[Super 7] FIC VA-503+",         ROM_FIC_VA503P,       "fic_va503p",     { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  512,   1,        at_mvp3_init, NULL},
+        
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };
 
@@ -657,6 +663,18 @@ void at_i430vx_init()
         piix_init(7, 18, 17, 20, 19);
         um8669f_init();
         device_add(&intel_flash_bxt_device);
+}
+
+void at_mvp3_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(8);
+        pci_slot(9);
+        pci_slot(10);
+        mvp3_init();
+        vt82c586b_init(7, 8, 9, 10, 0);
+        w83877tf_init();
 }
 
 void model_init()
