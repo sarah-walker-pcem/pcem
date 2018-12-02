@@ -16,12 +16,13 @@ extern void ide_pri_enable();
 extern void ide_sec_enable();
 extern void ide_pri_disable();
 extern void ide_sec_disable();
-extern void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size), int (*write_data)(int channel, uint8_t *data, int size), void (*set_irq)(int channel));
+extern void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size, void *p), int (*write_data)(int channel, uint8_t *data, int size, void *p), void (*set_irq)(int channel, void *p), void *p);
 void ide_irq_raise(struct IDE *ide);
 
-extern int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size);
-extern int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size);
-extern void (*ide_bus_master_set_irq)(int channel);
+extern int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size, void *p);
+extern int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size, void *p);
+extern void (*ide_bus_master_set_irq)(int channel, void *p);
+extern void *ide_bus_master_p;
 
 #include "ide_atapi.h"
 

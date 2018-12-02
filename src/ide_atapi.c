@@ -258,7 +258,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                                 {
                                                         if (ide_bus_master_write_data)
                                                         {
-                                                                if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos))
+                                                                if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos, ide_bus_master_p))
                                                                 {
                                                                         atapi_dev->state = ATAPI_STATE_RETRY_WRITE_DMA;
                                                                         timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
@@ -430,7 +430,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                         {
                                 if (ide_bus_master_read_data)
                                 {
-                                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos))
+                                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos, ide_bus_master_p))
                                         {
                                                 atapi_dev->state = ATAPI_STATE_RETRY_READ_DMA;
                                                 timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
@@ -535,7 +535,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                 
                 case ATAPI_STATE_RETRY_READ_DMA:
                 {
-                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos))
+                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos, ide_bus_master_p))
                         {
                                 timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                         }
@@ -549,7 +549,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
 
                 case ATAPI_STATE_RETRY_WRITE_DMA:
                 {
-                        if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos))
+                        if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos, ide_bus_master_p))
                         {
                                 timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                         }

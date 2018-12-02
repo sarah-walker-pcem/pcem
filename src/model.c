@@ -681,7 +681,7 @@ void model_init()
 {
         pclog("Initting as %s\n", model_getname());
         AMSTRAD = AT = PCI = TANDY = 0;
-        ide_set_bus_master(NULL, NULL, NULL);
+        ide_set_bus_master(NULL, NULL, NULL, NULL);
         
         models[model].init();
         if (models[model].device)

@@ -1,6 +1,8 @@
 #include <string.h>
 
 #include "ibm.h"
+#include "ide.h"
+#include "ide_sff8038i.h"
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
@@ -16,6 +18,8 @@ static struct
         uint8_t power_regs[256];
         
         uint8_t sysctrl;
+        
+        sff_busmaster_t busmaster[2];
 } vt82c586b;
 
 static uint8_t vt82c586b_read(int func, int addr, void *priv)
@@ -101,7 +105,7 @@ static void vt82c586b_pci_isa_bridge_write(int addr, uint8_t val)
 static void vt82c586b_ide_write(int addr, uint8_t val)
 {
         /*Read-only addresses*/
-        if ((addr < 6) || (addr == 8)
+        if ((addr < 4) || (addr == 5) || (addr == 8)
                         || (addr >= 0xa && addr < 0x0d)
                         || (addr >= 0x0e && addr < 0x20)
                         || (addr >= 0x22 && addr < 0x3c)
@@ -114,7 +118,7 @@ static void vt82c586b_ide_write(int addr, uint8_t val)
         switch (addr)
         {
                 case 4:
-                vt82c586b.ide_regs[4] = (val & 8) | 7;
+                vt82c586b.ide_regs[4] = val & 0x85;
                 break;
                 case 6:
                 vt82c586b.ide_regs[6] &= ~(val & 0xb0);
@@ -132,11 +136,32 @@ static void vt82c586b_ide_write(int addr, uint8_t val)
                 vt82c586b.ide_regs[addr] = val;
                 break;
         }
+
+        if (addr == 4 || (addr & ~3) == 0x20) /*Bus master base address*/
+        {
+                uint16_t base = (vt82c586b.ide_regs[0x20] & 0xf0) | (vt82c586b.ide_regs[0x21] << 8);
+                io_removehandler(0, 0x10000, sff_bus_master_read, NULL, NULL, sff_bus_master_write, NULL, NULL,  vt82c586b.busmaster);
+                if (vt82c586b.ide_regs[0x04] & 1)
+                        io_sethandler(base, 0x10, sff_bus_master_read, NULL, NULL, sff_bus_master_write, NULL, NULL,  vt82c586b.busmaster);
+        }
+        if (addr == 4 || addr == 0x40)
+        {
+                ide_pri_disable();
+                ide_sec_disable();
+                if (vt82c586b.ide_regs[0x04] & 1)
+                {
+                        if (vt82c586b.ide_regs[0x40] & 0x02)
+                                ide_pri_enable();
+                        if (vt82c586b.ide_regs[0x40] & 0x01)
+                                ide_sec_enable();
+                }
+        }
 }
 static void vt82c586b_usb_write(int addr, uint8_t val)
 {
         /*Read-only addresses*/
-        if ((addr < 7) || (addr >= 8 && addr < 0xd)
+        if ((addr < 4) || (addr == 5) || (addr == 6)
+                        || (addr >= 8 && addr < 0xd)
                         || (addr >= 0xe && addr < 0x20)
                         || (addr >= 0x22 && addr < 0x3c)
                         || (addr >= 0x3e && addr < 0x40)
@@ -147,6 +172,9 @@ static void vt82c586b_usb_write(int addr, uint8_t val)
 
         switch (addr)
         {
+                case 4:
+                vt82c586b.usb_regs[4] = val & 0x97;
+                break;
                 case 7:
                 vt82c586b.usb_regs[7] = val & 0x7f;
                 break;
@@ -307,4 +335,9 @@ void vt82c586b_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
                 pci_set_card_routing(pci_c, PCI_INTC);
         if (pci_d)
                 pci_set_card_routing(pci_d, PCI_INTD);
+
+        sff_bus_master_init(vt82c586b.busmaster);
+        
+        ide_pri_disable();
+        ide_sec_disable();
 }

@@ -94,9 +94,10 @@ IDE *ext_ide;
 
 char ide_fn[7][512];
 
-int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size);
-int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size);
-void (*ide_bus_master_set_irq)(int channel);
+int (*ide_bus_master_read_data)(int channel, uint8_t *data, int size, void *p);
+int (*ide_bus_master_write_data)(int channel, uint8_t *data, int size, void *p);
+void (*ide_bus_master_set_irq)(int channel, void *p);
+void *ide_bus_master_p;
 
 pc_timer_t ide_timer[2];
 
@@ -111,7 +112,7 @@ void ide_irq_raise(IDE *ide)
 //                if (ide->board && !ide->irqstat) pclog("IDE_IRQ_RAISE\n");
                 picint((ide->board)?(1<<15):(1<<14));
                 if (ide_bus_master_set_irq)
-                        ide_bus_master_set_irq(ide->board);
+                        ide_bus_master_set_irq(ide->board, ide_bus_master_p);
 	}
 	ide->irqstat=1;
         ide->service=1;
@@ -905,7 +906,7 @@ void callbackide(int ide_board)
                 
                 if (ide_bus_master_read_data)
                 {
-                        if (ide_bus_master_read_data(ide_board, &ide->sector_buffer[ide->sector_pos*512], 512))
+                        if (ide_bus_master_read_data(ide_board, &ide->sector_buffer[ide->sector_pos*512], 512, ide_bus_master_p))
                                 timer_set_delay_u64(&ide_timer[ide_board], 6*IDE_TIME);           /*DMA not performed, try again later*/
                         else
                         {
@@ -983,7 +984,7 @@ void callbackide(int ide_board)
 
                 if (ide_bus_master_write_data)
                 {
-                        if (ide_bus_master_write_data(ide_board, (uint8_t *)ide->buffer, 512))
+                        if (ide_bus_master_write_data(ide_board, (uint8_t *)ide->buffer, 512, ide_bus_master_p))
                         	timer_set_delay_u64(&ide_timer[ide_board], 6*IDE_TIME);           /*DMA not performed, try again later*/
                         else
                         {
@@ -1270,11 +1271,12 @@ static void ide_close(void *p)
 {
 }
 
-void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size), int (*write_data)(int channel, uint8_t *data, int size), void (*set_irq)(int channel))
+void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size, void *p), int (*write_data)(int channel, uint8_t *data, int size, void *p), void (*set_irq)(int channel, void *p), void *p)
 {
         ide_bus_master_read_data = read_data;
         ide_bus_master_write_data = write_data;
         ide_bus_master_set_irq = set_irq;
+        ide_bus_master_p = p;
 }
 
 device_t ide_device =
