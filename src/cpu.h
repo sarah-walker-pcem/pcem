@@ -28,12 +28,13 @@ extern int cpu, cpu_manufacturer;
 
 /*586 class CPUs*/
 #define CPU_WINCHIP 15
-#define CPU_PENTIUM 16
-#define CPU_PENTIUMMMX 17
-#define CPU_Cx6x86 	18
-#define CPU_Cx6x86MX 	19
-#define CPU_Cx6x86L 	20
-#define CPU_CxGX1 	21
+#define CPU_WINCHIP2 16
+#define CPU_PENTIUM 17
+#define CPU_PENTIUMMMX 18
+#define CPU_Cx6x86 	19
+#define CPU_Cx6x86MX    20
+#define CPU_Cx6x86L 	21
+#define CPU_CxGX1 	22
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -84,6 +85,7 @@ extern CPU cpus_i486[];
 extern CPU cpus_Am486[];
 extern CPU cpus_Cx486[];
 extern CPU cpus_WinChip[];
+extern CPU cpus_WinChip_SS7[];
 extern CPU cpus_Pentium5V[];
 extern CPU cpus_PentiumS5[];
 extern CPU cpus_Pentium[];
@@ -111,6 +113,7 @@ extern int cpu_hasMMX;
 extern int cpu_hasCR4;
 extern int cpu_hasVME;
 extern int cpu_hasCX8;
+extern int cpu_has3DNOW;
 
 #define CR4_TSD  (1 << 2)
 #define CR4_DE   (1 << 3)

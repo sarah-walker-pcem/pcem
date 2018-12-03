@@ -34,6 +34,7 @@ OpFn *x86_dynarec_opcodes_df_a16;
 OpFn *x86_dynarec_opcodes_df_a32;
 OpFn *x86_dynarec_opcodes_REPE;
 OpFn *x86_dynarec_opcodes_REPNE;
+OpFn *x86_dynarec_opcodes_3DNOW;
 
 OpFn *x86_opcodes;
 OpFn *x86_opcodes_0f;
@@ -55,6 +56,7 @@ OpFn *x86_opcodes_df_a16;
 OpFn *x86_opcodes_df_a32;
 OpFn *x86_opcodes_REPE;
 OpFn *x86_opcodes_REPNE;
+OpFn *x86_opcodes_3DNOW;
 
 enum
 {
@@ -68,6 +70,12 @@ enum
         CPUID_MMX = (1 << 23)
 };
 
+/*Addition flags returned by CPUID function 0x80000001*/
+enum
+{
+        CPUID_3DNOW = (1 << 31)
+};
+
 int cpu = 3, cpu_manufacturer = 0;
 CPU *cpu_s;
 int cpu_multi;
@@ -79,6 +87,7 @@ int cpu_hasMMX, cpu_hasMSR;
 int cpu_hasCR4;
 int cpu_hasCX8;
 int cpu_hasVME;
+int cpu_has3DNOW;
 int cpu_use_dynarec;
 int cpu_cyrix_alignment;
 
@@ -402,8 +411,22 @@ CPU cpus_WinChip[] =
         {"WinChip 166",  CPU_WINCHIP, 15, 166666666, 3, 33333333, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 15,15,7,7, (5*8)/2},
         {"WinChip 180",  CPU_WINCHIP, 16, 180000000, 3, 30000000, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*7},
         {"WinChip 200",  CPU_WINCHIP, 17, 200000000, 3, 33333333, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*8},
-        {"WinChip 225",  CPU_WINCHIP, 17, 225000000, 3, 37500000, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*9},
         {"WinChip 240",  CPU_WINCHIP, 17, 240000000, 6, 30000000, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 24,24,12,12, 4*7},
+        {"WinChip 2/200",  CPU_WINCHIP2, 17, 200000000, 3, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*8},
+        {"WinChip 2/240",  CPU_WINCHIP2, 17, 240000000, 6, 30000000, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 24,24,12,12, 4*7},
+        {"",             -1,        0, 0, 0}
+};
+
+CPU cpus_WinChip_SS7[] =
+{
+        /*IDT WinChip (Super Socket 7)*/
+        {"WinChip 200",    CPU_WINCHIP, 17, 200000000, 3, 33333333, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*8},
+        {"WinChip 225",    CPU_WINCHIP, 17, 225000000, 3, 37500000, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*9},
+        {"WinChip 240",    CPU_WINCHIP, 17, 240000000, 6, 30000000, 0x540, 0x540, 0, CPU_SUPPORTS_DYNAREC, 24,24,12,12, 4*7},
+        {"WinChip 2/200",  CPU_WINCHIP2, 17, 200000000, 3, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*8},
+        {"WinChip 2/225",  CPU_WINCHIP2, 17, 225000000, 3, 37500000, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 18,18,9,9, 3*9},
+        {"WinChip 2/240",  CPU_WINCHIP2, 17, 240000000, 6, 30000000, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 24,24,12,12, 4*7},
+        {"WinChip 2/250",  CPU_WINCHIP2, 17, 250000000, 6, 41666667, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC, 24,24,12,12, 4*7},
         {"",             -1,        0, 0, 0}
 };
 
@@ -505,6 +528,7 @@ void cpu_set()
         cpu_hasMSR = 0;
         cpu_hasCR4 = 0;
         cpu_hasCX8 = 0;
+        cpu_has3DNOW = 0;
         ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = 0;
         has_vlb = (cpu_s->cpu_type >= CPU_i486SX) && (cpu_s->cpu_type <= CPU_Cx5x86);
 
@@ -548,8 +572,10 @@ void cpu_set()
         x86_setopcodes(ops_386, ops_386_0f, dynarec_ops_386, dynarec_ops_386_0f);
         x86_opcodes_REPE = ops_REPE;
         x86_opcodes_REPNE = ops_REPNE;
+        x86_opcodes_3DNOW = ops_3DNOW;
         x86_dynarec_opcodes_REPE = dynarec_ops_REPE;
         x86_dynarec_opcodes_REPNE = dynarec_ops_REPNE;
+        x86_dynarec_opcodes_3DNOW = dynarec_ops_3DNOW;
 
         if (hasfpu)
         {
@@ -950,8 +976,48 @@ void cpu_set()
                 timing_bt  = 3-1; /*branch taken*/
                 timing_bnt = 1; /*branch not taken*/
                 cpu_hasrdtsc = 1;
-                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                msr.fcr = (1 << 8) | (1 << 16);
                 cpu_hasMMX = cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                /*unknown*/
+                timing_int_rm       = 26;
+                timing_int_v86      = 82;
+                timing_int_pm       = 44;
+                timing_int_pm_outer = 71;
+                timing_iret_rm       = 7;
+                timing_iret_v86      = 26;
+                timing_iret_pm       = 10;
+                timing_iret_pm_outer = 26;
+                timing_call_rm = 4;
+                timing_call_pm = 15;
+                timing_call_pm_gate = 26;
+                timing_call_pm_gate_inner = 35;
+                timing_retf_rm       = 4;
+                timing_retf_pm       = 7;
+                timing_retf_pm_outer = 23;
+                timing_jmp_rm      = 5;
+                timing_jmp_pm      = 7;
+                timing_jmp_pm_gate = 17;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
+                codegen_timing_set(&codegen_timing_winchip);
+                break;
+
+                case CPU_WINCHIP2:
+                x86_setopcodes(ops_386, ops_winchip2_0f, dynarec_ops_386, dynarec_ops_winchip2_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 2; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 2; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 3-1; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 21);
+                cpu_hasMMX = cpu_hasMSR = cpu_has3DNOW = 1;
                 cpu_hasCR4 = 1;
                 cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
                 /*unknown*/
@@ -1308,7 +1374,7 @@ void cpu_CPUID()
                         else
                         {
                                 EBX = 0x746e6543; /*CentaurHauls*/
-                                ECX = 0x736c7561;                        
+                                ECX = 0x736c7561;
                                 EDX = 0x48727561;
                         }
                 }
@@ -1317,13 +1383,73 @@ void cpu_CPUID()
                         EAX = 0x540;
                         EBX = ECX = 0;
                         EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
-			if (cpu_hasCX8) 
-				EDX |= CPUID_CMPXCHG8B;							
+			if (cpu_hasCX8)
+				EDX |= CPUID_CMPXCHG8B;
                         if (msr.fcr & (1 << 9))
                                 EDX |= CPUID_MMX;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
+                break;
+                
+                case CPU_WINCHIP2:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        if (msr.fcr2 & (1 << 14))
+                        {
+                                EBX = msr.fcr3 >> 32;
+                                ECX = msr.fcr3 & 0xffffffff;
+                                EDX = msr.fcr2 >> 32;
+                        }
+                        else
+                        {
+                                EBX = 0x746e6543; /*CentaurHauls*/
+                                ECX = 0x736c7561;                        
+                                EDX = 0x48727561;
+                        }
+                        break;
+                        case 1:
+                        EAX = 0x580;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
+			if (cpu_hasCX8) 
+				EDX |= CPUID_CMPXCHG8B;							
+                        if (msr.fcr & (1 << 9))
+                                EDX |= CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000005;
+                        break;
+                        case 0x80000001:
+                        EAX = 0x580;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
+			if (cpu_hasCX8)
+				EDX |= CPUID_CMPXCHG8B;
+                        if (msr.fcr & (1 << 9))
+                                EDX |= CPUID_MMX;
+			if (cpu_has3DNOW)
+                                EDX |= CPUID_3DNOW;
+                        break;
+                                
+                        case 0x80000002: /*Processor name string*/
+                        EAX = 0x20544449; /*IDT WinChip 2-3D*/
+                        EBX = 0x436e6957;
+                        ECX = 0x20706968;
+                        EDX = 0x44332d32;
+                        break;
+                        
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x08800880; /*TLBs*/
+                        ECX = 0x20040120; /*L1 data cache*/
+                        EDX = 0x20020120; /*L1 instruction cache*/
+                        break;
+                        
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
                 break;
 
                 case CPU_PENTIUM:
@@ -1447,6 +1573,7 @@ void cpu_RDMSR()
         switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_WINCHIP:
+                case CPU_WINCHIP2:
                 EAX = EDX = 0;
                 switch (ECX)
                 {
@@ -1507,6 +1634,7 @@ void cpu_WRMSR()
         switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_WINCHIP:
+                case CPU_WINCHIP2:
                 switch (ECX)
                 {
                         case 0x02:
@@ -1525,9 +1653,13 @@ void cpu_WRMSR()
                         msr.fcr = EAX;
                         cpu_hasMMX = EAX & (1 << 9);
 			if (EAX & (1 << 1))
-				cpu_hasCX8 = 1;							
+				cpu_hasCX8 = 1;
 			else
-				cpu_hasCX8 = 0;										
+				cpu_hasCX8 = 0;
+			if ((EAX & (1 << 20)) && models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type >= CPU_WINCHIP2)
+				cpu_has3DNOW = 1;
+			else
+				cpu_has3DNOW = 0;
                         if (EAX & (1 << 29))
                                 CPUID = 0;
                         else

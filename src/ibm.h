@@ -132,6 +132,7 @@ typedef union MMX_REG
         int16_t  sw[4];
         uint8_t  b[8];
         int8_t   sb[8];
+        float    f[2];
 } MMX_REG;
 
 struct
