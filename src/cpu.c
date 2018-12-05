@@ -1047,7 +1047,7 @@ void cpu_set()
                 timing_jmp_pm_gate = 17;
                 timing_misaligned = 2;
                 cpu_cyrix_alignment = 1;
-                codegen_timing_set(&codegen_timing_winchip);
+                codegen_timing_set(&codegen_timing_winchip2);
                 break;
 
                 case CPU_PENTIUM:

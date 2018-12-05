@@ -274,7 +274,7 @@ uint64_t opcode_deps_0f[256] =
 /*00*/  MODRM,  MODRM,   MODRM,   MODRM,
         0,      0,       0,       0,
         0,      0,       0,       0,
-        0,      0,       0,       0,
+        0,      MODRM,   0,       MODRM,
 
 /*10*/  0,      0,       0,       0,
         0,      0,       0,       0,
@@ -356,7 +356,7 @@ uint64_t opcode_deps_0f_mod3[256] =
 /*00*/  MODRM,  MODRM,   MODRM,   MODRM,
         0,      0,       0,       0,
         0,      0,       0,       0,
-        0,      0,       0,       0,
+        0,      MODRM,   0,       MODRM,
 
 /*10*/  0,      0,       0,       0,
         0,      0,       0,       0,
