@@ -191,9 +191,9 @@ MODEL models[] =
         {"[Socket 5] Intel Advanced/ZP",  ROM_ZAPPA,            "zappa",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,       at_zappa_init, NULL},
         {"[Socket 5] Packard Bell PB570", ROM_PB570,            "pb570",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1,  128,   1,       at_pb570_init, NULL},
 
-        {"[Socket 7] Award 430VX PCI",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  256,   1,      at_i430vx_init, NULL},
+        {"[Socket 7] Award 430VX PCI",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"AMD", cpus_K6_S7},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,      at_i430vx_init, NULL},
 
-        {"[Super 7] FIC VA-503+",         ROM_FIC_VA503P,       "fic_va503p",     { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip_SS7}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,     1,  512,   1,        at_mvp3_init, NULL},
+        {"[Super 7] FIC VA-503+",         ROM_FIC_VA503P,       "fic_va503p",     { {"Intel", cpus_Pentium},     {"AMD", cpus_K6_SS7},  {"IDT", cpus_WinChip_SS7}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,     1,  512,   1,        at_mvp3_init, NULL},
         
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };

@@ -35,6 +35,11 @@ extern int cpu, cpu_manufacturer;
 #define CPU_Cx6x86MX    20
 #define CPU_Cx6x86L 	21
 #define CPU_CxGX1 	22
+#define CPU_K6          23
+#define CPU_K6_2        24
+#define CPU_K6_3        25
+#define CPU_K6_2P       26
+#define CPU_K6_3P       27
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -90,6 +95,8 @@ extern CPU cpus_Pentium5V[];
 extern CPU cpus_PentiumS5[];
 extern CPU cpus_Pentium[];
 extern CPU cpus_6x86[];
+extern CPU cpus_K6_S7[];
+extern CPU cpus_K6_SS7[];
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_europc[];

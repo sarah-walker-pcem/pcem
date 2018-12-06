@@ -500,6 +500,55 @@ CPU cpus_Pentium[] =
         {"",             -1,        0, 0, 0}
 };
 
+CPU cpus_K6_S7[] =
+{
+        /*AMD K6*/
+        {"K6/166",          CPU_K6,    19, 166666666, 3, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 15,15,7,7, 20},
+        {"K6/200",          CPU_K6,    21, 200000000, 3, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 24},
+        {"K6/233",          CPU_K6,    24, 233333333, 4, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 21,21,10,10, 28},
+        {"K6/266",          CPU_K6,    26, 266666666, 4, 33333333, 0x570, 0x570, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 24,24,12,12, 32},
+        {"K6/300",          CPU_K6,    28, 300000000, 5, 33333333, 0x570, 0x570, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 36},
+        {"K6-2/233",        CPU_K6_2,  24, 233333333, 4, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 21,21,10,10, 28},
+        {"K6-2/266",        CPU_K6_2,  26, 266666666, 4, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 24,24,12,12, 32},
+        {"K6-2/300 AFR-66", CPU_K6_2,  28, 300000000, 5, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 36},
+        {"",                -1,        0, 0, 0}
+};
+
+CPU cpus_K6_SS7[] =
+{
+        /*AMD K6*/
+        {"K6/166",      CPU_K6,    19, 166666666, 3, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 15,15,7,7, 20},
+        {"K6/200",      CPU_K6,    21, 200000000, 3, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 24},
+        {"K6/233",      CPU_K6,    24, 233333333, 4, 33333333, 0x561, 0x561, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 21,21,10,10, 28},
+        {"K6/266",      CPU_K6,    26, 266666666, 4, 33333333, 0x570, 0x570, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 24,24,12,12, 32},
+        {"K6/300",      CPU_K6,    28, 300000000, 5, 33333333, 0x570, 0x570, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 36},
+        {"K6-2/233",    CPU_K6_2,  24, 233333333, 4, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 21,21,10,10, 28},
+        {"K6-2/266",    CPU_K6_2,  26, 266666666, 4, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 24,24,12,12, 32},
+        {"K6-2/300",    CPU_K6_2,  28, 300000000, 5, 33333333, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 36},
+        {"K6-2/333",    CPU_K6_2,  28, 333333333, 5, 31666667, 0x580, 0x580, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 40},
+        {"K6-2/350",    CPU_K6_2,  28, 350000000, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 42},
+        {"K6-2/366",    CPU_K6_2,  28, 366666666, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 44},
+        {"K6-2/380",    CPU_K6_2,  28, 380000000, 5, 31666667, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 46},
+        {"K6-2/400",    CPU_K6_2,  28, 400000000, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 48},
+        {"K6-2/450",    CPU_K6_2,  28, 450000000, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 54},
+        {"K6-2/475",    CPU_K6_2,  28, 475000000, 5, 31666667, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 57},
+        {"K6-2/500",    CPU_K6_2,  28, 500000000, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 60},
+        {"K6-2/533",    CPU_K6_2,  28, 533333333, 5, 31666667, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 64},
+        {"K6-2/550",    CPU_K6_2,  28, 550000000, 5, 33333333, 0x58c, 0x58c, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 66},
+        {"K6-2+/450",   CPU_K6_2P, 28, 450000000, 5, 33333333, 0x5d4, 0x5d4, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 54},
+        {"K6-2+/475",   CPU_K6_2P, 28, 475000000, 5, 31666667, 0x5d4, 0x5d4, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 57},
+        {"K6-2+/500",   CPU_K6_2P, 28, 500000000, 5, 33333333, 0x5d4, 0x5d4, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 60},
+        {"K6-2+/533",   CPU_K6_2P, 28, 533333333, 5, 31666667, 0x5d4, 0x5d4, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 64},
+        {"K6-2+/550",   CPU_K6_2P, 28, 550000000, 5, 33333333, 0x5d4, 0x5d4, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 66},
+        {"K6-III/400",  CPU_K6_3,  28, 400000000, 5, 33333333, 0x591, 0x591, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 48},
+        {"K6-III/450",  CPU_K6_3,  28, 450000000, 5, 33333333, 0x591, 0x591, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 54},
+        {"K6-III+/400", CPU_K6_3P, 28, 400000000, 5, 33333333, 0x5d0, 0x5d0, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 48},
+        {"K6-III+/450", CPU_K6_3P, 28, 450000000, 5, 33333333, 0x5d0, 0x5d0, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 54},
+        {"K6-III+/475", CPU_K6_3P, 28, 475000000, 5, 31666667, 0x5d0, 0x5d0, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 57},
+        {"K6-III+/500", CPU_K6_3P, 28, 500000000, 5, 33333333, 0x5d0, 0x5d0, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 27,27,13,13, 60},
+        {"",             -1,        0, 0, 0}
+};
+
 void cpu_set_edx()
 {
         EDX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
@@ -1287,6 +1336,91 @@ void cpu_set()
          	ccr4 = 0x80;
                 break;
 
+                case CPU_K6:
+                x86_setopcodes(ops_386, ops_pentiummmx_0f, dynarec_ops_386, dynarec_ops_pentiummmx_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 0; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                timing_int = 6;
+                timing_int_rm       = 11;
+                timing_int_v86      = 54;
+                timing_int_pm       = 25;
+                timing_int_pm_outer = 42;
+                timing_iret_rm       = 7;
+                timing_iret_v86      = 27; /*unknown*/
+                timing_iret_pm       = 10;
+                timing_iret_pm_outer = 27;
+                timing_call_rm = 4;
+                timing_call_pm = 4;
+                timing_call_pm_gate = 22;
+                timing_call_pm_gate_inner = 44;
+                timing_retf_rm       = 4;
+                timing_retf_pm       = 4;
+                timing_retf_pm_outer = 23;
+                timing_jmp_rm      = 3;
+                timing_jmp_pm      = 3;
+                timing_jmp_pm_gate = 18;
+                timing_misaligned = 3;
+                cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                cpu_hasMMX = 1;
+                cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_hasVME = 1;
+                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE;
+                codegen_timing_set(&codegen_timing_pentium);
+                break;
+
+                case CPU_K6_2:
+                case CPU_K6_3:
+                case CPU_K6_2P:
+                case CPU_K6_3P:
+                x86_setopcodes(ops_386, ops_winchip2_0f, dynarec_ops_386, dynarec_ops_winchip2_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 2; /*register dest - memory src*/
+                timing_mr  = 3; /*memory dest   - register src*/
+                timing_mm  = 3;
+                timing_rml = 2; /*register dest - memory src long*/
+                timing_mrl = 3; /*memory dest   - register src long*/
+                timing_mml = 3;
+                timing_bt  = 0; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                timing_int = 6;
+                timing_int_rm       = 11;
+                timing_int_v86      = 54;
+                timing_int_pm       = 25;
+                timing_int_pm_outer = 42;
+                timing_iret_rm       = 7;
+                timing_iret_v86      = 27; /*unknown*/
+                timing_iret_pm       = 10;
+                timing_iret_pm_outer = 27;
+                timing_call_rm = 4;
+                timing_call_pm = 4;
+                timing_call_pm_gate = 22;
+                timing_call_pm_gate_inner = 44;
+                timing_retf_rm       = 4;
+                timing_retf_pm       = 4;
+                timing_retf_pm_outer = 23;
+                timing_jmp_rm      = 3;
+                timing_jmp_pm      = 3;
+                timing_jmp_pm_gate = 18;
+                timing_misaligned = 3;
+                cpu_hasrdtsc = 1;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
+                cpu_hasMMX = 1;
+                cpu_hasMSR = 1;
+                cpu_hasCR4 = 1;
+                cpu_hasVME = 1;
+                cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE;
+                codegen_timing_set(&codegen_timing_pentium);
+                break;
+
                 default:
                 fatal("cpu_set : unknown CPU type %i\n", cpu_s->cpu_type);
         }
@@ -1571,6 +1705,220 @@ void cpu_CPUID()
                         EAX = EBX = ECX = EDX = 0;
                 break;
 
+                case CPU_K6:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        EBX = 0x68747541; /*AuthenticAMD*/
+                        ECX = 0x444d4163;
+                        EDX = 0x69746e65;
+                        break;
+                        case 1:
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000005;
+                        break;
+                        case 0x80000001:
+                        EAX = CPUID+0x100;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        break;
+
+                        case 0x80000002: /*Processor name string*/
+                        EAX = 0x2d444d41; /*AMD-K6tm w/ mult*/
+                        EBX = 0x6d74364b;
+                        ECX = 0x202f7720;
+                        EDX = 0x746c756d;
+                        break;
+
+                        case 0x80000003: /*Processor name string*/
+                        EAX = 0x64656d69; /*imedia extension*/
+                        EBX = 0x65206169;
+                        ECX = 0x6e657478;
+                        EDX = 0x6e6f6973;
+                        break;
+
+                        case 0x80000004: /*Processor name string*/
+                        EAX = 0x00000073; /*s*/
+                        EBX = 0x00000000;
+                        ECX = 0x00000000;
+                        EDX = 0x00000000;
+                        break;
+
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x02800140; /*TLBs*/
+                        ECX = 0x20020220; /*L1 data cache*/
+                        EDX = 0x20020220; /*L1 instruction cache*/
+                        break;
+
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
+                break;
+
+                case CPU_K6_2:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        EBX = 0x68747541; /*AuthenticAMD*/
+                        ECX = 0x444d4163;
+                        EDX = 0x69746e65;
+                        break;
+                        case 1:
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000005;
+                        break;
+                        case 0x80000001:
+                        EAX = CPUID+0x100;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX | CPUID_3DNOW;
+                        break;
+
+                        case 0x80000002: /*Processor name string*/
+                        EAX = 0x2d444d41; /*AMD-K6(tm) 3D pr*/
+                        EBX = 0x7428364b;
+                        ECX = 0x3320296d;
+                        EDX = 0x72702044;
+                        break;
+
+                        case 0x80000003: /*Processor name string*/
+                        EAX = 0x7365636f; /*ocessor*/
+                        EBX = 0x00726f73;
+                        ECX = 0x00000000;
+                        EDX = 0x00000000;
+                        break;
+
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x02800140; /*TLBs*/
+                        ECX = 0x20020220; /*L1 data cache*/
+                        EDX = 0x20020220; /*L1 instruction cache*/
+                        break;
+
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
+                break;
+
+                case CPU_K6_3:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        EBX = 0x68747541; /*AuthenticAMD*/
+                        ECX = 0x444d4163;
+                        EDX = 0x69746e65;
+                        break;
+                        case 1:
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000006;
+                        break;
+                        case 0x80000001:
+                        EAX = CPUID+0x100;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX | CPUID_3DNOW;
+                        break;
+
+                        case 0x80000002: /*Processor name string*/
+                        EAX = 0x2d444d41; /*AMD-K6(tm) 3D+ P*/
+                        EBX = 0x7428364b;
+                        ECX = 0x3320296d;
+                        EDX = 0x50202b44;
+                        break;
+
+                        case 0x80000003: /*Processor name string*/
+                        EAX = 0x65636f72; /*rocessor*/
+                        EBX = 0x726f7373;
+                        ECX = 0x00000000;
+                        EDX = 0x00000000;
+                        break;
+
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x02800140; /*TLBs*/
+                        ECX = 0x20020220; /*L1 data cache*/
+                        EDX = 0x20020220; /*L1 instruction cache*/
+                        break;
+
+                        case 0x80000006: /*L2 Cache information*/
+                        ECX = 0x01004220;
+                        break;
+                        
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
+                break;
+
+                case CPU_K6_2P:
+                case CPU_K6_3P:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        EBX = 0x68747541; /*AuthenticAMD*/
+                        ECX = 0x444d4163;
+                        EDX = 0x69746e65;
+                        break;
+                        case 1:
+                        EAX = CPUID;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000007;
+                        break;
+                        case 0x80000001:
+                        EAX = CPUID+0x100;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_MMX | CPUID_3DNOW;
+                        break;
+
+                        case 0x80000002: /*Processor name string*/
+                        EAX = 0x2d444d41; /*AMD-K6(tm)-III P*/
+                        EBX = 0x7428364b;
+                        ECX = 0x492d296d;
+                        EDX = 0x50204949;
+                        break;
+
+                        case 0x80000003: /*Processor name string*/
+                        EAX = 0x65636f72; /*rocessor*/
+                        EBX = 0x726f7373;
+                        ECX = 0x00000000;
+                        EDX = 0x00000000;
+                        break;
+
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x02800140; /*TLBs*/
+                        ECX = 0x20020220; /*L1 data cache*/
+                        EDX = 0x20020220; /*L1 instruction cache*/
+                        break;
+
+                        case 0x80000006: /*L2 Cache information*/
+                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_K6_3P)
+                                ECX = 0x01004220;
+                        else
+                                ECX = 0x00804220;
+                        break;
+
+                        case 0x80000007: /*PowerNow information*/
+                        EDX = 7;
+                        break;
+
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
+                break;
         }
 }
 
@@ -1632,6 +1980,20 @@ void cpu_RDMSR()
                         break;
                 }
  		break;
+                case CPU_K6:
+                case CPU_K6_2:
+                case CPU_K6_3:
+                case CPU_K6_2P:
+                case CPU_K6_3P:
+                EAX = EDX = 0;
+                switch (ECX)
+                {
+                        case 0x10:
+                        EAX = tsc & 0xffffffff;
+                        EDX = tsc >> 32;
+                        break;
+                }
+                break;
         }
 }
 
@@ -1693,6 +2055,18 @@ void cpu_WRMSR()
                 case CPU_Cx6x86L:
                 case CPU_CxGX1:
                 case CPU_Cx6x86MX:
+                switch (ECX)
+                {
+                        case 0x10:
+                        tsc = EAX | ((uint64_t)EDX << 32);
+                        break;
+                }
+                break;
+                case CPU_K6:
+                case CPU_K6_2:
+                case CPU_K6_3:
+                case CPU_K6_2P:
+                case CPU_K6_3P:
                 switch (ECX)
                 {
                         case 0x10:
