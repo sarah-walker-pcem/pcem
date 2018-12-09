@@ -563,7 +563,7 @@ static void codegen_timing_winchip2_prefix(uint8_t prefix, uint32_t fetchdat)
         last_prefix = prefix;
 }
 
-static void codegen_timing_winchip2_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+static void codegen_timing_winchip2_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
 {
         uint32_t *timings;
         uint64_t *deps;

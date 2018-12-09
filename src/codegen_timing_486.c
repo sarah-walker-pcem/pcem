@@ -296,7 +296,7 @@ void codegen_timing_486_prefix(uint8_t prefix, uint32_t fetchdat)
         last_prefix = prefix;
 }
 
-void codegen_timing_486_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+void codegen_timing_486_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
 {
         int **timings;
         uint64_t *deps;

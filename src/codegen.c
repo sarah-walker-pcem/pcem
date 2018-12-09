@@ -18,7 +18,7 @@ uint16_t *codeblock_hash;
 
 void (*codegen_timing_start)();
 void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
-void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
 void (*codegen_timing_block_start)();
 void (*codegen_timing_block_end)();
 
@@ -495,7 +495,7 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         }
 
 generate_call:
-        codegen_timing_opcode(opcode, fetchdat, op_32);
+        codegen_timing_opcode(opcode, fetchdat, op_32, op_pc);
 
         codegen_accumulate(ACCREG_ins, 1);
         codegen_accumulate(ACCREG_cycles, -codegen_block_cycles);

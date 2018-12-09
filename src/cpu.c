@@ -1374,7 +1374,7 @@ void cpu_set()
                 cpu_hasCR4 = 1;
                 cpu_hasVME = 1;
                 cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE;
-                codegen_timing_set(&codegen_timing_pentium);
+                codegen_timing_set(&codegen_timing_k6);
                 break;
 
                 case CPU_K6_2:
@@ -1418,7 +1418,7 @@ void cpu_set()
                 cpu_hasCR4 = 1;
                 cpu_hasVME = 1;
                 cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE;
-                codegen_timing_set(&codegen_timing_pentium);
+                codegen_timing_set(&codegen_timing_k6);
                 break;
 
                 default:

@@ -1075,7 +1075,7 @@ static void codegen_instruction(uint64_t *timings, uint64_t *deps, uint8_t opcod
         }
 }
 
-void codegen_timing_pentium_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+void codegen_timing_pentium_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
 {
         uint64_t *timings;
         uint64_t *deps;

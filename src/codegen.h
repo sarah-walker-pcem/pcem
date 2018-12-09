@@ -317,7 +317,7 @@ extern int codegen_block_cycles;
 
 extern void (*codegen_timing_start)();
 extern void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
-extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
 extern void (*codegen_timing_block_start)();
 extern void (*codegen_timing_block_end)();
 
@@ -325,7 +325,7 @@ typedef struct codegen_timing_t
 {
         void (*start)();
         void (*prefix)(uint8_t prefix, uint32_t fetchdat);
-        void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+        void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
         void (*block_start)();
         void (*block_end)();
 } codegen_timing_t;
@@ -335,6 +335,7 @@ extern codegen_timing_t codegen_timing_686;
 extern codegen_timing_t codegen_timing_486;
 extern codegen_timing_t codegen_timing_winchip;
 extern codegen_timing_t codegen_timing_winchip2;
+extern codegen_timing_t codegen_timing_k6;
 
 void codegen_timing_set(codegen_timing_t *timing);
 
