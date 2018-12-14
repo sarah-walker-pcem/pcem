@@ -2,6 +2,7 @@
 #include "codegen.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
+#include "codegen_ops_3dnow.h"
 #include "codegen_ops_arith.h"
 #include "codegen_ops_branch.h"
 #include "codegen_ops_fpu_arith.h"
@@ -114,6 +115,30 @@ RecompOpFn recomp_opcodes_0f[512] =
 /*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           ropPMULLW,      NULL,           NULL,           ropPSUBUSB,     ropPSUBUSW,     NULL,           ropPAND,        ropPADDUSB,     ropPADDUSW,     NULL,           ropPANDN,
 /*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           ropPMULHW,      NULL,           NULL,           ropPSUBSB,      ropPSUBSW,      NULL,           ropPOR,         ropPADDSB,      ropPADDSW,      NULL,           ropPXOR,
 /*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           ropPMADDWD,     NULL,           NULL,           ropPSUBB,       ropPSUBW,       ropPSUBD,       NULL,           ropPADDB,       ropPADDW,       ropPADDD,       NULL,
+};
+
+RecompOpFn recomp_opcodes_3DNOW[256] =
+{
+/*      00              01              02              03              04              05              06              07              08              09              0a              0b              0c              0d              0e              0f*/
+/*00*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropPI2FD,       NULL,           NULL,
+/*10*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           ropPF2ID,       NULL,           NULL,
+/*20*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*30*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*40*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*50*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*60*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*70*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*80*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*90*/  ropPFCMPGE,     NULL,           NULL,           NULL,           ropPFMIN,       NULL,           ropPFRCP,       ropPFRSQRT,     NULL,           NULL,           ropPFSUB,       NULL,           NULL,           NULL,           ropPFADD,       NULL,
+/*a0*/  ropPFCMPGT,     NULL,           NULL,           NULL,           ropPFMAX,       NULL,           ropPFRCPIT,     ropPFRSQIT1,    NULL,           NULL,           ropPFSUBR,      NULL,           NULL,           NULL,           NULL,           NULL,
+/*b0*/  ropPFCMPEQ,     NULL,           NULL,           NULL,           ropPFMUL,       NULL,           ropPFRCPIT,     NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+
+/*c0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*d0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*e0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
+/*f0*/  NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,           NULL,
 };
 
 RecompOpFn recomp_opcodes_d8[512] =

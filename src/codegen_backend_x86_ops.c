@@ -185,6 +185,10 @@ void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int 
         codegen_addbyte2(block, 0x01, 0xc0 | dst_reg | (src_reg_b << 3)); /*ADD dst_reg, src_reg_b*/
 }
 
+void host_x86_ADDPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x58, 0xc0 | src_reg | (dst_reg << 3)); /*ADDPS dst_reg, src_reg*/
+}
 void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x58, 0xc0 | src_reg | (dst_reg << 3));
@@ -309,9 +313,23 @@ void host_x86_CMP32_REG_REG(codeblock_t *block, int src_reg_a, int src_reg_b)
         codegen_addbyte2(block, 0x39, 0xc0 | src_reg_a | (src_reg_b << 3)); /*CMP src_reg_a, src_reg_b*/
 }
 
+void host_x86_CMPPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg, int type)
+{
+        codegen_addbyte4(block, 0x0f, 0xc2, 0xc0 | src_reg | (dst_reg << 3), type); /*CMPPS dst_reg, src_reg, type*/
+}
+
 void host_x86_COMISD_XREG_XREG(codeblock_t *block, int src_reg_a, int src_reg_b)
 {
         codegen_addbyte4(block, 0x66, 0x0f, 0x2e, 0xc0 | src_reg_b | (src_reg_a << 3));
+}
+
+void host_x86_CVTDQ2PS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x5b, 0xc0 | src_reg | (dst_reg << 3)); /*CVTDQ2PS dst_reg, src_reg*/
+}
+void host_x86_CVTPS2DQ_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0x66, 0x0f, 0x5b, 0xc0 | src_reg | (dst_reg << 3)); /*CVTPS2DQ dst_reg, src_reg*/
 }
 
 void host_x86_CVTSD2SI_REG_XREG(codeblock_t *block, int dst_reg, int src_reg)
@@ -327,6 +345,10 @@ void host_x86_CVTSI2SD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSI2SD dst_reg, src_reg*/
 }
+void host_x86_CVTSI2SS_XREG_REG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x2a, 0xc0 | src_reg | (dst_reg << 3)); /*CVTSI2SD dst_reg, src_reg*/
+}
 
 void host_x86_CVTSS2SD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
@@ -340,7 +362,11 @@ void host_x86_CVTSS2SD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base
 
 void host_x86_DIVSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        codegen_addbyte4(block, 0xf2, 0x0f, 0x5e, 0xc0 | src_reg | (dst_reg << 3));
+        codegen_addbyte4(block, 0xf2, 0x0f, 0x5e, 0xc0 | src_reg | (dst_reg << 3)); /*DIVSD dst_reg, src_reg*/
+}
+void host_x86_DIVSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x5e, 0xc0 | src_reg | (dst_reg << 3)); /*DIVSS dst_reg, src_reg*/
 }
 
 void host_x86_INC32_ABS(codeblock_t *block, void *p)
@@ -1024,6 +1050,19 @@ void host_x86_MOVZX_BASE_INDEX_32_16(codeblock_t *block, int dst_reg, int base_r
         codegen_addbyte4(block, 0x0f, 0xb7, 0x04 | (dst_reg << 3), base_reg | (idx_reg << 3)); /*MOVZX dst_reg, W[base_reg + idx_reg]*/
 }
 
+void host_x86_MAXPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x5f, 0xc0 | src_reg | (dst_reg << 3)); /*MAXPS dst_reg, src_reg*/
+}
+void host_x86_MINPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x5d, 0xc0 | src_reg | (dst_reg << 3)); /*MINPS dst_reg, src_reg*/
+}
+
+void host_x86_MULPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x59, 0xc0 | src_reg | (dst_reg << 3)); /*MULPS dst_reg, src_reg*/
+}
 void host_x86_MULSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x59, 0xc0 | src_reg | (dst_reg << 3));
@@ -1406,6 +1445,10 @@ void host_x86_SQRTSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x51, 0xc0 | src_reg | (dst_reg << 3)); /*SQRTSD dst_reg, src_reg*/
 }
+void host_x86_SQRTSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte4(block, 0xf3, 0x0f, 0x51, 0xc0 | src_reg | (dst_reg << 3)); /*SQRTSS dst_reg, src_reg*/
+}
 
 void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
 {
@@ -1476,6 +1519,10 @@ void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int 
         codegen_addbyte2(block, 0x29, 0xc0 | dst_reg | (src_reg_b << 3)); /*SUB dst_reg, src_reg_b*/
 }
 
+void host_x86_SUBPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
+{
+        codegen_addbyte3(block, 0x0f, 0x5c, 0xc0 | src_reg | (dst_reg << 3)); /*SUBPS dst_reg, src_reg*/
+}
 void host_x86_SUBSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_addbyte4(block, 0xf2, 0x0f, 0x5c, 0xc0 | src_reg | (dst_reg << 3));

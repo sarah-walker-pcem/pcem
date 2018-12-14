@@ -206,7 +206,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         host_x86_PUSH(block, REG_RAX);
         host_x86_PUSH(block, REG_RDX);
 #if WIN64
-        host_x86_SUB64_REG_IMM(block, REG_RSP, 0x20);
+        host_x86_SUB64_REG_IMM(block, REG_RSP, 0x28);
         if (size == 4 && is_float)
                 host_x86_MOVD_REG_XREG(block, REG_EDX, REG_XMM_TEMP); //data
         else if (size == 8)
@@ -227,7 +227,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         else if (size == 8)
                 host_x86_CALL(block, (void *)writememql);
 #if WIN64
-        host_x86_ADD64_REG_IMM(block, REG_RSP, 0x20);
+        host_x86_ADD64_REG_IMM(block, REG_RSP, 0x28);
 #endif
         host_x86_POP(block, REG_RDX);
         host_x86_POP(block, REG_RAX);

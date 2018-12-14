@@ -119,9 +119,14 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_CMGT_V8B      (0x0e203400)
 #define OPCODE_CMGT_V4H      (0x0e603400)
 #define OPCODE_CMGT_V2S      (0x0ea03400)
+#define OPCODE_DUP_V2S       (0x0e040400)
 #define OPCODE_EOR_V         (0x2e201c00)
 #define OPCODE_FABS_D        (0x1e60c000)
 #define OPCODE_FADD_D        (0x1e602800)
+#define OPCODE_FADD_V2S      (0x0e20d400)
+#define OPCODE_FCMEQ_V2S     (0x0e20e400)
+#define OPCODE_FCMGE_V2S     (0x2e20e400)
+#define OPCODE_FCMGT_V2S     (0x2ea0e400)
 #define OPCODE_FCMP_D        (0x1e602000)
 #define OPCODE_FCVT_D_S      (0x1e22c000)
 #define OPCODE_FCVT_S_D      (0x1e624000)
@@ -133,17 +138,25 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_FCVTPS_X_D    (0x9e680000)
 #define OPCODE_FCVTZS_W_D    (0x1e780000)
 #define OPCODE_FCVTZS_X_D    (0x9e780000)
+#define OPCODE_FCVTZS_V2S    (0x0ea1b800)
 #define OPCODE_FDIV_D        (0x1e601800)
+#define OPCODE_FDIV_S        (0x1e201800)
+#define OPCODE_FMAX_V2S      (0x0e20f400)
+#define OPCODE_FMIN_V2S      (0x0ea0f400)
 #define OPCODE_FMOV_D_D      (0x1e604000)
 #define OPCODE_FMOV_D_Q      (0x9e670000)
 #define OPCODE_FMOV_Q_D      (0x9e660000)
 #define OPCODE_FMOV_S_W      (0x1e270000)
 #define OPCODE_FMOV_W_S      (0x1e260000)
+#define OPCODE_FMOV_S_ONE    (0x1e2e1000)
 #define OPCODE_FMUL_D        (0x1e600800)
+#define OPCODE_FMUL_V2S      (0x2e20dc00)
 #define OPCODE_FNEG_D        (0x1e614000)
 #define OPCODE_FRINTX_D      (0x1e674000)
 #define OPCODE_FSQRT_D       (0x1e61c000)
+#define OPCODE_FSQRT_S       (0x1e21c000)
 #define OPCODE_FSUB_D        (0x1e603800)
+#define OPCODE_FSUB_V2S      (0x0ea0d400)
 #define OPCODE_LDR_REG       (0xb8606800)
 #define OPCODE_LDRX_REG      (0xf8606800)
 #define OPCODE_LDRB_REG      (0x38606800)
@@ -226,6 +239,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define SHIFT_IMM_V2D(shift) (((shift) | 0x40) << 16)
 
 #define SHRN_SHIFT_IMM_V4S(shift) (((shift) | 0x10) << 16)
+
+#define DUP_ELEMENT(element) ((element) << 19)
 
 static int literal_offset = 0;
 void codegen_reset_literal_pool(codeblock_t *block)
@@ -662,6 +677,11 @@ void host_arm64_CSEL_VS(codeblock_t *block, int dst_reg, int src_n_reg, int src_
 	codegen_addlong(block, OPCODE_CSEL | CSEL_COND(COND_VS) | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
+void host_arm64_DUP_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int element)
+{
+	codegen_addlong(block, OPCODE_DUP_V2S | Rd(dst_reg) | Rn(src_n_reg) | DUP_ELEMENT(element));
+}
+
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
 	if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
@@ -691,6 +711,22 @@ void host_arm64_FABS_D(codeblock_t *block, int dst_reg, int src_reg)
 void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_FADD_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FADD_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FCMEQ_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FCMEQ_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FCMGE_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FCMGE_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FCMGT_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FCMGT_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_FCMP_D(codeblock_t *block, int src_n_reg, int src_m_reg)
@@ -739,20 +775,45 @@ void host_arm64_FCVTZS_X_D(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_FCVTZS_X_D | Rd(dst_reg) | Rn(src_reg));
 }
+void host_arm64_FCVTZS_V2S(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_FCVTZS_V2S | Rd(dst_reg) | Rn(src_reg));
+}
 
 void host_arm64_FDIV_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_FDIV_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FDIV_S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FDIV_S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+
+void host_arm64_FMAX_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FMAX_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FMIN_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FMIN_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_FMUL_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_FMUL_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
+void host_arm64_FMUL_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FMUL_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
 
 void host_arm64_FSUB_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
 {
 	codegen_addlong(block, OPCODE_FSUB_D | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
+}
+void host_arm64_FSUB_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg)
+{
+	codegen_addlong(block, OPCODE_FSUB_V2S | Rd(dst_reg) | Rn(src_n_reg) | Rm(src_m_reg));
 }
 
 void host_arm64_FMOV_D_D(codeblock_t *block, int dst_reg, int src_reg)
@@ -775,6 +836,10 @@ void host_arm64_FMOV_W_S(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_FMOV_W_S | Rd(dst_reg) | Rn(src_reg));
 }
+void host_arm64_FMOV_S_ONE(codeblock_t *block, int dst_reg)
+{
+	codegen_addlong(block, OPCODE_FMOV_S_ONE | Rd(dst_reg));
+}
 
 void host_arm64_FNEG_D(codeblock_t *block, int dst_reg, int src_reg)
 {
@@ -789,6 +854,10 @@ void host_arm64_FRINTX_D(codeblock_t *block, int dst_reg, int src_reg)
 void host_arm64_FSQRT_D(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_FSQRT_D | Rd(dst_reg) | Rn(src_reg));
+}
+void host_arm64_FSQRT_S(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_FSQRT_S | Rd(dst_reg) | Rn(src_reg));
 }
 
 void host_arm64_LDP_POSTIDX_X(codeblock_t *block, int src_reg1, int src_reg2, int base_reg, int offset)

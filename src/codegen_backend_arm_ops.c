@@ -91,11 +91,15 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VADD_I8  0xf2000800
 #define OPCODE_VADD_I16 0xf2100800
 #define OPCODE_VADD_I32 0xf2200800
+#define OPCODE_VADD_F32 0xf2000d00
 #define OPCODE_VAND_D 0xf2000110
 #define OPCODE_VBIC_D 0xf2100110
+#define OPCODE_VCEQ_F32 0xf2000e00
 #define OPCODE_VCEQ_I8  0xf3000810
 #define OPCODE_VCEQ_I16 0xf3100810
 #define OPCODE_VCEQ_I32 0xf3200810
+#define OPCODE_VCGE_F32 0xf3000e00
+#define OPCODE_VCGT_F32 0xf3200e00
 #define OPCODE_VCGT_S8  0xf2000300
 #define OPCODE_VCGT_S16 0xf2100300
 #define OPCODE_VCGT_S32 0xf2200300
@@ -103,12 +107,17 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VCVT_D_IS  0xeeb80bc0
 #define OPCODE_VCVT_D_S   0xeeb70ac0
 #define OPCODE_VCVT_IS_D  0xeebd0bc0
+#define OPCODE_VCVT_S32_F32 0xf3bb0680
 #define OPCODE_VCVT_S_D   0xeeb70bc0
 #define OPCODE_VCVTR_IS_D 0xeebd0b40
 #define OPCODE_VDIV   0xee800b00
+#define OPCODE_VDIV_S 0xee800a00
+#define OPCODE_VDUP_32 0xf3b40c00
 #define OPCODE_VEOR_D 0xf3000110
 #define OPCODE_VLDR_D 0xed900b00
 #define OPCODE_VLDR_S 0xed900a00
+#define OPCODE_VMAX_F32 0xf200f00
+#define OPCODE_VMIN_F32 0xf220f00
 #define OPCODE_VMOV_32_S 0xee100a10
 #define OPCODE_VMOV_64_D 0xec500b10
 #define OPCODE_VMOV_D_64 0xec400b10
@@ -116,9 +125,11 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VMOV_D_D  0xeeb00b40
 #define OPCODE_VMOVN_I32 0xf3b60200
 #define OPCODE_VMOVN_I64 0xf3ba0200
+#define OPCODE_VMOV_F32_ONE 0xf2870f10
 #define OPCODE_VMRS_APSR 0xeef1fa10
 #define OPCODE_VMSR_FPSCR 0xeee10a10
 #define OPCODE_VMUL   0xee200b00
+#define OPCODE_VMUL_F32 0xf3000d10
 #define OPCODE_VMUL_S16  0xf2100910
 #define OPCODE_VMULL_S16 0xf2900c00
 #define OPCODE_VNEG_D 0xeeb10b40
@@ -148,6 +159,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define OPCODE_VSHR_D_U64    0xf3800090
 #define OPCODE_VSHRN         0xf2800810
 #define OPCODE_VSQRT_D 0xeeb10bc0
+#define OPCODE_VSQRT_S 0xeeb10ac0
 #define OPCODE_VSTR_D 0xed800b00
 #define OPCODE_VSTR_S 0xed800a00
 #define OPCODE_VSUB   0xee300b40
@@ -192,6 +204,8 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 #define VSHIFT_IMM(shift) ((shift) << 16)
 
 #define VSHIFT_IMM_32(shift) (((16 - (shift)) | 0x10) << 16)
+
+#define VDUP_32_IMM(imm) ((imm) << 19)
 
 static inline uint32_t arm_data_offset(int offset)
 {
@@ -808,6 +822,10 @@ void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 {
 	codegen_addlong(block, COND_AL | OPCODE_VADD | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
+void host_arm_VADD_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VADD_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
 void host_arm_VADD_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VADD_I8 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -833,6 +851,10 @@ void host_arm_VCMP_D(codeblock_t *block, int src_reg_d, int src_reg_m)
 	codegen_addlong(block, COND_AL | OPCODE_VCMP_D | Rd(src_reg_d) | Rm(src_reg_m));
 }
 
+void host_arm_VCEQ_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCEQ_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
 void host_arm_VCEQ_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VCEQ_I8 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
@@ -844,6 +866,14 @@ void host_arm_VCEQ_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VCEQ_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, OPCODE_VCEQ_I32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCGE_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCGE_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VCGT_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VCGT_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 void host_arm_VCGT_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
@@ -870,6 +900,10 @@ void host_arm_VCVT_IS_D(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCVT_IS_D | Vd(dest_reg) | Vm(src_reg));
 }
+void host_arm_VCVT_S32_F32(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VCVT_S32_F32 | Vd(dest_reg) | Vm(src_reg));
+}
 void host_arm_VCVT_S_D(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCVT_S_D | Vd(dest_reg) | Vm(src_reg));
@@ -881,6 +915,14 @@ void host_arm_VCVTR_IS_D(codeblock_t *block, int dest_reg, int src_reg)
 void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VDIV | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VDIV_S(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VDIV_S | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VDUP_32(codeblock_t *block, int dst_reg, int src_reg_m, int imm)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VDUP_32 | Rd(dst_reg) | Rm(src_reg_m) | VDUP_32_IMM(imm));
 }
 void host_arm_VEOR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
@@ -926,6 +968,10 @@ void host_arm_VMOVN_I64(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_VMOVN_I64 | Vd(dest_reg) | Vm(src_reg));
 }
+void host_arm_VMOV_F32_ONE(codeblock_t *block, int dst_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_F32_ONE | Rd(src_reg));
+}
 void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VMSR_FPSCR | Rd(src_reg));
@@ -935,9 +981,22 @@ void host_arm_VMRS_APSR(codeblock_t *block)
 	codegen_addlong(block, COND_AL | OPCODE_VMRS_APSR);
 }
 
+void host_arm_VMAX_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VMAX_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VMIN_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, OPCODE_VMIN_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+
 void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VMUL | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VMUL_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VMUL_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 void host_arm_VMUL_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
@@ -1081,6 +1140,10 @@ void host_arm_VSHRN_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 void host_arm_VSQRT_D(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VSQRT_D | Vd(dest_reg) | Vm(src_reg));
+}
+void host_arm_VSQRT_S(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VSQRT_S | Vd(dest_reg) | Vm(src_reg));
 }
 
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset)

@@ -1572,6 +1572,191 @@ static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PF2ID(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                host_x86_CVTPS2DQ_XREG_XREG(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("PF2ID %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFADD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_ADDPS_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PFADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_EQ);
+        }
+        else
+                fatal("PFCMPEQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_NLT);
+        }
+        else
+                fatal("PFCMPGE %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_NLE);
+        }
+        else
+                fatal("PFCMPGT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_MAXPS_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PFMAX %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_MINPS_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PFMIN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMUL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_MULPS_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else
+                fatal("PFMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFRCP(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                /*TODO: This could be improved (use RCPSS + iteration)*/
+                host_x86_MOV32_REG_IMM(block, REG_ECX, 1);
+                host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg_a);
+                host_x86_CVTSI2SS_XREG_REG(block, dest_reg, REG_ECX);
+                host_x86_DIVSS_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
+                host_x86_UNPCKLPS_XREG_XREG(block, dest_reg, dest_reg);
+        }
+        else
+                fatal("PFRCP %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFRSQRT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                /*TODO: This could be improved (use RSQRTSS + iteration)*/
+                host_x86_SQRTSS_XREG_XREG(block, REG_XMM_TEMP, src_reg_a);
+                host_x86_MOV32_REG_IMM(block, REG_ECX, 1);
+                host_x86_CVTSI2SS_XREG_REG(block, dest_reg, REG_ECX);
+                host_x86_DIVSS_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
+                host_x86_UNPCKLPS_XREG_XREG(block, dest_reg, dest_reg);
+        }
+        else
+                fatal("PFRSQRT %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFSUB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
+        {
+                host_x86_SUBPS_XREG_XREG(block, dest_reg, src_reg_b);
+        }
+        else if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg_a);
+                host_x86_SUBPS_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
+                host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
+        }
+        else
+                fatal("PFSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PI2FD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                host_x86_CVTDQ2PS_XREG_XREG(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("PI2FD %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+
 static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -2394,6 +2579,19 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PCMPGTW & UOP_MASK] = codegen_PCMPGTW,
         [UOP_PCMPGTD & UOP_MASK] = codegen_PCMPGTD,
 
+        [UOP_PF2ID & UOP_MASK]   = codegen_PF2ID,
+        [UOP_PFADD & UOP_MASK]   = codegen_PFADD,
+        [UOP_PFCMPEQ & UOP_MASK] = codegen_PFCMPEQ,
+        [UOP_PFCMPGE & UOP_MASK] = codegen_PFCMPGE,
+        [UOP_PFCMPGT & UOP_MASK] = codegen_PFCMPGT,
+        [UOP_PFMAX & UOP_MASK]   = codegen_PFMAX,
+        [UOP_PFMIN & UOP_MASK]   = codegen_PFMIN,
+        [UOP_PFMUL & UOP_MASK]   = codegen_PFMUL,
+        [UOP_PFRCP & UOP_MASK]   = codegen_PFRCP,
+        [UOP_PFRSQRT & UOP_MASK] = codegen_PFRSQRT,
+        [UOP_PFSUB & UOP_MASK]   = codegen_PFSUB,
+        [UOP_PI2FD & UOP_MASK]   = codegen_PI2FD,
+        
         [UOP_PMADDWD & UOP_MASK] = codegen_PMADDWD,
         [UOP_PMULHW & UOP_MASK]  = codegen_PMULHW,
         [UOP_PMULLW & UOP_MASK]  = codegen_PMULLW,

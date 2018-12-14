@@ -145,13 +145,17 @@ void host_arm_VADD_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg
 void host_arm_VADD_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VADD_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VADD_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VADD_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VAND_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VBIC_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCMP_D(codeblock_t *block, int src_reg_d, int src_reg_m);
 
+void host_arm_VCEQ_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCEQ_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCEQ_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCEQ_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VCGE_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VCGT_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCGT_S8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCGT_S16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VCGT_S32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
@@ -161,9 +165,11 @@ void host_arm_VCHS_D(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVT_D_IS(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVT_D_S(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVT_IS_D(codeblock_t *block, int dest_reg, int src_reg);
+void host_arm_VCVT_S32_F32(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVT_S_D(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VCVTR_IS_D(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VDIV_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VDIV_S(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VEOR_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VLDR_D(codeblock_t *block, int dest_reg, int base_reg, int offset);
 void host_arm_VLDR_S(codeblock_t *block, int dest_reg, int base_reg, int offset);
@@ -179,7 +185,13 @@ void host_arm_VMOVN_I64(codeblock_t *block, int dest_reg, int src_reg);
 void host_arm_VMRS_APSR(codeblock_t *block);
 void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg);
 
+void host_arm_VMAX_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VMIN_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+
+void host_arm_VMOV_F32_ONE(codeblock_t *block, int dst_reg);
+
 void host_arm_VMUL_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VMUL_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VMUL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
 void host_arm_VMULL_S16(codeblock_t *block, int dest_reg, int src_reg_n, int src_reg_m);
 
@@ -216,10 +228,12 @@ void host_arm_VSHR_D_U64(codeblock_t *block, int dest_reg, int src_reg, int shif
 void host_arm_VSHRN_32(codeblock_t *block, int dest_reg, int src_reg, int shift);
 
 void host_arm_VSQRT_D(codeblock_t *block, int dest_reg, int src_reg);
+void host_arm_VSQRT_S(codeblock_t *block, int dest_reg, int src_reg);
 
 void host_arm_VSTR_D(codeblock_t *block, int src_reg, int base_reg, int offset);
 void host_arm_VSTR_S(codeblock_t *block, int src_reg, int base_reg, int offset);
 void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
+void host_arm_VSUB_S(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VSUB_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VSUB_I16(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);
 void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m);

@@ -306,10 +306,12 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         RecompOpFn *recomp_op_table = recomp_opcodes;
         int opcode_shift = 0;
         int opcode_mask = 0x3ff;
+        uint32_t recomp_opcode_mask = 0x1ff;
         uint32_t op_32 = use32;
         int over = 0;
         int test_modrm = 1;
         int pc_off = 0;
+        uint32_t next_pc = 0;
 #ifdef DEBUG_EXTRA
         uint8_t last_prefix = 0;
 #endif
@@ -507,10 +509,68 @@ generate_call:
               (opcode == 0xff && ((fetchdat & 0x38) >= 0x10 && (fetchdat & 0x38) < 0x30)))) ||
             (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80)))
                 codegen_accumulate_flush(ir);
-//        pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
-        if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff])
+
+        if (op_table == x86_dynarec_opcodes_0f && opcode == 0x0f)
         {
-                uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](block, ir, opcode, fetchdat, op_32, op_pc);
+                /*3DNow opcodes are stored after ModR/M, SIB and any offset*/
+                uint8_t modrm = fetchdat & 0xff;
+                uint8_t sib = (fetchdat >> 8) & 0xff;
+                uint32_t opcode_pc = op_pc + 1;
+                uint8_t opcode_3dnow;
+
+                if ((modrm & 0xc0) != 0xc0)
+                {
+                        if (op_32 & 0x200)
+                        {
+                                if ((modrm & 7) == 4)
+                                {
+                                        /* Has SIB*/
+                                        opcode_pc++;
+                                        if ((modrm & 0xc0) == 0x40)
+                                                opcode_pc++;
+                                        else if ((modrm & 0xc0) == 0x80)
+                                                opcode_pc += 4;
+                                        else if ((sib & 0x07) == 0x05)
+                                                opcode_pc += 4;
+                                }
+                                else
+                                {
+                                        if ((modrm & 0xc0) == 0x40)
+                                                opcode_pc++;
+                                        else if ((modrm & 0xc0) == 0x80)
+                                                opcode_pc += 4;
+                                        else if ((modrm & 0xc7) == 0x05)
+                                                opcode_pc += 4;
+                                }
+                        }
+                        else
+                        {
+                                if ((modrm & 0xc0) == 0x40)
+                                        opcode_pc++;
+                                else if ((modrm & 0xc0) == 0x80)
+                                        opcode_pc += 2;
+                                else if ((modrm & 0xc7) == 0x06)
+                                        opcode_pc += 2;
+                        }
+                }
+
+                opcode_3dnow = fastreadb(cs + opcode_pc);
+//                pclog("recomp_opcodes_3DNOW[%02x]=%p\n", opcode, recomp_opcodes_3DNOW[opcode]);
+                if (recomp_opcodes_3DNOW[opcode_3dnow])
+                {
+                        next_pc = opcode_pc + 1;
+                
+                        op_table = x86_dynarec_opcodes_3DNOW;
+                        recomp_op_table = recomp_opcodes_3DNOW;
+                        opcode = opcode_3dnow;
+                        recomp_opcode_mask = 0xff;
+                        opcode_mask = 0xff;
+                }
+        }
+//        pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
+        if (recomp_op_table && recomp_op_table[(opcode | op_32) & recomp_opcode_mask])
+        {
+                uint32_t new_pc = recomp_op_table[(opcode | op_32) & recomp_opcode_mask](block, ir, opcode, fetchdat, op_32, op_pc);
                 if (new_pc)
                 {
                         if (new_pc != -1)
@@ -532,7 +592,8 @@ generate_call:
 
         if (!test_modrm ||
                 (op_table == x86_dynarec_opcodes && opcode_modrm[opcode]) ||
-                (op_table == x86_dynarec_opcodes_0f && opcode_0f_modrm[opcode]))
+                (op_table == x86_dynarec_opcodes_0f && opcode_0f_modrm[opcode]) ||
+                (op_table == x86_dynarec_opcodes_3DNOW))
         {
                 int stack_offset = 0;
 
@@ -564,7 +625,10 @@ generate_call:
         uop_LOG_INSTR(ir, opcode | (last_prefix << 8));
 #endif
 
-        uop_MOV_IMM(ir, IREG_pc, op_pc+pc_off);
+        if (op_table == x86_dynarec_opcodes_3DNOW)
+                uop_MOV_IMM(ir, IREG_pc, next_pc);
+        else
+                uop_MOV_IMM(ir, IREG_pc, op_pc+pc_off);
         uop_MOV_IMM(ir, IREG_oldpc, old_pc);
         if (op_32 != last_op_32)
                 uop_MOV_IMM(ir, IREG_op32, op_32);

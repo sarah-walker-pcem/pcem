@@ -1806,6 +1806,182 @@ static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_PF2ID(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                host_arm_VCVT_S32_F32(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("PF2ID %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFADD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VADD_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VCEQ_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFCMPEQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VCGE_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFCMPGE %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VCGT_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFCMPGT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VMAX_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFMAX %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VMIN_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFMIN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFMUL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VMUL_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PFRCP(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                /*TODO: This could be improved (use VRECPE/VRECPS)*/
+                host_arm_VMOV_F32_ONE(block, REG_D_TEMP);
+                host_arm_VDIV_S(block, dest_reg, REG_D_TEMP, src_reg_a);
+                host_arm_VDUP_32(block, dest_reg, dest_reg, 0);
+        }
+        else
+                fatal("PFRCP %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFRSQRT(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                /*TODO: This could be improved (use VRSQRTE/VRSQRTS)*/
+                host_arm_VSQRT_S(block, REG_D_TEMP, src_reg_a);
+                host_arm_VMOV_F32_ONE(block, REG_D_TEMP);
+                host_arm_VDIV_S(block, dest_reg, dest_reg, REG_D_TEMP);
+                host_arm_VDUP_32(block, dest_reg, dest_reg, 0);
+        }
+        else
+                fatal("PFRSQRT %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_PFSUB(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
+        {
+                host_arm_VSUB_F32(block, dest_reg, src_reg_a, src_reg_b);
+        }
+        else
+                fatal("PFSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+
+        return 0;
+}
+static int codegen_PI2FD(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
+        {
+                host_arm_VCVT_Q_F32_IS(block, dest_reg, src_reg_a);
+        }
+        else
+                fatal("PI2FD %02x %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+
 static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -2774,6 +2950,19 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PCMPGTB & UOP_MASK] = codegen_PCMPGTB,
         [UOP_PCMPGTW & UOP_MASK] = codegen_PCMPGTW,
         [UOP_PCMPGTD & UOP_MASK] = codegen_PCMPGTD,
+
+        [UOP_PF2ID & UOP_MASK]   = codegen_PF2ID,
+        [UOP_PFADD & UOP_MASK]   = codegen_PFADD,
+        [UOP_PFCMPEQ & UOP_MASK] = codegen_PFCMPEQ,
+        [UOP_PFCMPGE & UOP_MASK] = codegen_PFCMPGE,
+        [UOP_PFCMPGT & UOP_MASK] = codegen_PFCMPGT,
+        [UOP_PFMAX & UOP_MASK]   = codegen_PFMAX,
+        [UOP_PFMIN & UOP_MASK]   = codegen_PFMIN,
+        [UOP_PFMUL & UOP_MASK]   = codegen_PFMUL,
+        [UOP_PFRCP & UOP_MASK]   = codegen_PFRCP,
+        [UOP_PFRSQRT & UOP_MASK] = codegen_PFRSQRT,
+        [UOP_PFSUB & UOP_MASK]   = codegen_PFSUB,
+        [UOP_PI2FD & UOP_MASK]   = codegen_PI2FD,
 
         [UOP_PMADDWD & UOP_MASK] = codegen_PMADDWD,
         [UOP_PMULHW & UOP_MASK]  = codegen_PMULHW,
