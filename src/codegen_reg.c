@@ -214,6 +214,11 @@ static inline int ir_reg_is_invalid(ir_reg_t ir_reg)
         return (IREG_GET_REG(ir_reg.reg) == IREG_INVALID);
 }
 
+static inline int ir_get_get_refcount(ir_reg_t ir_reg)
+{
+        return reg_version_refcount[IREG_GET_REG(ir_reg.reg)][ir_reg.version];
+}
+
 static inline host_reg_set_t *get_reg_set(ir_reg_t ir_reg)
 {
         if (ireg_data[IREG_GET_REG(ir_reg.reg)].type == REG_INTEGER)
@@ -401,9 +406,45 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
         reg_set->dirty[c] = 0;
 }
 
+static void alloc_reg(ir_reg_t ir_reg)
+{
+        host_reg_set_t *reg_set = get_reg_set(ir_reg);
+        int nr_regs = (reg_set == &host_reg_set) ? CODEGEN_HOST_REGS : CODEGEN_HOST_FP_REGS;
+        int c;
+        
+        for (c = 0; c < nr_regs; c++)
+        {
+                if (IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(ir_reg.reg))
+                {
+                        if (reg_set->regs[c].version != ir_reg.version)
+                                fatal("alloc_reg - host_regs[c].version != ir_reg.version  %i %p %p  %i %i\n", c, reg_set, &host_reg_set, reg_set->regs[c].reg, ir_reg.reg);
+                        reg_set->locked |= (1 << c);
+                        return;
+                }
+        }
+}
+
+static void alloc_dest_reg(ir_reg_t ir_reg, int dest_reference)
+{
+        host_reg_set_t *reg_set = get_reg_set(ir_reg);
+        int nr_regs = (reg_set == &host_reg_set) ? CODEGEN_HOST_REGS : CODEGEN_HOST_FP_REGS;
+        int c;
+
+        for (c = 0; c < nr_regs; c++)
+        {
+                if (IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(ir_reg.reg))
+                {
+                        if (reg_set->regs[c].version == ir_reg.version || (reg_set->regs[c].version == (ir_reg.version-1) && reg_version_refcount[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version] == dest_reference))
+                                reg_set->locked |= (1 << c);
+                        else
+                                fatal("codegen_reg_alloc_register - host_regs[c].version != dest_reg_a.version  %i,%i %i\n", reg_set->regs[c].version, ir_reg.version, dest_reference);
+                        return;
+                }
+        }
+}
+
 void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b, ir_reg_t src_reg_c)
 {
-        int c;
         int dest_reference = 0;
         
         host_reg_set.locked = 0;
@@ -422,38 +463,14 @@ void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_
                 if (!ir_reg_is_invalid(src_reg_c) && IREG_GET_REG(src_reg_c.reg) == IREG_GET_REG(dest_reg_a.reg) && src_reg_c.version == dest_reg_a.version-1)
                         dest_reference++;
         }
-        for (c = 0; c < CODEGEN_HOST_REGS; c++)
-        {
-                host_reg_set_t *reg_set = get_reg_set(src_reg_a);
-                if (!ir_reg_is_invalid(src_reg_a) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(src_reg_a.reg))
-                {
-                        if (reg_set->regs[c].version != src_reg_a.version)
-                                fatal("codegen_reg_alloc_register - host_regs[c].version != src_reg_a.version\n");
-                        reg_set->locked |= (1 << c);
-                }
-                reg_set = get_reg_set(src_reg_b);
-                if (!ir_reg_is_invalid(src_reg_b) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(src_reg_b.reg))
-                {
-                        if (reg_set->regs[c].version != src_reg_b.version)
-                                fatal("codegen_reg_alloc_register - host_regs[c].version != src_reg_b.version\n");
-                        reg_set->locked |= (1 << c);
-                }
-                reg_set = get_reg_set(src_reg_c);
-                if (!ir_reg_is_invalid(src_reg_c) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(src_reg_c.reg))
-                {
-                        if (reg_set->regs[c].version != src_reg_c.version)
-                                fatal("codegen_reg_alloc_register - host_regs[c].version != src_reg_c.version\n");
-                        reg_set->locked |= (1 << c);
-                }
-                reg_set = get_reg_set(dest_reg_a);
-                if (!ir_reg_is_invalid(dest_reg_a) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(dest_reg_a.reg))
-                {
-                        if (reg_set->regs[c].version == dest_reg_a.version || (reg_set->regs[c].version == (dest_reg_a.version-1) && reg_version_refcount[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version] == dest_reference))
-                                reg_set->locked |= (1 << c);
-                        else
-                                fatal("codegen_reg_alloc_register - host_regs[c].version != dest_reg_a.version  %i,%i %i\n", reg_set->regs[c].version, dest_reg_a.version, dest_reference);
-                }
-        }
+        if (!ir_reg_is_invalid(src_reg_a))
+                alloc_reg(src_reg_a);
+        if (!ir_reg_is_invalid(src_reg_b))
+                alloc_reg(src_reg_b);
+        if (!ir_reg_is_invalid(src_reg_c))
+                alloc_reg(src_reg_c);
+        if (!ir_reg_is_invalid(dest_reg_a))
+                alloc_dest_reg(dest_reg_a, dest_reference);
 }
 
 ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx)
