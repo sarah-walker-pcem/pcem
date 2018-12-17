@@ -490,20 +490,29 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
 
         if (c == reg_set->nr_regs)
         {
-                /*No unused registers. Search for an unlocked register*/
+                /*No unused registers. Search for an unlocked register with no pending reads*/
                 for (c = 0; c < reg_set->nr_regs; c++)
                 {
-                        if (!(reg_set->locked & (1 << c)))
+                        if (!(reg_set->locked & (1 << c)) && !ir_get_get_refcount(reg_set->regs[c]))
                                 break;
                 }
                 if (c == reg_set->nr_regs)
-                        fatal("codegen_reg_alloc_read_reg - out of registers\n");
+                {
+                        /*Search for any unlocked register*/
+                        for (c = 0; c < reg_set->nr_regs; c++)
+                        {
+                                if (!(reg_set->locked & (1 << c)))
+                                        break;
+                        }
+                        if (c == reg_set->nr_regs)
+                                fatal("codegen_reg_alloc_read_reg - out of registers\n");
+                }
                 if (reg_set->dirty[c])
                         codegen_reg_writeback(reg_set, block, c, 1);
 //                pclog("   load %i\n", c);
                 codegen_reg_load(reg_set, block, c, ir_reg);
-                reg_set->locked |= (1 << c);
 //                fatal("codegen_reg_alloc_read_reg - read %i.%i to %i\n", ir_reg.reg,ir_reg.version, c);
+                reg_set->locked |= (1 << c);
 //                codegen_reg_writeback(block, c);
                 reg_set->dirty[c] = 0;
         }
