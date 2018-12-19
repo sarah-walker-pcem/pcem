@@ -215,8 +215,14 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOV32_REG_REG(block, REG_EDX, REG_ECX); //data
         host_x86_MOV32_REG_REG(block, REG_ECX, REG_EDI); //address
 #else
+        host_x86_SUB64_REG_IMM(block, REG_RSP, 0x8);
         //host_x86_MOV32_REG_REG(block, REG_EDI, REG_ECX);  //address
-        host_x86_MOV32_REG_REG(block, REG_ESI, REG_ECX); //data
+        if (size == 4 && is_float)
+                host_x86_MOVD_REG_XREG(block, REG_ESI, REG_XMM_TEMP); //data
+        else if (size == 8)
+                host_x86_MOVQ_REG_XREG(block, REG_RSI, REG_XMM_TEMP); //data
+        else
+                host_x86_MOV32_REG_REG(block, REG_ESI, REG_ECX); //data
 #endif
         if (size == 1)
                 host_x86_CALL(block, (void *)writememb386l);
@@ -228,6 +234,8 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
                 host_x86_CALL(block, (void *)writememql);
 #if WIN64
         host_x86_ADD64_REG_IMM(block, REG_RSP, 0x28);
+#else
+        host_x86_ADD64_REG_IMM(block, REG_RSP, 0x8);
 #endif
         host_x86_POP(block, REG_RDX);
         host_x86_POP(block, REG_RAX);
