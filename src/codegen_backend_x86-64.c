@@ -286,7 +286,7 @@ void codegen_backend_init()
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        codeblock_data = malloc(BLOCK_SIZE * BLOCK_DATA_SIZE);
+        codeblock_data = mmap(0, BLOCK_SIZE * BLOCK_DATA_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
 #endif
         codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
@@ -299,16 +299,6 @@ void codegen_backend_init()
                 codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
                 codeblock[c].pc = BLOCK_PC_INVALID;
         }
-
-#if defined(__linux__) || defined(__APPLE__)
-	start = (void *)((long)codeblock & pagemask);
-	len = ((BLOCK_SIZE * sizeof(codeblock_t)) + pagesize) & pagemask;
-	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-	{
-		perror("mprotect");
-		exit(-1);
-	}
-#endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
         block_current = 0;
