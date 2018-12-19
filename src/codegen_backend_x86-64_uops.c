@@ -771,9 +771,9 @@ static int codegen_LOAD_FUNC_ARG0(codeblock_t *block, uop_t *uop)
         if (REG_IS_W(src_size))
         {
 #if WIN64
-                host_x86_MOV16_REG_REG(block, REG_ECX, src_reg);
+                host_x86_MOVZX_REG_32_16(block, REG_ECX, src_reg);
 #else
-                host_x86_MOV16_REG_REG(block, REG_EDI, src_reg);
+                host_x86_MOVZX_REG_32_16(block, REG_EDI, src_reg);
 #endif
         }
         else
