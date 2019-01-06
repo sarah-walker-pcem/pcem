@@ -72,6 +72,9 @@
 
 #define FPU_FXCH (1ull << 33)
 
+#define HAS_IMM8    (1ull << 34)
+#define HAS_IMM1632 (1ull << 35)
+
 
 #define REGMASK_IMPL_ESP (1 << 8)
 #define REGMASK_SHIFTPACK (1 << 9)

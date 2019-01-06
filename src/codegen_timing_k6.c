@@ -1723,6 +1723,7 @@ static const risc86_instruction_t *opcode_timings_df_mod3[8] =
 
 
 static uint8_t last_prefix;
+static int prefixes;
 
 static int decode_timestamp;
 static int last_complete_timestamp;
@@ -1899,12 +1900,64 @@ void decode_flush()
         decode_buffer.nr_uops = 0;
 }
 
+/*The instruction is only of interest here if it's longer than 7 bytes, as that's the
+  limit on K6 short decoding*/
+static int codegen_timing_instr_length(uint64_t deps, uint32_t fetchdat, int op_32)
+{
+        int len = prefixes + 1; /*Opcode*/
+        if (deps & MODRM)
+        {
+                len++; /*ModR/M*/
+                if (deps & HAS_IMM8)
+                        len++;
+                if (deps & HAS_IMM1632)
+                        len += (op_32 & 0x100) ? 4 : 2;
+
+                if (op_32 & 0x200)
+                {
+                        if ((fetchdat & 7) == 4 && (fetchdat & 0xc0) != 0xc0)
+                        {
+                                /* Has SIB*/
+                                len++;
+                                if ((fetchdat & 0xc0) == 0x40)
+                                        len++;
+                                else if ((fetchdat & 0xc0) == 0x80)
+                                        len += 4;
+                                else if ((fetchdat & 0x700) == 0x500)
+                                        len += 4;
+                        }
+                        else
+                        {
+                                if ((fetchdat & 0xc0) == 0x40)
+                                        len++;
+                                else if ((fetchdat & 0xc0) == 0x80)
+                                        len += 4;
+                                else if ((fetchdat & 0xc7) == 0x05)
+                                        len += 4;
+                        }
+                }
+                else
+                {
+                        if ((fetchdat & 0xc0) == 0x40)
+                                len++;
+                        else if ((fetchdat & 0xc0) == 0x80)
+                                len += 2;
+                        else if ((fetchdat & 0xc7) == 0x06)
+                                len += 2;
+                }
+        }
+
+        return len;
+}
+
 static void decode_instruction(const risc86_instruction_t *ins, uint64_t deps, uint32_t fetchdat, int op_32, int bit8)
 {
         uint32_t regmask_required;
         uint32_t regmask_modified;
         int c, d;
         int earliest_start = 0;
+        decode_type_t decode_type = ins->decode_type;
+        int instr_length = codegen_timing_instr_length(deps, fetchdat, op_32);
 
         /*Generate input register mask, and determine the earliest time this
           instruction can start. This is not accurate, as this is calculated per
@@ -1931,7 +1984,14 @@ static void decode_instruction(const risc86_instruction_t *ins, uint64_t deps, u
                         earliest_start = fpu_st_timestamp[reg];
         }
 
-        switch (ins->decode_type)
+        /*Short decoders are limited to 7 bytes*/
+        if (decode_type == DECODE_SHORT && instr_length > 7)
+                decode_type = DECODE_LONG;
+        /*Long decoder is limited to 11 bytes*/
+        else if (instr_length > 11)
+                decode_type = DECODE_VECTOR;
+
+        switch (decode_type)
         {
                 case DECODE_SHORT:
                 if (decode_buffer.nr_uops)
@@ -2051,7 +2111,7 @@ static void decode_instruction(const risc86_instruction_t *ins, uint64_t deps, u
 void codegen_timing_k6_block_start()
 {
         int c;
-        
+
         for (c = 0; c < nr_units; c++)
                 units[c].first_available_cycle = 0;
 
@@ -2085,6 +2145,7 @@ void codegen_timing_k6_start()
                 nr_units = NR_K6_2_UNITS;
         }
         last_prefix = 0;
+        prefixes = 0;
 }
 
 void codegen_timing_k6_prefix(uint8_t prefix, uint32_t fetchdat)
@@ -2093,6 +2154,7 @@ void codegen_timing_k6_prefix(uint8_t prefix, uint32_t fetchdat)
                 decode_timestamp++;
 
         last_prefix = prefix;
+        prefixes++;
 }
 
 void codegen_timing_k6_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
