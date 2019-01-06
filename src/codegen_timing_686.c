@@ -1067,11 +1067,17 @@ void codegen_timing_686_block_end()
         }
 }
 
+int codegen_timing_686_jump_cycles()
+{
+        return 0;
+}
+
 codegen_timing_t codegen_timing_686 =
 {
         codegen_timing_686_start,
         codegen_timing_686_prefix,
         codegen_timing_686_opcode,
         codegen_timing_686_block_start,
-        codegen_timing_686_block_end
+        codegen_timing_686_block_end,
+        codegen_timing_686_jump_cycles
 };

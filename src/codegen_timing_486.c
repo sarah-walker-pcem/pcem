@@ -422,11 +422,17 @@ void codegen_timing_486_block_end()
 {
 }
 
+int codegen_timing_486_jump_cycles()
+{
+        return 0;
+}
+
 codegen_timing_t codegen_timing_486 =
 {
         codegen_timing_486_start,
         codegen_timing_486_prefix,
         codegen_timing_486_opcode,
         codegen_timing_486_block_start,
-        codegen_timing_486_block_end
+        codegen_timing_486_block_end,
+        codegen_timing_486_jump_cycles
 };

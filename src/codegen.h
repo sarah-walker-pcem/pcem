@@ -320,6 +320,7 @@ extern void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
 extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
 extern void (*codegen_timing_block_start)();
 extern void (*codegen_timing_block_end)();
+extern int (*codegen_timing_jump_cycles)();
 
 typedef struct codegen_timing_t
 {
@@ -328,6 +329,7 @@ typedef struct codegen_timing_t
         void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
         void (*block_start)();
         void (*block_end)();
+        int (*jump_cycles)();
 } codegen_timing_t;
 
 extern codegen_timing_t codegen_timing_pentium;

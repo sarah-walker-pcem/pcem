@@ -21,6 +21,7 @@ void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
 void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
 void (*codegen_timing_block_start)();
 void (*codegen_timing_block_end)();
+int (*codegen_timing_jump_cycles)();
 
 void codegen_timing_set(codegen_timing_t *timing)
 {
@@ -29,6 +30,7 @@ void codegen_timing_set(codegen_timing_t *timing)
         codegen_timing_opcode = timing->opcode;
         codegen_timing_block_start = timing->block_start;
         codegen_timing_block_end = timing->block_end;
+        codegen_timing_jump_cycles = timing->jump_cycles;
 }
 
 int codegen_in_recompile;
@@ -508,7 +510,20 @@ generate_call:
               (opcode & 0xfe) == 0xca || (opcode & 0xfc) == 0xcc || (opcode & 0xfc) == 0xe8 ||
               (opcode == 0xff && ((fetchdat & 0x38) >= 0x10 && (fetchdat & 0x38) < 0x30)))) ||
             (op_table == x86_dynarec_opcodes_0f && ((opcode & 0xf0) == 0x80)))
+        {
+                /*On some CPUs (eg K6), a jump/branch instruction may be able to pair with
+                  subsequent instructions, so no cycles may have been deducted for it yet.
+                  To prevent having zero cycle blocks (eg with a jump instruction pointing
+                  to itself), apply the cycles that would be taken if this jump is taken,
+                  then reverse it for subsequent instructions if the jump is not taken*/
+                int jump_cycles = codegen_timing_jump_cycles();
+                
+                if (jump_cycles)
+                        codegen_accumulate(ACCREG_cycles, -jump_cycles);
                 codegen_accumulate_flush(ir);
+                if (jump_cycles)
+                        codegen_accumulate(ACCREG_cycles, jump_cycles);
+        }
 
         if (op_table == x86_dynarec_opcodes_0f && opcode == 0x0f)
         {

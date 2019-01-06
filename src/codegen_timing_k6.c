@@ -2278,11 +2278,19 @@ void codegen_timing_k6_block_end()
                 decode_flush();
 }
 
+int codegen_timing_k6_jump_cycles()
+{
+        if (decode_buffer.nr_uops)
+                return 1;
+        return 0;
+}
+
 codegen_timing_t codegen_timing_k6 =
 {
         codegen_timing_k6_start,
         codegen_timing_k6_prefix,
         codegen_timing_k6_opcode,
         codegen_timing_k6_block_start,
-        codegen_timing_k6_block_end
+        codegen_timing_k6_block_end,
+        codegen_timing_k6_jump_cycles
 };

@@ -743,11 +743,17 @@ static void codegen_timing_winchip2_block_end()
         }
 }
 
+int codegen_timing_winchip2_jump_cycles()
+{
+        return 0;
+}
+
 codegen_timing_t codegen_timing_winchip2 =
 {
         codegen_timing_winchip2_start,
         codegen_timing_winchip2_prefix,
         codegen_timing_winchip2_opcode,
         codegen_timing_winchip2_block_start,
-        codegen_timing_winchip2_block_end
+        codegen_timing_winchip2_block_end,
+        codegen_timing_winchip2_jump_cycles
 };
