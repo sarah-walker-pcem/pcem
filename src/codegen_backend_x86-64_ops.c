@@ -541,6 +541,11 @@ void host_x86_LDMXCSR(codeblock_t *block, void *p)
         {
                 codegen_addbyte4(block, 0x0f, 0xae, 0x50 | REG_EBP, offset); /*LDMXCSR offset[EBP]*/
         }
+        else if (offset < (1ull << 32))
+        {
+                codegen_addbyte3(block, 0x0f, 0xae, 0x90 | REG_EBP); /*LDMXCSR offset[EBP]*/
+                codegen_addlong(block, offset);
+        }
         else
         {
                 fatal("host_x86_LDMXCSR - out of range %p\n", p);

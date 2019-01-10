@@ -333,6 +333,7 @@ pclog("  offsetof(codeblock_t, next_2)=%i\n", offsetof(codeblock_t, next_2));
                 : "=m" (cpu_state.old_fp_control2),
                   "=m" (cpu_state.old_fp_control)
         );
+        cpu_state.trunc_fp_control = cpu_state.old_fp_control | 0x6000;
 }
 
 void codegen_set_rounding_mode(int mode)

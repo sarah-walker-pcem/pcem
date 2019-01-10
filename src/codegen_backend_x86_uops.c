@@ -1579,7 +1579,9 @@ static int codegen_PF2ID(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
         {
+                host_x86_LDMXCSR(block, &cpu_state.trunc_fp_control);
                 host_x86_CVTPS2DQ_XREG_XREG(block, dest_reg, src_reg_a);
+                host_x86_LDMXCSR(block, &cpu_state.old_fp_control);
         }
         else
                 fatal("PF2ID %02x %02x\n", uop->dest_reg_a_real);

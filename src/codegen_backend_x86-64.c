@@ -310,6 +310,7 @@ void codegen_backend_init()
                 "stmxcsr %0\n"
                 : "=m" (cpu_state.old_fp_control)
         );
+        cpu_state.trunc_fp_control = cpu_state.old_fp_control | 0x6000;
 }
 
 void codegen_set_rounding_mode(int mode)

@@ -182,6 +182,9 @@ struct
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_
         uint16_t old_fp_control2, new_fp_control2;
 #endif
+#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined __amd64__
+        uint32_t trunc_fp_control;
+#endif
         x86seg seg_cs,seg_ds,seg_es,seg_ss,seg_fs,seg_gs;
 
         union
