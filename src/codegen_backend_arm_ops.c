@@ -96,8 +96,9 @@
 #define OPCODE_VCMP_D 0xeeb40b40
 #define OPCODE_VCVT_D_IS  0xeeb80bc0
 #define OPCODE_VCVT_D_S   0xeeb70ac0
+#define OPCODE_VCVT_F32_S32 0xf3bb0700
 #define OPCODE_VCVT_IS_D  0xeebd0bc0
-#define OPCODE_VCVT_S32_F32 0xf3bb0680
+#define OPCODE_VCVT_S32_F32 0xf3bb0600
 #define OPCODE_VCVT_S_D   0xeeb70bc0
 #define OPCODE_VCVTR_IS_D 0xeebd0b40
 #define OPCODE_VDIV   0xee800b00
@@ -156,6 +157,7 @@
 #define OPCODE_VSUB_I8  0xf3000800
 #define OPCODE_VSUB_I16 0xf3100800
 #define OPCODE_VSUB_I32 0xf3200800
+#define OPCODE_VSUB_F32 0xf3000d00
 #define OPCODE_VZIP_D8  0xf3b20180
 #define OPCODE_VZIP_D16 0xf3b60180
 #define OPCODE_VZIP_D32 0xf3ba0080
@@ -932,6 +934,10 @@ void host_arm_VCVT_D_S(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCVT_D_S | Vd(dest_reg) | Vm(src_reg));
 }
+void host_arm_VCVT_F32_S32(codeblock_t *block, int dest_reg, int src_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VCVT_F32_S32 | Vd(dest_reg) | Vm(src_reg));
+}
 void host_arm_VCVT_IS_D(codeblock_t *block, int dest_reg, int src_reg)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VCVT_IS_D | Vd(dest_reg) | Vm(src_reg));
@@ -1006,7 +1012,7 @@ void host_arm_VMOVN_I64(codeblock_t *block, int dest_reg, int src_reg)
 }
 void host_arm_VMOV_F32_ONE(codeblock_t *block, int dst_reg)
 {
-	codegen_addlong(block, COND_AL | OPCODE_VMOV_F32_ONE | Rd(src_reg));
+	codegen_addlong(block, COND_AL | OPCODE_VMOV_F32_ONE | Rd(dst_reg));
 }
 void host_arm_VMSR_FPSCR(codeblock_t *block, int src_reg)
 {
@@ -1197,6 +1203,10 @@ void host_arm_VSTR_S(codeblock_t *block, int src_reg, int base_reg, int offset)
 void host_arm_VSUB_D(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {
 	codegen_addlong(block, COND_AL | OPCODE_VSUB | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
+}
+void host_arm_VSUB_F32(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
+{
+	codegen_addlong(block, COND_AL | OPCODE_VSUB_F32 | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m));
 }
 void host_arm_VSUB_I8(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m)
 {

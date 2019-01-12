@@ -1696,12 +1696,12 @@ static int codegen_PF2ID(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFADD(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FADD_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FADD_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1710,12 +1710,12 @@ static int codegen_PFADD(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FCMEQ_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FCMEQ_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFCMPEQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1724,12 +1724,12 @@ static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FCMGE_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FCMGE_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFCMPGE %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1738,12 +1738,12 @@ static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FCMGT_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FCMGT_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFCMPGT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1752,12 +1752,12 @@ static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FMAX_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FMAX_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFMAX %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1766,12 +1766,12 @@ static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FMIN_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FMIN_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFMIN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1780,12 +1780,12 @@ static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
 }
 static int codegen_PFMUL(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FMUL_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FMUL_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
@@ -1800,9 +1800,9 @@ static int codegen_PFRCP(codeblock_t *block, uop_t *uop)
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
         {
                 /*TODO: This could be improved (use VRECPE/VRECPS)*/
-                host_arm_FMOV_S_ONE(block, REG_D_TEMP);
-                host_arm_FDIV_S(block, dest_reg, REG_D_TEMP, src_reg_a);
-                host_arm_DUP_V2S(block, dest_reg, dest_reg, 0);
+                host_arm64_FMOV_S_ONE(block, REG_V_TEMP);
+                host_arm64_FDIV_S(block, dest_reg, REG_V_TEMP, src_reg_a);
+                host_arm64_DUP_V2S(block, dest_reg, dest_reg, 0);
         }
         else
                 fatal("PFRCP %02x %02x\n", uop->dest_reg_a_real);
@@ -1817,10 +1817,10 @@ static int codegen_PFRSQRT(codeblock_t *block, uop_t *uop)
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a))
         {
                 /*TODO: This could be improved (use VRSQRTE/VRSQRTS)*/
-                host_arm_FSQRT_S(block, REG_D_TEMP, src_reg_a);
-                host_arm_FMOV_S_ONE(block, REG_D_TEMP);
-                host_arm_FDIV_S(block, dest_reg, dest_reg, REG_D_TEMP);
-                host_arm_DUP_V2S(block, dest_reg, dest_reg, 0);
+                host_arm64_FSQRT_S(block, REG_V_TEMP, src_reg_a);
+                host_arm64_FMOV_S_ONE(block, REG_V_TEMP);
+                host_arm64_FDIV_S(block, dest_reg, dest_reg, REG_V_TEMP);
+                host_arm64_DUP_V2S(block, dest_reg, dest_reg, 0);
         }
         else
                 fatal("PFRSQRT %02x %02x\n", uop->dest_reg_a_real);
@@ -1834,7 +1834,7 @@ static int codegen_PFSUB(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b))
         {
-                host_arm_FSUB_V2S(block, dest_reg, src_reg_a, src_reg_b);
+                host_arm64_FSUB_V2S(block, dest_reg, src_reg_a, src_reg_b);
         }
         else
                 fatal("PFSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);

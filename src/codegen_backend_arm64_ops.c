@@ -167,6 +167,7 @@
 #define OPCODE_SADDLP_V2S_4H (0x0e602800)
 #define OPCODE_SCVTF_D_Q     (0x9e620000)
 #define OPCODE_SCVTF_D_W     (0x1e620000)
+#define OPCODE_SCVTF_V2S     (0x0e21d800)
 #define OPCODE_SQADD_V8B     (0x0e200c00)
 #define OPCODE_SQADD_V4H     (0x0e600c00)
 #define OPCODE_SQSUB_V8B     (0x0e202c00)
@@ -1103,6 +1104,11 @@ void host_arm64_SCVTF_D_Q(codeblock_t *block, int dst_reg, int src_reg)
 void host_arm64_SCVTF_D_W(codeblock_t *block, int dst_reg, int src_reg)
 {
 	codegen_addlong(block, OPCODE_SCVTF_D_W | Rd(dst_reg) | Rn(src_reg));
+}
+
+void host_arm64_SCVTF_V2S(codeblock_t *block, int dst_reg, int src_reg)
+{
+	codegen_addlong(block, OPCODE_SCVTF_V2S | Rd(dst_reg) | Rn(src_reg));
 }
 
 void host_arm64_SHRN_V4H_4S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
