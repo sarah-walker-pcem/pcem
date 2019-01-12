@@ -63,6 +63,7 @@
 #include "vid_t1000.h"
 #include "wd76c10.h"
 #include "xi8088.h"
+#include "zenith.h"
 
 void             xt_init();
 void           pcjr_init();
@@ -108,6 +109,7 @@ void      at_pb520r_init();
 void       at_pb570_init();
 void     compaq_pip_init();
 void      xt_xi8088_init();
+void      xt_zenith_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY;
@@ -131,6 +133,7 @@ MODEL models[] =
         {"[8088] Thomson TO16 PC",        ROM_TO16_PC,          "to16_pc",        { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  512,  640, 128,             xt_init, NULL},
         {"[8088] Toshiba T1000",          ROM_T1000,            "t1000",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED,                                                 512, 1280, 768,       xt_t1000_init, &t1000_device},
         {"[8088] VTech Laser Turbo XT",   ROM_LTXT,             "ltxt",           { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64, 1152,  64,     xt_laserxt_init, NULL},
+        {"[8088] Zenith Data SupersPort", ROM_ZD_SUPERS,        "zdsupers",       { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  128,  640, 128,      xt_zenith_init, NULL},
         {"[8088] Xi8088",                 ROM_XI8088,           "xi8088",         { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2,                                64, 1024, 128,      xt_xi8088_init, &xi8088_device},
 
         {"[8086] Amstrad PC1512",         ROM_PC1512,           "pc1512",         { {"",      cpus_pc1512},      {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AMSTRAD,                                   512,  640, 128,            ams_init, NULL},
@@ -375,6 +378,22 @@ void xt_laserxt_init()
 {
         xt_init();
         laserxt_init();
+}
+
+void xt_zenith_init() /* [8088] Zenith Data Systems SupersPort */
+{
+        dma_init();
+        fdc_add();
+        lpt_init();
+        lpt2_remove(); /* only one parallel port */
+        pic_init();
+        pit_init();
+        serial1_init(0x3f8, 4); /* only one serial port */
+        mem_add_bios();
+        device_add(&zenith_scratchpad_device);
+        pit_set_out_func(&pit, 1, pit_refresh_timer_xt);
+        keyboard_xt_init();
+        nmi_init();
 }
 
 void xt_xi8088_init()

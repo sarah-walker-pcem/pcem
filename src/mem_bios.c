@@ -950,6 +950,13 @@ int loadbios()
                 biosmask = 0x7fff;
                 return 1;
 				
+                case ROM_ZD_SUPERS:  /* [8088] Zenith Data Systems SupersPort */
+                f=romfopen("zdsupers/z184m v3.1d.10d","rb");
+                if (!f) break;
+                romfread(rom, 32768, 1, f);
+                fclose(f);
+                biosmask = 0x7fff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
