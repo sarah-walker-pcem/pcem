@@ -799,7 +799,7 @@ static void *tgui9440_init()
 
 static int tgui9400cxi_available()
 {
-        return rom_present("9400CXI.VBI");
+        return rom_present("9400CXI.vbi");
 }
 
 static int tgui9440_available()
