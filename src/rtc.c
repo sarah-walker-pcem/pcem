@@ -42,7 +42,7 @@ static int rtc_is_leap(int org_year)
 static int rtc_get_days(int org_month, int org_year)
 {
         if (org_month != 2)
-                return rtc_days_in_month[org_month];
+                return rtc_days_in_month[org_month-1];
         else
                 return rtc_is_leap(org_year) ? 29 : 28;
 }
