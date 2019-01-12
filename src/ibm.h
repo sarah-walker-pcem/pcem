@@ -430,6 +430,8 @@ enum
         ROM_WIN486,
         ROM_PCI486,
         ROM_SIS496,
+        ROM_P55VA,   /* Epox P55-VA/430VX/Award/SMC FDC37C932FR*/
+        ROM_P55TVP4, /* ASUS P/I-P55TVP4/430VX/Award/Winbond W8387F*/
         ROM_430VX,
         ROM_ENDEAVOR,
         ROM_REVENGE,

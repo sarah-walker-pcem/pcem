@@ -282,6 +282,8 @@ void loadnvr()
                 case ROM_WIN486:      f = nvrfopen("win486.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_PCI486:      f = nvrfopen("hot-433.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_SIS496:      f = nvrfopen("sis496.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_P55VA:       f = nvrfopen("p55va.nvr",       "rb"); nvrmask = 127; break;
+                case ROM_P55TVP4:     f = nvrfopen("p55tvp4.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_430VX:       f = nvrfopen("430vx.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_REVENGE:     f = nvrfopen("revenge.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_ENDEAVOR:    f = nvrfopen("endeavor.nvr",    "rb"); nvrmask = 127; break;
@@ -375,6 +377,8 @@ void savenvr()
                 case ROM_WIN486:      f = nvrfopen("win486.nvr",      "wb"); break;
                 case ROM_PCI486:      f = nvrfopen("hot-433.nvr",     "wb"); break;
                 case ROM_SIS496:      f = nvrfopen("sis496.nvr",      "wb"); break;
+                case ROM_P55VA:       f = nvrfopen("p55va.nvr",       "wb"); break;
+                case ROM_P55TVP4:     f = nvrfopen("p55tvp4.nvr",     "wb"); break;
                 case ROM_430VX:       f = nvrfopen("430vx.nvr",       "wb"); break;
                 case ROM_REVENGE:     f = nvrfopen("revenge.nvr",     "wb"); break;
                 case ROM_ENDEAVOR:    f = nvrfopen("endeavor.nvr",    "wb"); break;

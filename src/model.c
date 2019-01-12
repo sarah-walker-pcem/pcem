@@ -93,6 +93,8 @@ void     at_ali1429_init();
 void    at_headland_init();
 void     at_opti495_init();
 void      at_sis496_init();
+void       at_p55va_init();
+void     at_p55tvp4_init();
 void      at_i430vx_init();
 void      at_batman_init();
 void    at_endeavor_init();
@@ -190,6 +192,8 @@ MODEL models[] =
         {"[Socket 5] Intel Advanced/ZP",  ROM_ZAPPA,            "zappa",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,       at_zappa_init, NULL},
         {"[Socket 5] Packard Bell PB570", ROM_PB570,            "pb570",          { {"Intel", cpus_PentiumS5},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1,  128,   1,       at_pb570_init, NULL},
 
+        {"[Socket 7] ASUS P/I-P55TVP4",   ROM_P55TVP4,          "p55tvp4",        { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  256,   1,      at_p55tvp4_init, NULL},
+        {"[Socket 7] Epox P55-VA",        ROM_P55VA,            "p55va",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  256,   1,      at_p55va_init, NULL},
         {"[Socket 7] Award 430VX PCI",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  256,   1,      at_i430vx_init, NULL},
 
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
@@ -646,6 +650,34 @@ void at_zappa_init()
         pc87306_init(0x2e);
         intel_zappa_init();
         device_add(&intel_flash_bxt_ami_device);
+}
+
+void at_p55va_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0x08);
+        pci_slot(0x09);
+        pci_slot(0x0A);
+        pci_slot(0x0B);
+        i430vx_init();
+        piix_init(7, 0x08, 0x09, 0x0A, 0x0B);
+        um8669f_init();
+        device_add(&intel_flash_bxt_device);
+}
+
+void at_p55tvp4_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0x0C);
+        pci_slot(0x0B);
+        pci_slot(0x0A);
+        pci_slot(0x09);
+        i430vx_init();
+        piix_init(7, 0x0C, 0x0B, 0x0A, 0x09);
+        um8669f_init();
+        device_add(&intel_flash_bxt_device);
 }
 
 void at_i430vx_init()

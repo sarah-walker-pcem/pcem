@@ -466,6 +466,22 @@ int loadbios()
                 pclog("Load SIS496 %x %x\n", rom[0x1fff0], rom[0xfff0]);
                 return 1;
                 
+                case ROM_P55VA:
+                f = romfopen("p55va/va021297.bin", "rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+
+                case ROM_P55TVP4:
+                f = romfopen("p55tvp4/tv5i0204.awd", "rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+
                 case ROM_430VX:
 //                f = romfopen("430vx/ga586atv.bin", "rb");
 //                f = fopen("430vx/vx29.bin", "rb");

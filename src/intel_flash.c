@@ -176,6 +176,12 @@ void *intel_flash_init(uint8_t type)
 		case ROM_ZAPPA:
 		strcpy(flash_path, "zappa/");
 		break;
+		case ROM_P55VA:
+		strcpy(flash_path, "p55va/");
+		break;
+		case ROM_P55TVP4:
+		strcpy(flash_path, "p55tvp4/");
+		break;
 		case ROM_430VX:
 		strcpy(flash_path, "430vx/");
 		break;
