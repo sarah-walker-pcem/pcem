@@ -11,9 +11,12 @@
 
 #include "codegen.h"
 #include "codegen_accumulate.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 #include "codegen_reg.h"
+
+uint8_t *block_write_data = NULL;
 
 int codegen_flat_ds, codegen_flat_ss;
 int mmx_ebx_ecx_loaded;
@@ -52,6 +55,7 @@ uint32_t instr_counts[256*256];
 
 void codegen_init()
 {
+        codegen_allocator_init();
         codegen_backend_init();
 #ifdef DEBUG_EXTRA
         memset(instr_counts, 0, sizeof(instr_counts));
@@ -96,10 +100,7 @@ void codegen_reset()
         mem_reset_page_blocks();
         
         for (c = 0; c < BLOCK_SIZE; c++)
-        {
                 codeblock[c].pc = BLOCK_PC_INVALID;
-                codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
-        }
 }
 
 void dump_block()
@@ -220,6 +221,28 @@ static void delete_block(codeblock_t *block)
 
         codeblock_tree_delete(block);
         remove_from_block_list(block, old_pc);
+        if (block->head_mem_block)
+                codegen_allocator_free(block->head_mem_block);
+        block->head_mem_block = NULL;
+}
+
+void codegen_delete_random_block()
+{
+        while (1)
+        {
+                int block_nr = rand() & BLOCK_MASK;
+                
+                if (block_nr && block_nr != block_current)
+                {
+                        codeblock_t *block = &codeblock[block_nr];
+                        
+                        if (block->pc != BLOCK_PC_INVALID && block->head_mem_block)
+                        {
+                                delete_block(block);
+                                return;
+                        }
+                }
+        }
 }
 
 void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
@@ -317,6 +340,9 @@ void codegen_block_start_recompile(codeblock_t *block)
 
         if (block->pc != cs + cpu_state.pc || (block->flags & CODEBLOCK_WAS_RECOMPILED))
                 fatal("Recompile to used block!\n");
+
+        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->data = codeblock_allocator_get_ptr(block->head_mem_block);
 
         block->status = cpu_cur_status;
 

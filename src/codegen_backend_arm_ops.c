@@ -2,20 +2,10 @@
 
 #include "ibm.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm_defs.h"
 #include "codegen_backend_arm_ops.h"
-
-static inline void codegen_addlong(codeblock_t *block, uint32_t val)
-{
-        *(uint32_t *)&block->data[block_pos] = val;
-        block_pos += 4;
-        if (block_pos >= BLOCK_MAX)
-        {
-                fatal("codegen_addlong over! %i\n", block_pos);
-                CPU_BLOCK_END();
-        }
-}
 
 #define Rm(x)  (x)
 #define Rs(x)  ((x) << 8)
@@ -207,6 +197,37 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 
 #define VDUP_32_IMM(imm) ((imm) << 19)
 
+static void codegen_allocate_new_block(codeblock_t *block);
+
+static inline void codegen_addlong(codeblock_t *block, uint32_t val)
+{
+        if (block_pos >= (BLOCK_MAX-4))
+		codegen_allocate_new_block(block);
+        *(uint32_t *)&block_write_data[block_pos] = val;
+        block_pos += 4;
+}
+
+static void codegen_allocate_new_block(codeblock_t *block)
+{
+        /*Current block is full. Allocate a new block*/
+        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block);
+        uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
+	uint32_t offset = ((uintptr_t)new_ptr - (uintptr_t)&block_write_data[block_pos]) - 8;
+
+        /*Add a jump instruction to the new block*/
+	*(uint32_t *)&block_write_data[block_pos] = COND_AL | OPCODE_B | B_OFFSET(offset);
+
+        /*Set write address to start of new block*/
+        block_pos = 0;
+        block_write_data = new_ptr;
+}
+
+static inline void codegen_alloc_4(codeblock_t *block)
+{
+        if (block_pos >= (BLOCK_MAX-4))
+		codegen_allocate_new_block(block);
+}
+
 static inline uint32_t arm_data_offset(int offset)
 {
 	if (offset < -0xffc || offset > 0xffc)
@@ -321,7 +342,10 @@ void host_arm_AND_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int sr
 
 void host_arm_B(codeblock_t *block, uintptr_t dest_addr)
 {
-	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+	uint32_t offset;
+
+	codegen_alloc_4(block);
+	offset = (dest_addr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
 	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
 	{
@@ -366,7 +390,10 @@ void host_arm_BIC_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int sr
 
 void host_arm_BL(codeblock_t *block, uintptr_t dest_addr)
 {
-	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+	uint32_t offset;
+
+	codegen_alloc_4(block);
+	offset = (dest_addr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
 	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
 	{
@@ -378,7 +405,10 @@ void host_arm_BL(codeblock_t *block, uintptr_t dest_addr)
 }
 void host_arm_BL_r1(codeblock_t *block, uintptr_t dest_addr)
 {
-	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+	uint32_t offset;
+
+	codegen_alloc_4(block);
+	offset = (dest_addr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
 	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
 	{
@@ -397,90 +427,93 @@ uint32_t *host_arm_BCC_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_CC | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BCS_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_CS | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BEQ_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_EQ | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BGE_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_GE | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BGT_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_GT | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BHI_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_HI | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BLE_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_LE | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BLS_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_LS | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BLT_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_LT | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BMI_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_MI | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BNE_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_NE | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BPL_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_PL | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BVC_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_VC | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 uint32_t *host_arm_BVS_(codeblock_t *block)
 {
 	codegen_addlong(block, COND_VS | OPCODE_B);
 
-	return (uint32_t *)&block->data[block_pos - 4];
+	return (uint32_t *)&block_write_data[block_pos - 4];
 }
 
 void host_arm_BEQ(codeblock_t *block, uintptr_t dest_addr)
 {
-	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+	uint32_t offset;
+
+	codegen_alloc_4(block);
+	offset = (dest_addr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
 	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
 		fatal("host_arm_BEQ - out of range %08x %i\n", offset, offset);
@@ -489,7 +522,10 @@ void host_arm_BEQ(codeblock_t *block, uintptr_t dest_addr)
 }
 void host_arm_BNE(codeblock_t *block, uintptr_t dest_addr)
 {
-	uint32_t offset = (dest_addr - (uintptr_t)&block->data[block_pos]) - 8;
+	uint32_t offset;
+
+	codegen_alloc_4(block);
+	offset = (dest_addr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
 	if ((offset & 0xfe000000) && (offset & 0xfe000000) != 0xfe000000)
 		fatal("host_arm_BNE - out of range %08x %i\n", offset, offset);

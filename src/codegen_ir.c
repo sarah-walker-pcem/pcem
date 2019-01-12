@@ -1,5 +1,6 @@
 #include "ibm.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 #include "codegen_reg.h"
@@ -20,6 +21,8 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
         int jump_target_at_end = -1;
         int c;
 
+        block_write_data = codeblock_allocator_get_ptr(block->head_mem_block);
+        block_pos = 0;
         codegen_backend_prologue(block);
 
         for (c = 0; c < ir->wr_pos; c++)
@@ -114,7 +117,7 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
         }
 
         codegen_backend_epilogue(block);
-
+        block_write_data = NULL;
 //        if (has_ea)
 //                fatal("IR compilation complete\n");
 }

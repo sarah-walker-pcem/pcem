@@ -7,6 +7,7 @@
 #include "386_common.h"
 
 #include "codegen_accumulate.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"

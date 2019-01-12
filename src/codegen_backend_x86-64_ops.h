@@ -163,6 +163,8 @@ void host_x86_MINPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MULSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MULSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
+void host_x86_NOP(codeblock_t *block);
+
 void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
 void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
 void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);

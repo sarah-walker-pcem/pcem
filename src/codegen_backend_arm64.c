@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm64_defs.h"
 #include "codegen_backend_arm64_ops.h"
@@ -83,9 +84,9 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 	  LDP X29, X30, [SP, #-16]
 	  RET
 	*/
+	codegen_alloc(block, 80);
 	host_arm64_MOV_REG_LSR(block, REG_W1, REG_W0, 12);
-	offset = add_literal_q(block, (uintptr_t)readlookup2);
-	host_arm64_LDR_LITERAL_X(block, REG_X2, offset);
+	host_arm64_MOVX_IMM(block, REG_X2, (uint64_t)readlookup2);
 	host_arm64_LDRX_REG_LSL3(block, REG_X1, REG_X2, REG_X1);
 	if (size != 1)
 	{
@@ -107,9 +108,9 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 	host_arm64_MOVZ_IMM(block, REG_W1, 0);
 	host_arm64_RET(block, REG_X30);
 
-	host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+	host_arm64_branch_set_offset(branch_offset, &block_write_data[block_pos]);
 	if (size != 1)
-		host_arm64_branch_set_offset(misaligned_offset, &block->data[block_pos]);
+		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
 	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
 	if (size == 1)
 		host_arm64_call(block, (uintptr_t)readmemb386l);
@@ -128,8 +129,6 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_FMOV_D_Q(block, REG_V_TEMP, REG_X0);
 	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
 	host_arm64_RET(block, REG_X30);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_store_routine(codeblock_t *block, int size, int is_float)
@@ -154,9 +153,9 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	  LDP X29, X30, [SP, #-16]
 	  RET
 	*/
+	codegen_alloc(block, 80);
 	host_arm64_MOV_REG_LSR(block, REG_W2, REG_W0, 12);
-	offset = add_literal_q(block, (uintptr_t)writelookup2);
-	host_arm64_LDR_LITERAL_X(block, REG_X3, offset);
+	host_arm64_MOVX_IMM(block, REG_X3, (uint64_t)writelookup2);
 	host_arm64_LDRX_REG_LSL3(block, REG_X2, REG_X3, REG_X2);
 	if (size != 1)
 	{
@@ -178,9 +177,9 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	host_arm64_MOVZ_IMM(block, REG_X1, 0);
 	host_arm64_RET(block, REG_X30);
 
-	host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+	host_arm64_branch_set_offset(branch_offset, &block_write_data[block_pos]);
 	if (size != 1)
-		host_arm64_branch_set_offset(misaligned_offset, &block->data[block_pos]);
+		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
 	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
 	if (size == 4 && is_float)
 		host_arm64_FMOV_W_S(block, REG_W1, REG_V_TEMP);
@@ -199,36 +198,34 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
 	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
 	host_arm64_RET(block, REG_X30);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_loadstore_routines(codeblock_t *block)
 {
-        codegen_mem_load_byte = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_byte = &block_write_data[block_pos];
         build_load_routine(block, 1, 0);
-        codegen_mem_load_word = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_word = &block_write_data[block_pos];
         build_load_routine(block, 2, 0);
-        codegen_mem_load_long = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_long = &block_write_data[block_pos];
         build_load_routine(block, 4, 0);
-        codegen_mem_load_quad = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_quad = &block_write_data[block_pos];
         build_load_routine(block, 8, 0);
-        codegen_mem_load_single = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_single = &block_write_data[block_pos];
         build_load_routine(block, 4, 1);
-        codegen_mem_load_double = &codeblock[block_current].data[block_pos];
+        codegen_mem_load_double = &block_write_data[block_pos];
         build_load_routine(block, 8, 1);
 
-        codegen_mem_store_byte = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_byte = &block_write_data[block_pos];
         build_store_routine(block, 1, 0);
-        codegen_mem_store_word = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_word = &block_write_data[block_pos];
         build_store_routine(block, 2, 0);
-        codegen_mem_store_long = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_long = &block_write_data[block_pos];
         build_store_routine(block, 4, 0);
-        codegen_mem_store_quad = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_quad = &block_write_data[block_pos];
         build_store_routine(block, 8, 0);
-        codegen_mem_store_single = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_single = &block_write_data[block_pos];
         build_store_routine(block, 4, 1);
-        codegen_mem_store_double = &codeblock[block_current].data[block_pos];
+        codegen_mem_store_double = &block_write_data[block_pos];
         build_store_routine(block, 8, 1);
 }
 
@@ -236,50 +233,47 @@ static void build_fp_round_routine(codeblock_t *block, int is_quad)
 {
 	uint64_t *jump_table;
 
+	codegen_alloc(block, 80);
 	host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.new_fp_control - (uintptr_t)&cpu_state);
 	host_arm64_ADR(block, REG_TEMP2, 12);
 	host_arm64_LDR_REG_X(block, REG_TEMP2, REG_TEMP2, REG_TEMP);
 	host_arm64_BR(block, REG_TEMP2);
 
-	jump_table = &block->data[block_pos];
-	addquad(0);
-	addquad(0);
-	addquad(0);
-	addquad(0);
+	jump_table = &block_write_data[block_pos];
+	block_pos += 4*8;
 
-	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block->data[block_pos]; //tie even
+	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //tie even
 	if (is_quad)
 		host_arm64_FCVTNS_X_D(block, REG_TEMP, REG_V_TEMP);
 	else
 		host_arm64_FCVTNS_W_D(block, REG_TEMP, REG_V_TEMP);
 	host_arm64_RET(block, REG_X30);
 
-	jump_table[X87_ROUNDING_UP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //pos inf
+	jump_table[X87_ROUNDING_UP] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //pos inf
 	if (is_quad)
 		host_arm64_FCVTPS_X_D(block, REG_TEMP, REG_V_TEMP);
 	else
 		host_arm64_FCVTPS_W_D(block, REG_TEMP, REG_V_TEMP);
 	host_arm64_RET(block, REG_X30);
 
-	jump_table[X87_ROUNDING_DOWN] = (uint64_t)(uintptr_t)&block->data[block_pos]; //neg inf
+	jump_table[X87_ROUNDING_DOWN] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //neg inf
 	if (is_quad)
 		host_arm64_FCVTMS_X_D(block, REG_TEMP, REG_V_TEMP);
 	else
 		host_arm64_FCVTMS_W_D(block, REG_TEMP, REG_V_TEMP);
 	host_arm64_RET(block, REG_X30);
 	
-	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //zero
+	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //zero
 	if (is_quad)
 		host_arm64_FCVTZS_X_D(block, REG_TEMP, REG_V_TEMP);
 	else
 		host_arm64_FCVTZS_W_D(block, REG_TEMP, REG_V_TEMP);
 	host_arm64_RET(block, REG_X30);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 void codegen_backend_init()
 {
+	codeblock_t *block;
         int c;
 #if defined(__linux__) || defined(__APPLE__)
 	void *start;
@@ -288,13 +282,6 @@ void codegen_backend_init()
 	long pagemask = ~(pagesize - 1);
 #endif
 
-#if defined WIN32 || defined _WIN32 || defined _WIN32
-        codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-#else
-        codeblock_data = malloc(BLOCK_SIZE * BLOCK_DATA_SIZE);
-#endif
-	if (!codeblock_data)
-		fatal("codeblock_data failed to alloc - %i\n", (BLOCK_SIZE+1) * BLOCK_DATA_SIZE);
 	codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
@@ -304,29 +291,24 @@ void codegen_backend_init()
         for (c = 0; c < BLOCK_SIZE; c++)
 	{
                 codeblock[c].pc = BLOCK_PC_INVALID;
-		codeblock[c].data = &codeblock_data[c * BLOCK_SIZE];
 	}
 
-#if defined(__linux__) || defined(__APPLE__)
-	start = (void *)((long)codeblock_data & pagemask);
-	len = ((BLOCK_SIZE * BLOCK_DATA_SIZE) + pagesize) & pagemask;
-	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-	{
-		perror("mprotect");
-		exit(-1);
-	}
-#endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
         block_current = 0;
         block_pos = 0;
-	codegen_reset_literal_pool(&codeblock[block_current]);
-        build_loadstore_routines(&codeblock[block_current]);
+        block = &codeblock[block_current];
+        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->data = codeblock_allocator_get_ptr(block->head_mem_block);
+        block_write_data = block->data;
+        build_loadstore_routines(block);
 
-        codegen_fp_round = &codeblock[block_current].data[block_pos];
-	build_fp_round_routine(&codeblock[block_current], 0);
-        codegen_fp_round_quad = &codeblock[block_current].data[block_pos];
-	build_fp_round_routine(&codeblock[block_current], 1);
+        codegen_fp_round = &block_write_data[block_pos];
+	build_fp_round_routine(block, 0);
+        codegen_fp_round_quad = &block_write_data[block_pos];
+	build_fp_round_routine(block, 1);
+
+        block_write_data = NULL;
 
 	asm("mrs %0, fpcr\n"
                 : "=r" (cpu_state.old_fp_control)
@@ -340,13 +322,10 @@ void codegen_set_rounding_mode(int mode)
         cpu_state.new_fp_control = mode << 3;
 }
 
-/*R11 - literal pool
-  R10 - cpu_state*/
+/*R10 - cpu_state*/
 void codegen_backend_prologue(codeblock_t *block)
 {
 	int offset;
-
-	codegen_reset_literal_pool(block);
 
         block_pos = 0;
 
@@ -378,8 +357,7 @@ void codegen_backend_prologue(codeblock_t *block)
 	host_arm64_STP_PREIDX_X(block, REG_X21, REG_X22, REG_SP, -16);
 	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -64);
 
-	offset = add_literal_q(block, (uintptr_t)&cpu_state);
-	host_arm64_LDR_LITERAL_X(block, REG_CPUSTATE, offset);
+	host_arm64_MOVX_IMM(block, REG_CPUSTATE, (uint64_t)&cpu_state);
 
         if (block->flags & CODEBLOCK_HAS_FPU)
         {
@@ -399,12 +377,7 @@ void codegen_backend_epilogue(codeblock_t *block)
 	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
 	host_arm64_RET(block, REG_X30);
 
-        if (block_pos > ARM_LITERAL_POOL_OFFSET)
-                fatal("Over limit!\n");
-
-
-
-	__clear_cache(&block->data[0], &block->data[block_pos]);
+	codegen_allocator_clean_blocks(block->head_mem_block);
 }
 
 #endif

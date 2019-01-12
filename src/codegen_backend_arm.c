@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm_defs.h"
 #include "codegen_backend_arm_ops.h"
@@ -126,8 +127,6 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm_VMOV_D_64(block, REG_D_TEMP, REG_R0, REG_R1);
 	host_arm_LDRB_ABS(block, REG_R1, &cpu_state.abrt);
 	host_arm_LDR_IMM_POST(block, REG_PC, REG_HOST_SP, 4);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_store_routine(codeblock_t *block, int size, int is_float)
@@ -199,8 +198,6 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 		fatal("build_store_routine - unknown size %i\n", size);
 	host_arm_LDRB_ABS(block, REG_R1, &cpu_state.abrt);
 	host_arm_LDR_IMM_POST(block, REG_PC, REG_HOST_SP, 4);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_loadstore_routines(codeblock_t *block)
@@ -246,13 +243,13 @@ static void build_fp_round_routine(codeblock_t *block)
 	host_arm_MOV_REG(block, REG_LR, REG_TEMP2);
 	host_arm_LDR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.new_fp_control - (uintptr_t)&cpu_state);
 	host_arm_LDR_REG(block, REG_PC, REG_PC, REG_TEMP);
-	addlong(0);
+	host_arm_NOP(block);
 
 	jump_table = (uint32_t *)&block->data[block_pos];
-	addlong(0);
-	addlong(0);
-	addlong(0);
-	addlong(0);
+	host_arm_NOP(block);
+	host_arm_NOP(block);
+	host_arm_NOP(block);
+	host_arm_NOP(block);
 
 	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block->data[block_pos]; //tie even
 	host_arm_VCVTR_IS_D(block, REG_D_TEMP, REG_D_TEMP);
@@ -279,12 +276,11 @@ static void build_fp_round_routine(codeblock_t *block)
 	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block->data[block_pos]; //zero
 	host_arm_VCVT_IS_D(block, REG_D_TEMP, REG_D_TEMP);
 	host_arm_MOV_REG(block, REG_PC, REG_LR);
-
-        block_pos = (block_pos + 63) & ~63;
 }
 
 void codegen_backend_init()
 {
+	codeblock_t *block;
         int c;
 #if defined(__linux__) || defined(__APPLE__)
 	void *start;
@@ -293,13 +289,6 @@ void codegen_backend_init()
 	long pagemask = ~(pagesize - 1);
 #endif
 
-#if defined WIN32 || defined _WIN32 || defined _WIN32
-        codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-#else
-        codeblock_data = malloc(BLOCK_SIZE * BLOCK_DATA_SIZE);
-#endif
-	if (!codeblock_data)
-		fatal("codeblock_data failed to alloc - %i\n", (BLOCK_SIZE+1) * BLOCK_DATA_SIZE);
 	codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
@@ -307,28 +296,23 @@ void codegen_backend_init()
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 
         for (c = 0; c < BLOCK_SIZE; c++)
-	{
                 codeblock[c].pc = BLOCK_PC_INVALID;
-		codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
-	}
 
-#if defined(__linux__) || defined(__APPLE__)
-	start = (void *)((long)codeblock_data & pagemask);
-	len = ((BLOCK_SIZE * BLOCK_DATA_SIZE) + pagesize) & pagemask;
-	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-	{
-		perror("mprotect");
-		exit(-1);
-	}
-#endif
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
         block_current = 0;
         block_pos = 0;
+        block = &codeblock[block_current];
+        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->data = codeblock_allocator_get_ptr(block->head_mem_block);
+        block_write_data = block->data;
         build_loadstore_routines(&codeblock[block_current]);
+printf("block_pos=%i\n", block_pos);
 
         codegen_fp_round = &codeblock[block_current].data[block_pos];
 	build_fp_round_routine(&codeblock[block_current]);
+
+        block_write_data = NULL;
 
 	asm("vmrs %0, fpscr\n"
                 : "=r" (cpu_state.old_fp_control)
@@ -380,10 +364,7 @@ void codegen_backend_epilogue(codeblock_t *block)
 	host_arm_ADD_IMM(block, REG_HOST_SP, REG_HOST_SP, 0x40);
 	host_arm_LDMIA_WB(block, REG_HOST_SP, REG_MASK_LOCAL | REG_MASK_PC);
 
-        if (block_pos > ARM_LITERAL_POOL_OFFSET)
-                fatal("Over limit!\n");
-
-	__clear_cache(&block->data[0], &block->data[block_pos]);
+	codegen_allocator_clean_blocks(block->head_mem_block);
 }
 
 #endif

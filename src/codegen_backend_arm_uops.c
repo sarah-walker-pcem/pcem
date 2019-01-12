@@ -6,6 +6,7 @@
 #include "x87.h"
 #include "386_common.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_arm_defs.h"
 #include "codegen_backend_arm_ops.h"
@@ -849,7 +850,7 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 	host_arm_call(block, x86_int);
         host_arm_B(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
 
-	*branch_ptr |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
+	*branch_ptr |= ((((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
 
         return 0;
 }
@@ -870,7 +871,7 @@ static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
 	host_arm_call(block, x86_int);
         host_arm_B(block, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
 
-	*branch_ptr |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
+	*branch_ptr |= ((((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_ptr) - 8) & 0x3fffffc) >> 2;
 
         host_arm_MOV_IMM(block, REG_TEMP, 0);
 	host_arm_STR_IMM(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[0] - (uintptr_t)&cpu_state);
@@ -1489,7 +1490,7 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
 	        host_arm_call(block, x87_fround64);
                 host_arm_VMOV_D_64(block, REG_D_TEMP, REG_R0, REG_R1);
                 
-		*branch_offset |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 8) & 0x3fffffc) >> 2;
+		*branch_offset |= ((((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 8) & 0x3fffffc) >> 2;
         }
         else
                 fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
@@ -3165,6 +3166,6 @@ void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)
 {
-	*(uint32_t *)p |= ((((uintptr_t)&block->data[block_pos] - (uintptr_t)p) - 8) & 0x3fffffc) >> 2;
+	*(uint32_t *)p |= ((((uintptr_t)&block_write_data[block_pos] - (uintptr_t)p) - 8) & 0x3fffffc) >> 2;
 }
 #endif

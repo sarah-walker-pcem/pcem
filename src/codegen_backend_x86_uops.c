@@ -5,15 +5,11 @@
 #include "x87.h"
 #include "386_common.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_x86_defs.h"
 #include "codegen_backend_x86_ops.h"
 #include "codegen_ir_defs.h"
-
-#define STACK_ARG0 (0)
-#define STACK_ARG1 (4)
-#define STACK_ARG2 (8)
-#define STACK_ARG3 (12)
 
 /*void codegen_debug()
 {
@@ -726,32 +722,32 @@ static int codegen_FSUB(codeblock_t *block, uop_t *uop)
 
 static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 {
-        uint8_t *branch_offset;
+        uint32_t *branch_offset;
         
         host_x86_MOV32_REG_ABS(block, REG_ECX, &cr0);
         host_x86_TEST32_REG_IMM(block, REG_ECX, 0xc);
-        branch_offset = host_x86_JZ_short(block);
+        branch_offset = host_x86_JZ_long(block);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.oldpc, uop->imm_data);
         host_x86_MOV32_STACK_IMM(block, STACK_ARG0, 7);
         host_x86_CALL(block, x86_int);
         host_x86_JMP(block, &block->data[BLOCK_EXIT_OFFSET]);
-        *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
 
         return 0;
 }
 
 static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
 {
-        uint8_t *branch_offset;
+        uint32_t *branch_offset;
 
         host_x86_MOV32_REG_ABS(block, REG_ECX, &cr0);
         host_x86_TEST32_REG_IMM(block, REG_ECX, 0xc);
-        branch_offset = host_x86_JZ_short(block);
+        branch_offset = host_x86_JZ_long(block);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.oldpc, uop->imm_data);
         host_x86_MOV32_STACK_IMM(block, STACK_ARG0, 7);
         host_x86_CALL(block, x86_int);
         host_x86_JMP(block, &block->data[BLOCK_EXIT_OFFSET]);
-        *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
         host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[0], 0);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[4], 0);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.TOP, 0);
@@ -1268,12 +1264,12 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_D(src_size) && REG_IS_Q(src_64_size))
         {
-                uint8_t *branch_offset;
+                uint32_t *branch_offset;
 
                 /*If TAG_UINT64 is set then the source is MM[]. Otherwise it is a double in ST()*/
                 host_x86_MOVQ_XREG_XREG(block, dest_reg, src_64_reg);
                 host_x86_TEST8_REG(block, tag_reg, tag_reg);
-                branch_offset = host_x86_JS_short(block);
+                branch_offset = host_x86_JS_long(block);
 
                 /*There is no SSE instruction to convert a floating point value to a 64-bit integer.
                   Instead we have to bounce through memory via x87.*/
@@ -1284,7 +1280,7 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
                 host_x86_MOVQ_XREG_BASE_OFFSET(block, dest_reg, REG_ESP, 0);
                 host_x87_FLDCW(block, &cpu_state.old_fp_control2);
 
-                *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+                *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
         }
         else
                 fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
@@ -2769,7 +2765,7 @@ void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)
 {
-        *(uint32_t *)p = (uintptr_t)&block->data[block_pos] - ((uintptr_t)p + 4);
+        *(uint32_t *)p = (uintptr_t)&block_write_data[block_pos] - ((uintptr_t)p + 4);
 }
 
 #endif

@@ -2,6 +2,7 @@
 
 #include "ibm.h"
 #include "codegen.h"
+#include "codegen_allocator.h"
 #include "codegen_backend.h"
 #include "codegen_backend_x86-64_defs.h"
 #include "codegen_backend_x86-64_ops.h"
@@ -101,9 +102,9 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
         host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
         host_x86_RET(block);
 
-        *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        *branch_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 1;
         if (size != 1)
-                *misaligned_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)misaligned_offset) - 1;
+                *misaligned_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)misaligned_offset) - 1;
         host_x86_PUSH(block, REG_RAX);
         host_x86_PUSH(block, REG_RDX);
 #if WIN64
@@ -145,7 +146,6 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
         host_x86_POP(block, REG_RAX);
         host_x86_MOVZX_REG_ABS_32_8(block, REG_ESI, &cpu_state.abrt);
         host_x86_RET(block);
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_store_routine(codeblock_t *block, int size, int is_float)
@@ -200,9 +200,9 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
         host_x86_RET(block);
 
-        *branch_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)branch_offset) - 1;
+        *branch_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 1;
         if (size != 1)
-                *misaligned_offset = (uint8_t)((uintptr_t)&block->data[block_pos] - (uintptr_t)misaligned_offset) - 1;
+                *misaligned_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)misaligned_offset) - 1;
         host_x86_PUSH(block, REG_RAX);
         host_x86_PUSH(block, REG_RDX);
 #if WIN64
@@ -241,7 +241,6 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         host_x86_POP(block, REG_RAX);
         host_x86_MOVZX_REG_ABS_32_8(block, REG_ESI, &cpu_state.abrt);
         host_x86_RET(block);
-        block_pos = (block_pos + 63) & ~63;
 }
 
 static void build_loadstore_routines(codeblock_t *block)
@@ -283,11 +282,6 @@ void codegen_backend_init()
 	long pagemask = ~(pagesize - 1);
 #endif
 
-#if defined WIN32 || defined _WIN32 || defined _WIN32
-        codeblock_data = VirtualAlloc(NULL, BLOCK_SIZE * BLOCK_DATA_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-#else
-        codeblock_data = mmap(0, BLOCK_SIZE * BLOCK_DATA_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
-#endif
         codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
         codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
@@ -295,16 +289,17 @@ void codegen_backend_init()
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 
         for (c = 0; c < BLOCK_SIZE; c++)
-        {
-                codeblock[c].data = &codeblock_data[c * BLOCK_DATA_SIZE];
                 codeblock[c].pc = BLOCK_PC_INVALID;
-        }
+
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
         block_current = 0;
         block_pos = 0;
+        codeblock[block_current].head_mem_block = codegen_allocator_allocate(NULL);
+        codeblock[block_current].data = codeblock_allocator_get_ptr(codeblock[block_current].head_mem_block);
+        block_write_data = codeblock[block_current].data;
         build_loadstore_routines(&codeblock[block_current]);
-//        fatal("Here\n");
+        block_write_data = NULL;
 
         asm(
                 "stmxcsr %0\n"
@@ -318,47 +313,46 @@ void codegen_set_rounding_mode(int mode)
         cpu_state.new_fp_control = (cpu_state.old_fp_control & ~0x6000) | (mode << 13);
 }
 
-static inline void call(codeblock_t *block, uintptr_t func)
-{
-	uintptr_t diff = func - (uintptr_t)&block->data[block_pos + 5];
-
-	if (diff >= -0x80000000 && diff < 0x7fffffff)
-	{
-	        addbyte(0xE8); /*CALL*/
-	        addlong((uint32_t)diff);
-	}
-	else
-	{
-		addbyte(0x48); /*MOV RAX, func*/
-		addbyte(0xb8);
-		addquad(func);
-		addbyte(0xff); /*CALL RAX*/
-		addbyte(0xd0);
-	}
-}
-
 void codegen_backend_prologue(codeblock_t *block)
 {
-        block_pos = 0; /*Entry code*/
-        addbyte(0x53); /*PUSH RBX*/
-        addbyte(0x55); /*PUSH RBP*/
-        addbyte(0x56); /*PUSH RSI*/
-        addbyte(0x57); /*PUSH RDI*/
-        addbyte(0x41); /*PUSH R12*/
-        addbyte(0x54);
-        addbyte(0x41); /*PUSH R13*/
-        addbyte(0x55);
-        addbyte(0x41); /*PUSH R14*/
-        addbyte(0x56);
-        addbyte(0x41); /*PUSH R15*/
-        addbyte(0x57);
-        addbyte(0x48); /*SUBL $40,%rsp*/
-        addbyte(0x83);
-        addbyte(0xEC);
-        addbyte(0x38);
-        addbyte(0x48); /*MOVL RBP, &cpu_state*/
-        addbyte(0xBD);
-        addquad(((uintptr_t)&cpu_state) + 128);
+        block_pos = BLOCK_GPF_OFFSET;
+#if WIN64
+        host_x86_XOR32_REG_REG(block, REG_ECX, REG_ECX, REG_ECX);
+        host_x86_XOR32_REG_REG(block, REG_EDX, REG_EDX, REG_EDX);
+#else
+        host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI, REG_EDI);
+        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
+#endif
+	host_x86_CALL(block, (uintptr_t)x86gpf);
+	while (block_pos < BLOCK_EXIT_OFFSET)
+        	host_x86_NOP(block);
+        if (block_pos > BLOCK_EXIT_OFFSET)
+                fatal("block_pos > BLOCK_EXIT_OFFSET\n");
+        block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
+        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_POP(block, REG_R15);
+        host_x86_POP(block, REG_R14);
+        host_x86_POP(block, REG_R13);
+        host_x86_POP(block, REG_R12);
+        host_x86_POP(block, REG_RDI);
+        host_x86_POP(block, REG_RSI);
+        host_x86_POP(block, REG_RBP);
+        host_x86_POP(block, REG_RDX);
+        host_x86_RET(block);
+        if (block_pos > BLOCK_START)
+                fatal("block_pos > BLOCK_START\n");
+
+        block_pos = BLOCK_START; /*Entry code*/
+        host_x86_PUSH(block, REG_RBX);
+        host_x86_PUSH(block, REG_RBP);
+        host_x86_PUSH(block, REG_RSI);
+        host_x86_PUSH(block, REG_RDI);
+        host_x86_PUSH(block, REG_R12);
+        host_x86_PUSH(block, REG_R13);
+        host_x86_PUSH(block, REG_R14);
+        host_x86_PUSH(block, REG_R15);
+        host_x86_SUB32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_MOV64_REG_IMM(block, REG_RBP, ((uintptr_t)&cpu_state) + 128);
         if (block->flags & CODEBLOCK_HAS_FPU)
         {
                 host_x86_MOV32_REG_ABS(block, REG_EAX, &cpu_state.TOP);
@@ -369,62 +363,15 @@ void codegen_backend_prologue(codeblock_t *block)
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-        addbyte(0x48); /*ADDL $40,%rsp*/
-        addbyte(0x83);
-        addbyte(0xC4);
-        addbyte(0x38);
-        addbyte(0x41); /*POP R15*/
-        addbyte(0x5f);
-        addbyte(0x41); /*POP R14*/
-        addbyte(0x5e);
-        addbyte(0x41); /*POP R13*/
-        addbyte(0x5d);
-        addbyte(0x41); /*POP R12*/
-        addbyte(0x5c);
-        addbyte(0x5f); /*POP RDI*/
-        addbyte(0x5e); /*POP RSI*/
-        addbyte(0x5d); /*POP RBP*/
-        addbyte(0x5b); /*POP RDX*/
-        addbyte(0xC3); /*RET*/
-
-        if (block_pos > BLOCK_GPF_OFFSET)
-                fatal("Over limit!\n");
-
-        block_pos = BLOCK_GPF_OFFSET;
-#if WIN64
-        addbyte(0x48); /*XOR RCX, RCX*/
-        addbyte(0x31);
-        addbyte(0xc9);
-        addbyte(0x31); /*XOR EDX, EDX*/
-        addbyte(0xd2);
-#else
-        addbyte(0x48); /*XOR RDI, RDI*/
-        addbyte(0x31);
-        addbyte(0xff);
-        addbyte(0x31); /*XOR ESI, ESI*/
-        addbyte(0xf6);
-#endif
-	call(block, (uintptr_t)x86gpf);
-	while (block_pos < BLOCK_EXIT_OFFSET)
-	       addbyte(0x90); /*NOP*/
-        block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        addbyte(0x48); /*ADDL $40,%rsp*/
-        addbyte(0x83);
-        addbyte(0xC4);
-        addbyte(0x38);
-        addbyte(0x41); /*POP R15*/
-        addbyte(0x5f);
-        addbyte(0x41); /*POP R14*/
-        addbyte(0x5e);
-        addbyte(0x41); /*POP R13*/
-        addbyte(0x5d);
-        addbyte(0x41); /*POP R12*/
-        addbyte(0x5c);
-        addbyte(0x5f); /*POP RDI*/
-        addbyte(0x5e); /*POP RSI*/
-        addbyte(0x5d); /*POP RBP*/
-        addbyte(0x5b); /*POP RDX*/
-        addbyte(0xC3); /*RET*/
+        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_POP(block, REG_R15);
+        host_x86_POP(block, REG_R14);
+        host_x86_POP(block, REG_R13);
+        host_x86_POP(block, REG_R12);
+        host_x86_POP(block, REG_RDI);
+        host_x86_POP(block, REG_RSI);
+        host_x86_POP(block, REG_RBP);
+        host_x86_POP(block, REG_RDX);
+        host_x86_RET(block);
 }
-
 #endif

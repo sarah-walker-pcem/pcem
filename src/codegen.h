@@ -59,13 +59,17 @@ typedef struct codeblock_t
           present in two pages.*/
         uint16_t prev, next;
         uint16_t prev_2, next_2;
+        
+        /*First mem_block_t used by this block. Any subsequent mem_block_ts
+          will be in the list starting at head_mem_block->next.*/
+        struct mem_block_t *head_mem_block;
 } codeblock_t;
-
-uint8_t *codeblock_data;
 
 extern codeblock_t *codeblock;
 
 extern uint16_t *codeblock_hash;
+
+extern uint8_t *block_write_data;
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1
@@ -299,6 +303,10 @@ struct ir_data_t;
 x86seg *codegen_generate_ea(struct ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32, int stack_offset);
 void codegen_check_seg_read(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
 void codegen_check_seg_write(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
+
+/*Delete a random code block to free memory. This is obviously quite expensive, and
+  will only be called when the allocator is out of memory*/
+void codegen_delete_random_block();
 
 extern int cpu_block_end;
 extern uint32_t codegen_endpc;

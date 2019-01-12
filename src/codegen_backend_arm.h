@@ -9,17 +9,10 @@
 
 #define HASH(l) ((l) & 0x1ffff)
 
-/*Hack until better memory management written*/
-/*#define BLOCK_EXIT_OFFSET 0x7f0*/
-
 #define BLOCK_GPF_OFFSET 0
 #define BLOCK_EXIT_OFFSET 32
 
-#define ARM_LITERAL_POOL_OFFSET 0x10000
-
-/*#define BLOCK_MAX 1720*/
-#define BLOCK_MAX 65208
-
+#define BLOCK_MAX 0x3c0
 
 void host_arm_ADD_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm);
 void host_arm_LDMIA_WB(codeblock_t *block, int addr_reg, uint32_t reg_mask);
@@ -30,6 +23,3 @@ void host_arm_SUB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm
 
 void host_arm_call(codeblock_t *block, void *dst_addr);
 void host_arm_nop(codeblock_t *block);
-
-void codegen_reset_literal_pool(codeblock_t *block);
-int add_literal(codeblock_t *block, uint32_t data);

@@ -94,6 +94,8 @@ void host_arm_MOVW_IMM(codeblock_t *block, int dst_reg, uint16_t imm);
 
 void host_arm_MVN_REG_LSL(codeblock_t *block, int dst_reg, int src_reg, int shift);
 
+#define host_arm_NOP(block) host_arm_MOV_REG(block, REG_R0, REG_R0)
+
 void host_arm_ORR_IMM_cond(codeblock_t *block, uint32_t cond, int dst_reg, int src_reg, uint32_t imm);
 void host_arm_ORR_REG_LSL_cond(codeblock_t *block, uint32_t cond, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 

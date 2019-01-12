@@ -779,7 +779,7 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 	host_arm64_call(block, x86_int);
         host_arm64_B(block, &block->data[BLOCK_EXIT_OFFSET]);
 
-	host_arm64_branch_set_offset(branch_ptr, &block->data[block_pos]);
+	host_arm64_branch_set_offset(branch_ptr, &block_write_data[block_pos]);
 
         return 0;
 }
@@ -876,12 +876,11 @@ static int codegen_LOAD_SEG(codeblock_t *block, uop_t *uop)
 {
         int src_reg = HOST_REG_GET(uop->src_reg_a_real);
         int src_size = IREG_GET_SIZE(uop->src_reg_a_real);
-	int offset = add_literal_q(block, (uintptr_t)uop->p);
 
         if (!REG_IS_W(src_size))
                 fatal("LOAD_SEG %02x %p\n", uop->src_reg_a_real, uop->p);
 
-	host_arm64_LDR_LITERAL_X(block, REG_ARG1, offset);
+	host_arm64_MOVX_IMM(block, REG_ARG1, (uint64_t)uop->p);
 	host_arm64_AND_IMM(block, REG_ARG0, src_reg, 0xffff);
 	host_arm64_call(block, (void *)loadseg);
 	host_arm64_CBNZ(block, REG_X0, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
@@ -1229,8 +1228,7 @@ static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
 }
 static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
 {
-	int offset = add_literal_q(block, (uintptr_t)uop->p);
-	host_arm64_LDR_LITERAL_X(block, uop->dest_reg_a_real, offset);
+	host_arm64_MOVX_IMM(block, uop->dest_reg_a_real, (uint64_t)uop->p);
 
         return 0;
 }
@@ -1371,7 +1369,7 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
 	        host_arm64_call(block, codegen_fp_round_quad);
                 host_arm64_FMOV_D_Q(block, dest_reg, REG_TEMP);
                 
-		host_arm64_branch_set_offset(branch_offset, &block->data[block_pos]);
+		host_arm64_branch_set_offset(branch_offset, &block_write_data[block_pos]);
         }
         else
                 fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
@@ -3031,8 +3029,6 @@ void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)
 {
-	int offset = (uintptr_t)&block->data[block_pos] - (uintptr_t)p;
-
-	*(uint32_t *)p |= OFFSET19(offset);
+	host_arm64_branch_set_offset(p, &block_write_data[block_pos]);
 }
 #endif
