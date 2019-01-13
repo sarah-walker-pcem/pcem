@@ -169,8 +169,13 @@ void cga_poll(void *p)
                         {
                                 for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        chr = cga->charbuffer[x << 1];
-                                        attr = cga->charbuffer[(x << 1) + 1];
+                                        if (cga->cgamode & 8)
+                                        {
+                                                chr = cga->charbuffer[x << 1];
+                                                attr = cga->charbuffer[(x << 1) + 1];
+                                        }
+                                        else
+                                                chr = attr = 0;
                                         drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
                                         if (cga->cgamode & 0x20)
                                         {
@@ -201,8 +206,13 @@ void cga_poll(void *p)
                         {
                                 for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        chr  = cga->vram[((cga->ma << 1) & 0x3fff)];
-                                        attr = cga->vram[(((cga->ma << 1) + 1) & 0x3fff)];
+                                        if (cga->cgamode & 8)
+                                        {
+                                                chr  = cga->vram[((cga->ma << 1) & 0x3fff)];
+                                                attr = cga->vram[(((cga->ma << 1) + 1) & 0x3fff)];
+                                        }
+                                        else
+                                                chr = attr = 0;
                                         drawcursor = ((cga->ma == ca) && cga->con && cga->cursoron);
                                         if (cga->cgamode & 0x20)
                                         {
@@ -255,7 +265,10 @@ void cga_poll(void *p)
                                 }
                                 for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        if (cga->cgamode & 8)
+                                                dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        else
+                                                dat = 0;
                                         cga->ma++;
                                         for (c = 0; c < 8; c++)
                                         {
@@ -271,7 +284,10 @@ void cga_poll(void *p)
                                 cols[1] = cga->cgacol & 15;
                                 for (x = 0; x < cga->crtc[1]; x++)
                                 {
-                                        dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        if (cga->cgamode & 8)
+                                                dat = (cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000)] << 8) | cga->vram[((cga->ma << 1) & 0x1fff) + ((cga->sc & 1) * 0x2000) + 1];
+                                        else
+                                                dat = 0;
                                         cga->ma++;
                                         for (c = 0; c < 16; c++)
                                         {
