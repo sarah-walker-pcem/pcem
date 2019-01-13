@@ -197,7 +197,7 @@ static int codegen_CALL_INSTRUCTION_FUNC(codeblock_t *block, uop_t *uop)
 {
         host_x86_CALL(block, uop->p);
         host_x86_TEST32_REG(block, REG_EAX, REG_EAX);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -727,7 +727,7 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
         host_x86_MOV32_REG_IMM(block, REG_EDI, 7);
 #endif
         host_x86_CALL(block, x86_int);
-        host_x86_JMP(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JMP(block, codegen_exit_rout);
         *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
 
         return 0;
@@ -746,7 +746,7 @@ static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
         host_x86_MOV32_REG_IMM(block, REG_EDI, 7);
 #endif
         host_x86_CALL(block, x86_int);
-        host_x86_JMP(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JMP(block, codegen_exit_rout);
         *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
         host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[0], 0);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[4], 0);
@@ -842,7 +842,7 @@ static int codegen_LOAD_SEG(codeblock_t *block, uop_t *uop)
 #endif
         host_x86_CALL(block, (void *)loadseg);
         host_x86_TEST32_REG(block, REG_EAX, REG_EAX);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -868,7 +868,7 @@ static int codegen_MEM_LOAD_ABS(codeblock_t *block, uop_t *uop)
         else
                 fatal("MEM_LOAD_ABS - %02x\n", uop->dest_reg_a_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
         if (REG_IS_B(dest_size))
         {
                 host_x86_MOV8_REG_REG(block, dest_reg, REG_ECX);
@@ -911,7 +911,7 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         else
                 fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
         if (REG_IS_B(dest_size))
         {
                 host_x86_MOV8_REG_REG(block, dest_reg, REG_ECX);
@@ -944,7 +944,7 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
         host_x86_CALL(block, codegen_mem_load_single);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
         host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
 
         return 0;
@@ -962,7 +962,7 @@ static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
         host_x86_CALL(block, codegen_mem_load_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
         host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
 
         return 0;
@@ -992,7 +992,7 @@ static int codegen_MEM_STORE_ABS(codeblock_t *block, uop_t *uop)
         else
                 fatal("MEM_STORE_ABS - %02x\n", uop->src_reg_b_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1005,7 +1005,7 @@ static int codegen_MEM_STORE_IMM_8(codeblock_t *block, uop_t *uop)
         host_x86_MOV8_REG_IMM(block, REG_ECX, uop->imm_data);
         host_x86_CALL(block, codegen_mem_store_byte);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1017,7 +1017,7 @@ static int codegen_MEM_STORE_IMM_16(codeblock_t *block, uop_t *uop)
         host_x86_MOV16_REG_IMM(block, REG_ECX, uop->imm_data);
         host_x86_CALL(block, codegen_mem_store_word);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1029,7 +1029,7 @@ static int codegen_MEM_STORE_IMM_32(codeblock_t *block, uop_t *uop)
         host_x86_MOV32_REG_IMM(block, REG_ECX, uop->imm_data);
         host_x86_CALL(block, codegen_mem_store_long);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1065,7 +1065,7 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
         else
                 fatal("MEM_STORE_REG - %02x\n", uop->src_reg_b_real);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1084,7 +1084,7 @@ static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
         host_x86_CVTSD2SS_XREG_XREG(block, REG_XMM_TEMP, src_reg);
         host_x86_CALL(block, codegen_mem_store_single);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }
@@ -1102,7 +1102,7 @@ static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
         host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg);
         host_x86_CALL(block, codegen_mem_store_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
-        host_x86_JNZ(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_x86_JNZ(block, codegen_exit_rout);
 
         return 0;
 }

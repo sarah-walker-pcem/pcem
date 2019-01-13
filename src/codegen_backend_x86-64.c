@@ -31,6 +31,9 @@ void *codegen_mem_store_quad;
 void *codegen_mem_store_single;
 void *codegen_mem_store_double;
 
+void *codegen_gpf_rout;
+void *codegen_exit_rout;
+
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
         REG_EAX,
@@ -48,8 +51,6 @@ int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
         REG_XMM5,
         REG_XMM6
 };
-
-static void *mem_abrt_rout;
 
 static void build_load_routine(codeblock_t *block, int size, int is_float)
 {
@@ -274,6 +275,7 @@ static void build_loadstore_routines(codeblock_t *block)
 
 void codegen_backend_init()
 {
+        codeblock_t *block;
         int c;
 #if defined(__linux__) || defined(__APPLE__)
 	void *start;
@@ -295,10 +297,33 @@ void codegen_backend_init()
 
         block_current = 0;
         block_pos = 0;
+        block = &codeblock[block_current];
         codeblock[block_current].head_mem_block = codegen_allocator_allocate(NULL);
         codeblock[block_current].data = codeblock_allocator_get_ptr(codeblock[block_current].head_mem_block);
         block_write_data = codeblock[block_current].data;
         build_loadstore_routines(&codeblock[block_current]);
+
+        codegen_gpf_rout = &codeblock[block_current].data[block_pos];
+#if WIN64
+        host_x86_XOR32_REG_REG(block, REG_ECX, REG_ECX, REG_ECX);
+        host_x86_XOR32_REG_REG(block, REG_EDX, REG_EDX, REG_EDX);
+#else
+        host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI, REG_EDI);
+        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
+#endif
+	host_x86_CALL(block, (uintptr_t)x86gpf);
+        codegen_exit_rout = &codeblock[block_current].data[block_pos];
+        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_POP(block, REG_R15);
+        host_x86_POP(block, REG_R14);
+        host_x86_POP(block, REG_R13);
+        host_x86_POP(block, REG_R12);
+        host_x86_POP(block, REG_RDI);
+        host_x86_POP(block, REG_RSI);
+        host_x86_POP(block, REG_RBP);
+        host_x86_POP(block, REG_RDX);
+        host_x86_RET(block);
+
         block_write_data = NULL;
 
         asm(
@@ -315,33 +340,6 @@ void codegen_set_rounding_mode(int mode)
 
 void codegen_backend_prologue(codeblock_t *block)
 {
-        block_pos = BLOCK_GPF_OFFSET;
-#if WIN64
-        host_x86_XOR32_REG_REG(block, REG_ECX, REG_ECX, REG_ECX);
-        host_x86_XOR32_REG_REG(block, REG_EDX, REG_EDX, REG_EDX);
-#else
-        host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI, REG_EDI);
-        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
-#endif
-	host_x86_CALL(block, (uintptr_t)x86gpf);
-	while (block_pos < BLOCK_EXIT_OFFSET)
-        	host_x86_NOP(block);
-        if (block_pos > BLOCK_EXIT_OFFSET)
-                fatal("block_pos > BLOCK_EXIT_OFFSET\n");
-        block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
-        host_x86_POP(block, REG_R15);
-        host_x86_POP(block, REG_R14);
-        host_x86_POP(block, REG_R13);
-        host_x86_POP(block, REG_R12);
-        host_x86_POP(block, REG_RDI);
-        host_x86_POP(block, REG_RSI);
-        host_x86_POP(block, REG_RBP);
-        host_x86_POP(block, REG_RDX);
-        host_x86_RET(block);
-        if (block_pos > BLOCK_START)
-                fatal("block_pos > BLOCK_START\n");
-
         block_pos = BLOCK_START; /*Entry code*/
         host_x86_PUSH(block, REG_RBX);
         host_x86_PUSH(block, REG_RBP);

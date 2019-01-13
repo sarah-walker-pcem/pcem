@@ -61,7 +61,7 @@ void codegen_check_seg_read(codeblock_t *block, ir_data_t *ir, x86seg *seg)
         if (seg == &cpu_state.seg_ds && codegen_flat_ds && !(cpu_cur_status & CPU_STATUS_NOTFLATDS))
                 return;
 
-        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, &block->data[BLOCK_GPF_OFFSET]);
+        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, codegen_gpf_rout);
 
         seg->checked = 1;
 }
@@ -78,7 +78,7 @@ void codegen_check_seg_write(codeblock_t *block, ir_data_t *ir, x86seg *seg)
         if (seg == &cpu_state.seg_ds && codegen_flat_ds && !(cpu_cur_status & CPU_STATUS_NOTFLATDS))
                 return;
 
-        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, &block->data[BLOCK_GPF_OFFSET]);
+        uop_CMP_IMM_JZ(ir, ireg_seg_base(seg), (uint32_t)-1, codegen_gpf_rout);
 
         seg->checked = 1;
 }

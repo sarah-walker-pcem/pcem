@@ -362,7 +362,7 @@ uint32_t ropD2(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
                 return 0;
                 
         uop_AND_IMM(ir, IREG_temp2, REG_ECX, 0x1f);
-        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, codegen_exit_rout);
         
         if ((fetchdat & 0xc0) == 0xc0)
         {
@@ -453,7 +453,7 @@ uint32_t ropD3_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
                 return 0;
                 
         uop_AND_IMM(ir, IREG_temp2, REG_ECX, 0x1f);
-        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, codegen_exit_rout);
 
         if ((fetchdat & 0xc0) == 0xc0)
         {
@@ -544,7 +544,7 @@ uint32_t ropD3_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
                 return 0;
 
         uop_AND_IMM(ir, IREG_temp2, REG_ECX, 0x1f);
-        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_CMP_IMM_JZ(ir, IREG_temp2, 0, codegen_exit_rout);
 
         if ((fetchdat & 0xc0) == 0xc0)
         {

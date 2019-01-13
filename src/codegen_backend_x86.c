@@ -32,6 +32,9 @@ void *codegen_mem_store_quad;
 void *codegen_mem_store_single;
 void *codegen_mem_store_double;
 
+void *codegen_gpf_rout;
+void *codegen_exit_rout;
+
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
         REG_EAX,
@@ -48,8 +51,6 @@ int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
         REG_XMM4,
         REG_XMM5
 };
-
-static void *mem_abrt_rout;
 
 static void build_load_routine(codeblock_t *block, int size, int is_float)
 {
@@ -301,16 +302,19 @@ pclog("  offsetof(codeblock_t, next_2)=%i\n", offsetof(codeblock_t, next_2));
         block->head_mem_block = codegen_allocator_allocate(NULL);
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
         block_write_data = block->data;
-        mem_abrt_rout = &block->data[block_pos];
-        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x10+4);
+        build_loadstore_routines(block);
+        
+        codegen_gpf_rout = &codeblock[block_current].data[block_pos];
+        host_x86_MOV32_STACK_IMM(block, STACK_ARG0, 0);
+        host_x86_MOV32_STACK_IMM(block, STACK_ARG1, 0);
+        host_x86_CALL(block, (void *)x86gpf);
+        codegen_exit_rout = &codeblock[block_current].data[block_pos];
+        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 64);
         host_x86_POP(block, REG_EDI);
         host_x86_POP(block, REG_ESI);
         host_x86_POP(block, REG_EBP);
         host_x86_POP(block, REG_EDX);
         host_x86_RET(block);
-
-        block_pos = 64;
-        build_loadstore_routines(block);
         block_write_data = NULL;
 
         cpu_state.old_fp_control = 0;
@@ -333,18 +337,6 @@ void codegen_set_rounding_mode(int mode)
 
 void codegen_backend_prologue(codeblock_t *block)
 {
-        block_pos = BLOCK_GPF_OFFSET;
-        host_x86_MOV32_STACK_IMM(block, STACK_ARG0, 0);
-        host_x86_MOV32_STACK_IMM(block, STACK_ARG1, 0);
-        host_x86_CALL(block, (void *)x86gpf);
-        block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 64);
-        host_x86_POP(block, REG_EDI);
-        host_x86_POP(block, REG_ESI);
-        host_x86_POP(block, REG_EBP);
-        host_x86_POP(block, REG_EDX);
-        host_x86_RET(block);
-
         block_pos = BLOCK_START; /*Entry code*/
         host_x86_PUSH(block, REG_EBX);
         host_x86_PUSH(block, REG_EBP);

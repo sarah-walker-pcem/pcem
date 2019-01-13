@@ -39,6 +39,9 @@ extern void *codegen_mem_store_quad;
 extern void *codegen_mem_store_single;
 extern void *codegen_mem_store_double;
 
+extern void *codegen_gpf_rout;
+extern void *codegen_exit_rout;
+
 #define STACK_ARG0 (0)
 #define STACK_ARG1 (4)
 #define STACK_ARG2 (8)

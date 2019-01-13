@@ -9,9 +9,6 @@
 
 #define HASH(l) ((l) & 0x1ffff)
 
-#define BLOCK_GPF_OFFSET 0
-#define BLOCK_EXIT_OFFSET 32
-
 #define BLOCK_MAX 0x3c0
 
 

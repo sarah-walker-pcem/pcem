@@ -130,3 +130,6 @@ extern void *codegen_mem_store_double;
 
 extern void *codegen_fp_round;
 extern void *codegen_fp_round_quad;
+
+extern void *codegen_gpf_rout;
+extern void *codegen_exit_rout;

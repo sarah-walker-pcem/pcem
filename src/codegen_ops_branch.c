@@ -48,7 +48,7 @@ static void ropJO_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNO_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -60,7 +60,7 @@ static void ropJNO_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 case FLAGS_ZN8: case FLAGS_ZN16: case FLAGS_ZN32:
                 /*Overflow is always zero*/
                 uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-                uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+                uop_JMP(ir, codegen_exit_rout);
                 return;
 
                 case FLAGS_SUB8: case FLAGS_DEC8:
@@ -82,7 +82,7 @@ static void ropJNO_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -115,7 +115,7 @@ static void ropJB_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNB_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -127,7 +127,7 @@ static void ropJNB_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 case FLAGS_ZN8: case FLAGS_ZN16: case FLAGS_ZN32:
                 /*Carry is always zero*/
                 uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-                uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+                uop_JMP(ir, codegen_exit_rout);
                 return;
 
                 case FLAGS_SUB8:
@@ -149,7 +149,7 @@ static void ropJNB_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -167,7 +167,7 @@ static void ropJE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
                 jump_uop = uop_CMP_IMM_JNZ_DEST(ir, IREG_flags_res, 0);
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 void ropJNE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -184,7 +184,7 @@ void ropJNE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t
                 jump_uop = uop_CMP_IMM_JZ_DEST(ir, IREG_flags_res, 0);
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -220,7 +220,7 @@ static void ropJBE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
         if (jump_uop2 != -1)
                 uop_set_jump_dest(ir, jump_uop2);
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNBE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -253,7 +253,7 @@ static void ropJNBE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, 
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
         if (jump_uop2 != -1)
                 uop_set_jump_dest(ir, jump_uop2);
@@ -305,7 +305,7 @@ static void ropJS_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNS_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -354,7 +354,7 @@ static void ropJNS_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -365,7 +365,7 @@ static void ropJP_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
         uop_CALL_FUNC_RESULT(ir, IREG_temp0, PF_SET);
         jump_uop = uop_CMP_IMM_JZ_DEST(ir, IREG_temp0, 0);
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNP_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -375,7 +375,7 @@ static void ropJNP_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
         uop_CALL_FUNC_RESULT(ir, IREG_temp0, PF_SET);
         jump_uop = uop_CMP_IMM_JNZ_DEST(ir, IREG_temp0, 0);
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -414,7 +414,7 @@ static void ropJL_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, ui
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNL_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -452,7 +452,7 @@ static void ropJNL_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 
@@ -484,7 +484,7 @@ static void ropJLE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, u
         if (jump_uop2 != -1)
                 uop_set_jump_dest(ir, jump_uop2);
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 }
 static void ropJNLE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, uint32_t offset)
@@ -513,7 +513,7 @@ static void ropJNLE_common(codeblock_t *block, ir_data_t *ir, uint32_t base_pc, 
                 break;
         }
         uop_MOV_IMM(ir, IREG_pc, base_pc + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
         if (jump_uop2 != -1)
                 uop_set_jump_dest(ir, jump_uop2);
@@ -570,7 +570,7 @@ uint32_t ropJCXZ(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         else
                 jump_uop = uop_CMP_IMM_JNZ_DEST(ir, IREG_CX, 0);
         uop_MOV_IMM(ir, IREG_pc, op_pc + 1 + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 
         return op_pc+1;
@@ -592,7 +592,7 @@ uint32_t ropLOOP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
                 jump_uop = uop_CMP_IMM_JZ_DEST(ir, IREG_CX, 0);
         }
         uop_MOV_IMM(ir, IREG_pc, op_pc + 1 + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 
         return op_pc+1;
@@ -623,7 +623,7 @@ uint32_t ropLOOPE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 jump_uop2 = uop_CMP_IMM_JNZ_DEST(ir, IREG_flags_res, 0);
         }
         uop_MOV_IMM(ir, IREG_pc, op_pc + 1 + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 
@@ -654,7 +654,7 @@ uint32_t ropLOOPNE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
                 jump_uop2 = uop_CMP_IMM_JZ_DEST(ir, IREG_flags_res, 0);
         }
         uop_MOV_IMM(ir, IREG_pc, op_pc + 1 + offset);
-        uop_JMP(ir, &block->data[BLOCK_EXIT_OFFSET]);
+        uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 

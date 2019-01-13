@@ -36,6 +36,9 @@ void *codegen_mem_store_double;
 void *codegen_fp_round;
 void *codegen_fp_round_quad;
 
+void *codegen_gpf_rout;
+void *codegen_exit_rout;
+
 int codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
         REG_X19,
@@ -308,7 +311,24 @@ void codegen_backend_init()
         codegen_fp_round_quad = &block_write_data[block_pos];
 	build_fp_round_routine(block, 1);
 
+	codegen_alloc(block, 80);
+        codegen_gpf_rout = &block_write_data[block_pos];
+	host_arm64_mov_imm(block, REG_ARG0, 0);
+	host_arm64_mov_imm(block, REG_ARG1, 0);
+	host_arm64_call(block, x86gpf);
+
+        codegen_exit_rout = &block_write_data[block_pos];
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
+	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_RET(block, REG_X30);
+
         block_write_data = NULL;
+
+	codegen_allocator_clean_blocks(block->head_mem_block);
 
 	asm("mrs %0, fpcr\n"
                 : "=r" (cpu_state.old_fp_control)
@@ -325,28 +345,7 @@ void codegen_set_rounding_mode(int mode)
 /*R10 - cpu_state*/
 void codegen_backend_prologue(codeblock_t *block)
 {
-	int offset;
-
-        block_pos = 0;
-
-        block_pos = BLOCK_GPF_OFFSET;
-	host_arm64_mov_imm(block, REG_ARG0, 0);
-	host_arm64_mov_imm(block, REG_ARG1, 0);
-	host_arm64_call(block, x86gpf);
-	while (block_pos != BLOCK_EXIT_OFFSET)
-		host_arm64_NOP(block);
-
-        block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
-	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
-	host_arm64_RET(block, REG_X30);
-
-	while (block_pos != BLOCK_START)
-		host_arm64_NOP(block);
+        block_pos = BLOCK_START;
 
 	/*Entry code*/
 

@@ -599,9 +599,14 @@ void host_arm64_BIC_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 
 void host_arm64_CBNZ(codeblock_t *block, int reg, uintptr_t dest)
 {
-	int offset = dest - (uintptr_t)&block_write_data[block_pos];
+	int offset;
+
+	codegen_alloc(block, 4);
+	offset = dest - (uintptr_t)&block_write_data[block_pos];
 	if (offset_is_19bit(offset))
+	{
 		codegen_addlong(block, OPCODE_CBNZ | OFFSET19(offset) | Rt(reg));
+	}
 	else
 	{
 		codegen_alloc(block, 12);

@@ -230,6 +230,12 @@ static inline void codegen_alloc_4(codeblock_t *block)
 		codegen_allocate_new_block(block);
 }
 
+void codegen_alloc(codeblock_t *block, int size)
+{
+        if (block_pos >= (BLOCK_MAX-size))
+		codegen_allocate_new_block(block);
+}
+
 static inline uint32_t arm_data_offset(int offset)
 {
 	if (offset < -0xffc || offset > 0xffc)

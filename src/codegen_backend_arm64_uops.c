@@ -242,7 +242,7 @@ static int codegen_CALL_FUNC_RESULT(codeblock_t *block, uop_t *uop)
 static int codegen_CALL_INSTRUCTION_FUNC(codeblock_t *block, uop_t *uop)
 {
 	host_arm64_call(block, uop->p);
-	host_arm64_CBNZ(block, REG_X0, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X0, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -777,7 +777,7 @@ static int codegen_FP_ENTER(codeblock_t *block, uop_t *uop)
 	host_arm64_STR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.oldpc - (uintptr_t)&cpu_state);
         host_arm64_mov_imm(block, REG_ARG0, 7);
 	host_arm64_call(block, x86_int);
-        host_arm64_B(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_arm64_B(block, codegen_exit_rout);
 
 	host_arm64_branch_set_offset(branch_ptr, &block_write_data[block_pos]);
 
@@ -798,7 +798,7 @@ static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
 	host_arm64_STR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.oldpc - (uintptr_t)&cpu_state);
         host_arm64_mov_imm(block, REG_ARG0, 7);
 	host_arm64_call(block, x86_int);
-        host_arm64_B(block, &block->data[BLOCK_EXIT_OFFSET]);
+        host_arm64_B(block, codegen_exit_rout);
 
 	host_arm64_branch_set_offset(branch_ptr, &block->data[block_pos]);
 
@@ -883,7 +883,7 @@ static int codegen_LOAD_SEG(codeblock_t *block, uop_t *uop)
 	host_arm64_MOVX_IMM(block, REG_ARG1, (uint64_t)uop->p);
 	host_arm64_AND_IMM(block, REG_ARG0, src_reg, 0xffff);
 	host_arm64_call(block, (void *)loadseg);
-	host_arm64_CBNZ(block, REG_X0, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X0, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -908,7 +908,7 @@ static int codegen_MEM_LOAD_ABS(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MEM_LOAD_ABS - %02x\n", uop->dest_reg_a_real);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
         if (REG_IS_B(dest_size))
         {
 		host_arm64_BFI(block, dest_reg, REG_X0, 0, 8);
@@ -954,7 +954,7 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
         if (REG_IS_B(dest_size))
         {
 		host_arm64_BFI(block, dest_reg, REG_X0, 0, 8);
@@ -990,7 +990,7 @@ static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
         if (uop->imm_data)
                 host_arm64_ADD_IMM(block, REG_X0, REG_X0, uop->imm_data);
         host_arm64_call(block, codegen_mem_load_double);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 	host_arm64_FMOV_D_D(block, dest_reg, REG_V_TEMP);
 
         return 0;
@@ -1007,7 +1007,7 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
         if (uop->imm_data)
                 host_arm64_ADD_IMM(block, REG_X0, REG_X0, uop->imm_data);
         host_arm64_call(block, codegen_mem_load_single);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 	host_arm64_FCVT_D_S(block, dest_reg, REG_V_TEMP);
 
         return 0;
@@ -1041,7 +1041,7 @@ static int codegen_MEM_STORE_ABS(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MEM_STORE_ABS - %02x\n", uop->dest_reg_a_real);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1080,7 +1080,7 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
         }
         else
                 fatal("MEM_STORE_REG - %02x\n", uop->src_reg_c_real);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1092,7 +1092,7 @@ static int codegen_MEM_STORE_IMM_8(codeblock_t *block, uop_t *uop)
 	host_arm64_ADD_REG(block, REG_W0, seg_reg, addr_reg, 0);
 	host_arm64_mov_imm(block, REG_W1, uop->imm_data);
         host_arm64_call(block, codegen_mem_store_byte);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1103,7 +1103,7 @@ static int codegen_MEM_STORE_IMM_16(codeblock_t *block, uop_t *uop)
 	host_arm64_ADD_REG(block, REG_W0, seg_reg, addr_reg, 0);
 	host_arm64_mov_imm(block, REG_W1, uop->imm_data);
         host_arm64_call(block, codegen_mem_store_word);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1114,7 +1114,7 @@ static int codegen_MEM_STORE_IMM_32(codeblock_t *block, uop_t *uop)
 	host_arm64_ADD_REG(block, REG_W0, seg_reg, addr_reg, 0);
 	host_arm64_mov_imm(block, REG_W1, uop->imm_data);
         host_arm64_call(block, codegen_mem_store_long);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1132,7 +1132,7 @@ static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
                 host_arm64_ADD_IMM(block, REG_X0, REG_X0, uop->imm_data);
 	host_arm64_FCVT_S_D(block, REG_V_TEMP, src_reg);
         host_arm64_call(block, codegen_mem_store_single);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
@@ -1149,7 +1149,7 @@ static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
                 host_arm64_ADD_IMM(block, REG_X0, REG_X0, uop->imm_data);
 	host_arm64_FMOV_D_D(block, REG_V_TEMP, src_reg);
         host_arm64_call(block, codegen_mem_store_double);
-	host_arm64_CBNZ(block, REG_X1, (uintptr_t)&block->data[BLOCK_EXIT_OFFSET]);
+	host_arm64_CBNZ(block, REG_X1, (uintptr_t)codegen_exit_rout);
 
         return 0;
 }
