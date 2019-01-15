@@ -185,6 +185,9 @@ void *intel_flash_init(uint8_t type)
 		case ROM_430VX:
 		strcpy(flash_path, "430vx/");
 		break;
+		case ROM_P55T2P4:
+		strcpy(flash_path, "p55t2p4/");
+		break;
 		default:
                 fatal("intel_flash_init on unsupported ROM set %i\n", romset);
 	}

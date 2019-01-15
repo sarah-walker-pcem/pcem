@@ -494,6 +494,14 @@ int loadbios()
                 //is486=1;
                 return 1;
 
+                case ROM_P55T2P4:
+                f = romfopen("p55t2p4/0207_j2.bin", "rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);                
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+
                 case ROM_REVENGE:
                 f = romfopen("revenge/1009af2_.bio", "rb");
                 if (!f) break;

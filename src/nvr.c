@@ -287,6 +287,7 @@ void loadnvr()
                 case ROM_430VX:       f = nvrfopen("430vx.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_REVENGE:     f = nvrfopen("revenge.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_ENDEAVOR:    f = nvrfopen("endeavor.nvr",    "rb"); nvrmask = 127; break;
+                case ROM_P55T2P4:     f = nvrfopen("p55t2p4.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_PX386:       f = nvrfopen("px386.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_DTK386:      f = nvrfopen("dtk386.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_MR386DX_OPTI495:  f = nvrfopen("mr386dx_opti495.nvr",  "rb"); nvrmask = 127; break;
@@ -382,6 +383,7 @@ void savenvr()
                 case ROM_430VX:       f = nvrfopen("430vx.nvr",       "wb"); break;
                 case ROM_REVENGE:     f = nvrfopen("revenge.nvr",     "wb"); break;
                 case ROM_ENDEAVOR:    f = nvrfopen("endeavor.nvr",    "wb"); break;
+                case ROM_P55T2P4:     f = nvrfopen("p55t2p4.nvr",     "wb"); break;
                 case ROM_PX386:       f = nvrfopen("px386.nvr",       "wb"); break;
                 case ROM_DTK386:      f = nvrfopen("dtk386.nvr",      "wb"); break;
                 case ROM_MR386DX_OPTI495:  f = nvrfopen("mr386dx_opti495.nvr",  "wb"); break;
