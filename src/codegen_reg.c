@@ -45,109 +45,120 @@ enum
         REG_FP
 };
 
+enum
+{
+        /*Register may be accessed outside of code block, and must be written
+          back before any control transfers*/
+        REG_PERMANENT = 0,
+        /*Register will not be accessed outside of code block, and does not need
+          to be written back if there are no readers remaining*/
+        REG_VOLATILE = 1
+};
+
 struct
 {
         int native_size;
         void *p;
         int type;
+        int is_volatile;
 } ireg_data[IREG_COUNT] =
 {
-        [IREG_EAX] = {REG_DWORD, &EAX, REG_INTEGER},
-	[IREG_ECX] = {REG_DWORD, &ECX, REG_INTEGER},
-	[IREG_EDX] = {REG_DWORD, &EDX, REG_INTEGER},
-	[IREG_EBX] = {REG_DWORD, &EBX, REG_INTEGER},
-	[IREG_ESP] = {REG_DWORD, &ESP, REG_INTEGER},
-	[IREG_EBP] = {REG_DWORD, &EBP, REG_INTEGER},
-	[IREG_ESI] = {REG_DWORD, &ESI, REG_INTEGER},
-	[IREG_EDI] = {REG_DWORD, &EDI, REG_INTEGER},
+        [IREG_EAX] = {REG_DWORD, &EAX, REG_INTEGER, REG_PERMANENT},
+	[IREG_ECX] = {REG_DWORD, &ECX, REG_INTEGER, REG_PERMANENT},
+	[IREG_EDX] = {REG_DWORD, &EDX, REG_INTEGER, REG_PERMANENT},
+	[IREG_EBX] = {REG_DWORD, &EBX, REG_INTEGER, REG_PERMANENT},
+	[IREG_ESP] = {REG_DWORD, &ESP, REG_INTEGER, REG_PERMANENT},
+	[IREG_EBP] = {REG_DWORD, &EBP, REG_INTEGER, REG_PERMANENT},
+	[IREG_ESI] = {REG_DWORD, &ESI, REG_INTEGER, REG_PERMANENT},
+	[IREG_EDI] = {REG_DWORD, &EDI, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_flags_op]  = {REG_DWORD, &cpu_state.flags_op,  REG_INTEGER},
-	[IREG_flags_res] = {REG_DWORD, &cpu_state.flags_res, REG_INTEGER},
-	[IREG_flags_op1] = {REG_DWORD, &cpu_state.flags_op1, REG_INTEGER},
-	[IREG_flags_op2] = {REG_DWORD, &cpu_state.flags_op2, REG_INTEGER},
+	[IREG_flags_op]  = {REG_DWORD, &cpu_state.flags_op,  REG_INTEGER, REG_PERMANENT},
+	[IREG_flags_res] = {REG_DWORD, &cpu_state.flags_res, REG_INTEGER, REG_PERMANENT},
+	[IREG_flags_op1] = {REG_DWORD, &cpu_state.flags_op1, REG_INTEGER, REG_PERMANENT},
+	[IREG_flags_op2] = {REG_DWORD, &cpu_state.flags_op2, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_pc]    = {REG_DWORD, &cpu_state.pc,    REG_INTEGER},
-	[IREG_oldpc] = {REG_DWORD, &cpu_state.oldpc, REG_INTEGER},
+	[IREG_pc]    = {REG_DWORD, &cpu_state.pc,    REG_INTEGER, REG_PERMANENT},
+	[IREG_oldpc] = {REG_DWORD, &cpu_state.oldpc, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_eaaddr] = {REG_DWORD, &cpu_state.eaaddr,   REG_INTEGER},
-	[IREG_ea_seg] = {REG_POINTER, &cpu_state.ea_seg, REG_INTEGER},
+	[IREG_eaaddr] = {REG_DWORD, &cpu_state.eaaddr,   REG_INTEGER, REG_PERMANENT},
+	[IREG_ea_seg] = {REG_POINTER, &cpu_state.ea_seg, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_op32] = {REG_DWORD, &cpu_state.op32,  REG_INTEGER},
-	[IREG_ssegsx] = {REG_BYTE, &cpu_state.ssegs, REG_INTEGER},
+	[IREG_op32] = {REG_DWORD, &cpu_state.op32,  REG_INTEGER, REG_PERMANENT},
+	[IREG_ssegsx] = {REG_BYTE, &cpu_state.ssegs, REG_INTEGER, REG_PERMANENT},
 	
-	[IREG_rm_mod_reg] = {REG_DWORD, &cpu_state.rm_data.rm_mod_reg_data, REG_INTEGER},
+	[IREG_rm_mod_reg] = {REG_DWORD, &cpu_state.rm_data.rm_mod_reg_data, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_ins]    = {REG_DWORD, &cpu_state.cpu_recomp_ins, REG_INTEGER},
-	[IREG_cycles] = {REG_DWORD, &cpu_state._cycles,        REG_INTEGER},
+	[IREG_ins]    = {REG_DWORD, &cpu_state.cpu_recomp_ins, REG_INTEGER, REG_PERMANENT},
+	[IREG_cycles] = {REG_DWORD, &cpu_state._cycles,        REG_INTEGER, REG_PERMANENT},
 	
-	[IREG_CS_base] = {REG_DWORD, &cpu_state.seg_cs.base, REG_INTEGER},
-	[IREG_DS_base] = {REG_DWORD, &cpu_state.seg_ds.base, REG_INTEGER},
-	[IREG_ES_base] = {REG_DWORD, &cpu_state.seg_es.base, REG_INTEGER},
-	[IREG_FS_base] = {REG_DWORD, &cpu_state.seg_fs.base, REG_INTEGER},
-	[IREG_GS_base] = {REG_DWORD, &cpu_state.seg_gs.base, REG_INTEGER},
-	[IREG_SS_base] = {REG_DWORD, &cpu_state.seg_ss.base, REG_INTEGER},
+	[IREG_CS_base] = {REG_DWORD, &cpu_state.seg_cs.base, REG_INTEGER, REG_PERMANENT},
+	[IREG_DS_base] = {REG_DWORD, &cpu_state.seg_ds.base, REG_INTEGER, REG_PERMANENT},
+	[IREG_ES_base] = {REG_DWORD, &cpu_state.seg_es.base, REG_INTEGER, REG_PERMANENT},
+	[IREG_FS_base] = {REG_DWORD, &cpu_state.seg_fs.base, REG_INTEGER, REG_PERMANENT},
+	[IREG_GS_base] = {REG_DWORD, &cpu_state.seg_gs.base, REG_INTEGER, REG_PERMANENT},
+	[IREG_SS_base] = {REG_DWORD, &cpu_state.seg_ss.base, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_CS_seg] = {REG_WORD, &cpu_state.seg_cs.seg, REG_INTEGER},
-	[IREG_DS_seg] = {REG_WORD, &cpu_state.seg_ds.seg, REG_INTEGER},
-	[IREG_ES_seg] = {REG_WORD, &cpu_state.seg_es.seg, REG_INTEGER},
-	[IREG_FS_seg] = {REG_WORD, &cpu_state.seg_fs.seg, REG_INTEGER},
-	[IREG_GS_seg] = {REG_WORD, &cpu_state.seg_gs.seg, REG_INTEGER},
-	[IREG_SS_seg] = {REG_WORD, &cpu_state.seg_ss.seg, REG_INTEGER},
+	[IREG_CS_seg] = {REG_WORD, &cpu_state.seg_cs.seg, REG_INTEGER, REG_PERMANENT},
+	[IREG_DS_seg] = {REG_WORD, &cpu_state.seg_ds.seg, REG_INTEGER, REG_PERMANENT},
+	[IREG_ES_seg] = {REG_WORD, &cpu_state.seg_es.seg, REG_INTEGER, REG_PERMANENT},
+	[IREG_FS_seg] = {REG_WORD, &cpu_state.seg_fs.seg, REG_INTEGER, REG_PERMANENT},
+	[IREG_GS_seg] = {REG_WORD, &cpu_state.seg_gs.seg, REG_INTEGER, REG_PERMANENT},
+	[IREG_SS_seg] = {REG_WORD, &cpu_state.seg_ss.seg, REG_INTEGER, REG_PERMANENT},
 	
-	[IREG_FPU_TOP] = {REG_DWORD, &cpu_state.TOP, REG_INTEGER},
+	[IREG_FPU_TOP] = {REG_DWORD, &cpu_state.TOP, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_ST0] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST1] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST2] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST3] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST4] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST5] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST6] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
-	[IREG_ST7] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP},
+	[IREG_ST0] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST1] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST2] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST3] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST4] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST5] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST6] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
+	[IREG_ST7] = {REG_FPU_ST_DOUBLE, &cpu_state.ST[0], REG_FP, REG_PERMANENT},
 	
-	[IREG_tag0] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag1] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag2] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag3] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag4] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag5] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag6] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
-	[IREG_tag7] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER},
+	[IREG_tag0] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag1] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag2] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag3] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag4] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag5] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag6] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
+	[IREG_tag7] = {REG_FPU_ST_BYTE, &cpu_state.tag[0], REG_INTEGER, REG_PERMANENT},
 
-	[IREG_ST0_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST1_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST2_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST3_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST4_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST5_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST6_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_ST7_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP},
+	[IREG_ST0_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST1_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST2_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST3_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST4_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST5_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST6_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_ST7_i64] = {REG_FPU_ST_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
 
-	[IREG_MM0x] = {REG_QWORD, &cpu_state.MM[0], REG_FP},
-	[IREG_MM1x] = {REG_QWORD, &cpu_state.MM[1], REG_FP},
-	[IREG_MM2x] = {REG_QWORD, &cpu_state.MM[2], REG_FP},
-	[IREG_MM3x] = {REG_QWORD, &cpu_state.MM[3], REG_FP},
-	[IREG_MM4x] = {REG_QWORD, &cpu_state.MM[4], REG_FP},
-	[IREG_MM5x] = {REG_QWORD, &cpu_state.MM[5], REG_FP},
-	[IREG_MM6x] = {REG_QWORD, &cpu_state.MM[6], REG_FP},
-	[IREG_MM7x] = {REG_QWORD, &cpu_state.MM[7], REG_FP},
+	[IREG_MM0x] = {REG_QWORD, &cpu_state.MM[0], REG_FP, REG_PERMANENT},
+	[IREG_MM1x] = {REG_QWORD, &cpu_state.MM[1], REG_FP, REG_PERMANENT},
+	[IREG_MM2x] = {REG_QWORD, &cpu_state.MM[2], REG_FP, REG_PERMANENT},
+	[IREG_MM3x] = {REG_QWORD, &cpu_state.MM[3], REG_FP, REG_PERMANENT},
+	[IREG_MM4x] = {REG_QWORD, &cpu_state.MM[4], REG_FP, REG_PERMANENT},
+	[IREG_MM5x] = {REG_QWORD, &cpu_state.MM[5], REG_FP, REG_PERMANENT},
+	[IREG_MM6x] = {REG_QWORD, &cpu_state.MM[6], REG_FP, REG_PERMANENT},
+	[IREG_MM7x] = {REG_QWORD, &cpu_state.MM[7], REG_FP, REG_PERMANENT},
 	
-	[IREG_NPXCx] = {REG_WORD, &cpu_state.npxc, REG_INTEGER},
-	[IREG_NPXSx] = {REG_WORD, &cpu_state.npxs, REG_INTEGER},
+	[IREG_NPXCx] = {REG_WORD, &cpu_state.npxc, REG_INTEGER, REG_PERMANENT},
+	[IREG_NPXSx] = {REG_WORD, &cpu_state.npxs, REG_INTEGER, REG_PERMANENT},
 
-	[IREG_flagsx] = {REG_WORD, &cpu_state.flags, REG_INTEGER},
-	[IREG_eflagsx] = {REG_WORD, &cpu_state.eflags, REG_INTEGER},
+	[IREG_flagsx] = {REG_WORD, &cpu_state.flags, REG_INTEGER, REG_PERMANENT},
+	[IREG_eflagsx] = {REG_WORD, &cpu_state.eflags, REG_INTEGER, REG_PERMANENT},
 
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/
-	[IREG_temp0] = {REG_DWORD, (void *)16, REG_INTEGER},
-	[IREG_temp1] = {REG_DWORD, (void *)20, REG_INTEGER},
-	[IREG_temp2] = {REG_DWORD, (void *)24, REG_INTEGER},
-	[IREG_temp3] = {REG_DWORD, (void *)28, REG_INTEGER},
+	[IREG_temp0] = {REG_DWORD, (void *)16, REG_INTEGER, REG_VOLATILE},
+	[IREG_temp1] = {REG_DWORD, (void *)20, REG_INTEGER, REG_VOLATILE},
+	[IREG_temp2] = {REG_DWORD, (void *)24, REG_INTEGER, REG_VOLATILE},
+	[IREG_temp3] = {REG_DWORD, (void *)28, REG_INTEGER, REG_VOLATILE},
 	
-	[IREG_temp0d] = {REG_DOUBLE, (void *)40, REG_FP},
-	[IREG_temp1d] = {REG_DOUBLE, (void *)48, REG_FP},
+	[IREG_temp0d] = {REG_DOUBLE, (void *)40, REG_FP, REG_VOLATILE},
+	[IREG_temp1d] = {REG_DOUBLE, (void *)48, REG_FP, REG_VOLATILE},
 };
 
 static int reg_is_native_size(ir_reg_t ir_reg)
@@ -316,6 +327,10 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
 {
         int ir_reg = IREG_GET_REG(reg_set->regs[c].reg);
         void *p = ireg_data[ir_reg].p;
+
+        if (!reg_version_refcount[ir_reg][reg_set->regs[c].version] &&
+                        ireg_data[ir_reg].is_volatile)
+                return;
 
         switch (ireg_data[ir_reg].native_size)
         {
@@ -520,7 +535,7 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
 //                pclog("   already loaded %i\n", c);
 
         reg_version_refcount[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version]--;
-        if (reg_version_refcount[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version] < 0)
+        if (reg_version_refcount[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version] == (uint8_t)-1)
                 fatal("codegen_reg_alloc_read_reg - refcount < 0\n");
 
         if (host_reg_idx)
@@ -541,6 +556,7 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                 
                 parent_reg.reg = IREG_GET_REG(ir_reg.reg) | IREG_SIZE_L;
                 parent_reg.version = ir_reg.version - 1;
+                reg_version_refcount[IREG_GET_REG(ir_reg.reg)][ir_reg.version - 1]++;
                 
                 codegen_reg_alloc_read_reg(block, parent_reg, &c);
 
