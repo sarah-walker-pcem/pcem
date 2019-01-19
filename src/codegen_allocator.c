@@ -50,7 +50,8 @@ mem_block_t *codegen_allocator_allocate(mem_block_t *parent)
         
         while (!mem_block_free_list)
         {
-                codegen_delete_random_block();
+                if (!codegen_purge_purgable_list())
+                        codegen_delete_random_block(1);
         }
 //                fatal("codegen_allocator_allocate: free list empty!\n");
 

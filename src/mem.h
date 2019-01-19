@@ -111,6 +111,7 @@ mem_mapping_t bios_high_mapping[8];
 extern mem_mapping_t ram_high_mapping;
 extern mem_mapping_t ram_remapped_mapping;
 
+#define EVICT_NOT_IN_LIST ((uint32_t)-1)
 typedef struct page_t
 {
         void (*write_b)(uint32_t addr, uint8_t val, struct page_t *p);
@@ -125,11 +126,21 @@ typedef struct page_t
         uint16_t head;
         
         uint64_t code_present_mask[4], dirty_mask[4];
+        
+        uint32_t evict_prev, evict_next;
 } page_t;
 
 extern page_t *pages;
 
 extern page_t **page_lookup;
+
+extern uint32_t purgable_page_list_head;
+static inline int page_in_evict_list(page_t *p)
+{
+        return (p->evict_prev != EVICT_NOT_IN_LIST);
+}
+void page_remove_from_evict_list(page_t *p);
+void page_add_to_evict_list(page_t *p);
 
 uint32_t mmutranslate_noabrt(uint32_t addr, int rw);
 extern uint32_t get_phys_virt,get_phys_phys;
@@ -195,4 +206,6 @@ void mmu_invalidate(uint32_t addr);
 int loadbios();
 
 extern unsigned char isram[0x10000];
+
+extern int purgeable_page_count;
 #endif

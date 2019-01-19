@@ -16,7 +16,7 @@
 #ifdef __ARM_EABI__
 #define MEM_BLOCK_NR 32768
 #else
-#define MEM_BLOCK_NR 65536
+#define MEM_BLOCK_NR 131072
 #endif
 
 #define MEM_BLOCK_SIZE 0x3c0

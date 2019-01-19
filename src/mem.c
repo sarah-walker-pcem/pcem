@@ -924,14 +924,51 @@ uint32_t mem_read_raml(uint32_t addr, void *priv)
         return *(uint32_t *)&ram[addr];
 }
 
+uint32_t purgable_page_list_head = 0;
+int purgeable_page_count = 0;
+
+static inline int page_index(page_t *p)
+{
+        return ((uintptr_t)p - (uintptr_t)pages) / sizeof(page_t);
+}
+void page_add_to_evict_list(page_t *p)
+{
+//        pclog("page_add_to_evict_list: %08x %i\n", page_index(p), purgeable_page_count);
+        pages[purgable_page_list_head].evict_prev = page_index(p);
+        p->evict_next = purgable_page_list_head;
+        p->evict_prev = 0;
+        purgable_page_list_head = pages[purgable_page_list_head].evict_prev;
+        purgeable_page_count++;
+}
+void page_remove_from_evict_list(page_t *p)
+{
+//        pclog("page_remove_from_evict_list: %08x %i\n", page_index(p), purgeable_page_count);
+        if (!page_in_evict_list(p))
+                fatal("page_remove_from_evict_list: not in evict list!\n");
+        if (p->evict_prev)
+                pages[p->evict_prev].evict_next = p->evict_next;
+        else
+                purgable_page_list_head = p->evict_next;
+        if (p->evict_next)
+                pages[p->evict_next].evict_prev = p->evict_prev;
+        p->evict_prev = EVICT_NOT_IN_LIST;
+        purgeable_page_count--;
+}
+
 void mem_write_ramb_page(uint32_t addr, uint8_t val, page_t *p)
 {      
         if (val != p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-//        pclog("mem_write_ramb_page: %08x %02x %08x %llx %llx\n", addr, val, cs+pc, p->dirty_mask, mask);
-                p->dirty_mask[(addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] |= mask;
+                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+//        pclog("mem_write_ramb_page: %08x %02x %08x %llx %llx\n", addr, val, cs+cpu_state.pc, p->dirty_mask, mask);
                 p->mem[addr & 0xfff] = val;
+                p->dirty_mask[index] |= mask;
+                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                {
+//                        pclog("ramb add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
         }
 }
 void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
@@ -939,11 +976,17 @@ void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
         if (val != *(uint16_t *)&p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
                 if ((addr & 0xf) == 0xf)
                         mask |= (mask << 1);
-//        pclog("mem_write_ramw_page: %08x %04x %08x\n", addr, val, cs+pc);
-                p->dirty_mask[(addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] |= mask;
+//        pclog("mem_write_ramw_page: %08x %04x %08x  %016llx %016llx %016llx  %08x %08x  %p\n", addr, val, cs+cpu_state.pc, p->dirty_mask[index], p->code_present_mask[index], mask, p->evict_prev, p->evict_next,  p);
                 *(uint16_t *)&p->mem[addr & 0xfff] = val;
+                p->dirty_mask[index] |= mask;
+                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                {
+//                        pclog("ramw add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
         }
 }
 void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
@@ -951,11 +994,17 @@ void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
         if (val != *(uint32_t *)&p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
                 if ((addr & 0xf) >= 0xd)
                         mask |= (mask << 1);
-//        pclog("mem_write_raml_page: %08x %08x %08x\n", addr, val, cs+pc);
-                p->dirty_mask[(addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] |= mask;
+//        pclog("mem_write_raml_page: %08x %08x %08x   %016llx %016llx %016llx\n", addr, val, cs+cpu_state.pc, p->dirty_mask[index], p->code_present_mask[index], mask);
                 *(uint32_t *)&p->mem[addr & 0xfff] = val;
+                p->dirty_mask[index] |= mask;
+                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                {
+//                        pclog("raml add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
         }
 }
 
@@ -1066,8 +1115,15 @@ void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
         for (; start_addr <= end_addr; start_addr += (1 << PAGE_MASK_SHIFT))
         {
                 uint64_t mask = (uint64_t)1 << ((start_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                
-                pages[start_addr >> 12].dirty_mask[(start_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] |= mask;
+                page_t *p = &pages[start_addr >> 12];
+                int index = (start_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+//pclog("mem_invalidate: %08x\n", start_addr);
+                p->dirty_mask[index] |= mask;
+                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                {
+//                        pclog("invalidate add %08x %016llx %016llx\n", start_addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
         }
 }
 
@@ -1330,6 +1386,7 @@ void mem_init()
                 pages[c].write_b = mem_write_ramb_page;
                 pages[c].write_w = mem_write_ramw_page;
                 pages[c].write_l = mem_write_raml_page;
+                pages[c].evict_prev = EVICT_NOT_IN_LIST;
         }
 
         memset(isram, 0, sizeof(isram));
@@ -1439,6 +1496,7 @@ void mem_resize()
                 pages[c].write_b = mem_write_ramb_page;
                 pages[c].write_w = mem_write_ramw_page;
                 pages[c].write_l = mem_write_raml_page;
+                pages[c].evict_prev = EVICT_NOT_IN_LIST;
         }
         
         memset(isram, 0, sizeof(isram));

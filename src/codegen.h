@@ -29,12 +29,6 @@
   same page).
 */
 
-/*Hack until better memory management written*/
-/*This is deliberately _not_ a power of two, to avoid cache aliasing problems.
-  Try changing this to a power of two, and watch the performance plummet :)
-  It's probably best for this to be a multiple of the cache line size though*/
-#define BLOCK_DATA_SIZE 0xff80
-
 typedef struct codeblock_t
 {
         uint32_t pc;
@@ -59,7 +53,7 @@ typedef struct codeblock_t
           present in two pages.*/
         uint16_t prev, next;
         uint16_t prev_2, next_2;
-        
+
         /*First mem_block_t used by this block. Any subsequent mem_block_ts
           will be in the list starting at head_mem_block->next.*/
         struct mem_block_t *head_mem_block;
@@ -77,6 +71,8 @@ extern uint8_t *block_write_data;
 #define CODEBLOCK_STATIC_TOP 2
 /*Code block has been compiled*/
 #define CODEBLOCK_WAS_RECOMPILED 4
+/*Code block is in free list and is not valid*/
+#define CODEBLOCK_IN_FREE_LIST 8
 
 #define BLOCK_PC_INVALID 0xffffffff
 
@@ -304,9 +300,10 @@ x86seg *codegen_generate_ea(struct ir_data_t *ir, x86seg *op_ea_seg, uint32_t fe
 void codegen_check_seg_read(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
 void codegen_check_seg_write(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
 
+int codegen_purge_purgable_list();
 /*Delete a random code block to free memory. This is obviously quite expensive, and
   will only be called when the allocator is out of memory*/
-void codegen_delete_random_block();
+void codegen_delete_random_block(int required_mem_block);
 
 extern int cpu_block_end;
 extern uint32_t codegen_endpc;
