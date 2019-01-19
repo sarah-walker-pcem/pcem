@@ -1204,7 +1204,7 @@ static const risc86_instruction_t *opcode_timings_0f[256] =
         &vector_bsx_op,         &vector_bsx_op,         &load_alux_op,          &load_alu_op,
 
 /*c0*/  &vector_alux_store_op,  &vector_alu_store_op,   INVALID,                INVALID,
-        INVALID,                INVALID,                INVALID,                INVALID,
+        INVALID,                INVALID,                INVALID,                &vector_cmpxchg_op,
         &bswap_op,              &bswap_op,              &bswap_op,              &bswap_op,
         &bswap_op,              &bswap_op,              &bswap_op,              &bswap_op,
 
@@ -2330,6 +2330,8 @@ void codegen_timing_k6_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint
                 }
         }
 
+        if (!ins_table[opcode])
+                fatal("!ins_table opcode=%02x last_prefix=%02x\n", opcode, last_prefix);
         decode_instruction(ins_table[opcode], deps[opcode], fetchdat, op_32, bit8);
         codegen_block_cycles += (last_complete_timestamp - old_last_complete_timestamp);
 }
