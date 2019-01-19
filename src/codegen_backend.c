@@ -94,7 +94,15 @@ void codegen_close()
 void codegen_reset()
 {
         int c;
-        
+
+        for (c = 1; c < BLOCK_SIZE; c++)
+        {
+                codeblock_t *block = &codeblock[c];
+                
+                if (block->pc != BLOCK_PC_INVALID)
+                        delete_block(block);
+        }
+
         memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
         memset(codeblock_hash, 0, HASH_SIZE * sizeof(uint16_t));
         mem_reset_page_blocks();
