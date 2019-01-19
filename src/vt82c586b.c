@@ -20,7 +20,21 @@ static struct
         uint8_t sysctrl;
         
         sff_busmaster_t busmaster[2];
+        
+        struct
+        {
+                uint16_t io_base;
+        } usb;
+        struct
+        {
+                uint16_t io_base;
+        } power;
 } vt82c586b;
+
+#define ACPI_TIMER_FREQ 3579545
+
+#define ACPI_IO_ENABLE   (1 << 7)
+#define ACPI_TIMER_32BIT (1 << 3)
 
 static uint8_t vt82c586b_read(int func, int addr, void *priv)
 {
@@ -157,6 +171,28 @@ static void vt82c586b_ide_write(int addr, uint8_t val)
                 }
         }
 }
+
+static uint8_t usb_reg_read(uint16_t addr, void *p)
+{
+//        pclog("usb_reg_read: addr=%04x\n", addr);
+        switch (addr & 0x1f)
+        {
+                case 0x10: case 0x11: case 0x12: case 0x13: /*Port status*/
+                return 0;
+        }
+        return 0xff;
+}
+static void usb_reg_write(uint16_t addr, uint8_t val, void *p)
+{
+//        pclog("usb_reg_write: addr=%04x val=%02x\n", addr, val);
+}
+static void usb_update_io_mapping()
+{
+        io_removehandler(vt82c586b.usb.io_base, 0x20, usb_reg_read, NULL, NULL, usb_reg_write, NULL, NULL, NULL);
+        vt82c586b.usb.io_base = (vt82c586b.usb_regs[0x20] & ~0x1f) | (vt82c586b.usb_regs[0x21] << 8);
+        if (vt82c586b.usb_regs[PCI_REG_COMMAND] & PCI_COMMAND_IO)
+                io_sethandler(vt82c586b.usb.io_base, 0x20, usb_reg_read, NULL, NULL, usb_reg_write, NULL, NULL, NULL);
+}
 static void vt82c586b_usb_write(int addr, uint8_t val)
 {
         /*Read-only addresses*/
@@ -174,6 +210,7 @@ static void vt82c586b_usb_write(int addr, uint8_t val)
         {
                 case 4:
                 vt82c586b.usb_regs[4] = val & 0x97;
+                usb_update_io_mapping();
                 break;
                 case 7:
                 vt82c586b.usb_regs[7] = val & 0x7f;
@@ -181,12 +218,38 @@ static void vt82c586b_usb_write(int addr, uint8_t val)
 
                 case 0x20:
                 vt82c586b.usb_regs[0x20] = (val & ~0x1f) | 1;
+                usb_update_io_mapping();
+                break;
+                case 0x21:
+                vt82c586b.usb_regs[0x21] = val;
+                usb_update_io_mapping();
                 break;
 
                 default:
                 vt82c586b.usb_regs[addr] = val;
                 break;
         }
+//        pclog("  USB write %02x %02x\n", addr, val);
+}
+
+static uint8_t power_reg_read(uint16_t addr, void *p)
+{
+        uint32_t timer;
+
+        switch (addr & 0xff)
+        {
+                case 0x08: case 0x09: case 0x0a: case 0x0b: /*ACPI timer*/
+                timer = (tsc * ACPI_TIMER_FREQ) / cpu_get_speed();
+                if (!(vt82c586b.power_regs[0x41] & ACPI_TIMER_32BIT))
+                        timer &= 0x00ffffff;
+                return (timer >> (8 * (addr & 3))) & 0xff;
+        }
+//        pclog("power_reg_read: addr=%04x\n", addr);
+        return 0xff;
+}
+static void power_reg_write(uint16_t addr, uint8_t val, void *p)
+{
+//        pclog("power_reg_write: addr=%04x val=%02x\n", addr, val);
 }
 static void vt82c586b_power_write(int addr, uint8_t val)
 {
@@ -200,6 +263,21 @@ static void vt82c586b_power_write(int addr, uint8_t val)
 
         switch (addr)
         {
+                case 0x41:
+                io_removehandler(vt82c586b.power.io_base, 0x0100, power_reg_read, NULL, NULL, power_reg_write, NULL, NULL, NULL);
+                vt82c586b.power_regs[addr] = val;
+                if (vt82c586b.power_regs[0x41] & ACPI_IO_ENABLE)
+                        io_sethandler(vt82c586b.power.io_base, 0x0100, power_reg_read, NULL, NULL, power_reg_write, NULL, NULL, NULL);
+                break;
+
+                case 0x49:
+                io_removehandler(vt82c586b.power.io_base, 0x0100, power_reg_read, NULL, NULL, power_reg_write, NULL, NULL, NULL);
+                vt82c586b.power_regs[addr] = val;
+                vt82c586b.power.io_base = val << 8;
+                if (vt82c586b.power_regs[0x41] & ACPI_IO_ENABLE)
+                        io_sethandler(vt82c586b.power.io_base, 0x0100, power_reg_read, NULL, NULL, power_reg_write, NULL, NULL, NULL);
+                break;
+                
                 default:
                 vt82c586b.power_regs[addr] = val;
                 break;
