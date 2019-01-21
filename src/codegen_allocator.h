@@ -19,13 +19,14 @@
 #define MEM_BLOCK_NR 131072
 #endif
 
+#define MEM_BLOCK_MASK (MEM_BLOCK_NR-1)
 #define MEM_BLOCK_SIZE 0x3c0
 
 void codegen_allocator_init();
 /*Allocate a mem_block_t, and the associated backing memory.
   If parent is non-NULL, then the new block will be added to the list in
   parent->next*/
-struct mem_block_t *codegen_allocator_allocate(struct mem_block_t *parent);
+struct mem_block_t *codegen_allocator_allocate(struct mem_block_t *parent, int code_block);
 /*Free a mem_block_t, and any subsequent blocks in the list at block->next*/
 void codegen_allocator_free(struct mem_block_t *block);
 /*Get a pointer to the backing memory associated with block*/

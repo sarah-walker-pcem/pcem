@@ -290,6 +290,7 @@ void codegen_block_remove();
 void codegen_block_start_recompile(codeblock_t *block);
 void codegen_block_end_recompile(codeblock_t *block);
 void codegen_block_end();
+void codegen_delete_block(codeblock_t *block);
 void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_pc, uint32_t old_pc);
 void codegen_generate_seg_restore();
 void codegen_set_op32();

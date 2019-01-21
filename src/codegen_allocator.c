@@ -14,6 +14,7 @@ typedef struct mem_block_t
 {
         uint32_t offset; /*Offset into mem_block_alloc*/
         uint32_t next;
+        uint16_t code_block;
 } mem_block_t;
 
 static mem_block_t mem_blocks[MEM_BLOCK_NR];
@@ -35,6 +36,7 @@ void codegen_allocator_init()
         for (c = 0; c < MEM_BLOCK_NR; c++)
         {
                 mem_blocks[c].offset = c * MEM_BLOCK_SIZE;
+                mem_blocks[c].code_block = BLOCK_INVALID;
                 if (c < MEM_BLOCK_NR-1)
                         mem_blocks[c].next = c+2;
                 else
@@ -43,15 +45,19 @@ void codegen_allocator_init()
         mem_block_free_list = 1;
 }
 
-mem_block_t *codegen_allocator_allocate(mem_block_t *parent)
+mem_block_t *codegen_allocator_allocate(mem_block_t *parent, int code_block)
 {
         mem_block_t *block;
         uint32_t block_nr;
         
         while (!mem_block_free_list)
         {
-                if (!codegen_purge_purgable_list())
-                        codegen_delete_random_block(1);
+                /*Pick a random memory block and free the owning code block*/
+                block_nr = rand() & MEM_BLOCK_MASK;
+                block = &mem_blocks[block_nr];
+                
+                if (block->code_block && block->code_block != code_block)
+                        codegen_delete_block(&codeblock[block->code_block]);
         }
 //                fatal("codegen_allocator_allocate: free list empty!\n");
 
@@ -60,6 +66,7 @@ mem_block_t *codegen_allocator_allocate(mem_block_t *parent)
         block = &mem_blocks[block_nr-1];
         mem_block_free_list = block->next;
         
+        block->code_block = code_block;
         if (parent)
         {
                 /*Add to parent list*/
@@ -88,6 +95,7 @@ void codegen_allocator_free(mem_block_t *block)
                 codegen_allocator_usage--;
                 
                 block->next = mem_block_free_list;
+                block->code_block = BLOCK_INVALID;
                 mem_block_free_list = block_nr;
                 block_nr = next_block_nr;
                 

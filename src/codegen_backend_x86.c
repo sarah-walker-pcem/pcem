@@ -299,7 +299,7 @@ pclog("  offsetof(codeblock_t, next_2)=%i\n", offsetof(codeblock_t, next_2));
         block_current = 0;
         block_pos = 0;
         block = &codeblock[block_current];
-        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
         block_write_data = block->data;
         build_loadstore_routines(block);

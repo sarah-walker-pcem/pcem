@@ -298,7 +298,7 @@ void codegen_backend_init()
         block_current = 0;
         block_pos = 0;
         block = &codeblock[block_current];
-        codeblock[block_current].head_mem_block = codegen_allocator_allocate(NULL);
+        codeblock[block_current].head_mem_block = codegen_allocator_allocate(NULL, block_current);
         codeblock[block_current].data = codeblock_allocator_get_ptr(codeblock[block_current].head_mem_block);
         block_write_data = codeblock[block_current].data;
         build_loadstore_routines(&codeblock[block_current]);

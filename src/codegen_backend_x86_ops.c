@@ -78,7 +78,7 @@ static inline void codegen_addquad(codeblock_t *block, uint64_t val)
 static void codegen_allocate_new_block(codeblock_t *block)
 {
         /*Current block is full. Allocate a new block*/
-        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block);
+        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
         uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
 
         /*Add a jump instruction to the new block*/

@@ -101,7 +101,7 @@ static inline void codegen_alloc_bytes(codeblock_t *block, int size)
         if (block_pos > ((BLOCK_MAX - size) - JMP_LEN_BYTES))
         {
                 /*Current block is full. Allocate a new block*/
-                struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block);
+                struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
                 uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
 
                 /*Add a jump instruction to the new block*/

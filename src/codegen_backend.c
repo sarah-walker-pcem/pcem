@@ -300,6 +300,12 @@ static void delete_block(codeblock_t *block)
         block_free_list_add(block);
 }
 
+void codegen_delete_block(codeblock_t *block)
+{
+        if (block->pc != BLOCK_PC_INVALID)
+                delete_block(block);
+}
+
 void codegen_delete_random_block(int required_mem_block)
 {
         int block_nr = rand() & BLOCK_MASK;
@@ -419,7 +425,7 @@ void codegen_block_start_recompile(codeblock_t *block)
         if (block->pc != cs + cpu_state.pc || (block->flags & CODEBLOCK_WAS_RECOMPILED))
                 fatal("Recompile to used block!\n");
 
-        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
 
         block->status = cpu_cur_status;
