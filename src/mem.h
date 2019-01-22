@@ -157,17 +157,34 @@ static inline uint32_t get_phys(uint32_t addr)
                 return addr & rammask;
         }
         
-        get_phys_phys = (mmutranslatereal(addr, 0) & rammask) & ~0xfff;
+        if (readlookup2[addr >> 12] != -1)
+                get_phys_phys = ((uintptr_t)readlookup2[addr >> 12] + (addr & ~0xfff)) - (uintptr_t)ram;
+        else
+        {
+                get_phys_phys = (mmutranslatereal(addr, 0) & rammask) & ~0xfff;
+                if (!cpu_state.abrt)
+                        addreadlookup(get_phys_virt, get_phys_phys);
+        }
+                
         return get_phys_phys | (addr & 0xfff);
 //        return mmutranslatereal(addr, 0) & rammask;
 }
 
 static inline uint32_t get_phys_noabrt(uint32_t addr)
 {
+        uint32_t phys_addr;
+        
         if (!(cr0 >> 31))
                 return addr & rammask;
         
-        return mmutranslate_noabrt(addr, 0) & rammask;
+        if (readlookup2[addr >> 12] != -1)
+                return ((uintptr_t)readlookup2[addr >> 12] + addr) - (uintptr_t)ram;
+
+        phys_addr = mmutranslate_noabrt(addr, 0) & rammask;
+        if (!cpu_state.abrt)
+                addreadlookup(addr, phys_addr);
+
+        return phys_addr;
 }
 
 void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr);
