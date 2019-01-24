@@ -181,7 +181,7 @@ static inline uint32_t get_phys_noabrt(uint32_t addr)
                 return ((uintptr_t)readlookup2[addr >> 12] + addr) - (uintptr_t)ram;
 
         phys_addr = mmutranslate_noabrt(addr, 0) & rammask;
-        if (!cpu_state.abrt)
+        if (phys_addr != 0xffffffff)
                 addreadlookup(addr, phys_addr);
 
         return phys_addr;
