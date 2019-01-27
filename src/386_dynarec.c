@@ -533,10 +533,8 @@ void exec386_dynarec(int cycs)
         {
                 oldcs = CS;
                 cpu_state.oldpc = cpu_state.pc;
-                cpu_state.op32 = use32;
 
 
-                cycdiff=0;
                 oldcyc=cycles;
 //                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
                 if (!CACHE_ON()) /*Interpret block*/
