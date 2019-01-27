@@ -601,7 +601,7 @@ void exec386_dynarec(int cycs)
                 codeblock_t *block = &codeblock[codeblock_hash[hash]];
                 int valid_block = 0;
 
-                if (block && !cpu_state.abrt)
+                if (!cpu_state.abrt)
                 {
                         page_t *page = &pages[phys_addr >> 12];
 
