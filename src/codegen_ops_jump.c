@@ -12,22 +12,30 @@
 uint32_t ropJMP_r8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         uint32_t offset = (int32_t)(int8_t)fastreadb(cs + op_pc);
+        uint32_t dest_addr = op_pc+1+offset;
 
-        uop_MOV_IMM(ir, IREG_pc, op_pc+1+offset);
+        if (!(op_32 & 0x100))
+                dest_addr &= 0xffff;
+
+        uop_MOV_IMM(ir, IREG_pc, dest_addr);
         return -1;
 }
 uint32_t ropJMP_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         uint32_t offset = (int32_t)(int16_t)fastreadw(cs + op_pc);
+        uint32_t dest_addr = op_pc+2+offset;
+        
+        dest_addr &= 0xffff;
 
-        uop_MOV_IMM(ir, IREG_pc, op_pc+2+offset);
+        uop_MOV_IMM(ir, IREG_pc, dest_addr);
         return -1;
 }
 uint32_t ropJMP_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         uint32_t offset = fastreadl(cs + op_pc);
-
-        uop_MOV_IMM(ir, IREG_pc, op_pc+4+offset);
+        uint32_t dest_addr = op_pc+4+offset;
+        
+        uop_MOV_IMM(ir, IREG_pc, dest_addr);
         return -1;
 }
 
@@ -64,6 +72,8 @@ uint32_t ropCALL_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
         uint16_t ret_addr = op_pc + 2;
         uint16_t dest_addr = ret_addr + offset;
         int sp_reg;
+
+        dest_addr &= 0xffff;
 
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
         sp_reg = LOAD_SP_WITH_OFFSET(ir, -2);

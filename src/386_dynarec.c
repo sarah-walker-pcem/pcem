@@ -678,7 +678,6 @@ void exec386_dynarec(int cycs)
 inrecomp=1;
                         code();
 inrecomp=0;
-                        if (!use32) cpu_state.pc &= 0xffff;
 //                        cpu_recomp_ins += block->ins;
                         cpu_recomp_blocks++;
 /*                        ins += codeblock_ins[index];
