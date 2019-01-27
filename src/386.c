@@ -238,7 +238,6 @@ void exec386(int cycs)
 
                 oldcs=CS;
                 cpu_state.oldpc = cpu_state.pc;
-                oldcpl=CPL;
                 cpu_state.op32 = use32;
                 
 dontprint=0;

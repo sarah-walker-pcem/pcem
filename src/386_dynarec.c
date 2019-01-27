@@ -533,7 +533,6 @@ void exec386_dynarec(int cycs)
         {
                 oldcs = CS;
                 cpu_state.oldpc = cpu_state.pc;
-                oldcpl = CPL;
                 cpu_state.op32 = use32;
 
 
@@ -549,7 +548,6 @@ void exec386_dynarec(int cycs)
                         {
                                 oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
-                                oldcpl=CPL;
                                 cpu_state.op32 = use32;
 
                                 cpu_state.ea_seg = &cpu_state.seg_ds;
@@ -708,7 +706,6 @@ inrecomp=0;
                         {
                                 oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
-                                oldcpl=CPL;
                                 cpu_state.op32 = use32;
 
                                 cpu_state.ea_seg = &cpu_state.seg_ds;
@@ -790,7 +787,6 @@ inrecomp=0;
                         {
                                 oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
-                                oldcpl=CPL;
                                 cpu_state.op32 = use32;
 
                                 cpu_state.ea_seg = &cpu_state.seg_ds;
