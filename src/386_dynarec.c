@@ -600,7 +600,6 @@ void exec386_dynarec(int cycs)
                 int hash = HASH(phys_addr);
                 codeblock_t *block = &codeblock[codeblock_hash[hash]];
                 int valid_block = 0;
-                trap = 0;
 
                 if (block && !cpu_state.abrt)
                 {
@@ -877,7 +876,7 @@ inrecomp=0;
                 
                 if (trap)
                 {
-
+                        trap = 0;
                         flags_rebuild();
 //                        oldpc=pc;
 //                        oldcs=CS;
