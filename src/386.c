@@ -263,8 +263,6 @@ dontprint=0;
                                 break;
                 }
 
-                if (!use32) cpu_state.pc &= 0xffff;
-
                 if (cpu_state.abrt)
                 {
                         flags_rebuild();

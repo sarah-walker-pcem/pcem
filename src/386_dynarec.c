@@ -567,8 +567,6 @@ void exec386_dynarec(int cycs)
                                         x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
                                 }
 
-                                if (!use32) cpu_state.pc &= 0xffff;
-
                                 if (((cs + cpu_state.pc) >> 12) != pccache)
                                         CPU_BLOCK_END();
 
@@ -731,8 +729,6 @@ inrecomp=0;
                                                 break;
                                 }
 
-                                if (!use32) cpu_state.pc &= 0xffff;
-
                                 /*Cap source code at 4000 bytes per block; this
                                   will prevent any block from spanning more than
                                   2 pages. In practice this limit will never be
@@ -807,8 +803,6 @@ inrecomp=0;
                                         if (x86_was_reset)
                                                 break;
                                 }
-
-                                if (!use32) cpu_state.pc &= 0xffff;
 
                                 /*Cap source code at 4000 bytes per block; this
                                   will prevent any block from spanning more than
