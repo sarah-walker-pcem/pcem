@@ -532,8 +532,6 @@ void exec386_dynarec(int cycs)
         while (cycles>0)
         {
                 oldcs = CS;
-                cpu_state.oldpc = cpu_state.pc;
-
 
                 oldcyc=cycles;
 //                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
@@ -835,6 +833,9 @@ inrecomp=0;
 
 //                        output &= ~2;
                 }
+                else
+                        cpu_state.oldpc = cpu_state.pc;
+
 //                        if (output && (SP & 1))
 //                                fatal("odd SP\n");
                 }
