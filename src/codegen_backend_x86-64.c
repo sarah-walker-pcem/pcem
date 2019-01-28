@@ -100,7 +100,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOVQ_XREG_BASE_INDEX(block, REG_XMM_TEMP, REG_RSI, REG_RCX);
         else
                 fatal("build_load_routine: size=%i\n", size);
-        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
+        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI);
         host_x86_RET(block);
 
         *branch_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 1;
@@ -198,7 +198,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOVQ_BASE_INDEX_XREG(block, REG_RSI, REG_RDI, REG_XMM_TEMP);
         else
                 fatal("build_store_routine: size=%i\n", size);
-        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
+        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI);
         host_x86_RET(block);
 
         *branch_offset = (uint8_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 1;
@@ -305,15 +305,15 @@ void codegen_backend_init()
 
         codegen_gpf_rout = &codeblock[block_current].data[block_pos];
 #if WIN64
-        host_x86_XOR32_REG_REG(block, REG_ECX, REG_ECX, REG_ECX);
-        host_x86_XOR32_REG_REG(block, REG_EDX, REG_EDX, REG_EDX);
+        host_x86_XOR32_REG_REG(block, REG_ECX, REG_ECX);
+        host_x86_XOR32_REG_REG(block, REG_EDX, REG_EDX);
 #else
-        host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI, REG_EDI);
-        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI, REG_ESI);
+        host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI);
+        host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI);
 #endif
 	host_x86_CALL(block, (uintptr_t)x86gpf);
         codegen_exit_rout = &codeblock[block_current].data[block_pos];
-        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_ADD64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_POP(block, REG_R15);
         host_x86_POP(block, REG_R14);
         host_x86_POP(block, REG_R13);
@@ -349,19 +349,19 @@ void codegen_backend_prologue(codeblock_t *block)
         host_x86_PUSH(block, REG_R13);
         host_x86_PUSH(block, REG_R14);
         host_x86_PUSH(block, REG_R15);
-        host_x86_SUB32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_SUB64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_MOV64_REG_IMM(block, REG_RBP, ((uintptr_t)&cpu_state) + 128);
         if (block->flags & CODEBLOCK_HAS_FPU)
         {
                 host_x86_MOV32_REG_ABS(block, REG_EAX, &cpu_state.TOP);
-                host_x86_SUB32_REG_IMM(block, REG_EAX, REG_EAX, block->TOP);
-                host_x86_MOV32_BASE_OFFSET_REG(block, REG_ESP, IREG_TOP_diff_stack_offset, REG_EAX);
+                host_x86_SUB32_REG_IMM(block, REG_EAX, block->TOP);
+                host_x86_MOV32_BASE_OFFSET_REG(block, REG_RSP, IREG_TOP_diff_stack_offset, REG_EAX);
         }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-        host_x86_ADD32_REG_IMM(block, REG_ESP, REG_ESP, 0x38);
+        host_x86_ADD64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_POP(block, REG_R15);
         host_x86_POP(block, REG_R14);
         host_x86_POP(block, REG_R13);

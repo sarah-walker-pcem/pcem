@@ -163,10 +163,10 @@ static inline void jmp(codeblock_t *block, uintptr_t func)
 	}
 }
 
-void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
+void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_ADD8_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_ADD8_REG_IMM - dst_reg & 8\n");
 
         if (dst_reg == REG_EAX)
         {
@@ -179,10 +179,10 @@ void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t
                 codegen_addbyte3(block, 0x80, 0xc0 | RM_OP_ADD | (dst_reg & 7), imm_data); /*ADD dst_reg, imm_data*/
         }
 }
-void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data)
+void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_ADD32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_ADD16_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -202,10 +202,10 @@ void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16
                 codegen_addword(block, imm_data);
         }
 }
-void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_ADD32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_ADD32_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -238,29 +238,29 @@ void host_x86_ADD64_REG_IMM(codeblock_t *block, int dst_reg, uint64_t imm_data)
         else
                 fatal("ADD64_REG_IMM !is_imm8 %016llx\n", imm_data);
 }
-void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD8_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_ADD8_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x00, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x00, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*ADD dst_reg, src_reg*/
 }
-void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD16_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_ADD16_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 3);
-        codegen_addbyte3(block, 0x66, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
+        codegen_addbyte3(block, 0x66, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*ADD dst_reg, src_reg*/
 }
-void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_ADD32_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_ADD32_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*ADD dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x01, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*ADD dst_reg, src_reg*/
 }
 
 void host_x86_ADDPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
@@ -274,10 +274,10 @@ void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0xf2, 0x0f, 0x58, 0xc0 | src_reg | (dst_reg << 3));
 }
 
-void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
+void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_AND8_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_AND8_REG_IMM - dst_reg & 8\n");
 
         if (dst_reg == REG_EAX)
         {
@@ -290,10 +290,10 @@ void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t
                 codegen_addbyte3(block, 0x80, 0xc0 | RM_OP_AND | (dst_reg & 7), imm_data); /*AND dst_reg, imm_data*/
         }
 }
-void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data)
+void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_AND32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_AND16_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -313,10 +313,10 @@ void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16
                 codegen_addword(block, imm_data);
         }
 }
-void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_AND32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_AND32_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -336,29 +336,29 @@ void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32
                 codegen_addlong(block, imm_data);
         }
 }
-void host_x86_AND8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_AND8_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_AND8_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_AND8_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x20, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*AND dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x20, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*AND dst_reg, src_reg*/
 }
-void host_x86_AND16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_AND16_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_AND16_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_AND16_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 3);
-        codegen_addbyte3(block, 0x66, 0x21, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*AND dst_reg, src_reg_b*/
+        codegen_addbyte3(block, 0x66, 0x21, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*AND dst_reg, src_reg*/
 }
-void host_x86_AND32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_AND32_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_AND32_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_AND32_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x21, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*AND dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x21, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*AND dst_reg, src_reg*/
 }
 
 void host_x86_CALL(codeblock_t *block, void *p)
@@ -1512,10 +1512,10 @@ void host_x86_NOP(codeblock_t *block)
         codegen_addbyte(block, 0x90); /*NOP*/
 }
 
-void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
+void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_OR8_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_OR8_REG_IMM - dst_reg & 8\n");
 
         if (dst_reg == REG_EAX)
         {
@@ -1528,10 +1528,10 @@ void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t 
                 codegen_addbyte3(block, 0x80, 0xc0 | RM_OP_OR | (dst_reg & 7), imm_data); /*OR dst_reg, imm_data*/
         }
 }
-void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data)
+void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_OR16_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_OR16_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -1551,10 +1551,10 @@ void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_
                 codegen_addword(block, imm_data);
         }
 }
-void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_OR32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_OR32_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -1574,29 +1574,29 @@ void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_
                 codegen_addlong(block, imm_data);
         }
 }
-void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_OR8_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_OR8_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x08, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*OR dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x08, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*OR dst_reg, src_reg*/
 }
-void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_OR16_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_OR16_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 3);
-        codegen_addbyte3(block, 0x66, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*OR dst_reg, src_reg_b*/
+        codegen_addbyte3(block, 0x66, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*OR dst_reg, src_reg*/
 }
-void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_OR32_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_OR32_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*OR dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x09, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*OR dst_reg, src_reg*/
 }
 
 void host_x86_PACKSSWB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
@@ -2046,10 +2046,10 @@ void host_x86_SQRTSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0xf3, 0x0f, 0x51, 0xc0 | src_reg | (dst_reg << 3)); /*SQRTSS dst_reg, src_reg*/
 }
 
-void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
+void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_SUB8_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_SUB8_REG_IMM - dst_reg & 8\n");
 
         if (dst_reg == REG_EAX)
         {
@@ -2062,10 +2062,10 @@ void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t
                 codegen_addbyte3(block, 0x80, 0xc0 | RM_OP_SUB | (dst_reg & 7), imm_data); /*SUB dst_reg, imm_data*/
         }
 }
-void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data)
+void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_SUB16_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_SUB16_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -2085,10 +2085,10 @@ void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16
                 codegen_addword(block, imm_data);
         }
 }
-void host_x86_SUB32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+void host_x86_SUB32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_SUB32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_SUB32_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -2121,29 +2121,29 @@ void host_x86_SUB64_REG_IMM(codeblock_t *block, int dst_reg, uint64_t imm_data)
         else
                 fatal("SUB64_REG_IMM !is_imm8 %016llx\n", imm_data);
 }
-void host_x86_SUB8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_SUB8_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_SUB8_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_SUB8_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x28, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*SUB dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x28, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*SUB dst_reg, src_reg*/
 }
-void host_x86_SUB16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_SUB16_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_SUB16_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_SUB16_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 3);
-        codegen_addbyte3(block, 0x66, 0x29, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*SUB dst_reg, src_reg_b*/
+        codegen_addbyte3(block, 0x66, 0x29, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*SUB dst_reg, src_reg*/
 }
-void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_SUB32_REG_REG - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_SUB32_REG_REG - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x29, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*SUB dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x29, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*SUB dst_reg, src_reg*/
 }
 
 void host_x86_SUBPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
@@ -2201,10 +2201,10 @@ void host_x86_UNPCKLPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte3(block, 0x0f, 0x14, 0xc0 | src_reg | (dst_reg << 3));
 }
 
-void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data)
+void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_XOR8_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_XOR8_REG_IMM - dst_reg & 8\n");
 
         if (dst_reg == REG_EAX)
         {
@@ -2217,10 +2217,10 @@ void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t
                 codegen_addbyte3(block, 0x80, 0xc0 | RM_OP_XOR | (dst_reg & 7), imm_data); /*XOR dst_reg, imm_data*/
         }
 }
-void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data)
+void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_XOR16_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_XOR16_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -2240,10 +2240,10 @@ void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16
                 codegen_addword(block, imm_data);
         }
 }
-void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data)
+void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 {
-        if (dst_reg != src_reg || (dst_reg & 8) || (src_reg & 8))
-                fatal("host_x86_XOR32_REG_IMM - dst_reg != src_reg\n");
+        if (dst_reg & 8)
+                fatal("host_x86_XOR32_REG_IMM - dst_reg & 8\n");
 
         if (is_imm8(imm_data))
         {
@@ -2263,29 +2263,29 @@ void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32
                 codegen_addlong(block, imm_data);
         }
 }
-void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_XOR8_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_XOR8_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x30, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*XOR dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x30, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*XOR dst_reg, src_reg*/
 }
-void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_XOR16_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_XOR16_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 3);
-        codegen_addbyte3(block, 0x66, 0x31, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*XOR dst_reg, src_reg_b*/
+        codegen_addbyte3(block, 0x66, 0x31, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*XOR dst_reg, src_reg*/
 }
-void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b)
+void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg)
 {
-        if (dst_reg != src_reg_a || (dst_reg & 8) || (src_reg_b & 8))
-                fatal("host_x86_XOR32_REG_IMM - dst_reg != src_reg_a\n");
+        if ((dst_reg & 8) || (src_reg & 8))
+                fatal("host_x86_XOR32_REG_IMM - dst_reg & 8\n");
 
         codegen_alloc_bytes(block, 2);
-        codegen_addbyte2(block, 0x31, 0xc0 | (dst_reg & 7) | ((src_reg_b & 7) << 3)); /*XOR dst_reg, src_reg_b*/
+        codegen_addbyte2(block, 0x31, 0xc0 | (dst_reg & 7) | ((src_reg & 7) << 3)); /*XOR dst_reg, src_reg*/
 }
 
 #endif

@@ -34,19 +34,19 @@ static int codegen_ADD(codeblock_t *block, uop_t *uop)
                 if (dest_reg != src_reg_a)
                         host_x86_LEA_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
                 else
-                        host_x86_ADD32_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                        host_x86_ADD32_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_ADD16_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_ADD16_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_ADD8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_ADD8_REG_REG(block, dest_reg, src_reg_b);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -65,19 +65,19 @@ static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
                 if (dest_reg != src_reg)
                         host_x86_LEA_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
                 else
-                        host_x86_ADD32_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                        host_x86_ADD32_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
-                host_x86_ADD16_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_ADD16_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
-                host_x86_ADD8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_ADD8_REG_IMM(block, dest_reg, uop->imm_data);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -89,7 +89,12 @@ static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
 static int codegen_ADD_LSHIFT(codeblock_t *block, uop_t *uop)
 {
         if (!uop->imm_data)
-                host_x86_ADD32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+        {
+                if (uop->dest_reg_a_real == uop->src_reg_a_real)
+                        host_x86_ADD32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_b_real);
+                else
+                        host_x86_LEA_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
+        }
         else if (uop->imm_data < 4)
                 host_x86_LEA_REG_REG_SHIFT(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, uop->imm_data);
 #ifdef RECOMPILER_DEBUG
@@ -112,19 +117,19 @@ static int codegen_AND(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV32_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_AND32_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_AND32_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_AND16_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_AND16_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_AND8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_AND8_REG_REG(block, dest_reg, src_reg_b);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -142,19 +147,19 @@ static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
-                host_x86_AND32_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_AND32_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
-                host_x86_AND16_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_AND16_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
-                host_x86_AND8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_AND8_REG_IMM(block, dest_reg, uop->imm_data);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -631,10 +636,10 @@ static int codegen_FTST(codeblock_t *block, uop_t *uop)
                 host_x86_PXOR_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP);
                 if (dest_reg != REG_EAX)
                         host_x86_MOV32_REG_REG(block, REG_ECX, REG_EAX);
-                host_x86_XOR32_REG_REG(block, REG_EAX, REG_EAX, REG_EAX);
+                host_x86_XOR32_REG_REG(block, REG_EAX, REG_EAX);
                 host_x86_COMISD_XREG_XREG(block, src_reg_a, REG_XMM_TEMP);
                 host_x86_LAHF(block);
-                host_x86_AND16_REG_IMM(block, REG_EAX, REG_EAX, C0|C2|C3);
+                host_x86_AND16_REG_IMM(block, REG_EAX, C0|C2|C3);
                 if (dest_reg != REG_EAX)
                 {
                         host_x86_MOV16_REG_REG(block, dest_reg, REG_EAX);
@@ -672,10 +677,10 @@ static int codegen_FCOM(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != REG_EAX)
                         host_x86_MOV32_REG_REG(block, REG_ECX, REG_EAX);
-                host_x86_XOR32_REG_REG(block, REG_EAX, REG_EAX, REG_EAX);
+                host_x86_XOR32_REG_REG(block, REG_EAX, REG_EAX);
                 host_x86_COMISD_XREG_XREG(block, src_reg_a, src_reg_b);
                 host_x86_LAHF(block);
-                host_x86_AND16_REG_IMM(block, REG_EAX, REG_EAX, C0|C2|C3);
+                host_x86_AND16_REG_IMM(block, REG_EAX, C0|C2|C3);
                 if (dest_reg != REG_EAX)
                 {
                         host_x86_MOV16_REG_REG(block, dest_reg, REG_EAX);
@@ -939,7 +944,7 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
 
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         if (REG_IS_B(dest_size))
         {
                 host_x86_CALL(block, codegen_mem_load_byte);
@@ -992,7 +997,7 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
 #endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         host_x86_CALL(block, codegen_mem_load_single);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
@@ -1011,7 +1016,7 @@ static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
 #endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         host_x86_CALL(block, codegen_mem_load_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
@@ -1095,7 +1100,7 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
 
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         if (REG_IS_B(src_size))
         {
                 host_x86_MOV8_REG_REG(block, REG_ECX, src_reg);
@@ -1137,7 +1142,7 @@ static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
 #endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         host_x86_CVTSD2SS_XREG_XREG(block, REG_XMM_TEMP, src_reg);
         host_x86_CALL(block, codegen_mem_store_single);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
@@ -1156,7 +1161,7 @@ static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
 #endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
-                host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
+                host_x86_ADD32_REG_IMM(block, REG_ESI, uop->imm_data);
         host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg);
         host_x86_CALL(block, codegen_mem_store_double);
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
@@ -1369,17 +1374,19 @@ static int codegen_OR(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV32_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_OR32_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_OR32_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_OR16_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_OR16_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
         {
-                host_x86_OR8_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                if (dest_reg != src_reg_a)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
+                host_x86_OR8_REG_REG(block, dest_reg, src_reg_b);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -1394,15 +1401,15 @@ static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_L(dest_size) && REG_IS_L(src_size))
         {
-                host_x86_OR32_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_OR32_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
         {
-                host_x86_OR16_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_OR16_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
         {
-                host_x86_OR8_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_OR8_REG_IMM(block, dest_reg, uop->imm_data);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2438,19 +2445,19 @@ static int codegen_SUB(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV32_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_SUB32_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_SUB32_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_SUB16_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_SUB16_REG_REG(block, dest_reg, src_reg_b);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
         {
                 if (dest_reg != src_reg_a)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
-                host_x86_SUB8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
+                host_x86_SUB8_REG_REG(block, dest_reg, src_reg_b);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2467,19 +2474,19 @@ static int codegen_SUB_IMM(codeblock_t *block, uop_t *uop)
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
-                host_x86_SUB32_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_SUB32_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
-                host_x86_SUB16_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_SUB16_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
         {
                 if (dest_reg != src_reg)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
-                host_x86_SUB8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
+                host_x86_SUB8_REG_IMM(block, dest_reg, uop->imm_data);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2548,17 +2555,17 @@ static int codegen_XOR(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PXOR_XREG_XREG(block, dest_reg, src_reg_b);
         }
-        else if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b))
+        else if (REG_IS_L(dest_size) && REG_IS_L(src_size_a) && REG_IS_L(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_XOR32_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                host_x86_XOR32_REG_REG(block, dest_reg, src_reg_b);
         }
-        else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b))
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size_a) && REG_IS_W(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_XOR16_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                host_x86_XOR16_REG_REG(block, dest_reg, src_reg_b);
         }
-        else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b))
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size_a) && REG_IS_B(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_XOR8_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
+                host_x86_XOR8_REG_REG(block, dest_reg, src_reg_b);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2573,15 +2580,15 @@ static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_L(dest_size) && REG_IS_L(src_size))
         {
-                host_x86_XOR32_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_XOR32_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
         {
-                host_x86_XOR16_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_XOR16_REG_IMM(block, dest_reg, uop->imm_data);
         }
         else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
         {
-                host_x86_XOR8_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
+                host_x86_XOR8_REG_IMM(block, dest_reg, uop->imm_data);
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2781,8 +2788,8 @@ void codegen_direct_read_st_8(codeblock_t *block, int host_reg, void *base, int 
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOV8_REG_ABS_REG_REG_SHIFT(block, host_reg, offset, REG_RBP, REG_ECX, 0);
 }
 void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int reg_idx)
@@ -2790,8 +2797,8 @@ void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(block, host_reg, offset, REG_RBP, REG_ECX, 3);
 }
 void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx)
@@ -2799,8 +2806,8 @@ void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base,
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(block, host_reg, offset, REG_RBP, REG_ECX, 3);
 }
 
@@ -2833,8 +2840,8 @@ void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int 
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOV8_ABS_REG_REG_SHIFT_REG(block, offset, REG_RBP, REG_ECX, 0, host_reg);
 }
 void codegen_direct_write_st_64(codeblock_t *block, void *base, int reg_idx, int host_reg)
@@ -2842,8 +2849,8 @@ void codegen_direct_write_st_64(codeblock_t *block, void *base, int reg_idx, int
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(block, offset, REG_RBP, REG_ECX, 3, host_reg);
 }
 void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg)
@@ -2851,8 +2858,8 @@ void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx,
         int offset = (uintptr_t)base - (((uintptr_t)&cpu_state) + 128);
 
         host_x86_MOV32_REG_BASE_OFFSET(block, REG_ECX, REG_RSP, IREG_TOP_diff_stack_offset);
-        host_x86_ADD32_REG_IMM(block, REG_ECX, REG_ECX, reg_idx);
-        host_x86_AND32_REG_IMM(block, REG_ECX, REG_ECX, 7);
+        host_x86_ADD32_REG_IMM(block, REG_ECX, reg_idx);
+        host_x86_AND32_REG_IMM(block, REG_ECX, 7);
         host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(block, offset, REG_RBP, REG_ECX, 3, host_reg);
 }
 

@@ -1,22 +1,22 @@
-void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
-void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
-void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
+void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
+void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 void host_x86_ADD64_REG_IMM(codeblock_t *block, int dst_reg, uint64_t imm_data);
 
-void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
+void host_x86_ADD8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_ADD16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_ADD32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_ADDPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
-void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
-void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
-void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+void host_x86_AND8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
+void host_x86_AND16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
+void host_x86_AND32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 
-void host_x86_AND8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_AND16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_AND32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
+void host_x86_AND8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_AND16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_AND32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_CALL(codeblock_t *block, void *p);
 
@@ -168,13 +168,13 @@ void host_x86_MULSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_NOP(codeblock_t *block);
 
-void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
-void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
-void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+void host_x86_OR8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
+void host_x86_OR16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
+void host_x86_OR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 
-void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
+void host_x86_OR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_OR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_OR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_PACKSSWB_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_PACKSSDW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
@@ -262,14 +262,14 @@ void host_x86_SHR32_IMM(codeblock_t *block, int dst_reg, int shift);
 void host_x86_SQRTSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_SQRTSS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
-void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
-void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
-void host_x86_SUB32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+void host_x86_SUB8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
+void host_x86_SUB16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
+void host_x86_SUB32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 void host_x86_SUB64_REG_IMM(codeblock_t *block, int dst_reg, uint64_t imm_data);
 
-void host_x86_SUB8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_SUB16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
+void host_x86_SUB8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_SUB16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_SUB32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_SUBPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_SUBSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
@@ -281,10 +281,10 @@ void host_x86_TEST32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data)
 
 void host_x86_UNPCKLPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
-void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t imm_data);
-void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint16_t imm_data);
-void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm_data);
+void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
+void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
+void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 
-void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
-void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg_a, int src_reg_b);
+void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
