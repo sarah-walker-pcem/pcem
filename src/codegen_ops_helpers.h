@@ -46,11 +46,24 @@ static inline void SUB_SP(ir_data_t *ir, int offset)
                 uop_SUB_IMM(ir, IREG_SP, IREG_SP, offset);
 }
 
-static inline void fpu_POP(ir_data_t *ir)
+static inline void fpu_POP(codeblock_t *block, ir_data_t *ir)
 {
-        uop_ADD_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
+        if (block->flags & CODEBLOCK_STATIC_TOP)
+                uop_MOV_IMM(ir, IREG_FPU_TOP, cpu_state.TOP + 1);
+        else
+                uop_ADD_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
 }
-static inline void fpu_PUSH(ir_data_t *ir)
+static inline void fpu_POP2(codeblock_t *block, ir_data_t *ir)
 {
-        uop_SUB_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
+        if (block->flags & CODEBLOCK_STATIC_TOP)
+                uop_MOV_IMM(ir, IREG_FPU_TOP, cpu_state.TOP + 2);
+        else
+                uop_ADD_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 2);
+}
+static inline void fpu_PUSH(codeblock_t *block, ir_data_t *ir)
+{
+        if (block->flags & CODEBLOCK_STATIC_TOP)
+                uop_MOV_IMM(ir, IREG_FPU_TOP, cpu_state.TOP - 1);
+        else
+                uop_SUB_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
 }

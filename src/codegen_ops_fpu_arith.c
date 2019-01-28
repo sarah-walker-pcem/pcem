@@ -38,7 +38,7 @@ uint32_t ropFADDP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_FP_ENTER(ir);
         uop_FADD(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
         
         return op_pc;
 }
@@ -62,7 +62,7 @@ uint32_t ropFCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
@@ -72,8 +72,7 @@ uint32_t ropFCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(ir);
-        fpu_POP(ir);
+        fpu_POP2(block, ir);
 
         return op_pc;
 }
@@ -125,7 +124,7 @@ uint32_t ropFDIVP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_FP_ENTER(ir);
         uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
         
         return op_pc;
 }
@@ -136,7 +135,7 @@ uint32_t ropFDIVRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_FP_ENTER(ir);
         uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
@@ -168,7 +167,7 @@ uint32_t ropFMULP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_FP_ENTER(ir);
         uop_FMUL(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
@@ -220,7 +219,7 @@ uint32_t ropFSUBP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_FP_ENTER(ir);
         uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
@@ -231,7 +230,7 @@ uint32_t ropFSUBRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_FP_ENTER(ir);
         uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
         uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
         
         return op_pc;
 }
@@ -255,7 +254,7 @@ uint32_t ropFUCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
@@ -265,8 +264,7 @@ uint32_t ropFUCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(ir);
-        fpu_POP(ir);
+        fpu_POP2(block, ir);
 
         return op_pc;
 }
@@ -316,7 +314,7 @@ uint32_t ropFCOMP ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uin
         uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
-        fpu_POP(ir);                                                                                                            \
+        fpu_POP(block, ir);                                                                                                     \
                                                                                                                                 \
         return op_pc+1;                                                                                                         \
 }                                                                                                                               \
@@ -447,7 +445,7 @@ uint32_t ropFICOMP ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, ui
         uop_FCOM(ir, IREG_temp1_W, IREG_ST(0), IREG_temp0_D);                                                                   \
         uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));                                                                     \
         uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp1_W);                                                                         \
-        fpu_POP(ir);                                                                                                            \
+        fpu_POP(block, ir);                                                                                                     \
                                                                                                                                 \
         return op_pc+1;                                                                                                         \
 }                                                                                                                               \

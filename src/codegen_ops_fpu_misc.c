@@ -29,7 +29,7 @@ uint32_t ropFLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
         uop_MOV(ir, IREG_ST(-1), IREG_ST(src_reg));
         uop_MOV(ir, IREG_ST_i64(-1), IREG_ST_i64(src_reg));
         uop_MOV(ir, IREG_tag(-1), IREG_tag(src_reg));
-        fpu_PUSH(ir);
+        fpu_PUSH(block, ir);
 
         return op_pc;
 }
@@ -53,7 +53,7 @@ uint32_t ropFSTP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         uop_MOV(ir, IREG_ST(dest_reg), IREG_ST(0));
         uop_MOV(ir, IREG_ST_i64(dest_reg), IREG_ST_i64(0));
         uop_MOV(ir, IREG_tag(dest_reg), IREG_tag(0));
-        fpu_POP(ir);
+        fpu_POP(block, ir);
 
         return op_pc;
 }
