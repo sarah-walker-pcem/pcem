@@ -48,9 +48,10 @@ static int codegen_ADD(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
                 host_x86_ADD8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("ADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -78,9 +79,10 @@ static int codegen_ADD_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_ADD8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("ADD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -90,9 +92,10 @@ static int codegen_ADD_LSHIFT(codeblock_t *block, uop_t *uop)
                 host_x86_ADD32_REG_REG(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
         else if (uop->imm_data < 4)
                 host_x86_LEA_REG_REG_SHIFT(block, uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real, uop->imm_data);
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_ADD_LSHIFT - shift out of range %i\n", uop->imm_data);
-
+#endif
         return 0;
 }
 
@@ -123,9 +126,10 @@ static int codegen_AND(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
                 host_x86_AND8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("AND %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -152,9 +156,10 @@ static int codegen_AND_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_AND8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("AND_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -167,9 +172,10 @@ static int codegen_ANDN(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PANDN_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("ANDN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -185,8 +191,10 @@ static int codegen_CALL_FUNC_RESULT(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_L(dest_size))
                 fatal("CALL_FUNC_RESULT %02x\n", uop->dest_reg_a_real);
+#endif
         host_x86_CALL(block, uop->p);
         host_x86_MOV32_REG_REG(block, dest_reg, REG_EAX);
 
@@ -211,8 +219,10 @@ static int codegen_CMP_IMM_JZ(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP32_REG_IMM(block, src_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_IMM_JZ %02x\n", uop->src_reg_a_real);
+#endif
         host_x86_JZ(block, uop->p);
 
         return 0;
@@ -231,9 +241,10 @@ static int codegen_CMP_IMM_JNZ_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP16_REG_IMM(block, src_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_IMM_JNZ_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNZ_long(block);
 
         return 0;
@@ -251,9 +262,10 @@ static int codegen_CMP_IMM_JZ_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP16_REG_IMM(block, src_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_IMM_JZ_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JZ_long(block);
 
         return 0;
@@ -276,9 +288,10 @@ static int codegen_CMP_JNB_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNB_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNB_long(block);
 
         return 0;
@@ -300,9 +313,10 @@ static int codegen_CMP_JNBE_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNBE_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNBE_long(block);
 
         return 0;
@@ -324,9 +338,10 @@ static int codegen_CMP_JNL_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNL_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNL_long(block);
 
         return 0;
@@ -348,9 +363,10 @@ static int codegen_CMP_JNLE_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNLE_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNLE_long(block);
 
         return 0;
@@ -372,9 +388,10 @@ static int codegen_CMP_JNO_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNO_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNO_long(block);
 
         return 0;
@@ -396,9 +413,10 @@ static int codegen_CMP_JNZ_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JNZ_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNZ_long(block);
 
         return 0;
@@ -420,9 +438,10 @@ static int codegen_CMP_JB_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JB_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JB_long(block);
 
         return 0;
@@ -444,9 +463,10 @@ static int codegen_CMP_JBE_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JBE_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JBE_long(block);
 
         return 0;
@@ -468,9 +488,10 @@ static int codegen_CMP_JL_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JL_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JL_long(block);
 
         return 0;
@@ -492,9 +513,10 @@ static int codegen_CMP_JLE_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JLE_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JLE_long(block);
 
         return 0;
@@ -516,9 +538,10 @@ static int codegen_CMP_JO_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JO_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JO_long(block);
 
         return 0;
@@ -540,9 +563,10 @@ static int codegen_CMP_JZ_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMP8_REG_REG(block, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("CMP_JZ_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JZ_long(block);
 
         return 0;
@@ -559,9 +583,10 @@ static int codegen_FABS(codeblock_t *block, uop_t *uop)
                 host_x86_SUBSD_XREG_XREG(block, REG_XMM_TEMP, dest_reg);
                 host_x86_MAXSD_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FABS %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_FCHS(codeblock_t *block, uop_t *uop)
@@ -575,9 +600,10 @@ static int codegen_FCHS(codeblock_t *block, uop_t *uop)
                 host_x86_PXOR_XREG_XREG(block, dest_reg, dest_reg);
                 host_x86_SUBSD_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FCHS %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_FSQRT(codeblock_t *block, uop_t *uop)
@@ -589,9 +615,10 @@ static int codegen_FSQRT(codeblock_t *block, uop_t *uop)
         {
                 host_x86_SQRTSD_XREG_XREG(block, dest_reg, src_reg_a);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FSQRT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_FTST(codeblock_t *block, uop_t *uop)
@@ -614,9 +641,10 @@ static int codegen_FTST(codeblock_t *block, uop_t *uop)
                         host_x86_MOV32_REG_REG(block, REG_EAX, REG_ECX);
                 }
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FTST %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -629,9 +657,10 @@ static int codegen_FADD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_ADDSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_FCOM(codeblock_t *block, uop_t *uop)
@@ -653,9 +682,10 @@ static int codegen_FCOM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV32_REG_REG(block, REG_EAX, REG_ECX);
                 }
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FCOM %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_FDIV(codeblock_t *block, uop_t *uop)
@@ -673,9 +703,10 @@ static int codegen_FDIV(codeblock_t *block, uop_t *uop)
                 host_x86_DIVSD_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
                 host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FDIV %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_FMUL(codeblock_t *block, uop_t *uop)
@@ -687,9 +718,10 @@ static int codegen_FMUL(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MULSD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_FSUB(codeblock_t *block, uop_t *uop)
@@ -707,9 +739,10 @@ static int codegen_FSUB(codeblock_t *block, uop_t *uop)
                 host_x86_SUBSD_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
                 host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_FSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -776,24 +809,31 @@ static int codegen_LOAD_FUNC_ARG0(codeblock_t *block, uop_t *uop)
                 host_x86_MOVZX_REG_32_16(block, REG_EDI, src_reg);
 #endif
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("codegen_LOAD_FUNC_ARG0 %02x\n", uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG1(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         fatal("codegen_LOAD_FUNC_ARG1 %02x\n", uop->src_reg_a_real);
+#endif
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG2(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         fatal("codegen_LOAD_FUNC_ARG2 %02x\n", uop->src_reg_a_real);
+#endif
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG3(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         fatal("codegen_LOAD_FUNC_ARG3 %02x\n", uop->src_reg_a_real);
+#endif
         return 0;
 }
 
@@ -817,12 +857,16 @@ static int codegen_LOAD_FUNC_ARG1_IMM(codeblock_t *block, uop_t *uop)
 }
 static int codegen_LOAD_FUNC_ARG2_IMM(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         fatal("codegen_LOAD_FUNC_ARG2_IMM\n");
+#endif
         return 0;
 }
 static int codegen_LOAD_FUNC_ARG3_IMM(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         fatal("codegen_LOAD_FUNC_ARG3_IMM\n");
+#endif
         return 0;
 }
 
@@ -831,8 +875,10 @@ static int codegen_LOAD_SEG(codeblock_t *block, uop_t *uop)
         int src_reg = HOST_REG_GET(uop->src_reg_a_real);
         int src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_W(src_size))
                 fatal("LOAD_SEG %02x %p\n", uop->src_reg_a_real, uop->p);
+#endif
 #if WIN64
         host_x86_MOV16_REG_REG(block, REG_CX, src_reg);
         host_x86_MOV64_REG_IMM(block, REG_EDX, (uint64_t)uop->p);
@@ -865,8 +911,10 @@ static int codegen_MEM_LOAD_ABS(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CALL(block, codegen_mem_load_long);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MEM_LOAD_ABS - %02x\n", uop->dest_reg_a_real);
+#endif
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
         if (REG_IS_B(dest_size))
@@ -908,8 +956,10 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CALL(block, codegen_mem_load_quad);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MEM_LOAD_REG - %02x\n", uop->dest_reg_a_real);
+#endif
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
         if (REG_IS_B(dest_size))
@@ -936,9 +986,10 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_D(dest_size))
                 fatal("MEM_LOAD_SINGLE - %02x\n", uop->dest_reg_a_real);
-
+#endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
@@ -954,9 +1005,10 @@ static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_D(dest_size))
                 fatal("MEM_LOAD_DOUBLE - %02x\n", uop->dest_reg_a_real);
-
+#endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
@@ -989,8 +1041,10 @@ static int codegen_MEM_STORE_ABS(codeblock_t *block, uop_t *uop)
                 host_x86_MOV32_REG_REG(block, REG_ECX, src_reg);
                 host_x86_CALL(block, codegen_mem_store_long);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MEM_STORE_ABS - %02x\n", uop->src_reg_b_real);
+#endif
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
 
@@ -1062,8 +1116,10 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
                 host_x86_MOVQ_XREG_XREG(block, REG_XMM_TEMP, src_reg);
                 host_x86_CALL(block, codegen_mem_store_quad);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MEM_STORE_REG - %02x\n", uop->src_reg_b_real);
+#endif
         host_x86_TEST32_REG(block, REG_ESI, REG_ESI);
         host_x86_JNZ(block, codegen_exit_rout);
 
@@ -1075,9 +1131,10 @@ static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
         int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
         int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_D(src_size))
                 fatal("MEM_STORE_SINGLE - %02x\n", uop->src_reg_b_real);
-
+#endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
@@ -1093,9 +1150,10 @@ static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
         int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
         int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
 
+#ifdef RECOMPILER_DEBUG
         if (!REG_IS_D(src_size))
                 fatal("MEM_STORE_DOUBLE - %02x\n", uop->src_reg_b_real);
-
+#endif
         host_x86_LEA_REG_REG(block, REG_ESI, seg_reg, addr_reg);
         if (uop->imm_data)
                 host_x86_ADD32_REG_IMM(block, REG_ESI, REG_ESI, uop->imm_data);
@@ -1132,9 +1190,10 @@ static int codegen_MOV(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOVQ_XREG_XREG(block, dest_reg, src_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOV %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
@@ -1154,9 +1213,10 @@ static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOV8_REG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOV_IMM %02x\n", uop->dest_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
@@ -1181,8 +1241,10 @@ static int codegen_MOVSX(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOVSX_REG_16_8(block, dest_reg, src_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOVSX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
         return 0;
 }
 static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
@@ -1210,8 +1272,10 @@ static int codegen_MOVZX(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MOVZX_REG_16_8(block, dest_reg, src_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOVZX %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
         return 0;
 }
 
@@ -1234,9 +1298,10 @@ static int codegen_MOV_DOUBLE_INT(codeblock_t *block, uop_t *uop)
                 host_x86_MOVQ_REG_XREG(block, REG_RCX, src_reg);
                 host_x86_CVTSI2SD_XREG_REG64(block, dest_reg, REG_RCX);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOV_DOUBLE_INT %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_MOV_INT_DOUBLE(codeblock_t *block, uop_t *uop)
@@ -1257,9 +1322,10 @@ static int codegen_MOV_INT_DOUBLE(codeblock_t *block, uop_t *uop)
                 host_x86_MOV16_REG_REG(block, dest_reg, REG_ECX);
                 host_x86_LDMXCSR(block, &cpu_state.old_fp_control);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOV_INT_DOUBLE %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
@@ -1283,9 +1349,10 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
                 
                 *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("MOV_INT_DOUBLE_64 %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -1314,9 +1381,10 @@ static int codegen_OR(codeblock_t *block, uop_t *uop)
         {
                 host_x86_OR8_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("OR %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
@@ -1336,9 +1404,10 @@ static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_OR8_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("OR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -1351,9 +1420,10 @@ static int codegen_PACKSSWB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PACKSSWB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PACKSSWB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PACKSSDW(codeblock_t *block, uop_t *uop)
@@ -1365,9 +1435,10 @@ static int codegen_PACKSSDW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PACKSSDW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PACKSSDW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PACKUSWB(codeblock_t *block, uop_t *uop)
@@ -1379,9 +1450,10 @@ static int codegen_PACKUSWB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PACKUSWB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PACKUSWB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -1394,9 +1466,10 @@ static int codegen_PADDB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDW(codeblock_t *block, uop_t *uop)
@@ -1408,9 +1481,10 @@ static int codegen_PADDW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDD(codeblock_t *block, uop_t *uop)
@@ -1422,9 +1496,10 @@ static int codegen_PADDD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDSB(codeblock_t *block, uop_t *uop)
@@ -1436,9 +1511,10 @@ static int codegen_PADDSB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDSB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDSW(codeblock_t *block, uop_t *uop)
@@ -1450,9 +1526,10 @@ static int codegen_PADDSW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDSW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDUSB(codeblock_t *block, uop_t *uop)
@@ -1464,9 +1541,10 @@ static int codegen_PADDUSB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDUSB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDUSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PADDUSW(codeblock_t *block, uop_t *uop)
@@ -1478,9 +1556,10 @@ static int codegen_PADDUSW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PADDUSW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PADDUSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -1493,9 +1572,10 @@ static int codegen_PCMPEQB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPEQB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPEQB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PCMPEQW(codeblock_t *block, uop_t *uop)
@@ -1507,9 +1587,10 @@ static int codegen_PCMPEQW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPEQW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPEQW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PCMPEQD(codeblock_t *block, uop_t *uop)
@@ -1521,9 +1602,10 @@ static int codegen_PCMPEQD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPEQD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPEQD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PCMPGTB(codeblock_t *block, uop_t *uop)
@@ -1535,9 +1617,10 @@ static int codegen_PCMPGTB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPGTB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPGTB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PCMPGTW(codeblock_t *block, uop_t *uop)
@@ -1549,9 +1632,10 @@ static int codegen_PCMPGTW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPGTW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPGTW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
@@ -1563,9 +1647,10 @@ static int codegen_PCMPGTD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PCMPGTD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PCMPGTD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -1580,9 +1665,10 @@ static int codegen_PF2ID(codeblock_t *block, uop_t *uop)
                 host_x86_CVTPS2DQ_XREG_XREG(block, dest_reg, src_reg_a);
                 host_x86_LDMXCSR(block, &cpu_state.old_fp_control);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PF2ID %02x %02x\n", uop->dest_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PFADD(codeblock_t *block, uop_t *uop)
@@ -1594,9 +1680,10 @@ static int codegen_PFADD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_ADDPS_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFADD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
@@ -1608,9 +1695,10 @@ static int codegen_PFCMPEQ(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_EQ);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFCMPEQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
@@ -1622,9 +1710,10 @@ static int codegen_PFCMPGE(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_NLT);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFCMPGE %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
@@ -1636,9 +1725,10 @@ static int codegen_PFCMPGT(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CMPPS_XREG_XREG(block, dest_reg, src_reg_b, CMPPS_NLE);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFCMPGT %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
@@ -1650,9 +1740,10 @@ static int codegen_PFMAX(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MAXPS_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFMAX %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
@@ -1664,9 +1755,10 @@ static int codegen_PFMIN(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MINPS_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFMIN %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFMUL(codeblock_t *block, uop_t *uop)
@@ -1678,9 +1770,10 @@ static int codegen_PFMUL(codeblock_t *block, uop_t *uop)
         {
                 host_x86_MULPS_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFMUL %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PFRCP(codeblock_t *block, uop_t *uop)
@@ -1697,9 +1790,10 @@ static int codegen_PFRCP(codeblock_t *block, uop_t *uop)
                 host_x86_DIVSS_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
                 host_x86_UNPCKLPS_XREG_XREG(block, dest_reg, dest_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFRCP %02x %02x\n", uop->dest_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PFRSQRT(codeblock_t *block, uop_t *uop)
@@ -1716,9 +1810,10 @@ static int codegen_PFRSQRT(codeblock_t *block, uop_t *uop)
                 host_x86_DIVSS_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
                 host_x86_UNPCKLPS_XREG_XREG(block, dest_reg, dest_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFRSQRT %02x %02x\n", uop->dest_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PFSUB(codeblock_t *block, uop_t *uop)
@@ -1736,9 +1831,10 @@ static int codegen_PFSUB(codeblock_t *block, uop_t *uop)
                 host_x86_SUBPS_XREG_XREG(block, REG_XMM_TEMP, src_reg_b);
                 host_x86_MOVQ_XREG_XREG(block, dest_reg, REG_XMM_TEMP);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PFSUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PI2FD(codeblock_t *block, uop_t *uop)
@@ -1750,9 +1846,10 @@ static int codegen_PI2FD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_CVTDQ2PS_XREG_XREG(block, dest_reg, src_reg_a);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PI2FD %02x %02x\n", uop->dest_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -1765,9 +1862,10 @@ static int codegen_PMADDWD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PMADDWD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PMULHW(codeblock_t *block, uop_t *uop)
@@ -1779,9 +1877,10 @@ static int codegen_PMULHW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PMULHW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PMULHW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PMULLW(codeblock_t *block, uop_t *uop)
@@ -1793,9 +1892,10 @@ static int codegen_PMULLW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PMULLW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PMULLW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -1808,9 +1908,10 @@ static int codegen_PSLLW_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSLLW_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSLLW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSLLD_IMM(codeblock_t *block, uop_t *uop)
@@ -1822,9 +1923,10 @@ static int codegen_PSLLD_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSLLD_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSLLD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSLLQ_IMM(codeblock_t *block, uop_t *uop)
@@ -1836,9 +1938,10 @@ static int codegen_PSLLQ_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSLLQ_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSLLQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRAW_IMM(codeblock_t *block, uop_t *uop)
@@ -1850,9 +1953,10 @@ static int codegen_PSRAW_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRAW_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRAW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRAD_IMM(codeblock_t *block, uop_t *uop)
@@ -1864,9 +1968,10 @@ static int codegen_PSRAD_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRAD_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRAD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRAQ_IMM(codeblock_t *block, uop_t *uop)
@@ -1878,9 +1983,10 @@ static int codegen_PSRAQ_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRAQ_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRAQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRLW_IMM(codeblock_t *block, uop_t *uop)
@@ -1892,9 +1998,10 @@ static int codegen_PSRLW_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRLW_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRLW_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRLD_IMM(codeblock_t *block, uop_t *uop)
@@ -1906,9 +2013,10 @@ static int codegen_PSRLD_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRLD_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRLD_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_PSRLQ_IMM(codeblock_t *block, uop_t *uop)
@@ -1920,9 +2028,10 @@ static int codegen_PSRLQ_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSRLQ_XREG_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSRLQ_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -1935,9 +2044,10 @@ static int codegen_PSUBB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBW(codeblock_t *block, uop_t *uop)
@@ -1949,9 +2059,10 @@ static int codegen_PSUBW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBD(codeblock_t *block, uop_t *uop)
@@ -1963,9 +2074,10 @@ static int codegen_PSUBD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBSB(codeblock_t *block, uop_t *uop)
@@ -1977,9 +2089,10 @@ static int codegen_PSUBSB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBSB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBSW(codeblock_t *block, uop_t *uop)
@@ -1991,9 +2104,10 @@ static int codegen_PSUBSW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBSW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBUSB(codeblock_t *block, uop_t *uop)
@@ -2005,9 +2119,10 @@ static int codegen_PSUBUSB(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBUSB_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBUSB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PSUBUSW(codeblock_t *block, uop_t *uop)
@@ -2019,9 +2134,10 @@ static int codegen_PSUBUSW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PSUBUSW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PSUBUSW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -2034,9 +2150,10 @@ static int codegen_PUNPCKHBW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKHBW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKHBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PUNPCKHWD(codeblock_t *block, uop_t *uop)
@@ -2048,9 +2165,10 @@ static int codegen_PUNPCKHWD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKHWD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKHWD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PUNPCKHDQ(codeblock_t *block, uop_t *uop)
@@ -2062,9 +2180,10 @@ static int codegen_PUNPCKHDQ(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKHDQ_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKHDQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PUNPCKLBW(codeblock_t *block, uop_t *uop)
@@ -2076,9 +2195,10 @@ static int codegen_PUNPCKLBW(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKLBW_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKLBW %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PUNPCKLWD(codeblock_t *block, uop_t *uop)
@@ -2090,9 +2210,10 @@ static int codegen_PUNPCKLWD(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKLWD_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKLWD %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_PUNPCKLDQ(codeblock_t *block, uop_t *uop)
@@ -2104,9 +2225,10 @@ static int codegen_PUNPCKLDQ(codeblock_t *block, uop_t *uop)
         {
                 host_x86_PUNPCKLDQ_XREG_XREG(block, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("PUNPCKLDQ %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 
@@ -2134,9 +2256,10 @@ static int codegen_SAR(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SAR8_CL(block, dest_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SAR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_SAR_IMM(codeblock_t *block, uop_t *uop)
@@ -2162,9 +2285,10 @@ static int codegen_SAR_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SAR8_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SAR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_SHL(codeblock_t *block, uop_t *uop)
@@ -2191,9 +2315,10 @@ static int codegen_SHL(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SHL8_CL(block, dest_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SHL %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_SHL_IMM(codeblock_t *block, uop_t *uop)
@@ -2219,9 +2344,10 @@ static int codegen_SHL_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SHL8_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SHL_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_SHR(codeblock_t *block, uop_t *uop)
@@ -2248,9 +2374,10 @@ static int codegen_SHR(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SHR8_CL(block, dest_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SHR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 static int codegen_SHR_IMM(codeblock_t *block, uop_t *uop)
@@ -2276,23 +2403,28 @@ static int codegen_SHR_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SHR8_IMM(block, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SHR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
 static int codegen_STORE_PTR_IMM(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         if (((uintptr_t)uop->p) >> 32)
                 fatal("STORE_PTR_IMM 64-bit addr\n");
+#endif
         host_x86_MOV32_ABS_IMM(block, uop->p, uop->imm_data);
         return 0;
 }
 static int codegen_STORE_PTR_IMM_8(codeblock_t *block, uop_t *uop)
 {
+#ifdef RECOMPILER_DEBUG
         if (((uintptr_t)uop->p) >> 32)
                 fatal("STORE_PTR_IMM_8 64-bit addr\n");
+#endif
         host_x86_MOV8_ABS_IMM(block, uop->p, uop->imm_data);
         return 0;
 }
@@ -2320,9 +2452,10 @@ static int codegen_SUB(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg_a);
                 host_x86_SUB8_REG_REG(block, dest_reg, dest_reg, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SUB %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_SUB_IMM(codeblock_t *block, uop_t *uop)
@@ -2348,9 +2481,10 @@ static int codegen_SUB_IMM(codeblock_t *block, uop_t *uop)
                         host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
                 host_x86_SUB8_REG_IMM(block, dest_reg, dest_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("SUB_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
@@ -2371,9 +2505,10 @@ static int codegen_TEST_JNS_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_TEST8_REG(block, src_reg, src_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("TEST_JNS_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JNS_long(block);
 
         return 0;
@@ -2395,9 +2530,10 @@ static int codegen_TEST_JS_DEST(codeblock_t *block, uop_t *uop)
         {
                 host_x86_TEST8_REG(block, src_reg, src_reg);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("TEST_JS_DEST %02x\n", uop->src_reg_a_real);
-
+#endif
         uop->p = host_x86_JS_long(block);
 
         return 0;
@@ -2424,9 +2560,10 @@ static int codegen_XOR(codeblock_t *block, uop_t *uop)
         {
                 host_x86_XOR8_REG_REG(block, dest_reg, src_reg_a, src_reg_b);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("XOR %02x %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real, uop->src_reg_b_real);
-
+#endif
         return 0;
 }
 static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
@@ -2446,9 +2583,10 @@ static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
         {
                 host_x86_XOR8_REG_IMM(block, dest_reg, src_reg, uop->imm_data);
         }
+#ifdef RECOMPILER_DEBUG
         else
                 fatal("XOR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
-
+#endif
         return 0;
 }
 
