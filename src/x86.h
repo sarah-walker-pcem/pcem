@@ -1,4 +1,3 @@
-uint16_t oldcs;
 extern uint32_t rmdat32;
 int oldcpl;
 

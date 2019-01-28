@@ -95,7 +95,6 @@ void x86seg_reset()
 void x86_doabrt(int x86_abrt)
 {
 //        ingpf = 1;
-        CS = oldcs;
         cpu_state.pc = cpu_state.oldpc;
         cpu_state.seg_cs.access = oldcpl << 5;
 //        pclog("x86_doabrt - %02X %08X  %04X:%08X  %i\n", x86_abrt, abrt_error, CS, pc, ins);
@@ -730,7 +729,6 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
 //                                pclog("Call gate\n");
                                 cgate32=(type&0x800);
                                 cgate16=!cgate32;
-                                oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
                                 if ((DPL < CPL) || (DPL < (seg&3)))
                                 {
@@ -1267,8 +1265,6 @@ void loadcscall(uint16_t seg)
                                                                 }
                                                         }
 //                                                                x86abort("Call gate with count %i\n",count);
-//                                                        PUSHL(oldcs);
-//                                                        PUSHL(oldpc); if (cpu_state.abrt) return;
                                                 }
                                                 else
                                                 {
@@ -1305,8 +1301,6 @@ void loadcscall(uint16_t seg)
                                                         }
 //                                                        if (output) pclog("Stack %04X\n",SP);
 //                                                        if (count) x86abort("Call gate with count\n");
-//                                                        PUSHW(oldcs);
-//                                                       PUSHW(oldpc); if (cpu_state.abrt) return;
                                                 }
                                                 cycles -= timing_call_pm_gate_inner;
                                                 break;
@@ -1318,16 +1312,6 @@ void loadcscall(uint16_t seg)
                                                 return;
                                         }
                                         case 0x1C00: case 0x1D00: case 0x1E00: case 0x1F00: /*Conforming*/
-/*                                        if (type==0xC00)
-                                        {
-                                                PUSHL(oldcs);
-                                                PUSHL(oldpc); if (cpu_state.abrt) return;
-                                        }
-                                        else
-                                        {
-                                                PUSHW(oldcs);
-                                                PUSHW(oldpc); if (cpu_state.abrt) return;
-                                        }*/
                                         CS=seg2;
                                         do_seg_load(&cpu_state.seg_cs, segdat);
                                         if (CPL==3 && oldcpl!=3) flushmmucache_cr3();

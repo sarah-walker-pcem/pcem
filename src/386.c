@@ -50,7 +50,6 @@ extern int oddeven;
 int inttype;
 
 
-uint32_t oldcs2;
 uint32_t oldecx;
 
 uint32_t *eal_r, *eal_w;
@@ -233,10 +232,8 @@ void exec386(int cycs)
             /*            testr[0]=EAX; testr[1]=EBX; testr[2]=ECX; testr[3]=EDX;
                         testr[4]=ESI; testr[5]=EDI; testr[6]=EBP; testr[7]=ESP;*/
 /*                        testr[8]=flags;*/
-//                oldcs2=oldcs;
 //                oldpc2=oldpc;
 
-                oldcs=CS;
                 cpu_state.oldpc = cpu_state.pc;
                 cpu_state.op32 = use32;
                 
@@ -283,7 +280,6 @@ dontprint=0;
                         if (cpu_state.abrt)
                         {
                                 cpu_state.abrt = 0;
-                                CS = oldcs;
                                 cpu_state.pc = cpu_state.oldpc;
                                 pclog("Double fault %i\n", ins);
                                 pmodeint(8, 0);
@@ -302,7 +298,6 @@ dontprint=0;
                 {
                         flags_rebuild();
 //                        oldpc=pc;
-//                        oldcs=CS;
                         if (msw&1)
                         {
                                 pmodeint(1,0);
@@ -323,7 +318,6 @@ dontprint=0;
                 else if (nmi && nmi_enable && nmi_mask)
                 {
                         cpu_state.oldpc = cpu_state.pc;
-                        oldcs = CS;
 //                        pclog("NMI\n");
                         x86_int(2);
                         nmi_enable = 0;

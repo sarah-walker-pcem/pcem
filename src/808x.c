@@ -88,7 +88,6 @@ void writememl(uint32_t s, uint32_t a, uint32_t v)
 }
 
 
-uint16_t oldcs;
 int oldcpl;
 
 int tempc;
@@ -481,7 +480,6 @@ void makeznptable()
 }
 int timetolive=0;
 
-extern uint32_t oldcs2;
 extern uint32_t oldpc2;
 
 int indump = 0;
@@ -571,7 +569,7 @@ void dumpregs()
         else
            printf("AX=%04X BX=%04X CX=%04X DX=%04X DI=%04X SI=%04X BP=%04X SP=%04X\n",AX,BX,CX,DX,DI,SI,BP,SP);
         printf("PC=%04X CS=%04X DS=%04X ES=%04X SS=%04X FLAGS=%04X\n",cpu_state.pc,CS,DS,ES,SS,cpu_state.flags);
-        printf("%04X:%04X %04X:%04X\n",oldcs,cpu_state.oldpc, oldcs2, oldpc2);
+        printf("%04X %04X\n",cpu_state.oldpc, oldpc2);
         printf("%i ins\n",ins);
         if (is386)
            printf("In %s mode\n",(msw&1)?((cpu_state.eflags&VM_FLAG)?"V86":"protected"):"real");
@@ -1142,7 +1140,6 @@ void execx86(int cycs)
         {
 //                old83=old82;
 //                old82=old8;
-//                old8=oldpc|(oldcs<<16);
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
 //                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
@@ -1152,7 +1149,6 @@ void execx86(int cycs)
                 nextcyc=0;
 //        if (output) printf("CLOCK %i %i\n",cycdiff,cycles);
                 fetchclocks=0;
-                oldcs=CS;
                 cpu_state.oldpc = cpu_state.pc;
                 opcodestart:
                 opcode=FETCH();
@@ -3092,7 +3088,7 @@ void execx86(int cycs)
                         break;
 
                         case 0xF4: /*HLT*/
-//                        printf("IN HLT!!!! %04X:%04X %08X %08X %08X\n",oldcs,oldpc,old8,old82,old83);
+//                        printf("IN HLT!!!! %04X %08X %08X %08X\n",oldpc,old8,old82,old83);
 /*                        if (!(flags & I_FLAG))
                         {
                                 pclog("HLT\n");

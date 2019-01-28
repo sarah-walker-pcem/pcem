@@ -59,7 +59,6 @@ int oddeven=0;
 int inttype;
 
 
-uint32_t oldcs2;
 uint32_t oldecx;
 
 uint32_t *eal_r, *eal_w;
@@ -531,8 +530,6 @@ void exec386_dynarec(int cycs)
 //        output=3;
         while (cycles>0)
         {
-                oldcs = CS;
-
                 oldcyc=cycles;
 //                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
                 if (!CACHE_ON()) /*Interpret block*/
@@ -542,7 +539,6 @@ void exec386_dynarec(int cycs)
 //                        if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
                         while (!cpu_block_end)
                         {
-                                oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
                                 cpu_state.op32 = use32;
 
@@ -696,7 +692,6 @@ inrecomp=0;
 //                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
                         while (!cpu_block_end)
                         {
-                                oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
                                 cpu_state.op32 = use32;
 
@@ -775,7 +770,6 @@ inrecomp=0;
 //                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
                         while (!cpu_block_end)
                         {
-                                oldcs=CS;
                                 cpu_state.oldpc = cpu_state.pc;
                                 cpu_state.op32 = use32;
 
@@ -854,7 +848,6 @@ inrecomp=0;
                         if (cpu_state.abrt)
                         {
                                 cpu_state.abrt = 0;
-                                CS = oldcs;
                                 cpu_state.pc = cpu_state.oldpc;
                                 pclog("Double fault %i\n", ins);
                                 pmodeint(8, 0);
@@ -873,7 +866,6 @@ inrecomp=0;
                         trap = 0;
                         flags_rebuild();
 //                        oldpc=pc;
-//                        oldcs=CS;
                         if (msw&1)
                         {
                                 pmodeint(1,0);
@@ -894,7 +886,6 @@ inrecomp=0;
                 else if (nmi && nmi_enable && nmi_mask)
                 {
                         cpu_state.oldpc = cpu_state.pc;
-                        oldcs = CS;
 //                        pclog("NMI\n");
                         x86_int(2);
                         nmi_enable = 0;
