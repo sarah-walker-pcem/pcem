@@ -506,7 +506,7 @@ int dontprint=0;
 #include "386_ops.h"
 
 
-#define CACHE_ON() (!(cr0 & (1 << 30)) /*&& (cr0 & 1)*/ && !(cpu_state.flags & T_FLAG))
+#define CACHE_ON() (!(cr0 & (1 << 30)) && !(cpu_state.flags & T_FLAG))
 //#define CACHE_ON() 0
 
 static int cycles_main = 0;
@@ -518,7 +518,7 @@ void exec386_dynarec(int cycs)
         int cycdiff;
         int oldcyc;
         int cyc_period = cycs / 2000; /*5us*/
-//output = 3;
+
         cycles_main += cycs;
         while (cycles_main > 0)
         {
@@ -527,385 +527,317 @@ void exec386_dynarec(int cycs)
                 cycles += cyc_period;
                 cycles_start = cycles;
 
-//        output=3;
-        while (cycles>0)
-        {
-                oldcyc=cycles;
-//                if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
-                if (!CACHE_ON()) /*Interpret block*/
+                while (cycles>0)
                 {
-                        cpu_block_end = 0;
-                        x86_was_reset = 0;
-//                        if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
-                        while (!cpu_block_end)
+                        oldcyc=cycles;
+//                        if (output && CACHE_ON()) pclog("Block %04x:%04x %04x:%08x\n", CS, pc, SS,ESP);
+                        if (!CACHE_ON()) /*Interpret block*/
                         {
-                                cpu_state.oldpc = cpu_state.pc;
-                                cpu_state.op32 = use32;
+                                cpu_block_end = 0;
+                                x86_was_reset = 0;
+//                                if (output) pclog("Interpret block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  %04x\n", CS, pc, AX, BX, CX, DX, SI, DI, SP);
+                                while (!cpu_block_end)
+                                {
+                                        cpu_state.oldpc = cpu_state.pc;
+                                        cpu_state.op32 = use32;
 
-                                cpu_state.ea_seg = &cpu_state.seg_ds;
-                                cpu_state.ssegs = 0;
+                                        cpu_state.ea_seg = &cpu_state.seg_ds;
+                                        cpu_state.ssegs = 0;
                 
-                                fetchdat = fastreadl(cs + cpu_state.pc);
-//                                if (!fetchdat)
-//                                        fatal("Dead with cache off\n");
-                                if (!cpu_state.abrt)
-                                {               
-                                        trap = cpu_state.flags & T_FLAG;
-                                        opcode = fetchdat & 0xFF;
-                                        fetchdat >>= 8;
+                                        fetchdat = fastreadl(cs + cpu_state.pc);
 
-//                                        if (output == 3)
-//                                                pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
-
-                                        cpu_state.pc++;
-                                        x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
-                                }
-
-                                if (((cs + cpu_state.pc) >> 12) != pccache)
-                                        CPU_BLOCK_END();
-
-/*                                if (ssegs)
-                                {
-                                        ds=oldds;
-                                        ss=oldss;
-                                        ssegs=0;
-                                }*/
-                                if (cpu_state.abrt)
-                                        CPU_BLOCK_END();
-                                if (trap)
-                                        CPU_BLOCK_END();
-                                if (nmi && nmi_enable && nmi_mask)
-                                        CPU_BLOCK_END();
-                                        
-                                ins++;
-                                insc++;
-                                
-/*                                if ((cs + pc) == 4)
-                                        fatal("4\n");*/
-/*                                if (ins >= 141400000)
-                                        output = 3;*/
-                        }
-                }
-                else
-                {
-                uint32_t phys_addr = get_phys(cs+cpu_state.pc);
-                int hash = HASH(phys_addr);
-                codeblock_t *block = &codeblock[codeblock_hash[hash]];
-                int valid_block = 0;
-
-                if (!cpu_state.abrt)
-                {
-                        page_t *page = &pages[phys_addr >> 12];
-
-                        /*Block must match current CS, PC, code segment size,
-                          and physical address. The physical address check will
-                          also catch any page faults at this stage*/
-                        valid_block = (block->pc == cs + cpu_state.pc) && (block->_cs == cs) &&
-                                      (block->phys == phys_addr) && !((block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
-                                      ((block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK));
-                        if (!valid_block)
-                        {
-                                uint64_t mask = (uint64_t)1 << ((phys_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                                
-                                if (page->code_present_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] & mask)
-                                {
-                                        /*Walk page tree to see if we find the correct block*/
-                                        codeblock_t *new_block = codeblock_tree_find(phys_addr, cs);
-                                        if (new_block)
+                                        if (!cpu_state.abrt)
                                         {
-                                                valid_block = (new_block->pc == cs + cpu_state.pc) && (new_block->_cs == cs) &&
-                                                                (new_block->phys == phys_addr) && !((new_block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
-                                                                ((new_block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK));
-                                                if (valid_block)
-                                                {
-                                                        block = new_block;
-                                                        codeblock_hash[hash] = get_block_nr(block);
-                                                }
+                                                trap = cpu_state.flags & T_FLAG;
+                                                opcode = fetchdat & 0xFF;
+                                                fetchdat >>= 8;
+
+//                                                if (output == 3)
+//                                                        pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
+
+                                                cpu_state.pc++;
+                                                x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
                                         }
-                                }
-                        }
 
-                        if (valid_block && (block->page_mask & *block->dirty_mask))
-                        {
-                                codegen_check_flush(page, page->dirty_mask[(phys_addr >> 10) & 3], phys_addr);
-                                page->dirty_mask[(phys_addr >> 10) & 3] = 0;
-                                if (block->pc == BLOCK_PC_INVALID)
-                                        valid_block = 0;
-                        }
-                        if (valid_block && block->page_mask2)
-                        {
-                                /*We don't want the second page to cause a page
-                                  fault at this stage - that would break any
-                                  code crossing a page boundary where the first
-                                  page is present but the second isn't. Instead
-                                  allow the first page to be interpreted and for
-                                  the page fault to occur when the page boundary
-                                  is actually crossed.*/
-                                uint32_t phys_addr_2 = get_phys_noabrt(block->pc + 0x400);
-                                page_t *page_2 = &pages[phys_addr_2 >> 12];
-                                if ((block->phys_2 ^ phys_addr_2) & ~0xfff)
-                                        valid_block = 0;
-                                else if (block->page_mask2 & *block->dirty_mask2)
-                                {
-                                        codegen_check_flush(page_2, page_2->dirty_mask[(phys_addr_2 >> 10) & 3], phys_addr_2);
-                                        page_2->dirty_mask[(phys_addr_2 >> 10) & 3] = 0;
-                                        if (block->pc == BLOCK_PC_INVALID)
-                                                valid_block = 0;
-                                }
-                        }
-                        if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED) && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
-                        {
-                                /*FPU top-of-stack does not match the value this block was compiled
-                                  with, re-compile using dynamic top-of-stack*/
-                                block->flags &= ~(CODEBLOCK_STATIC_TOP | CODEBLOCK_WAS_RECOMPILED);
-                        }
-                }
+                                        if (((cs + cpu_state.pc) >> 12) != pccache)
+                                                CPU_BLOCK_END();
 
-                if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED))
-                {
-                        void (*code)() = (void *)&block->data[BLOCK_START];
-
-//                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
-
-inrecomp=1;
-                        code();
-inrecomp=0;
-//                        cpu_recomp_ins += block->ins;
-                        cpu_recomp_blocks++;
-/*                        ins += codeblock_ins[index];
-                        insc += codeblock_ins[index];*/
-/*                        pclog("Exit block now %04X:%04X\n", CS, pc);*/
-                }
-                else if (valid_block && !cpu_state.abrt)
-                {
-                        uint32_t start_pc = cpu_state.pc;
-                        
-//                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
-                        cpu_block_end = 0;
-                        x86_was_reset = 0;
-
-                        cpu_new_blocks++;
-                        
-                        codegen_block_start_recompile(block);
-                        codegen_in_recompile = 1;
-
-//                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
-                        while (!cpu_block_end)
-                        {
-                                cpu_state.oldpc = cpu_state.pc;
-                                cpu_state.op32 = use32;
-
-                                cpu_state.ea_seg = &cpu_state.seg_ds;
-                                cpu_state.ssegs = 0;
-                
-                                fetchdat = fastreadl(cs + cpu_state.pc);
-//                                if (fetchdat == 0xffffffff)
-//                                        fatal("Dead ffffffff\n");
-//                                if (!fetchdat)
-//                                        fatal("Dead\n");
-                                if (!cpu_state.abrt)
-                                {               
-                                        trap = cpu_state.flags & T_FLAG;
-                                        opcode = fetchdat & 0xFF;
-                                        fetchdat >>= 8;
-
-//                                        if (output == 3)
-//                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
-
-                                        cpu_state.pc++;
-                                                
-                                        codegen_generate_call(opcode, x86_opcodes[(opcode | cpu_state.op32) & 0x3ff], fetchdat, cpu_state.pc, cpu_state.pc-1);
-
-                                        x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
-
-                                        if (x86_was_reset)
-                                                break;
-                                }
-
-                                /*Cap source code at 4000 bytes per block; this
-                                  will prevent any block from spanning more than
-                                  2 pages. In practice this limit will never be
-                                  hit, as host block size is only 2kB*/
-                                if ((cpu_state.pc - start_pc) > 1000)
-                                        CPU_BLOCK_END();
+                                        if (cpu_state.abrt)
+                                                CPU_BLOCK_END();
+                                        if (trap)
+                                                CPU_BLOCK_END();
+                                        if (nmi && nmi_enable && nmi_mask)
+                                                CPU_BLOCK_END();
                                         
-                                if (trap)
-                                        CPU_BLOCK_END();
-
-                                if (nmi && nmi_enable && nmi_mask)
-                                        CPU_BLOCK_END();
-
-                                if (cpu_state.abrt)
-                                {
-                                        codegen_block_remove();
-                                        CPU_BLOCK_END();
+                                        ins++;
+                                        insc++;
                                 }
-
-                                ins++;
-                                insc++;
-                        }
-                        
-                        if (!cpu_state.abrt && !x86_was_reset)
-                                codegen_block_end_recompile(block);
-                        
-                        if (x86_was_reset)
-                                codegen_reset();
-
-                        codegen_in_recompile = 0;
-//                        output &= ~2;
-                }
-                else if (!cpu_state.abrt)
-                {
-                        /*Mark block but do not recompile*/
-                        uint32_t start_pc = cpu_state.pc;
-
-//                        pclog("Hash %08x %i\n", codeblock_hash_pc[HASH(cs + pc)], codeblock_page_dirty[(cs + pc) >> 12]);
-                        cpu_block_end = 0;
-                        x86_was_reset = 0;
-
-//                        cpu_new_blocks++;
-                        
-                        codegen_block_init(phys_addr);
-
-//                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
-                        while (!cpu_block_end)
-                        {
-                                cpu_state.oldpc = cpu_state.pc;
-                                cpu_state.op32 = use32;
-
-                                cpu_state.ea_seg = &cpu_state.seg_ds;
-                                cpu_state.ssegs = 0;
-                
-                                codegen_endpc = (cs + cpu_state.pc) + 8;
-                                fetchdat = fastreadl(cs + cpu_state.pc);
-
-                                if (!cpu_state.abrt)
-                                {               
-                                        trap = cpu_state.flags & T_FLAG;
-                                        opcode = fetchdat & 0xFF;
-                                        fetchdat >>= 8;
-
-//                                        if (output == 3)
-//                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
-
-                                        cpu_state.pc++;
-                                                
-                                        x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
-
-                                        if (x86_was_reset)
-                                                break;
-                                }
-
-                                /*Cap source code at 4000 bytes per block; this
-                                  will prevent any block from spanning more than
-                                  2 pages. In practice this limit will never be
-                                  hit, as host block size is only 2kB*/
-                                if ((cpu_state.pc - start_pc) > 1000)
-                                        CPU_BLOCK_END();
-                                        
-                                if (trap)
-                                        CPU_BLOCK_END();
-
-                                if (nmi && nmi_enable && nmi_mask)
-                                        CPU_BLOCK_END();
-
-                                if (cpu_state.abrt)
-                                {
-                                        codegen_block_remove();
-                                        CPU_BLOCK_END();
-                                }
-
-                                ins++;
-                                insc++;
-                        }
-                        
-                        if (!cpu_state.abrt && !x86_was_reset)
-                                codegen_block_end();
-                        
-                        if (x86_was_reset)
-                                codegen_reset();
-
-//                        output &= ~2;
-                }
-                else
-                        cpu_state.oldpc = cpu_state.pc;
-
-//                        if (output && (SP & 1))
-//                                fatal("odd SP\n");
-                }
-
-                cycdiff=oldcyc-cycles;
-                tsc += cycdiff;
-                
-//                timer_end_period(cycles);
-                
-                if (cpu_state.abrt)
-                {
-                        flags_rebuild();
-                        tempi = cpu_state.abrt;
-                        cpu_state.abrt = 0;
-                        x86_doabrt(tempi);
-                        if (cpu_state.abrt)
-                        {
-                                cpu_state.abrt = 0;
-                                cpu_state.pc = cpu_state.oldpc;
-                                pclog("Double fault %i\n", ins);
-                                pmodeint(8, 0);
-                                if (cpu_state.abrt)
-                                {
-                                        cpu_state.abrt = 0;
-                                        softresetx86();
-                                        cpu_set_edx();
-                                        pclog("Triple fault - reset\n");
-                                }
-                        }
-                }
-                
-                if (trap)
-                {
-                        trap = 0;
-                        flags_rebuild();
-//                        oldpc=pc;
-                        if (msw&1)
-                        {
-                                pmodeint(1,0);
                         }
                         else
                         {
-                                writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
-                                writememw(ss,(SP-4)&0xFFFF,CS);
-                                writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
-                                SP-=6;
-                                addr = (1 << 2) + idt.base;
-                                cpu_state.flags &= ~I_FLAG;
-                                cpu_state.flags &= ~T_FLAG;
-                                cpu_state.pc=readmemw(0,addr);
-                                loadcs(readmemw(0,addr+2));
+                                uint32_t phys_addr = get_phys(cs+cpu_state.pc);
+                                int hash = HASH(phys_addr);
+                                codeblock_t *block = &codeblock[codeblock_hash[hash]];
+                                int valid_block = 0;
+
+                                if (!cpu_state.abrt)
+                                {
+                                        page_t *page = &pages[phys_addr >> 12];
+
+                                        /*Block must match current CS, PC, code segment size,
+                                          and physical address. The physical address check will
+                                          also catch any page faults at this stage*/
+                                        valid_block = (block->pc == cs + cpu_state.pc) && (block->_cs == cs) &&
+                                                      (block->phys == phys_addr) && !((block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
+                                                      ((block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK));
+                                        if (!valid_block)
+                                        {
+                                                uint64_t mask = (uint64_t)1 << ((phys_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
+                                
+                                                if (page->code_present_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] & mask)
+                                                {
+                                                        /*Walk page tree to see if we find the correct block*/
+                                                        codeblock_t *new_block = codeblock_tree_find(phys_addr, cs);
+                                                        if (new_block)
+                                                        {
+                                                                valid_block = (new_block->pc == cs + cpu_state.pc) && (new_block->_cs == cs) &&
+                                                                                (new_block->phys == phys_addr) && !((new_block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
+                                                                                ((new_block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK));
+                                                                if (valid_block)
+                                                                {
+                                                                        block = new_block;
+                                                                        codeblock_hash[hash] = get_block_nr(block);
+                                                                }
+                                                        }
+                                                }
+                                        }
+
+                                        if (valid_block && (block->page_mask & *block->dirty_mask))
+                                        {
+                                                codegen_check_flush(page, page->dirty_mask[(phys_addr >> 10) & 3], phys_addr);
+                                                page->dirty_mask[(phys_addr >> 10) & 3] = 0;
+                                                if (block->pc == BLOCK_PC_INVALID)
+                                                        valid_block = 0;
+                                        }
+                                        if (valid_block && block->page_mask2)
+                                        {
+                                                /*We don't want the second page to cause a page
+                                                  fault at this stage - that would break any
+                                                  code crossing a page boundary where the first
+                                                  page is present but the second isn't. Instead
+                                                  allow the first page to be interpreted and for
+                                                  the page fault to occur when the page boundary
+                                                  is actually crossed.*/
+                                                uint32_t phys_addr_2 = get_phys_noabrt(block->pc + 0x400);
+                                                page_t *page_2 = &pages[phys_addr_2 >> 12];
+                                                if ((block->phys_2 ^ phys_addr_2) & ~0xfff)
+                                                        valid_block = 0;
+                                                else if (block->page_mask2 & *block->dirty_mask2)
+                                                {
+                                                        codegen_check_flush(page_2, page_2->dirty_mask[(phys_addr_2 >> 10) & 3], phys_addr_2);
+                                                        page_2->dirty_mask[(phys_addr_2 >> 10) & 3] = 0;
+                                                        if (block->pc == BLOCK_PC_INVALID)
+                                                                valid_block = 0;
+                                                }
+                                        }
+                                        if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED) && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
+                                        {
+                                                /*FPU top-of-stack does not match the value this block was compiled
+                                                  with, re-compile using dynamic top-of-stack*/
+                                                block->flags &= ~(CODEBLOCK_STATIC_TOP | CODEBLOCK_WAS_RECOMPILED);
+                                        }
+                                }
+
+                                if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED))
+                                {
+                                        void (*code)() = (void *)&block->data[BLOCK_START];
+
+//                                        if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
+
+                                        inrecomp=1;
+                                        code();
+                                        inrecomp=0;
+
+                                        cpu_recomp_blocks++;
+                                }
+                                else if (valid_block && !cpu_state.abrt)
+                                {
+                                        uint32_t start_pc = cpu_state.pc;
+                        
+                                        cpu_block_end = 0;
+                                        x86_was_reset = 0;
+
+                                        cpu_new_blocks++;
+                        
+                                        codegen_block_start_recompile(block);
+                                        codegen_in_recompile = 1;
+
+//                                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
+                                        while (!cpu_block_end)
+                                        {
+                                                cpu_state.oldpc = cpu_state.pc;
+                                                cpu_state.op32 = use32;
+
+                                                cpu_state.ea_seg = &cpu_state.seg_ds;
+                                                cpu_state.ssegs = 0;
+                
+                                                fetchdat = fastreadl(cs + cpu_state.pc);
+
+                                                if (!cpu_state.abrt)
+                                                {
+                                                        trap = cpu_state.flags & T_FLAG;
+                                                        opcode = fetchdat & 0xFF;
+                                                        fetchdat >>= 8;
+
+//                                                        if (output == 3)
+//                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
+
+                                                        cpu_state.pc++;
+                                                
+                                                        codegen_generate_call(opcode, x86_opcodes[(opcode | cpu_state.op32) & 0x3ff], fetchdat, cpu_state.pc, cpu_state.pc-1);
+
+                                                        x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
+
+                                                        if (x86_was_reset)
+                                                                break;
+                                                }
+
+                                                /*Cap source code at 4000 bytes per block; this
+                                                  will prevent any block from spanning more than
+                                                  2 pages. In practice this limit will never be
+                                                  hit, as host block size is only 2kB*/
+                                                if ((cpu_state.pc - start_pc) > 1000)
+                                                        CPU_BLOCK_END();
+                                        
+                                                if (trap)
+                                                        CPU_BLOCK_END();
+
+                                                if (nmi && nmi_enable && nmi_mask)
+                                                        CPU_BLOCK_END();
+
+                                                if (cpu_state.abrt)
+                                                {
+                                                        codegen_block_remove();
+                                                        CPU_BLOCK_END();
+                                                }
+
+                                                ins++;
+                                                insc++;
+                                        }
+                        
+                                        if (!cpu_state.abrt && !x86_was_reset)
+                                                codegen_block_end_recompile(block);
+                        
+                                        if (x86_was_reset)
+                                                codegen_reset();
+
+                                        codegen_in_recompile = 0;
+                                }
+                                else if (!cpu_state.abrt)
+                                {
+                                        /*Mark block but do not recompile*/
+                                        uint32_t start_pc = cpu_state.pc;
+
+                                        cpu_block_end = 0;
+                                        x86_was_reset = 0;
+
+                                        codegen_block_init(phys_addr);
+
+//                                        if (output) pclog("Recompile block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%04x %04x  %02x%02x:%02x%02x %02x%02x:%02x%02x %02x%02x:%02x%02x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, ram[0x116330+0x6df4+0xa+3], ram[0x116330+0x6df4+0xa+2], ram[0x116330+0x6df4+0xa+1], ram[0x116330+0x6df4+0xa+0], ram[0x11d136+3],ram[0x11d136+2],ram[0x11d136+1],ram[0x11d136+0], ram[(0x119abe)+0x3],ram[(0x119abe)+0x2],ram[(0x119abe)+0x1],ram[(0x119abe)+0x0]);
+                                        while (!cpu_block_end)
+                                        {
+                                                cpu_state.oldpc = cpu_state.pc;
+                                                cpu_state.op32 = use32;
+
+                                                cpu_state.ea_seg = &cpu_state.seg_ds;
+                                                cpu_state.ssegs = 0;
+                
+                                                codegen_endpc = (cs + cpu_state.pc) + 8;
+                                                fetchdat = fastreadl(cs + cpu_state.pc);
+
+                                                if (!cpu_state.abrt)
+                                                {
+                                                        trap = cpu_state.flags & T_FLAG;
+                                                        opcode = fetchdat & 0xFF;
+                                                        fetchdat >>= 8;
+
+//                                                        if (output == 3)
+//                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
+
+                                                        cpu_state.pc++;
+                                                
+                                                        x86_opcodes[(opcode | cpu_state.op32) & 0x3ff](fetchdat);
+
+                                                        if (x86_was_reset)
+                                                                break;
+                                                }
+
+                                                /*Cap source code at 4000 bytes per block; this
+                                                  will prevent any block from spanning more than
+                                                  2 pages. In practice this limit will never be
+                                                  hit, as host block size is only 2kB*/
+                                                if ((cpu_state.pc - start_pc) > 1000)
+                                                        CPU_BLOCK_END();
+                                        
+                                                if (trap)
+                                                        CPU_BLOCK_END();
+
+                                                if (nmi && nmi_enable && nmi_mask)
+                                                        CPU_BLOCK_END();
+
+                                                if (cpu_state.abrt)
+                                                {
+                                                        codegen_block_remove();
+                                                        CPU_BLOCK_END();
+                                                }
+
+                                                ins++;
+                                                insc++;
+                                        }
+                        
+                                        if (!cpu_state.abrt && !x86_was_reset)
+                                                codegen_block_end();
+                        
+                                        if (x86_was_reset)
+                                                codegen_reset();
+                                }
+                                else
+                                        cpu_state.oldpc = cpu_state.pc;
+
                         }
-                }
-                else if (nmi && nmi_enable && nmi_mask)
-                {
-                        cpu_state.oldpc = cpu_state.pc;
-//                        pclog("NMI\n");
-                        x86_int(2);
-                        nmi_enable = 0;
-                        if (nmi_auto_clear)
+
+                        cycdiff=oldcyc-cycles;
+                        tsc += cycdiff;
+                
+                        if (cpu_state.abrt)
                         {
-                                nmi_auto_clear = 0;
-                                nmi = 0;
+                                flags_rebuild();
+                                tempi = cpu_state.abrt;
+                                cpu_state.abrt = 0;
+                                x86_doabrt(tempi);
+                                if (cpu_state.abrt)
+                                {
+                                        cpu_state.abrt = 0;
+                                        cpu_state.pc = cpu_state.oldpc;
+                                        pclog("Double fault %i\n", ins);
+                                        pmodeint(8, 0);
+                                        if (cpu_state.abrt)
+                                        {
+                                                cpu_state.abrt = 0;
+                                                softresetx86();
+                                                cpu_set_edx();
+                                                pclog("Triple fault - reset\n");
+                                        }
+                                }
                         }
-                }
-                else if ((cpu_state.flags & I_FLAG) && pic_intpending)
-                {
-                        temp=picinterrupt();
-                        if (temp!=0xFF)
+                
+                        if (trap)
                         {
-//                                pclog("IRQ %02X %04X:%04X %04X:%04X\n", temp, SS, SP, CS, pc);
-                                CPU_BLOCK_END();
+                                trap = 0;
                                 flags_rebuild();
                                 if (msw&1)
                                 {
-                                        pmodeint(temp,0);
+                                        pmodeint(1,0);
                                 }
                                 else
                                 {
@@ -913,16 +845,54 @@ inrecomp=0;
                                         writememw(ss,(SP-4)&0xFFFF,CS);
                                         writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
                                         SP-=6;
-                                        addr=temp<<2;
+                                        addr = (1 << 2) + idt.base;
                                         cpu_state.flags &= ~I_FLAG;
                                         cpu_state.flags &= ~T_FLAG;
-                                        oxpc=cpu_state.pc;
                                         cpu_state.pc=readmemw(0,addr);
                                         loadcs(readmemw(0,addr+2));
                                 }
                         }
+                        else if (nmi && nmi_enable && nmi_mask)
+                        {
+                                cpu_state.oldpc = cpu_state.pc;
+//                                pclog("NMI\n");
+                                x86_int(2);
+                                nmi_enable = 0;
+                                if (nmi_auto_clear)
+                                {
+                                        nmi_auto_clear = 0;
+                                        nmi = 0;
+                                }
+                        }
+                        else if ((cpu_state.flags & I_FLAG) && pic_intpending)
+                        {
+                                temp=picinterrupt();
+                                if (temp!=0xFF)
+                                {
+//                                        pclog("IRQ %02X %04X:%04X %04X:%04X\n", temp, SS, SP, CS, pc);
+                                        CPU_BLOCK_END();
+                                        flags_rebuild();
+                                        if (msw&1)
+                                        {
+                                                pmodeint(temp,0);
+                                        }
+                                        else
+                                        {
+                                                writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
+                                                writememw(ss,(SP-4)&0xFFFF,CS);
+                                                writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
+                                                SP-=6;
+                                                addr=temp<<2;
+                                                cpu_state.flags &= ~I_FLAG;
+                                                cpu_state.flags &= ~T_FLAG;
+                                                oxpc=cpu_state.pc;
+                                                cpu_state.pc=readmemw(0,addr);
+                                                loadcs(readmemw(0,addr+2));
+                                        }
+                                }
+                        }
                 }
-        }
+        
 		if (TIMER_VAL_LESS_THAN_VAL(timer_target, (uint32_t)tsc))
 			timer_process();
                 cycles_main -= (cycles_start - cycles);
