@@ -161,7 +161,11 @@ void codegen_reset()
                 codeblock_t *block = &codeblock[c];
                 
                 if (block->pc != BLOCK_PC_INVALID)
+                {
+                        block->phys = 0;
+                        block->phys_2 = 0;
                         delete_block(block);
+                }
         }
 
         memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
