@@ -7,6 +7,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_x86_defs.h"
 #include "codegen_backend_x86_ops.h"
+#include "codegen_backend_x86_ops_sse.h"
 #include "codegen_reg.h"
 #include "x86.h"
 

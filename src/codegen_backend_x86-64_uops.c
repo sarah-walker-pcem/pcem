@@ -8,6 +8,7 @@
 #include "codegen_backend.h"
 #include "codegen_backend_x86-64_defs.h"
 #include "codegen_backend_x86-64_ops.h"
+#include "codegen_backend_x86-64_ops_sse.h"
 #include "codegen_ir_defs.h"
 
 #define STACK_ARG0 (0)

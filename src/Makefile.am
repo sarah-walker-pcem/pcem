@@ -72,12 +72,12 @@ pcem_SOURCES += wx-sdl2-midi.c
 endif
 
 if CPU_I386
-pcem_SOURCES += codegen_backend_x86.c codegen_backend_x86_ops.c codegen_backend_x86_uops.c
+pcem_SOURCES += codegen_backend_x86.c codegen_backend_x86_ops.c codegen_backend_x86_ops_fpu.c codegen_backend_x86_ops_sse.c codegen_backend_x86_uops.c
 pcem_CFLAGS += -msse2
 endif
 
 if CPU_X86_64
-pcem_SOURCES += codegen_backend_x86-64.c codegen_backend_x86-64_ops.c codegen_backend_x86-64_uops.c
+pcem_SOURCES += codegen_backend_x86-64.c codegen_backend_x86-64_ops.c codegen_backend_x86-64_ops_sse.c codegen_backend_x86-64_uops.c
 endif
 
 if CPU_ARM
