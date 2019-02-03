@@ -33,8 +33,6 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
 
                 if (uop->type & UOP_TYPE_BARRIER)
                         codegen_reg_flush_invalidate(ir, block);
-                else if (uop->type & UOP_TYPE_ORDER_BARRIER)
-                        codegen_reg_flush(ir, block);
 
                 if (uop->type & UOP_TYPE_JUMP_DEST)
                 {
@@ -62,6 +60,13 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                         {
                                 uop->src_reg_c_real = codegen_reg_alloc_read_reg(block, uop->src_reg_c, NULL);
                         }
+                }
+                
+                if (uop->type & UOP_TYPE_ORDER_BARRIER)
+                        codegen_reg_flush(ir, block);
+
+                if (uop->type & UOP_TYPE_PARAMS_REGS)
+                {
                         if (uop->dest_reg_a.reg != IREG_INVALID)
                         {
                                 uop->dest_reg_a_real = codegen_reg_alloc_write_reg(block, uop->dest_reg_a);
