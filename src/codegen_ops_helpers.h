@@ -1,3 +1,5 @@
+#include "codegen_backend.h"
+
 static inline int LOAD_SP_WITH_OFFSET(ir_data_t *ir, int offset)
 {
         if (stack32)
@@ -66,4 +68,20 @@ static inline void fpu_PUSH(codeblock_t *block, ir_data_t *ir)
                 uop_MOV_IMM(ir, IREG_FPU_TOP, cpu_state.TOP - 1);
         else
                 uop_SUB_IMM(ir, IREG_FPU_TOP, IREG_FPU_TOP, 1);
+}
+
+static inline void CHECK_SEG_LIMITS(codeblock_t *block, ir_data_t *ir, x86seg *seg, int addr_reg, int end_offset)
+{
+        if ((seg == &cpu_state.seg_ds && codegen_flat_ds && !(cpu_cur_status & CPU_STATUS_NOTFLATDS)) ||
+            (seg == &cpu_state.seg_ss && codegen_flat_ss && !(cpu_cur_status & CPU_STATUS_NOTFLATSS)))
+                return;
+
+        uop_CMP_JB(ir, addr_reg, ireg_seg_limit_low(seg), codegen_gpf_rout);
+        if (end_offset)
+        {
+                uop_ADD_IMM(ir, IREG_temp3, addr_reg, end_offset);
+                uop_CMP_JNBE(ir, IREG_temp3, ireg_seg_limit_high(seg), codegen_gpf_rout);
+        }
+        else
+                uop_CMP_JNBE(ir, addr_reg, ireg_seg_limit_high(seg), codegen_gpf_rout);
 }

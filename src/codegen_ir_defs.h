@@ -125,6 +125,10 @@
 #define UOP_MEM_STORE_SINGLE      (UOP_TYPE_PARAMS_REGS | 0x4a | UOP_TYPE_ORDER_BARRIER)
 /*UOP_MEM_STORE_DOUBLE - src_reg_a:[src_reg_b] = src_reg_c*/
 #define UOP_MEM_STORE_DOUBLE      (UOP_TYPE_PARAMS_REGS | 0x4b | UOP_TYPE_ORDER_BARRIER)
+/*UOP_CMP_JB - if (src_reg_a < src_reg_b) then jump to ptr*/
+#define UOP_CMP_JB                (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x4c | UOP_TYPE_ORDER_BARRIER)
+/*UOP_CMP_JNBE - if (src_reg_a > src_reg_b) then jump to ptr*/
+#define UOP_CMP_JNBE              (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x4d | UOP_TYPE_ORDER_BARRIER)
 
 /*UOP_SAR - dest_reg = src_reg_a >> src_reg_b*/
 #define UOP_SAR                   (UOP_TYPE_PARAMS_REGS | 0x50)
@@ -563,6 +567,16 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
         uop->imm_data = imm;
 }
 
+static inline void uop_gen_reg_src2_pointer(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b, void *p)
+{
+        uop_t *uop = uop_alloc(ir);
+
+        uop->type = uop_type;
+        uop->src_reg_a = codegen_reg_read(src_reg_a);
+        uop->src_reg_b = codegen_reg_read(src_reg_b);
+        uop->p = p;
+}
+
 #define uop_LOAD_FUNC_ARG_REG(ir, arg, reg)  uop_gen_reg_src1(UOP_LOAD_FUNC_ARG_0 + arg, ir, reg)
 
 #define uop_LOAD_FUNC_ARG_IMM(ir, arg, imm)  uop_gen_imm(UOP_LOAD_FUNC_ARG_0_IMM + arg, ir, imm)
@@ -595,6 +609,9 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 #define uop_CMP_IMM_JNZ_DEST(ir, src_reg, imm) uop_gen_reg_src1_imm(UOP_CMP_IMM_JNZ_DEST, ir, src_reg, imm)
 #define uop_CMP_IMM_JZ_DEST(ir, src_reg, imm)  uop_gen_reg_src1_imm(UOP_CMP_IMM_JZ_DEST, ir, src_reg, imm)
+
+#define uop_CMP_JB(ir, src_reg_a, src_reg_b, p)   uop_gen_reg_src2_pointer(UOP_CMP_JB, ir, src_reg_a, src_reg_b, p)
+#define uop_CMP_JNBE(ir, src_reg_a, src_reg_b, p) uop_gen_reg_src2_pointer(UOP_CMP_JNBE, ir, src_reg_a, src_reg_b, p)
 
 #define uop_CMP_JNB_DEST(ir, src_reg_a, src_reg_b)  uop_gen_reg_src2(UOP_CMP_JNB_DEST, ir, src_reg_a, src_reg_b)
 #define uop_CMP_JNBE_DEST(ir, src_reg_a, src_reg_b) uop_gen_reg_src2(UOP_CMP_JNBE_DEST, ir, src_reg_a, src_reg_b)

@@ -149,6 +149,20 @@ struct
 	[IREG_flagsx] = {REG_WORD, &cpu_state.flags, REG_INTEGER, REG_PERMANENT},
 	[IREG_eflagsx] = {REG_WORD, &cpu_state.eflags, REG_INTEGER, REG_PERMANENT},
 
+	[IREG_CS_limit_low] = {REG_DWORD, &cpu_state.seg_cs.limit_low, REG_INTEGER, REG_PERMANENT},
+	[IREG_DS_limit_low] = {REG_DWORD, &cpu_state.seg_ds.limit_low, REG_INTEGER, REG_PERMANENT},
+	[IREG_ES_limit_low] = {REG_DWORD, &cpu_state.seg_es.limit_low, REG_INTEGER, REG_PERMANENT},
+	[IREG_FS_limit_low] = {REG_DWORD, &cpu_state.seg_fs.limit_low, REG_INTEGER, REG_PERMANENT},
+	[IREG_GS_limit_low] = {REG_DWORD, &cpu_state.seg_gs.limit_low, REG_INTEGER, REG_PERMANENT},
+	[IREG_SS_limit_low] = {REG_DWORD, &cpu_state.seg_ss.limit_low, REG_INTEGER, REG_PERMANENT},
+
+	[IREG_CS_limit_high] = {REG_DWORD, &cpu_state.seg_cs.limit_high, REG_INTEGER, REG_PERMANENT},
+	[IREG_DS_limit_high] = {REG_DWORD, &cpu_state.seg_ds.limit_high, REG_INTEGER, REG_PERMANENT},
+	[IREG_ES_limit_high] = {REG_DWORD, &cpu_state.seg_es.limit_high, REG_INTEGER, REG_PERMANENT},
+	[IREG_FS_limit_high] = {REG_DWORD, &cpu_state.seg_fs.limit_high, REG_INTEGER, REG_PERMANENT},
+	[IREG_GS_limit_high] = {REG_DWORD, &cpu_state.seg_gs.limit_high, REG_INTEGER, REG_PERMANENT},
+	[IREG_SS_limit_high] = {REG_DWORD, &cpu_state.seg_ss.limit_high, REG_INTEGER, REG_PERMANENT},
+
 	/*Temporary registers are stored on the stack, and are not guaranteed to
           be preserved across uOPs. They will not be written back if they will
           not be read again.*/

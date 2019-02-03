@@ -119,7 +119,21 @@ enum
         IREG_flagsx = 74,
         IREG_eflagsx = 75,
         
-	IREG_COUNT = 76,
+        IREG_CS_limit_low = 76,
+        IREG_DS_limit_low = 77,
+        IREG_ES_limit_low = 78,
+        IREG_FS_limit_low = 79,
+        IREG_GS_limit_low = 80,
+        IREG_SS_limit_low = 81,
+
+        IREG_CS_limit_high = 82,
+        IREG_DS_limit_high = 83,
+        IREG_ES_limit_high = 84,
+        IREG_FS_limit_high = 85,
+        IREG_GS_limit_high = 86,
+        IREG_SS_limit_high = 87,
+
+	IREG_COUNT = 88,
 	
 	IREG_INVALID = 255,
 	
@@ -218,6 +232,41 @@ static inline int ireg_seg_base(x86seg *seg)
         if (seg == &cpu_state.seg_ss)
                 return IREG_SS_base;
         fatal("ireg_seg_base : unknown segment\n");
+        return 0;
+}
+
+static inline int ireg_seg_limit_low(x86seg *seg)
+{
+        if (seg == &cpu_state.seg_cs)
+                return IREG_CS_limit_low;
+        if (seg == &cpu_state.seg_ds)
+                return IREG_DS_limit_low;
+        if (seg == &cpu_state.seg_es)
+                return IREG_ES_limit_low;
+        if (seg == &cpu_state.seg_fs)
+                return IREG_FS_limit_low;
+        if (seg == &cpu_state.seg_gs)
+                return IREG_GS_limit_low;
+        if (seg == &cpu_state.seg_ss)
+                return IREG_SS_limit_low;
+        fatal("ireg_seg_limit_low : unknown segment\n");
+        return 0;
+}
+static inline int ireg_seg_limit_high(x86seg *seg)
+{
+        if (seg == &cpu_state.seg_cs)
+                return IREG_CS_limit_high;
+        if (seg == &cpu_state.seg_ds)
+                return IREG_DS_limit_high;
+        if (seg == &cpu_state.seg_es)
+                return IREG_ES_limit_high;
+        if (seg == &cpu_state.seg_fs)
+                return IREG_FS_limit_high;
+        if (seg == &cpu_state.seg_gs)
+                return IREG_GS_limit_high;
+        if (seg == &cpu_state.seg_ss)
+                return IREG_SS_limit_high;
+        fatal("ireg_seg_limit_high : unknown segment\n");
         return 0;
 }
 

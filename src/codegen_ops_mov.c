@@ -5,6 +5,7 @@
 #include "codegen.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
+#include "codegen_ops_helpers.h"
 #include "codegen_ops_mov.h"
 
 uint32_t ropMOV_rb_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -50,6 +51,7 @@ uint32_t ropMOV_b_r(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
                 codegen_check_seg_write(block, ir, target_seg);
+                CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 0);
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_8(src_reg));
         }
 
@@ -71,6 +73,7 @@ uint32_t ropMOV_w_r(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
                 codegen_check_seg_write(block, ir, target_seg);
+                CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 1);
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_16(src_reg));
         }
 
@@ -92,6 +95,7 @@ uint32_t ropMOV_l_r(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
                 codegen_check_seg_write(block, ir, target_seg);
+                CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 3);
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_32(src_reg));
         }
 
@@ -363,6 +367,7 @@ uint32_t ropMOV_w_seg(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
                 target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
                 codegen_check_seg_write(block, ir, target_seg);
+                CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 1);
                 uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, src_reg);
         }
 

@@ -79,6 +79,7 @@ uint32_t ropFSTd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         op_pc--;
         target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
         codegen_check_seg_write(block, ir, target_seg);
+        CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 7);
         uop_MEM_STORE_DOUBLE(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_ST(0));
 
         return op_pc+1;
@@ -92,6 +93,7 @@ uint32_t ropFSTPd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         op_pc--;
         target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
         codegen_check_seg_write(block, ir, target_seg);
+        CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 7);
         uop_MEM_STORE_DOUBLE(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_ST(0));
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
