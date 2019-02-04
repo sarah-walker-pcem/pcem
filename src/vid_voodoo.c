@@ -6127,8 +6127,19 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 temp = voodoo->line & 0x1fff;
                 break;
                 case SST_hvRetrace:
-                temp = voodoo->line & 0x1fff;
-                temp |= ((((tsc - timer_get_ts_int(&voodoo->timer)) * voodoo->h_total) / (voodoo->line_time >> 32)) << 16) & 0x7ff0000;
+                {
+                        uint32_t line_time = (uint32_t)(voodoo->line_time >> 32);
+                        uint32_t diff = (timer_get_ts_int(&voodoo->timer) > (tsc & 0xffffffff)) ? (timer_get_ts_int(&voodoo->timer) - (tsc & 0xffffffff)) : 0;
+                        uint32_t pre_div = diff * voodoo->h_total;
+                        uint32_t post_div = pre_div / line_time;
+                        uint32_t h_pos = (voodoo->h_total - 1) - post_div;
+                        
+                        if (h_pos >= voodoo->h_total)
+                                h_pos = 0;
+                        
+                        temp = voodoo->line & 0x1fff;
+                        temp |= (h_pos << 16);
+                }
                 break;
 
                 case SST_fbiInit5:
