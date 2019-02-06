@@ -292,9 +292,9 @@ static inline int CF_SET()
         switch (cpu_state.flags_op)
         {
                 case FLAGS_ADD8:
-                return (cpu_state.flags_op1 + cpu_state.flags_op2) & 0x100;
+                return ((cpu_state.flags_op1 + cpu_state.flags_op2) & 0x100) ? 1 : 0;
                 case FLAGS_ADD16:
-                return (cpu_state.flags_op1 + cpu_state.flags_op2) & 0x10000;
+                return ((cpu_state.flags_op1 + cpu_state.flags_op2) & 0x10000) ? 1 : 0;
                 case FLAGS_ADD32:
                 return (cpu_state.flags_res < cpu_state.flags_op1);
 
@@ -320,11 +320,11 @@ static inline int CF_SET()
                         (cpu_state.flags_op1 == cpu_state.flags_op2 && cpu_state.flags_res != 0);
 
                 case FLAGS_SHL8:
-                return (cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x80;
+                return ((cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x80) ? 1 : 0;
                 case FLAGS_SHL16:
-                return (cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x8000;
+                return ((cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x8000) ? 1 : 0;
                 case FLAGS_SHL32:
-                return (cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x80000000;
+                return ((cpu_state.flags_op1 << (cpu_state.flags_op2 - 1)) & 0x80000000) ? 1 : 0;
 
                 case FLAGS_SHR8:
                 case FLAGS_SHR16:
