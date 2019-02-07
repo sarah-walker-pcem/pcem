@@ -1313,69 +1313,6 @@ void mem_add_bios()
 int mem_a20_key = 0, mem_a20_alt = 0;
 static int mem_a20_state = 2;
 
-void mem_init()
-{
-        int c;
-
-        ram = malloc(mem_size * 1024);
-//        rom = malloc(0x20000);
-        readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
-        writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
-        biosmask = 0xffff;
-        pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
-        page_lookup = malloc((1 << 20) * sizeof(page_t *));
-
-        memset(ram, 0, mem_size * 1024);
-        memset(pages, 0, (((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
-        
-        memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
-        
-        for (c = 0; c < (((mem_size + 384) * 1024) >> 12); c++)
-        {
-                pages[c].mem = &ram[c << 12];
-                pages[c].write_b = mem_write_ramb_page;
-                pages[c].write_w = mem_write_ramw_page;
-                pages[c].write_l = mem_write_raml_page;
-                pages[c].evict_prev = EVICT_NOT_IN_LIST;
-        }
-
-        memset(read_mapping, 0, sizeof(read_mapping));
-        memset(write_mapping, 0, sizeof(write_mapping));
-        memset(_mem_exec, 0, sizeof(_mem_exec));
-        
-        memset(ff_array, 0xff, sizeof(ff_array));
-
-        memset(&base_mapping, 0, sizeof(base_mapping));
-
-        memset(_mem_state, 0, sizeof(_mem_state));
-
-        mem_set_mem_state(0x000000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-        mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
-
-        mem_mapping_add(&ram_low_mapping, 0x00000, (mem_size > 640) ? 0xa0000 : mem_size * 1024, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram,  MEM_MAPPING_INTERNAL, NULL);
-        if (mem_size > 1024)
-        {
-                if (cpu_16bitbus && mem_size > 16256)
-                {
-                        mem_set_mem_state(0x100000, (16256 - 1024) * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-                        mem_mapping_add(&ram_high_mapping, 0x100000, ((16256 - 1024) * 1024), mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
-                }
-                else
-                {
-                        mem_set_mem_state(0x100000, (mem_size - 1024) * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-                        mem_mapping_add(&ram_high_mapping, 0x100000, ((mem_size - 1024) * 1024), mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0x100000, MEM_MAPPING_INTERNAL, NULL);
-                }
-        }
-	if (mem_size > 768)
-        	mem_mapping_add(&ram_mid_mapping,   0xc0000, 0x40000, mem_read_ram,    mem_read_ramw,    mem_read_raml,    mem_write_ram, mem_write_ramw, mem_write_raml,   ram + 0xc0000,  MEM_MAPPING_INTERNAL, NULL);
-
-        if (romset == ROM_IBMPS1_2011)
-                mem_mapping_add(&romext_mapping,  0xc8000, 0x08000, mem_read_romext, mem_read_romextw, mem_read_romextl, NULL, NULL, NULL,   romext, 0, NULL);
-//        pclog("Mem resize %i %i\n",mem_size,c);
-        mem_a20_key = 2;
-        mem_a20_alt = 0;
-}
-
 static void mem_remap_top(int max_size)
 {
         int c;
@@ -1417,7 +1354,16 @@ void mem_set_704kb()
         mem_mapping_set_addr(&ram_low_mapping, 0x00000, (mem_size > 704) ? 0xb0000 : mem_size * 1024);
 }
 
-void mem_resize()
+void mem_init()
+{
+        readlookup2  = malloc(1024 * 1024 * sizeof(uintptr_t));
+        writelookup2 = malloc(1024 * 1024 * sizeof(uintptr_t));
+        page_lookup = malloc((1 << 20) * sizeof(page_t *));
+
+        memset(ff_array, 0xff, sizeof(ff_array));
+}
+
+void mem_alloc()
 {
         int c;
         
@@ -1436,7 +1382,9 @@ void mem_resize()
                 pages[c].write_l = mem_write_raml_page;
                 pages[c].evict_prev = EVICT_NOT_IN_LIST;
         }
-        
+
+        memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
+
         memset(read_mapping, 0, sizeof(read_mapping));
         memset(write_mapping, 0, sizeof(write_mapping));
         memset(_mem_exec, 0, sizeof(_mem_exec));

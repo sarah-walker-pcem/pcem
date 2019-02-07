@@ -208,7 +208,7 @@ void mem_flush_write_page(uint32_t addr, uint32_t virt);
 void mem_add_bios();
 
 void mem_init();
-void mem_resize();
+void mem_alloc();
 
 void mem_set_704kb();
 

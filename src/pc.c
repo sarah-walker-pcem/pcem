@@ -408,7 +408,7 @@ void resetpchard()
         sound_reset();
         io_init();
         cpu_set();
-        mem_resize();
+        mem_alloc();
         fdc_init();
 	disc_reset();
         disc_load(0, discfns[0]);
