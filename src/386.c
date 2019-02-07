@@ -17,16 +17,6 @@
 #undef CPU_BLOCK_END
 #define CPU_BLOCK_END()
 
-uint32_t use32;
-int stack32;
-int optype;
-
-int trap;
-
-uint32_t rmdat;
-
-uint32_t *eal_r, *eal_w;
-
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;

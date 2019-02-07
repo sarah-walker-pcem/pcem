@@ -23,7 +23,7 @@ wx-resources.cpp : pc.xrc
 	-wxrc -c pc.xrc -o wx-resources.cpp
 
 # PCem
-pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
+pcem_SOURCES = 386.c 386_common.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
 cmd640.c codegen.c codegen_accumulate.c codegen_allocator.c codegen_backend.c codegen_ir.c codegen_ops.c codegen_ops_3dnow.c codegen_ops_arith.c codegen_ops_branch.c codegen_ops_fpu_arith.c codegen_ops_fpu_constant.c codegen_ops_fpu_loadstore.c codegen_ops_fpu_misc.c codegen_ops_jump.c codegen_ops_logic.c codegen_ops_shift.c \
 codegen_ops_misc.c codegen_ops_mov.c codegen_ops_stack.c codegen_reg.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_k6.c codegen_timing_pentium.c codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c config.c cpu.c \
 dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
