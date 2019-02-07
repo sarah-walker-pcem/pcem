@@ -102,6 +102,8 @@ int is386;
 
 uint64_t tsc = 0;
 
+int is486;
+
 int timing_rr;
 int timing_mr, timing_mrl;
 int timing_rm, timing_rml;

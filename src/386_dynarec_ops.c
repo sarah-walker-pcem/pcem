@@ -18,7 +18,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;
@@ -33,7 +32,6 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;

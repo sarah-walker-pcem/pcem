@@ -7,6 +7,8 @@ extern int oldcpl;
 
 extern int nmi_enable;
 
+extern int trap;
+
 extern int output;
 extern int timetolive;
 
@@ -88,6 +90,8 @@ void loadcscall(uint16_t seg, uint32_t old_pc);
 void loadcsjmp(uint16_t seg, uint32_t old_pc);
 void pmoderetf(int is32, uint16_t off);
 void pmodeiret(int is32);
+
+void x86_int(int num);
 void x86_int_sw(int num);
 int x86_int_sw_rm(int num);
 

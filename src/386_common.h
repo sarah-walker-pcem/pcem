@@ -1,14 +1,9 @@
-extern uint16_t ea_rseg;
-
-#undef readmemb
-#undef writememb
-
-
 #define readmemb(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1)?readmembl((s)+(a)): *(uint8_t *)(readlookup2[(uint32_t)((s)+(a))>>12] + (uint32_t)((s) + (a))) )
+#define readmemw(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 1))?readmemwl((s)+(a)):*(uint16_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
+#define readmeml(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 3))?readmemll((s)+(a)):*(uint32_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
 #define readmemq(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 7))?readmemql((s)+(a)):*(uint64_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
 
 #define writememb(s,a,v) if (writelookup2[(uint32_t)((s)+(a))>>12]==-1) writemembl((s)+(a),v); else *(uint8_t *)(writelookup2[(uint32_t)((s) + (a)) >> 12] + (uint32_t)((s) + (a))) = v
-
 #define writememw(s,a,v) if (writelookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 1)) writememwl((s)+(a),v); else *(uint16_t *)(writelookup2[(uint32_t)((s) + (a)) >> 12] + (uint32_t)((s) + (a))) = v
 #define writememl(s,a,v) if (writelookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 3)) writememll((s)+(a),v); else *(uint32_t *)(writelookup2[(uint32_t)((s) + (a)) >> 12] + (uint32_t)((s) + (a))) = v
 #define writememq(s,a,v) if (writelookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 7)) writememql((s)+(a),v); else *(uint64_t *)(writelookup2[(uint32_t)((s) + (a)) >> 12] + (uint32_t)((s) + (a))) = v
@@ -183,7 +178,6 @@ static inline uint16_t geteaw()
 {
         if (cpu_mod == 3)
                 return cpu_state.regs[cpu_rm].w;
-//        cycles-=3;
         if (eal_r)
                 return *(uint16_t *)eal_r;
         return readmemw(easeg,cpu_state.eaaddr);
@@ -193,7 +187,6 @@ static inline uint32_t geteal()
 {
         if (cpu_mod == 3)
                 return cpu_state.regs[cpu_rm].l;
-//        cycles-=3;
         if (eal_r)
                 return *eal_r;
         return readmeml(easeg,cpu_state.eaaddr);
@@ -237,6 +230,3 @@ static inline void seteaq(uint64_t v)
 #define getwordf() ((uint16_t)(fetchdat)); cpu_state.pc+=2
 #define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
 #define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
-
-
-void x86_int(int num);

@@ -40,8 +40,6 @@ void FETCHCOMPLETE();
 
 #define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
 
-#undef readmemb
-#undef readmemw
 uint8_t readmemb(uint32_t a)
 {
         if (a!=(cs+cpu_state.pc)) memcycs+=4;
@@ -479,8 +477,6 @@ void makeznptable()
 }
 int timetolive=0;
 
-extern uint32_t oldpc2;
-
 int indump = 0;
 
 void dumpregs()
@@ -568,7 +564,7 @@ void dumpregs()
         else
            printf("AX=%04X BX=%04X CX=%04X DX=%04X DI=%04X SI=%04X BP=%04X SP=%04X\n",AX,BX,CX,DX,DI,SI,BP,SP);
         printf("PC=%04X CS=%04X DS=%04X ES=%04X SS=%04X FLAGS=%04X\n",cpu_state.pc,CS,DS,ES,SS,cpu_state.flags);
-        printf("%04X %04X\n",cpu_state.oldpc, oldpc2);
+        printf("%04X\n",cpu_state.oldpc);
         printf("%i ins\n",ins);
         if (is386)
            printf("In %s mode\n",(msw&1)?((cpu_state.eflags&VM_FLAG)?"V86":"protected"):"real");

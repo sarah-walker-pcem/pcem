@@ -12,45 +12,18 @@
 #include "nmi.h"
 
 #include "386_common.h"
+#include "codegen.h"
 
+#undef CPU_BLOCK_END
 #define CPU_BLOCK_END()
-
-extern int codegen_flags_changed;
-
-extern int nmi_enable;
 
 uint32_t use32;
 int stack32;
 int optype;
 
-uint32_t oldpc2;
-
 int trap;
 
-
-
-extern int cpl_override;
-
-int has_fpu;
-extern int fpucount;
-uint16_t ea_rseg;
-
-int is486;
-int cgate32;
-
-
-
-uint8_t romext[32768];
-uint8_t *ram,*rom;
-
 uint32_t rmdat;
-
-uint32_t backupregs[16];
-extern int oddeven;
-int inttype;
-
-
-uint32_t oldecx;
 
 uint32_t *eal_r, *eal_w;
 
@@ -58,7 +31,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (cpu_rm == 4)
         {
                 uint8_t sib = rmdat >> 8;
@@ -85,7 +57,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 else if ((sib & 6) == 4 && !cpu_state.ssegs)
                 {
                         easeg = ss;
-                        ea_rseg = SS;
                         cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
@@ -99,7 +70,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         if (cpu_rm == 5 && !cpu_state.ssegs)
                         {
                                 easeg = ss;
-                                ea_rseg = SS;
                                 cpu_state.ea_seg = &cpu_state.seg_ss;
                         }
                         if (cpu_mod == 1) 
@@ -131,8 +101,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
-        if (!cpu_mod && cpu_rm == 6) 
+        if (!cpu_mod && cpu_rm == 6)
         { 
                 cpu_state.eaaddr = getword();
         }
@@ -154,7 +123,6 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                 if (mod1seg[cpu_rm] == &ss && !cpu_state.ssegs)
                 {
                         easeg = ss;
-                        ea_rseg = SS;
                         cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 cpu_state.eaaddr &= 0xFFFF;
@@ -178,19 +146,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 #define getwordf() ((uint16_t)(fetchdat)); cpu_state.pc+=2
 #define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
 #define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
-extern int xout;
 
-int oldi;
-
-uint32_t testr[9];
-extern int dontprint;
-
-#undef NOTRM
-#define NOTRM   if (!(msw & 1) || (eflags & VM_FLAG))\
-                { \
-                        x86_int(6); \
-                        return 0; \
-                }
 
 #define OP_TABLE(name) ops_ ## name
 
@@ -198,13 +154,6 @@ extern int dontprint;
 #define CLOCK_CYCLES_ALWAYS(c) cycles -= (c)
 
 #include "x86_ops.h"
-
-#undef NOTRM
-#define NOTRM   if (!(msw & 1) || (eflags & VM_FLAG))\
-                { \
-                        x86_int(6); \
-                        break; \
-                }
 
 void exec386(int cycs)
 {
@@ -226,16 +175,9 @@ void exec386(int cycs)
 //                pclog("%i %02X\n", ins, ram[8]);
                 while (cycdiff < cycle_period)
                 {
-            /*            testr[0]=EAX; testr[1]=EBX; testr[2]=ECX; testr[3]=EDX;
-                        testr[4]=ESI; testr[5]=EDI; testr[6]=EBP; testr[7]=ESP;*/
-/*                        testr[8]=flags;*/
-//                oldpc2=oldpc;
-
                 cpu_state.oldpc = cpu_state.pc;
                 cpu_state.op32 = use32;
                 
-dontprint=0;
-
                 cpu_state.ea_seg = &cpu_state.seg_ds;
                 cpu_state.ssegs = 0;
                 
@@ -262,15 +204,6 @@ dontprint=0;
                         flags_rebuild();
 //                        pclog("Abort\n");
 //                        if (CS == 0x228) pclog("Abort at %04X:%04X - %i %i %i\n",CS,pc,notpresent,nullseg,abrt);
-/*                        if (testr[0]!=EAX) pclog("EAX corrupted %08X\n",pc);
-                        if (testr[1]!=EBX) pclog("EBX corrupted %08X\n",pc);
-                        if (testr[2]!=ECX) pclog("ECX corrupted %08X\n",pc);
-                        if (testr[3]!=EDX) pclog("EDX corrupted %08X\n",pc);
-                        if (testr[4]!=ESI) pclog("ESI corrupted %08X\n",pc);
-                        if (testr[5]!=EDI) pclog("EDI corrupted %08X\n",pc);
-                        if (testr[6]!=EBP) pclog("EBP corrupted %08X\n",pc);
-                        if (testr[7]!=ESP) pclog("ESP corrupted %08X\n",pc);*/
-/*                        if (testr[8]!=flags) pclog("FLAGS corrupted %08X\n",pc);*/
                         tempi = cpu_state.abrt;
                         cpu_state.abrt = 0;
                         x86_doabrt(tempi);

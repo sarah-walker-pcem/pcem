@@ -1,5 +1,3 @@
-extern int trap;
-
 #define REP_OPS(size, CNT_REG, SRC_REG, DEST_REG) \
 static int opREP_INSB_ ## size(uint32_t fetchdat)                               \
 {                                                                               \

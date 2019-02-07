@@ -31,37 +31,15 @@ int cpu_block_end = 0;
 
 int nmi_enable = 1;
 
-uint32_t oldpc2;
-
-int trap;
-
-
-
 int cpl_override=0;
 
-int has_fpu;
 int fpucount=0;
-uint16_t ea_rseg;
 
-int is486;
-int cgate32;
-
-
-uint8_t romext[32768];
-uint8_t *ram,*rom;
-
-uint32_t backupregs[16];
-int oddeven=0;
-int inttype;
-
-
-uint32_t oldecx;
 
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (cpu_rm == 4)
         {
                 uint8_t sib = rmdat >> 8;
@@ -88,7 +66,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                 else if ((sib & 6) == 4 && !cpu_state.ssegs)
                 {
                         easeg = ss;
-                        ea_rseg = SS;
                         cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 if (((sib >> 3) & 7) != 4) 
@@ -102,7 +79,6 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
                         if (cpu_rm == 5 && !cpu_state.ssegs)
                         {
                                 easeg = ss;
-                                ea_rseg = SS;
                                 cpu_state.ea_seg = &cpu_state.seg_ss;
                         }
                         if (cpu_mod == 1) 
@@ -134,8 +110,7 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
-        if (!cpu_mod && cpu_rm == 6) 
+        if (!cpu_mod && cpu_rm == 6)
         { 
                 cpu_state.eaaddr = getword();
         }
@@ -157,7 +132,6 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
                 if (mod1seg[cpu_rm] == &ss && !cpu_state.ssegs)
                 {
                         easeg = ss;
-                        ea_rseg = SS;
                         cpu_state.ea_seg = &cpu_state.seg_ss;
                 }
                 cpu_state.eaaddr &= 0xFFFF;
@@ -423,9 +397,6 @@ int checkio(int port)
         return d&(1<<(port&7));
 }
 
-int xout=0;
-
-
 #define divexcp() { \
                 pclog("Divide exception at %04X(%06X):%04X\n",CS,cs,cpu_state.pc); \
                 x86_int(0); \
@@ -481,11 +452,6 @@ void cpu_386_flags_rebuild()
 {
         flags_rebuild();
 }
-
-int oldi;
-
-uint32_t testr[9];
-int dontprint=0;
 
 #define OP_TABLE(name) ops_ ## name
 #define CLOCK_CYCLES(c) cycles -= (c)

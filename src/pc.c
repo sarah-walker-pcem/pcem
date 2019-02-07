@@ -913,7 +913,6 @@ void saveconfig(char *fn)
         config_set_int(CFG_MACHINE, NULL, "video_speed", video_speed);
         config_set_string(CFG_MACHINE, NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
         config_set_int(CFG_MACHINE, NULL, "cpu_speed", cpuspeed);
-        config_set_int(CFG_MACHINE, NULL, "has_fpu", hasfpu);
         config_set_string(CFG_MACHINE, NULL, "disc_a", discfns[0]);
         config_set_string(CFG_MACHINE, NULL, "disc_b", discfns[1]);
         config_set_string(CFG_MACHINE, NULL, "hdd_controller", hdd_controller_name);
