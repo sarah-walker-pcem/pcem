@@ -124,10 +124,18 @@ pcem_LDADD += wx.res
 endif
 
 if !HAS_OFF64T
-pcem_CFLAGS += -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
+#pcem_CFLAGS += -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
 endif
 
 if RELEASE_BUILD
 pcem_CFLAGS += -DRELEASE_BUILD
 pcem_CXXFLAGS += -DRELEASE_BUILD
 endif
+
+pcem_CFLAGS += -mtune=cortex-a53
+pcem_CXXFLAGS += -mtune=cortex-a53
+#pcem_LDFLAGS = -flto -O3 -mtune=cortex-a15
+
+# pcem_CFLAGS += -fprofile-use
+# pcem_CXXFLAGS += -fprofile-use
+# pcem_LDFLAGS = -fprofile-use

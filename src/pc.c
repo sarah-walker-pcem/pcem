@@ -561,8 +561,6 @@ void runpc()
                 cpu_recomp_evicted_latched = cpu_recomp_evicted;
                 cpu_recomp_reuse_latched = cpu_recomp_reuse;
                 cpu_recomp_removed_latched = cpu_recomp_removed;
-                cpu_reps_latched = cpu_reps;
-                cpu_notreps_latched = cpu_notreps;
 
                 cpu_recomp_blocks = 0;
                 cpu_state.cpu_recomp_ins = 0;
@@ -572,8 +570,6 @@ void runpc()
                 cpu_recomp_evicted = 0;
                 cpu_recomp_reuse = 0;
                 cpu_recomp_removed = 0;
-                cpu_reps = 0;
-                cpu_notreps = 0;
 
                 updatestatus=1;
                 readlnum=writelnum=0;

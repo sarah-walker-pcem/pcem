@@ -209,7 +209,6 @@ COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
 uint32_t oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
 
 extern int ins,output;
-extern int cycdiff;
 
 x86seg gdt,ldt,idt,tr;
 x86seg _oldds;

@@ -29,13 +29,21 @@ uint64_t xt_cpu_multi;
 int nmi = 0;
 int nmi_auto_clear = 0;
 
-int nextcyc=0;
-int cycdiff;
+int oldcpl;
+
+int tempc;
+static int noint=0;
+
+int output=0;
+int timetolive=0;
+int ins=0;
+
 int is8086=0;
 
+int nextcyc=0;
 int memcycs;
-int nopageerrors=0;
 
+static int cycdiff;
 void FETCHCOMPLETE();
 
 #define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
@@ -88,15 +96,6 @@ void writememl(uint32_t s, uint32_t a, uint32_t v)
 }
 
 
-int oldcpl;
-
-int tempc;
-uint16_t pc2,pc3;
-static int noint=0;
-
-int output=0;
-
-int ins=0;
 //#define readmemb(a) (((a)<0xA0000)?ram[a]:readmembl(a))
 
 int fetchcycles=0,memcycs,fetchclocks;
@@ -475,7 +474,6 @@ void makeznptable()
       
 //      makemod1table();
 }
-int timetolive=0;
 
 int indump = 0;
 
@@ -492,7 +490,6 @@ void dumpregs()
 //        savenvr();
 //        return;
         chdir(logs_path);
-        nopageerrors=1;
 /*        f=fopen("rram3.dmp","wb");
         for (c=0;c<0x8000000;c++) putc(readmemb(c+0x10000000),f);
         fclose(f);*/
@@ -599,12 +596,10 @@ void dumpregs()
         indump = 0;
 }
 
-int resets = 0;
 int x86_was_reset = 0;
 void resetx86()
 {
         pclog("x86 reset\n");
-        resets++;
         ins = 0;
         use32=0;
         cpu_cur_status = 0;
@@ -1109,11 +1104,8 @@ void rep(int fv)
 
 
 static int inhlt=0;
-int firstrepcycle;
 static int skipnextprint=0;
 
-int instime=0;
-//#if 0
 void execx86(int cycs)
 {
         uint8_t temp,temp2;
@@ -1133,10 +1125,6 @@ void execx86(int cycs)
         {
                 uint8_t opcode;
                 
-//                old83=old82;
-//                old82=old8;
-//                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
-//                if (pc<0x8000) printf("%04X : %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %04X %02X %04X %i\n",pc,AX,BX,CX,DX,cs>>4,ds>>4,es>>4,ss>>4,DI,SI,BP,SP,opcode,flags,disctime);
                 cycdiff=cycles;
                 current_diff = 0;
                 cycles-=nextcyc;
