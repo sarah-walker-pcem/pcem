@@ -222,7 +222,5 @@ void mmu_invalidate(uint32_t addr);
 
 int loadbios();
 
-extern unsigned char isram[0x10000];
-
 extern int purgeable_page_count;
 #endif

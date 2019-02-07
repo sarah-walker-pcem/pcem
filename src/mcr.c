@@ -10,7 +10,6 @@ void resetmcr()
 {
         mcrlock=0;
         mcrfirst=1;
-        shadowbios=0;
 }
 
 void writemcr(uint16_t addr, uint8_t val)
@@ -29,7 +28,7 @@ void writemcr(uint16_t addr, uint8_t val)
 //                exit(-1);
                 break;
                 case 0x23:
-                if (nextreg6) shadowbios=!val;
+//                if (nextreg6) shadowbios=!val;
                 break;
         }
         mcr22=val;

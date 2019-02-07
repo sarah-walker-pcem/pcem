@@ -36,10 +36,6 @@ mem_mapping_t bios_mapping[8];
 mem_mapping_t bios_high_mapping[8];
 static mem_mapping_t romext_mapping;
 
-int shadowbios,shadowbios_write;
-
-unsigned char isram[0x10000];
-
 static uint8_t ff_array[0x1000];
 
 int mem_size;
@@ -50,7 +46,10 @@ int cachesize=256;
 uint8_t *ram, *rom = NULL;
 uint8_t romext[32768];
 
-//int abrt=0;
+uint32_t mem_logical_addr;
+
+int mmuflush=0;
+int mmu_perm=4;
 
 void resetreadlookup()
 {
@@ -67,9 +66,6 @@ void resetreadlookup()
 //        readlnum=writelnum=0;
 
 }
-
-int mmuflush=0;
-int mmu_perm=4;
 
 void flushmmucache()
 {
@@ -202,14 +198,8 @@ void mem_flush_write_page(uint32_t addr, uint32_t virt)
         }
 }
 
-extern int output;
-
 #define mmutranslate_read(addr) mmutranslatereal(addr,0)
 #define mmutranslate_write(addr) mmutranslatereal(addr,1)
-
-int pctrans=0;
-
-extern uint32_t testr[9];
 
 static inline uint32_t mmu_readl(uint32_t addr)
 {
@@ -423,16 +413,13 @@ void addwritelookup(uint32_t virt, uint32_t phys)
         cycles -= 9;
 }
 
-#undef printf
 uint8_t *getpccache(uint32_t a)
 {
         uint32_t a2=a;
 
         if (cr0>>31)
         {
-		pctrans=1;
                 a = mmutranslate_read(a);
-                pctrans=0;
 
                 if (a==0xFFFFFFFF) return ram;
         }
@@ -451,9 +438,7 @@ uint8_t *getpccache(uint32_t a)
         pclog("Bad getpccache %08X\n", a);
         return &ff_array[0-(uintptr_t)(a2 & ~0xFFF)];
 }
-#define printf pclog
 
-uint32_t mem_logical_addr;
 uint8_t readmembl(uint32_t addr)
 {
         mem_mapping_t *map;

@@ -20,9 +20,7 @@ void headland_write(uint16_t addr, uint8_t val, void *priv)
                 pclog("Headland write %02X %02X\n",headland_index,val);
                 if (headland_index == 0x82)
                 {
-                        shadowbios = val & 0x10;
-                        shadowbios_write = !(val & 0x10);
-                        if (shadowbios)
+                        if (val & 0x10)
                                 mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
                         else
                                 mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);

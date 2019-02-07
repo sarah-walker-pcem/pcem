@@ -404,10 +404,8 @@ static void model_55sx_write(uint16_t port, uint8_t val)
                 case 0x105:
                 pclog("Write POS3 %02x\n", val);
                 ps2.option[3] = val;
-                shadowbios = !(val & 0x10);
-                shadowbios_write = val & 0x10;
 
-                if (shadowbios)
+                if (!(val & 0x10))
                 {
                         mem_set_mem_state(0xe0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
                         mem_mapping_disable(&ps2.shadow_mapping);

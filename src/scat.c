@@ -564,8 +564,6 @@ void scat_init()
                 mem_mapping_disable(&scat_mapping[i]);
         }
 
-        for(i=4;i<10;i++) isram[i] = 0;
-
         // TODO - Only normal CPU accessing address FF0000 to FFFFFF mapped to ROM. Normal CPU accessing address FC0000 to FEFFFF map to ROM should be implemented later.
         for (i = 12; i < 16; i++)
         {

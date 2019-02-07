@@ -55,8 +55,6 @@ void ali1429_write(uint16_t port, uint8_t val, void *priv)
                         ali1429_recalc();
                         break;
                         case 0x14:
-                        shadowbios = val & 1;
-                        shadowbios_write = val & 2;
                         ali1429_recalc();
                         break;
                 }

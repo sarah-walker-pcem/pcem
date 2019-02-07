@@ -43,7 +43,6 @@ void sis496_recalcmapping(sis496_t *sis496)
         }
 
         flushmmucache();
-        shadowbios = (sis496->pci_conf[0x44] & 0xf0);
 }
 
 void sis496_write(int func, int addr, uint8_t val, void *p)

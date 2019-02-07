@@ -97,8 +97,6 @@ int noint=0;
 
 int output=0;
 
-int shadowbios=0;
-
 int ins=0;
 //#define readmemb(a) (((a)<0xA0000)?ram[a]:readmembl(a))
 

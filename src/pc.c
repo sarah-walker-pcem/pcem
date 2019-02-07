@@ -360,8 +360,7 @@ void initpc(int argc, char *argv[])
         ali1429_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
-        shadowbios=0;
-        
+
 #if __unix
 	if (cdrom_drive == -1)
 	        cdrom_null_reset();	
@@ -387,7 +386,6 @@ void resetpc()
 //        cpuspeed2=(AT)?2:1;
 //        atfullspeed=0;
 ///*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
-        shadowbios=0;
 }
 
 void resetpc_cad()
@@ -449,7 +447,6 @@ void resetpchard()
 //        atfullspeed = 0;
 //        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
 
-        shadowbios = 0;
         ali1429_reset();
         
         keyboard_at_reset();
