@@ -239,7 +239,4 @@ static inline void seteaq(uint64_t v)
 #define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
 
 
-#define rmdat rmdat32
-#define fetchdat rmdat32
-
 void x86_int(int num);

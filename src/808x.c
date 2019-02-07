@@ -38,6 +38,8 @@ int nopageerrors=0;
 
 void FETCHCOMPLETE();
 
+#define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
+
 #undef readmemb
 #undef readmemw
 uint8_t readmemb(uint32_t a)
@@ -91,9 +93,8 @@ void writememl(uint32_t s, uint32_t a, uint32_t v)
 int oldcpl;
 
 int tempc;
-uint8_t opcode;
 uint16_t pc2,pc3;
-int noint=0;
+static int noint=0;
 
 int output=0;
 
@@ -330,9 +331,9 @@ reg = If mod=11,  (depending on data size, 16 bits/8 bits, 32 bits=extend 16 bit
 */
 
 uint32_t easeg;
-int rmdat;
+uint32_t rmdat;
 
-uint16_t zero=0;
+static uint16_t zero=0;
 uint16_t *mod1add[2][8];
 uint32_t *mod1seg[8];
 
@@ -429,7 +430,7 @@ static inline void seteaw(uint16_t val)
 
 /*Flags*/
 uint8_t znptable8[256];
-uint16_t znptable16[65536];
+static uint16_t znptable16[65536];
 
 void makeznptable()
 {
@@ -649,7 +650,6 @@ void resetx86()
         EAX = 0;
         ESP=0;
         mmu_perm=4;
-        memset(inscounts, 0, sizeof(inscounts));
         x86seg_reset();
         codegen_reset();
         x86_was_reset = 1;
@@ -1112,10 +1112,9 @@ void rep(int fv)
 }
 
 
-int inhlt=0;
-uint16_t lastpc,lastcs;
+static int inhlt=0;
 int firstrepcycle;
-int skipnextprint=0;
+static int skipnextprint=0;
 
 int instime=0;
 //#if 0
@@ -1136,6 +1135,8 @@ void execx86(int cycs)
 //        return;
         while (cycles>0)
         {
+                uint8_t opcode;
+                
 //                old83=old82;
 //                old82=old8;
 //                if (pc==0x96B && cs==0x9E040) { printf("Hit it\n"); output=1; timetolive=150; }
@@ -2450,8 +2451,6 @@ void execx86(int cycs)
                         cycles-=72;
                         break;
                         case 0xCD: /*INT*/
-                        lastpc=cpu_state.pc;
-                        lastcs=CS;
                         temp=FETCH();
 
                         if (cpu_state.ssegs) ss=oldss;

@@ -1,6 +1,5 @@
 #include "ibm.h"
 #include "cpu.h"
-#include "386.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
@@ -14,9 +13,6 @@
 
 #include "386_common.h"
 
-
-extern uint16_t *mod1add[2][8];
-extern uint32_t *mod1seg[8];
 
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {

@@ -1,11 +1,10 @@
 #define CALL_FAR_w(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
         old_pc = cpu_state.pc;                                                  \
-        oxpc = cpu_state.pc;                                                    \
         cpu_state.pc = new_pc;                                                  \
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
-        if (msw & 1) loadcscall(new_seg);                                       \
+        if (msw & 1) loadcscall(new_seg, old_pc);                               \
         else                                                                    \
         {                                                                       \
                 loadcs(new_seg);                                                \
@@ -30,11 +29,10 @@
 #define CALL_FAR_l(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
         old_pc = cpu_state.pc;                                                  \
-        oxpc = cpu_state.pc;                                                    \
         cpu_state.pc = new_pc;                                                  \
         optype = CALL;                                                          \
         cgate16 = cgate32 = 0;                                                  \
-        if (msw & 1) loadcscall(new_seg);                                       \
+        if (msw & 1) loadcscall(new_seg, old_pc);                               \
         else                                                                    \
         {                                                                       \
                 loadcs(new_seg);                                                \
@@ -158,11 +156,11 @@ static int opFF_w_a16(uint32_t fetchdat)
                 case 0x28: /*JMP far*/
                 if (cpu_mod != 3)
                         SEG_CHECK_READ(cpu_state.ea_seg);
-                oxpc = cpu_state.pc;
+                old_pc = cpu_state.pc;
                 new_pc = readmemw(easeg, cpu_state.eaaddr);
                 new_cs = readmemw(easeg, cpu_state.eaaddr + 2);  if (cpu_state.abrt) return 1;
                 cpu_state.pc = new_pc;
-                loadcsjmp(new_cs, oxpc);               if (cpu_state.abrt) return 1;
+                loadcsjmp(new_cs, old_pc);               if (cpu_state.abrt) return 1;
                 CPU_BLOCK_END();
                 PREFETCH_RUN(cycles_old-cycles, 2, rmdat, 2,0,0,0, 0);
                 PREFETCH_FLUSH();
@@ -249,11 +247,11 @@ static int opFF_w_a32(uint32_t fetchdat)
                 case 0x28: /*JMP far*/
                 if (cpu_mod != 3)
                         SEG_CHECK_READ(cpu_state.ea_seg);
-                oxpc = cpu_state.pc;
+                old_pc = cpu_state.pc;
                 new_pc = readmemw(easeg, cpu_state.eaaddr);
                 new_cs = readmemw(easeg, cpu_state.eaaddr + 2);  if (cpu_state.abrt) return 1;
                 cpu_state.pc = new_pc;
-                loadcsjmp(new_cs, oxpc);               if (cpu_state.abrt) return 1;
+                loadcsjmp(new_cs, old_pc);               if (cpu_state.abrt) return 1;
                 CPU_BLOCK_END();
                 PREFETCH_RUN(cycles_old-cycles, 2, rmdat, 2,0,0,0, 1);
                 PREFETCH_FLUSH();
@@ -341,11 +339,11 @@ static int opFF_l_a16(uint32_t fetchdat)
                 case 0x28: /*JMP far*/
                 if (cpu_mod != 3)
                         SEG_CHECK_READ(cpu_state.ea_seg);
-                oxpc = cpu_state.pc;
+                old_pc = cpu_state.pc;
                 new_pc = readmeml(easeg, cpu_state.eaaddr);
                 new_cs = readmemw(easeg, cpu_state.eaaddr + 4);   if (cpu_state.abrt) return 1;
                 cpu_state.pc = new_pc;
-                loadcsjmp(new_cs, oxpc);                if (cpu_state.abrt) return 1;
+                loadcsjmp(new_cs, old_pc);                if (cpu_state.abrt) return 1;
                 CPU_BLOCK_END();
                 PREFETCH_RUN(cycles_old-cycles, 2, rmdat, 1,1,0,0, 0);
                 PREFETCH_FLUSH();
@@ -432,11 +430,11 @@ static int opFF_l_a32(uint32_t fetchdat)
                 case 0x28: /*JMP far*/
                 if (cpu_mod != 3)
                         SEG_CHECK_READ(cpu_state.ea_seg);
-                oxpc = cpu_state.pc;
+                old_pc = cpu_state.pc;
                 new_pc = readmeml(easeg, cpu_state.eaaddr);
                 new_cs = readmemw(easeg, cpu_state.eaaddr + 4);   if (cpu_state.abrt) return 1;
                 cpu_state.pc = new_pc;
-                loadcsjmp(new_cs, oxpc);                if (cpu_state.abrt) return 1;
+                loadcsjmp(new_cs, old_pc);                if (cpu_state.abrt) return 1;
                 CPU_BLOCK_END();
                 PREFETCH_RUN(cycles_old-cycles, 2, rmdat, 1,1,0,0, 1);
                 PREFETCH_FLUSH();

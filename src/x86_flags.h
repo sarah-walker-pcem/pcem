@@ -1,3 +1,5 @@
+extern int tempc;
+
 enum
 {
         FLAGS_UNKNOWN,
@@ -553,3 +555,5 @@ static inline void setsbc32(uint32_t a, uint32_t b)
         cpu_state.flags_op = FLAGS_SBC32;
 }
 
+extern void cpu_386_flags_extract();
+extern void cpu_386_flags_rebuild();

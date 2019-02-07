@@ -2,7 +2,6 @@
 
 #include "x86.h"
 #include "386_common.h"
-#include "386.h"
 #include "codegen.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"

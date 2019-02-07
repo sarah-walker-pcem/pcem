@@ -1,22 +1,30 @@
-extern uint32_t rmdat32;
-int oldcpl;
+extern uint32_t rmdat;
+#define fetchdat rmdat
+
+extern uint32_t easeg;
+
+extern int oldcpl;
 
 extern int nmi_enable;
 
-int tempc;
-int output;
-int firstrepcycle;
+extern int output;
+extern int timetolive;
 
-uint32_t easeg,ealimit,ealimitw;
+extern uint8_t znptable8[256];
 
-int skipnextprint;
-int inhlt;
+extern uint32_t use32;
+extern int stack32;
 
-uint8_t opcode;
-int noint;
+extern uint16_t *mod1add[2][8];
+extern uint32_t *mod1seg[8];
 
-uint16_t lastcs,lastpc;
-int timetolive,keyboardtimer;
+extern int cgate32;
+
+extern uint32_t *eal_r, *eal_w;
+
+extern int x86_was_reset;
+
+
 
 #define setznp168 setznp16
 
@@ -29,12 +37,6 @@ int timetolive,keyboardtimer;
 #define setr16(r,v) cpu_state.regs[r].w=v
 #define setr32(r,v) cpu_state.regs[r].l=v
 
-uint8_t znptable8[256];
-uint16_t znptable16[65536];
-
-int use32;
-int stack32;
-
 #define fetchea()   { rmdat=readmemb(cs+pc); pc++;  \
                     reg=(rmdat>>3)&7;               \
                     mod=(rmdat>>6)&3;               \
@@ -42,33 +44,11 @@ int stack32;
                     if (mod!=3) fetcheal(); }
 
 
-int optype;
+extern int optype;
 #define JMP 1
 #define CALL 2
 #define IRET 3
 #define OPTYPE_INT 4
-
-uint32_t oxpc;
-
-extern uint16_t *mod1add[2][8];
-extern uint32_t *mod1seg[8];
-
-
-#define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
-
-extern int cgate32;
-
-
-extern uint32_t *eal_r, *eal_w;
-
-
-extern uint32_t flags_zn;
-extern uint8_t flags_p;
-#define FLAG_N (flags_zn>>31)
-#define FLAG_Z (flags_zn)
-#define FLAG_P (znptable8[flags_p]&P_FLAG)
-
-extern int gpf;
 
 
 enum
@@ -86,21 +66,13 @@ extern uint32_t abrt_error;
 
 void x86_doabrt(int x86_abrt);
 
-extern uint8_t opcode2;
-
-extern uint16_t rds;
-extern uint32_t rmdat32;
-
-extern int inscounts[256];
+extern int codegen_flat_ds;
+extern int codegen_flat_ss;
 
 void x86illegal();
 
 void x86seg_reset();
 void x86gpf(char *s, uint16_t error);
-
-extern uint16_t zero;
-
-extern int x86_was_reset;
 
 void resetx86();
 void softresetx86();
@@ -111,5 +83,13 @@ void execx86(int cycs);
 void exec386(int cycs);
 void exec386_dynarec(int cycs);
 
-extern int codegen_flat_ds;
-extern int codegen_flat_ss;
+void pmodeint(int num, int soft);
+void loadcscall(uint16_t seg, uint32_t old_pc);
+void loadcsjmp(uint16_t seg, uint32_t old_pc);
+void pmoderetf(int is32, uint16_t off);
+void pmodeiret(int is32);
+void x86_int_sw(int num);
+int x86_int_sw_rm(int num);
+
+int divl(uint32_t val);
+int idivl(int32_t val);

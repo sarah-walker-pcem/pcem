@@ -81,7 +81,6 @@ void fullspeed();
 
 int framecount,fps;
 
-int output;
 int atfullspeed;
 
 void saveconfig(char *fn);

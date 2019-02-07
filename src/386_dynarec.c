@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "ibm.h"
-#include "386.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
@@ -32,7 +31,6 @@ int cpu_block_end = 0;
 
 int nmi_enable = 1;
 
-int inscounts[256];
 uint32_t oldpc2;
 
 int trap;
@@ -43,7 +41,6 @@ int cpl_override=0;
 
 int has_fpu;
 int fpucount=0;
-uint16_t rds;
 uint16_t ea_rseg;
 
 int is486;
@@ -53,18 +50,12 @@ int cgate32;
 uint8_t romext[32768];
 uint8_t *ram,*rom;
 
-uint32_t rmdat32;
 uint32_t backupregs[16];
 int oddeven=0;
 int inttype;
 
 
 uint32_t oldecx;
-
-uint32_t *eal_r, *eal_w;
-
-uint16_t *mod1add[2][8];
-uint32_t *mod1seg[8];
 
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
@@ -231,7 +222,6 @@ void x86_int(int num)
 
                         cpu_state.flags &= ~I_FLAG;
                         cpu_state.flags &= ~T_FLAG;
-                        oxpc=cpu_state.pc;
                         cpu_state.pc=readmemw(0,addr);
                         loadcs(readmemw(0,addr+2));
                 }
@@ -278,7 +268,6 @@ void x86_int_sw(int num)
 
                         cpu_state.flags &= ~I_FLAG;
                         cpu_state.flags &= ~T_FLAG;
-                        oxpc=cpu_state.pc;
                         cpu_state.pc=readmemw(0,addr);
                         loadcs(readmemw(0,addr+2));
                         cycles -= timing_int_rm;
@@ -311,7 +300,6 @@ int x86_int_sw_rm(int num)
         cpu_state.flags &= ~T_FLAG;
         cpu_state.pc = new_pc;
         loadcs(new_cs);
-        oxpc=cpu_state.pc;
 
         cycles -= timing_int_rm;
         trap = 0;
@@ -548,9 +536,9 @@ void exec386_dynarec(int cycs)
 
                                         if (!cpu_state.abrt)
                                         {
-                                                trap = cpu_state.flags & T_FLAG;
-                                                opcode = fetchdat & 0xFF;
+                                                uint8_t opcode = fetchdat & 0xFF;
                                                 fetchdat >>= 8;
+                                                trap = cpu_state.flags & T_FLAG;
 
 //                                                if (output == 3)
 //                                                        pclog("int %04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X %f  %02X%02X %02X%02X\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, pit.c[0], ram[0x8f13f], ram[0x8f13e], ram[0x8f141], ram[0x8f140]);
@@ -685,9 +673,10 @@ void exec386_dynarec(int cycs)
 
                                                 if (!cpu_state.abrt)
                                                 {
-                                                        trap = cpu_state.flags & T_FLAG;
-                                                        opcode = fetchdat & 0xFF;
+                                                        uint8_t opcode = fetchdat & 0xFF;
                                                         fetchdat >>= 8;
+                                                        
+                                                        trap = cpu_state.flags & T_FLAG;
 
 //                                                        if (output == 3)
 //                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
@@ -757,9 +746,10 @@ void exec386_dynarec(int cycs)
 
                                                 if (!cpu_state.abrt)
                                                 {
-                                                        trap = cpu_state.flags & T_FLAG;
-                                                        opcode = fetchdat & 0xFF;
+                                                        uint8_t opcode = fetchdat & 0xFF;
                                                         fetchdat >>= 8;
+
+                                                        trap = cpu_state.flags & T_FLAG;
 
 //                                                        if (output == 3)
 //                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
@@ -885,7 +875,6 @@ void exec386_dynarec(int cycs)
                                                 addr=temp<<2;
                                                 cpu_state.flags &= ~I_FLAG;
                                                 cpu_state.flags &= ~T_FLAG;
-                                                oxpc=cpu_state.pc;
                                                 cpu_state.pc=readmemw(0,addr);
                                                 loadcs(readmemw(0,addr+2));
                                         }

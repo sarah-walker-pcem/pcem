@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "ibm.h"
-#include "386.h"
 #include "x86.h"
 #include "x87.h"
 #include "mem.h"
@@ -20,7 +19,10 @@ extern int codegen_flags_changed;
 
 extern int nmi_enable;
 
-int inscounts[256];
+uint32_t use32;
+int stack32;
+int optype;
+
 uint32_t oldpc2;
 
 int trap;
@@ -31,7 +33,6 @@ extern int cpl_override;
 
 int has_fpu;
 extern int fpucount;
-uint16_t rds;
 uint16_t ea_rseg;
 
 int is486;
@@ -42,9 +43,8 @@ int cgate32;
 uint8_t romext[32768];
 uint8_t *ram,*rom;
 
-uint32_t rmdat32;
-#define rmdat rmdat32
-#define fetchdat rmdat32
+uint32_t rmdat;
+
 uint32_t backupregs[16];
 extern int oddeven;
 int inttype;
@@ -53,9 +53,6 @@ int inttype;
 uint32_t oldecx;
 
 uint32_t *eal_r, *eal_w;
-
-uint16_t *mod1add[2][8];
-uint32_t *mod1seg[8];
 
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
@@ -245,10 +242,10 @@ dontprint=0;
                 fetchdat = fastreadl(cs + cpu_state.pc);
 
                 if (!cpu_state.abrt)
-                {               
-                        trap = cpu_state.flags & T_FLAG;
-                        opcode = fetchdat & 0xFF;
+                {
+                        uint8_t opcode = fetchdat & 0xFF;
                         fetchdat >>= 8;
+                        trap = cpu_state.flags & T_FLAG;
 
                         if (output == 3)
                         {
@@ -350,7 +347,6 @@ dontprint=0;
                                         addr = (temp << 2) + idt.base;
                                         cpu_state.flags &= ~I_FLAG;
                                         cpu_state.flags &= ~T_FLAG;
-                                        oxpc=cpu_state.pc;
                                         cpu_state.pc=readmemw(0,addr);
                                         loadcs(readmemw(0,addr+2));
 //                                        if (temp==0x76) pclog("INT to %04X:%04X\n",CS,pc);

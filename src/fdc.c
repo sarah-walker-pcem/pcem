@@ -70,7 +70,6 @@ typedef struct FDC
 static FDC fdc;
 
 void fdc_callback();
-int timetolive;
 //#define SECTORS 9
 int lastbyte=0;
 uint8_t disc_3f7;

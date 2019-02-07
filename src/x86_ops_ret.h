@@ -4,7 +4,6 @@
                         pmoderetf(0, stack_offset);             \
                         return 1;                               \
                 }                                               \
-                oxpc = cpu_state.pc;                            \
                 if (stack32)                                    \
                 {                                               \
                         cpu_state.pc = readmemw(ss, ESP);       \
@@ -26,7 +25,6 @@
                         pmoderetf(1, stack_offset);             \
                         return 1;                               \
                 }                                               \
-                oxpc = cpu_state.pc;                            \
                 if (stack32)                                    \
                 {                                               \
                         cpu_state.pc = readmeml(ss, ESP);       \
@@ -108,7 +106,6 @@ static int opIRET_286(uint32_t fetchdat)
         else
         {
                 uint16_t new_cs;
-                oxpc = cpu_state.pc;
                 if (stack32)
                 {
                         cpu_state.pc = readmemw(ss, ESP);
@@ -184,7 +181,6 @@ static int opIRET(uint32_t fetchdat)
                 else
                 {
                         uint16_t new_cs;
-                        oxpc = cpu_state.pc;
                         if (stack32)
                         {
                                 cpu_state.pc = readmemw(ss, ESP);
@@ -230,7 +226,6 @@ static int opIRETD(uint32_t fetchdat)
         else
         {
                 uint16_t new_cs;
-                oxpc = cpu_state.pc;
                 if (stack32)
                 {
                         cpu_state.pc = readmeml(ss, ESP);

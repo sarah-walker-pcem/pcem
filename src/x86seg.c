@@ -5,7 +5,7 @@
 #include "ibm.h"
 #include "mem.h"
 #include "x86.h"
-#include "386.h"
+#include "x86_flags.h"
 #include "386_common.h"
 #include "cpu.h"
 #include "config.h"
@@ -32,8 +32,6 @@ int intgatesize;
 void taskswitch286(uint16_t seg, uint16_t *segdat, int is32);
 void taskswitch386(uint16_t seg, uint16_t *segdat);
 
-int output;
-
 /*NOT PRESENT is INT 0B
   GPF is INT 0D*/
 
@@ -59,8 +57,6 @@ void x86abort(const char *format, ...)
         dumpregs();
         exit(-1);
 }
-
-uint8_t opcode2;
 
 static void seg_reset(x86seg *s)
 {
@@ -129,7 +125,6 @@ void x86_doabrt(int x86_abrt)
 
                 cpu_state.flags &= ~I_FLAG;
                 cpu_state.flags &= ~T_FLAG;
-                oxpc=cpu_state.pc;
                 cpu_state.pc=readmemw(0,addr);
                 loadcs(readmemw(0,addr+2));
                 return;
@@ -163,8 +158,6 @@ void x86_doabrt(int x86_abrt)
                         SP-=4;
                 }
         }
-//        ingpf = 0;
-//        abrt = gpf = 1;
 }
 void x86gpf(char *s, uint16_t error)
 {
@@ -343,7 +336,7 @@ int loadseg(uint16_t seg, x86seg *s)
                 {
                         if (addr>=ldt.limit)
                         {
-                                pclog("Bigger than LDT limit %04X %04X %02X %02X %02X\n",seg,ldt.limit, opcode, opcode2, 0/*rmdat*/);
+                                pclog("Bigger than LDT limit %04X %04X %02X\n",seg,ldt.limit, 0/*rmdat*/);
 //                                dumppic();
 //                                dumpregs();
 //                                exit(-1);
@@ -548,7 +541,7 @@ void loadcs(uint16_t seg)
                                 if ((seg&3)>CPL)
                                 {
                                         x86gpf(NULL,seg&~3);
-                                        pclog("loadcs RPL > CPL %04X %04X %i %02X\n",segdat[2],seg,CPL,opcode);
+                                        pclog("loadcs RPL > CPL %04X %04X %i\n",segdat[2],seg,CPL);
                                         return;
                                 }
                                 if (CPL != DPL)
@@ -592,7 +585,7 @@ void loadcs(uint16_t seg)
                         switch (segdat[2]&0xF00)
                         {
                                 default:
-                                pclog("Bad CS %02X %02X %i special descriptor %03X %04X\n",opcode,0/*rmdat*/,optype,segdat[2]&0xF00,seg);
+                                pclog("Bad CS %02X %i special descriptor %03X %04X\n",0/*rmdat*/,optype,segdat[2]&0xF00,seg);
                                 x86gpf(NULL,seg&~3);
                                 return;
                         }
@@ -615,7 +608,7 @@ void loadcs(uint16_t seg)
         }
 }
 
-void loadcsjmp(uint16_t seg, uint32_t oxpc)
+void loadcsjmp(uint16_t seg, uint32_t old_pc)
 {
         uint16_t segdat[4];
         uint32_t addr;
@@ -825,7 +818,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 case 0x100: /*286 Task gate*/
                                 case 0x900: /*386 Task gate*/
 //                                pclog("Task gate\n");
-                                cpu_state.pc=oxpc;
+                                cpu_state.pc = old_pc;
                                 optype=JMP;
                                 cpl_override=1;
                                 taskswitch286(seg,segdat,segdat[2]&0x800);
@@ -837,7 +830,7 @@ void loadcsjmp(uint16_t seg, uint32_t oxpc)
                                 return;
 
                                 default:
-                                pclog("Bad JMP CS %02X %02X %i special descriptor %03X %04X\n",opcode,0/*rmdat*/,optype,segdat[2]&0xF00,seg);
+                                pclog("Bad JMP CS %02X %i special descriptor %03X %04X\n",0/*rmdat*/,optype,segdat[2]&0xF00,seg);
                                 x86gpf(NULL,0);
                                 return;
 //                                dumpregs();
@@ -931,7 +924,7 @@ uint32_t POPL()
         return templ;
 }
 
-void loadcscall(uint16_t seg)
+void loadcscall(uint16_t seg, uint32_t old_pc)
 {
         uint16_t seg2;
         uint16_t segdat[4],segdat2[4],newss;
@@ -1337,7 +1330,7 @@ void loadcscall(uint16_t seg)
                                 case 0x100: /*286 Task gate*/
                                 case 0x900: /*386 Task gate*/
 //                                pclog("Task gate\n");
-                                cpu_state.pc=oxpc;
+                                cpu_state.pc = old_pc;
                                 cpl_override=1;
                                 taskswitch286(seg,segdat,segdat[2]&0x800);
                                 cpl_override=0;
@@ -2070,7 +2063,6 @@ void pmodeiret(int is32)
                         x86gpf(NULL,0);
                         return;
                 }
-                oxpc=cpu_state.pc;
                 if (is32)
                 {
                         newpc=POPL();
@@ -2128,7 +2120,6 @@ void pmodeiret(int is32)
                 cpl_override=0;
                 return;
         }
-        oxpc=cpu_state.pc;
         flagmask=0xFFFF;
         if (CPL) flagmask&=~0x3000;
         if (IOPL<CPL) flagmask&=~0x200;

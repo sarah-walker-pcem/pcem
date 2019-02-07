@@ -276,7 +276,6 @@ uint32_t dr[8];
 //#define IOPLV86 ((!(msw&1)) || (CPL<=IOPL))
 extern int cycles_lost;
 extern int is486;
-extern uint8_t opcode;
 extern int insc;
 extern int fpucount;
 extern float mips,flops;
