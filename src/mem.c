@@ -497,50 +497,6 @@ void writemembl(uint32_t addr, uint8_t val)
 //        else                          pclog("Bad writemembl %08X %02X  %04X:%08X\n", addr, val, CS, pc);
 }
 
-uint8_t readmemb386l(uint32_t addr)
-{
-        mem_logical_addr = addr;
-/*        if (readlookup2[mem_logical_addr >> 12] != 0xFFFFFFFF)
-        {
-                return ram[readlookup2[mem_logical_addr >> 12] + (mem_logical_addr & 0xFFF)];
-        }*/
-        
-        if (cr0 >> 31)
-        {
-                addr = mmutranslate_read(addr);
-                if (addr == 0xFFFFFFFF) return 0xFF;
-        }
-
-        addr &= rammask;
-
-        if (_mem_read_b[addr >> 14]) return _mem_read_b[addr >> 14](addr, _mem_priv_r[addr >> 14]);
-//        pclog("Bad readmemb386l %08X %04X:%08X\n", addr, CS, pc);
-        return 0xFF;
-}
-
-void writememb386l(uint32_t addr, uint8_t val)
-{
-        mem_logical_addr = addr;
-        if (page_lookup[addr>>12])
-        {
-                page_lookup[addr>>12]->write_b(addr, val, page_lookup[addr>>12]);
-                return;
-        }
-        if (cr0 >> 31)
-        {
-                addr = mmutranslate_write(addr);
-                if (addr == 0xFFFFFFFF) return;
-        }
-
-        addr &= rammask;
-
-/*        if (addr >= 0xa0000 && addr < 0xc0000)
-           pclog("writemembl %08X %02X\n", addr, val);*/
-
-        if (_mem_write_b[addr >> 14]) _mem_write_b[addr >> 14](addr, val, _mem_priv_w[addr >> 14]);
-//        else                          pclog("Bad writememb386l %08X %02X %04X:%08X\n", addr, val, CS, pc);
-}
-
 uint16_t readmemwl(uint32_t addr)
 {
         mem_logical_addr = addr;
@@ -556,8 +512,7 @@ uint16_t readmemwl(uint32_t addr)
                                 if (mmutranslate_read(addr)   == 0xffffffff) return 0xffff;
                                 if (mmutranslate_read(addr+1) == 0xffffffff) return 0xffff;
                         }
-                        if (is386) return readmemb386l(addr)|(readmemb386l(addr+1)<<8);
-                        else       return readmembl(addr)|(readmembl(addr+1)<<8);
+                        return readmembl(addr)|(readmembl(addr+1)<<8);
                 }
                 else if (readlookup2[addr >> 12] != -1)
                         return *(uint16_t *)(readlookup2[addr >> 12] + addr);
@@ -594,16 +549,8 @@ void writememwl(uint32_t addr, uint16_t val)
                                 if (mmutranslate_write(addr)   == 0xffffffff) return;
                                 if (mmutranslate_write(addr+1) == 0xffffffff) return;
                         }
-                        if (is386)
-                        {
-                                writememb386l(addr,val);
-                                writememb386l(addr+1,val>>8);
-                        }
-                        else
-                        {
-                                writemembl(addr,val);
-                                writemembl(addr+1,val>>8);
-                        }
+                        writemembl(addr,val);
+                        writemembl(addr+1,val>>8);
                         return;
                 }
                 else if (writelookup2[addr >> 12] != -1)

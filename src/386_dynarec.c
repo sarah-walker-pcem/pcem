@@ -428,7 +428,7 @@ int checkio(int port)
 //        pclog("CheckIO %04X %01X %01X %02X %04X %04X %08X ",CS,CPL,IOPL,port,t,t+(port>>3),tr.base+t+(port>>3));
         if ((t+(port>>3))>tr.limit) return 1;
         cpl_override = 1;
-        d = readmemb386l(tr.base + t + (port >> 3));
+        d = readmembl(tr.base + t + (port >> 3));
 //        d=readmemb(tr.base,t+(port>>3));
         cpl_override = 0;
 //      pclog("%02X %02X\n",d,d&(1<<(port&7)));

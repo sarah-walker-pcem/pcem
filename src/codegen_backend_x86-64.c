@@ -71,7 +71,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
         * PUSH EAX
           PUSH EDX
           PUSH ECX
-          CALL readmemb386l
+          CALL readmembl
           POP ECX
           POP EDX
           POP EAX
@@ -117,7 +117,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 #endif
         if (size == 1 && !is_float)
         {
-                host_x86_CALL(block, (void *)readmemb386l);
+                host_x86_CALL(block, (void *)readmembl);
                 host_x86_MOVZX_REG_32_8(block, REG_ECX, REG_EAX);
         }
         else if (size == 2 && !is_float)
@@ -169,7 +169,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
         * PUSH EAX
           PUSH EDX
           PUSH ECX
-          CALL writememb386l
+          CALL writemembl
           POP ECX
           POP EDX
           POP EAX
@@ -227,7 +227,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
                 host_x86_MOV32_REG_REG(block, REG_ESI, REG_ECX); //data
 #endif
         if (size == 1)
-                host_x86_CALL(block, (void *)writememb386l);
+                host_x86_CALL(block, (void *)writemembl);
         else if (size == 2)
                 host_x86_CALL(block, (void *)writememwl);
         else if (size == 4)

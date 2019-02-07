@@ -529,7 +529,7 @@ void dumpregs()
         for (c=0;c<0x0050000;c++)
         {
                 cpu_state.abrt = 0;
-                putc(readmemb386l(c+0x80000000),f);
+                putc(readmembl(c+0x80000000),f);
         }
         fclose(f);
         pclog("Dumping done\n");        

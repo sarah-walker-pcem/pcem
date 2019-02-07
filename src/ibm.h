@@ -45,8 +45,6 @@ extern int mmu_perm;
 //void writememb(uint32_t addr, uint8_t val);
 uint8_t readmembl(uint32_t addr);
 void writemembl(uint32_t addr, uint8_t val);
-uint8_t readmemb386l(uint32_t addr);
-void writememb386l(uint32_t addr, uint8_t val);
 uint16_t readmemwl(uint32_t addr);
 void writememwl(uint32_t addr, uint16_t val);
 uint32_t readmemll(uint32_t addr);
