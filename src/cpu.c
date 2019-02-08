@@ -99,10 +99,10 @@ int cpu_waitstates;
 int cpu_cache_int_enabled, cpu_cache_ext_enabled;
 
 int is386;
+int is486;
+int CPUID;
 
 uint64_t tsc = 0;
-
-int is486;
 
 int timing_rr;
 int timing_mr, timing_mrl;

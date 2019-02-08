@@ -12,6 +12,7 @@
 #include "sound_pas16.h"
 #include "sound_sb_dsp.h"
 #include "timer.h"
+#include "x86.h"
 
 /*      Original PAS uses
                 2 x OPL2

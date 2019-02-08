@@ -143,6 +143,8 @@ void cyrix_write(uint16_t addr, uint8_t val, void *priv);
 uint8_t cyrix_read(uint16_t addr, void *priv);
 
 extern int is8086;
+extern int is486;
+extern int CPUID;
 
 void cpu_CPUID();
 void cpu_RDMSR();

@@ -2,6 +2,7 @@
   This chip was used as part of many 386 chipsets
   It controls memory addressing and shadowing*/
 #include "ibm.h"
+#include "x86.h"
 
 int nextreg6;
 uint8_t mcr22;

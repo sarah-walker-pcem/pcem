@@ -66,7 +66,6 @@ int start_in_fullscreen = 0;
 
 static int override_drive_a = 0, override_drive_b = 0;
 
-int CPUID;
 int vid_resize, vid_api;
 
 int cycles_lost = 0;

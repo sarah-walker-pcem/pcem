@@ -5,6 +5,7 @@
 #include "sound.h"
 #include "sound_opl.h"
 #include "sound_dbopl.h"
+#include "x86.h"
 
 /*Interfaces between PCem and the actual OPL emulator*/
 

@@ -4,6 +4,11 @@
 #include "x86_flags.h"
 #include "codegen.h"
 
+x86seg gdt, ldt, idt, tr;
+
+uint32_t cr2, cr3, cr4;
+uint32_t dr[8];
+
 uint32_t use32;
 int stack32;
 int optype;
@@ -22,6 +27,8 @@ int fpucount=0;
 
 uint16_t cpu_cur_status = 0;
 
+uint32_t pccache;
+uint8_t *pccache2;
 
 void x86_int(int num)
 {

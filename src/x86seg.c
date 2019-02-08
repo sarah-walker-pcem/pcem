@@ -1653,11 +1653,6 @@ void pmoderetf(int is32, uint16_t off)
         }
 }
 
-void restore_stack()
-{
-        ss=oldss; cpu_state.seg_ss.limit=oldsslimit;
-}
-
 void pmodeint(int num, int soft)
 {
         uint16_t segdat[4],segdat2[4],segdat3[4];

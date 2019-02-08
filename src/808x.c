@@ -40,28 +40,31 @@ int ins=0;
 
 int is8086=0;
 
-int nextcyc=0;
-int memcycs;
+static uint32_t oldds;
+uint32_t oldss;
+
+static int nextcyc=0;
+static int memcycs;
 
 static int cycdiff;
-void FETCHCOMPLETE();
+static void FETCHCOMPLETE();
 
 #define IRQTEST ((cpu_state.flags & I_FLAG) && (pic.pend&~pic.mask) && !noint)
 
-uint8_t readmemb(uint32_t a)
+static uint8_t readmemb(uint32_t a)
 {
         if (a!=(cs+cpu_state.pc)) memcycs+=4;
         if (readlookup2[(a)>>12]==-1) return readmembl(a);
         else return *(uint8_t *)(readlookup2[(a) >> 12] + (a));
 }
 
-uint8_t readmembf(uint32_t a)
+static uint8_t readmembf(uint32_t a)
 {
         if (readlookup2[(a)>>12]==-1) return readmembl(a);
         else return *(uint8_t *)(readlookup2[(a) >> 12] + (a));
 }
 
-uint16_t readmemw(uint32_t s, uint16_t a)
+static uint16_t readmemw(uint32_t s, uint16_t a)
 {
         if (a!=(cs+cpu_state.pc)) memcycs+=(8>>is8086);
         if ((readlookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF)) return readmemwl(s+a);
@@ -77,32 +80,28 @@ void refreshread() { /*pclog("Refreshread\n"); */FETCHCOMPLETE(); memcycs+=4; }
                     cpu_rm=rmdat&7;                   \
                     if (cpu_mod!=3) fetcheal(); }
 
-void writememb(uint32_t a, uint8_t v)
+static void writememb(uint32_t a, uint8_t v)
 {
         memcycs+=4;
         if (writelookup2[(a)>>12]==-1) writemembl(a,v);
         else *(uint8_t *)(writelookup2[a >> 12] + a) = v;
 }
-void writememw(uint32_t s, uint32_t a, uint16_t v)
+static void writememw(uint32_t s, uint32_t a, uint16_t v)
 {
         memcycs+=(8>>is8086);
         if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF) writememwl(s+a,v);
         else *(uint16_t *)(writelookup2[(s + a) >> 12] + s + a) = v;
 }
-void writememl(uint32_t s, uint32_t a, uint32_t v)
-{
-        if (writelookup2[((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF) writememll(s+a,v);
-        else *(uint32_t *)(writelookup2[(s + a) >> 12] + s + a) = v;
-}
 
 
 //#define readmemb(a) (((a)<0xA0000)?ram[a]:readmembl(a))
 
-int fetchcycles=0,memcycs,fetchclocks;
+static int fetchcycles=0,fetchclocks;
 
-uint8_t prefetchqueue[6];
-uint16_t prefetchpc;
-int prefetchw=0;
+static uint8_t prefetchqueue[6];
+static uint16_t prefetchpc;
+static int prefetchw=0;
+
 static inline uint8_t FETCH()
 {
         uint8_t temp;
@@ -187,7 +186,7 @@ static inline void FETCHADD(int c)
 //        if (fetchcycles>24) fetchcycles=24;
 }
 
-void FETCHCOMPLETE()
+static void FETCHCOMPLETE()
 {
 //        pclog("Fetchcomplete %i %i %i\n",fetchcycles&3,fetchcycles,prefetchw);
         if (!(fetchcycles&3)) return;
@@ -604,7 +603,6 @@ void resetx86()
         use32=0;
         cpu_cur_status = 0;
         stack32=0;
-        cpu_hasCX8 = 0;
 //        i86_Reset();
 //        cs=0xFFFF0;
         msw=0;
@@ -665,7 +663,6 @@ void softresetx86()
         cr4 = 0;
         cpu_state.eflags=0;
         cgate32=0;
-        cpu_hasCX8 = 0;
         if (AT)
         {
                 loadcs(0xF000);
@@ -845,7 +842,7 @@ int current_diff = 0;
   between the two frequencies, use fixed point arithmetic when updating TSC.*/
 static uint64_t tsc_frac = 0;
 
-void clockhardware()
+static void clockhardware()
 {
         int diff = cycdiff - cycles - current_diff;
         
@@ -864,7 +861,7 @@ static int takeint = 0;
 
 int firstrepcycle=1;
 
-void rep(int fv)
+static void rep(int fv)
 {
         uint8_t temp;
         int c=CX;

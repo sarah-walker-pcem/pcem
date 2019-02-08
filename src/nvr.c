@@ -11,6 +11,7 @@
 #include "model.h"
 #include "nmi.h"
 #include "t1000.h"
+#include "x86.h"
 
 int oldromset;
 int nvrmask=63;
