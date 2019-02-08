@@ -946,7 +946,7 @@ static int opCPUID(uint32_t fetchdat)
 
 static int opRDMSR(uint32_t fetchdat)
 {
-        if (cpu_hasMSR)
+        if (cpu_has_feature(CPU_FEATURE_MSR))
         {
                 cpu_RDMSR();
                 CLOCK_CYCLES(9);
@@ -959,7 +959,7 @@ static int opRDMSR(uint32_t fetchdat)
 
 static int opWRMSR(uint32_t fetchdat)
 {
-        if (cpu_hasMSR)
+        if (cpu_has_feature(CPU_FEATURE_MSR))
         {
                 cpu_WRMSR();
                 CLOCK_CYCLES(9);

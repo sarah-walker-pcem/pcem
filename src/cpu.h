@@ -114,13 +114,19 @@ extern int cpu_multi;
 /*Cyrix 5x86/6x86 only has data misalignment penalties when crossing 8-byte boundaries*/
 extern int cpu_cyrix_alignment;
 
-extern int cpu_hasrdtsc;
-extern int cpu_hasMSR;
-extern int cpu_hasMMX;
-extern int cpu_hasCR4;
-extern int cpu_hasVME;
-extern int cpu_hasCX8;
-extern int cpu_has3DNOW;
+#define CPU_FEATURE_RDTSC (1 << 0)
+#define CPU_FEATURE_MSR   (1 << 1)
+#define CPU_FEATURE_MMX   (1 << 2)
+#define CPU_FEATURE_CR4   (1 << 3)
+#define CPU_FEATURE_VME   (1 << 4)
+#define CPU_FEATURE_CX8   (1 << 5)
+#define CPU_FEATURE_3DNOW (1 << 6)
+
+extern uint32_t cpu_features;
+static int cpu_has_feature(int feature)
+{
+        return cpu_features & feature;
+}
 
 #define CR4_TSD  (1 << 2)
 #define CR4_DE   (1 << 3)
