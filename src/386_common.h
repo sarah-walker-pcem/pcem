@@ -21,17 +21,6 @@ int checkio(int port);
                                 } \
                         }
 
-#define checkio_perm(port) if (!IOPLp || (cpu_state.eflags&VM_FLAG)) \
-                        { \
-                                int tempi = checkio(port); \
-                                if (cpu_state.abrt) break; \
-                                if (tempi) \
-                                { \
-                                        x86gpf(NULL,0); \
-                                        break; \
-                                } \
-                        }
-
 #define SEG_CHECK_READ(seg)                             \
         do                                              \
         {                                               \
