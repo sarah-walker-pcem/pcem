@@ -123,7 +123,7 @@ extern int cpu_cyrix_alignment;
 #define CPU_FEATURE_3DNOW (1 << 6)
 
 extern uint32_t cpu_features;
-static int cpu_has_feature(int feature)
+static inline int cpu_has_feature(int feature)
 {
         return cpu_features & feature;
 }
