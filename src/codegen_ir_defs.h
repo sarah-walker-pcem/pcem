@@ -312,6 +312,8 @@
 
 #define UOP_MAX 0xc6
 
+#define UOP_INVALID 0xff
+
 #define UOP_MASK 0xffff
 
 typedef struct uop_t
@@ -338,7 +340,7 @@ typedef struct ir_data_t
         int wr_pos;
 } ir_data_t;
 
-static inline uop_t *uop_alloc(ir_data_t *ir)
+static inline uop_t *uop_alloc(ir_data_t *ir, uint32_t uop_type)
 {
         uop_t *uop;
         
@@ -353,7 +355,10 @@ static inline uop_t *uop_alloc(ir_data_t *ir)
         uop->src_reg_c = invalid_ir_reg;
         
         uop->jump_list_next = -1;
-        
+
+        if (uop_type & (UOP_TYPE_BARRIER | UOP_TYPE_ORDER_BARRIER))
+                codegen_reg_mark_as_required();
+
         return uop;
 }
 
@@ -366,7 +371,7 @@ static inline void uop_set_jump_dest(ir_data_t *ir, int jump_uop)
 
 static inline int uop_gen(uint32_t uop_type, ir_data_t *ir)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
 
@@ -375,7 +380,7 @@ static inline int uop_gen(uint32_t uop_type, ir_data_t *ir)
 
 static inline int uop_gen_reg_src1(uint32_t uop_type, ir_data_t *ir, int src_reg_a)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
         
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -385,7 +390,7 @@ static inline int uop_gen_reg_src1(uint32_t uop_type, ir_data_t *ir, int src_reg
 
 static inline void uop_gen_reg_src1_arg(uint32_t uop_type, ir_data_t *ir, int arg, int src_reg_a)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -393,7 +398,7 @@ static inline void uop_gen_reg_src1_arg(uint32_t uop_type, ir_data_t *ir, int ar
 
 static inline int uop_gen_reg_src1_imm(uint32_t uop_type, ir_data_t *ir, int src_reg, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg);
@@ -404,86 +409,86 @@ static inline int uop_gen_reg_src1_imm(uint32_t uop_type, ir_data_t *ir, int src
 
 static inline void uop_gen_reg_dst_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
         uop->imm_data = imm;
 }
 
 static inline void uop_gen_reg_dst_pointer(uint32_t uop_type, ir_data_t *ir, int dest_reg, void *p)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
         uop->p = p;
 }
 
 static inline void uop_gen_reg_dst_src1(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
 }
 
 static inline void uop_gen_reg_dst_src1_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
         uop->imm_data = imm;
 }
 
 static inline void uop_gen_reg_dst_src2(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
         uop->src_reg_b = codegen_reg_read(src_reg_b);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
 }
 
 static inline void uop_gen_reg_dst_src2_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
         uop->src_reg_b = codegen_reg_read(src_reg_b);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
         uop->imm_data = imm;
 }
 
 static inline void uop_gen_reg_dst_src3(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg_a, int src_reg_b, int src_reg_c)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
         uop->src_reg_b = codegen_reg_read(src_reg_b);
         uop->src_reg_c = codegen_reg_read(src_reg_c);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
 }
 
 static inline void uop_gen_reg_dst_src_imm(uint32_t uop_type, ir_data_t *ir, int dest_reg, int src_reg, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg);
-        uop->dest_reg_a = codegen_reg_write(dest_reg);
+        uop->dest_reg_a = codegen_reg_write(dest_reg, ir->wr_pos - 1);
         uop->imm_data = imm;
 }
 
 static inline int uop_gen_reg_src2(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -494,7 +499,7 @@ static inline int uop_gen_reg_src2(uint32_t uop_type, ir_data_t *ir, int src_reg
 
 static inline void uop_gen_reg_src2_imm(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -504,7 +509,7 @@ static inline void uop_gen_reg_src2_imm(uint32_t uop_type, ir_data_t *ir, int sr
 
 static inline void uop_gen_reg_src3(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b, int src_reg_c)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -514,7 +519,7 @@ static inline void uop_gen_reg_src3(uint32_t uop_type, ir_data_t *ir, int src_re
 
 static inline void uop_gen_reg_src3_imm(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b, int src_reg_c, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -525,7 +530,7 @@ static inline void uop_gen_reg_src3_imm(uint32_t uop_type, ir_data_t *ir, int sr
 
 static inline void uop_gen_imm(uint32_t uop_type, ir_data_t *ir, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
         
         uop->type = uop_type;
         uop->imm_data = imm;
@@ -533,7 +538,7 @@ static inline void uop_gen_imm(uint32_t uop_type, ir_data_t *ir, uint32_t imm)
 
 static inline void uop_gen_pointer(uint32_t uop_type, ir_data_t *ir, void *p)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
         
         uop->type = uop_type;
         uop->p = p;
@@ -541,7 +546,7 @@ static inline void uop_gen_pointer(uint32_t uop_type, ir_data_t *ir, void *p)
 
 static inline void uop_gen_pointer_imm(uint32_t uop_type, ir_data_t *ir, void *p, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
         
         uop->type = uop_type;
         uop->p = p;
@@ -550,7 +555,7 @@ static inline void uop_gen_pointer_imm(uint32_t uop_type, ir_data_t *ir, void *p
 
 static inline void uop_gen_reg_src_pointer(uint32_t uop_type, ir_data_t *ir, int src_reg_a, void *p)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -559,7 +564,7 @@ static inline void uop_gen_reg_src_pointer(uint32_t uop_type, ir_data_t *ir, int
 
 static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir, int src_reg_a, void *p, uint32_t imm)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);
@@ -569,7 +574,7 @@ static inline void uop_gen_reg_src_pointer_imm(uint32_t uop_type, ir_data_t *ir,
 
 static inline void uop_gen_reg_src2_pointer(uint32_t uop_type, ir_data_t *ir, int src_reg_a, int src_reg_b, void *p)
 {
-        uop_t *uop = uop_alloc(ir);
+        uop_t *uop = uop_alloc(ir, uop_type);
 
         uop->type = uop_type;
         uop->src_reg_a = codegen_reg_read(src_reg_a);

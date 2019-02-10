@@ -21,6 +21,8 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
         int jump_target_at_end = -1;
         int c;
 
+        codegen_reg_mark_as_required();
+        codegen_reg_process_dead_list(ir);
         block_write_data = codeblock_allocator_get_ptr(block->head_mem_block);
         block_pos = 0;
         codegen_backend_prologue(block);
@@ -44,6 +46,9 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                                 codegen_set_jump_dest(block, uop_dest->p);
                         }
                 }
+
+                if ((uop->type & UOP_MASK) == UOP_INVALID)
+                        continue;
 
                 if (uop->type & UOP_TYPE_PARAMS_REGS)
                 {

@@ -272,7 +272,36 @@ static inline int ireg_seg_limit_high(x86seg *seg)
 }
 
 extern uint8_t reg_last_version[IREG_COUNT];
-extern uint8_t reg_version_refcount[IREG_COUNT][256];
+
+/*This version of the register must be calculated, regardless of whether it is
+  apparently required or not. Do not optimise out.*/
+#define REG_FLAGS_REQUIRED (1 << 0)
+/*This register and the parent uOP have been optimised out.*/
+#define REG_FLAGS_DEAD     (1 << 1)
+
+typedef struct
+{
+        /*Refcount of pending reads on this register version*/
+        uint8_t refcount;
+        /*Flags*/
+        uint8_t flags;
+        /*uOP that generated this register version*/
+        uint16_t parent_uop;
+        /*Pointer to next register version in dead register list*/
+        uint16_t next;
+} reg_version_t;
+
+extern reg_version_t reg_version[IREG_COUNT][256];
+
+/*Head of dead register list; a list of register versions that are not used and
+  can be optimised out*/
+extern uint16_t reg_dead_list;
+
+static inline void add_to_dead_list(reg_version_t *regv, int reg, int version)
+{
+        regv->next = reg_dead_list;
+        reg_dead_list = version | (reg << 8);
+}
 
 typedef struct
 {
@@ -289,37 +318,50 @@ typedef uint16_t ir_host_reg_t;
 static inline ir_reg_t codegen_reg_read(int reg)
 {
         ir_reg_t ireg;
+        reg_version_t *version;
         
         if (IREG_GET_REG(reg) == IREG_INVALID)
                 fatal("codegen_reg_read - IREG_INVALID\n");
         
         ireg.reg = reg;
         ireg.version = reg_last_version[IREG_GET_REG(reg)];
-        reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version]++;
-        if (!reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version])
+        version = &reg_version[IREG_GET_REG(ireg.reg)][ireg.version];
+        version->flags = 0;
+        version->refcount++;
+        if (!version->refcount)
                 fatal("codegen_reg_read - refcount overflow\n");
-        else if (reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version] > REG_VERSION_MAX)
+        else if (version->refcount > REG_VERSION_MAX)
                 CPU_BLOCK_END();
-        
+//        pclog("codegen_reg_read: %i %i %i\n", reg & IREG_REG_MASK, ireg.version, reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version]);
         return ireg;
 }
 
-static inline ir_reg_t codegen_reg_write(int reg)
+static inline ir_reg_t codegen_reg_write(int reg, int uop_nr)
 {
         ir_reg_t ireg;
-
+        int last_version = reg_last_version[IREG_GET_REG(reg)];
+        reg_version_t *version;
+        
         if (IREG_GET_REG(reg) == IREG_INVALID)
                 fatal("codegen_reg_write - IREG_INVALID\n");
 
         ireg.reg = reg;
-        ireg.version = reg_last_version[IREG_GET_REG(reg)] + 1;
+        ireg.version = last_version + 1;
+        
+        if (IREG_GET_REG(reg) > IREG_EBX && last_version && !reg_version[IREG_GET_REG(reg)][last_version].refcount &&
+                        !(reg_version[IREG_GET_REG(reg)][last_version].flags & REG_FLAGS_REQUIRED))
+                add_to_dead_list(&reg_version[IREG_GET_REG(reg)][last_version], IREG_GET_REG(reg), last_version);
+        
         reg_last_version[IREG_GET_REG(reg)]++;
         if (!reg_last_version[IREG_GET_REG(reg)])
                 fatal("codegen_reg_write - version overflow\n");
         else if (reg_last_version[IREG_GET_REG(reg)] > REG_VERSION_MAX)
                 CPU_BLOCK_END();
-        reg_version_refcount[IREG_GET_REG(reg)][ireg.version] = 0;
-
+        version = &reg_version[IREG_GET_REG(reg)][ireg.version];
+        version->refcount = 0;
+        version->flags = 0;
+        version->parent_uop = uop_nr;
+//        pclog("codegen_reg_write: %i\n", reg & IREG_REG_MASK);
         return ireg;
 }
 
@@ -337,4 +379,6 @@ void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_
 ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx);
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg);
 
+void codegen_reg_mark_as_required();
+void codegen_reg_process_dead_list(struct ir_data_t *ir);
 #endif
