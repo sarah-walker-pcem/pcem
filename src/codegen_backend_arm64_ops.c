@@ -282,7 +282,7 @@ static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 static void codegen_allocate_new_block(codeblock_t *block)
 {
         /*Current block is full. Allocate a new block*/
-        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block);
+        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
         uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
 	uint32_t offset = (uintptr_t)new_ptr - (uintptr_t)&block_write_data[block_pos];
 

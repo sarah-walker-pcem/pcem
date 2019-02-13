@@ -82,7 +82,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 	  MOV W1, #0
 	  RET
 	* STP X29, X30, [SP, #-16]
-	  BL readmemb386l
+	  BL readmembl
 	  LDRB R1, cpu_state.abrt
 	  LDP X29, X30, [SP, #-16]
 	  RET
@@ -116,7 +116,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
 	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
 	if (size == 1)
-		host_arm64_call(block, (uintptr_t)readmemb386l);
+		host_arm64_call(block, (uintptr_t)readmembl);
 	else if (size == 2)
 		host_arm64_call(block, (uintptr_t)readmemwl);
 	else if (size == 4)
@@ -151,7 +151,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	  MOV W1, #0
 	  RET
 	* STP X29, X30, [SP, #-16]
-	  BL writememb386l
+	  BL writemembl
 	  LDRB R1, cpu_state.abrt
 	  LDP X29, X30, [SP, #-16]
 	  RET
@@ -189,7 +189,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	else if (size == 8)
 		host_arm64_FMOV_Q_D(block, REG_X1, REG_V_TEMP);
 	if (size == 1)
-		host_arm64_call(block, (uintptr_t)writememb386l);
+		host_arm64_call(block, (uintptr_t)writemembl);
 	else if (size == 2)
 		host_arm64_call(block, (uintptr_t)writememwl);
 	else if (size == 4)
@@ -301,7 +301,7 @@ void codegen_backend_init()
         block_current = 0;
         block_pos = 0;
         block = &codeblock[block_current];
-        block->head_mem_block = codegen_allocator_allocate(NULL);
+        block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
         block_write_data = block->data;
         build_loadstore_routines(block);
