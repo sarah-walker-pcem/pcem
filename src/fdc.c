@@ -9,6 +9,7 @@
 #include "io.h"
 #include "pic.h"
 #include "timer.h"
+#include "x86.h"
 
 static int fdc_reset_stat = 0;
 /*FDC*/
@@ -320,6 +321,8 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
 //        pclog("Write FDC %04X %02X %04X:%04X %i %02X %i rate=%i  %i\n",addr,val,cs>>4,pc,ins,fdc.st0,ins,fdc.rate, fdc.data_ready);
 	int drive;
 
+        cycles -= ISA_CYCLES(8);
+        
         switch (addr&7)
         {
                 case 1: return;
@@ -550,7 +553,7 @@ bad_command:
 //                                pclog("Got all params %02X\n", fdc.command);
                                 fdc.stat=0x30;
                                 discint=fdc.command&0x1F;
-        			timer_set_delay_u64(&fdc.timer, 1024 * TIMER_USEC);
+        			timer_set_delay_u64(&fdc.timer, 256 * TIMER_USEC);
 //                                fdc.drive = fdc.params[0] & 3;
                                 disc_drivesel = fdc.drive & 1;
                                 fdc_reset_stat = 0;
@@ -674,6 +677,9 @@ uint8_t fdc_read(uint16_t addr, void *priv)
 {
         uint8_t temp;
         int drive;
+        
+        cycles -= ISA_CYCLES(8);
+        
 //        /*if (addr!=0x3f4) */printf("Read FDC %04X %04X:%04X %04X %i %02X %02x %i ",addr,cs>>4,pc,BX,fdc.pos,fdc.st0,fdc.stat,ins);
         switch (addr&7)
         {
