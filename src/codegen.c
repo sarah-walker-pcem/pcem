@@ -692,7 +692,7 @@ generate_call:
 #ifdef DEBUG_EXTRA
         uop_LOG_INSTR(ir, opcode | (last_prefix << 8));
 #endif
-
+        codegen_accumulate_flush(ir);
         if (op_table == x86_dynarec_opcodes_3DNOW)
                 uop_MOV_IMM(ir, IREG_pc, next_pc);
         else
