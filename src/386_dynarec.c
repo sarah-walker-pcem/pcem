@@ -341,14 +341,6 @@ void exec386_dynarec(int cycs)
                                                 }
                                         }
 
-                                        if (valid_block && (block->flags & CODEBLOCK_IN_DIRTY_LIST))
-                                        {
-                                                block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
-                                                if (block->flags & CODEBLOCK_BYTE_MASK)
-                                                        block->flags |= CODEBLOCK_NO_IMMEDIATES;
-                                                else
-                                                        block->flags |= CODEBLOCK_BYTE_MASK;
-                                        }
                                         if (valid_block && (block->page_mask & *block->dirty_mask))
                                         {
                                                 codegen_check_flush(page, page->dirty_mask, phys_addr);
@@ -378,6 +370,14 @@ void exec386_dynarec(int cycs)
                                                         else if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
                                                                 block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
                                                 }
+                                        }
+                                        if (valid_block && (block->flags & CODEBLOCK_IN_DIRTY_LIST))
+                                        {
+                                                block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
+                                                if (block->flags & CODEBLOCK_BYTE_MASK)
+                                                        block->flags |= CODEBLOCK_NO_IMMEDIATES;
+                                                else
+                                                        block->flags |= CODEBLOCK_BYTE_MASK;
                                         }
                                         if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED) && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
                                         {
