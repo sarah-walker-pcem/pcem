@@ -529,6 +529,7 @@ uint32_t ropJ ## cond ## _8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, u
                 dest_addr &= 0xffff;                                                                                                    \
 	ropJ ## cond ## _common(block, ir, dest_addr);                                                                                  \
                                                                                                                                         \
+        codegen_mark_code_present(block, cs+op_pc, 1);                                                                                  \
 	return op_pc+1;                                                                                                                 \
 }                                                                                                                                       \
 uint32_t ropJ ## cond ## _16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)      \
@@ -538,6 +539,7 @@ uint32_t ropJ ## cond ## _16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, 
                                                                                                                                         \
         ropJ ## cond ## _common(block, ir, dest_addr);                                                                                  \
                                                                                                                                         \
+        codegen_mark_code_present(block, cs+op_pc, 2);                                                                                  \
 	return op_pc+2;                                                                                                                 \
 }                                                                                                                                       \
 uint32_t ropJ ## cond ## _32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)      \
@@ -547,6 +549,7 @@ uint32_t ropJ ## cond ## _32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, 
                                                                                                                                         \
         ropJ ## cond ## _common(block, ir, dest_addr);                                                                                  \
                                                                                                                                         \
+        codegen_mark_code_present(block, cs+op_pc, 4);                                                                                  \
 	return op_pc+4;                                                                                                                 \
 }
 
@@ -585,6 +588,7 @@ uint32_t ropJCXZ(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc+1;
 }
 
@@ -611,6 +615,7 @@ uint32_t ropLOOP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         uop_JMP(ir, codegen_exit_rout);
         uop_set_jump_dest(ir, jump_uop);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc+1;
 }
 
@@ -647,6 +652,7 @@ uint32_t ropLOOPE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc+1;
 }
 uint32_t ropLOOPNE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -682,5 +688,6 @@ uint32_t ropLOOPNE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc+1;
 }

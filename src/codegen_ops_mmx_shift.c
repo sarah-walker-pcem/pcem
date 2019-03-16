@@ -17,6 +17,7 @@ uint32_t ropPSxxW_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
         int shift = fastreadb(cs + op_pc + 1);
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         switch (op)
         {
                 case 0x10: /*PSRLW*/
@@ -33,6 +34,7 @@ uint32_t ropPSxxW_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 uint32_t ropPSxxD_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -42,6 +44,7 @@ uint32_t ropPSxxD_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
         int shift = fastreadb(cs + op_pc + 1);
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         switch (op)
         {
                 case 0x10: /*PSRLD*/
@@ -58,6 +61,7 @@ uint32_t ropPSxxD_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 uint32_t ropPSxxQ_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -67,6 +71,7 @@ uint32_t ropPSxxQ_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
         int shift = fastreadb(cs + op_pc + 1);
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         switch (op)
         {
                 case 0x10: /*PSRLQ*/
@@ -83,5 +88,6 @@ uint32_t ropPSxxQ_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }

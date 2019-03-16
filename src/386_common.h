@@ -1,3 +1,6 @@
+#ifndef _386_COMMON_H_
+#define _386_COMMON_H_
+
 #define readmemb(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1)?readmembl((s)+(a)): *(uint8_t *)(readlookup2[(uint32_t)((s)+(a))>>12] + (uint32_t)((s) + (a))) )
 #define readmemw(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 1))?readmemwl((s)+(a)):*(uint16_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
 #define readmeml(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (((s)+(a)) & 3))?readmemll((s)+(a)):*(uint32_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
@@ -128,6 +131,17 @@ static inline uint32_t fastreadl(uint32_t a)
         return val;
 }
 
+static inline void *get_ram_ptr(uint32_t a)
+{
+        if ((a >> 12) == pccache)
+                return &pccache2[a];
+        else
+        {
+                uint8_t *t = getpccache(a);
+                return &t[a];
+        }
+}
+
 static inline uint8_t getbyte()
 {
         cpu_state.pc++;
@@ -219,3 +233,5 @@ static inline void seteaq(uint64_t v)
 #define getwordf() ((uint16_t)(fetchdat)); cpu_state.pc+=2
 #define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
 #define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
+
+#endif

@@ -15,6 +15,7 @@ uint32_t ropPAND(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -32,13 +33,13 @@ uint32_t ropPAND(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         }
 
         return op_pc + 1;
-
 }
 uint32_t ropPANDN(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -56,13 +57,13 @@ uint32_t ropPANDN(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         }
 
         return op_pc + 1;
-
 }
 uint32_t ropPOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -80,13 +81,13 @@ uint32_t ropPOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
         }
 
         return op_pc + 1;
-
 }
 uint32_t ropPXOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -104,5 +105,4 @@ uint32_t ropPXOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         }
 
         return op_pc + 1;
-
 }

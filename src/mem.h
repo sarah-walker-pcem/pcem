@@ -112,6 +112,13 @@ mem_mapping_t bios_high_mapping[8];
 extern mem_mapping_t ram_high_mapping;
 extern mem_mapping_t ram_remapped_mapping;
 
+extern uint64_t *byte_dirty_mask;
+extern uint64_t *byte_code_present_mask;
+
+#define PAGE_BYTE_MASK_SHIFT 6
+#define PAGE_BYTE_MASK_OFFSET_MASK 63
+#define PAGE_BYTE_MASK_MASK  63
+
 #define EVICT_NOT_IN_LIST ((uint32_t)-1)
 typedef struct page_t
 {
@@ -121,14 +128,17 @@ typedef struct page_t
         
         uint8_t *mem;
         
-        uint16_t block[4], block_2[4];
+        uint16_t block, block_2;
         
         /*Head of codeblock tree associated with this page*/
         uint16_t head;
         
-        uint64_t code_present_mask[4], dirty_mask[4];
+        uint64_t code_present_mask, dirty_mask;
         
         uint32_t evict_prev, evict_next;
+        
+        uint64_t *byte_dirty_mask;
+        uint64_t *byte_code_present_mask;
 } page_t;
 
 extern page_t *pages;

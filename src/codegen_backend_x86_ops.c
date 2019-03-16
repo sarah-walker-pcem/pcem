@@ -788,6 +788,23 @@ void host_x86_MOVSX_REG_32_16(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte3(block, 0x0f, 0xbf, 0xc0 | (dst_reg << 3) | src_reg); /*MOVSX dst_reg, src_reg*/
 }
 
+void host_x86_MOVZX_REG_ABS_16_8(codeblock_t *block, int dst_reg, void *p)
+{
+        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+
+        if (offset >= -128 && offset < 127)
+        {
+                codegen_alloc_bytes(block, 5);
+                codegen_addbyte(block, 0x66);
+                codegen_addbyte4(block, 0x0f, 0xb6, 0x45 | (dst_reg << 3), offset); /*MOV dest_reg, [EBP+offset]*/
+        }
+        else
+        {
+                codegen_alloc_bytes(block, 8);
+                codegen_addbyte4(block, 0x66, 0x0f, 0xb6, 0x05 | (dst_reg << 3)); /*MOVZX dst_reg, [p]*/
+                codegen_addlong(block, (uint32_t)p);
+        }
+}
 void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p)
 {
         int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);

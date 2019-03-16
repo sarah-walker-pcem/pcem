@@ -11,6 +11,7 @@
 #include "codegen_backend.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
+#include "codegen_ops_helpers.h"
 
 int has_ea;
 
@@ -85,6 +86,7 @@ void codegen_check_seg_write(codeblock_t *block, ir_data_t *ir, x86seg *seg)
 
 static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
 {
+        uint32_t old_pc = *op_pc;
 //        pclog("codegen - mod=%i rm=%i reg=%i fetchdat=%08x\n", cpu_mod, cpu_rm, cpu_reg, fetchdat);
         if (!cpu_mod && cpu_rm == 6)
         {
@@ -145,12 +147,16 @@ static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                 }
         }
         
+        codegen_mark_code_present(ir->block, cs+old_pc, (*op_pc)-old_pc);
         return op_ea_seg;
 }
 
 static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, int stack_offset)
 {
+        codeblock_t *block = ir->block;
+        uint32_t old_pc = (*op_pc) + 1;
         uint32_t new_eaaddr;
+        int extra_bytes = 0;
 
         if (cpu_rm == 4)
         {
@@ -162,13 +168,23 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                         case 0:
                         if ((sib & 7) == 5)
                         {
-                                new_eaaddr = fastreadl(cs + (*op_pc) + 1);
-                                uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
+                                if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+                                {
+                                        LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_eaaddr, cs + (*op_pc) + 1);
+                                        extra_bytes = 1;
+                                }
+                                else
+                                {
+                                        new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                                        uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
+                                        extra_bytes = 5;
+                                }
                                 (*op_pc) += 4;
                         }
                         else
                         {
                                 uop_MOV(ir, IREG_eaaddr, sib & 7);
+                                extra_bytes = 1;
                         }
                         break;
                         case 1:
@@ -176,12 +192,22 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                         uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
                         uop_ADD(ir, IREG_eaaddr, IREG_eaaddr, sib & 7);
                         (*op_pc)++;
+                        extra_bytes = 2;
                         break;
                         case 2:
-                        new_eaaddr = fastreadl(cs + (*op_pc) + 1);
-                        uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
-                        uop_ADD(ir, IREG_eaaddr, IREG_eaaddr, sib & 7);
+                        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+                        {
+                                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_eaaddr, cs + (*op_pc) + 1);
+                                extra_bytes = 1;
+                        }
+                        else
+                        {
+                                new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                                uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
+                                extra_bytes = 5;
+                        }
                         (*op_pc) += 4;
+                        uop_ADD(ir, IREG_eaaddr, IREG_eaaddr, sib & 7);
                         break;
                 }
                 if (stack_offset && (sib & 7) == 4 && (cpu_mod || (sib & 7) != 5)) /*ESP*/
@@ -215,29 +241,54 @@ static x86seg *codegen_generate_ea_32_long(ir_data_t *ir, x86seg *op_ea_seg, uin
         {
                 if (!cpu_mod && cpu_rm == 5)
                 {
-                        new_eaaddr = fastreadl(cs + (*op_pc) + 1);
-                        uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
-                        (*op_pc) += 4;
-                        return op_ea_seg;
-                }
-                uop_MOV(ir, IREG_eaaddr, cpu_rm);
-                if (cpu_mod)
-                {
-                        if (cpu_rm == 5 && !op_ssegs)
-                                op_ea_seg = &cpu_state.seg_ss;
-                        if (cpu_mod == 1)
+                        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
                         {
-                                uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, (uint32_t)(int8_t)(fetchdat >> 8));
-                                (*op_pc)++;
+                                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_eaaddr, cs + (*op_pc) + 1);
                         }
                         else
                         {
                                 new_eaaddr = fastreadl(cs + (*op_pc) + 1);
-                                uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, new_eaaddr);
-                                (*op_pc) += 4;
+                                uop_MOV_IMM(ir, IREG_eaaddr, new_eaaddr);
+                                extra_bytes = 4;
+                        }
+                        
+                        (*op_pc) += 4;
+                }
+                else
+                {
+                        uop_MOV(ir, IREG_eaaddr, cpu_rm);
+                        if (cpu_mod)
+                        {
+                                if (cpu_rm == 5 && !op_ssegs)
+                                        op_ea_seg = &cpu_state.seg_ss;
+                                if (cpu_mod == 1)
+                                {
+                                        uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, (uint32_t)(int8_t)(fetchdat >> 8));
+                                        (*op_pc)++;
+                                        extra_bytes = 1;
+                                }
+                                else
+                                {
+                                        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+                                        {
+                                                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_temp0, cs + (*op_pc) + 1);
+                                                uop_ADD(ir, IREG_eaaddr, IREG_eaaddr, IREG_temp0);
+                                        }
+                                        else
+                                        {
+                                                new_eaaddr = fastreadl(cs + (*op_pc) + 1);
+                                                uop_ADD_IMM(ir, IREG_eaaddr, IREG_eaaddr, new_eaaddr);
+                                                extra_bytes = 4;
+                                        }
+                                        (*op_pc) += 4;
+                                }
                         }
                 }
         }
+
+        if (extra_bytes)
+                codegen_mark_code_present(ir->block, cs+old_pc, extra_bytes);
+                
         return op_ea_seg;
 }
 
@@ -583,6 +634,7 @@ generate_call:
                         opcode_mask = 0xff;
                 }
         }
+        codegen_mark_code_present(block, cs+old_pc, (op_pc - old_pc) - pc_off);
 //        pclog("%04x:%08x : %02x\n", CS, new_pc, opcode);
         if (recomp_op_table && recomp_op_table[(opcode | op_32) & recomp_opcode_mask])
         {
@@ -654,6 +706,7 @@ generate_call:
                 uop_MOV_IMM(ir, IREG_ssegs, op_ssegs);
         uop_LOAD_FUNC_ARG_IMM(ir, 0, fetchdat);
         uop_CALL_INSTRUCTION_FUNC(ir, op);
+        codegen_mark_code_present(block, cs+cpu_state.pc, 8);
 
         last_op_32 = op_32;
         last_op_ea_seg = op_ea_seg;

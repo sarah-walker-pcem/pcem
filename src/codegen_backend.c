@@ -55,9 +55,22 @@ uint32_t instr_counts[256*256];
 
 static uint16_t block_free_list;
 static void delete_block(codeblock_t *block);
+static void delete_dirty_block(codeblock_t *block);
+
+/*Temporary list of code blocks that have recently been evicted. This allows for
+  some historical state to be kept when a block is the target of self-modifying
+  code.
+  
+  The size of this list is limited to DIRTY_LIST_MAX_SIZE blocks. When this is
+  exceeded the oldest entry will be moved to the free list.*/
+static uint16_t block_dirty_list_head, block_dirty_list_tail;
+static int dirty_list_size = 0;
+#define DIRTY_LIST_MAX_SIZE 64
 
 static void block_free_list_add(codeblock_t *block)
 {
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                fatal("block_free_list_add: block=%p in dirty list\n", block);
         if (block_free_list)
                 block->next = block_free_list;
         else
@@ -67,23 +80,92 @@ static void block_free_list_add(codeblock_t *block)
 //        pclog("block_free_list_add: %p %p\n", block, block->next);
 }
 
+static void block_dirty_list_add(codeblock_t *block)
+{
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                fatal("block_dirty_list_add: block=%p already in dirty list\n", block);
+//        pclog("block_dirty_list_add: block=%i size=%i %i head=%i tail=%i\n", get_block_nr(block), dirty_list_size, dirty_list_check_size(), block_dirty_list_head, block_dirty_list_tail);
+        if (block_dirty_list_head != BLOCK_INVALID)
+        {
+                codeblock_t *old_head = &codeblock[block_dirty_list_head];
+                
+                block->next = block_dirty_list_head;
+                block->prev = BLOCK_INVALID;
+                block_dirty_list_head = old_head->prev = get_block_nr(block);
+//                pclog("  next=%p,%i prev=%i\n", old_head, block->next, old_head->prev);
+        }
+        else
+        {
+                /*List empty*/
+                block->prev = block->next = BLOCK_INVALID;
+                block_dirty_list_head = block_dirty_list_tail = get_block_nr(block);
+        }
+        block->flags |= CODEBLOCK_IN_DIRTY_LIST;
+//        pclog("  block_dirty_list_add: %p flags = %x\n", block, block->flags);
+        dirty_list_size++;
+        if (dirty_list_size > DIRTY_LIST_MAX_SIZE)
+        {
+                /*Evict oldest block to the free list*/
+                codeblock_t *evict_block = &codeblock[block_dirty_list_tail];
+
+                if (!(evict_block->flags & CODEBLOCK_IN_DIRTY_LIST))
+                        fatal("block_dirty_list_add: evict_block=%p %x %x not in dirty list\n", evict_block, evict_block->phys, evict_block->flags);
+                if (!block_dirty_list_tail)
+                        fatal("block_dirty_list_add - !block_dirty_list_tail\n");
+                if (evict_block->prev == BLOCK_INVALID)
+                        fatal("block_dirty_list_add - evict_block->prev == BLOCK_INVALID\n");
+
+                block_dirty_list_tail = evict_block->prev;
+                codeblock[evict_block->prev].next = BLOCK_INVALID;
+
+                dirty_list_size--;
+                evict_block->flags &= ~CODEBLOCK_IN_DIRTY_LIST;
+//                pclog("  block_dirty_list_add: %p flags = %x\n", evict_block, evict_block->flags);
+                delete_dirty_block(evict_block);
+        }
+        
+//        pclog("block_free_list_add: %p %p\n", block, block->next);
+}
+
+static void block_dirty_list_remove(codeblock_t *block)
+{
+        codeblock_t *prev_block = &codeblock[block->prev];
+        codeblock_t *next_block = &codeblock[block->next];
+
+        if (!(block->flags & CODEBLOCK_IN_DIRTY_LIST))
+                fatal("block_dirty_list_remove: block=%p not in dirty list\n", block);
+
+        /*Is block head of list*/
+        if (block->prev == BLOCK_INVALID)
+                block_dirty_list_head = block->next;
+        else
+                prev_block->next = block->next;
+
+        /*Is block tail of list?*/
+        if (block->next == BLOCK_INVALID)
+                block_dirty_list_tail = block->prev;
+        else
+                next_block->prev = block->prev;
+
+        dirty_list_size--;
+        if (dirty_list_size < 0)
+                fatal("remove - dirty_list_size < 0!\n");
+        block->flags &= ~CODEBLOCK_IN_DIRTY_LIST;
+//        pclog("  block_dirty_list_remove: %p flags = %x\n", block, block->flags);
+}
+
 int codegen_purge_purgable_list()
 {
         if (purgable_page_list_head)
         {
                 page_t *page = &pages[purgable_page_list_head];
-                int c;
-//                pclog("Purge page %08x\n", purgable_page_list_head);
-                for (c = 0; c < 4; c++)
+
+                if (page->code_present_mask & page->dirty_mask)
                 {
-//                        pclog(" Check %016llx %016llx\n", page->code_present_mask[c], page->dirty_mask[c]);
-                        if (page->code_present_mask[c] & page->dirty_mask[c])
-                        {
-                                codegen_check_flush(page, page->dirty_mask[c], (purgable_page_list_head << 12) + (c << 10));
-//                                pclog(" Check %08x %i\n", (purgable_page_list_head << 12) + (c << 10), block_free_list);
-                                if (block_free_list)
-                                        return 1;
-                        }
+                        codegen_check_flush(page, page->dirty_mask, purgable_page_list_head << 12);
+
+                        if (block_free_list)
+                                return 1;
                 }
         }
         return 0;
@@ -95,6 +177,27 @@ static codeblock_t *block_free_list_get()
 
         while (!block_free_list)
         {
+                /*Free list is empty, check the dirty list*/
+                if (block_dirty_list_tail)
+                {
+                        if (dirty_list_size <= 0)
+                                fatal("get - dirty_list_size <= 0!\n");
+
+                        /*Reuse oldest block*/
+                        block = &codeblock[block_dirty_list_tail];
+
+//        pclog("block_free_list_get: remove block=%p size=%i\n", block, dirty_list_size);
+                        block_dirty_list_tail = block->prev;
+                        if (block->prev == BLOCK_INVALID)
+                                block_dirty_list_head = BLOCK_INVALID;
+                        else
+                                codeblock[block->prev].next = BLOCK_INVALID;
+                        dirty_list_size--;
+                        block->flags &= ~CODEBLOCK_IN_DIRTY_LIST;
+                        delete_dirty_block(block);
+                        block_free_list = get_block_nr(block);
+                        break;
+                }
                 /*Free list is empty - free up a block*/
                 if (!codegen_purge_purgable_list())
                         codegen_delete_random_block(0);
@@ -103,6 +206,7 @@ static codeblock_t *block_free_list_get()
         block = &codeblock[block_free_list];
         block_free_list = block->next;
         block->flags &= ~CODEBLOCK_IN_FREE_LIST;
+//        pclog("  block_free_list_get: %p flags = %x\n", block, block->flags);
         block->next = 0;
 //        pclog("block_free_list_get: %p  %p\n", block, block_free_list);
         return block;
@@ -118,6 +222,8 @@ void codegen_init()
         block_free_list = 0;
         for (c = 0; c < BLOCK_SIZE; c++)
                 block_free_list_add(&codeblock[c]);
+        block_dirty_list_head = block_dirty_list_tail = 0;
+        dirty_list_size = 0;
 #ifdef DEBUG_EXTRA
         memset(instr_counts, 0, sizeof(instr_counts));
 #endif
@@ -200,22 +306,23 @@ void dump_block()
 
 static void add_to_block_list(codeblock_t *block)
 {
-        uint16_t block_prev_nr = pages[block->phys >> 12].block[(block->phys >> 10) & 3];
+        uint16_t block_prev_nr = pages[block->phys >> 12].block;
         uint16_t block_nr = get_block_nr(block);
+//pclog("Add to block list %p %08x %llx %x\n", block, block->phys, block->page_mask2, block->flags);
 
         if (!block->page_mask)
-                fatal("add_to_block_list - mask = 0\n");
+                fatal("add_to_block_list - mask = 0 %llx %llx\n", block->page_mask,block->page_mask2);
 
         if (block_prev_nr)
         {
                 block->next = block_prev_nr;
                 codeblock[block_prev_nr].prev = block_nr;
-                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block_nr;
+                pages[block->phys >> 12].block = block_nr;
         }
         else
         {
                 block->next = BLOCK_INVALID;
-                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block_nr;
+                pages[block->phys >> 12].block = block_nr;
         }
 
         if (block->next)
@@ -226,26 +333,31 @@ static void add_to_block_list(codeblock_t *block)
         
         if (block->page_mask2)
         {
-                block_prev_nr = pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3];
+                block->flags |= CODEBLOCK_HAS_PAGE2;
+                
+                block_prev_nr = pages[block->phys_2 >> 12].block_2;
 
                 if (block_prev_nr)
                 {
                         block->next_2 = block_prev_nr;
                         codeblock[block_prev_nr].prev_2 = block_nr;
-                        pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block_nr;
+                        pages[block->phys_2 >> 12].block_2 = block_nr;
                 }
                 else
                 {
                         block->next_2 = BLOCK_INVALID;
-                        pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block_nr;
+                        pages[block->phys_2 >> 12].block_2 = block_nr;
                 }
         }
+//        pclog("  add_to_block_list: %p flags = %x\n", block, block->flags);
 }
 
 static void remove_from_block_list(codeblock_t *block, uint32_t pc)
 {
         if (!block->page_mask)
                 return;
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                fatal("remove_from_block_list: in dirty list\n");
 
         if (block->prev)
         {
@@ -255,18 +367,21 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
         }
         else
         {
-                pages[block->phys >> 12].block[(block->phys >> 10) & 3] = block->next;
+                pages[block->phys >> 12].block = block->next;
                 if (block->next)
                         codeblock[block->next].prev = BLOCK_INVALID;
                 else
                         mem_flush_write_page(block->phys, 0);
         }
-        if (!block->page_mask2)
+
+        if (!(block->flags & CODEBLOCK_HAS_PAGE2))
         {
                 if (block->prev_2 || block->next_2)
-                        fatal("Invalid block_2\n");
+                        fatal("Invalid block_2 %x %p %08x\n", block->flags, block, block->phys);
                 return;
         }
+        block->flags &= ~CODEBLOCK_HAS_PAGE2;
+//        pclog("  remove_from_block_list: %p flags = %x\n", block, block->flags);
 
         if (block->prev_2)
         {
@@ -277,12 +392,28 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
         else
         {
 //                pclog(" pages.block_2=%p 3 %p %p\n", (void *)block->next_2, (void *)block, (void *)pages[block->phys_2 >> 12].block_2);
-                pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3] = block->next_2;
+                pages[block->phys_2 >> 12].block_2 = block->next_2;
                 if (block->next_2)
                         codeblock[block->next_2].prev_2 = BLOCK_INVALID;
                 else
                         mem_flush_write_page(block->phys_2, 0);
         }
+}
+
+static void invalidate_block(codeblock_t *block)
+{
+        uint32_t old_pc = block->pc;
+
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                fatal("invalidate_block: already in dirty list\n");
+        if (block->pc == BLOCK_PC_INVALID)
+                fatal("Invalidating deleted block\n");
+                
+        remove_from_block_list(block, old_pc);
+        block_dirty_list_add(block);
+        if (block->head_mem_block)
+                codegen_allocator_free(block->head_mem_block);
+        block->head_mem_block = NULL;
 }
 
 static void delete_block(codeblock_t *block)
@@ -297,10 +428,26 @@ static void delete_block(codeblock_t *block)
         block->pc = BLOCK_PC_INVALID;
 
         codeblock_tree_delete(block);
-        remove_from_block_list(block, old_pc);
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                block_dirty_list_remove(block);
+        else
+                remove_from_block_list(block, old_pc);
         if (block->head_mem_block)
                 codegen_allocator_free(block->head_mem_block);
         block->head_mem_block = NULL;
+        block_free_list_add(block);
+}
+
+static void delete_dirty_block(codeblock_t *block)
+{
+        if (block == &codeblock[codeblock_hash[HASH(block->phys)]])
+                codeblock_hash[HASH(block->phys)] = BLOCK_INVALID;
+
+        if (block->pc == BLOCK_PC_INVALID)
+                fatal("Deleting deleted block\n");
+        block->pc = BLOCK_PC_INVALID;
+
+        codeblock_tree_delete(block);
         block_free_list_add(block);
 }
 
@@ -332,16 +479,19 @@ void codegen_delete_random_block(int required_mem_block)
 
 void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
 {
-        uint16_t block_nr = page->block[(phys_addr >> 10) & 3];
+        uint16_t block_nr = page->block;
+        int remove_from_evict_list = 0;
+        int c;
 
         while (block_nr)
         {
                 codeblock_t *block = &codeblock[block_nr];
                 uint16_t next_block = block->next;
                 
-                if (mask & block->page_mask)
+                if (*block->dirty_mask & block->page_mask)
                 {
-                        delete_block(block);
+//                        pclog("Delete block from codegen_check_flush %08x %08x  %016llx %016llx %016llx  %02x\n", phys_addr, block->pc, *block->dirty_mask, block->page_mask, *block->dirty_mask & block->page_mask, block->flags);
+                        invalidate_block(block);
                         cpu_recomp_evicted++;
                 }
                 if (block_nr == next_block)
@@ -349,16 +499,17 @@ void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
                 block_nr = next_block;
         }
 
-        block_nr = page->block_2[(phys_addr >> 10) & 3];
+        block_nr = page->block_2;
         
         while (block_nr)
         {
                 codeblock_t *block = &codeblock[block_nr];
                 uint16_t next_block = block->next_2;
-                
-                if (mask & block->page_mask2)
+
+                if (*block->dirty_mask2 & block->page_mask2)
                 {
-                        delete_block(block);
+//                        pclog("Delete block from codegen_check_flush2 %08x %08x\n", phys_addr, block->pc);*/
+                        invalidate_block(block);
                         cpu_recomp_evicted++;
                 }
                 if (block_nr == next_block)
@@ -366,13 +517,19 @@ void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
                 block_nr = next_block;
         }
         
-        page->code_present_mask[(phys_addr >> 10) & 3] &= ~mask;
-        page->dirty_mask[(phys_addr >> 10) & 3] &= ~mask;
+        if (page->code_present_mask & page->dirty_mask)
+                remove_from_evict_list = 1;
+        page->code_present_mask &= ~page->dirty_mask;
+        page->dirty_mask = 0;
         
-        if (!(page->code_present_mask[0] & page->dirty_mask[0]) &&
-            !(page->code_present_mask[1] & page->dirty_mask[1]) &&
-            !(page->code_present_mask[2] & page->dirty_mask[2]) &&
-            !(page->code_present_mask[3] & page->dirty_mask[3]))
+        for (c = 0; c < 64; c++)
+        {
+                if (page->byte_code_present_mask[c] & page->byte_dirty_mask[c])
+                        remove_from_evict_list = 0;
+                page->byte_code_present_mask[c] &= ~page->byte_dirty_mask[c];
+                page->byte_dirty_mask[c] = 0;
+        }
+        if (remove_from_evict_list)
                 page_remove_from_evict_list(page);
 }
 
@@ -380,10 +537,9 @@ void codegen_block_init(uint32_t phys_addr)
 {
         codeblock_t *block;
         page_t *page = &pages[phys_addr >> 12];
-        
-        if (!page->block[(phys_addr >> 10) & 3])
-                mem_flush_write_page(phys_addr, cs+cpu_state.pc);
 
+        if (!page->block)
+                mem_flush_write_page(phys_addr, cs+cpu_state.pc);
         block = block_free_list_get();
         if (!block)
                 fatal("codegen_block_init: block_free_list_get() returned NULL\n");
@@ -396,16 +552,17 @@ void codegen_block_init(uint32_t phys_addr)
         block->pc = cs + cpu_state.pc;
         block->_cs = cs;
         block->phys = phys_addr;
-        block->dirty_mask = &page->dirty_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK];
+        block->dirty_mask = &page->dirty_mask;
         block->dirty_mask2 = NULL;
         block->next = block->prev = BLOCK_INVALID;
         block->next_2 = block->prev_2 = BLOCK_INVALID;
-        block->page_mask = 0;
+        block->page_mask = block->page_mask2 = 0;
         block->flags = CODEBLOCK_STATIC_TOP;
+//        pclog("  block_init: %p flags = %x\n", block, block->flags);
         block->status = cpu_cur_status;
         
         recomp_page = block->phys & ~0xfff;
-        
+//        pclog("codegen_block_init: %08x\n", block->pc);
         codeblock_tree_add(block);
 }
 
@@ -419,8 +576,8 @@ ir_data_t *codegen_get_ir_data()
 void codegen_block_start_recompile(codeblock_t *block)
 {
         page_t *page = &pages[block->phys >> 12];
-        
-        if (!page->block[(block->phys >> 10) & 3])
+
+        if (!page->block)
                 mem_flush_write_page(block->phys, cs+cpu_state.pc);
 
         block_num = HASH(block->phys);
@@ -433,6 +590,9 @@ void codegen_block_start_recompile(codeblock_t *block)
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
 
         block->status = cpu_cur_status;
+        
+        block->page_mask = block->page_mask2 = 0;
+        block->ins = 0;
 
         cpu_block_end = 0;
 
@@ -465,7 +625,14 @@ void codegen_block_start_recompile(codeblock_t *block)
         codegen_flat_ds = !(cpu_cur_status & CPU_STATUS_NOTFLATDS);
         codegen_flat_ss = !(cpu_cur_status & CPU_STATUS_NOTFLATSS);       
         
+        if (block->flags & CODEBLOCK_BYTE_MASK)
+        {
+                block->dirty_mask = &page->byte_dirty_mask[(block->phys >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK];
+                block->dirty_mask2 = NULL;
+        }
+
         ir_data = codegen_ir_init();
+        ir_data->block = block;
         codegen_reg_reset();
         codegen_accumulate_reset();
         codegen_generate_reset();
@@ -482,40 +649,104 @@ void codegen_block_remove()
         recomp_page = -1;
 }
 
-void codegen_block_generate_end_mask()
+void codegen_block_generate_end_mask_recompile()
+{
+        codeblock_t *block = &codeblock[block_current];
+        page_t *p;
+//pclog("gen_end_mask: %08x %08x  %016llx %016llx\n", block->pc, codegen_endpc, block->page_mask,block->page_mask2);
+        
+        p = &pages[block->phys >> 12];
+        if (block->flags & CODEBLOCK_BYTE_MASK)
+        {
+                int offset = (block->phys >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+
+                p->byte_code_present_mask[offset] |= block->page_mask;
+        }
+        else
+                p->code_present_mask |= block->page_mask;
+
+        if ((*(block->dirty_mask) & block->page_mask) && !page_in_evict_list(p))
+                page_add_to_evict_list(p);
+
+        block->phys_2 = -1;
+        block->next_2 = block->prev_2 = BLOCK_INVALID;
+        if (block->page_mask2)
+        {
+                block->phys_2 = get_phys_noabrt(codegen_endpc);
+                if (block->phys_2 != -1)
+                {
+                        page_t *page_2 = &pages[block->phys_2 >> 12];
+
+                        if (block->flags & CODEBLOCK_BYTE_MASK)
+                        {
+                                int offset = (block->phys_2 >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+                                
+                                page_2->byte_code_present_mask[offset] |= block->page_mask2;
+                                block->dirty_mask2 = &page_2->byte_dirty_mask[offset];
+                        }
+                        else
+                        {
+                                page_2->code_present_mask |= block->page_mask2;
+                                block->dirty_mask2 = &page_2->dirty_mask;
+                        }
+                        if (((*block->dirty_mask2) & block->page_mask2) && !page_in_evict_list(page_2))
+                                page_add_to_evict_list(page_2);
+
+                        if (!pages[block->phys_2 >> 12].block_2)
+                                mem_flush_write_page(block->phys_2, codegen_endpc);
+
+                        if (!block->page_mask2)
+                                fatal("!page_mask2\n");
+                        if (block->next_2)
+                        {
+//                        pclog("  next_2->pc=%08x\n", block->next_2->pc);
+                                if (codeblock[block->next_2].pc == BLOCK_PC_INVALID)
+                                        fatal("block->next_2->pc=BLOCK_PC_INVALID %p\n", (void *)&codeblock[block->next_2]);
+                        }
+                }
+        }
+
+//        pclog("block_end: %08x %08x %016llx\n", block->pc, codegen_endpc, block->page_mask);
+        recomp_page = -1;
+}
+
+void codegen_block_generate_end_mask_mark()
 {
         codeblock_t *block = &codeblock[block_current];
         uint32_t start_pc;
         uint32_t end_pc;
         page_t *p;
 
+        if (block->flags & CODEBLOCK_BYTE_MASK)
+                fatal("codegen_block_generate_end_mask2() - BYTE_MASK\n");
+
         block->page_mask = 0;
-        start_pc = (block->pc & 0x3ff) & ~15;
-        if ((block->pc ^ codegen_endpc) & ~0x3ff)
-                end_pc = 0x3ff & ~15;
+        start_pc = (block->pc & 0xfff) & ~63;
+        if ((block->pc ^ codegen_endpc) & ~0xfff)
+                end_pc = 0xfff & ~63;
         else
-                end_pc = (codegen_endpc & 0x3ff) & ~15;
+                end_pc = (codegen_endpc & 0xfff) & ~63;
         if (end_pc < start_pc)
-                end_pc = 0x3ff;
+                end_pc = 0xfff;
         start_pc >>= PAGE_MASK_SHIFT;
         end_pc >>= PAGE_MASK_SHIFT;
-        
+
 //        pclog("block_end: %08x %08x\n", start_pc, end_pc);
         for (; start_pc <= end_pc; start_pc++)
-        {                
+        {
                 block->page_mask |= ((uint64_t)1 << start_pc);
 //                pclog("  %08x %llx\n", start_pc, block->page_mask);
         }
-        
+
         p = &pages[block->phys >> 12];
-        p->code_present_mask[(block->phys >> 10) & 3] |= block->page_mask;
-        if ((p->dirty_mask[(block->phys >> 10) & 3] & block->page_mask) && !page_in_evict_list(p))
+        p->code_present_mask |= block->page_mask;
+        if ((p->dirty_mask & block->page_mask) && !page_in_evict_list(p))
                 page_add_to_evict_list(p);
 
         block->phys_2 = -1;
         block->page_mask2 = 0;
         block->next_2 = block->prev_2 = BLOCK_INVALID;
-        if ((block->pc ^ codegen_endpc) & ~0x3ff)
+        if ((block->pc ^ codegen_endpc) & ~0xfff)
         {
                 block->phys_2 = get_phys_noabrt(codegen_endpc);
                 if (block->phys_2 != -1)
@@ -523,14 +754,15 @@ void codegen_block_generate_end_mask()
                         page_t *page_2 = &pages[block->phys_2 >> 12];
 
                         start_pc = 0;
-                        end_pc = (codegen_endpc & 0x3ff) >> PAGE_MASK_SHIFT;
+                        end_pc = (codegen_endpc & 0xfff) >> PAGE_MASK_SHIFT;
                         for (; start_pc <= end_pc; start_pc++)
                                 block->page_mask2 |= ((uint64_t)1 << start_pc);
-                        page_2->code_present_mask[(block->phys_2 >> 10) & 3] |= block->page_mask2;
-                        if ((page_2->dirty_mask[(block->phys_2 >> 10) & 3] & block->page_mask2) && !page_in_evict_list(page_2))
+
+                        page_2->code_present_mask |= block->page_mask2;
+                        if ((page_2->dirty_mask & block->page_mask2) && !page_in_evict_list(page_2))
                                 page_add_to_evict_list(page_2);
 
-                        if (!pages[block->phys_2 >> 12].block_2[(block->phys_2 >> 10) & 3])
+                        if (!pages[block->phys_2 >> 12].block_2)
                                 mem_flush_write_page(block->phys_2, codegen_endpc);
 
                         if (!block->page_mask2)
@@ -542,7 +774,7 @@ void codegen_block_generate_end_mask()
                                         fatal("block->next_2->pc=BLOCK_PC_INVALID %p\n", (void *)&codeblock[block->next_2]);
                         }
 
-                        block->dirty_mask2 = &page_2->dirty_mask[(block->phys_2 >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK];
+                        block->dirty_mask2 = &page_2->dirty_mask;
                 }
         }
 
@@ -554,7 +786,7 @@ void codegen_block_end()
 {
         codeblock_t *block = &codeblock[block_current];
 
-        codegen_block_generate_end_mask();
+        codegen_block_generate_end_mask_mark();
         add_to_block_list(block);
 }
 
@@ -562,10 +794,13 @@ void codegen_block_end_recompile(codeblock_t *block)
 {
         codegen_timing_block_end();
 
-        remove_from_block_list(block, block->pc);
+        if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                block_dirty_list_remove(block);
+        else
+                remove_from_block_list(block, block->pc);
         block->next = block->prev = BLOCK_INVALID;
         block->next_2 = block->prev_2 = BLOCK_INVALID;
-        codegen_block_generate_end_mask();
+        codegen_block_generate_end_mask_recompile();
         add_to_block_list(block);
 //        pclog("End block %i\n", block_num);
 
@@ -579,4 +814,61 @@ void codegen_block_end_recompile(codeblock_t *block)
 void codegen_flush()
 {
         return;
+}
+
+void codegen_mark_code_present_multibyte(codeblock_t *block, uint32_t start_pc, int len)
+{
+        if (len)
+        {
+                uint32_t end_pc = start_pc + (len-1);
+
+                if (block->flags & CODEBLOCK_BYTE_MASK)
+                {
+			uint32_t start_pc_masked = start_pc & PAGE_MASK_MASK;
+			uint32_t end_pc_masked = start_pc & PAGE_MASK_MASK;
+
+                        if ((start_pc ^ block->pc) & ~0x3f) /*Starts in second page*/
+                        {
+                                for (; start_pc_masked <= end_pc_masked; start_pc_masked++)
+                                        block->page_mask2 |= ((uint64_t)1 << start_pc_masked);
+                        }
+                        else if (((start_pc + (len-1)) ^ block->pc) & ~0x3f) /*Crosses both pages*/
+                        {
+                                for (; start_pc_masked <= 63; start_pc_masked++)
+                                        block->page_mask |= ((uint64_t)1 << start_pc_masked);
+                                for (start_pc_masked = 0; start_pc_masked <= end_pc_masked; start_pc_masked++)
+                                        block->page_mask2 |= ((uint64_t)1 << start_pc_masked);
+                        }
+                        else /*First page only*/
+                        {
+                                for (; start_pc_masked <= end_pc_masked; start_pc_masked++)
+                                        block->page_mask |= ((uint64_t)1 << start_pc_masked);
+                        }
+                }
+                else
+                {
+                        uint32_t start_pc_shifted = start_pc >> PAGE_MASK_SHIFT;
+                        uint32_t end_pc_shifted = end_pc >> PAGE_MASK_SHIFT;
+                        start_pc_shifted &= PAGE_MASK_MASK;
+                        end_pc_shifted &= PAGE_MASK_MASK;
+
+                        if ((start_pc ^ block->pc) & ~0xfff) /*Starts in second page*/
+                        {
+                                for (; start_pc_shifted <= end_pc_shifted; start_pc_shifted++)
+                                        block->page_mask2 |= ((uint64_t)1 << start_pc_shifted);
+                        }
+                        else if (((start_pc + (len-1)) ^ block->pc) & ~0xfff) /*Crosses both pages*/
+                        {
+                                for (; start_pc_shifted <= 63; start_pc_shifted++)
+                                        block->page_mask |= ((uint64_t)1 << start_pc_shifted);
+                                for (start_pc_shifted = 0; start_pc_shifted <= end_pc_shifted; start_pc_shifted++)
+                                        block->page_mask2 |= ((uint64_t)1 << start_pc_shifted);
+                        }
+                        else /*First page only*/
+                        {
+                                for (; start_pc_shifted <= end_pc_shifted; start_pc_shifted++)
+                                        block->page_mask |= ((uint64_t)1 << start_pc_shifted);
+                        }
+                }
+        }
 }

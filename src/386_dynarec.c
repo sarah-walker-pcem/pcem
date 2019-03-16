@@ -320,8 +320,10 @@ void exec386_dynarec(int cycs)
                                         if (!valid_block)
                                         {
                                                 uint64_t mask = (uint64_t)1 << ((phys_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                                
-                                                if (page->code_present_mask[(phys_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK] & mask)
+                                                int byte_offset = (phys_addr >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+                                                uint64_t byte_mask = 1ull << (PAGE_BYTE_MASK_MASK & 0x3f);
+
+                                                if ((page->code_present_mask & mask) || (page->byte_code_present_mask[byte_offset] & byte_mask))
                                                 {
                                                         /*Walk page tree to see if we find the correct block*/
                                                         codeblock_t *new_block = codeblock_tree_find(phys_addr, cs);
@@ -339,12 +341,21 @@ void exec386_dynarec(int cycs)
                                                 }
                                         }
 
+                                        if (valid_block && (block->flags & CODEBLOCK_IN_DIRTY_LIST))
+                                        {
+                                                block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
+                                                if (block->flags & CODEBLOCK_BYTE_MASK)
+                                                        block->flags |= CODEBLOCK_NO_IMMEDIATES;
+                                                else
+                                                        block->flags |= CODEBLOCK_BYTE_MASK;
+                                        }
                                         if (valid_block && (block->page_mask & *block->dirty_mask))
                                         {
-                                                codegen_check_flush(page, page->dirty_mask[(phys_addr >> 10) & 3], phys_addr);
-                                                page->dirty_mask[(phys_addr >> 10) & 3] = 0;
+                                                codegen_check_flush(page, page->dirty_mask, phys_addr);
                                                 if (block->pc == BLOCK_PC_INVALID)
                                                         valid_block = 0;
+                                                else if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                                                        block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
                                         }
                                         if (valid_block && block->page_mask2)
                                         {
@@ -355,16 +366,17 @@ void exec386_dynarec(int cycs)
                                                   allow the first page to be interpreted and for
                                                   the page fault to occur when the page boundary
                                                   is actually crossed.*/
-                                                uint32_t phys_addr_2 = get_phys_noabrt(block->pc + 0x400);
+                                                uint32_t phys_addr_2 = get_phys_noabrt(block->pc + ((block->flags & CODEBLOCK_BYTE_MASK) ? 0x40 : 0x400));
                                                 page_t *page_2 = &pages[phys_addr_2 >> 12];
                                                 if ((block->phys_2 ^ phys_addr_2) & ~0xfff)
                                                         valid_block = 0;
                                                 else if (block->page_mask2 & *block->dirty_mask2)
                                                 {
-                                                        codegen_check_flush(page_2, page_2->dirty_mask[(phys_addr_2 >> 10) & 3], phys_addr_2);
-                                                        page_2->dirty_mask[(phys_addr_2 >> 10) & 3] = 0;
+                                                        codegen_check_flush(page_2, page_2->dirty_mask, phys_addr_2);
                                                         if (block->pc == BLOCK_PC_INVALID)
                                                                 valid_block = 0;
+                                                        else if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
+                                                                block->flags &= ~CODEBLOCK_WAS_RECOMPILED;
                                                 }
                                         }
                                         if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED) && (block->flags & CODEBLOCK_STATIC_TOP) && block->TOP != (cpu_state.TOP & 7))
@@ -390,7 +402,8 @@ void exec386_dynarec(int cycs)
                                 else if (valid_block && !cpu_state.abrt)
                                 {
                                         uint32_t start_pc = cpu_state.pc;
-                        
+                                        const int max_block_size = (block->flags & CODEBLOCK_BYTE_MASK) ? ((128 - 25) - (start_pc & 0x3f)) : 1000;
+                                        
                                         cpu_block_end = 0;
                                         x86_was_reset = 0;
 
@@ -434,7 +447,7 @@ void exec386_dynarec(int cycs)
                                                   will prevent any block from spanning more than
                                                   2 pages. In practice this limit will never be
                                                   hit, as host block size is only 2kB*/
-                                                if ((cpu_state.pc - start_pc) > 1000)
+                                                if ((cpu_state.pc - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
                                                 if (trap)
@@ -465,6 +478,7 @@ void exec386_dynarec(int cycs)
                                 {
                                         /*Mark block but do not recompile*/
                                         uint32_t start_pc = cpu_state.pc;
+                                        const int max_block_size = (block->flags & CODEBLOCK_BYTE_MASK) ? ((128 - 25) - (start_pc & 0x3f)) : 1000;
 
                                         cpu_block_end = 0;
                                         x86_was_reset = 0;
@@ -505,7 +519,7 @@ void exec386_dynarec(int cycs)
                                                   will prevent any block from spanning more than
                                                   2 pages. In practice this limit will never be
                                                   hit, as host block size is only 2kB*/
-                                                if ((cpu_state.pc - start_pc) > 1000)
+                                                if ((cpu_state.pc - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
                                                 if (trap)

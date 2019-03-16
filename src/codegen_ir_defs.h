@@ -76,6 +76,12 @@
 #define UOP_MOV_INT_DOUBLE        (UOP_TYPE_PARAMS_REGS    | 0x26)
 /*UOP_MOV_INT_DOUBLE_64 - dest_reg = (int)src_reg_a. New rounding control in src_reg_b, old rounding control in src_reg_c*/
 #define UOP_MOV_INT_DOUBLE_64     (UOP_TYPE_PARAMS_REGS    | 0x27)
+/*UOP_MOV_REG_PTR - dest_reg = *p*/
+#define UOP_MOV_REG_PTR           (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x28)
+/*UOP_MOVZX_REG_PTR_8 - dest_reg = *(uint8_t *)p*/
+#define UOP_MOVZX_REG_PTR_8       (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x29)
+/*UOP_MOVZX_REG_PTR_16 - dest_reg = *(uint16_t *)p*/
+#define UOP_MOVZX_REG_PTR_16      (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_POINTER | 0x2a)
 /*UOP_ADD - dest_reg = src_reg_a + src_reg_b*/
 #define UOP_ADD                   (UOP_TYPE_PARAMS_REGS    | 0x30)
 /*UOP_ADD_IMM - dest_reg = src_reg_a + immediate*/
@@ -338,6 +344,7 @@ typedef struct ir_data_t
 {
         uop_t uops[UOP_NR_MAX];
         int wr_pos;
+        struct codeblock_t *block;
 } ir_data_t;
 
 static inline uop_t *uop_alloc(ir_data_t *ir, uint32_t uop_type)
@@ -667,6 +674,9 @@ static inline void uop_gen_reg_src2_pointer(uint32_t uop_type, ir_data_t *ir, in
 #define uop_MOV(ir, dst_reg, src_reg)            uop_gen_reg_dst_src1(UOP_MOV, ir, dst_reg, src_reg)
 #define uop_MOV_IMM(ir, reg, imm)                uop_gen_reg_dst_imm(UOP_MOV_IMM, ir, reg, imm)
 #define uop_MOV_PTR(ir, reg, p)                  uop_gen_reg_dst_pointer(UOP_MOV_PTR, ir, reg, p)
+#define uop_MOV_REG_PTR(ir, reg, p)              uop_gen_reg_dst_pointer(UOP_MOV_REG_PTR, ir, reg, p)
+#define uop_MOVZX_REG_PTR_8(ir, reg, p)          uop_gen_reg_dst_pointer(UOP_MOVZX_REG_PTR_8, ir, reg, p)
+#define uop_MOVZX_REG_PTR_16(ir, reg, p)         uop_gen_reg_dst_pointer(UOP_MOVZX_REG_PTR_16, ir, reg, p)
 #define uop_MOVSX(ir, dst_reg, src_reg)          uop_gen_reg_dst_src1(UOP_MOVSX, ir, dst_reg, src_reg)
 #define uop_MOVZX(ir, dst_reg, src_reg)          uop_gen_reg_dst_src1(UOP_MOVZX, ir, dst_reg, src_reg)
 #define uop_MOV_DOUBLE_INT(ir, dst_reg, src_reg) uop_gen_reg_dst_src1(UOP_MOV_DOUBLE_INT, ir, dst_reg, src_reg)

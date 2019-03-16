@@ -1,3 +1,4 @@
+#include "386_common.h"
 #include "codegen_backend.h"
 
 static inline int LOAD_SP_WITH_OFFSET(ir_data_t *ir, int offset)
@@ -84,4 +85,27 @@ static inline void CHECK_SEG_LIMITS(codeblock_t *block, ir_data_t *ir, x86seg *s
         }
         else
                 uop_CMP_JNBE(ir, addr_reg, ireg_seg_limit_high(seg), codegen_gpf_rout);
+}
+
+static inline void LOAD_IMMEDIATE_FROM_RAM_8(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr)
+{
+        uop_MOVZX_REG_PTR_8(ir, dest_reg, get_ram_ptr(addr));
+}
+
+void LOAD_IMMEDIATE_FROM_RAM_16_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr);
+static inline void LOAD_IMMEDIATE_FROM_RAM_16(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr)
+{
+        if ((addr & 0xfff) == 0xfff)
+                LOAD_IMMEDIATE_FROM_RAM_16_unaligned(block, ir, dest_reg, addr);
+        else
+                uop_MOVZX_REG_PTR_16(ir, dest_reg, get_ram_ptr(addr));
+}
+
+void LOAD_IMMEDIATE_FROM_RAM_32_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr);
+static inline void LOAD_IMMEDIATE_FROM_RAM_32(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr)
+{
+        if ((addr & 0xfff) >= 0xffd)
+                LOAD_IMMEDIATE_FROM_RAM_32_unaligned(block, ir, dest_reg, addr);
+        else
+                uop_MOV_REG_PTR(ir, dest_reg, get_ram_ptr(addr));
 }

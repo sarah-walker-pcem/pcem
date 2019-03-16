@@ -6,6 +6,7 @@
 #include "codegen.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
+#include "codegen_ops_helpers.h"
 #include "codegen_ops_logic.h"
 
 uint32_t ropAND_AL_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -17,6 +18,7 @@ uint32_t ropAND_AL_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32
         uop_MOVZX(ir, IREG_flags_res, IREG_AL);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 uint32_t ropAND_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -28,13 +30,23 @@ uint32_t ropAND_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32
         uop_MOVZX(ir, IREG_flags_res, IREG_AX);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }
 uint32_t ropAND_EAX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        fetchdat = fastreadl(cs + op_pc);
+        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+        {
+                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_temp0, cs + op_pc);
+                uop_AND(ir, IREG_EAX, IREG_EAX, IREG_temp0);
+        }
+        else
+        {
+                fetchdat = fastreadl(cs + op_pc);
+                codegen_mark_code_present(block, cs+op_pc, 4);
+                uop_AND_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
+        }
 
-        uop_AND_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN32);
         uop_MOV(ir, IREG_flags_res, IREG_EAX);
 
@@ -45,6 +57,7 @@ uint32_t ropAND_b_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -72,6 +85,7 @@ uint32_t ropAND_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -102,6 +116,7 @@ uint32_t ropAND_w_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -129,6 +144,7 @@ uint32_t ropAND_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -159,6 +175,7 @@ uint32_t ropAND_l_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -186,6 +203,7 @@ uint32_t ropAND_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -222,6 +240,7 @@ uint32_t ropOR_AL_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
         uop_MOVZX(ir, IREG_flags_res, IREG_AL);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 uint32_t ropOR_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -233,23 +252,35 @@ uint32_t ropOR_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
         uop_MOVZX(ir, IREG_flags_res, IREG_AX);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }
 uint32_t ropOR_EAX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        fetchdat = fastreadl(cs + op_pc);
+        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+        {
+                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_temp0, cs + op_pc);
+                uop_OR(ir, IREG_EAX, IREG_EAX, IREG_temp0);
+        }
+        else
+        {
+                fetchdat = fastreadl(cs + op_pc);
+                codegen_mark_code_present(block, cs+op_pc, 4);
+                uop_OR_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
+        }
 
-        uop_OR_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN32);
         uop_MOV(ir, IREG_flags_res, IREG_EAX);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 4);
         return op_pc + 4;
 }
 uint32_t ropOR_b_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -277,6 +308,7 @@ uint32_t ropOR_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -307,6 +339,7 @@ uint32_t ropOR_w_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -334,6 +367,7 @@ uint32_t ropOR_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -364,6 +398,7 @@ uint32_t ropOR_l_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -391,6 +426,7 @@ uint32_t ropOR_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -426,6 +462,7 @@ uint32_t ropTEST_AL_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN8);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 uint32_t ropTEST_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -436,22 +473,34 @@ uint32_t ropTEST_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN16);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }
 uint32_t ropTEST_EAX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        fetchdat = fastreadl(cs + op_pc);
+        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+        {
+                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_temp0, cs + op_pc);
+                uop_AND(ir, IREG_flags_res, IREG_EAX, IREG_temp0);
+        }
+        else
+        {
+                fetchdat = fastreadl(cs + op_pc);
+                codegen_mark_code_present(block, cs+op_pc, 4);
+                uop_AND_IMM(ir, IREG_flags_res, IREG_EAX, fetchdat);
+        }
 
-        uop_AND_IMM(ir, IREG_flags_res, IREG_EAX, fetchdat);
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN32);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 4);
         return op_pc + 4;
 }
 uint32_t ropTEST_b_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -479,6 +528,7 @@ uint32_t ropTEST_w_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -506,6 +556,7 @@ uint32_t ropTEST_l_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -538,6 +589,7 @@ uint32_t ropXOR_AL_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32
         uop_MOVZX(ir, IREG_flags_res, IREG_AL);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 uint32_t ropXOR_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -549,23 +601,35 @@ uint32_t ropXOR_AX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32
         uop_MOVZX(ir, IREG_flags_res, IREG_AX);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }
 uint32_t ropXOR_EAX_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        fetchdat = fastreadl(cs + op_pc);
+        if (block->flags & CODEBLOCK_NO_IMMEDIATES)
+        {
+                LOAD_IMMEDIATE_FROM_RAM_32(block, ir, IREG_temp0, cs + op_pc);
+                uop_XOR(ir, IREG_EAX, IREG_EAX, IREG_temp0);
+        }
+        else
+        {
+                fetchdat = fastreadl(cs + op_pc);
+                codegen_mark_code_present(block, cs+op_pc, 4);
+                uop_XOR_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
+        }
 
-        uop_XOR_IMM(ir, IREG_EAX, IREG_EAX, fetchdat);
         uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN32);
         uop_MOV(ir, IREG_flags_res, IREG_EAX);
 
         codegen_flags_changed = 1;
+        codegen_mark_code_present(block, cs+op_pc, 4);
         return op_pc + 4;
 }
 uint32_t ropXOR_b_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -593,6 +657,7 @@ uint32_t ropXOR_b_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -623,6 +688,7 @@ uint32_t ropXOR_w_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -650,6 +716,7 @@ uint32_t ropXOR_w_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;
@@ -680,6 +747,7 @@ uint32_t ropXOR_l_rm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int dest_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -707,6 +775,7 @@ uint32_t ropXOR_l_rmw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int dest_reg = fetchdat & 7;

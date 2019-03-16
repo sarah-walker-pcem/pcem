@@ -73,6 +73,14 @@ extern uint8_t *block_write_data;
 #define CODEBLOCK_WAS_RECOMPILED 4
 /*Code block is in free list and is not valid*/
 #define CODEBLOCK_IN_FREE_LIST 8
+/*Code block spans two pages, page_mask2 and dirty_mask2 are valid*/
+#define CODEBLOCK_HAS_PAGE2 0x10
+/*Code block is using a byte mask for code present and dirty*/
+#define CODEBLOCK_BYTE_MASK 0x20
+/*Code block is in dirty list*/
+#define CODEBLOCK_IN_DIRTY_LIST 0x40
+/*Code block is not inlining immediate parameters, parameters must be fetched from memory*/
+#define CODEBLOCK_NO_IMMEDIATES 0x80
 
 #define BLOCK_PC_INVALID 0xffffffff
 
@@ -277,10 +285,33 @@ static inline void codeblock_tree_delete(codeblock_t *block)
         }
 }
 
-#define PAGE_MASK_INDEX_MASK 3
-#define PAGE_MASK_INDEX_SHIFT 10
 #define PAGE_MASK_MASK 63
-#define PAGE_MASK_SHIFT 4
+#define PAGE_MASK_SHIFT 6
+
+void codegen_mark_code_present_multibyte(codeblock_t *block, uint32_t start_pc, int len);
+
+static inline void codegen_mark_code_present(codeblock_t *block, uint32_t start_pc, int len)
+{
+        if (len == 1)
+        {
+                if (block->flags & CODEBLOCK_BYTE_MASK)
+                {
+                        if (!((start_pc ^ block->pc) & ~0x3f)) /*Starts in second page*/
+                                block->page_mask |= ((uint64_t)1 << (start_pc & PAGE_MASK_MASK));
+                        else
+                                block->page_mask2 |= ((uint64_t)1 << (start_pc & PAGE_MASK_MASK));
+                }
+                else
+                {
+                        if (!((start_pc ^ block->pc) & ~0xfff)) /*Starts in second page*/
+                                block->page_mask |= ((uint64_t)1 << ((start_pc >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK));
+                        else
+                                block->page_mask2 |= ((uint64_t)1 << ((start_pc >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK));
+                }
+        }
+        else
+                codegen_mark_code_present_multibyte(block, start_pc, len);
+}
 
 void codegen_init();
 void codegen_close();

@@ -16,6 +16,7 @@ uint32_t rop ## func(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
         int dest_reg = (fetchdat >> 3) & 7;                                                                                     \
                                                                                                                                 \
         uop_MMX_ENTER(ir);                                                                                                      \
+        codegen_mark_code_present(block, cs+op_pc, 1);                                                                          \
         if ((fetchdat & 0xc0) == 0xc0)                                                                                          \
         {                                                                                                                       \
                 int src_reg = fetchdat & 7;                                                                                     \
@@ -32,6 +33,7 @@ uint32_t rop ## func(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
                 uop_ ## func(ir, IREG_MM(dest_reg), IREG_MM(dest_reg), IREG_temp0_Q);                                           \
         }                                                                                                                       \
                                                                                                                                 \
+        codegen_mark_code_present(block, cs+op_pc+1, 1);                                                                        \
         return op_pc + 2;                                                                                                       \
 }
 
@@ -49,6 +51,7 @@ uint32_t ropPF2ID(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -65,6 +68,7 @@ uint32_t ropPF2ID(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_PF2ID(ir, IREG_MM(dest_reg), IREG_temp0_Q);
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 
@@ -73,6 +77,7 @@ uint32_t ropPFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -89,6 +94,7 @@ uint32_t ropPFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
                 uop_PFSUB(ir, IREG_MM(dest_reg), IREG_temp0_Q, IREG_MM(dest_reg));
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 
@@ -97,6 +103,7 @@ uint32_t ropPI2FD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -113,6 +120,7 @@ uint32_t ropPI2FD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_PI2FD(ir, IREG_MM(dest_reg), IREG_temp0_Q);
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 
@@ -121,6 +129,7 @@ uint32_t ropPFRCPIT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -136,6 +145,7 @@ uint32_t ropPFRCPIT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 uop_MEM_LOAD_REG(ir, IREG_MM(dest_reg), ireg_seg_base(target_seg), IREG_eaaddr);
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 uint32_t ropPFRCP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -143,6 +153,7 @@ uint32_t ropPFRCP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -159,6 +170,7 @@ uint32_t ropPFRCP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_PFRCP(ir, IREG_MM(dest_reg), IREG_temp0_Q);
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 uint32_t ropPFRSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -166,6 +178,7 @@ uint32_t ropPFRSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 int src_reg = fetchdat & 7;
@@ -182,6 +195,7 @@ uint32_t ropPFRSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
                 uop_PFRSQRT(ir, IREG_MM(dest_reg), IREG_temp0_Q);
         }
 
+        codegen_mark_code_present(block, cs+op_pc+1, 1);
         return op_pc + 2;
 }
 
@@ -189,5 +203,6 @@ uint32_t ropPFRSQIT1(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         uop_MMX_ENTER(ir);
 
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }

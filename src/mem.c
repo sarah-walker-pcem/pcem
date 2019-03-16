@@ -46,6 +46,9 @@ int cachesize=256;
 uint8_t *ram, *rom = NULL;
 uint8_t romext[32768];
 
+uint64_t *byte_dirty_mask;
+uint64_t *byte_code_present_mask;
+
 uint32_t mem_logical_addr;
 
 int mmuflush=0;
@@ -401,7 +404,7 @@ void addwritelookup(uint32_t virt, uint32_t phys)
 //        if (page_lookup[virt >> 12] && (writelookup2[virt>>12] != 0xffffffff))
 //                fatal("Bad write mapping\n");
 
-        if (pages[phys >> 12].block[0] || pages[phys >> 12].block[1] || pages[phys >> 12].block[2] || pages[phys >> 12].block[3] || (phys & ~0xfff) == recomp_page)
+        if (pages[phys >> 12].block || (phys & ~0xfff) == recomp_page)
                 page_lookup[virt >> 12] = &pages[phys >> 12];//(uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
         else
                 writelookup2[virt>>12] = (uintptr_t)&ram[(uintptr_t)(phys & ~0xFFF) - (uintptr_t)(virt & ~0xfff)];
@@ -926,13 +929,21 @@ void mem_write_ramb_page(uint32_t addr, uint8_t val, page_t *p)
         if (val != p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+                int byte_offset = (addr >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+                uint64_t byte_mask = (uint64_t)1 << (addr & PAGE_BYTE_MASK_MASK);
+                
 //        pclog("mem_write_ramb_page: %08x %02x %08x %llx %llx\n", addr, val, cs+cpu_state.pc, p->dirty_mask, mask);
                 p->mem[addr & 0xfff] = val;
-                p->dirty_mask[index] |= mask;
-                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                p->dirty_mask |= mask;
+                if ((p->code_present_mask & mask) && !page_in_evict_list(p))
                 {
 //                        pclog("ramb add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
+                p->byte_dirty_mask[byte_offset] |= byte_mask;
+                if ((p->byte_code_present_mask[byte_offset] & byte_mask) && !page_in_evict_list(p))
+                {
+//                        pclog("   ramb add %08x %016llx %016llx\n", addr, p->byte_code_present_mask[byte_offset], byte_mask);
                         page_add_to_evict_list(p);
                 }
         }
@@ -942,13 +953,34 @@ void mem_write_ramw_page(uint32_t addr, uint16_t val, page_t *p)
         if (val != *(uint16_t *)&p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+                int byte_offset = (addr >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+                uint64_t byte_mask = (uint64_t)1 << (addr & PAGE_BYTE_MASK_MASK);
+
                 if ((addr & 0xf) == 0xf)
                         mask |= (mask << 1);
 //        pclog("mem_write_ramw_page: %08x %04x %08x  %016llx %016llx %016llx  %08x %08x  %p\n", addr, val, cs+cpu_state.pc, p->dirty_mask[index], p->code_present_mask[index], mask, p->evict_prev, p->evict_next,  p);
                 *(uint16_t *)&p->mem[addr & 0xfff] = val;
-                p->dirty_mask[index] |= mask;
-                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                p->dirty_mask |= mask;
+                if ((p->code_present_mask & mask) && !page_in_evict_list(p))
+                {
+//                        pclog("ramw add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                        page_add_to_evict_list(p);
+                }
+                if ((addr & PAGE_BYTE_MASK_MASK) == PAGE_BYTE_MASK_MASK)
+                {
+                        p->byte_dirty_mask[byte_offset+1] |= 1;
+                        if ((p->byte_code_present_mask[byte_offset+1] & 1) && !page_in_evict_list(p))
+                        {
+//                                pclog("ramw add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                                page_add_to_evict_list(p);
+                        }
+                }
+                else
+                        byte_mask |= (byte_mask << 1);
+                        
+                p->byte_dirty_mask[byte_offset] |= byte_mask;
+
+                if ((p->byte_code_present_mask[byte_offset] & byte_mask) && !page_in_evict_list(p))
                 {
 //                        pclog("ramw add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
                         page_add_to_evict_list(p);
@@ -960,16 +992,30 @@ void mem_write_raml_page(uint32_t addr, uint32_t val, page_t *p)
         if (val != *(uint32_t *)&p->mem[addr & 0xfff] || codegen_in_recompile)
         {
                 uint64_t mask = (uint64_t)1 << ((addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
-                int index = (addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+                int byte_offset = (addr >> PAGE_BYTE_MASK_SHIFT) & PAGE_BYTE_MASK_OFFSET_MASK;
+                uint64_t byte_mask = (uint64_t)0xf << (addr & PAGE_BYTE_MASK_MASK);
+
                 if ((addr & 0xf) >= 0xd)
                         mask |= (mask << 1);
 //        pclog("mem_write_raml_page: %08x %08x %08x   %016llx %016llx %016llx\n", addr, val, cs+cpu_state.pc, p->dirty_mask[index], p->code_present_mask[index], mask);
                 *(uint32_t *)&p->mem[addr & 0xfff] = val;
-                p->dirty_mask[index] |= mask;
-                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                p->dirty_mask |= mask;
+                p->byte_dirty_mask[byte_offset] |= byte_mask;
+                if (!page_in_evict_list(p) && ((p->code_present_mask & mask) || (p->byte_code_present_mask[byte_offset] & byte_mask)))
                 {
 //                        pclog("raml add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
                         page_add_to_evict_list(p);
+                }
+                if ((addr & PAGE_BYTE_MASK_MASK) > (PAGE_BYTE_MASK_MASK-3))
+                {
+                        uint32_t byte_mask_2 = 0xf >> (4 - (addr & 3));
+
+                        p->byte_dirty_mask[byte_offset+1] |= byte_mask_2;
+                        if ((p->byte_code_present_mask[byte_offset+1] & byte_mask_2) && !page_in_evict_list(p))
+                        {
+//                                pclog("raml add %08x %016llx %016llx\n", addr, p->code_present_mask[index], mask);
+                                page_add_to_evict_list(p);
+                        }
                 }
         }
 }
@@ -1082,10 +1128,10 @@ void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr)
         {
                 uint64_t mask = (uint64_t)1 << ((start_addr >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK);
                 page_t *p = &pages[start_addr >> 12];
-                int index = (start_addr >> PAGE_MASK_INDEX_SHIFT) & PAGE_MASK_INDEX_MASK;
+
 //pclog("mem_invalidate: %08x\n", start_addr);
-                p->dirty_mask[index] |= mask;
-                if ((p->code_present_mask[index] & mask) && !page_in_evict_list(p))
+                p->dirty_mask |= mask;
+                if ((p->code_present_mask & mask) && !page_in_evict_list(p))
                 {
 //                        pclog("invalidate add %08x %016llx %016llx\n", start_addr, p->code_present_mask[index], mask);
                         page_add_to_evict_list(p);
@@ -1371,6 +1417,13 @@ void mem_alloc()
         ram = malloc(mem_size * 1024);
         memset(ram, 0, mem_size * 1024);
         
+        free(byte_dirty_mask);
+        byte_dirty_mask = malloc((mem_size * 1024) / 8);
+        memset(byte_dirty_mask, 0, (mem_size * 1024) / 8);
+        free(byte_code_present_mask);
+        byte_code_present_mask = malloc((mem_size * 1024) / 8);
+        memset(byte_code_present_mask, 0, (mem_size * 1024) / 8);
+        
         free(pages);
         pages = malloc((((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
         memset(pages, 0, (((mem_size + 384) * 1024) >> 12) * sizeof(page_t));
@@ -1381,6 +1434,8 @@ void mem_alloc()
                 pages[c].write_w = mem_write_ramw_page;
                 pages[c].write_l = mem_write_raml_page;
                 pages[c].evict_prev = EVICT_NOT_IN_LIST;
+                pages[c].byte_dirty_mask = &byte_dirty_mask[c * 64];
+                pages[c].byte_code_present_mask = &byte_code_present_mask[c * 64];
         }
 
         memset(page_lookup, 0, (1 << 20) * sizeof(page_t *));
@@ -1431,8 +1486,8 @@ void mem_reset_page_blocks()
                 pages[c].write_b = mem_write_ramb_page;
                 pages[c].write_w = mem_write_ramw_page;
                 pages[c].write_l = mem_write_raml_page;
-                pages[c].block[0] = pages[c].block[1] = pages[c].block[2] = pages[c].block[3] = BLOCK_INVALID;
-                pages[c].block_2[0] = pages[c].block_2[1] = pages[c].block_2[2] = pages[c].block_2[3] = BLOCK_INVALID;
+                pages[c].block = BLOCK_INVALID;
+                pages[c].block_2 = BLOCK_INVALID;
         }
 }
 

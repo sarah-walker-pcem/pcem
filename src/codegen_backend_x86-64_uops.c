@@ -1269,6 +1269,60 @@ static int codegen_MOV_PTR(codeblock_t *block, uop_t *uop)
         host_x86_MOV64_REG_IMM(block, uop->dest_reg_a_real, (uint64_t)uop->p);
         return 0;
 }
+static int codegen_MOV_REG_PTR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_L(dest_size))
+        {
+                host_x86_MOV32_REG_ABS(block, dest_reg, uop->p);
+        }
+        else
+                fatal("MOV_REG_PTR %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOVZX_REG_PTR_8(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_L(dest_size))
+        {
+                host_x86_MOVZX_REG_ABS_32_8(block, dest_reg, uop->p);
+        }
+        else if (REG_IS_W(dest_size))
+        {
+                host_x86_MOVZX_REG_ABS_16_8(block, dest_reg, uop->p);
+        }
+        else if (REG_IS_B(dest_size))
+        {
+                host_x86_MOV8_REG_ABS(block, dest_reg, uop->p);
+        }
+        else
+                fatal("MOVZX_REG_PTR_8 %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOVZX_REG_PTR_16(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+        if (REG_IS_L(dest_size))
+        {
+                host_x86_MOVZX_REG_ABS_32_16(block, dest_reg, uop->p);
+        }
+        else if (REG_IS_W(dest_size))
+        {
+                host_x86_MOV16_REG_ABS(block, dest_reg, uop->p);
+        }
+        else
+                fatal("MOVZX_REG_PTR_16 %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
 static int codegen_MOVSX(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
@@ -2681,7 +2735,10 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
         [UOP_MOV_INT_DOUBLE    & UOP_MASK] = codegen_MOV_INT_DOUBLE,
         [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
-        
+        [UOP_MOV_REG_PTR       & UOP_MASK] = codegen_MOV_REG_PTR,
+        [UOP_MOVZX_REG_PTR_8   & UOP_MASK] = codegen_MOVZX_REG_PTR_8,
+        [UOP_MOVZX_REG_PTR_16  & UOP_MASK] = codegen_MOVZX_REG_PTR_16,
+
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,
         [UOP_ADD_LSHIFT & UOP_MASK] = codegen_ADD_LSHIFT,

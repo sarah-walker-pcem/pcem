@@ -16,6 +16,7 @@ uint32_t ropLEA_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         if ((fetchdat & 0xc0) == 0xc0)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
         uop_MOV(ir, IREG_16(dest_reg), IREG_eaaddr_W);
         
@@ -28,6 +29,7 @@ uint32_t ropLEA_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         if ((fetchdat & 0xc0) == 0xc0)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
         uop_MOV(ir, IREG_32(dest_reg), IREG_eaaddr);
 
@@ -43,6 +45,7 @@ uint32_t ropF6(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
         if (fetchdat & 0x20)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
                 reg = IREG_8(fetchdat & 7);
         else
@@ -67,6 +70,7 @@ uint32_t ropF6(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
                 uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN8);
 
                 codegen_flags_changed = 1;
+                codegen_mark_code_present(block, cs+op_pc+1, 1);
                 return op_pc+2;
                 
                 case 0x10: /*NOT*/
@@ -111,6 +115,7 @@ uint32_t ropF7_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         if (fetchdat & 0x20)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
                 reg = IREG_16(fetchdat & 7);
         else
@@ -135,6 +140,7 @@ uint32_t ropF7_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN16);
 
                 codegen_flags_changed = 1;
+                codegen_mark_code_present(block, cs+op_pc+1, 2);
                 return op_pc+3;
 
                 case 0x10: /*NOT*/
@@ -179,6 +185,7 @@ uint32_t ropF7_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         if (fetchdat & 0x20)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
                 reg = IREG_32(fetchdat & 7);
         else
@@ -202,6 +209,7 @@ uint32_t ropF7_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ZN32);
 
                 codegen_flags_changed = 1;
+                codegen_mark_code_present(block, cs+op_pc+1, 4);
                 return op_pc+5;
 
                 case 0x10: /*NOT*/
@@ -267,6 +275,7 @@ uint32_t ropFF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         if ((fetchdat & 0x38) != 0x00 && (fetchdat & 0x38) != 0x08 && (fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x28 && (fetchdat & 0x38) != 0x30)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 if ((fetchdat & 0x38) == 0x28)
@@ -284,7 +293,7 @@ uint32_t ropFF_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
                 uop_MEM_LOAD_REG(ir, IREG_temp0_W, ireg_seg_base(target_seg), IREG_eaaddr);
                 src_reg = IREG_temp0_W;
         }
-        
+
         switch (fetchdat & 0x38)
         {
                 case 0x00: /*INC*/
@@ -373,6 +382,7 @@ uint32_t ropFF_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         if ((fetchdat & 0x38) != 0x00 && (fetchdat & 0x38) != 0x08 && (fetchdat & 0x38) != 0x10 && (fetchdat & 0x38) != 0x20 && (fetchdat & 0x38) != 0x28 && (fetchdat & 0x38) != 0x30)
                 return 0;
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 if ((fetchdat & 0x38) == 0x28)
@@ -510,6 +520,7 @@ uint32_t rop ## name ## _16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, u
         if ((fetchdat & 0xc0) == 0xc0)                                                                                                  \
                 return 0;                                                                                                               \
                                                                                                                                         \
+        codegen_mark_code_present(block, cs+op_pc, 1);                                                                                  \
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                                   \
         target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                          \
         codegen_check_seg_read(block, ir, target_seg);                                                                                  \
@@ -531,6 +542,7 @@ uint32_t rop ## name ## _32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, u
         if ((fetchdat & 0xc0) == 0xc0)                                                                                                  \
                 return 0;                                                                                                               \
                                                                                                                                         \
+        codegen_mark_code_present(block, cs+op_pc, 1);                                                                                  \
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);                                                                                   \
         target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);                                          \
         codegen_check_seg_read(block, ir, target_seg);                                                                                  \

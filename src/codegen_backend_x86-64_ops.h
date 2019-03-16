@@ -110,7 +110,9 @@ void host_x86_MOVZX_REG_16_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_8(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_MOVZX_REG_32_16(codeblock_t *block, int dst_reg, int src_reg);
 
+void host_x86_MOVZX_REG_ABS_16_8(codeblock_t *block, int dst_reg, void *p);
 void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p);
+void host_x86_MOVZX_REG_ABS_32_16(codeblock_t *block, int dst_reg, void *p);
 
 void host_x86_NOP(codeblock_t *block);
 

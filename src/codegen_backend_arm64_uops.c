@@ -1413,6 +1413,66 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
 
         return 0;
 }
+static int codegen_MOV_REG_PTR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+	host_arm64_MOVX_IMM(block, REG_TEMP, (uint64_t)uop->p);
+        if (REG_IS_L(dest_size))
+        {
+		host_arm64_LDR_IMM_W(block, dest_reg, REG_TEMP, 0);
+        }
+        else
+                fatal("MOV_REG_PTR %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOVZX_REG_PTR_8(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+	host_arm64_MOVX_IMM(block, REG_TEMP, (uint64_t)uop->p);
+        if (REG_IS_L(dest_size))
+        {
+                host_arm64_LDRB_IMM_W(block, dest_reg, REG_TEMP, 0);
+        }
+        else if (REG_IS_W(dest_size))
+        {
+                host_arm64_LDRB_IMM_W(block, REG_TEMP, REG_TEMP, 0);
+		host_arm64_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+        else if (REG_IS_B(dest_size))
+        {
+                host_arm64_LDRB_IMM_W(block, REG_TEMP, REG_TEMP, 0);
+		host_arm64_BFI(block, dest_reg, REG_TEMP, 0, 8);
+        }
+        else
+                fatal("MOVZX_REG_PTR_8 %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
+static int codegen_MOVZX_REG_PTR_16(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
+
+	host_arm64_MOVX_IMM(block, REG_TEMP, (uint64_t)uop->p);
+        if (REG_IS_L(dest_size))
+        {
+                host_arm64_LDRH_IMM(block, dest_reg, REG_TEMP, 0);
+        }
+        else if (REG_IS_W(dest_size))
+        {
+                host_arm64_LDRH_IMM(block, REG_TEMP, REG_TEMP, 0);
+		host_arm64_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+        else
+                fatal("MOVZX_REG_PTR_16 %02x\n", uop->dest_reg_a_real);
+
+        return 0;
+}
 
 static int codegen_OR(codeblock_t *block, uop_t *uop)
 {
@@ -2765,6 +2825,8 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOV_DOUBLE_INT & UOP_MASK] = codegen_MOV_DOUBLE_INT,
         [UOP_MOV_INT_DOUBLE   & UOP_MASK] = codegen_MOV_INT_DOUBLE,
         [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
+        [UOP_MOV_REG_PTR       & UOP_MASK] = codegen_MOV_REG_PTR,
+        [UOP_MOVZX_REG_PTR_8   & UOP_MASK] = codegen_MOVZX_REG_PTR_8,
 
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,

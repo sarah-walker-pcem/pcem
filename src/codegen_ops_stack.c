@@ -75,6 +75,7 @@ uint32_t ropPUSH_imm_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
         uop_MEM_STORE_IMM_16(ir, IREG_SS_base, sp_reg, imm);
         SUB_SP(ir, 2);
 
+        codegen_mark_code_present(block, cs+op_pc, 2);
         return op_pc + 2;
 }
 uint32_t ropPUSH_imm_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -87,6 +88,7 @@ uint32_t ropPUSH_imm_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint3
         uop_MEM_STORE_IMM_32(ir, IREG_SS_base, sp_reg, imm);
         SUB_SP(ir, 4);
 
+        codegen_mark_code_present(block, cs+op_pc, 4);
         return op_pc + 4;
 }
 
@@ -100,6 +102,7 @@ uint32_t ropPUSH_imm_16_8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uin
         uop_MEM_STORE_IMM_16(ir, IREG_SS_base, sp_reg, imm);
         SUB_SP(ir, 2);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 uint32_t ropPUSH_imm_32_8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
@@ -112,6 +115,7 @@ uint32_t ropPUSH_imm_32_8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uin
         uop_MEM_STORE_IMM_32(ir, IREG_SS_base, sp_reg, imm);
         SUB_SP(ir, 4);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         return op_pc + 1;
 }
 
@@ -119,6 +123,7 @@ uint32_t ropPOP_W(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 {
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 if (stack32)
@@ -154,6 +159,7 @@ uint32_t ropPOP_L(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 {
         uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
 
+        codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)
         {
                 if (stack32)

@@ -16,6 +16,7 @@ uint32_t rop ## func(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
         int dest_reg = (fetchdat >> 3) & 7;                                                                                     \
                                                                                                                                 \
         uop_MMX_ENTER(ir);                                                                                                      \
+        codegen_mark_code_present(block, cs+op_pc, 1);                                                                          \
         if ((fetchdat & 0xc0) == 0xc0)                                                                                          \
         {                                                                                                                       \
                 int src_reg = fetchdat & 7;                                                                                     \
