@@ -69,7 +69,7 @@ uint32_t ropFSTCW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         codegen_check_seg_write(block, ir, target_seg);
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_NPXC);
 
-        return op_pc;
+        return op_pc+1;
 }
 uint32_t ropFSTSW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
@@ -82,7 +82,7 @@ uint32_t ropFSTSW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         codegen_check_seg_write(block, ir, target_seg);
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_NPXS);
 
-        return op_pc;
+        return op_pc+1;
 }
 uint32_t ropFSTSW_AX(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
