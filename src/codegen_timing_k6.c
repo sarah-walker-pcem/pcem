@@ -2339,7 +2339,11 @@ void codegen_timing_k6_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint
 void codegen_timing_k6_block_end()
 {
         if (decode_buffer.nr_uops)
+        {
+                int old_last_complete_timestamp = last_complete_timestamp;
                 decode_flush();
+                codegen_block_cycles += (last_complete_timestamp - old_last_complete_timestamp);
+        }
 }
 
 int codegen_timing_k6_jump_cycles()
