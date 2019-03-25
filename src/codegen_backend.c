@@ -826,7 +826,7 @@ void codegen_mark_code_present_multibyte(codeblock_t *block, uint32_t start_pc, 
                 if (block->flags & CODEBLOCK_BYTE_MASK)
                 {
 			uint32_t start_pc_masked = start_pc & PAGE_MASK_MASK;
-			uint32_t end_pc_masked = start_pc & PAGE_MASK_MASK;
+			uint32_t end_pc_masked = end_pc & PAGE_MASK_MASK;
 
                         if ((start_pc ^ block->pc) & ~0x3f) /*Starts in second page*/
                         {
