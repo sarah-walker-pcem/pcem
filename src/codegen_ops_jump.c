@@ -16,9 +16,10 @@ uint32_t ropJMP_r8(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         if (!(op_32 & 0x100))
                 dest_addr &= 0xffff;
 
-        uop_MOV_IMM(ir, IREG_pc, dest_addr);
+        if (offset < 0)
+                codegen_can_unroll(block, ir, op_pc+1, dest_addr);
         codegen_mark_code_present(block, cs+op_pc, 1);
-        return -1;
+        return dest_addr;
 }
 uint32_t ropJMP_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
@@ -27,18 +28,20 @@ uint32_t ropJMP_r16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
         
         dest_addr &= 0xffff;
 
-        uop_MOV_IMM(ir, IREG_pc, dest_addr);
+        if (offset < 0)
+                codegen_can_unroll(block, ir, op_pc+1, dest_addr);
         codegen_mark_code_present(block, cs+op_pc, 2);
-        return -1;
+        return dest_addr;
 }
 uint32_t ropJMP_r32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
         uint32_t offset = fastreadl(cs + op_pc);
         uint32_t dest_addr = op_pc+4+offset;
         
-        uop_MOV_IMM(ir, IREG_pc, dest_addr);
+        if (offset < 0)
+                codegen_can_unroll(block, ir, op_pc+1, dest_addr);
         codegen_mark_code_present(block, cs+op_pc, 4);
-        return -1;
+        return dest_addr;
 }
 
 uint32_t ropJMP_far_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)

@@ -8,18 +8,70 @@
 extern int has_ea;
 static ir_data_t ir_block;
 
+static int codegen_unroll_start, codegen_unroll_count;
+
 ir_data_t *codegen_ir_init()
 {
         ir_block.wr_pos = 0;
 //        pclog("codegen_ir_init %04x:%04x\n", CS,cpu_state.pc);
 
+        codegen_unroll_count = 0;
+
         return &ir_block;
+}
+
+void codegen_ir_set_unroll(int count, int start)
+{
+        codegen_unroll_count = count;
+        codegen_unroll_start = start;
+}
+
+static void duplicate_uop(ir_data_t *ir, uop_t *uop, int offset)
+{
+        uop_t *new_uop = uop_alloc(ir, uop->type);
+
+//        pclog("  uop type %08x\n", uop->type);
+        if (!ir_reg_is_invalid(uop->src_reg_a))
+                new_uop->src_reg_a = codegen_reg_read(uop->src_reg_a.reg);
+        if (!ir_reg_is_invalid(uop->src_reg_b))
+                new_uop->src_reg_b = codegen_reg_read(uop->src_reg_b.reg);
+        if (!ir_reg_is_invalid(uop->src_reg_c))
+                new_uop->src_reg_c = codegen_reg_read(uop->src_reg_c.reg);
+        if (!ir_reg_is_invalid(uop->dest_reg_a))
+                new_uop->dest_reg_a = codegen_reg_write(uop->dest_reg_a.reg, ir->wr_pos-1);
+
+        new_uop->type = uop->type;
+        new_uop->imm_data = uop->imm_data;
+        new_uop->p = uop->p;
+        new_uop->pc = uop->pc;
+        
+        if (uop->jump_dest_uop != -1)
+        {
+                new_uop->jump_dest_uop = uop->jump_dest_uop + offset;
+        }
 }
 
 void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
 {
         int jump_target_at_end = -1;
         int c;
+
+        if (codegen_unroll_count)
+        {
+                int unroll_count;
+                int unroll_end = ir->wr_pos;
+                
+                for (unroll_count = 1; unroll_count < codegen_unroll_count; unroll_count++)
+                {
+                        int offset = ir->wr_pos - codegen_unroll_start;
+//                        pclog("Unroll from %i to %i, offset %i - iteration %i\n", codegen_unroll_start, ir->wr_pos, offset, unroll_count);
+                        for (c = codegen_unroll_start; c < unroll_end; c++)
+                        {
+//                                pclog(" Duplicate uop %i\n", c);
+                                duplicate_uop(ir, &ir->uops[c], offset);
+                        }
+                }
+        }
 
         codegen_reg_mark_as_required();
         codegen_reg_process_dead_list(ir);

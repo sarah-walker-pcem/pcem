@@ -4,6 +4,7 @@
 #include "codegen_ir_defs.h"
 #include "codegen_reg.h"
 
+int max_version_refcount;
 uint16_t reg_dead_list = 0;
 
 uint8_t reg_last_version[IREG_COUNT];
@@ -249,11 +250,7 @@ void codegen_reg_reset()
         }
         
         reg_dead_list = 0;
-}
-
-static inline int ir_reg_is_invalid(ir_reg_t ir_reg)
-{
-        return (IREG_GET_REG(ir_reg.reg) == IREG_INVALID);
+        max_version_refcount = 0;
 }
 
 static inline int ir_get_refcount(ir_reg_t ir_reg)

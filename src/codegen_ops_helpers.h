@@ -109,3 +109,18 @@ static inline void LOAD_IMMEDIATE_FROM_RAM_32(codeblock_t *block, ir_data_t *ir,
         else
                 uop_MOV_REG_PTR(ir, dest_reg, get_ram_ptr(addr));
 }
+
+int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc, uint32_t dest_addr);
+static inline int codegen_can_unroll(codeblock_t *block, ir_data_t *ir, uint32_t next_pc, uint32_t dest_addr)
+{
+        if (block->flags & CODEBLOCK_BYTE_MASK)
+                return 0;
+
+        /*Is dest within block?*/
+        if (dest_addr > next_pc)
+                return 0;
+        if ((cs+dest_addr) < block->pc)
+                return 0;
+
+        return codegen_can_unroll_full(block, ir, next_pc, dest_addr);
+}

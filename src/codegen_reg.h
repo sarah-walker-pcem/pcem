@@ -315,7 +315,10 @@ extern ir_reg_t invalid_ir_reg;
 
 typedef uint16_t ir_host_reg_t;
 
+extern int max_version_refcount;
+
 #define REG_VERSION_MAX 250
+#define REG_REFCOUNT_MAX 250
 
 static inline ir_reg_t codegen_reg_read(int reg)
 {
@@ -332,8 +335,10 @@ static inline ir_reg_t codegen_reg_read(int reg)
         version->refcount++;
         if (!version->refcount)
                 fatal("codegen_reg_read - refcount overflow\n");
-        else if (version->refcount > REG_VERSION_MAX)
+        else if (version->refcount > REG_REFCOUNT_MAX)
                 CPU_BLOCK_END();
+        if (version->refcount > max_version_refcount)
+                max_version_refcount = version->refcount;
 //        pclog("codegen_reg_read: %i %i %i\n", reg & IREG_REG_MASK, ireg.version, reg_version_refcount[IREG_GET_REG(ireg.reg)][ireg.version]);
         return ireg;
 }
@@ -359,12 +364,20 @@ static inline ir_reg_t codegen_reg_write(int reg, int uop_nr)
                 fatal("codegen_reg_write - version overflow\n");
         else if (reg_last_version[IREG_GET_REG(reg)] > REG_VERSION_MAX)
                 CPU_BLOCK_END();
+        if (reg_last_version[IREG_GET_REG(reg)] > max_version_refcount)
+                max_version_refcount = reg_last_version[IREG_GET_REG(reg)];
+
         version = &reg_version[IREG_GET_REG(reg)][ireg.version];
         version->refcount = 0;
         version->flags = 0;
         version->parent_uop = uop_nr;
 //        pclog("codegen_reg_write: %i\n", reg & IREG_REG_MASK);
         return ireg;
+}
+
+static inline int ir_reg_is_invalid(ir_reg_t ir_reg)
+{
+        return (IREG_GET_REG(ir_reg.reg) == IREG_INVALID);
 }
 
 struct ir_data_t;

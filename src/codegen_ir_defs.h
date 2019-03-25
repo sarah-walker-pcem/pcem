@@ -336,6 +336,7 @@ typedef struct uop_t
         int jump_dest_uop;
         int jump_list_next;
         void *jump_dest;
+        uint32_t pc;
 } uop_t;
 
 #define UOP_NR_MAX 4096
@@ -361,6 +362,9 @@ static inline uop_t *uop_alloc(ir_data_t *ir, uint32_t uop_type)
         uop->src_reg_b = invalid_ir_reg;
         uop->src_reg_c = invalid_ir_reg;
         
+        uop->pc = cpu_state.oldpc;
+        
+        uop->jump_dest_uop = -1;
         uop->jump_list_next = -1;
 
         if (uop_type & (UOP_TYPE_BARRIER | UOP_TYPE_ORDER_BARRIER))
