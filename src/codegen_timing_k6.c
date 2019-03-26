@@ -2330,9 +2330,10 @@ void codegen_timing_k6_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint
                 }
         }
 
-        if (!ins_table[opcode])
-                fatal("!ins_table opcode=%02x last_prefix=%02x\n", opcode, last_prefix);
-        decode_instruction(ins_table[opcode], deps[opcode], fetchdat, op_32, bit8);
+        if (ins_table[opcode])
+                decode_instruction(ins_table[opcode], deps[opcode], fetchdat, op_32, bit8);
+        else
+                decode_instruction(&vector_alu1_op, 0, fetchdat, op_32, bit8);
         codegen_block_cycles += (last_complete_timestamp - old_last_complete_timestamp);
 }
 
