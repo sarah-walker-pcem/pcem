@@ -704,6 +704,13 @@ void codegen_block_generate_end_mask_recompile()
                                         fatal("block->next_2->pc=BLOCK_PC_INVALID %p\n", (void *)&codeblock[block->next_2]);
                         }
                 }
+                else
+                {
+                        /*Second page not present. page_mask2 is most likely set only because
+                          the recompiler didn't know how long the last instruction was, so
+                          clear it*/
+                        block->page_mask2 = 0;
+                }
         }
 
 //        pclog("block_end: %08x %08x %016llx\n", block->pc, codegen_endpc, block->page_mask);
@@ -775,6 +782,13 @@ void codegen_block_generate_end_mask_mark()
                         }
 
                         block->dirty_mask2 = &page_2->dirty_mask;
+                }
+                else
+                {
+                        /*Second page not present. page_mask2 is most likely set only because
+                          the recompiler didn't know how long the last instruction was, so
+                          clear it*/
+                        block->page_mask2 = 0;
                 }
         }
 
