@@ -6,31 +6,20 @@
                 switch (rmdat & 0x38)                                                   \
                 {                                                                       \
                         case 0x00: /*ROL b, c*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = (temp & 0x80) ? 1 : 0;                          \
-                                temp = (temp << 1) | temp2;                             \
-                                c--;                                                    \
-                        }                                                               \
-                        seteab(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((cpu_state.flags & C_FLAG) ^ (temp >> 7)) cpu_state.flags |= V_FLAG;            \
+                        temp = (temp << (c & 7)) | (temp >> (8-(c & 7)));               \
+                        seteab(temp);      if (cpu_state.abrt) return 1;                     \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
+                        if ((temp ^ (temp >> 7)) & 1) cpu_state.flags |= V_FLAG;        \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x08: /*ROR b,CL*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = temp & 1;                                       \
-                                temp >>= 1;                                             \
-                                if (temp2) temp |= 0x80;                                \
-                                c--;                                                    \
-                        }                                                               \
-                        seteab(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((temp ^ (temp >> 1)) & 0x40) cpu_state.flags |= V_FLAG;               \
+                        temp = (temp >> (c & 7)) | (temp << (8-(c & 7)));               \
+                        seteab(temp);      if (cpu_state.abrt) return 1;                     \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 0x80) cpu_state.flags |= C_FLAG;                     \
+                        if ((temp ^ (temp >> 1)) & 0x40) cpu_state.flags |= V_FLAG;     \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
@@ -98,32 +87,21 @@
                 switch (rmdat & 0x38)                                                   \
                 {                                                                       \
                         case 0x00: /*ROL w, c*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = (temp & 0x8000) ? 1 : 0;                        \
-                                temp = (temp << 1) | temp2;                             \
-                                c--;                                                    \
-                        }                                                               \
-                        seteaw(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((cpu_state.flags & C_FLAG) ^ (temp >> 15)) cpu_state.flags |= V_FLAG;           \
-                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
+                        temp = (temp << (c & 15)) | (temp >> (16-(c & 15)));            \
+                        seteaw(temp);      if (cpu_state.abrt) return 1;                \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
+                        if ((temp ^ (temp >> 15)) & 1) cpu_state.flags |= V_FLAG;       \
+                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
-                        case 0x08: /*ROR w, c*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = temp & 1;                                       \
-                                temp >>= 1;                                             \
-                                if (temp2) temp |= 0x8000;                              \
-                                c--;                                                    \
-                        }                                                               \
-                        seteaw(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((temp ^ (temp >> 1)) & 0x4000) cpu_state.flags |= V_FLAG;             \
-                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
+                        case 0x08: /*ROR w,CL*/                                         \
+                        temp = (temp >> (c & 15)) | (temp << (16-(c & 15)));            \
+                        seteaw(temp);      if (cpu_state.abrt) return 1;                \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 0x8000) cpu_state.flags |= C_FLAG;                   \
+                        if ((temp ^ (temp >> 1)) & 0x4000) cpu_state.flags |= V_FLAG;   \
+                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x10: /*RCL w, c*/                                         \
@@ -190,33 +168,22 @@
                 switch (rmdat & 0x38)                                                   \
                 {                                                                       \
                         case 0x00: /*ROL l, c*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = (temp & 0x80000000) ? 1 : 0;                    \
-                                temp = (temp << 1) | temp2;                             \
-                                c--;                                                    \
-                        }                                                               \
-                        seteal(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((cpu_state.flags & C_FLAG) ^ (temp >> 31)) cpu_state.flags |= V_FLAG;           \
-                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
-                        PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, ea32); \
+                        temp = (temp << c) | (temp >> (32-c));                          \
+                        seteal(temp);      if (cpu_state.abrt) return 1;                \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
+                        if ((temp ^ (temp >> 31)) & 1) cpu_state.flags |= V_FLAG;       \
+                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
+                        PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
-                        case 0x08: /*ROR l, c*/                                         \
-                        while (c > 0)                                                   \
-                        {                                                               \
-                                temp2 = temp & 1;                                       \
-                                temp >>= 1;                                             \
-                                if (temp2) temp |= 0x80000000;                          \
-                                c--;                                                    \
-                        }                                                               \
-                        seteal(temp);           if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                                    \
-                        if (temp2) cpu_state.flags |= C_FLAG;                                     \
-                        if ((temp ^ (temp >> 1)) & 0x40000000) cpu_state.flags |= V_FLAG;         \
-                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
-                        PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, ea32); \
+                        case 0x08: /*ROR l,CL*/                                         \
+                        temp = (temp >> c) | (temp << (32-c));                          \
+                        seteal(temp);      if (cpu_state.abrt) return 1;                \
+                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
+                        if (temp & 0x80000000) cpu_state.flags |= C_FLAG;               \
+                        if ((temp ^ (temp >> 1)) & 0x40000000) cpu_state.flags |= V_FLAG;       \
+                        CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
+                        PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x10: /*RCL l, c*/                                         \
                         temp2 = CF_SET();                                               \
