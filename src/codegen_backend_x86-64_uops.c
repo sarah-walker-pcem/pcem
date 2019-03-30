@@ -1455,6 +1455,11 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_NOP(codeblock_t *block, uop_t *uop)
+{
+        return 0;
+}
+
 static int codegen_OR(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -2979,7 +2984,9 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PUNPCKHDQ & UOP_MASK] = codegen_PUNPCKHDQ,
         [UOP_PUNPCKLBW & UOP_MASK] = codegen_PUNPCKLBW,
         [UOP_PUNPCKLWD & UOP_MASK] = codegen_PUNPCKLWD,
-        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ
+        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ,
+
+        [UOP_NOP_BARRIER & UOP_MASK] = codegen_NOP
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)

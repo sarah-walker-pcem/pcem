@@ -496,12 +496,17 @@ uint32_t ropC1_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         }
         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
         {
+                uint32_t new_pc;
+                int jump_uop;
+                
                 LOAD_IMMEDIATE_FROM_RAM_8(block, ir, IREG_temp2, cs + op_pc + 1);
-
                 uop_AND_IMM(ir, IREG_temp2, IREG_temp2, 0x1f);
-                uop_CMP_IMM_JZ(ir, IREG_temp2, 0, codegen_exit_rout);
+                jump_uop = uop_CMP_IMM_JZ_DEST(ir, IREG_temp2, 0);
 
-                return shift_common_variable_32(ir, fetchdat, op_pc, target_seg, IREG_temp2) + 1;
+                new_pc = shift_common_variable_32(ir, fetchdat, op_pc, target_seg, IREG_temp2) + 1;
+                uop_NOP_BARRIER(ir);
+                uop_set_jump_dest(ir, jump_uop);
+                return new_pc;
         }
         else
         {
