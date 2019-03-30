@@ -148,6 +148,14 @@
 #define UOP_SHR                   (UOP_TYPE_PARAMS_REGS | 0x54)
 /*UOP_SHR_IMM - dest_reg = src_reg_a >> immediate*/
 #define UOP_SHR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x55)
+/*UOP_ROL - dest_reg = src_reg_a rotate<< src_reg_b*/
+#define UOP_ROL                   (UOP_TYPE_PARAMS_REGS | 0x56)
+/*UOP_ROL_IMM - dest_reg = src_reg_a rotate<< immediate*/
+#define UOP_ROL_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x57)
+/*UOP_ROR - dest_reg = src_reg_a rotate>> src_reg_b*/
+#define UOP_ROR                   (UOP_TYPE_PARAMS_REGS | 0x58)
+/*UOP_ROR_IMM - dest_reg = src_reg_a rotate>> immediate*/
+#define UOP_ROR_IMM               (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | 0x59)
 
 /*UOP_CMP_IMM_JZ_DEST - if (src_reg_a == imm_data) then jump to ptr*/
 #define UOP_CMP_IMM_JZ_DEST       (UOP_TYPE_PARAMS_REGS | UOP_TYPE_PARAMS_IMM | UOP_TYPE_PARAMS_POINTER | 0x60 | UOP_TYPE_ORDER_BARRIER | UOP_TYPE_JUMP)
@@ -616,6 +624,10 @@ static inline void uop_gen_reg_src2_pointer(uint32_t uop_type, ir_data_t *ir, in
 #define uop_SHL_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SHL_IMM, ir, dst_reg, src_reg, imm)
 #define uop_SHR(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_SHR, ir, dst_reg, src_reg, shift_reg)
 #define uop_SHR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_SHR_IMM, ir, dst_reg, src_reg, imm)
+#define uop_ROL(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_ROL, ir, dst_reg, src_reg, shift_reg)
+#define uop_ROL_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_ROL_IMM, ir, dst_reg, src_reg, imm)
+#define uop_ROR(ir, dst_reg, src_reg, shift_reg)   uop_gen_reg_dst_src2(UOP_ROR, ir, dst_reg, src_reg, shift_reg)
+#define uop_ROR_IMM(ir, dst_reg, src_reg, imm)     uop_gen_reg_dst_src_imm(UOP_ROR_IMM, ir, dst_reg, src_reg, imm)
 
 #define uop_CALL_FUNC(ir, p)                 uop_gen_pointer(UOP_CALL_FUNC, ir, p)
 #define uop_CALL_FUNC_RESULT(ir, dst_reg, p) uop_gen_reg_dst_pointer(UOP_CALL_FUNC_RESULT, ir, dst_reg, p)

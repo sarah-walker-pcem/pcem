@@ -2333,6 +2333,125 @@ static int codegen_PUNPCKLDQ(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_ROL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        host_x86_MOV32_REG_REG(block, REG_ECX, shift_reg);
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL32_CL(block, dest_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL16_CL(block, dest_reg);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL8_CL(block, dest_reg);
+        }
+#ifdef RECOMPILER_DEBUG
+        else
+                fatal("ROL %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
+        return 0;
+}
+static int codegen_ROL_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL32_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL16_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROL8_IMM(block, dest_reg, uop->imm_data);
+        }
+#ifdef RECOMPILER_DEBUG
+        else
+                fatal("ROL_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
+        return 0;
+}
+static int codegen_ROR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        host_x86_MOV32_REG_REG(block, REG_ECX, shift_reg);
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR32_CL(block, dest_reg);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR16_CL(block, dest_reg);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR8_CL(block, dest_reg);
+        }
+#ifdef RECOMPILER_DEBUG
+        else
+                fatal("ROR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
+        return 0;
+}
+static int codegen_ROR_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV32_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR32_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV16_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR16_IMM(block, dest_reg, uop->imm_data);
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+                if (uop->dest_reg_a_real != uop->src_reg_a_real)
+                        host_x86_MOV8_REG_REG(block, dest_reg, src_reg);
+                host_x86_ROR8_IMM(block, dest_reg, uop->imm_data);
+        }
+#ifdef RECOMPILER_DEBUG
+        else
+                fatal("ROR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+#endif
+        return 0;
+}
+
 static int codegen_SAR(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
@@ -2758,6 +2877,10 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_SHL_IMM & UOP_MASK] = codegen_SHL_IMM,
         [UOP_SHR     & UOP_MASK] = codegen_SHR,
         [UOP_SHR_IMM & UOP_MASK] = codegen_SHR_IMM,
+        [UOP_ROL     & UOP_MASK] = codegen_ROL,
+        [UOP_ROL_IMM & UOP_MASK] = codegen_ROL_IMM,
+        [UOP_ROR     & UOP_MASK] = codegen_ROR,
+        [UOP_ROR_IMM & UOP_MASK] = codegen_ROR_IMM,
 
         [UOP_CMP_IMM_JZ & UOP_MASK] = codegen_CMP_IMM_JZ,
 

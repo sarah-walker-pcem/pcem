@@ -18,6 +18,20 @@ static uint32_t shift_common_8(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc,
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_8(dest_reg), IREG_8(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_8(dest_reg), IREG_8(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOVZX(ir, IREG_flags_op1, IREG_8(dest_reg));
                         uop_SHL_IMM(ir, IREG_8(dest_reg), IREG_8(dest_reg), count);
@@ -50,6 +64,22 @@ static uint32_t shift_common_8(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc,
         {
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_temp0_B, IREG_temp0_B, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_B);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_B);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_temp0_B, IREG_temp0_B, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_B);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_B);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL_IMM(ir, IREG_temp1_B, IREG_temp0_B, count);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_B);
@@ -94,6 +124,20 @@ static uint32_t shift_common_16(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_16(dest_reg), IREG_16(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_16(dest_reg), IREG_16(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOVZX(ir, IREG_flags_op1, IREG_16(dest_reg));
                         uop_SHL_IMM(ir, IREG_16(dest_reg), IREG_16(dest_reg), count);
@@ -126,6 +170,22 @@ static uint32_t shift_common_16(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc
         {
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_temp0_W, IREG_temp0_W, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_W);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_temp0_W, IREG_temp0_W, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_W);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL_IMM(ir, IREG_temp1_W, IREG_temp0_W, count);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
@@ -169,6 +229,20 @@ static uint32_t shift_common_32(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_32(dest_reg), IREG_32(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_32(dest_reg), IREG_32(dest_reg), count);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOV(ir, IREG_flags_op1, IREG_32(dest_reg));
                         uop_SHL_IMM(ir, IREG_32(dest_reg), IREG_32(dest_reg), count);
@@ -201,6 +275,22 @@ static uint32_t shift_common_32(ir_data_t *ir, uint32_t fetchdat, uint32_t op_pc
         {
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL_IMM(ir, IREG_temp0, IREG_temp0, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR_IMM(ir, IREG_temp0, IREG_temp0, count);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL_IMM(ir, IREG_temp1, IREG_temp0, count);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
@@ -245,6 +335,20 @@ static uint32_t shift_common_variable_32(ir_data_t *ir, uint32_t fetchdat, uint3
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_32(dest_reg), IREG_32(dest_reg), count_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_32(dest_reg), IREG_32(dest_reg), count_reg);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOV(ir, IREG_flags_op1, IREG_32(dest_reg));
                         uop_SHL(ir, IREG_32(dest_reg), IREG_32(dest_reg), count_reg);
@@ -277,6 +381,22 @@ static uint32_t shift_common_variable_32(ir_data_t *ir, uint32_t fetchdat, uint3
         {
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_temp0, IREG_temp0, count_reg);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_temp0, IREG_temp0, count_reg);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL(ir, IREG_temp1, IREG_temp0, count_reg);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
@@ -318,7 +438,7 @@ uint32_t ropC0(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
         x86seg *target_seg = NULL;
         uint8_t imm;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -341,7 +461,7 @@ uint32_t ropC1_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         x86seg *target_seg = NULL;
         uint8_t imm;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -363,7 +483,7 @@ uint32_t ropC1_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 {
         x86seg *target_seg = NULL;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -398,7 +518,7 @@ uint32_t ropD0(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
 {
         x86seg *target_seg = NULL;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -416,7 +536,7 @@ uint32_t ropD1_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 {
         x86seg *target_seg = NULL;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -434,7 +554,7 @@ uint32_t ropD1_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 {
         x86seg *target_seg = NULL;
 
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         codegen_mark_code_present(block, cs+op_pc, 1);
@@ -451,7 +571,7 @@ uint32_t ropD1_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
 uint32_t ropD2(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         if (!(CL & 0x1f) || !block->ins)
@@ -467,6 +587,20 @@ uint32_t ropD2(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_8(dest_reg), IREG_8(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_8(dest_reg), IREG_8(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_8(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOVZX(ir, IREG_flags_op1, IREG_8(dest_reg));
                         uop_SHL(ir, IREG_8(dest_reg), IREG_8(dest_reg), IREG_temp2);
@@ -506,6 +640,22 @@ uint32_t ropD2(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_temp0_B, IREG_temp0_B, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_B);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_B);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_temp0_B, IREG_temp0_B, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_B);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR8);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_B);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL(ir, IREG_temp1_B, IREG_temp0_B, IREG_temp2);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_B);
@@ -543,7 +693,7 @@ uint32_t ropD2(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetch
 }
 uint32_t ropD3_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         if (!(CL & 0x1f) || !block->ins)
@@ -559,6 +709,20 @@ uint32_t ropD3_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_16(dest_reg), IREG_16(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_16(dest_reg), IREG_16(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_16(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOVZX(ir, IREG_flags_op1, IREG_16(dest_reg));
                         uop_SHL(ir, IREG_16(dest_reg), IREG_16(dest_reg), IREG_temp2);
@@ -598,6 +762,22 @@ uint32_t ropD3_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_temp0_W, IREG_temp0_W, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_W);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_temp0_W, IREG_temp0_W, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR16);
+                        uop_MOVZX(ir, IREG_flags_res, IREG_temp0_W);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL(ir, IREG_temp1_W, IREG_temp0_W, IREG_temp2);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1_W);
@@ -635,7 +815,7 @@ uint32_t ropD3_w(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 }
 uint32_t ropD3_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
 {
-        if (!(fetchdat & 0x20)) /*ROL/ROR/RCL/RCR*/
+        if ((fetchdat & 0x30) == 0x10) /*RCL/RCR*/
                 return 0;
 
         if (!(CL & 0x1f) || !block->ins)
@@ -651,6 +831,20 @@ uint32_t ropD3_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_32(dest_reg), IREG_32(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_32(dest_reg), IREG_32(dest_reg), IREG_temp2);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_32(dest_reg));
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_MOV(ir, IREG_flags_op1, IREG_32(dest_reg));
                         uop_SHL(ir, IREG_32(dest_reg), IREG_32(dest_reg), IREG_temp2);
@@ -690,6 +884,22 @@ uint32_t ropD3_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
                 switch (fetchdat & 0x38)
                 {
+                        case 0x00: /*ROL*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROL(ir, IREG_temp0, IREG_temp0, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROL32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
+                        case 0x08: /*ROR*/
+                        uop_CALL_FUNC(ir, flags_rebuild);
+                        uop_ROR(ir, IREG_temp0, IREG_temp0, IREG_temp2);
+                        uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
+                        uop_MOV_IMM(ir, IREG_flags_op, FLAGS_ROR32);
+                        uop_MOV(ir, IREG_flags_res, IREG_temp0);
+                        break;
+
                         case 0x20: case 0x30: /*SHL*/
                         uop_SHL(ir, IREG_temp1, IREG_temp0, IREG_temp2);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);

@@ -15,6 +15,8 @@
 #define RM_OP_XOR 0x30
 #define RM_OP_CMP 0x38
 
+#define RM_OP_ROL 0x00
+#define RM_OP_ROR 0x08
 #define RM_OP_SHL 0x20
 #define RM_OP_SHR 0x28
 #define RM_OP_SAR 0x38
@@ -1261,6 +1263,94 @@ void host_x86_RET(codeblock_t *block)
 {
         codegen_alloc_bytes(block, 1);
         codegen_addbyte(block, 0xc3); /*RET*/
+}
+
+void host_x86_ROL8_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROL8 CL & 8\n");
+        codegen_alloc_bytes(block, 2);
+        codegen_addbyte2(block, 0xd2, 0xc0 | RM_OP_ROL | dst_reg); /*SHL dst_reg, CL*/
+}
+void host_x86_ROL16_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROL16 CL & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0x66, 0xd3, 0xc0 | RM_OP_ROL | dst_reg); /*SHL dst_reg, CL*/
+}
+void host_x86_ROL32_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROL32 CL & 8\n");
+        codegen_alloc_bytes(block, 2);
+        codegen_addbyte2(block, 0xd3, 0xc0 | RM_OP_ROL | dst_reg); /*SHL dst_reg, CL*/
+}
+
+void host_x86_ROL8_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROL8 imm & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0xc0, 0xc0 | RM_OP_ROL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+void host_x86_ROL16_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROL16 imm & 8\n");
+        codegen_alloc_bytes(block, 4);
+        codegen_addbyte4(block, 0x66, 0xc1, 0xc0 | RM_OP_ROL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+void host_x86_ROL32_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROL32 imm & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_ROL | dst_reg, shift); /*SHL dst_reg, shift*/
+}
+
+void host_x86_ROR8_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROR8 CL & 8\n");
+        codegen_alloc_bytes(block, 2);
+        codegen_addbyte2(block, 0xd2, 0xc0 | RM_OP_ROR | dst_reg); /*SHR dst_reg, CL*/
+}
+void host_x86_ROR16_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROR16 CL & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0x66, 0xd3, 0xc0 | RM_OP_ROR | dst_reg); /*SHR dst_reg, CL*/
+}
+void host_x86_ROR32_CL(codeblock_t *block, int dst_reg)
+{
+        if (dst_reg & 8)
+                fatal("ROR32 CL & 8\n");
+        codegen_alloc_bytes(block, 2);
+        codegen_addbyte2(block, 0xd3, 0xc0 | RM_OP_ROR | dst_reg); /*SHR dst_reg, CL*/
+}
+
+void host_x86_ROR8_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROR8 imm & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0xc0, 0xc0 | RM_OP_ROR | dst_reg, shift); /*SHR dst_reg, shift*/
+}
+void host_x86_ROR16_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROR16 imm & 8\n");
+        codegen_alloc_bytes(block, 4);
+        codegen_addbyte4(block, 0x66, 0xc1, 0xc0 | RM_OP_ROR | dst_reg, shift); /*SHR dst_reg, shift*/
+}
+void host_x86_ROR32_IMM(codeblock_t *block, int dst_reg, int shift)
+{
+        if (dst_reg & 8)
+                fatal("ROR32 im & 8\n");
+        codegen_alloc_bytes(block, 3);
+        codegen_addbyte3(block, 0xc1, 0xc0 | RM_OP_ROR | dst_reg, shift); /*SHR dst_reg, shift*/
 }
 
 void host_x86_SAR8_CL(codeblock_t *block, int dst_reg)

@@ -130,6 +130,22 @@ void host_x86_PUSH(codeblock_t *block, int src_reg);
 
 void host_x86_RET(codeblock_t *block);
 
+void host_x86_ROL8_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_ROL16_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_ROL32_IMM(codeblock_t *block, int dst_reg, int shift);
+
+void host_x86_ROL8_CL(codeblock_t *block, int dst_reg);
+void host_x86_ROL16_CL(codeblock_t *block, int dst_reg);
+void host_x86_ROL32_CL(codeblock_t *block, int dst_reg);
+
+void host_x86_ROR8_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_ROR16_IMM(codeblock_t *block, int dst_reg, int shift);
+void host_x86_ROR32_IMM(codeblock_t *block, int dst_reg, int shift);
+
+void host_x86_ROR8_CL(codeblock_t *block, int dst_reg);
+void host_x86_ROR16_CL(codeblock_t *block, int dst_reg);
+void host_x86_ROR32_CL(codeblock_t *block, int dst_reg);
+
 void host_x86_SAR8_CL(codeblock_t *block, int dst_reg);
 void host_x86_SAR16_CL(codeblock_t *block, int dst_reg);
 void host_x86_SAR32_CL(codeblock_t *block, int dst_reg);
