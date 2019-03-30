@@ -28,6 +28,14 @@ enum
         FLAGS_SAR16,
         FLAGS_SAR32,
 
+        FLAGS_ROL8,
+        FLAGS_ROL16,
+        FLAGS_ROL32,
+
+        FLAGS_ROR8,
+        FLAGS_ROR16,
+        FLAGS_ROR32,
+
         FLAGS_INC8,
         FLAGS_INC16,
         FLAGS_INC32,
@@ -81,6 +89,12 @@ static inline int ZF_SET()
                 case FLAGS_SBC32:
                 return !cpu_state.flags_res;
                 
+                case FLAGS_ROL8:
+                case FLAGS_ROL16:
+                case FLAGS_ROL32:
+                case FLAGS_ROR8:
+                case FLAGS_ROR16:
+                case FLAGS_ROR32:
                 case FLAGS_UNKNOWN:
                 return cpu_state.flags & Z_FLAG;
         }
@@ -127,6 +141,12 @@ static inline int NF_SET()
                 case FLAGS_SBC32:
                 return cpu_state.flags_res & 0x80000000;
                 
+                case FLAGS_ROL8:
+                case FLAGS_ROL16:
+                case FLAGS_ROL32:
+                case FLAGS_ROR8:
+                case FLAGS_ROR16:
+                case FLAGS_ROR32:
                 case FLAGS_UNKNOWN:
                 return cpu_state.flags & N_FLAG;
         }
@@ -169,6 +189,12 @@ static inline int PF_SET()
                 case FLAGS_SBC32:
                 return znptable8[cpu_state.flags_res & 0xff] & P_FLAG;
                 
+                case FLAGS_ROL8:
+                case FLAGS_ROL16:
+                case FLAGS_ROL32:
+                case FLAGS_ROR8:
+                case FLAGS_ROR16:
+                case FLAGS_ROR32:
                 case FLAGS_UNKNOWN:
                 return cpu_state.flags & P_FLAG;
         }
@@ -226,7 +252,21 @@ static inline int VF_SET()
                 return ((cpu_state.flags_op2 == 1) && (cpu_state.flags_op1 & 0x8000));
                 case FLAGS_SHR32:
                 return ((cpu_state.flags_op2 == 1) && (cpu_state.flags_op1 & 0x80000000));
-                
+
+                case FLAGS_ROL8:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 7)) & 1;
+                case FLAGS_ROL16:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 15)) & 1;
+                case FLAGS_ROL32:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 31)) & 1;
+
+                case FLAGS_ROR8:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 1)) & 0x40;
+                case FLAGS_ROR16:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 1)) & 0x4000;
+                case FLAGS_ROR32:
+                return (cpu_state.flags_res ^ (cpu_state.flags_res >> 1)) & 0x40000000;
+
                 case FLAGS_UNKNOWN:
                 return cpu_state.flags & V_FLAG;
         }
@@ -283,6 +323,12 @@ static inline int AF_SET()
                 return ((cpu_state.flags_op1 & 0xf) < (cpu_state.flags_op2 & 0xf)) ||
                         ((cpu_state.flags_op1 & 0xf) == (cpu_state.flags_op2 & 0xf) && (cpu_state.flags_res & 0xf) != 0);
                 
+                case FLAGS_ROL8:
+                case FLAGS_ROL16:
+                case FLAGS_ROL32:
+                case FLAGS_ROR8:
+                case FLAGS_ROR16:
+                case FLAGS_ROR32:
                 case FLAGS_UNKNOWN:
                 return cpu_state.flags & A_FLAG;
         }
@@ -344,6 +390,18 @@ static inline int CF_SET()
                 case FLAGS_ZN16:
                 case FLAGS_ZN32:
                 return 0;
+
+                case FLAGS_ROL8:
+                case FLAGS_ROL16:
+                case FLAGS_ROL32:
+                return cpu_state.flags_res & 1;
+                
+                case FLAGS_ROR8:
+                return (cpu_state.flags_res & 0x80) ? 1 : 0;
+                case FLAGS_ROR16:
+                return (cpu_state.flags_res & 0x8000) ? 1 :0;
+                case FLAGS_ROR32:
+                return (cpu_state.flags_res & 0x80000000) ? 1 : 0;
                 
                 case FLAGS_DEC8:
                 case FLAGS_DEC16:
@@ -396,6 +454,15 @@ static inline void flags_rebuild_c()
         }                
 }
 
+static inline int flags_res_valid()
+{
+        if (cpu_state.flags_op == FLAGS_UNKNOWN ||
+            (cpu_state.flags_op >= FLAGS_ROL8 && cpu_state.flags_op <= FLAGS_ROR32))
+                return 0;
+
+        return 1;
+}
+
 static inline void setznp8(uint8_t val)
 {
         cpu_state.flags_op = FLAGS_ZN8;
@@ -417,6 +484,10 @@ static inline void setznp32(uint32_t val)
         cpu_state.flags_res = res;                \
         cpu_state.flags_op1 = orig;               \
         cpu_state.flags_op2 = shift;
+
+#define set_flags_rotate(op, res)               \
+        cpu_state.flags_op = op;                \
+        cpu_state.flags_res = res;
 
 static inline void setadd8(uint8_t a, uint8_t b)
 {

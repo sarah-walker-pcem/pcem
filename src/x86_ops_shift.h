@@ -8,18 +8,14 @@
                         case 0x00: /*ROL b, c*/                                         \
                         temp = (temp << (c & 7)) | (temp >> (8-(c & 7)));               \
                         seteab(temp);      if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
-                        if ((temp ^ (temp >> 7)) & 1) cpu_state.flags |= V_FLAG;        \
+                        set_flags_rotate(FLAGS_ROL8, temp);                             \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x08: /*ROR b,CL*/                                         \
                         temp = (temp >> (c & 7)) | (temp << (8-(c & 7)));               \
-                        seteab(temp);      if (cpu_state.abrt) return 1;                     \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 0x80) cpu_state.flags |= C_FLAG;                     \
-                        if ((temp ^ (temp >> 1)) & 0x40) cpu_state.flags |= V_FLAG;     \
+                        seteab(temp);      if (cpu_state.abrt) return 1;                \
+                        set_flags_rotate(FLAGS_ROR8, temp);                             \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                                 \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
@@ -89,18 +85,14 @@
                         case 0x00: /*ROL w, c*/                                         \
                         temp = (temp << (c & 15)) | (temp >> (16-(c & 15)));            \
                         seteaw(temp);      if (cpu_state.abrt) return 1;                \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
-                        if ((temp ^ (temp >> 15)) & 1) cpu_state.flags |= V_FLAG;       \
+                        set_flags_rotate(FLAGS_ROL16, temp);                            \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x08: /*ROR w,CL*/                                         \
                         temp = (temp >> (c & 15)) | (temp << (16-(c & 15)));            \
                         seteaw(temp);      if (cpu_state.abrt) return 1;                \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 0x8000) cpu_state.flags |= C_FLAG;                   \
-                        if ((temp ^ (temp >> 1)) & 0x4000) cpu_state.flags |= V_FLAG;   \
+                        set_flags_rotate(FLAGS_ROR16, temp);                            \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
@@ -170,18 +162,14 @@
                         case 0x00: /*ROL l, c*/                                         \
                         temp = (temp << c) | (temp >> (32-c));                          \
                         seteal(temp);      if (cpu_state.abrt) return 1;                \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 1) cpu_state.flags |= C_FLAG;                        \
-                        if ((temp ^ (temp >> 31)) & 1) cpu_state.flags |= V_FLAG;       \
+                        set_flags_rotate(FLAGS_ROL32, temp);                            \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
                         case 0x08: /*ROR l,CL*/                                         \
                         temp = (temp >> c) | (temp << (32-c));                          \
                         seteal(temp);      if (cpu_state.abrt) return 1;                \
-                        cpu_state.flags &= ~(C_FLAG | V_FLAG);                          \
-                        if (temp & 0x80000000) cpu_state.flags |= C_FLAG;               \
-                        if ((temp ^ (temp >> 1)) & 0x40000000) cpu_state.flags |= V_FLAG;       \
+                        set_flags_rotate(FLAGS_ROR32, temp);                            \
                         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 7);                           \
                         PREFETCH_RUN((cpu_mod == 3) ? 3 : 7, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, ea32); \
                         break;                                                          \
