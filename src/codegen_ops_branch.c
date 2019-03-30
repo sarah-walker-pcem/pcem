@@ -965,6 +965,7 @@ uint32_t ropLOOPE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         }
         uop_MOV_IMM(ir, IREG_pc, dest_addr);
         uop_JMP(ir, codegen_exit_rout);
+        uop_NOP_BARRIER(ir);
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 
@@ -1001,6 +1002,7 @@ uint32_t ropLOOPNE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         }
         uop_MOV_IMM(ir, IREG_pc, dest_addr);
         uop_JMP(ir, codegen_exit_rout);
+        uop_NOP_BARRIER(ir);
         uop_set_jump_dest(ir, jump_uop);
         uop_set_jump_dest(ir, jump_uop2);
 
