@@ -68,7 +68,7 @@ int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
 static void build_load_routine(codeblock_t *block, int size, int is_float)
 {
         uint32_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint32_t *misaligned_offset;
 	int offset;
 
         /*In - W0 = address
@@ -116,13 +116,13 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
 	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_XSP, -16);
 	if (size == 1)
-		host_arm64_call(block, (uintptr_t)readmembl);
+		host_arm64_call(block, (void *)readmembl);
 	else if (size == 2)
-		host_arm64_call(block, (uintptr_t)readmemwl);
+		host_arm64_call(block, (void *)readmemwl);
 	else if (size == 4)
-		host_arm64_call(block, (uintptr_t)readmemll);
+		host_arm64_call(block, (void *)readmemll);
 	else if (size == 8)
-		host_arm64_call(block, (uintptr_t)readmemql);
+		host_arm64_call(block, (void *)readmemql);
 	else
 		fatal("build_load_routine - unknown size %i\n", size);
 	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
@@ -136,8 +136,8 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 
 static void build_store_routine(codeblock_t *block, int size, int is_float)
 {
-        uint8_t *branch_offset;
-        uint8_t *misaligned_offset;
+        uint32_t *branch_offset;
+        uint32_t *misaligned_offset;
 	int offset;
 
         /*In - R0 = address, R1 = data
@@ -189,13 +189,13 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	else if (size == 8)
 		host_arm64_FMOV_Q_D(block, REG_X1, REG_V_TEMP);
 	if (size == 1)
-		host_arm64_call(block, (uintptr_t)writemembl);
+		host_arm64_call(block, (void *)writemembl);
 	else if (size == 2)
-		host_arm64_call(block, (uintptr_t)writememwl);
+		host_arm64_call(block, (void *)writememwl);
 	else if (size == 4)
-		host_arm64_call(block, (uintptr_t)writememll);
+		host_arm64_call(block, (void *)writememll);
 	else if (size == 8)
-		host_arm64_call(block, (uintptr_t)writememql);
+		host_arm64_call(block, (void *)writememql);
 	else
 		fatal("build_store_routine - unknown size %i\n", size);
 	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
@@ -242,7 +242,7 @@ static void build_fp_round_routine(codeblock_t *block, int is_quad)
 	host_arm64_LDR_REG_X(block, REG_TEMP2, REG_TEMP2, REG_TEMP);
 	host_arm64_BR(block, REG_TEMP2);
 
-	jump_table = &block_write_data[block_pos];
+	jump_table = (uint64_t *)&block_write_data[block_pos];
 	block_pos += 4*8;
 
 	jump_table[X87_ROUNDING_NEAREST] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //tie even
@@ -315,7 +315,7 @@ void codegen_backend_init()
         codegen_gpf_rout = &block_write_data[block_pos];
 	host_arm64_mov_imm(block, REG_ARG0, 0);
 	host_arm64_mov_imm(block, REG_ARG1, 0);
-	host_arm64_call(block, x86gpf);
+	host_arm64_call(block, (void *)x86gpf);
 
         codegen_exit_rout = &block_write_data[block_pos];
 	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_XSP, 64);

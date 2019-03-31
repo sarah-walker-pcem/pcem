@@ -1396,7 +1396,7 @@ static int codegen_MOV_INT_DOUBLE_64(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_D(src_size) && REG_IS_Q(src_64_size))
         {
-                uint8_t *branch_offset;
+                uint32_t *branch_offset;
 
                 /*If TAG_UINT64 is set then the source is MM[]. Otherwise it is a double in ST()*/
                 host_arm64_FMOV_D_D(block, dest_reg, src_64_reg);

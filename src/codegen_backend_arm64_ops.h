@@ -82,6 +82,8 @@ void host_arm64_FABS_D(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_FADD_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FADD_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FCMEQ_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_FCMGE_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
+void host_arm64_FCMGT_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FCMP_D(codeblock_t *block, int src_n_reg, int src_m_reg);
 void host_arm64_FDIV_D(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
 void host_arm64_FDIV_S(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg);
@@ -111,6 +113,8 @@ void host_arm64_FMOV_Q_D(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_FMOV_S_W(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_FMOV_W_S(codeblock_t *block, int dst_reg, int src_reg);
 void host_arm64_FMOV_S_ONE(codeblock_t *block, int dst_reg);
+
+void host_arm64_FNEG_D(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_arm64_FRINTX_D(codeblock_t *block, int dst_reg, int src_reg);
 
