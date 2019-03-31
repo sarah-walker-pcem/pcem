@@ -97,7 +97,7 @@
 #define REG_V30 30
 #define REG_V31 31
 
-#define REG_SP  31
+#define REG_XSP 31
 
 #define REG_ARG0 REG_X0
 #define REG_ARG1 REG_X1

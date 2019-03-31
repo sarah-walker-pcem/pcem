@@ -3222,7 +3222,7 @@ void codegen_direct_read_double(codeblock_t *block, int host_reg, void *p)
 }
 void codegen_direct_read_st_8(codeblock_t *block, int host_reg, void *base, int reg_idx)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3230,7 +3230,7 @@ void codegen_direct_read_st_8(codeblock_t *block, int host_reg, void *base, int 
 }
 void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int reg_idx)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3238,7 +3238,7 @@ void codegen_direct_read_st_64(codeblock_t *block, int host_reg, void *base, int
 }
 void codegen_direct_read_st_double(codeblock_t *block, int host_reg, void *base, int reg_idx)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3282,7 +3282,7 @@ void codegen_direct_write_double(codeblock_t *block, void *p, int host_reg)
 }
 void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int host_reg)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3290,7 +3290,7 @@ void codegen_direct_write_st_8(codeblock_t *block, void *base, int reg_idx, int 
 }
 void codegen_direct_write_st_64(codeblock_t *block, void *base, int reg_idx, int host_reg)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3298,7 +3298,7 @@ void codegen_direct_write_st_64(codeblock_t *block, void *base, int reg_idx, int
 }
 void codegen_direct_write_st_double(codeblock_t *block, void *base, int reg_idx, int host_reg)
 {
-        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+        host_arm64_LDR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         host_arm64_ADD_IMM(block, REG_TEMP, REG_TEMP, reg_idx);
 	host_arm64_ADDX_IMM(block, REG_TEMP2, REG_CPUSTATE, (uintptr_t)base - (uintptr_t)&cpu_state);
         host_arm64_AND_IMM(block, REG_TEMP, REG_TEMP, 7);
@@ -3316,47 +3316,47 @@ void codegen_direct_write_ptr(codeblock_t *block, void *p, int host_reg)
 void codegen_direct_read_16_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
 	if (in_range12_h(stack_offset))
-		host_arm64_LDRH_IMM(block, host_reg, REG_SP, stack_offset);
+		host_arm64_LDRH_IMM(block, host_reg, REG_XSP, stack_offset);
 	else
 		fatal("codegen_direct_read_32_stack - not in range\n");
 }
 void codegen_direct_read_32_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
 	if (in_range12_w(stack_offset))
-		host_arm64_LDR_IMM_W(block, host_reg, REG_SP, stack_offset);
+		host_arm64_LDR_IMM_W(block, host_reg, REG_XSP, stack_offset);
 	else
 		fatal("codegen_direct_read_32_stack - not in range\n");
 }
 void codegen_direct_read_pointer_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
 	if (in_range12_q(stack_offset))
-		host_arm64_LDR_IMM_X(block, host_reg, REG_SP, stack_offset);
+		host_arm64_LDR_IMM_X(block, host_reg, REG_XSP, stack_offset);
 	else
 		fatal("codegen_direct_read_pointer_stack - not in range\n");
 }
 void codegen_direct_read_64_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
-        host_arm64_LDR_IMM_F64(block, host_reg, REG_SP, stack_offset);
+        host_arm64_LDR_IMM_F64(block, host_reg, REG_XSP, stack_offset);
 }
 void codegen_direct_read_double_stack(codeblock_t *block, int host_reg, int stack_offset)
 {
-        host_arm64_LDR_IMM_F64(block, host_reg, REG_SP, stack_offset);
+        host_arm64_LDR_IMM_F64(block, host_reg, REG_XSP, stack_offset);
 }
 
 void codegen_direct_write_32_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
 	if (in_range12_w(stack_offset))
-		host_arm64_STR_IMM_W(block, host_reg, REG_SP, stack_offset);
+		host_arm64_STR_IMM_W(block, host_reg, REG_XSP, stack_offset);
 	else
 		fatal("codegen_direct_write_32_stack - not in range\n");
 }
 void codegen_direct_write_64_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
-        host_arm64_STR_IMM_F64(block, host_reg, REG_SP, stack_offset);
+        host_arm64_STR_IMM_F64(block, host_reg, REG_XSP, stack_offset);
 }
 void codegen_direct_write_double_stack(codeblock_t *block, int stack_offset, int host_reg)
 {
-        host_arm64_STR_IMM_F64(block, host_reg, REG_SP, stack_offset);
+        host_arm64_STR_IMM_F64(block, host_reg, REG_XSP, stack_offset);
 }
 
 void codegen_set_jump_dest(codeblock_t *block, void *p)

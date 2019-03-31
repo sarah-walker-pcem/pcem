@@ -114,7 +114,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 	host_arm64_branch_set_offset(branch_offset, &block_write_data[block_pos]);
 	if (size != 1)
 		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
-	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_XSP, -16);
 	if (size == 1)
 		host_arm64_call(block, (uintptr_t)readmembl);
 	else if (size == 2)
@@ -130,7 +130,7 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 		host_arm64_FMOV_S_W(block, REG_V_TEMP, REG_W0);
 	else if (size == 8)
 		host_arm64_FMOV_D_Q(block, REG_V_TEMP, REG_X0);
-	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_XSP, 16);
 	host_arm64_RET(block, REG_X30);
 }
 
@@ -183,7 +183,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	host_arm64_branch_set_offset(branch_offset, &block_write_data[block_pos]);
 	if (size != 1)
 		host_arm64_branch_set_offset(misaligned_offset, &block_write_data[block_pos]);
-	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_XSP, -16);
 	if (size == 4 && is_float)
 		host_arm64_FMOV_W_S(block, REG_W1, REG_V_TEMP);
 	else if (size == 8)
@@ -199,7 +199,7 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 	else
 		fatal("build_store_routine - unknown size %i\n", size);
 	codegen_direct_read_8(block, REG_W1, &cpu_state.abrt);
-	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_XSP, 16);
 	host_arm64_RET(block, REG_X30);
 }
 
@@ -318,12 +318,12 @@ void codegen_backend_init()
 	host_arm64_call(block, x86gpf);
 
         codegen_exit_rout = &block_write_data[block_pos];
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
-	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_XSP, 64);
+	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_XSP, 16);
 	host_arm64_RET(block, REG_X30);
 
         block_write_data = NULL;
@@ -349,12 +349,12 @@ void codegen_backend_prologue(codeblock_t *block)
 
 	/*Entry code*/
 
-	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X27, REG_X28, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X25, REG_X26, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X23, REG_X24, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X21, REG_X22, REG_SP, -16);
-	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_SP, -64);
+	host_arm64_STP_PREIDX_X(block, REG_X29, REG_X30, REG_XSP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X27, REG_X28, REG_XSP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X25, REG_X26, REG_XSP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X23, REG_X24, REG_XSP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X21, REG_X22, REG_XSP, -16);
+	host_arm64_STP_PREIDX_X(block, REG_X19, REG_X20, REG_XSP, -64);
 
 	host_arm64_MOVX_IMM(block, REG_CPUSTATE, (uint64_t)&cpu_state);
 
@@ -362,18 +362,18 @@ void codegen_backend_prologue(codeblock_t *block)
         {
 		host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
 		host_arm64_SUB_IMM(block, REG_TEMP, REG_TEMP, block->TOP);
-		host_arm64_STR_IMM_W(block, REG_TEMP, REG_SP, IREG_TOP_diff_stack_offset);
+		host_arm64_STR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
         }
 }
 
 void codegen_backend_epilogue(codeblock_t *block)
 {
-	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_SP, 64);
-	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_SP, 16);
-	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_SP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_XSP, 64);
+	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X25, REG_X26, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X27, REG_X28, REG_XSP, 16);
+	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_XSP, 16);
 	host_arm64_RET(block, REG_X30);
 
 	codegen_allocator_clean_blocks(block->head_mem_block);
