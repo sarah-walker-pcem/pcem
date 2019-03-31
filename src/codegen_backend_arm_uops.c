@@ -1595,6 +1595,11 @@ static int codegen_MOVZX_REG_PTR_16(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_NOP(codeblock_t *block, uop_t *uop)
+{
+	return 0;
+}
+
 static int codegen_OR(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
@@ -2503,6 +2508,220 @@ static int codegen_PUNPCKLDQ(codeblock_t *block, uop_t *uop)
         return 0;
 }
 
+static int codegen_ROL(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+	if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+		host_arm_RSB_IMM(block, REG_TEMP2, shift_reg, 32);
+		host_arm_MOV_REG_ROR_REG(block, dest_reg, src_reg, REG_TEMP2);
+        }
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+		host_arm_UXTH(block, REG_TEMP, src_reg, 0);
+		host_arm_RSB_IMM(block, REG_TEMP2, shift_reg, 16);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 16);
+		host_arm_MOV_REG_ROR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+		host_arm_RSB_IMM(block, REG_TEMP2, shift_reg, 8);
+		host_arm_UXTB(block, REG_TEMP, src_reg, 0);
+		host_arm_AND_IMM(block, REG_TEMP2, REG_TEMP2, 7);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+		host_arm_MOV_REG_LSR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+        }
+	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size))
+        {
+		host_arm_RSB_IMM(block, REG_TEMP2, shift_reg, 8);
+		host_arm_UXTB(block, REG_TEMP, src_reg, 8);
+		host_arm_AND_IMM(block, REG_TEMP2, REG_TEMP2, 7);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+		host_arm_MOV_REG_LSR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 8, 8);
+        }
+	else
+                fatal("ROL %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_ROL_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+		if (!(uop->imm_data & 31))
+		{
+			if (src_reg != dest_reg)
+				host_arm_MOV_REG(block, dest_reg, src_reg);
+		}
+		else
+		{
+			host_arm_MOV_REG_ROR(block, dest_reg, src_reg, 32 - (uop->imm_data & 31));
+		}
+        }
+        else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+		if ((uop->imm_data & 15) == 0)
+		{
+			if (src_reg != dest_reg)
+				host_arm_BFI(block, dest_reg, src_reg, 0, 16);
+		}
+		else
+		{
+			host_arm_UXTH(block, REG_TEMP, src_reg, 0);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 16);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, 16-(uop->imm_data & 15));
+			host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+		}
+        }
+        else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+		if ((uop->imm_data & 7) == 0)
+		{
+			if (src_reg != dest_reg)
+				host_arm_BFI(block, dest_reg, src_reg, 0, 8);
+		}
+		else
+		{
+			host_arm_UXTB(block, REG_TEMP, src_reg, 0);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, 8-(uop->imm_data & 7));
+			host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+		}
+        }
+	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size))
+        {
+		if ((uop->imm_data & 7) == 0)
+		{
+			if (src_reg != dest_reg)
+		                fatal("ROL_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+		}
+		else
+		{
+			host_arm_UXTB(block, REG_TEMP, src_reg, 8);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, 8-(uop->imm_data & 7));
+			host_arm_BFI(block, dest_reg, REG_TEMP, 8, 8);
+		}
+        }
+	else
+                fatal("ROL_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_ROR(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+	if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+		host_arm_MOV_REG_ROR_REG(block, dest_reg, src_reg, shift_reg);
+        }
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+		host_arm_UXTH(block, REG_TEMP, src_reg, 0);
+		host_arm_AND_IMM(block, REG_TEMP2, shift_reg, 15);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 16);
+		host_arm_MOV_REG_LSR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+        }
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+		host_arm_UXTB(block, REG_TEMP, src_reg, 0);
+		host_arm_AND_IMM(block, REG_TEMP2, shift_reg, 7);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+		host_arm_MOV_REG_LSR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+        }
+	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size))
+        {
+		host_arm_UXTB(block, REG_TEMP, src_reg, 8);
+		host_arm_AND_IMM(block, REG_TEMP2, shift_reg, 7);
+		host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+		host_arm_MOV_REG_LSR_REG(block, REG_TEMP, REG_TEMP, REG_TEMP2);
+		host_arm_BFI(block, dest_reg, REG_TEMP, 8, 8);
+        }
+	else
+                fatal("ROR %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+static int codegen_ROR_IMM(codeblock_t *block, uop_t *uop)
+{
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
+
+        if (REG_IS_L(dest_size) && REG_IS_L(src_size))
+        {
+		if (!(uop->imm_data & 31))
+		{
+			if (src_reg != dest_reg)
+				host_arm_MOV_REG(block, dest_reg, src_reg);
+		}
+		else
+		{
+			host_arm_MOV_REG_ROR(block, dest_reg, src_reg, uop->imm_data & 31);
+		}
+        }
+	else if (REG_IS_W(dest_size) && REG_IS_W(src_size))
+        {
+		if ((uop->imm_data & 15) == 0)
+		{
+			if (src_reg != dest_reg)
+		                fatal("ROR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+		}
+		else
+		{
+			host_arm_UXTH(block, REG_TEMP, src_reg, 0);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 16);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, uop->imm_data & 15);
+			host_arm_BFI(block, dest_reg, REG_TEMP, 0, 16);
+		}
+        }
+	else if (REG_IS_B(dest_size) && REG_IS_B(src_size))
+        {
+		if ((uop->imm_data & 7) == 0)
+		{
+			if (src_reg != dest_reg)
+		                fatal("ROR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+		}
+		else
+		{
+			host_arm_UXTB(block, REG_TEMP, src_reg, 0);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, uop->imm_data & 7);
+			host_arm_BFI(block, dest_reg, REG_TEMP, 0, 8);
+		}
+        }
+	else if (REG_IS_BH(dest_size) && REG_IS_BH(src_size))
+        {
+		if ((uop->imm_data & 7) == 0)
+		{
+			if (src_reg != dest_reg)
+		                fatal("ROR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+		}
+		else
+		{
+			host_arm_UXTB(block, REG_TEMP, src_reg, 8);
+			host_arm_ORR_REG_LSL(block, REG_TEMP, REG_TEMP, REG_TEMP, 8);
+			host_arm_MOV_REG_LSR(block, REG_TEMP, REG_TEMP, uop->imm_data & 7);
+			host_arm_BFI(block, dest_reg, REG_TEMP, 8, 8);
+		}
+        }
+	else
+                fatal("ROR_IMM %02x %02x\n", uop->dest_reg_a_real, uop->src_reg_a_real);
+
+        return 0;
+}
+
 static int codegen_SAR(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real), shift_reg = HOST_REG_GET(uop->src_reg_b_real);
@@ -2997,6 +3216,10 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_SHL_IMM & UOP_MASK] = codegen_SHL_IMM,
         [UOP_SHR     & UOP_MASK] = codegen_SHR,
         [UOP_SHR_IMM & UOP_MASK] = codegen_SHR_IMM,
+        [UOP_ROL     & UOP_MASK] = codegen_ROL,
+        [UOP_ROL_IMM & UOP_MASK] = codegen_ROL_IMM,
+        [UOP_ROR     & UOP_MASK] = codegen_ROR,
+        [UOP_ROR_IMM & UOP_MASK] = codegen_ROR_IMM,
 
         [UOP_CMP_IMM_JZ & UOP_MASK] = codegen_CMP_IMM_JZ,
 
@@ -3095,7 +3318,9 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_PUNPCKHDQ & UOP_MASK] = codegen_PUNPCKHDQ,
         [UOP_PUNPCKLBW & UOP_MASK] = codegen_PUNPCKLBW,
         [UOP_PUNPCKLWD & UOP_MASK] = codegen_PUNPCKLWD,
-        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ
+        [UOP_PUNPCKLDQ & UOP_MASK] = codegen_PUNPCKLDQ,
+
+	[UOP_NOP_BARRIER & UOP_MASK] = codegen_NOP
 };
 
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p)

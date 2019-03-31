@@ -49,6 +49,7 @@
 #define OPCODE_MVN_REG  (0x1e << OPCODE_SHIFT)
 #define OPCODE_ORR_IMM  (0x38 << OPCODE_SHIFT)
 #define OPCODE_ORR_REG  (0x18 << OPCODE_SHIFT)
+#define OPCODE_RSB_IMM  (0x26 << OPCODE_SHIFT)
 #define OPCODE_RSB_REG  (0x06 << OPCODE_SHIFT)
 #define OPCODE_STMDB_WB (0x92 << OPCODE_SHIFT)
 #define OPCODE_STR_IMM  (0x50 << OPCODE_SHIFT)
@@ -177,10 +178,12 @@
 #define SHIFT_ASR_IMM(x) (SHIFT_TYPE_ASR | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 #define SHIFT_LSL_IMM(x) (SHIFT_TYPE_LSL | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 #define SHIFT_LSR_IMM(x) (SHIFT_TYPE_LSR | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
+#define SHIFT_ROR_IMM(x) (SHIFT_TYPE_ROR | SHIFT_TYPE_IMM | ((x) << SHIFT_IMM_SHIFT))
 
 #define SHIFT_ASR_REG(x) (SHIFT_TYPE_ASR | SHIFT_TYPE_REG | Rs(x))
 #define SHIFT_LSL_REG(x) (SHIFT_TYPE_LSL | SHIFT_TYPE_REG | Rs(x))
 #define SHIFT_LSR_REG(x) (SHIFT_TYPE_LSR | SHIFT_TYPE_REG | Rs(x))
+#define SHIFT_ROR_REG(x) (SHIFT_TYPE_ROR | SHIFT_TYPE_REG | Rs(x))
 
 #define BFI_lsb(lsb) ((lsb) << 7)
 #define BFI_msb(msb) ((msb) << 16)
@@ -695,6 +698,14 @@ void host_arm_MOV_REG_LSR_REG(codeblock_t *block, int dst_reg, int src_reg, int 
 {
 	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_LSR_REG(shift_reg));
 }
+void host_arm_MOV_REG_ROR(codeblock_t *block, int dst_reg, int src_reg, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_ROR_IMM(shift));
+}
+void host_arm_MOV_REG_ROR_REG(codeblock_t *block, int dst_reg, int src_reg, int shift_reg)
+{
+	codegen_addlong(block, COND_AL | OPCODE_MOV_REG | Rd(dst_reg) | Rm(src_reg) | SHIFT_ROR_REG(shift_reg));
+}
 
 void host_arm_MOVT_IMM(codeblock_t *block, int dst_reg, uint16_t imm)
 {
@@ -730,6 +741,24 @@ void host_arm_ORR_REG_LSL_cond(codeblock_t *block, uint32_t cond, int dst_reg, i
 	codegen_addlong(block, cond | OPCODE_ORR_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
 }
 
+void host_arm_RSB_IMM(codeblock_t *block, int dst_reg, int src_reg, uint32_t imm)
+{
+	uint32_t arm_imm;
+
+	if (get_arm_imm(imm, &arm_imm))
+	{
+		codegen_addlong(block, COND_AL | OPCODE_RSB_IMM | Rd(dst_reg) | Rn(src_reg) | arm_imm);
+	}
+	else
+	{
+		host_arm_MOV_IMM(block, REG_TEMP, imm);
+		host_arm_RSB_REG_LSL(block, dst_reg, src_reg, REG_TEMP, 0);
+	}
+}
+void host_arm_RSB_REG_LSL(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
+{
+	codegen_addlong(block, COND_AL | OPCODE_RSB_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSL_IMM(shift));
+}
 void host_arm_RSB_REG_LSR(codeblock_t *block, int dst_reg, int src_reg_n, int src_reg_m, int shift)
 {
 	codegen_addlong(block, COND_AL | OPCODE_RSB_REG | Rd(dst_reg) | Rn(src_reg_n) | Rm(src_reg_m) | SHIFT_LSR_IMM(shift));
