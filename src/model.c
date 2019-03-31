@@ -56,6 +56,7 @@
 #include "sound_ps1.h"
 #include "sound_pssj.h"
 #include "sound_sn76489.h"
+#include "sst39sf010.h"
 #include "tandy_eeprom.h"
 #include "tandy_rom.h"
 #include "um8669f.h"
@@ -675,6 +676,7 @@ void at_mvp3_init()
         mvp3_init();
         vt82c586b_init(7, 8, 9, 10, 0);
         w83877tf_init();
+        device_add(&sst_39sf010_device);
 }
 
 void model_init()
