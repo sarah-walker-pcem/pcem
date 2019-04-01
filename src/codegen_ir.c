@@ -9,6 +9,7 @@ extern int has_ea;
 static ir_data_t ir_block;
 
 static int codegen_unroll_start, codegen_unroll_count;
+static int codegen_unroll_first_instruction;
 
 ir_data_t *codegen_ir_init()
 {
@@ -20,10 +21,11 @@ ir_data_t *codegen_ir_init()
         return &ir_block;
 }
 
-void codegen_ir_set_unroll(int count, int start)
+void codegen_ir_set_unroll(int count, int start, int first_instruction)
 {
         codegen_unroll_count = count;
         codegen_unroll_start = start;
+        codegen_unroll_first_instruction = first_instruction;
 }
 
 static void duplicate_uop(ir_data_t *ir, uop_t *uop, int offset)
@@ -59,7 +61,10 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
         if (codegen_unroll_count)
         {
                 int unroll_count;
-                int unroll_end = ir->wr_pos;
+                int unroll_end;
+                
+                codegen_set_loop_start(ir, codegen_unroll_first_instruction);
+                unroll_end = ir->wr_pos;
                 
                 for (unroll_count = 1; unroll_count < codegen_unroll_count; unroll_count++)
                 {

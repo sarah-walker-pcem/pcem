@@ -33,21 +33,13 @@ int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc,
 {
         int start;
         int max_unroll;
+        int first_instruction;
 
         /*Check that dest instruction was actually compiled into block*/
-        for (start = 0; start < ir->wr_pos; start++)
-        {
-//                pclog("  uOP %i %08x %08x\n", c, ir->uops[c].pc, dest_addr);
-                if (ir->uops[start].pc == dest_addr)
-                        break;
-                if (ir->uops[start].pc > dest_addr)
-                {
-//                        pclog("Went past dest_addr. start_pc=%08x end_pc=%08x dest_pc=%08x wr_pos=%i loop_size=%i\n", block->pc-cs, next_pc, dest_addr, ir->wr_pos, ir->wr_pos-start);
-                        return 0;
-                }
-        }
+        start = codegen_get_instruction_uop(block, dest_addr, &first_instruction);
+
         /*Couldn't find any uOPs corresponding to the destination instruction*/
-        if (start == ir->wr_pos)
+        if (start == -1)
         {
                 /*Is instruction jumping to itself?*/
                 if (dest_addr != cpu_state.oldpc)
@@ -55,6 +47,8 @@ int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc,
 //                        pclog("Couldn't find start. start_pc=%08x end_pc=%08x dest_pc=%08x wr_pos=%i loop_size=%i\n", block->pc-cs, next_pc, dest_addr, ir->wr_pos, ir->wr_pos-start);
                         return 0;
                 }
+                else
+                        start = ir->wr_pos;
         }
 
         max_unroll = UNROLL_MAX_UOPS / ((ir->wr_pos-start)+6);
@@ -65,7 +59,7 @@ int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc,
         if (max_unroll <= 1)
                 return 0;
 
-        codegen_ir_set_unroll(max_unroll, start);
+        codegen_ir_set_unroll(max_unroll, start, first_instruction);
 
         return 1;
 }

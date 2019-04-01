@@ -13,6 +13,41 @@
 #include "codegen_ops.h"
 #include "codegen_ops_helpers.h"
 
+#define MAX_INSTRUCTION_COUNT 100
+
+static struct
+{
+        uint32_t pc;
+        int op_ssegs;
+        x86seg *op_ea_seg;
+        uint32_t op_32;
+        int first_uop;
+} codegen_instructions[MAX_INSTRUCTION_COUNT];
+
+int codegen_get_instruction_uop(codeblock_t *block, uint32_t pc, int *first_instruction)
+{
+        int c;
+        
+        for (c = 0; c < block->ins; c++)
+        {
+                if (codegen_instructions[c].pc == pc)
+                {
+                        *first_instruction = c;
+                        return codegen_instructions[c].first_uop;
+                }
+        }
+        
+        *first_instruction = block->ins;
+        return -1;
+}
+
+void codegen_set_loop_start(ir_data_t *ir, int first_instruction)
+{
+        uop_MOV_IMM(ir, IREG_op32, codegen_instructions[first_instruction].op_32);
+        uop_MOV_PTR(ir, IREG_ea_seg, (void *)codegen_instructions[first_instruction].op_ea_seg);
+        uop_MOV_IMM(ir, IREG_ssegs, codegen_instructions[first_instruction].op_ssegs);
+}
+
 int has_ea;
 
 codeblock_t *codeblock;
@@ -551,6 +586,12 @@ void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t 
         }
 
 generate_call:
+        codegen_instructions[block->ins].pc = cpu_state.oldpc;
+        codegen_instructions[block->ins].op_ssegs = last_op_ssegs;
+        codegen_instructions[block->ins].op_ea_seg = last_op_ea_seg;
+        codegen_instructions[block->ins].op_32 = last_op_32;
+        codegen_instructions[block->ins].first_uop = ir->wr_pos;
+
         codegen_timing_opcode(opcode, fetchdat, op_32, op_pc);
 
         codegen_accumulate(ACCREG_ins, 1);
@@ -645,6 +686,11 @@ generate_call:
                                 uop_MOV_IMM(ir, IREG_pc, new_pc);
 
                         codegen_endpc = (cs + cpu_state.pc) + 8;
+
+                        block->ins++;
+
+                	if (block->ins >= 50)
+                		CPU_BLOCK_END();
 
                         return;
                 }
