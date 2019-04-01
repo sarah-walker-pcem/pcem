@@ -12,6 +12,7 @@ typedef struct sst_t
         int dirty;
         
         char flash_path[1024];
+        uint8_t data[0x20000];
 } sst_t;
 
 #define SST_CHIP_ERASE    0x10
@@ -30,7 +31,10 @@ static void sst_new_command(sst_t *sst, uint8_t val)
         {
                 case SST_CHIP_ERASE:
                 if (sst->erase)
+                {
                         memset(rom, 0xff, 0x20000);
+                        memset(sst->data, 0xff, 0x20000);
+                }
                 sst->command_state = 0;
                 sst->erase = 0;
                 break;
@@ -69,6 +73,7 @@ static void sst_sector_erase(sst_t *sst, uint32_t addr)
 {
 //        pclog("SST sector erase %08x\n", addr);
         memset(&rom[addr & 0x1f000], 0xff, 4096);
+        memset(&sst->data[addr & 0x1f000], 0xff, 4096);
         sst->dirty = 1;
 }
 
@@ -121,6 +126,7 @@ static void sst_write(uint32_t addr, uint8_t val, void *p)
                 case 3:
 //                pclog("Byte program %08x %02x\n", addr, val);
                 rom[addr & 0x1ffff] = val;
+                sst->data[addr & 0x1ffff] = val;
                 sst->command_state = 0;
                 sst->dirty = 1;
                 break;
@@ -184,6 +190,7 @@ static void *sst_39sf010_init()
                 fread(rom, 0x20000, 1, f);
                 fclose(f);
         }
+        memcpy(sst->data, rom, 0x20000);
 
         clear_id_mode(sst);
 	
@@ -197,7 +204,7 @@ static void sst_39sf010_close(void *p)
         if (sst->dirty)
         {
                 FILE *f = romfopen(sst->flash_path, "wb");
-                fwrite(rom, 0x20000, 1, f);
+                fwrite(sst->data, 0x20000, 1, f);
                 fclose(f);
         }
 
