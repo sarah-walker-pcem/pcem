@@ -13,7 +13,7 @@
 #include "codegen_ops.h"
 #include "codegen_ops_helpers.h"
 
-#define MAX_INSTRUCTION_COUNT 100
+#define MAX_INSTRUCTION_COUNT 50
 
 static struct
 {
@@ -689,7 +689,7 @@ generate_call:
 
                         block->ins++;
 
-                	if (block->ins >= 50)
+                	if (block->ins >= MAX_INSTRUCTION_COUNT)
                 		CPU_BLOCK_END();
 
                         return;
@@ -761,7 +761,7 @@ generate_call:
         
         block->ins++;
 
-	if (block->ins >= 50)
+	if (block->ins >= MAX_INSTRUCTION_COUNT)
 		CPU_BLOCK_END();
 
         codegen_endpc = (cs + cpu_state.pc) + 8;
