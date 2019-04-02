@@ -401,7 +401,7 @@ void exec386_dynarec(int cycs)
                                 }
                                 else if (valid_block && !cpu_state.abrt)
                                 {
-                                        uint32_t start_pc = cpu_state.pc;
+                                        uint32_t start_pc = cs+cpu_state.pc;
                                         const int max_block_size = (block->flags & CODEBLOCK_BYTE_MASK) ? ((128 - 25) - (start_pc & 0x3f)) : 1000;
                                         
                                         cpu_block_end = 0;
@@ -447,7 +447,7 @@ void exec386_dynarec(int cycs)
                                                   will prevent any block from spanning more than
                                                   2 pages. In practice this limit will never be
                                                   hit, as host block size is only 2kB*/
-                                                if ((cpu_state.pc - start_pc) >= max_block_size)
+                                                if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
                                                 if (trap)
@@ -477,7 +477,7 @@ void exec386_dynarec(int cycs)
                                 else if (!cpu_state.abrt)
                                 {
                                         /*Mark block but do not recompile*/
-                                        uint32_t start_pc = cpu_state.pc;
+                                        uint32_t start_pc = cs+cpu_state.pc;
                                         const int max_block_size = (block->flags & CODEBLOCK_BYTE_MASK) ? ((128 - 25) - (start_pc & 0x3f)) : 1000;
 
                                         cpu_block_end = 0;
@@ -519,7 +519,7 @@ void exec386_dynarec(int cycs)
                                                   will prevent any block from spanning more than
                                                   2 pages. In practice this limit will never be
                                                   hit, as host block size is only 2kB*/
-                                                if ((cpu_state.pc - start_pc) >= max_block_size)
+                                                if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
                                                 if (trap)
