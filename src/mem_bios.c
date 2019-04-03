@@ -965,6 +965,14 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x7fff;
                 return 1;
+
+                case ROM_PB410A:
+                f = romfopen("pb410a/PB410A.080337.4ABF.U25.bin","rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

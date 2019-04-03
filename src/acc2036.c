@@ -88,6 +88,9 @@ static uint8_t acc2036_read(uint16_t addr, void *p)
 {
         if (!(addr & 1))
                 return acc2036.reg_idx;
+
+        if (acc2036.reg_idx >= 0xbc)
+                return 0xff;
                 
         return acc2036.regs[acc2036.reg_idx];
 }

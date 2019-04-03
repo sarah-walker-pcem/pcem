@@ -467,6 +467,7 @@ enum
 	ROM_IBMPS2_M70_TYPE4,
 	ROM_TULIP_TC7,
 	ROM_ZD_SUPERS,   /* [8088] Zenith Data Systems SupersPort */
+	ROM_PB410A,
                 	
         ROM_MAX
 };

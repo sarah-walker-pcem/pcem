@@ -23,6 +23,7 @@
 #include "vid_et4000w32.h"
 #include "vid_genius.h"
 #include "vid_hercules.h"
+#include "vid_ht216.h"
 #include "vid_incolor.h"
 #include "vid_colorplus.h"
 #include "vid_mda.h"
@@ -128,6 +129,7 @@ static video_timings_t timing_ps1_svga = {VIDEO_ISA, 6, 8,16, 6, 8,16};
 static video_timings_t timing_t3100e   = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_t1000    = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_pc425x   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
+static video_timings_t timing_pb410a   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
 static video_timings_t timing_pb570    = {VIDEO_BUS, 4, 4, 8, 10,10,20};
 static video_timings_t timing_pb520r   = {VIDEO_BUS, 4, 4, 8, 10,10,20};
 
@@ -219,6 +221,9 @@ device_t *video_card_getdevice(int card)
                 
                 case ROM_ELX_PC425X:
                 return &tgui9400cxi_elx_device;
+
+                case ROM_PB410A:
+                return &ht216_32_pb410a_device;
 
                 case ROM_PB570:
                 return &gd5430_pb570_device;
@@ -332,6 +337,7 @@ int video_is_mda()
         	case ROM_T3100E:
         	case ROM_T1000:
                 case ROM_ELX_PC425X:
+                case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
                 return 0;
@@ -371,6 +377,7 @@ int video_is_cga()
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
                 case ROM_ELX_PC425X:
+                case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
                 return 0;
@@ -407,6 +414,7 @@ int video_is_ega_vga()
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
                 case ROM_ELX_PC425X:
+                case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
                 return 1;
@@ -559,6 +567,11 @@ void video_updatetiming()
                         
                         case ROM_ELX_PC425X:
                         timing = &timing_pc425x;
+                        break;
+                        
+                        case ROM_PB410A:
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_pb410a;
                         break;
                         
                         case ROM_PB570:
@@ -731,6 +744,15 @@ void video_init()
                 
                 case ROM_ELX_PC425X:
                 device_add(&tgui9400cxi_elx_device);
+                return;
+
+                case ROM_PB410A:
+                device_add(&ht216_32_pb410a_device);
+                if (gfxcard != GFX_BUILTIN)
+                {
+                        svga_set_override(svga_get_pri(), 1);
+                        break;
+                }
                 return;
 
                 case ROM_PB570:

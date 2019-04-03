@@ -5,6 +5,8 @@
 #include "mouse.h"
 
 #include "acc2036.h"
+#include "acc2168.h"
+#include "acc3221.h"
 #include "acer386sx.h"
 #include "ali1429.h"
 #include "amstrad.h"
@@ -107,6 +109,7 @@ void       xt_t1000_init();
 void       xt_t1200_init();
 void    at_sl82c460_init();
 void       at_zappa_init();
+void      at_pb410a_init();
 void      at_pb520r_init();
 void       at_pb570_init();
 void     compaq_pip_init();
@@ -189,6 +192,7 @@ MODEL models[] =
         {"[486] Award SiS 496/497",       ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,                   1,  256,   1,      at_sis496_init, NULL},
         {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_HAS_IDE,                            1,  256,   1,    at_sl82c460_init, NULL},
         {"[486] IBM PS/2 Model 70 (type 4)",   ROM_IBMPS2_M70_TYPE4, "ibmps2_m70_type4", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,               2,   16,   2,   ps2_model_70_init, NULL},
+        {"[486] Packard Bell PB410A",     ROM_PB410A,           "pb410a",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,             1,   64,   1,      at_pb410a_init, NULL},
         
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,      at_batman_init, NULL},
         {"[Socket 4] Packard Bell PB520R",ROM_PB520R,           "pb520r",         { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,   1,  128,   1,      at_pb520r_init, NULL},
@@ -590,6 +594,14 @@ void pb_l300sx_init()
         at_init();
         acc2036_init();
 }
+
+void at_pb410a_init()
+{
+        at_init();
+        acc2168_init();
+        acc3221_init();
+}
+
 
 void at_sis496_init()
 {

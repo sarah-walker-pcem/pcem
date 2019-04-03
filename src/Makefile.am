@@ -23,7 +23,7 @@ wx-resources.cpp : pc.xrc
 	-wxrc -c pc.xrc -o wx-resources.cpp
 
 # PCem
-pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
+pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acc2036.c acc2168.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
 cmd640.c codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c hdd_file.c headland.c i430hx.c i430lx.c i430fx.c i430vx.c ide.c ide_atapi.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
@@ -36,7 +36,7 @@ sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_e
 t1000.c t3100e.c \
 timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c vid_ati18800.c vid_ati28800.c \
 vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_compaq_cga.c vid_ega.c vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c \
-vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti037.c vid_oti067.c vid_paradise.c vid_pc200.c \
+vid_ht216.c vid_icd2061.c vid_ics2595.c vid_incolor.c vid_mda.c vid_olivetti_m24.c vid_oti037.c vid_oti067.c vid_paradise.c vid_pc200.c \
 vid_pc1512.c vid_pc1640.c vid_pcjr.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c vid_sigma.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c \
