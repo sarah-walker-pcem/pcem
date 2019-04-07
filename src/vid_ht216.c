@@ -78,6 +78,8 @@ void ht216_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3c2:
                 ht216->clk_sel = (ht216->clk_sel & ~3) | ((val & 0x0c) >> 2);
                 ht216->misc = val;
+                ht216->read_bank_reg[0]  = (ht216->read_bank_reg[0] & ~0x20) | ((val & HT_MISC_PAGE_SEL) ? 0x20 : 0);
+                ht216->write_bank_reg[0] = (ht216->write_bank_reg[0] & ~0x20) | ((val & HT_MISC_PAGE_SEL) ? 0x20 : 0);
                 ht216_remap(ht216);
                 svga_recalctimings(&ht216->svga);
                 break;
@@ -145,6 +147,12 @@ void ht216_out(uint16_t addr, uint8_t val, void *p)
                                 break;
                                 case 0xf6:
                                 svga->vram_display_mask = (val & 0x40) ? ht216->vram_mask : 0x3ffff;
+                                ht216->read_bank_reg[0]  = (ht216->read_bank_reg[0] & ~0xc0) | ((val & 0xc) << 4);
+                                ht216->write_bank_reg[0] = (ht216->write_bank_reg[0] & ~0xc0) | ((val & 0x3) << 6);
+                                break;
+                                case 0xf9:
+                                ht216->read_bank_reg[0]  = (ht216->read_bank_reg[0] & ~0x10) | ((val & 1) ? 0x10 : 0);
+                                ht216->write_bank_reg[0] = (ht216->write_bank_reg[0] & ~0x10) | ((val & 1) ? 0x10 : 0);
                                 break;
                                 case 0xff:
                                 svga->hwcursor.addr = ((ht216->ht_regs[0x94] << 6) | (3 << 14) | ((val & 0x60) << 11)) << 2;
@@ -296,29 +304,24 @@ void ht216_remap(ht216_t *ht216)
         }
         else
         {
-                uint32_t read_offset = (ht216->ht_regs[0xf6] & 0xc) << 16;
-                uint32_t write_offset = (ht216->ht_regs[0xf6] & 0x3) << 18;
+                uint8_t read_bank_reg[2] = {ht216->read_bank_reg[0], ht216->read_bank_reg[1]};
+                uint8_t write_bank_reg[2] = {ht216->write_bank_reg[0], ht216->write_bank_reg[1]};
                 
-                if (svga->chain4 && (ht216->ht_regs[0xfc] & HT_REG_FC_ECOLRE))
+                if (!svga->chain4 || !(ht216->ht_regs[0xfc] & HT_REG_FC_ECOLRE))
                 {
-                        if (ht216->misc & HT_MISC_PAGE_SEL)
-                        {
-                                read_offset |= (1 << 17);
-                                write_offset |= (1 << 17);
-                        }
-                        if (ht216->ht_regs[0xf9] & HT_REG_F9_XPSEL)
-                        {
-                                read_offset |= (1 << 16);
-                                write_offset |= (1 << 16);
-                        }
+                        read_bank_reg[0] &= ~0x30;
+                        read_bank_reg[1] &= ~0x30;
+                        write_bank_reg[0] &= ~0x30;
+                        write_bank_reg[1] &= ~0x30;
                 }
-                ht216->read_bank[0] = read_offset + (ht216->read_bank_reg[0] << 12);
-                ht216->write_bank[0] = write_offset + (ht216->write_bank_reg[0] << 12);
+
+                ht216->read_bank[0] = read_bank_reg[0] << 12;
+                ht216->write_bank[0] = write_bank_reg[0] << 12;
                 if (ht216->ht_regs[0xe0] & HT_REG_E0_SBAE)
                 {
                         /*Split bank*/
-                        ht216->read_bank[1] = read_offset + (ht216->read_bank_reg[1] << 12);
-                        ht216->write_bank[1] = write_offset + (ht216->write_bank_reg[1] << 12);
+                        ht216->read_bank[1] = read_bank_reg[1] << 12;
+                        ht216->write_bank[1] = write_bank_reg[1] << 12;
                 }
                 else
                 {
@@ -334,7 +337,7 @@ void ht216_remap(ht216_t *ht216)
                         ht216->write_bank[1] >>= 2;
                 }
         }
-//        pclog("Remap - chain4=%i gdc[6]=%02x read[0]=%05X write[0]=%05X read[1]=%05X write[1]=%05X\n", svga->chain4, svga->gdcreg[6], ht216->read_bank[0], ht216->write_bank[0], ht216->read_bank[1], ht216->write_bank[1]);
+//        pclog("Remap - chain4=%i [e0]=%02x [e8]=%02x [e9]=%02x [f6]=%02x [fc]=%02x [f9]=%02x misc=%02x gdc[6]=%02x read[0]=%05X write[0]=%05X read[1]=%05X write[1]=%05X\n", svga->chain4, ht216->ht_regs[0xe0], ht216->ht_regs[0xe8], ht216->ht_regs[0xe9], ht216->ht_regs[0xf6], ht216->ht_regs[0xfc], ht216->ht_regs[0xf9], ht216->misc, svga->gdcreg[6], ht216->read_bank[0], ht216->write_bank[0], ht216->read_bank[1], ht216->write_bank[1]);
 }
 
 void ht216_recalctimings(svga_t *svga)
