@@ -38,6 +38,7 @@ static int opFINIT(uint32_t fetchdat)
         cpu_state.TOP = 0;
         cpu_state.ismmx = 0;
         CLOCK_CYCLES(17);
+        CPU_BLOCK_END();
         return 0;
 }
 
