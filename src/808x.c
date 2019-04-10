@@ -630,14 +630,13 @@ void resetx86()
         idt.base = 0;
         idt.limit = is386 ? 0x03FF : 0xFFFF;
         cpu_state.flags=2;
+        EAX = EBX = ECX = EDX = ESI = EDI = EBP = ESP = 0;
         makeznptable();
         resetreadlookup();
         makemod1table();
         FETCHCLEAR();
         x87_reset();
         cpu_set_edx();
-        EAX = 0;
-        ESP=0;
         mmu_perm=4;
         x86seg_reset();
         codegen_reset();
@@ -679,6 +678,7 @@ void softresetx86()
         cpu_state.flags=2;
         idt.base = 0;
         idt.limit = is386 ? 0x03FF : 0xFFFF;
+        EAX = EBX = ECX = EDX = ESI = EDI = EBP = ESP = 0;
         x86seg_reset();
         x86_was_reset = 1;
 }
