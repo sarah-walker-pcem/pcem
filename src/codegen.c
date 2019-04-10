@@ -121,7 +121,7 @@ void codegen_check_seg_write(codeblock_t *block, ir_data_t *ir, x86seg *seg)
 
 static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc)
 {
-        uint32_t old_pc = *op_pc;
+        uint32_t old_pc = (*op_pc) + 1;
 //        pclog("codegen - mod=%i rm=%i reg=%i fetchdat=%08x\n", cpu_mod, cpu_rm, cpu_reg, fetchdat);
         if (!cpu_mod && cpu_rm == 6)
         {
@@ -182,7 +182,7 @@ static x86seg *codegen_generate_ea_16_long(ir_data_t *ir, x86seg *op_ea_seg, uin
                 }
         }
         
-        codegen_mark_code_present(ir->block, cs+old_pc, (*op_pc)-old_pc);
+        codegen_mark_code_present(ir->block, cs+old_pc, ((*op_pc)+1)-old_pc);
         return op_ea_seg;
 }
 
