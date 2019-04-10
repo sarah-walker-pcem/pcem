@@ -1224,7 +1224,7 @@ static void es1371_speed_changed(void *p)
 {
         es1371_t *es1371 = (es1371_t *)p;
         
-        es1371->dac[1].latch = (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
+        es1371->dac[1].latch = (uint64_t)((double)TIMER_USEC * (1000000.0 / 48000.0));
 }
 
 void es1371_add_status_info_dac(es1371_t *es1371, char *s, int max_len, int dac_nr)
