@@ -10,7 +10,7 @@ static int opPREFETCH_a16(uint32_t fetchdat)
 }
 static int opPREFETCH_a32(uint32_t fetchdat)
 {
-        fetch_ea_16(fetchdat);
+        fetch_ea_32(fetchdat);
         ILLEGAL_ON(cpu_mod == 3);
 
         CLOCK_CYCLES(1);
