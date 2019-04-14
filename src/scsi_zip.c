@@ -218,6 +218,14 @@ static void scsi_zip_close(void *p)
         zip_data = NULL;
 }
 
+static void scsi_zip_reset(void *p)
+{
+        scsi_zip_data *data = p;
+
+        timer_disable(&data->callback_timer);
+        data->cmd_pos = CMD_POS_IDLE;
+}
+
 static int scsi_add_data(uint8_t val, void *p)
 {
         scsi_zip_data *data = p;
@@ -1195,6 +1203,7 @@ scsi_device_t scsi_zip =
         scsi_zip_init,
         scsi_zip_atapi_init,
         scsi_zip_close,
+        scsi_zip_reset,
         
         scsi_zip_start_command,
         scsi_zip_command,

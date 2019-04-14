@@ -816,6 +816,7 @@ scsi_device_t scsi_hd =
         scsi_hd_init,
         NULL,
         scsi_hd_close,
+        NULL,
         
         scsi_hd_start_command,
         scsi_hd_command,

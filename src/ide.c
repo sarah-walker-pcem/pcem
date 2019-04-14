@@ -819,6 +819,7 @@ void callbackide(int ide_board)
                 {
                         ide->cylinder=0xEB14;
                         atapi->stop();
+                        atapi_reset(&ide->atapi);
                 }
                 if (ide->type == IDE_NONE)
                 {
@@ -829,6 +830,7 @@ void callbackide(int ide_board)
                 {
                         ide_other->cylinder=0xEB14;
                         atapi->stop();
+                        atapi_reset(&ide_other->atapi);
                 }
                 if (ide_other->type == IDE_NONE)
                 {

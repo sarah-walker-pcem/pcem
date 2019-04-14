@@ -563,3 +563,13 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                 break;
         }
 }
+
+void atapi_reset(atapi_device_t *atapi_dev)
+{
+        pclog("atapi_reset\n");
+        atapi_dev->state = ATAPI_STATE_IDLE;
+        atapi_dev->command_pos = 0;
+        atapi_dev->data_read_pos = 0;
+        atapi_dev->data_write_pos = 0;
+        scsi_bus_reset(&atapi_dev->bus);
+}

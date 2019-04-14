@@ -420,6 +420,14 @@ static void scsi_cd_close(void *p)
         free(data);
 }
 
+static void scsi_cd_reset(void *p)
+{
+        scsi_cd_data_t *data = p;
+
+        timer_disable(&data->callback_timer);
+        data->cmd_pos = CMD_POS_IDLE;
+}
+
 static void scsi_cd_illegal(scsi_cd_data_t *data)
 {
         atapi_cmd_error(data, KEY_ILLEGAL_REQ, ASC_INVALID_LUN, 0);
@@ -1546,6 +1554,7 @@ scsi_device_t scsi_cd =
         scsi_cd_init,
         scsi_cd_atapi_init,
         scsi_cd_close,
+        scsi_cd_reset,
         
         scsi_cd_start_command,
         scsi_cd_command,

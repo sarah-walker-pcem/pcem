@@ -9,6 +9,7 @@ typedef struct scsi_device_t
         void *(*init)(struct scsi_bus_t *bus, int id);
         void *(*atapi_init)(struct scsi_bus_t *bus, int id, struct atapi_device_t *atapi_dev);
         void (*close)(void *p);
+        void (*reset)(void *p);
         
         void (*start_command)(void *p);
         int (*command)(uint8_t *cdb, void *p);
@@ -106,6 +107,7 @@ int scsi_bus_match(scsi_bus_t *bus, int bus_assert);
 void scsi_bus_kick(scsi_bus_t *bus);
 void scsi_bus_init(scsi_bus_t *bus);
 void scsi_bus_close(scsi_bus_t *bus);
+void scsi_bus_reset(scsi_bus_t *bus);
 
 void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id, struct atapi_device_t *atapi_dev);
 
