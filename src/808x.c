@@ -680,6 +680,7 @@ void softresetx86()
         idt.limit = is386 ? 0x03FF : 0xFFFF;
         EAX = EBX = ECX = EDX = ESI = EDI = EBP = ESP = 0;
         x86seg_reset();
+        flushmmucache();
         x86_was_reset = 1;
 }
 
