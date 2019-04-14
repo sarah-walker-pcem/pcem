@@ -27,3 +27,5 @@ void host_arm64_STRB_IMM_W(codeblock_t *block, int dest_reg, int base_reg, int o
 
 void host_arm64_call(codeblock_t *block, void *dst_addr);
 void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data);
+
+uint32_t host_arm64_find_imm(uint32_t data);

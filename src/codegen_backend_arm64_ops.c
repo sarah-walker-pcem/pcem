@@ -218,6 +218,8 @@
 #define IMMR(immr) ((immr) << 16)
 #define IMMS(imms) ((imms) << 10)
 
+#define IMM_LOGICAL(imm) ((imm) << 10)
+
 #define BIT_TBxZ(bit) ((((bit) & 0x1f) << 19) | (((bit) & 0x20) ? (1 << 31) : 0))
 
 #define OFFSET14(offset) (((offset >> 2) << 5) & 0x0007ffe0)
@@ -379,25 +381,11 @@ void host_arm64_ADR(codeblock_t *block, int dst_reg, int offset)
 
 void host_arm64_AND_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
-	if (imm_data == 0xff) /*Quick hack until proper immediate generation is written */
+	uint32_t imm_encoding = host_arm64_find_imm(imm_data);
+
+	if (imm_encoding)
 	{
-		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x07));
-	}
-	else if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
-	{
-		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x0f));
-	}
-	else if (imm_data == 0xffffff00)
-	{
-		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(24) | IMMS(0x17));
-	}
-	else if (imm_data == 0xffff00ff)
-	{
-		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(16) | IMMS(0x17));
-	}
-	else if (imm_data == 0x0000ff00)
-	{
-		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(24) | IMMS(0x07));
+		codegen_addlong(block, OPCODE_AND_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM_LOGICAL(imm_encoding));
 	}
 	else
 	{
@@ -424,25 +412,11 @@ void host_arm64_AND_REG_V(codeblock_t *block, int dst_reg, int src_n_reg, int sr
 
 void host_arm64_ANDS_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
-	if (imm_data == 0xff) /*Quick hack until proper immediate generation is written */
+	uint32_t imm_encoding = host_arm64_find_imm(imm_data);
+
+	if (imm_encoding)
 	{
-		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x07));
-	}
-	else if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
-	{
-		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x0f));
-	}
-	else if (imm_data == 0xffffff00)
-	{
-		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(24) | IMMS(0x17));
-	}
-	else if (imm_data == 0xffff00ff)
-	{
-		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(16) | IMMS(0x17));
-	}
-	else if (imm_data == 0x0000ff00)
-	{
-		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(24) | IMMS(0x07));
+		codegen_addlong(block, OPCODE_ANDS_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM_LOGICAL(imm_encoding));
 	}
 	else
 	{
@@ -722,9 +696,11 @@ void host_arm64_DUP_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int elem
 
 void host_arm64_EOR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
-	if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
+	uint32_t imm_encoding = host_arm64_find_imm(imm_data);
+
+	if (imm_encoding)
 	{
-		codegen_addlong(block, OPCODE_EOR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x0f));
+		codegen_addlong(block, OPCODE_EOR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM_LOGICAL(imm_encoding));
 	}
 	else
 	{
@@ -1062,21 +1038,11 @@ void host_arm64_NOP(codeblock_t *block)
 
 void host_arm64_ORR_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data)
 {
-	if (imm_data == 0xffff) /*Quick hack until proper immediate generation is written */
+	uint32_t imm_encoding = host_arm64_find_imm(imm_data);
+
+	if (imm_encoding)
 	{
-		codegen_addlong(block, OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(0) | IMMS(0x0f));
-	}
-	else if (imm_data == 0xffff0000)
-	{
-		codegen_addlong(block, OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(16) | IMMS(0x0f));
-	}
-	else if (imm_data == 0xffffff00)
-	{
-		codegen_addlong(block, OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(24) | IMMS(0x17));
-	}
-	else if (imm_data == 0xffff00ff)
-	{
-		codegen_addlong(block, OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMMN(0) | IMMR(16) | IMMS(0x17));
+		codegen_addlong(block, OPCODE_ORR_IMM | Rd(dst_reg) | Rn(src_n_reg) | IMM_LOGICAL(imm_encoding));
 	}
 	else
 	{
