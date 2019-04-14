@@ -85,7 +85,7 @@ pcem_SOURCES += codegen_backend_arm.c codegen_backend_arm_ops.c codegen_backend_
 endif
 
 if CPU_ARM64
-pcem_SOURCES += codegen_backend_arm64.c codegen_backend_arm64_ops.c codegen_backend_arm64_uops.c
+pcem_SOURCES += codegen_backend_arm64.c codegen_backend_arm64_imm.c codegen_backend_arm64_ops.c codegen_backend_arm64_uops.c
 endif
 
 if USE_NETWORKING
