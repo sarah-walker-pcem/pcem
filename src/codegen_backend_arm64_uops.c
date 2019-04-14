@@ -1246,16 +1246,16 @@ static int codegen_MOV_IMM(codeblock_t *block, uop_t *uop)
 	}
 	else if (REG_IS_W(dest_size))
 	{
-		host_arm64_MOVK_IMM(block, dest_reg, uop->imm_data);
+		host_arm64_MOVK_IMM(block, dest_reg, uop->imm_data & 0xffff);
 	}
 	else if (REG_IS_B(dest_size))
 	{
-		host_arm64_MOVZ_IMM(block, REG_TEMP, uop->imm_data);
+		host_arm64_MOVZ_IMM(block, REG_TEMP, uop->imm_data & 0xff);
 		host_arm64_BFI(block, dest_reg, REG_TEMP, 0, 8);
 	}
 	else if (REG_IS_BH(dest_size))
 	{
-		host_arm64_MOVZ_IMM(block, REG_TEMP, uop->imm_data);
+		host_arm64_MOVZ_IMM(block, REG_TEMP, uop->imm_data & 0xff);
 		host_arm64_BFI(block, dest_reg, REG_TEMP, 8, 8);
 	}
 	else
@@ -3051,6 +3051,7 @@ const uOpFn uop_handlers[UOP_MAX] =
         [UOP_MOV_INT_DOUBLE_64 & UOP_MASK] = codegen_MOV_INT_DOUBLE_64,
         [UOP_MOV_REG_PTR       & UOP_MASK] = codegen_MOV_REG_PTR,
         [UOP_MOVZX_REG_PTR_8   & UOP_MASK] = codegen_MOVZX_REG_PTR_8,
+        [UOP_MOVZX_REG_PTR_16  & UOP_MASK] = codegen_MOVZX_REG_PTR_16,
 
         [UOP_ADD     & UOP_MASK] = codegen_ADD,
         [UOP_ADD_IMM & UOP_MASK] = codegen_ADD_IMM,
