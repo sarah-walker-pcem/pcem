@@ -151,7 +151,7 @@ char *video_card_getname(int card)
         return video_cards[card].name;
 }
 
-device_t *video_card_getdevice(int card)
+device_t *video_card_getdevice(int card, int romset)
 {
         switch (romset)
         {
@@ -169,25 +169,30 @@ device_t *video_card_getdevice(int card)
                 return &pc1512_device;
                 
                 case ROM_PC1640:
-                if (gfxcard == GFX_BUILTIN)
+                if (card == GFX_BUILTIN)
                         return &pc1640_device;
                 break;
                 
                 case ROM_PC200:
-                if (gfxcard == GFX_BUILTIN)
+                if (card == GFX_BUILTIN)
                         return &pc200_device;
+                break;
+
+		case ROM_PPC512:
+                if (card == GFX_BUILTIN)
+                        return &ppc512_device;
                 break;
                 
                 case ROM_OLIM24:
                 return &m24_device;
 
                 case ROM_PC2086:
-                if (gfxcard == GFX_BUILTIN)
+                if (card == GFX_BUILTIN)
                         return &paradise_pvga1a_pc2086_device;
                 break;
 
                 case ROM_PC3086:
-                if (gfxcard == GFX_BUILTIN)
+                if (card == GFX_BUILTIN)
                         return &paradise_pvga1a_pc3086_device;
                 break;
 
@@ -234,11 +239,16 @@ device_t *video_card_getdevice(int card)
         return video_cards[card].device;
 }
 
-int video_card_has_config(int card)
+int video_card_has_config(int card, int romset)
 {
-        if (card == GFX_BUILTIN)
+	/* Allow builtin cards to have configuration */
+	device_t *device = video_card_getdevice(card, romset);
+
+	if (!device)
+	{
                 return 0;
-        return video_cards[card].device->config ? 1 : 0;
+	}	
+        return device->config ? 1 : 0;
 }
 
 int video_card_getid(char *s)
@@ -312,8 +322,16 @@ int video_is_mda()
 {
         switch (romset)
         {
-                case ROM_PC1640:
                 case ROM_PC200:
+		case ROM_PPC512:
+		if (gfxcard == GFX_BUILTIN)
+		{
+/* The chipset here can emulate either CGA or MDA. Find out which */
+			return (pc200_is_mda);
+		}
+		break;
+
+                case ROM_PC1640:
                 case ROM_PC2086:
                 case ROM_PC3086:
                 case ROM_MEGAPC:
@@ -349,8 +367,14 @@ int video_is_cga()
         switch (romset)
         {
                 case ROM_PC200:
-                if (gfxcard != GFX_BUILTIN)
-                        break;
+		case ROM_PPC512:
+		if (gfxcard == GFX_BUILTIN)
+		{
+/* The chipset here can emulate either CGA or MDA. Find out which */
+			return (!pc200_is_mda);
+		}
+                break;
+
                 case ROM_IBMPCJR:
                 case ROM_TANDY:
                 case ROM_TANDY1000HX:
@@ -394,6 +418,7 @@ int video_is_ega_vga()
                 case ROM_TANDY1000SL2:
                 case ROM_PC1512:
                 case ROM_PC200:
+		case ROM_PPC512:
                 case ROM_OLIM24:
         	case ROM_T3100E:
         	case ROM_T1000:
@@ -514,6 +539,7 @@ void video_updatetiming()
                         break;
                 
                         case ROM_PC200:
+			case ROM_PPC512:
                         if (gfxcard == GFX_BUILTIN)
                                 timing = &timing_pc200;
                         break;
@@ -676,6 +702,14 @@ void video_init()
                         device_add(&pc200_device);
                         return;
                 }
+		break;
+
+		case ROM_PPC512:
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&ppc512_device);
+                        return;
+                }
                 break;
                 
                 case ROM_OLIM24:
@@ -788,7 +822,7 @@ uint8_t fontdatksc5601_user[192][32]; /* Korean KSC-5601 user defined font */
 
 int xsize=1,ysize=1;
 
-void loadfont(char *s, int format)
+void loadfont(char *s, fontformat_t format)
 {
         FILE *f=romfopen(s,"rb");
         int c,d;
@@ -800,7 +834,7 @@ void loadfont(char *s, int format)
 	}
 	switch (format)
         {
-		case 0:	/* MDA */
+		case FONT_MDA:	/* MDA */
                 for (c=0;c<256;c++)
                 {
                         for (d=0;d<8;d++)
@@ -824,33 +858,22 @@ void loadfont(char *s, int format)
                         }
                 }
 		break;
-		case 1:	/* PC200 */
-                for (c=0;c<256;c++)
-                {
-                        for (d=0;d<8;d++)
+		case FONT_PC200:	/* PC200 */
+		for (d=0;d<4;d++)	/* There are 4 fonts in the ROM */
+		{
+                	for (c=0;c<256;c++)	/* 8x14 MDA in 8x16 cell */
+                	{
+				fread(&fontdatm[256*d+c], 1, 16, f);
+			}
+			for (c=0;c<256; c++)	/* 8x8 CGA in 8x16 cell */
                         {
-                                fontdatm[c][d]=getc(f);
+				fread(fontdat[256*d+c], 1, 8, f);
+				fseek(f, 8, SEEK_CUR); 
                         }
-                }
-                for (c=0;c<256;c++)
-                {
-                       	for (d=0;d<8;d++)
-                        {
-                                fontdatm[c][d+8]=getc(f);
-                        }
-                }
-                fseek(f, 4096, SEEK_SET);
-                for (c=0;c<256;c++)
-                {
-                        for (d=0;d<8;d++)
-                        {
-                                fontdat[c][d]=getc(f);
-                        }
-                        for (d=0;d<8;d++) getc(f);                
                 }
 		break;
 		default:
-		case 2:	/* CGA */
+		case FONT_CGA:	/* CGA */
                 for (c=0;c<2048;c++)	/* Allow up to 2048 chars */
                 {
                        	for (d=0;d<8;d++)
@@ -859,7 +882,7 @@ void loadfont(char *s, int format)
                         }
                 }
 		break;
-		case 3: /* Wyse 700 */
+		case FONT_WY700: /* Wyse 700 */
                 for (c=0;c<512;c++)
                 {
                         for (d=0;d<32;d++)
@@ -868,7 +891,7 @@ void loadfont(char *s, int format)
                         }
                 }
 		break;
-		case 4: /* MDSI Genius */
+		case FONT_MDSI: /* MDSI Genius */
                 for (c=0;c<256;c++)
                 {
                         for (d=0;d<16;d++)
@@ -877,7 +900,7 @@ void loadfont(char *s, int format)
                         }
                 }
 		break;
-		case 5: /* Toshiba 3100e */
+		case FONT_T3100E: /* Toshiba 3100e */
 		for (d = 0; d < 2048; d += 512)	/* Four languages... */
 		{
 	                for (c = d; c < d+256; c++)
@@ -907,7 +930,7 @@ void loadfont(char *s, int format)
                 	}
 		}
                 break;
-		case 6: /* Korean KSC-5601 */
+		case FONT_KSC5601: /* Korean KSC-5601 */
                 for (c=0;c<16384;c++)
                 {
                        	for (d=0;d<32;d++)
@@ -916,7 +939,7 @@ void loadfont(char *s, int format)
                         }
                 }
                 break;
-		case 7: /* Sigma Color 400 */
+		case FONT_SIGMA400: /* Sigma Color 400 */
 		/* The first 4k of the character ROM holds an 8x8 font */
 		for (c = 0; c < 256; c++)
 		{

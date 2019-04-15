@@ -9,7 +9,6 @@
 #include "video.h"
 #include "vid_sigma.h"
 
-extern void loadfont(char *s, int format);
 
 /* The Sigma Designs Color 400 is a video card from 1985, presumably intended
  * as an EGA competitor.

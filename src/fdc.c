@@ -1421,6 +1421,11 @@ void fdc_discchange_clear(int drive)
                 disc_changed[drive] = 0;
 }
 
+int fdc_discchange_read()
+{
+        return (disc_changed[fdc.drive] || drive_empty[fdc.drive]) ? 1 : 0;
+}
+
 void fdc_set_dskchg_activelow()
 {
         fdc.dskchg_activelow = 1;

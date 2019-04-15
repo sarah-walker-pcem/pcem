@@ -7,6 +7,7 @@ void fdc_reset();
 void fdc_poll();
 void fdc_abort();
 void fdc_discchange_clear(int drive);
+int fdc_discchange_read();
 void fdc_set_dskchg_activelow();
 void fdc_3f1_enable(int enable);
 void fdc_set_ps1();

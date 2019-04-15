@@ -211,8 +211,15 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
                   are always enabled for PS/2 machines - this would mean that other peripherals
                   could fire NMIs regardless of the mask state, but as there aren't any emulated
                   MCA peripherals that do this it's currently a moot point.*/
-                if (!(models[model].flags & MODEL_MCA))
+
+		/* Also don't update the NMI mask on Amstrad PCs - actually
+		 * ought not to do it for any XT because their NMI mask 
+		 * register is at 0xA0. But particularly important on the 
+		 * PC200 and PPC because their video subsystem issues NMIs */
+                if (!(models[model].flags & (MODEL_MCA | MODEL_AMSTRAD)))
+		{
                         nmi_mask = ~val & 0x80;
+		}
         }
 }
 
@@ -255,6 +262,7 @@ void loadnvr()
                 case ROM_PC200:       f = nvrfopen("pc200.nvr",       "rb"); break;
                 case ROM_PC2086:      f = nvrfopen("pc2086.nvr",      "rb"); break;
                 case ROM_PC3086:      f = nvrfopen("pc3086.nvr",      "rb"); break;
+                case ROM_PPC512:      f = nvrfopen("ppc512.nvr",      "rb"); break;
                 case ROM_IBMAT:       f = nvrfopen("at.nvr",          "rb"); break;
                 case ROM_IBMXT286:    f = nvrfopen("ibmxt286.nvr",    "rb"); break;
                 case ROM_IBMPS1_2011: f = nvrfopen("ibmps1_2011.nvr", "rb"); /*nvrmask = 127; */break;
@@ -352,6 +360,7 @@ void savenvr()
                 case ROM_PC200:       f = nvrfopen("pc200.nvr",       "wb"); break;
                 case ROM_PC2086:      f = nvrfopen("pc2086.nvr",      "wb"); break;
                 case ROM_PC3086:      f = nvrfopen("pc3086.nvr",      "wb"); break;
+                case ROM_PPC512:      f = nvrfopen("ppc512.nvr",      "wb"); break;
                 case ROM_IBMAT:       f = nvrfopen("at.nvr",          "wb"); break;
                 case ROM_IBMXT286:    f = nvrfopen("ibmxt286.nvr",    "wb"); break;
                 case ROM_IBMPS1_2011: f = nvrfopen("ibmps1_2011.nvr", "wb"); break;

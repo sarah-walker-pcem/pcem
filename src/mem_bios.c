@@ -59,9 +59,9 @@ int loadbios()
         FILE *f=NULL,*ff=NULL;
         int c;
        
-        loadfont("mda.rom", 0);
-	loadfont("wy700.rom", 3);
-	loadfont("8x12.bin", 4);
+        loadfont("mda.rom", FONT_MDA);
+	loadfont("wy700.rom", FONT_WY700);
+	loadfont("8x12.bin", FONT_MDSI);
         
         biosmask = 0xffff;
         
@@ -85,7 +85,7 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                loadfont("pc1512/40078.ic127", 2);
+                loadfont("pc1512/40078.ic127", FONT_CGA);
                 return 1;
                 case ROM_PC1640:
                 f=romfopen("pc1640/40044.v3","rb");
@@ -113,7 +113,20 @@ int loadbios()
                 }
                 fclose(ff);
                 fclose(f);
-                loadfont("pc200/40109.bin", 1);
+                loadfont("pc200/40109.bin", FONT_PC200);
+                return 1;
+                case ROM_PPC512:
+                f=romfopen("ppc512/40107.v2","rb");
+                ff=romfopen("ppc512/40108.v2","rb");
+                if (!f || !ff) break;
+                for (c=0xC000;c<0x10000;c+=2)
+                {
+                        rom[c]=getc(f);
+                        rom[c+1]=getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
+                loadfont("ppc512/40109.bin", FONT_PC200);
                 return 1;
                 case ROM_TANDY:
                 f=romfopen("tandy/tandy1t1.020","rb");
@@ -759,7 +772,7 @@ int loadbios()
                 return 1;
 				
                 case ROM_T3100E:
-                loadfont("t3100e/t3100e_font.bin", 5);
+                loadfont("t3100e/t3100e_font.bin", FONT_T3100E);
                 f=romfopen("t3100e/t3100e.rom","rb");
                 if (!f) break;
                 romfread(rom,65536,1,f);
@@ -767,7 +780,7 @@ int loadbios()
                 return 1;
 
                 case ROM_T1000:
-                loadfont("t1000/t1000font.rom", 2);
+                loadfont("t1000/t1000font.rom", FONT_CGA);
                 f=romfopen("t1000/t1000.rom","rb");
                 if (!f) break;
                 romfread(rom, 0x8000,1,f);
@@ -777,7 +790,7 @@ int loadbios()
                 return 1;
 
                 case ROM_T1200:
-                loadfont("t1200/t1000font.rom", 2);
+                loadfont("t1200/t1000font.rom", FONT_CGA);
                 f=romfopen("t1200/t1200_019e.ic15.bin","rb");
                 if (!f) break;
                 romfread(rom, 0x8000,1,f);

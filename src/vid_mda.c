@@ -8,29 +8,6 @@
 #include "video.h"
 #include "vid_mda.h"
 
-typedef struct mda_t
-{
-        mem_mapping_t mapping;
-        
-        uint8_t crtc[32];
-        int crtcreg;
-        
-        uint8_t ctrl, stat;
-        
-        int dispontime, dispofftime;
-        int vidtime;
-        
-        int firstline, lastline;
-
-        int linepos, displine;
-        int vc, sc;
-        uint16_t ma, maback;
-        int con, coff, cursoron;
-        int dispon, blink;
-        int vsynctime, vadj;
-
-        uint8_t *vram;
-} mda_t;
 
 static uint32_t mdacols[256][2][2];
 
@@ -261,18 +238,26 @@ void mda_poll(void *p)
         }
 }
 
-void *mda_init()
+void *mda_standalone_init()
 {
-        int display_type;
-        int c;
         mda_t *mda = malloc(sizeof(mda_t));
+
         memset(mda, 0, sizeof(mda_t));
+	mda_init(mda);
 
         mda->vram = malloc(0x1000);
-
         timer_add(mda_poll, &mda->vidtime, TIMER_ALWAYS_ENABLED, mda);
         mem_mapping_add(&mda->mapping, 0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, mda);
         io_sethandler(0x03b0, 0x0010, mda_in, NULL, NULL, mda_out, NULL, NULL, mda);
+
+	return mda;
+}
+
+
+void mda_init(mda_t *mda)
+{
+        int display_type;
+        int c;
 
         display_type = device_get_config_int("display_type");
         cgapal_rebuild(display_type, 0);
@@ -295,8 +280,11 @@ void *mda_init()
         mdacols[0x08][0][1] = mdacols[0x08][1][1] = cgapal[0];
         mdacols[0x80][0][1] = mdacols[0x80][1][1] = cgapal[0];
         mdacols[0x88][0][1] = mdacols[0x88][1][1] = cgapal[0];
+}
 
-        return mda;
+void mda_setcol(int chr, int blink, int fg, uint8_t cga_ink)
+{
+	mdacols[chr][blink][fg] = cgapal[cga_ink];
 }
 
 void mda_close(void *p)
@@ -349,7 +337,7 @@ device_t mda_device =
 {
         "MDA",
         0,
-        mda_init,
+        mda_standalone_init,
         mda_close,
         NULL,
         mda_speed_changed,

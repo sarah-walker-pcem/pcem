@@ -5,6 +5,7 @@
 #include "lpt.h"
 #include "mouse.h"
 #include "video.h"
+#include "fdc.h"
 
 #include "amstrad.h"
 
@@ -25,12 +26,15 @@ uint8_t amstrad_read(uint16_t port, void *priv)
                 case 0x37a:
                 temp = lpt1_read(port, NULL) & 0x1f;
                 if (romset == ROM_PC1512) return temp | 0x20;
-                if (romset == ROM_PC200)
+                if (romset == ROM_PC200 || romset == ROM_PPC512)
                 {
+                        if (fdc_discchange_read())
+                                temp |= 0x20;
+/* DIP switches 4,5: Initial video mode */
                         if (video_is_cga())
-                                temp |= 0x80;
+                                temp |= 0x80;	/* CGA 80 */
                         else if (video_is_mda())
-                                temp |= 0xc0;
+                                temp |= 0xc0;	/* MDA */
                         return temp;
                 }
                 if (romset == ROM_PC1640)
@@ -55,8 +59,13 @@ uint8_t amstrad_read(uint16_t port, void *priv)
                 }
                 return temp;
                 case 0x3de:
-                return 0x20; /*PC200 - use external video. If internal video is being used
-                               then this port is handled in vid_pc200.c*/
+                if (romset == ROM_PC200 || romset == ROM_PPC512)
+		{
+/* Read DIP switches / internal display adapter status. This code is only
+ * reached if the IDA is disabled; if it is enabled this read will be
+ * handled by the video card */
+		}
+                return 0x20; /* Disable IDA */
                 case 0xdead:
                 return amstrad_dead;
         }
@@ -153,6 +162,6 @@ void amstrad_init()
         io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
         io_sethandler(0x0378, 0x0003, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
-        if (romset == ROM_PC200 && gfxcard != GFX_BUILTIN)        
+        if ((romset == ROM_PC200 || romset == ROM_PPC512) && gfxcard != GFX_BUILTIN)        
                 io_sethandler(0x03de, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
 }

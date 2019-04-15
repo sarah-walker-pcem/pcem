@@ -13,7 +13,6 @@
 #define GENIUS_YSIZE 1008
 
 void updatewindowsize(int x, int y);
-void loadfont(char *s, int format);
 
 extern uint8_t fontdat8x12[256][16];	
 

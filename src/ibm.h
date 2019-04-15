@@ -468,7 +468,8 @@ enum
 	ROM_TULIP_TC7,
 	ROM_ZD_SUPERS,   /* [8088] Zenith Data Systems SupersPort */
 	ROM_PB410A,
-                	
+        ROM_PPC512,
+
         ROM_MAX
 };
 

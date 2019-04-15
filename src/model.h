@@ -39,6 +39,7 @@ extern int model;
 
 int model_count();
 int model_getromset();
+int model_getromset_from_model(int model);
 int model_getmodel(int romset);
 char *model_getname();
 char *model_get_internal_name();

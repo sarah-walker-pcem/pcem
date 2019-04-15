@@ -364,7 +364,7 @@ void *ati28800k_init()
         ati28800->ksc5601_mode_enabled = 0;
         
         rom_init(&ati28800->bios_rom, "atikorvga.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
-        loadfont("ati_ksc5601.rom", 6);
+        loadfont("ati_ksc5601.rom", FONT_KSC5601);
         
         svga_init(&ati28800->svga, ati28800, 1 << 19, /*512kb*/
                    ati28800k_recalctimings,
