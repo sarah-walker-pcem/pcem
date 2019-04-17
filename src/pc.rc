@@ -24,6 +24,11 @@ BEGIN
                 MENUITEM SEPARATOR                
                 MENUITEM "&Configure hard discs...",IDM_HDCONF
         END
+	POPUP "C&assette"
+	BEGIN
+		MENUITEM "&Load tapefile...", IDM_CASSETTE_LOAD
+		MENUITEM "&Eject tape", IDM_CASSETTE_EJECT
+	END
         POPUP "&Settings"
         BEGIN
                 MENUITEM "&Configure...", IDM_CONFIG

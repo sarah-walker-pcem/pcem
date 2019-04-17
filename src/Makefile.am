@@ -23,13 +23,13 @@ wx-resources.cpp : pc.xrc
 	-wxrc -c pc.xrc -o wx-resources.cpp
 
 # PCem
-pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acc2168.c acc3221.c acer386sx.c ali1429.c  amstrad.c cbm_io.c cdrom-image.cc cdrom-null.c \
+pcem_SOURCES = 386.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acc2168.c acc3221.c acer386sx.c ali1429.c  amstrad.c cassette.c cbm_io.c cdrom-image.cc cdrom-null.c \
 cmd640.c codegen.c codegen_ops.c codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_pentium.c codegen_timing_winchip.c compaq.c config.c cpu.c \
 dells200.c device.c disc.c disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdd.c fdi2raw.c gameport.c \
 hdd.c hdd_esdi.c hdd_file.c headland.c i430hx.c i430lx.c i430fx.c i430vx.c ide.c ide_atapi.c intel.c intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c \
 joystick_tm_fcs.c keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c \
 laserxt.c lpt.c lpt_dac.c lpt_dss.c mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c neat.c nmi.c nvr.c olivetti_m24.c \
-opti495.c paths.c pc.c pc87306.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c nvr_tc8521.c rom.c rtc.c rtc_tc8521.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c scsi_zip.c \
+opti495.c paths.c pc.c pc87306.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c ps2_nvr.c nvr_tc8521.c pzx.c rom.c rtc.c rtc_tc8521.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c scsi_zip.c \
 serial.c sio.c sis496.c sl82c460.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c sound_cms.c sound_emu8k.c sound_gus.c \
 sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c sound_sb.c sound_sb_dsp.c sound_sn76489.c \
 sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c tandy_eeprom.c tandy_rom.c \

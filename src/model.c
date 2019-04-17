@@ -15,6 +15,7 @@
 #include "compaq.h"
 #include "dells200.h"
 #include "device.h"
+#include "cassette.h"
 #include "dma.h"
 #include "fdc.h"
 #include "fdc37c665.h"
@@ -301,6 +302,8 @@ void xt_init()
         keyboard_xt_init();
 	nmi_init();
         device_add(&gameport_device);
+	if (romset == ROM_IBMPC)
+		device_add(&cassette_device);
 }
 
 void compaq_pip_init()

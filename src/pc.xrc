@@ -137,6 +137,15 @@
 				<radio>1</radio>
 			</object>
 		</object>
+		<object class="wxMenu" name="IDM_CASSETTE">
+			<label>C_assette</label>
+			<object class="wxMenuItem" name="IDM_CASSETTE_LOAD">
+				<label>_Load tapefile...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_CASSETTE_EJECT">
+				<label>_Eject tape</label>
+			</object>
+		</object>
 		<object class="wxMenu">
 			<label>Video</label>
 			<object class="wxMenu">

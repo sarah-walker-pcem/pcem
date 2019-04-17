@@ -3484,14 +3484,6 @@ void execx86(int cycs)
                // if (instime) printf("%i %i %i %i\n",cycdiff,cycles,memcycs,fetchclocks);
                 FETCHADD(((cycdiff-cycles)-memcycs)-fetchclocks);
                 if ((cycdiff-cycles)<memcycs) cycles-=(memcycs-(cycdiff-cycles));
-                if (romset==ROM_IBMPC)
-                {
-                        if ((cs+cpu_state.pc)==0xFE4A7) /*You didn't seriously think I was going to emulate the cassette, did you?*/
-                        {
-                                CX=1;
-                                BX=0x500;
-                        }
-                }
                 memcycs=0;
 
                 insc++;
