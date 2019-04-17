@@ -140,7 +140,7 @@ void ati28800k_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3DE:
 //                pclog("ati28800k_out : set port 03DE to %02X at %04X:%04X\n", val, CS, cpu_state.oldpc);
                 ati28800->in_get_korean_font_kind_set = 0;
-                if(ati28800->get_korean_font_enabled && (ati28800->regs[0xBF] & 0x20))
+                if(ati28800->get_korean_font_enabled)
                 {
                         if((ati28800->get_korean_font_base & 0x7F) > 0x20 && (ati28800->get_korean_font_base & 0x7F) < 0x7F)
                                 fontdatksc5601_user[(ati28800->get_korean_font_kind & 4) * 24 + (ati28800->get_korean_font_base & 0x7F) - 0x20][ati28800->get_korean_font_index] = val;
@@ -237,7 +237,7 @@ uint8_t ati28800k_in(uint16_t addr, void *p)
         switch (addr)
         {
                 case 0x3DE:
-                if (ati28800->get_korean_font_enabled && (ati28800->regs[0xBF] & 0x20))
+                if (ati28800->get_korean_font_enabled)
                 {
                         switch (ati28800->get_korean_font_kind >> 8)
                         {
