@@ -7,6 +7,7 @@ static int laserxt_emspage[4];
 static int laserxt_emscontrol[4];
 static mem_mapping_t laserxt_ems_mapping[4];
 static int laserxt_ems_baseaddr_index = 0;
+static uint8_t laserxt_turbo = 0x80;
 
 static uint32_t get_laserxt_ems_addr(uint32_t addr)
 {
@@ -25,6 +26,11 @@ static void laserxt_write(uint16_t port, uint8_t val, void *priv)
         
         switch (port)
         {
+                case 0x01F0:
+                laserxt_turbo = val;
+                cpu_set_turbo((val & 0x80) >> 7);
+                //pclog("Turbo %s at %04X:%04X\n", (val & 0x80) ? "Enabled" : "Disabled", CS, cpu_state.oldpc);
+                break;
                 case 0x0208: case 0x4208: case 0x8208: case 0xC208:
                 laserxt_emspage[port >> 14] = val;
                 paddr = 0xC0000 + (port & 0xC000) + (((laserxt_ems_baseaddr_index + (4 - (port >> 14))) & 0x0C) << 14);
@@ -64,6 +70,9 @@ static uint8_t laserxt_read(uint16_t port, void *priv)
 {
         switch (port)
         {
+                case 0x01F0:
+                return laserxt_turbo;
+
                 case 0x0208: case 0x4208: case 0x8208: case 0xC208:
                 return laserxt_emspage[port >> 14];
 
@@ -95,6 +104,10 @@ void laserxt_init()
 {
         int i;
 
+        io_sethandler(0x01F0, 0x0001, laserxt_read, NULL, NULL, laserxt_write, NULL, NULL,  NULL);
+        laserxt_turbo = 0x80;
+        cpu_set_turbo(1);
+
         if (mem_size > 640)
         {
                 io_sethandler(0x0208, 0x0002, laserxt_read, NULL, NULL, laserxt_write, NULL, NULL,  NULL);
@@ -111,5 +124,5 @@ void laserxt_init()
                 mem_mapping_add(&laserxt_ems_mapping[i], 0xE0000 + (i << 14), 0x4000, mem_read_laserxtems, NULL, NULL, mem_write_laserxtems, NULL, NULL, ram + 0xA0000 + (i << 14), 0, NULL);
                 mem_mapping_disable(&laserxt_ems_mapping[i]);
         }
-        mem_set_mem_state(0x0c0000, 0x40000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        mem_set_mem_state(0x0a0000, 0x60000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
 }
