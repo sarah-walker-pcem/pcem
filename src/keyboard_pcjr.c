@@ -1,5 +1,7 @@
 #include "ibm.h"
 #include "device.h"
+#include "cassette.h"
+#include "fdd.h"
 #include "io.h"
 #include "mem.h"
 #include "nmi.h"
@@ -129,6 +131,8 @@ void keyboard_pcjr_write(uint16_t port, uint8_t val, void *priv)
                 timer_process();
                 timer_update_outstanding();
 
+                cassette_set_motor((val & 8) ? 0 : 1);
+
                 speaker_update();
                 speaker_gated = val & 1;
                 speaker_enable = val & 2;
@@ -171,7 +175,12 @@ uint8_t keyboard_pcjr_read(uint16_t port, void *priv)
                 case 0x62:
                 temp = (keyboard_pcjr.latched ? 1 : 0);
                 temp |= 0x02; /*Modem card not installed*/
-                temp |= (ppispeakon ? 0x10 : 0);
+                if (fdd_get_type(0) == 0)
+                        temp |= 0x04; /*Disc card not installed*/
+                if (!(keyboard_pcjr.pb & 8))
+                        temp |= (cassette_input()) ? 0x10 : 0;
+                else
+                        temp |= (ppispeakon ? 0x10 : 0);
                 temp |= (ppispeakon ? 0x20 : 0);
                 temp |= (keyboard_pcjr.data ? 0x40: 0);
 //                temp |= 0x04;

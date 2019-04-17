@@ -325,6 +325,7 @@ void pcjr_init()
         keyboard_pcjr_init();
         device_add(&sn76489_device);
 	nmi_mask = 0x80;
+	device_add(&cassette_device);
 }
 
 void tandy1k_init()
