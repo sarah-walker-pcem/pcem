@@ -148,8 +148,8 @@ typedef struct incolor_t
 
         uint8_t ctrl, ctrl2, stat;
 
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
         
         int firstline, lastline;
 
@@ -358,8 +358,8 @@ void incolor_recalctimings(incolor_t *incolor)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= MDACONST;
         _dispofftime *= MDACONST;
-	incolor->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	incolor->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	incolor->dispontime  = (uint64_t)_dispontime;
+	incolor->dispofftime = (uint64_t)_dispofftime;
 }
 
 
@@ -851,7 +851,7 @@ void incolor_poll(void *p)
         if (!incolor->linepos)
         {
 //                pclog("InColor poll %i %i\n", incolor->vc, incolor->sc);
-                incolor->vidtime += incolor->dispofftime;
+                timer_advance_u64(&incolor->timer, incolor->dispofftime);
                 incolor->stat |= 1;
                 incolor->linepos = 1;
                 oldsc = incolor->sc;
@@ -886,7 +886,7 @@ void incolor_poll(void *p)
         }
         else
         {
-                incolor->vidtime += incolor->dispontime;
+                timer_advance_u64(&incolor->timer, incolor->dispontime);
                 if (incolor->dispon) 
                         incolor->stat &= ~1;
                 incolor->linepos = 0;
@@ -1006,7 +1006,7 @@ void *incolor_init()
 
         incolor->vram = malloc(0x40000);	/* 4 planes of 64k */
 
-        timer_add(incolor_poll, &incolor->vidtime, TIMER_ALWAYS_ENABLED, incolor);
+        timer_add(&incolor->timer, incolor_poll, incolor, 1);
         mem_mapping_add(&incolor->mapping, 0xb0000, 0x08000, incolor_read, NULL, NULL, incolor_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, incolor);
         io_sethandler(0x03b0, 0x0010, incolor_in, NULL, NULL, incolor_out, NULL, NULL, incolor);
 

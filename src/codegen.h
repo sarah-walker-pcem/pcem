@@ -4,14 +4,6 @@
 #include "mem.h"
 #include "x86_ops.h"
 
-#ifdef __amd64__
-#include "codegen_x86-64.h"
-#elif defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
-#include "codegen_x86.h"
-#else
-#error Dynamic recompiler not implemented on your platform
-#endif
-
 /*Handling self-modifying code (of which there is a lot on x86) :
 
   PCem tracks a 'dirty mask' for each physical page, in which each bit
@@ -39,60 +31,88 @@
 
 typedef struct codeblock_t
 {
+        uint32_t pc;
+        uint32_t _cs;
+        uint32_t phys, phys_2;
+        uint16_t status;
+        uint16_t flags;
+        uint8_t ins;
+        uint8_t TOP;
+
+        /*Pointers for codeblock tree, used to search for blocks when hash lookup
+          fails.*/
+        uint16_t parent, left, right;
+
+        uint8_t *data;
+        
         uint64_t page_mask, page_mask2;
         uint64_t *dirty_mask, *dirty_mask2;
-        uint64_t cmp;
-        
+
         /*Previous and next pointers, for the codeblock list associated with
           each physical page. Two sets of pointers, as a codeblock can be
           present in two pages.*/
-        struct codeblock_t *prev, *next;
-        struct codeblock_t *prev_2, *next_2;
-        
-        /*Pointers for codeblock tree, used to search for blocks when hash lookup
-          fails.*/
-        struct codeblock_t *parent, *left, *right;
-        
-        int pnt;
-        int ins;
-        
-        int was_recompiled;
-        int TOP;
+        uint16_t prev, next;
+        uint16_t prev_2, next_2;
 
-        uint32_t pc;
-        uint32_t _cs;
-        uint32_t endpc;
-        uint32_t phys, phys_2;
-        uint32_t status;
-        uint32_t flags;
-
-        uint8_t data[2048];
+        /*First mem_block_t used by this block. Any subsequent mem_block_ts
+          will be in the list starting at head_mem_block->next.*/
+        struct mem_block_t *head_mem_block;
 } codeblock_t;
+
+extern codeblock_t *codeblock;
+
+extern uint16_t *codeblock_hash;
+
+extern uint8_t *block_write_data;
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1
 /*Code block is always entered with the same FPU top-of-stack*/
 #define CODEBLOCK_STATIC_TOP 2
+/*Code block has been compiled*/
+#define CODEBLOCK_WAS_RECOMPILED 4
+/*Code block is in free list and is not valid*/
+#define CODEBLOCK_IN_FREE_LIST 8
+/*Code block spans two pages, page_mask2 and dirty_mask2 are valid*/
+#define CODEBLOCK_HAS_PAGE2 0x10
+/*Code block is using a byte mask for code present and dirty*/
+#define CODEBLOCK_BYTE_MASK 0x20
+/*Code block is in dirty list*/
+#define CODEBLOCK_IN_DIRTY_LIST 0x40
+/*Code block is not inlining immediate parameters, parameters must be fetched from memory*/
+#define CODEBLOCK_NO_IMMEDIATES 0x80
 
 #define BLOCK_PC_INVALID 0xffffffff
 
+#define BLOCK_INVALID 0
+
+static inline int get_block_nr(codeblock_t *block)
+{
+        return ((uintptr_t)block - (uintptr_t)codeblock) / sizeof(codeblock_t);
+}
+
 static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
 {
-        codeblock_t *block = pages[phys >> 12].head;
+        codeblock_t *block;
         uint64_t a = _cs | ((uint64_t)phys << 32);
         
+        if (!pages[phys >> 12].head)
+                return NULL;
+                
+        block = &codeblock[pages[phys >> 12].head];
         while (block)
         {
-                if (a == block->cmp)
+                uint64_t block_cmp = block->_cs | ((uint64_t)block->phys << 32);
+                if (a == block_cmp)
                 {
                         if (!((block->status ^ cpu_cur_status) & CPU_STATUS_FLAGS) &&
                              ((block->status & cpu_cur_status & CPU_STATUS_MASK) == (cpu_cur_status & CPU_STATUS_MASK)))
                                 break;
                 }
-                if (a < block->cmp)
-                        block = block->left;
+                if (a < block_cmp)
+                        block = block->left ? &codeblock[block->left] : NULL;
                 else
-                        block = block->right;
+                        block = block->right ? &codeblock[block->right] : NULL;
         }
         
         return block;
@@ -100,75 +120,87 @@ static inline codeblock_t *codeblock_tree_find(uint32_t phys, uint32_t _cs)
 
 static inline void codeblock_tree_add(codeblock_t *new_block)
 {
-        codeblock_t *block = pages[new_block->phys >> 12].head;
+        codeblock_t *block = &codeblock[pages[new_block->phys >> 12].head];
         uint64_t a = new_block->_cs | ((uint64_t)new_block->phys << 32);
-        new_block->cmp = a;
-                
-        if (!block)
+
+        if (!pages[new_block->phys >> 12].head)
         {
-                pages[new_block->phys >> 12].head = new_block;
-                new_block->parent = new_block->left = new_block->right = NULL;
+                pages[new_block->phys >> 12].head = get_block_nr(new_block);
+                new_block->parent = new_block->left = new_block->right = BLOCK_INVALID;
         }
         else
         {
                 codeblock_t *old_block = NULL;
+                uint64_t old_block_cmp = 0;
                 
                 while (block)
                 {
                         old_block = block;
-                        if (a < old_block->cmp)
-                                block = block->left;
+                        old_block_cmp = old_block->_cs | ((uint64_t)old_block->phys << 32);
+                        
+                        if (a < old_block_cmp)
+                                block = block->left ? &codeblock[block->left] : NULL;
                         else
-                                block = block->right;
+                                block = block->right ? &codeblock[block->right] : NULL;
                 }
                 
-                if (a < old_block->cmp)
-                        old_block->left = new_block;
+                if (a < old_block_cmp)
+                        old_block->left = get_block_nr(new_block);
                 else
-                        old_block->right = new_block;
+                        old_block->right = get_block_nr(new_block);
                 
-                new_block->parent = old_block;
-                new_block->left = new_block->right = NULL;
+                new_block->parent = get_block_nr(old_block);
+                new_block->left = new_block->right = BLOCK_INVALID;
         }
 }
 
 static inline void codeblock_tree_delete(codeblock_t *block)
 {
-        codeblock_t *parent = block->parent;
+        uint16_t parent_nr = block->parent;
+        codeblock_t *parent;
+
+        if (block->parent)
+                parent = &codeblock[block->parent];
+        else
+                parent = NULL;
 
         if (!block->left && !block->right)
         {
                 /*Easy case - remove from parent*/
                 if (!parent)
-                        pages[block->phys >> 12].head = NULL;
+                        pages[block->phys >> 12].head = BLOCK_INVALID;
                 else
                 {
-                        if (parent->left == block)
-                                parent->left = NULL;
-                        if (parent->right == block)
-                                parent->right = NULL;
+                        uint16_t block_nr = get_block_nr(block);
+                        
+                        if (parent->left == block_nr)
+                                parent->left = BLOCK_INVALID;
+                        if (parent->right == block_nr)
+                                parent->right = BLOCK_INVALID;
                 }
                 return;
         }
         else if (!block->left)
         {
                 /*Only right node*/
-                if (!parent)
+                if (!parent_nr)
                 {
                         pages[block->phys >> 12].head = block->right;
-                        pages[block->phys >> 12].head->parent = NULL;
+                        codeblock[pages[block->phys >> 12].head].parent = BLOCK_INVALID;
                 }
                 else
                 {
-                        if (parent->left == block)
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
                         {
                                 parent->left = block->right;
-                                parent->left->parent = parent;
+                                codeblock[parent->left].parent = parent_nr;
                         }
-                        if (parent->right == block)
+                        if (parent->right == block_nr)
                         {
                                 parent->right = block->right;
-                                parent->right->parent = parent;
+                                codeblock[parent->right].parent = parent_nr;
                         }
                 }
                 return;
@@ -176,22 +208,24 @@ static inline void codeblock_tree_delete(codeblock_t *block)
         else if (!block->right)
         {
                 /*Only left node*/
-                if (!parent)
+                if (!parent_nr)
                 {
                         pages[block->phys >> 12].head = block->left;
-                        pages[block->phys >> 12].head->parent = NULL;
+                        codeblock[pages[block->phys >> 12].head].parent = BLOCK_INVALID;
                 }
                 else
                 {
-                        if (parent->left == block)
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
                         {
                                 parent->left = block->left;
-                                parent->left->parent = parent;
+                                codeblock[parent->left].parent = parent_nr;
                         }
-                        if (parent->right == block)
+                        if (parent->right == block_nr)
                         {
                                 parent->right = block->left;
-                                parent->right->parent = parent;
+                                codeblock[parent->right].parent = parent_nr;
                         }
                 }
                 return;
@@ -199,75 +233,109 @@ static inline void codeblock_tree_delete(codeblock_t *block)
         else
         {
                 /*Difficult case - node has two children. Walk right child to find lowest node*/
-                codeblock_t *lowest = block->right, *highest;
+                codeblock_t *lowest = &codeblock[block->right], *highest;
                 codeblock_t *old_parent;
+                uint16_t lowest_nr;
                         
                 while (lowest->left)
-                        lowest = lowest->left;
-
-                old_parent = lowest->parent;
+                        lowest = &codeblock[lowest->left];
+                lowest_nr = get_block_nr(lowest);
+                
+                old_parent = &codeblock[lowest->parent];
 
                 /*Replace deleted node with lowest node*/
-                if (!parent)
-                        pages[block->phys >> 12].head = lowest;
+                if (!parent_nr)
+                        pages[block->phys >> 12].head = lowest_nr;
                 else
                 {
-                        if (parent->left == block)
-                                parent->left = lowest;
-                        if (parent->right == block)
-                                parent->right = lowest;
+                        uint16_t block_nr = get_block_nr(block);
+
+                        if (parent->left == block_nr)
+                                parent->left = lowest_nr;
+                        if (parent->right == block_nr)
+                                parent->right = lowest_nr;
                 }
 
-                lowest->parent = parent;
+                lowest->parent = parent_nr;
                 lowest->left = block->left;
                 if (lowest->left)
-                        lowest->left->parent = lowest;
+                        codeblock[lowest->left].parent = lowest_nr;
 
-                old_parent->left = NULL;
+                old_parent->left = BLOCK_INVALID;
                                 
-                highest = lowest->right;
-                if (!highest)
+                highest = &codeblock[lowest->right];
+                if (!lowest->right)
                 {
-                        if (lowest != block->right)
+                        if (lowest_nr != block->right)
                         {
                                 lowest->right = block->right;
-                                block->right->parent = lowest;
+                                codeblock[block->right].parent = lowest_nr;
                         }
                         return;
                 }
 
                 while (highest->right)
-                        highest = highest->right;
+                        highest = &codeblock[highest->right];
 
-                if (block->right && block->right != lowest)
+                if (block->right && block->right != lowest_nr)
                 {
                         highest->right = block->right;
-                        block->right->parent = highest;
+                        codeblock[block->right].parent = get_block_nr(highest);
                 }
         }
 }
 
-#define PAGE_MASK_INDEX_MASK 3
-#define PAGE_MASK_INDEX_SHIFT 10
 #define PAGE_MASK_MASK 63
-#define PAGE_MASK_SHIFT 4
+#define PAGE_MASK_SHIFT 6
 
-extern codeblock_t *codeblock;
+void codegen_mark_code_present_multibyte(codeblock_t *block, uint32_t start_pc, int len);
 
-extern codeblock_t **codeblock_hash;
+static inline void codegen_mark_code_present(codeblock_t *block, uint32_t start_pc, int len)
+{
+        if (len == 1)
+        {
+                if (block->flags & CODEBLOCK_BYTE_MASK)
+                {
+                        if (!((start_pc ^ block->pc) & ~0x3f)) /*Starts in second page*/
+                                block->page_mask |= ((uint64_t)1 << (start_pc & PAGE_MASK_MASK));
+                        else
+                                block->page_mask2 |= ((uint64_t)1 << (start_pc & PAGE_MASK_MASK));
+                }
+                else
+                {
+                        if (!((start_pc ^ block->pc) & ~0xfff)) /*Starts in second page*/
+                                block->page_mask |= ((uint64_t)1 << ((start_pc >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK));
+                        else
+                                block->page_mask2 |= ((uint64_t)1 << ((start_pc >> PAGE_MASK_SHIFT) & PAGE_MASK_MASK));
+                }
+        }
+        else
+                codegen_mark_code_present_multibyte(block, start_pc, len);
+}
 
 void codegen_init();
+void codegen_close();
 void codegen_reset();
 void codegen_block_init(uint32_t phys_addr);
 void codegen_block_remove();
 void codegen_block_start_recompile(codeblock_t *block);
 void codegen_block_end_recompile(codeblock_t *block);
 void codegen_block_end();
+void codegen_delete_block(codeblock_t *block);
 void codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_pc, uint32_t old_pc);
 void codegen_generate_seg_restore();
 void codegen_set_op32();
 void codegen_flush();
 void codegen_check_flush(struct page_t *page, uint64_t mask, uint32_t phys_addr);
+struct ir_data_t;
+x86seg *codegen_generate_ea(struct ir_data_t *ir, x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, uint32_t *op_pc, uint32_t op_32, int stack_offset);
+void codegen_check_seg_read(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
+void codegen_check_seg_write(codeblock_t *block, struct ir_data_t *ir, x86seg *seg);
+
+int codegen_purge_purgable_list();
+/*Delete a random code block to free memory. This is obviously quite expensive, and
+  will only be called when the allocator is out of memory*/
+void codegen_delete_random_block(int required_mem_block);
 
 extern int cpu_block_end;
 extern uint32_t codegen_endpc;
@@ -286,23 +354,27 @@ extern int codegen_block_cycles;
 
 extern void (*codegen_timing_start)();
 extern void (*codegen_timing_prefix)(uint8_t prefix, uint32_t fetchdat);
-extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+extern void (*codegen_timing_opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
 extern void (*codegen_timing_block_start)();
 extern void (*codegen_timing_block_end)();
+extern int (*codegen_timing_jump_cycles)();
 
 typedef struct codegen_timing_t
 {
         void (*start)();
         void (*prefix)(uint8_t prefix, uint32_t fetchdat);
-        void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32);
+        void (*opcode)(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc);
         void (*block_start)();
         void (*block_end)();
+        int (*jump_cycles)();
 } codegen_timing_t;
 
 extern codegen_timing_t codegen_timing_pentium;
 extern codegen_timing_t codegen_timing_686;
 extern codegen_timing_t codegen_timing_486;
 extern codegen_timing_t codegen_timing_winchip;
+extern codegen_timing_t codegen_timing_winchip2;
+extern codegen_timing_t codegen_timing_k6;
 
 void codegen_timing_set(codegen_timing_t *timing);
 
@@ -310,45 +382,6 @@ extern int block_current;
 extern int block_pos;
 
 #define CPU_BLOCK_END() cpu_block_end = 1
-
-static inline void addbyte(uint8_t val)
-{
-        codeblock[block_current].data[block_pos++] = val;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addword(uint16_t val)
-{
-        *(uint16_t *)(void *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 2;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addlong(uint32_t val)
-{
-        *(uint32_t *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 4;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
-
-static inline void addquad(uint64_t val)
-{
-        *(uint64_t *)&codeblock[block_current].data[block_pos] = val;
-        block_pos += 8;
-        if (block_pos >= BLOCK_MAX)
-        {
-                CPU_BLOCK_END();
-        }
-}
 
 /*Current physical page of block being recompiled. -1 if no recompilation taking place */
 extern uint32_t recomp_page;
@@ -368,5 +401,14 @@ extern int codegen_fpu_loaded_iq[8];
 extern int codegen_reg_loaded[8];
 
 extern int codegen_in_recompile;
+
+void codegen_generate_reset();
+
+int codegen_get_instruction_uop(codeblock_t *block, uint32_t pc, int *first_instruction);
+void codegen_set_loop_start(struct ir_data_t *ir, int first_instruction);
+
+#ifdef DEBUG_EXTRA
+extern uint32_t instr_counts[256*256];
+#endif
 
 #endif

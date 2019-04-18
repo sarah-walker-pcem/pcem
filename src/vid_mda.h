@@ -8,9 +8,9 @@ typedef struct mda_t
         
         uint8_t ctrl, stat;
         
-        int dispontime, dispofftime;
-        int vidtime;
-        
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
+
         int firstline, lastline;
 
         int linepos, displine;

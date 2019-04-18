@@ -68,7 +68,7 @@ typedef struct scsi_zip_data
         
         int hd_id;
         
-        int callback;
+        pc_timer_t callback_timer;
         
         scsi_bus_t *bus;
         
@@ -176,8 +176,6 @@ static void scsi_zip_callback(void *p)
 {
         scsi_zip_data *data = p;
 
-        data->callback = 0;
-        
         if (data->cmd_pos == CMD_POS_WAIT)
         {
                 data->cmd_pos = data->new_cmd_pos;
@@ -194,7 +192,7 @@ static void *scsi_zip_init(scsi_bus_t *bus, int id)
         
         data->hd_id = id;
         data->bus = bus;
-        timer_add(scsi_zip_callback, &data->callback, &data->callback, data);
+        timer_add(&data->callback_timer, scsi_zip_callback, data, 0);
 
         zip_data = data;        
         return data;
@@ -218,6 +216,14 @@ static void scsi_zip_close(void *p)
                 hdd_close(&data->hdd);
         free(data);
         zip_data = NULL;
+}
+
+static void scsi_zip_reset(void *p)
+{
+        scsi_zip_data *data = p;
+
+        timer_disable(&data->callback_timer);
+        data->cmd_pos = CMD_POS_IDLE;
 }
 
 static int scsi_add_data(uint8_t val, void *p)
@@ -689,7 +695,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
 //                        pclog("SCSI_READ_6: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_START_SECTOR;
                         data->sector_pos = 0;
                         
@@ -750,7 +756,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
 //                        pclog("SCSI_READ_10: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_START_SECTOR;
                         data->sector_pos = 0;
                         
@@ -819,7 +825,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_TRANSFER;
                         data->sector_pos = 0;
                         
@@ -887,7 +893,7 @@ static int scsi_zip_command(uint8_t *cdb, void *p)
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_TRANSFER;
                         data->sector_pos = 0;
                         
@@ -1197,6 +1203,7 @@ scsi_device_t scsi_zip =
         scsi_zip_init,
         scsi_zip_atapi_init,
         scsi_zip_close,
+        scsi_zip_reset,
         
         scsi_zip_start_command,
         scsi_zip_command,

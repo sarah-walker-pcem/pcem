@@ -18,8 +18,8 @@ typedef struct cga_t
         uint16_t ma, maback;
         int oddeven;
 
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         
         int firstline, lastline;
         

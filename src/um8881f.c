@@ -33,8 +33,7 @@ void um8881f_write(int func, int addr, uint8_t val, void *priv)
                                 case 0x80: mem_bios_set_state(0xf0000, 0x10000, 1, 1); break;
                                 case 0xc0: mem_bios_set_state(0xf0000, 0x10000, 1, 0); break;
                         }*/
-                        shadowbios = val & 0x80;
-                        shadowbios_write = !(val & 0x40);
+//                        shadowbios = val & 0x80;
                         flushmmucache_nopc();
                 }
         }

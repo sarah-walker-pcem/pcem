@@ -27,15 +27,10 @@ static void opti495_write(uint16_t addr, uint8_t val, void *p)
                         }
                         if (optireg == 0x22)
                         {
-                                shadowbios = !(val & 0x80);
-                                shadowbios_write = val & 0x80;
-                                //pclog("shadowbios %i %02x\n", shadowbios, val);
-                                if (shadowbios)
+                                if (!(val & 0x80))
                                         mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
                                 else
                                         mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
-//                                if (shadowbios)
-//                                        fatal("Here\n");
                         }
                 }
                 break;

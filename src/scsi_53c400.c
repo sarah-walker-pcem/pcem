@@ -8,9 +8,8 @@
 #include "scsi_53c400.h"
 #include "timer.h"
 
-#define POLL_TIME_US 10
+#define POLL_TIME_US 1
 #define MAX_BYTES_TRANSFERRED_PER_POLL 50
-/*10us poll period with 50 bytes transferred per poll = 5MB/sec*/
 
 typedef struct ncr5380_t
 {
@@ -57,8 +56,7 @@ typedef struct lcs6821n_t
         
         int ncr5380_dma_enabled;
         
-        int dma_callback;
-        int dma_enabled;
+	pc_timer_t dma_timer;
         
         int ncr_busy;
 } lcs6821n_t;
@@ -96,13 +94,24 @@ enum
         DMA_INITIATOR_RECEIVE
 };
 
+static void set_dma_enable(lcs6821n_t *scsi, int enable)
+{
+	if (enable)
+	{
+                if (!timer_is_enabled(&scsi->dma_timer))
+                        timer_set_delay_u64(&scsi->dma_timer, TIMER_USEC * POLL_TIME_US);
+        }
+	else
+		timer_disable(&scsi->dma_timer);
+}
+
 static void ncr53c400_dma_changed(ncr5380_t *ncr, int mode, int enable)
 {
         lcs6821n_t *scsi = (lcs6821n_t *)ncr->p;
         
         scsi->ncr5380_dma_enabled = (mode && enable);
         
-        scsi->dma_enabled = (scsi->ncr5380_dma_enabled && scsi->block_count_loaded);
+	set_dma_enable(scsi, scsi->ncr5380_dma_enabled && scsi->block_count_loaded);
 }
 
 void ncr5380_reset(ncr5380_t *ncr)
@@ -424,7 +433,7 @@ static void lcs6821n_write(uint32_t addr, uint8_t val, void *p)
                         case 0x3981: /*Block counter register*/
                         scsi->block_count = val;
                         scsi->block_count_loaded = 1;
-                        scsi->dma_enabled = (scsi->ncr5380_dma_enabled && scsi->block_count_loaded);
+                        set_dma_enable(scsi, scsi->ncr5380_dma_enabled && scsi->block_count_loaded);
                         if (scsi->status_ctrl & CTRL_DATA_DIR)
                         {
                                 scsi->buffer_host_pos = 128;
@@ -533,7 +542,7 @@ static void ncr53c400_dma_callback(void *p)
         int bytes_transferred = 0;
 
 //pclog("dma_Callback poll\n");
-        scsi->dma_callback += POLL_TIME_US;
+	timer_advance_u64(&scsi->dma_timer, TIMER_USEC * POLL_TIME_US);
                 
         switch (scsi->ncr.dma_mode)
         {
@@ -600,7 +609,7 @@ static void ncr53c400_dma_callback(void *p)
                                 if (!scsi->block_count)
                                 {
                                         scsi->block_count_loaded = 0;
-                                        scsi->dma_enabled = 0;
+                                        set_dma_enable(scsi, 0);
 //                                        scsi->buffer_host_pos = 128;
 //                                        scsi->status_ctrl |= STATUS_BUFFER_NOT_READY;
 
@@ -665,7 +674,7 @@ static void ncr53c400_dma_callback(void *p)
                                 if (!scsi->block_count)
                                 {
                                         scsi->block_count_loaded = 0;
-                                        scsi->dma_enabled = 0;
+                                        set_dma_enable(scsi, 0);
                                         
 //                                        output=3;
                                         ncr->isr |= STATUS_END_OF_DMA;
@@ -717,7 +726,7 @@ static void *scsi_53c400_init(char *bios_fn)
         
         scsi_bus_init(&scsi->ncr.bus);
         
-        timer_add(ncr53c400_dma_callback, &scsi->dma_callback, &scsi->dma_enabled, scsi);
+        timer_add(&scsi->dma_timer, ncr53c400_dma_callback, scsi, 0);
         
         return scsi;
 }
@@ -757,7 +766,7 @@ static void *scsi_t130b_init(char *bios_fn)
         
         scsi_bus_init(&scsi->ncr.bus);
         
-        timer_add(ncr53c400_dma_callback, &scsi->dma_callback, &scsi->dma_enabled, scsi);
+        timer_add(&scsi->dma_timer, ncr53c400_dma_callback, scsi, 0);
         
         return scsi;
 }

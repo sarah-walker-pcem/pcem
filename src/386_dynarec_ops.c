@@ -1,6 +1,5 @@
 #include "ibm.h"
 #include "cpu.h"
-#include "386.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
@@ -15,14 +14,10 @@
 #include "386_common.h"
 
 
-extern uint16_t *mod1add[2][8];
-extern uint32_t *mod1seg[8];
-
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;
@@ -37,7 +32,6 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
         easeg = cpu_state.ea_seg->base;
-        ea_rseg = cpu_state.ea_seg->seg;
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;
@@ -48,8 +42,8 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         }
 }
 
-#define fetch_ea_16(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_16_long(rmdat); 
-#define fetch_ea_32(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_32_long(rmdat); 
+#define fetch_ea_16(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_16_long(rmdat);
+#define fetch_ea_32(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_32_long(rmdat);
 
 
 #define PREFETCH_RUN(instr_cycles, bytes, modrm, reads, read_ls, writes, write_ls, ea32)
@@ -57,7 +51,8 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
 #define PREFETCH_FLUSH()
 
 #define OP_TABLE(name) dynarec_ops_ ## name
-#define CLOCK_CYCLES(c) 
+/*Temporary*/
+#define CLOCK_CYCLES(c)
 #define CLOCK_CYCLES_ALWAYS(c) cycles -= (c)
 
 #include "386_ops.h"

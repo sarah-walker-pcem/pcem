@@ -1,5 +1,5 @@
 #define SEEK_RECALIBRATE -999
-void fdd_seek(int drive, int track_diff);
+uint64_t fdd_seek(int drive, int track_diff);
 int fdd_track0(int drive);
 int fdd_getrpm(int drive);
 void fdd_set_densel(int densel);

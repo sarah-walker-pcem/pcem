@@ -1,6 +1,8 @@
 #ifndef _MEM_H_
 #define _MEM_H_
 
+#include "x86.h"
+
 typedef struct mem_mapping_t
 {
         struct mem_mapping_t *prev, *next;
@@ -35,7 +37,6 @@ extern uint8_t *ram,*rom;
 extern uint8_t romext[32768];
 extern int readlnum,writelnum;
 extern int memspeed[11];
-extern int nopageerrors;
 extern uint32_t biosmask;
 
 void mem_mapping_add(mem_mapping_t *mapping,
@@ -111,6 +112,14 @@ mem_mapping_t bios_high_mapping[8];
 extern mem_mapping_t ram_high_mapping;
 extern mem_mapping_t ram_remapped_mapping;
 
+extern uint64_t *byte_dirty_mask;
+extern uint64_t *byte_code_present_mask;
+
+#define PAGE_BYTE_MASK_SHIFT 6
+#define PAGE_BYTE_MASK_OFFSET_MASK 63
+#define PAGE_BYTE_MASK_MASK  63
+
+#define EVICT_NOT_IN_LIST ((uint32_t)-1)
 typedef struct page_t
 {
         void (*write_b)(uint32_t addr, uint8_t val, struct page_t *p);
@@ -119,17 +128,30 @@ typedef struct page_t
         
         uint8_t *mem;
         
-        struct codeblock_t *block[4], *block_2[4];
+        uint16_t block, block_2;
         
         /*Head of codeblock tree associated with this page*/
-        struct codeblock_t *head;
+        uint16_t head;
         
-        uint64_t code_present_mask[4], dirty_mask[4];
+        uint64_t code_present_mask, dirty_mask;
+        
+        uint32_t evict_prev, evict_next;
+        
+        uint64_t *byte_dirty_mask;
+        uint64_t *byte_code_present_mask;
 } page_t;
 
 extern page_t *pages;
 
 extern page_t **page_lookup;
+
+extern uint32_t purgable_page_list_head;
+static inline int page_in_evict_list(page_t *p)
+{
+        return (p->evict_prev != EVICT_NOT_IN_LIST);
+}
+void page_remove_from_evict_list(page_t *p);
+void page_add_to_evict_list(page_t *p);
 
 uint32_t mmutranslate_noabrt(uint32_t addr, int rw);
 extern uint32_t get_phys_virt,get_phys_phys;
@@ -146,17 +168,34 @@ static inline uint32_t get_phys(uint32_t addr)
                 return addr & rammask;
         }
         
-        get_phys_phys = (mmutranslatereal(addr, 0) & rammask) & ~0xfff;
+        if (readlookup2[addr >> 12] != -1)
+                get_phys_phys = ((uintptr_t)readlookup2[addr >> 12] + (addr & ~0xfff)) - (uintptr_t)ram;
+        else
+        {
+                get_phys_phys = (mmutranslatereal(addr, 0) & rammask) & ~0xfff;
+                if (!cpu_state.abrt)
+                        addreadlookup(get_phys_virt, get_phys_phys);
+        }
+                
         return get_phys_phys | (addr & 0xfff);
 //        return mmutranslatereal(addr, 0) & rammask;
 }
 
 static inline uint32_t get_phys_noabrt(uint32_t addr)
 {
+        uint32_t phys_addr;
+        
         if (!(cr0 >> 31))
                 return addr & rammask;
         
-        return mmutranslate_noabrt(addr, 0) & rammask;
+        if (readlookup2[addr >> 12] != -1)
+                return ((uintptr_t)readlookup2[addr >> 12] + addr) - (uintptr_t)ram;
+
+        phys_addr = mmutranslate_noabrt(addr, 0) & rammask;
+        if (phys_addr != 0xffffffff)
+                addreadlookup(addr, phys_addr);
+
+        return phys_addr;
 }
 
 void mem_invalidate_range(uint32_t start_addr, uint32_t end_addr);
@@ -180,7 +219,7 @@ void mem_flush_write_page(uint32_t addr, uint32_t virt);
 void mem_add_bios();
 
 void mem_init();
-void mem_resize();
+void mem_alloc();
 
 void mem_set_704kb();
 
@@ -194,5 +233,5 @@ void mmu_invalidate(uint32_t addr);
 
 int loadbios();
 
-extern unsigned char isram[0x10000];
+extern int purgeable_page_count;
 #endif

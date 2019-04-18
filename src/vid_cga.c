@@ -80,8 +80,9 @@ void cga_write(uint32_t addr, uint8_t val, void *p)
         cga->vram[addr & 0x3fff] = val;
         if (cga->snow_enabled)
         {
-                cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = val;
-                cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = val;
+                int offset = ((timer_get_remaining_u64(&cga->timer) / CGACONST) * 2) & 0xfc;
+                cga->charbuffer[offset] = cga->vram[addr & 0x3fff];
+                cga->charbuffer[offset | 1] = cga->vram[addr & 0x3fff];
         }
         egawrites++;
         cycles -= 4;
@@ -93,8 +94,9 @@ uint8_t cga_read(uint32_t addr, void *p)
         cycles -= 4;        
         if (cga->snow_enabled)
         {
-                cga->charbuffer[ ((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc] = cga->vram[addr & 0x3fff];
-                cga->charbuffer[(((int)(((cga->dispontime - cga->vidtime) * 2) / CGACONST)) & 0xfc) | 1] = cga->vram[addr & 0x3fff];
+                int offset = ((timer_get_remaining_u64(&cga->timer) / CGACONST) * 2) & 0xfc;
+                cga->charbuffer[offset] = cga->vram[addr & 0x3fff];
+                cga->charbuffer[offset | 1] = cga->vram[addr & 0x3fff];
         }
         egareads++;
 //        pclog("CGA_READ %04X\n", addr);
@@ -121,8 +123,8 @@ void cga_recalctimings(cga_t *cga)
         _dispontime *= CGACONST;
         _dispofftime *= CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
-	cga->dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	cga->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	cga->dispontime = (uint64_t)_dispontime;
+	cga->dispofftime = (uint64_t)_dispofftime;
 }
 
 void cga_poll(void *p)
@@ -140,7 +142,7 @@ void cga_poll(void *p)
 
         if (!cga->linepos)
         {
-                cga->vidtime += cga->dispofftime;
+		timer_advance_u64(&cga->timer, cga->dispofftime);
                 cga->cgastat |= 1;
                 cga->linepos = 1;
                 oldsc = cga->sc;
@@ -329,7 +331,7 @@ void cga_poll(void *p)
         }
         else
         {
-                cga->vidtime += cga->dispontime;
+		timer_advance_u64(&cga->timer, cga->dispontime);
                 cga->linepos = 0;
                 if (cga->vsynctime)
                 {
@@ -450,6 +452,7 @@ void cga_poll(void *p)
 
 void cga_init(cga_t *cga)
 {
+        timer_add(&cga->timer, cga_poll, cga, 1);
         cga->composite = 0;
 }
 
@@ -468,7 +471,8 @@ void *cga_standalone_init()
         cga->vram = malloc(0x4000);
                 
 	cga_comp_init(cga->revision);
-        timer_add(cga_poll, &cga->vidtime, TIMER_ALWAYS_ENABLED, cga);
+
+        timer_add(&cga->timer, cga_poll, cga, 1);
         mem_mapping_add(&cga->mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, cga);
         io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, cga);
 

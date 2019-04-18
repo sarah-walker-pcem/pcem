@@ -64,7 +64,7 @@ void i430hx_write(int func, int addr, uint8_t val, void *priv)
                 if ((card_i430hx[0x59] ^ val) & 0xf0)
                 {
                         i430hx_map(0xf0000, 0x10000, val >> 4);
-                        shadowbios = (val & 0x10);
+//                        shadowbios = (val & 0x10);
                 }
                 pclog("i430hx_write : PAM0 write %02X\n", val);
                 break;

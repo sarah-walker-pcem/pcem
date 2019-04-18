@@ -12,6 +12,7 @@
 #include "sound_pas16.h"
 #include "sound_sb_dsp.h"
 #include "timer.h"
+#include "x86.h"
 
 /*      Original PAS uses
                 2 x OPL2
@@ -118,7 +119,8 @@ typedef struct pas16_t
         struct
         {
                 uint32_t l[3];
-                int c[3];
+		int c[3];
+                pc_timer_t timer[3];
                 uint8_t m[3];
                 uint8_t ctrl, ctrls[2];
                 int wp, rm[3], wm[3];
@@ -398,7 +400,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                 {
                         if (!(val & 0x20))
                         {
-                                if (val & 2) pas16->pit.rl[0] = pas16->pit.c[0] / (PITCONST * (1 << TIMER_SHIFT));
+                                if (val & 2) pas16->pit.rl[0] = timer_get_remaining_u64(&pit.timer[0]) / PITCONST;;
                                 if (val & 4) pas16->pit.rl[1] = pas16->pit.c[1];
                                 if (val & 8) pas16->pit.rl[2] = pas16->pit.c[2];
                         }
@@ -413,11 +415,14 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                 }
                 if (!(pas16->pit.ctrl & 0x30))
                 {
-                        pas16->pit.rl[t] = pas16->pit.c[t];
-                        if (!t)
-                                pas16->pit.rl[t] /= (PITCONST * (1 << TIMER_SHIFT));
-                        if (pas16->pit.c[t] < 0) 
-                                pas16->pit.rl[t] = 0;
+			if (!t)
+                                pas16->pit.rl[t] = timer_get_remaining_u64(&pit.timer[t]) / PITCONST;
+			else
+			{
+	                        pas16->pit.rl[t] = pas16->pit.c[t];
+	                        if (pas16->pit.c[t] < 0)
+	                                pas16->pit.rl[t] = 0;
+			}
                         pas16->pit.ctrl |= 0x30;
                         pas16->pit.rereadlatch[t] = 0;
                         pas16->pit.rm[t] = 3;
@@ -431,9 +436,10 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                         if (!pas16->pit.rm[t])
                         {
                                 pas16->pit.rm[t] = 3;
-                                pas16->pit.rl[t] = pit.c[t];
-                                if (!t)
-                                        pas16->pit.rl[t] /= (PITCONST * (1 << TIMER_SHIFT));
+				if (!t)
+                                        pas16->pit.rl[t] = timer_get_remaining_u64(&pit.timer[t]) / PITCONST;
+				else
+	                                pas16->pit.rl[t] = pas16->pit.c[t];
                         }
                         pas16->pit.rereadlatch[t] = 1;
                 }
@@ -449,7 +455,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                         pas16->pit.thit[t] = 0;
                         pas16->pit.c[t] = pas16->pit.l[t];
                         if (!t)
-                                pas16->pit.c[t] *= PITCONST * (1 << TIMER_SHIFT);
+                                timer_set_delay_u64(&pas16->pit.timer[t], pas16->pit.c[t] * PITCONST);
                         pas16->pit.enable[t] = 1;
                         break;
                         case 2:
@@ -457,7 +463,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                         pas16->pit.thit[t] = 0;
                         pas16->pit.c[t] = pas16->pit.l[t];
                         if (!t)
-                                pas16->pit.c[t] *= PITCONST * (1 << TIMER_SHIFT);
+                                timer_set_delay_u64(&pas16->pit.timer[t], pas16->pit.c[t] * PITCONST);
                         pas16->pit.enable[t] = 1;
                         break;
                         case 0:
@@ -465,7 +471,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                         pas16->pit.l[t] |= (val << 8);
                         pas16->pit.c[t] = pas16->pit.l[t];
                         if (!t)
-                                pas16->pit.c[t] *= PITCONST * (1 << TIMER_SHIFT);
+                                timer_set_delay_u64(&pas16->pit.timer[t], pas16->pit.c[t] * PITCONST);
                         pas16->pit.thit[t] = 0;
                         pas16->pit.wm[t] = 3;
                         pas16->pit.enable[t] = 1;
@@ -481,7 +487,7 @@ static void pas16_pit_out(uint16_t port, uint8_t val, void *p)
                         pas16->pit.l[t] |= 0x10000;
                         pas16->pit.c[t] = pas16->pit.l[t];
                         if (!t)
-                                pas16->pit.c[t] *= PITCONST * (1 << TIMER_SHIFT);
+                                timer_set_delay_u64(&pas16->pit.timer[t], pas16->pit.c[t] * PITCONST);
                 }
                 break;
         }
@@ -501,8 +507,8 @@ static uint8_t pas16_pit_in(uint16_t port, void *p)
                         pas16->pit.rereadlatch[t] = 0;
                         if (!t)
                         {
-                                pas16->pit.rl[t] = pas16->pit.c[t] / (PITCONST * (1 << TIMER_SHIFT));
-                                if ((pas16->pit.c[t] / (PITCONST * (1 << TIMER_SHIFT))) > 65536) 
+                                pas16->pit.rl[t] = timer_get_remaining_u64(&pit.timer[t]) / PITCONST;
+                                if ((timer_get_remaining_u64(&pit.timer[t]) / PITCONST) > 65536) 
                                         pas16->pit.rl[t] = 0xFFFF;
                         }
                         else
@@ -557,13 +563,12 @@ static void pas16_pcm_poll(void *p)
         if (pas16->pit.m[0] & 2)
         {
                 if (pas16->pit.l[0]) 
-                        pas16->pit.c[0] += (pas16->pit.l[0] * PITCONST * (1 << TIMER_SHIFT));
+                        timer_advance_u64(&pas16->pit.timer[0], pas16->pit.l[0] * PITCONST);
                 else                
-                        pas16->pit.c[0] += (0x10000 * PITCONST * (1 << TIMER_SHIFT));
+                        timer_advance_u64(&pas16->pit.timer[0], 0x10000 * PITCONST);
         }
         else
         {
-                pas16->pit.c[0] = -1;
                 pas16->pit.enable[0] = 0;
         }
 //        if (pas16->pcm_ctrl & PAS16_PCM_ENA)
@@ -736,7 +741,7 @@ void *pas16_init()
 
         io_sethandler(0x9a01, 0x0001, NULL, NULL, NULL, pas16_out_base, NULL, NULL,  pas16);
         
-        timer_add(pas16_pcm_poll, &pas16->pit.c[0], &pas16->pit.enable[0],  pas16);
+        timer_add(&pas16->pit.timer[0], pas16_pcm_poll, pas16, 0);
         
         sound_add_handler(pas16_get_buffer, pas16);
         

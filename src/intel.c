@@ -45,11 +45,10 @@ void batman_brdconfig_write(uint16_t port, uint8_t val, void *p)
 }
 
 static uint16_t batman_timer_latch;
-static int batman_timer = 0;
+static pc_timer_t batman_timer;
 
 static void batman_timer_over(void *p)
 {
-        batman_timer = 0;
 }
 
 static void batman_timer_write(uint16_t addr, uint8_t val, void *p)
@@ -58,7 +57,7 @@ static void batman_timer_write(uint16_t addr, uint8_t val, void *p)
                 batman_timer_latch = (batman_timer_latch & 0xff) | (val << 8);
         else
                 batman_timer_latch = (batman_timer_latch & 0xff00) | val;
-        batman_timer = batman_timer_latch * TIMER_USEC;
+        timer_set_delay_u64(&batman_timer, batman_timer_latch * TIMER_USEC);
 }
 
 static uint8_t batman_timer_read(uint16_t addr, void *p)
@@ -67,12 +66,7 @@ static uint8_t batman_timer_read(uint16_t addr, void *p)
         
         cycles -= (int)PITCONST;
         
-        timer_clock();
-
-        if (batman_timer < 0)
-                return 0;
-        
-        batman_timer_latch = batman_timer / TIMER_USEC;
+        batman_timer_latch = timer_get_remaining_us(&batman_timer);
 
         if (addr & 1)
                 return batman_timer_latch >> 8;
@@ -87,7 +81,7 @@ void intel_batman_init()
         io_sethandler(0x0078, 0x0002, batman_timer_read, NULL, NULL, batman_timer_write, NULL, NULL, NULL);
         io_sethandler(0x0092, 0x0001, batman_brdconfig, NULL, NULL, batman_brdconfig_write, NULL, NULL, NULL);
         batman_port_92 = 0;
-        timer_add(batman_timer_over, &batman_timer, &batman_timer, NULL);
+        timer_add(&batman_timer, batman_timer_over, NULL, 0);
 }
 
 

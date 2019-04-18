@@ -8,7 +8,7 @@
 #include "scsi_hd.h"
 #include "timer.h"
 
-extern char ide_fn[4][512];
+extern char ide_fn[7][512];
 
 #define BUFFER_SIZE (256*1024)
 
@@ -47,7 +47,7 @@ typedef struct scsi_hd_data
         
         int hd_id;
         
-        int callback;
+        pc_timer_t callback_timer;
         
         scsi_bus_t *bus;
 } scsi_hd_data;
@@ -56,8 +56,6 @@ static void scsi_hd_callback(void *p)
 {
         scsi_hd_data *data = p;
 
-        data->callback = 0;
-        
         if (data->cmd_pos == CMD_POS_WAIT)
         {
                 data->cmd_pos = data->new_cmd_pos;
@@ -80,7 +78,7 @@ static void *scsi_hd_init(scsi_bus_t *bus, int id)
         
         data->hd_id = id;
         data->bus = bus;
-        timer_add(scsi_hd_callback, &data->callback, &data->callback, data);
+        timer_add(&data->callback_timer, scsi_hd_callback, data, 0);
         
         return data;
 }
@@ -464,7 +462,7 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
 //                        pclog("SCSI_READ_6: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_START_SECTOR;
                         data->sector_pos = 0;
                         
@@ -524,7 +522,7 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
 //                        pclog("SCSI_READ_10: addr=%08x len=%04x\n", data->addr, data->len);
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_START_SECTOR;
                         data->sector_pos = 0;
                         
@@ -585,7 +583,7 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_TRANSFER;
                         data->sector_pos = 0;
                         
@@ -644,7 +642,7 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
                         data->bytes_required = data->len * 512;
                         
                         data->cmd_pos = CMD_POS_WAIT;
-                        data->callback = RW_DELAY;
+                        timer_set_delay_u64(&data->callback_timer, RW_DELAY);
                         data->new_cmd_pos = CMD_POS_TRANSFER;
                         data->sector_pos = 0;
                         
@@ -818,6 +816,7 @@ scsi_device_t scsi_hd =
         scsi_hd_init,
         NULL,
         scsi_hd_close,
+        NULL,
         
         scsi_hd_start_command,
         scsi_hd_command,

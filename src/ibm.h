@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "timer.h"
+
 #ifdef ABS
 #undef ABS
 #endif
@@ -30,27 +32,14 @@ int writelnext;
 
 extern int mmu_perm;
 
-#define readmemb(a) ((readlookup2[(a)>>12]==-1)?readmembl(a):*(uint8_t *)(readlookup2[(a) >> 12] + (a)))
-#define readmemw(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a)) & 1))?readmemwl(s,a):*(uint16_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
-#define readmeml(s,a) ((readlookup2[(uint32_t)((s)+(a))>>12]==-1 || (s)==0xFFFFFFFF || (((s)+(a)) & 3))?readmemll(s,a):*(uint32_t *)(readlookup2[(uint32_t)((s)+(a))>>12]+(uint32_t)((s)+(a))))
-
-//#define writememb(a,v) if (writelookup2[(a)>>12]==0xFFFFFFFF) writemembl(a,v); else ram[writelookup2[(a)>>12]+((a)&0xFFF)]=v
-//#define writememw(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememwl(s,a,v); else *((uint16_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
-//#define writememl(s,a,v) if (writelookup2[((s)+(a))>>12]==0xFFFFFFFF || (s)==0xFFFFFFFF) writememll(s,a,v); else *((uint32_t *)(&ram[writelookup2[((s)+(a))>>12]+(((s)+(a))&0xFFF)]))=v
-//#define readmemb(a) ((isram[((a)>>16)&255] && !(cr0>>31))?ram[a&0xFFFFFF]:readmembl(a))
-//#define writememb(a,v) if (isram[((a)>>16)&255] && !(cr0>>31)) ram[a&0xFFFFFF]=v; else writemembl(a,v)
-
-//void writememb(uint32_t addr, uint8_t val);
 uint8_t readmembl(uint32_t addr);
 void writemembl(uint32_t addr, uint8_t val);
-uint8_t readmemb386l(uint32_t seg, uint32_t addr);
-void writememb386l(uint32_t seg, uint32_t addr, uint8_t val);
-uint16_t readmemwl(uint32_t seg, uint32_t addr);
-void writememwl(uint32_t seg, uint32_t addr, uint16_t val);
-uint32_t readmemll(uint32_t seg, uint32_t addr);
-void writememll(uint32_t seg, uint32_t addr, uint32_t val);
-uint64_t readmemql(uint32_t seg, uint32_t addr);
-void writememql(uint32_t seg, uint32_t addr, uint64_t val);
+uint16_t readmemwl(uint32_t addr);
+void writememwl(uint32_t addr, uint16_t val);
+uint32_t readmemll(uint32_t addr);
+void writememll(uint32_t addr, uint32_t val);
+uint64_t readmemql(uint32_t addr);
+void writememql(uint32_t addr, uint64_t val);
 
 uint8_t *getpccache(uint32_t a);
 
@@ -69,221 +58,14 @@ uint32_t inl(uint16_t port);
 void outl(uint16_t port, uint32_t val);
 
 FILE *romfopen(char *fn, char *mode);
-extern int shadowbios,shadowbios_write;
 extern int mem_size;
 extern int readlnum,writelnum;
 
 
 /*Processor*/
-#define EAX cpu_state.regs[0].l
-#define ECX cpu_state.regs[1].l
-#define EDX cpu_state.regs[2].l
-#define EBX cpu_state.regs[3].l
-#define ESP cpu_state.regs[4].l
-#define EBP cpu_state.regs[5].l
-#define ESI cpu_state.regs[6].l
-#define EDI cpu_state.regs[7].l
-#define AX cpu_state.regs[0].w
-#define CX cpu_state.regs[1].w
-#define DX cpu_state.regs[2].w
-#define BX cpu_state.regs[3].w
-#define SP cpu_state.regs[4].w
-#define BP cpu_state.regs[5].w
-#define SI cpu_state.regs[6].w
-#define DI cpu_state.regs[7].w
-#define AL cpu_state.regs[0].b.l
-#define AH cpu_state.regs[0].b.h
-#define CL cpu_state.regs[1].b.l
-#define CH cpu_state.regs[1].b.h
-#define DL cpu_state.regs[2].b.l
-#define DH cpu_state.regs[2].b.h
-#define BL cpu_state.regs[3].b.l
-#define BH cpu_state.regs[3].b.h
+extern int ins, output, timetolive;
 
-typedef union
-{
-        uint32_t l;
-        uint16_t w;
-        struct
-        {
-                uint8_t l,h;
-        } b;
-} x86reg;
-
-typedef struct
-{
-        uint32_t base;
-        uint32_t limit;
-        uint8_t access;
-        uint16_t seg;
-        uint32_t limit_low, limit_high;
-        int checked; /*Non-zero if selector is known to be valid*/
-} x86seg;
-
-typedef union MMX_REG
-{
-        uint64_t q;
-        int64_t  sq;
-        uint32_t l[2];
-        int32_t  sl[2];
-        uint16_t w[4];
-        int16_t  sw[4];
-        uint8_t  b[8];
-        int8_t   sb[8];
-} MMX_REG;
-
-struct
-{
-        x86reg regs[8];
-        
-        uint8_t tag[8];
-
-        x86seg *ea_seg;
-        uint32_t eaaddr;
-        
-        int flags_op;
-        uint32_t flags_res;
-        uint32_t flags_op1, flags_op2;
-        
-        uint32_t pc;
-        uint32_t oldpc;
-        uint32_t op32;
-        
-        int TOP;
-        
-        union
-        {
-                struct
-                {
-                        int8_t rm, mod, reg;
-                } rm_mod_reg;
-                uint32_t rm_mod_reg_data;
-        } rm_data;
-        
-        int8_t ssegs;
-        int8_t ismmx;
-        int8_t abrt;
-        
-        int _cycles;
-        int cpu_recomp_ins;
-        
-        uint16_t npxs, npxc;
-
-        double ST[8];        
-        
-        uint16_t MM_w4[8];
-        
-        MMX_REG MM[8];
-        
-        uint16_t old_npxc, new_npxc;
-} cpu_state;
-
-#define cycles cpu_state._cycles
-
-extern uint32_t cpu_cur_status;
-
-/*The flags below must match in both cpu_cur_status and block->status for a block
-  to be valid*/
-#define CPU_STATUS_USE32   (1 << 0)
-#define CPU_STATUS_STACK32 (1 << 1)
-#define CPU_STATUS_PMODE   (1 << 2)
-#define CPU_STATUS_V86     (1 << 3)
-#define CPU_STATUS_FLAGS 0xffff
-
-/*If the flags below are set in cpu_cur_status, they must be set in block->status.
-  Otherwise they are ignored*/
-#define CPU_STATUS_NOTFLATDS  (1 << 16)
-#define CPU_STATUS_NOTFLATSS  (1 << 17)
-#define CPU_STATUS_MASK 0xffff0000
-
-#define COMPILE_TIME_ASSERT(expr) typedef char COMP_TIME_ASSERT[(expr) ? 1 : 0];
-
-COMPILE_TIME_ASSERT(sizeof(cpu_state) <= 128);
-
-#define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
-
-uint16_t flags,eflags;
-uint32_t oldds,oldss,olddslimit,oldsslimit,olddslimitw,oldsslimitw;
-
-extern int ins,output;
-extern int cycdiff;
-
-x86seg gdt,ldt,idt,tr;
-x86seg _cs,_ds,_es,_ss,_fs,_gs;
-x86seg _oldds;
-
-uint32_t pccache;
-uint8_t *pccache2;
-/*Segments -
-  _cs,_ds,_es,_ss are the segment structures
-  CS,DS,ES,SS is the 16-bit data
-  cs,ds,es,ss are defines to the bases*/
-#define CS _cs.seg
-#define DS _ds.seg
-#define ES _es.seg
-#define SS _ss.seg
-#define FS _fs.seg
-#define GS _gs.seg
-#define cs _cs.base
-#define ds _ds.base
-#define es _es.base
-#define ss _ss.base
-#define seg_fs _fs.base
-#define gs _gs.base
-
-#define CPL ((_cs.access>>5)&3)
-
-void loadseg(uint16_t seg, x86seg *s);
-void loadcs(uint16_t seg);
-
-union
-{
-        uint32_t l;
-        uint16_t w;
-} CR0;
-
-#define cr0 CR0.l
-#define msw CR0.w
-
-uint32_t cr2, cr3, cr4;
-uint32_t dr[8];
-
-#define C_FLAG  0x0001
-#define P_FLAG  0x0004
-#define A_FLAG  0x0010
-#define Z_FLAG  0x0040
-#define N_FLAG  0x0080
-#define T_FLAG  0x0100
-#define I_FLAG  0x0200
-#define D_FLAG  0x0400
-#define V_FLAG  0x0800
-#define NT_FLAG 0x4000
-#define VM_FLAG 0x0002 /*In EFLAGS*/
-#define VIF_FLAG 0x0008 /*In EFLAGS*/
-#define VIP_FLAG 0x0010 /*In EFLAGS*/
-
-#define WP_FLAG 0x10000 /*In CR0*/
-
-#define CR4_VME (1 << 0)
-#define CR4_PVI (1 << 1)
-#define CR4_PSE (1 << 4)
-
-#define IOPL ((flags>>12)&3)
-
-#define IOPLp ((!(msw&1)) || (CPL<=IOPL))
-//#define IOPLp 1
-
-//#define IOPLV86 ((!(msw&1)) || (CPL<=IOPL))
 extern int cycles_lost;
-extern int is486;
-extern uint8_t opcode;
-extern int insc;
-extern int fpucount;
-extern float mips,flops;
-extern int cgate16;
-extern int CPUID;
-
-extern int cpl_override;
 
 /*Timer*/
 typedef struct PIT_nr
@@ -295,7 +77,7 @@ typedef struct PIT_nr
 typedef struct PIT
 {
         uint32_t l[3];
-        int c[3];
+	pc_timer_t timer[3];
         uint8_t m[3];
         uint8_t ctrl,ctrls[3];
         int wp,rm[3],wm[3];
@@ -377,7 +159,6 @@ PIC pic,pic2;
 extern int pic_intpending;
 
 
-int disctime;
 char discfns[2][256];
 int driveempty[2];
 
@@ -469,7 +250,8 @@ enum
 	ROM_ZD_SUPERS,   /* [8088] Zenith Data Systems SupersPort */
 	ROM_PB410A,
         ROM_PPC512,
-
+	ROM_FIC_VA503P,
+	
         ROM_MAX
 };
 
@@ -537,10 +319,10 @@ extern int changeframecount;
 
 /*Sound*/
 int ppispeakon;
-float CGACONST;
-float MDACONST;
-float VGACONST1,VGACONST2;
-float RTCCONST;
+extern uint64_t CGACONST;
+extern uint64_t MDACONST;
+extern uint64_t VGACONST1,VGACONST2;
+extern uint64_t RTCCONST;
 int gated,speakval,speakon;
 
 

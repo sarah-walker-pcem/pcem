@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "ibm.h"
 #include "cpu.h"
+#include "x86.h"
 #include "device.h"
 #include "pzx.h"
 

@@ -11,7 +11,8 @@
 #include "config.h"
 #include "nmi.h"
 
-static int nvr_onesec_time = 0, nvr_onesec_cnt = 0;
+static pc_timer_t nvr_onesec_timer;
+static int nvr_onesec_cnt = 0;
 
 static void tc8521_onesec(void *p)
 {
@@ -21,7 +22,7 @@ static void tc8521_onesec(void *p)
 		tc8521_tick();
                 nvr_onesec_cnt = 0;
         }
-        nvr_onesec_time += (int)(10000 * TIMER_USEC);
+        timer_advance_u64(&nvr_onesec_timer, 10000 * TIMER_USEC);
 }
 
 void write_tc8521(uint16_t addr, uint8_t val, void *priv)
@@ -96,5 +97,5 @@ void tc8521_savenvr()
 void nvr_tc8521_init()
 {
         io_sethandler(0x2C0, 0x10, read_tc8521, NULL, NULL, write_tc8521, NULL, NULL,  NULL);
-        timer_add(tc8521_onesec, &nvr_onesec_time, TIMER_ALWAYS_ENABLED, NULL);
+        timer_add(&nvr_onesec_timer, tc8521_onesec, NULL, 1);
 }

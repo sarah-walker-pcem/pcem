@@ -557,7 +557,7 @@ int config_dlgsave(void* hdlg)
 
                         if (has_been_inited)
                         {
-                                mem_resize();
+                                mem_alloc();
                                 loadbios();
                                 resetpchard();
                         }

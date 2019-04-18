@@ -91,7 +91,7 @@ static struct
 
 static int vlan_handlers_num;
 
-static int vlan_poller_time = 0;
+static pc_timer_t vlan_poller_timer;
 
 void vlan_handler(void (*poller)(void *p), void *p)
 //void vlan_handler(int (*can_receive)(void *p), void (*receive)(void *p, const uint8_t *buf, int size), void *p)
@@ -106,7 +106,7 @@ void vlan_poller(void *priv)
 {
         int c;
 
-        vlan_poller_time += (int)((double)TIMER_USEC * (1000000.0 / 8.0 / 1500.0));
+        timer_advance_u64(&vlan_poller_timer, (uint64_t)((double)TIMER_USEC * (1000000.0 / 8.0 / 1500.0)));
 
         for (c = 0; c < vlan_handlers_num; c++)
                 vlan_handlers[c].poller(vlan_handlers[c].priv);
@@ -114,7 +114,7 @@ void vlan_poller(void *priv)
 
 void vlan_reset()
 {
-        timer_add(vlan_poller, &vlan_poller_time, TIMER_ALWAYS_ENABLED, NULL);
+        timer_add(&vlan_poller_timer, vlan_poller, NULL, 1);
 
         vlan_handlers_num = 0;
 }

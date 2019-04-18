@@ -4,7 +4,7 @@
 #include "scsi.h"
 #include "timer.h"
 
-#define IDE_TIME (5 * 100 * (1 << TIMER_SHIFT))
+#define IDE_TIME (100 * TIMER_USEC)
 
 #define ATAPI_STATE_IDLE             0
 #define ATAPI_STATE_COMMAND          1
@@ -35,7 +35,7 @@ void atapi_data_write(atapi_device_t *atapi_dev, uint16_t val)
                 if (atapi_dev->command_pos >= 12)
                 {
                         atapi_dev->state = ATAPI_STATE_GOT_COMMAND;
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
 
@@ -47,7 +47,7 @@ void atapi_data_write(atapi_device_t *atapi_dev, uint16_t val)
                 {
                         atapi_dev->bus_state = 0;
                         atapi_dev->state = ATAPI_STATE_WRITE_DATA;
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
         }
@@ -73,7 +73,7 @@ uint16_t atapi_data_read(atapi_device_t *atapi_dev)
                 if (atapi_dev->data_read_pos >= atapi_dev->data_write_pos)
                 {
                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                        idecallback[atapi_dev->board] = 6*IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6*IDE_TIME);
                 }
                 break;
         }
@@ -199,7 +199,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                 {
 //                                        pclog("SEND_COMMAND timed out %x\n", scsi_bus_read(&atapi_dev->bus));
                                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                                         break;
                                 }
 
@@ -209,7 +209,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                 {
 //                                        pclog("SEND_COMMAND - bus state changed %x\n", bus_state);
                                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                                         break;
                                 }
 
@@ -258,23 +258,23 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                                 {
                                                         if (ide_bus_master_write_data)
                                                         {
-                                                                if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos))
+                                                                if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos, ide_bus_master_p))
                                                                 {
                                                                         atapi_dev->state = ATAPI_STATE_RETRY_WRITE_DMA;
-                                                                        idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                                                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                                                                 }
                                                                 else
                                                                 {
                                                                         atapi_dev->data_write_pos = atapi_dev->data_read_pos;
                                                                         atapi_dev->bus_state = 0;
                                                                         atapi_dev->state = ATAPI_STATE_WRITE_DATA;
-                                                                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                                                                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                                                                 }
                                                         }
                                                         else
                                                         {
                                                                 atapi_dev->state = ATAPI_STATE_RETRY_WRITE_DMA;
-                                                                idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                                                         }
                                                 }
                                                 else
@@ -312,7 +312,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                         break;
                                 }
                         }
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
                                                 
@@ -344,7 +344,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                         break;
                                 }
                         }
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
 
@@ -387,7 +387,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                         break;
                                 }
                         }
-                        idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
 
@@ -430,21 +430,21 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                         {
                                 if (ide_bus_master_read_data)
                                 {
-                                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos))
+                                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos, ide_bus_master_p))
                                         {
                                                 atapi_dev->state = ATAPI_STATE_RETRY_READ_DMA;
-                                                idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                                         }
                                         else
                                         {
                                                 atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                                                idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                                         }
                                 }
                                 else
                                 {
                                         atapi_dev->state = ATAPI_STATE_RETRY_READ_DMA;
-                                        idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                                 }
                         }
                         else
@@ -490,7 +490,7 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                         }
                                 
                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                        idecallback[atapi_dev->board] = 1 * IDE_TIME;
+                        timer_set_delay_u64(&ide_timer[atapi_dev->board], 1 * IDE_TIME);
                 }
                 break;
                         
@@ -529,37 +529,47 @@ void atapi_process_packet(atapi_device_t *atapi_dev)
                                 ide_irq_raise(atapi_dev->ide);
                         }
                         else
-                                idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                 }
                 break;
                 
                 case ATAPI_STATE_RETRY_READ_DMA:
                 {
-                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos))
+                        if (ide_bus_master_read_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_write_pos, ide_bus_master_p))
                         {
-                                idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                         }
                         else
                         {
                                 atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
-                                idecallback[atapi_dev->board] = 6*IDE_TIME;
+                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 6*IDE_TIME);
                         }
                 }
                 break;
 
                 case ATAPI_STATE_RETRY_WRITE_DMA:
                 {
-                        if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos))
+                        if (ide_bus_master_write_data(atapi_dev->board, atapi_dev->data, atapi_dev->data_read_pos, ide_bus_master_p))
                         {
-                                idecallback[atapi_dev->board] = 1*IDE_TIME;
+                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 1*IDE_TIME);
                         }
                         else
                         {
                                 atapi_dev->bus_state = 0;
                                 atapi_dev->state = ATAPI_STATE_WRITE_DATA;
-                                idecallback[atapi_dev->board] = 6 * IDE_TIME;
+                                timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
                         }
                 }
                 break;
         }
+}
+
+void atapi_reset(atapi_device_t *atapi_dev)
+{
+        pclog("atapi_reset\n");
+        atapi_dev->state = ATAPI_STATE_IDLE;
+        atapi_dev->command_pos = 0;
+        atapi_dev->data_read_pos = 0;
+        atapi_dev->data_write_pos = 0;
+        scsi_bus_reset(&atapi_dev->bus);
 }

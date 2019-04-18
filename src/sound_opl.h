@@ -4,8 +4,7 @@ typedef struct opl_t
 {
         int chip_nr[2];
         
-        int timers[2][2];
-        int timers_enable[2][2];
+        pc_timer_t timers[2][2];
 
         int16_t filtbuf[2];
 

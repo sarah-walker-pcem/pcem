@@ -374,3 +374,21 @@ void scsi_bus_close(scsi_bus_t *bus)
                         bus->devices[c]->close(bus->device_data[c]);
         }
 }
+
+void scsi_bus_reset(scsi_bus_t *bus)
+{
+        int c;
+        
+        bus->state = STATE_IDLE;
+        bus->clear_req = 0;
+        bus->change_state_delay = 0;
+        bus->new_req_delay = 0;
+        bus->bus_in = bus->bus_out = 0;
+        bus->command_pos = 0;
+
+	for (c = 0; c < 8; c++)
+	{
+                if (bus->device_data[c] && bus->devices[c]->reset)
+                        bus->devices[c]->reset(bus->device_data[c]);
+        }
+}

@@ -177,9 +177,7 @@ void headland_write(uint16_t addr, uint8_t val, void *priv)
                 //pclog("Headland write %02X %02X at %04X:%04X\n",headland_index,val,CS,cpu_state.oldpc);
                 if (headland_index == 0x82)
                 {
-                        shadowbios = val & 0x10;
-                        shadowbios_write = !(val & 0x10);
-                        if (shadowbios)
+                        if (val & 0x10)
                                 mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
                         else
                                 mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
@@ -531,8 +529,6 @@ void headland_init()
                 mem_mapping_add(&headland_ems_mapping[i], ((i & 31) + ((i & 31) >= 24 ? 24 : 16)) << 14, 0x04000, mem_read_headlandb, mem_read_headlandw, mem_read_headlandl, mem_write_headlandb, mem_write_headlandw, mem_write_headlandl, ram + (((i & 31) + ((i & 31) >= 24 ? 24 : 16)) << 14), 0, &headland_ems_mr[i]);
                 mem_mapping_disable(&headland_ems_mapping[i]);
         }
-
-        for(i=4;i<10;i++) isram[i] = 0;
 
         headland_memmap_state_update();
 }

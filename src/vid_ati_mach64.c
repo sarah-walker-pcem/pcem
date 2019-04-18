@@ -422,7 +422,7 @@ void mach64_recalctimings(svga_t *svga)
                 svga->hdisp_time = svga->hdisp = ((mach64->crtc_h_total_disp >> 16) & 255) + 1;
                 svga->vsyncstart = (mach64->crtc_v_sync_strt_wid & 2047) + 1;
                 svga->rowoffset = (mach64->crtc_off_pitch >> 22);
-                svga->clock = cpuclock / mach64->ics2595.output_clock;
+                svga->clock = (cpuclock * (float)(1ull << 32)) / mach64->ics2595.output_clock;
                 svga->ma_latch = (mach64->crtc_off_pitch & 0x1fffff) * 2;
                 svga->linedbl = svga->rowcount = 0;
                 svga->split = 0xffffff;

@@ -643,7 +643,7 @@ static void s3_virge_recalctimings(svga_t *svga)
                 int m = svga->seqregs[0x13] & 0x7f;
                 double freq = (((double)m + 2) / (((double)n + 2) * (double)(1 << r))) * 14318184.0;
 
-                svga->clock = cpuclock / freq;
+                svga->clock = (cpuclock * (float)(1ull << 32)) / freq;
         }
 }
 

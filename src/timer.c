@@ -1,117 +1,134 @@
 #include "ibm.h"
 
-/*#include "sound_opl.h"
-#include "adlibgold.h"
-#include "sound_pas16.h"
-#include "sound_sb.h"
-#include "sound_sb_dsp.h"
-#include "sound_wss.h"*/
 #include "timer.h"
 
-#define TIMERS_MAX 32
+uint64_t TIMER_USEC;
+uint32_t timer_target;
 
-int TIMER_USEC;
+/*Enabled timers are stored in a linked list, with the first timer to expire at
+  the head.*/
+static pc_timer_t *timer_head = NULL;
 
-static struct
+void timer_enable(pc_timer_t *timer)
 {
-	int present;
-	void (*callback)(void *priv);
-	void *priv;
-	int *enable;
-	int *count;
-} timers[TIMERS_MAX];
+	pc_timer_t *timer_node = timer_head;
 
-int timers_present = 0;
-int timer_one = 1;
-	
-int timer_count = 0, timer_latch = 0;
-int timer_start = 0;
+//	pclog("timer->enable %p %i\n", timer, timer->enabled);
+	if (timer->enabled)
+		timer_disable(timer);
+
+	if (timer->next || timer->prev)
+		fatal("timer_enable - timer->next\n");
+
+	timer->enabled = 1;
+
+	/*List currently empty - add to head*/
+	if (!timer_head)
+	{
+		timer_head = timer;
+		timer->next = timer->prev = NULL;
+        	timer_target = timer_head->ts_integer;
+		return;
+	}
+
+	timer_node = timer_head;
+
+	while (1)
+	{
+		/*Timer expires before timer_node. Add to list in front of timer_node*/
+		if (TIMER_LESS_THAN(timer, timer_node))
+		{
+			timer->next = timer_node;
+			timer->prev = timer_node->prev;
+			timer_node->prev = timer;
+			if (timer->prev)
+				timer->prev->next = timer;
+			else
+			{
+				timer_head = timer;
+				timer_target = timer_head->ts_integer;
+                        }
+			return;
+		}
+
+		/*timer_node is last in the list. Add timer to end of list*/
+		if (!timer_node->next)
+		{
+			timer_node->next = timer;
+			timer->prev = timer_node;
+			return;
+		}
+
+		timer_node = timer_node->next;
+	}
+}
+void timer_disable(pc_timer_t *timer)
+{
+//	pclog("timer->disable %p\n", timer);
+	if (!timer->enabled)
+		return;
+
+	if (!timer->next && !timer->prev && timer != timer_head)
+		fatal("timer_disable - !timer->next\n");
+
+	timer->enabled = 0;
+
+	if (timer->prev)
+		timer->prev->next = timer->next;
+	else
+		timer_head = timer->next;
+	if (timer->next)
+		timer->next->prev = timer->prev;
+	timer->prev = timer->next = NULL;
+}
+static void timer_remove_head()
+{
+	if (timer_head)
+	{
+		pc_timer_t *timer = timer_head;
+//		pclog("timer_remove_head %p %p\n", timer_head, timer_head->next);
+		timer_head = timer->next;
+		timer_head->prev = NULL;
+		timer->next = timer->prev = NULL;
+		timer->enabled = 0;
+	}
+}
 
 void timer_process()
 {
-	int c;
-	int process = 0;
-	/*Get actual elapsed time*/
-	int diff = timer_latch - timer_count;
-	int enable[TIMERS_MAX];
+	if (!timer_head)
+		return;
 
-	timer_latch = 0;
-
-        for (c = 0; c < timers_present; c++)
-        {
-                enable[c] = *timers[c].enable;
-                if (*timers[c].enable)
-                {
-                        *timers[c].count = *timers[c].count - diff;
-                        if (*timers[c].count <= 0)
-                                process = 1;
-                }
-        }
-        
-        if (!process)
-                return;
-
-        while (1)
-        {
-                int lowest = 1, lowest_c;
-                
-                for (c = 0; c < timers_present; c++)
-                {
-                        if (enable[c])
-                        {
-                                if (*timers[c].count < lowest)
-                                {
-                                        lowest = *timers[c].count;
-                                        lowest_c = c;
-                                }
-                        }
-                }
-                
-                if (lowest > 0)
-                        break;
-
-                timers[lowest_c].callback(timers[lowest_c].priv);
-                enable[lowest_c] = *timers[lowest_c].enable;
-        }              
-}
-
-void timer_update_outstanding()
-{
-	int c;
-	timer_latch = 0x7fffffff;
-	for (c = 0; c < timers_present; c++)
+	while (1)
 	{
-		if (*timers[c].enable && *timers[c].count < timer_latch)
-			timer_latch = *timers[c].count;
+		pc_timer_t *timer = timer_head;
+
+		if (!TIMER_LESS_THAN_VAL(timer, (uint32_t)tsc))
+			break;
+
+		timer_remove_head();
+		timer->callback(timer->p);
 	}
-	timer_count = timer_latch = (timer_latch + ((1 << TIMER_SHIFT) - 1));
+
+	timer_target = timer_head->ts_integer;
 }
 
 void timer_reset()
 {
 	pclog("timer_reset\n");
-	timers_present = 0;
-	timer_latch = timer_count = 0;
-//	timer_process();
+	timer_target = 0;
+	tsc = 0;
+	timer_head = NULL;
 }
 
-int timer_add(void (*callback)(void *priv), int *count, int *enable, void *priv)
+void timer_add(pc_timer_t *timer, void (*callback)(void *p), void *p, int start_timer)
 {
-	if (timers_present < TIMERS_MAX)
-	{
-//		pclog("timer_add : adding timer %i\n", timers_present);
-		timers[timers_present].present = 1;
-		timers[timers_present].callback = callback;
-		timers[timers_present].priv = priv;
-		timers[timers_present].count = count;
-		timers[timers_present].enable = enable;
-		timers_present++;
-		return timers_present - 1;
-	}
-	return -1;
-}
-
-void timer_set_callback(int timer, void (*callback)(void *priv))
-{
-	timers[timer].callback = callback;
+        memset(timer, 0, sizeof(pc_timer_t));
+        
+	timer->callback = callback;
+	timer->p = p;
+	timer->enabled = 0;
+	timer->prev = timer->next = NULL;
+	if (start_timer)
+		timer_set_delay_u64(timer, 0);
 }

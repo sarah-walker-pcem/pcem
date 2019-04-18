@@ -14,6 +14,7 @@
 #include "ide.h"
 #include "cdrom-image.h"
 #include "scsi_zip.h"
+#include "codegen_allocator.h"
 #include "wx-common.h"
 
 drive_info_t drive_info[10];
@@ -135,7 +136,7 @@ int get_status(char* machine, char* device)
                 "\n"
 
                 "New blocks : %i\nOld blocks : %i\nRecompiled speed : %f MIPS\nAverage size : %f\n"
-                "Flushes : %i\nEvicted : %i\nReused : %i\nRemoved : %i\nReal speed : %f MIPS"
+                "Flushes : %i\nEvicted : %i\nReused : %i\nRemoved : %i\nReal speed : %f MIPS\nMem blocks used : %i (%g MB)"
         //                        "\nFully recompiled ins %% : %f%%"
                 ,mips,
                 flops,
@@ -158,7 +159,9 @@ int get_status(char* machine, char* device)
                 cpu_recomp_flushes_latched, cpu_recomp_evicted_latched,
                 cpu_recomp_reuse_latched, cpu_recomp_removed_latched,
 
-                ((double)cpu_recomp_ins_latched / 1000000.0) / ((double)main_time / timer_freq)
+                ((double)cpu_recomp_ins_latched / 1000000.0) / ((double)main_time / timer_freq),
+                codegen_allocator_usage,
+                (double)(codegen_allocator_usage * MEM_BLOCK_SIZE) / (1024.0*1024.0)
         //                        ((double)cpu_recomp_full_ins_latched / (double)cpu_recomp_ins_latched) * 100.0
         //                        cpu_reps_latched, cpu_notreps_latched
         );

@@ -37,7 +37,8 @@ typedef struct tandy_t
         int vsynctime, vadj;
         uint16_t ma, maback;
         
-        int dispontime, dispofftime, vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         int firstline, lastline;
         
         int composite;
@@ -186,8 +187,8 @@ void tandy_recalctimings(tandy_t *tandy)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= CGACONST;
         _dispofftime *= CGACONST;
-	tandy->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	tandy->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	tandy->dispontime  = (uint64_t)_dispontime;
+	tandy->dispofftime = (uint64_t)_dispofftime;
 }
 
 
@@ -208,7 +209,7 @@ void tandy_poll(void *p)
         {
 //                cgapal[0]=tandy->col&15;
 //                printf("Firstline %i Lastline %i tandy->displine %i\n",firstline,lastline,tandy->displine);
-                tandy->vidtime += tandy->dispofftime;
+                timer_advance_u64(&tandy->timer, tandy->dispofftime);
                 tandy->stat |= 1;
                 tandy->linepos = 1;
                 oldsc = tandy->sc;
@@ -476,7 +477,7 @@ void tandy_poll(void *p)
         }
         else
         {
-                tandy->vidtime += tandy->dispontime;
+                timer_advance_u64(&tandy->timer, tandy->dispontime);
                 if (tandy->dispon) 
                         tandy->stat &= ~1;
                 tandy->linepos = 0;
@@ -624,7 +625,7 @@ void *tandy_init()
         tandy->memctrl = -1;
         tandy->base = (mem_size - 128) * 1024;
         
-        timer_add(tandy_poll, &tandy->vidtime, TIMER_ALWAYS_ENABLED, tandy);
+        timer_add(&tandy->timer, tandy_poll, tandy, 1);
         mem_mapping_add(&tandy->mapping, 0xb8000, 0x08000, tandy_read, NULL, NULL, tandy_write, NULL, NULL,  NULL, 0, tandy);
         mem_mapping_add(&tandy->ram_mapping, 0x80000, 0x20000, tandy_ram_read, NULL, NULL, tandy_ram_write, NULL, NULL,  NULL, 0, tandy);
         /*Base 128k mapping is controlled via port 0xA0, so we remove it from the main mapping*/

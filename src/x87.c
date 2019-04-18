@@ -19,6 +19,11 @@
 #include "x87.h"
 #include "386_common.h"
 
+#define X87_TAG_VALID   0
+#define X87_TAG_ZERO    1
+#define X87_TAG_INVALID 2
+#define X87_TAG_EMPTY   3
+
 uint16_t x87_gettag()
 {
         uint16_t ret = 0;
@@ -26,10 +31,14 @@ uint16_t x87_gettag()
         
         for (c = 0; c < 8; c++)
         {
-                if (cpu_state.tag[c] & TAG_UINT64)
+                if (cpu_state.tag[c] == TAG_EMPTY)
+                        ret |= X87_TAG_EMPTY << (c * 2);
+                else if (cpu_state.tag[c] & TAG_UINT64)
                         ret |= 2 << (c*2);
+                else if (cpu_state.ST[c] == 0.0)
+                        ret |= X87_TAG_ZERO << (c * 2);
                 else
-                        ret |= (cpu_state.tag[c] << (c*2));
+                        ret |= X87_TAG_VALID << (c * 2);
         }
 
         return ret;
@@ -37,14 +46,19 @@ uint16_t x87_gettag()
 
 void x87_settag(uint16_t new_tag)
 {
-        cpu_state.tag[0] = new_tag & 3;
-        cpu_state.tag[1] = (new_tag >> 2) & 3;
-        cpu_state.tag[2] = (new_tag >> 4) & 3;
-        cpu_state.tag[3] = (new_tag >> 6) & 3;
-        cpu_state.tag[4] = (new_tag >> 8) & 3;
-        cpu_state.tag[5] = (new_tag >> 10) & 3;
-        cpu_state.tag[6] = (new_tag >> 12) & 3;
-        cpu_state.tag[7] = (new_tag >> 14) & 3;
+        int c;
+        
+        for (c = 0; c < 8; c++)
+        {
+                int tag = (new_tag >> (c * 2)) & 3;
+                
+                if (tag == X87_TAG_EMPTY)
+                        cpu_state.tag[c] = TAG_EMPTY;
+                else if (tag == 2)
+                        cpu_state.tag[c] = TAG_VALID | TAG_UINT64;
+                else
+                        cpu_state.tag[c] = TAG_VALID;
+        }
 }
 
 void x87_dumpregs()
@@ -56,7 +70,7 @@ void x87_dumpregs()
         }
         else
         {
-                pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",cpu_state.ST[cpu_state.TOP],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
+                pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",cpu_state.ST[cpu_state.TOP&7],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
                 pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7]);
         }
         pclog("Status = %04X  Control = %04X  Tag = %04X\n", cpu_state.npxs, cpu_state.npxc, x87_gettag());

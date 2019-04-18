@@ -1,6 +1,6 @@
 static int opRDTSC(uint32_t fetchdat)
 {
-        if (!cpu_hasrdtsc)
+        if (!cpu_has_feature(CPU_FEATURE_RDTSC))
         {
                 cpu_state.pc = cpu_state.oldpc;
                 x86illegal();

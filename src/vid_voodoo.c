@@ -202,6 +202,15 @@ typedef struct texture_t
         uint32_t *data;
 } texture_t;
 
+typedef struct vert_t
+{
+        float sVx, sVy;
+        float sRed, sGreen, sBlue, sAlpha;
+        float sVz, sWb;
+        float sW0, sS0, sT0;
+        float sW1, sS1, sT1;
+} vert_t;
+
 typedef struct voodoo_t
 {
         mem_mapping_t mapping;
@@ -214,7 +223,7 @@ typedef struct voodoo_t
         uint16_t dac_pll_regs[16];
         
         float pixel_clock;
-        int line_time;
+        uint64_t line_time;
         
         voodoo_params_t params;
         
@@ -248,7 +257,7 @@ typedef struct voodoo_t
         int swap_count;
         
         int disp_buffer, draw_buffer;
-        int timer_count;
+        pc_timer_t timer;
         
         int line;
         svga_t *svga;
@@ -318,14 +327,7 @@ typedef struct voodoo_t
         uint32_t cmdfifo_amin, cmdfifo_amax;
         
         uint32_t sSetupMode;
-        struct
-        {
-                float sVx, sVy;
-                float sRed, sGreen, sBlue, sAlpha;
-                float sVz, sWb;
-                float sW0, sS0, sT0;
-                float sW1, sS1, sT1;
-        } verts[4];
+        vert_t verts[4];
         int vertex_num;
         int num_verticies;
         
@@ -386,7 +388,7 @@ typedef struct voodoo_t
 
         int read_time, write_time, burst_time;
 
-        int wake_timer;
+        pc_timer_t wake_timer;
                 
         uint8_t thefilter[256][256]; // pixel filter, feeding from one or two
         uint8_t thefilterg[256][256]; // for green
@@ -2659,7 +2661,9 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         int dither = params->fbzMode & FBZ_DITHER;*/
         int texels;
         int c;
+#ifndef NO_CODEGEN
         uint8_t (*voodoo_draw)(voodoo_state_t *state, voodoo_params_t *params, int x, int real_y);
+#endif
         int y_diff = SLI_ENABLED ? 2 : 1;
 
         if ((params->textureMode[0] & TEXTUREMODE_MASK) == TEXTUREMODE_PASSTHROUGH ||
@@ -3703,10 +3707,15 @@ static void triangle_setup(voodoo_t *voodoo)
         float area;
         int va = 0, vb = 1, vc = 2;
         int reverse_cull = 0;
+        vert_t verts[3];
 
-        if (voodoo->verts[0].sVy < voodoo->verts[1].sVy)
+        verts[0] = voodoo->verts[0];
+        verts[1] = voodoo->verts[1];
+        verts[2] = voodoo->verts[2];
+
+        if (verts[0].sVy < verts[1].sVy)
         {
-                if (voodoo->verts[1].sVy < voodoo->verts[2].sVy)
+                if (verts[1].sVy < verts[2].sVy)
                 {
                         /* V1>V0, V2>V1, V2>V1>V0*/
                         va = 0; /*OK*/
@@ -3716,7 +3725,7 @@ static void triangle_setup(voodoo_t *voodoo)
                 else
                 {
                         /* V1>V0, V1>V2*/
-                        if (voodoo->verts[0].sVy < voodoo->verts[2].sVy)
+                        if (verts[0].sVy < verts[2].sVy)
                         {
                                 /* V1>V0, V1>V2, V2>V0, V1>V2>V0*/
                                 va = 0;
@@ -3735,10 +3744,10 @@ static void triangle_setup(voodoo_t *voodoo)
         }
         else
         {
-                if (voodoo->verts[1].sVy < voodoo->verts[2].sVy)
+                if (verts[1].sVy < verts[2].sVy)
                 {
                         /* V0>V1, V2>V1*/
-                        if (voodoo->verts[0].sVy < voodoo->verts[2].sVy)
+                        if (verts[0].sVy < verts[2].sVy)
                         {
                                 /* V0>V1, V2>V1, V2>V0, V2>V0>V1*/
                                 va = 1;
@@ -3764,10 +3773,10 @@ static void triangle_setup(voodoo_t *voodoo)
                 }
         }
 
-        dxAB = voodoo->verts[va].sVx - voodoo->verts[vb].sVx;
-        dxBC = voodoo->verts[vb].sVx - voodoo->verts[vc].sVx;
-        dyAB = voodoo->verts[va].sVy - voodoo->verts[vb].sVy;
-        dyBC = voodoo->verts[vb].sVy - voodoo->verts[vc].sVy;
+        dxAB = verts[va].sVx - verts[vb].sVx;
+        dxBC = verts[vb].sVx - verts[vc].sVx;
+        dyAB = verts[va].sVy - verts[vb].sVy;
+        dyBC = verts[vb].sVy - verts[vc].sVy;
         
         area = dxAB * dyBC - dxBC * dyAB;
 
@@ -3802,66 +3811,66 @@ static void triangle_setup(voodoo_t *voodoo)
                         return;
         }
         
-        voodoo->params.vertexAx = (int32_t)(int16_t)((int32_t)(voodoo->verts[va].sVx * 16.0f) & 0xffff);
-        voodoo->params.vertexAy = (int32_t)(int16_t)((int32_t)(voodoo->verts[va].sVy * 16.0f) & 0xffff);
-        voodoo->params.vertexBx = (int32_t)(int16_t)((int32_t)(voodoo->verts[vb].sVx * 16.0f) & 0xffff);
-        voodoo->params.vertexBy = (int32_t)(int16_t)((int32_t)(voodoo->verts[vb].sVy * 16.0f) & 0xffff);
-        voodoo->params.vertexCx = (int32_t)(int16_t)((int32_t)(voodoo->verts[vc].sVx * 16.0f) & 0xffff);
-        voodoo->params.vertexCy = (int32_t)(int16_t)((int32_t)(voodoo->verts[vc].sVy * 16.0f) & 0xffff);
+        voodoo->params.vertexAx = (int32_t)(int16_t)((int32_t)(verts[va].sVx * 16.0f) & 0xffff);
+        voodoo->params.vertexAy = (int32_t)(int16_t)((int32_t)(verts[va].sVy * 16.0f) & 0xffff);
+        voodoo->params.vertexBx = (int32_t)(int16_t)((int32_t)(verts[vb].sVx * 16.0f) & 0xffff);
+        voodoo->params.vertexBy = (int32_t)(int16_t)((int32_t)(verts[vb].sVy * 16.0f) & 0xffff);
+        voodoo->params.vertexCx = (int32_t)(int16_t)((int32_t)(verts[vc].sVx * 16.0f) & 0xffff);
+        voodoo->params.vertexCy = (int32_t)(int16_t)((int32_t)(verts[vc].sVy * 16.0f) & 0xffff);
         
         if (voodoo->params.vertexAy > voodoo->params.vertexBy || voodoo->params.vertexBy > voodoo->params.vertexCy)
                 fatal("triangle_setup wrong order %d %d %d\n", voodoo->params.vertexAy, voodoo->params.vertexBy, voodoo->params.vertexCy);
 
         if (voodoo->sSetupMode & SETUPMODE_RGB)
         {
-                voodoo->params.startR = (int32_t)(voodoo->verts[va].sRed * 4096.0f);
-                voodoo->params.dRdX = (int32_t)(((voodoo->verts[va].sRed - voodoo->verts[vb].sRed) * dyBC - (voodoo->verts[vb].sRed - voodoo->verts[vc].sRed) * dyAB) * 4096.0f);
-                voodoo->params.dRdY = (int32_t)(((voodoo->verts[vb].sRed - voodoo->verts[vc].sRed) * dxAB - (voodoo->verts[va].sRed - voodoo->verts[vb].sRed) * dxBC) * 4096.0f);
-                voodoo->params.startG = (int32_t)(voodoo->verts[va].sGreen * 4096.0f);
-                voodoo->params.dGdX = (int32_t)(((voodoo->verts[va].sGreen - voodoo->verts[vb].sGreen) * dyBC - (voodoo->verts[vb].sGreen - voodoo->verts[vc].sGreen) * dyAB) * 4096.0f);
-                voodoo->params.dGdY = (int32_t)(((voodoo->verts[vb].sGreen - voodoo->verts[vc].sGreen) * dxAB - (voodoo->verts[va].sGreen - voodoo->verts[vb].sGreen) * dxBC) * 4096.0f);
-                voodoo->params.startB = (int32_t)(voodoo->verts[va].sBlue * 4096.0f);
-                voodoo->params.dBdX = (int32_t)(((voodoo->verts[va].sBlue - voodoo->verts[vb].sBlue) * dyBC - (voodoo->verts[vb].sBlue - voodoo->verts[vc].sBlue) * dyAB) * 4096.0f);
-                voodoo->params.dBdY = (int32_t)(((voodoo->verts[vb].sBlue - voodoo->verts[vc].sBlue) * dxAB - (voodoo->verts[va].sBlue - voodoo->verts[vb].sBlue) * dxBC) * 4096.0f);
+                voodoo->params.startR = (int32_t)(verts[va].sRed * 4096.0f);
+                voodoo->params.dRdX = (int32_t)(((verts[va].sRed - verts[vb].sRed) * dyBC - (verts[vb].sRed - verts[vc].sRed) * dyAB) * 4096.0f);
+                voodoo->params.dRdY = (int32_t)(((verts[vb].sRed - verts[vc].sRed) * dxAB - (verts[va].sRed - verts[vb].sRed) * dxBC) * 4096.0f);
+                voodoo->params.startG = (int32_t)(verts[va].sGreen * 4096.0f);
+                voodoo->params.dGdX = (int32_t)(((verts[va].sGreen - verts[vb].sGreen) * dyBC - (verts[vb].sGreen - verts[vc].sGreen) * dyAB) * 4096.0f);
+                voodoo->params.dGdY = (int32_t)(((verts[vb].sGreen - verts[vc].sGreen) * dxAB - (verts[va].sGreen - verts[vb].sGreen) * dxBC) * 4096.0f);
+                voodoo->params.startB = (int32_t)(verts[va].sBlue * 4096.0f);
+                voodoo->params.dBdX = (int32_t)(((verts[va].sBlue - verts[vb].sBlue) * dyBC - (verts[vb].sBlue - verts[vc].sBlue) * dyAB) * 4096.0f);
+                voodoo->params.dBdY = (int32_t)(((verts[vb].sBlue - verts[vc].sBlue) * dxAB - (verts[va].sBlue - verts[vb].sBlue) * dxBC) * 4096.0f);
         }
         if (voodoo->sSetupMode & SETUPMODE_ALPHA)
         {
-                voodoo->params.startA = (int32_t)(voodoo->verts[va].sAlpha * 4096.0f);
-                voodoo->params.dAdX = (int32_t)(((voodoo->verts[va].sAlpha - voodoo->verts[vb].sAlpha) * dyBC - (voodoo->verts[vb].sAlpha - voodoo->verts[vc].sAlpha) * dyAB) * 4096.0f);
-                voodoo->params.dAdY = (int32_t)(((voodoo->verts[vb].sAlpha - voodoo->verts[vc].sAlpha) * dxAB - (voodoo->verts[va].sAlpha - voodoo->verts[vb].sAlpha) * dxBC) * 4096.0f);
+                voodoo->params.startA = (int32_t)(verts[va].sAlpha * 4096.0f);
+                voodoo->params.dAdX = (int32_t)(((verts[va].sAlpha - verts[vb].sAlpha) * dyBC - (verts[vb].sAlpha - verts[vc].sAlpha) * dyAB) * 4096.0f);
+                voodoo->params.dAdY = (int32_t)(((verts[vb].sAlpha - verts[vc].sAlpha) * dxAB - (verts[va].sAlpha - verts[vb].sAlpha) * dxBC) * 4096.0f);
         }
         if (voodoo->sSetupMode & SETUPMODE_Z)
         {
-                voodoo->params.startZ = (int32_t)(voodoo->verts[va].sVz * 4096.0f);
-                voodoo->params.dZdX = (int32_t)(((voodoo->verts[va].sVz - voodoo->verts[vb].sVz) * dyBC - (voodoo->verts[vb].sVz - voodoo->verts[vc].sVz) * dyAB) * 4096.0f);
-                voodoo->params.dZdY = (int32_t)(((voodoo->verts[vb].sVz - voodoo->verts[vc].sVz) * dxAB - (voodoo->verts[va].sVz - voodoo->verts[vb].sVz) * dxBC) * 4096.0f);
+                voodoo->params.startZ = (int32_t)(verts[va].sVz * 4096.0f);
+                voodoo->params.dZdX = (int32_t)(((verts[va].sVz - verts[vb].sVz) * dyBC - (verts[vb].sVz - verts[vc].sVz) * dyAB) * 4096.0f);
+                voodoo->params.dZdY = (int32_t)(((verts[vb].sVz - verts[vc].sVz) * dxAB - (verts[va].sVz - verts[vb].sVz) * dxBC) * 4096.0f);
         }
         if (voodoo->sSetupMode & SETUPMODE_Wb)
         {
-                voodoo->params.startW = (int64_t)(voodoo->verts[va].sWb * 4294967296.0f);
-                voodoo->params.dWdX = (int64_t)(((voodoo->verts[va].sWb - voodoo->verts[vb].sWb) * dyBC - (voodoo->verts[vb].sWb - voodoo->verts[vc].sWb) * dyAB) * 4294967296.0f);
-                voodoo->params.dWdY = (int64_t)(((voodoo->verts[vb].sWb - voodoo->verts[vc].sWb) * dxAB - (voodoo->verts[va].sWb - voodoo->verts[vb].sWb) * dxBC) * 4294967296.0f);
+                voodoo->params.startW = (int64_t)(verts[va].sWb * 4294967296.0f);
+                voodoo->params.dWdX = (int64_t)(((verts[va].sWb - verts[vb].sWb) * dyBC - (verts[vb].sWb - verts[vc].sWb) * dyAB) * 4294967296.0f);
+                voodoo->params.dWdY = (int64_t)(((verts[vb].sWb - verts[vc].sWb) * dxAB - (verts[va].sWb - verts[vb].sWb) * dxBC) * 4294967296.0f);
                 voodoo->params.tmu[0].startW = voodoo->params.tmu[1].startW = voodoo->params.startW;
                 voodoo->params.tmu[0].dWdX = voodoo->params.tmu[1].dWdX = voodoo->params.dWdX;
                 voodoo->params.tmu[0].dWdY = voodoo->params.tmu[1].dWdY = voodoo->params.dWdY;
         }
         if (voodoo->sSetupMode & SETUPMODE_W0)
         {
-                voodoo->params.tmu[0].startW = (int64_t)(voodoo->verts[va].sW0 * 4294967296.0f);
-                voodoo->params.tmu[0].dWdX = (int64_t)(((voodoo->verts[va].sW0 - voodoo->verts[vb].sW0) * dyBC - (voodoo->verts[vb].sW0 - voodoo->verts[vc].sW0) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[0].dWdY = (int64_t)(((voodoo->verts[vb].sW0 - voodoo->verts[vc].sW0) * dxAB - (voodoo->verts[va].sW0 - voodoo->verts[vb].sW0) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[0].startW = (int64_t)(verts[va].sW0 * 4294967296.0f);
+                voodoo->params.tmu[0].dWdX = (int64_t)(((verts[va].sW0 - verts[vb].sW0) * dyBC - (verts[vb].sW0 - verts[vc].sW0) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[0].dWdY = (int64_t)(((verts[vb].sW0 - verts[vc].sW0) * dxAB - (verts[va].sW0 - verts[vb].sW0) * dxBC) * 4294967296.0f);
                 voodoo->params.tmu[1].startW = voodoo->params.tmu[0].startW;
                 voodoo->params.tmu[1].dWdX = voodoo->params.tmu[0].dWdX;
                 voodoo->params.tmu[1].dWdY = voodoo->params.tmu[0].dWdY;
         }
         if (voodoo->sSetupMode & SETUPMODE_S0_T0)
         {
-                voodoo->params.tmu[0].startS = (int64_t)(voodoo->verts[va].sS0 * 4294967296.0f);
-                voodoo->params.tmu[0].dSdX = (int64_t)(((voodoo->verts[va].sS0 - voodoo->verts[vb].sS0) * dyBC - (voodoo->verts[vb].sS0 - voodoo->verts[vc].sS0) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[0].dSdY = (int64_t)(((voodoo->verts[vb].sS0 - voodoo->verts[vc].sS0) * dxAB - (voodoo->verts[va].sS0 - voodoo->verts[vb].sS0) * dxBC) * 4294967296.0f);
-                voodoo->params.tmu[0].startT = (int64_t)(voodoo->verts[va].sT0 * 4294967296.0f);
-                voodoo->params.tmu[0].dTdX = (int64_t)(((voodoo->verts[va].sT0 - voodoo->verts[vb].sT0) * dyBC - (voodoo->verts[vb].sT0 - voodoo->verts[vc].sT0) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[0].dTdY = (int64_t)(((voodoo->verts[vb].sT0 - voodoo->verts[vc].sT0) * dxAB - (voodoo->verts[va].sT0 - voodoo->verts[vb].sT0) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[0].startS = (int64_t)(verts[va].sS0 * 4294967296.0f);
+                voodoo->params.tmu[0].dSdX = (int64_t)(((verts[va].sS0 - verts[vb].sS0) * dyBC - (verts[vb].sS0 - verts[vc].sS0) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[0].dSdY = (int64_t)(((verts[vb].sS0 - verts[vc].sS0) * dxAB - (verts[va].sS0 - verts[vb].sS0) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[0].startT = (int64_t)(verts[va].sT0 * 4294967296.0f);
+                voodoo->params.tmu[0].dTdX = (int64_t)(((verts[va].sT0 - verts[vb].sT0) * dyBC - (verts[vb].sT0 - verts[vc].sT0) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[0].dTdY = (int64_t)(((verts[vb].sT0 - verts[vc].sT0) * dxAB - (verts[va].sT0 - verts[vb].sT0) * dxBC) * 4294967296.0f);
                 voodoo->params.tmu[1].startS = voodoo->params.tmu[0].startS;
                 voodoo->params.tmu[1].dSdX = voodoo->params.tmu[0].dSdX;
                 voodoo->params.tmu[1].dSdY = voodoo->params.tmu[0].dSdY;
@@ -3871,18 +3880,18 @@ static void triangle_setup(voodoo_t *voodoo)
         }
         if (voodoo->sSetupMode & SETUPMODE_W1)
         {
-                voodoo->params.tmu[1].startW = (int64_t)(voodoo->verts[va].sW1 * 4294967296.0f);
-                voodoo->params.tmu[1].dWdX = (int64_t)(((voodoo->verts[va].sW1 - voodoo->verts[vb].sW1) * dyBC - (voodoo->verts[vb].sW1 - voodoo->verts[vc].sW1) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[1].dWdY = (int64_t)(((voodoo->verts[vb].sW1 - voodoo->verts[vc].sW1) * dxAB - (voodoo->verts[va].sW1 - voodoo->verts[vb].sW1) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[1].startW = (int64_t)(verts[va].sW1 * 4294967296.0f);
+                voodoo->params.tmu[1].dWdX = (int64_t)(((verts[va].sW1 - verts[vb].sW1) * dyBC - (verts[vb].sW1 - verts[vc].sW1) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[1].dWdY = (int64_t)(((verts[vb].sW1 - verts[vc].sW1) * dxAB - (verts[va].sW1 - verts[vb].sW1) * dxBC) * 4294967296.0f);
         }
         if (voodoo->sSetupMode & SETUPMODE_S1_T1)
         {
-                voodoo->params.tmu[1].startS = (int64_t)(voodoo->verts[va].sS1 * 4294967296.0f);
-                voodoo->params.tmu[1].dSdX = (int64_t)(((voodoo->verts[va].sS1 - voodoo->verts[vb].sS1) * dyBC - (voodoo->verts[vb].sS1 - voodoo->verts[vc].sS1) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[1].dSdY = (int64_t)(((voodoo->verts[vb].sS1 - voodoo->verts[vc].sS1) * dxAB - (voodoo->verts[va].sS1 - voodoo->verts[vb].sS1) * dxBC) * 4294967296.0f);
-                voodoo->params.tmu[1].startT = (int64_t)(voodoo->verts[va].sT1 * 4294967296.0f);
-                voodoo->params.tmu[1].dTdX = (int64_t)(((voodoo->verts[va].sT1 - voodoo->verts[vb].sT1) * dyBC - (voodoo->verts[vb].sT1 - voodoo->verts[vc].sT1) * dyAB) * 4294967296.0f);
-                voodoo->params.tmu[1].dTdY = (int64_t)(((voodoo->verts[vb].sT1 - voodoo->verts[vc].sT1) * dxAB - (voodoo->verts[va].sT1 - voodoo->verts[vb].sT1) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[1].startS = (int64_t)(verts[va].sS1 * 4294967296.0f);
+                voodoo->params.tmu[1].dSdX = (int64_t)(((verts[va].sS1 - verts[vb].sS1) * dyBC - (verts[vb].sS1 - verts[vc].sS1) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[1].dSdY = (int64_t)(((verts[vb].sS1 - verts[vc].sS1) * dxAB - (verts[va].sS1 - verts[vb].sS1) * dxBC) * 4294967296.0f);
+                voodoo->params.tmu[1].startT = (int64_t)(verts[va].sT1 * 4294967296.0f);
+                voodoo->params.tmu[1].dTdX = (int64_t)(((verts[va].sT1 - verts[vb].sT1) * dyBC - (verts[vb].sT1 - verts[vc].sT1) * dyAB) * 4294967296.0f);
+                voodoo->params.tmu[1].dTdY = (int64_t)(((verts[vb].sT1 - verts[vc].sT1) * dxAB - (verts[va].sT1 - verts[vb].sT1) * dxBC) * 4294967296.0f);
         }
 
         voodoo->params.sign = (area < 0.0);
@@ -5860,15 +5869,13 @@ static void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
 #define WAKE_DELAY (TIMER_USEC * 100)
 static inline void wake_fifo_thread(voodoo_t *voodoo)
 {
-        if (!voodoo->wake_timer)
+        if (!timer_is_enabled(&voodoo->wake_timer))
         {
                 /*Don't wake FIFO thread immediately - if we do that it will probably
                   process one word and go back to sleep, requiring it to be woken on
                   almost every write. Instead, wait a short while so that the CPU
                   emulation writes more data so we have more batched-up work.*/
-                timer_process();
-                voodoo->wake_timer = WAKE_DELAY;
-                timer_update_outstanding();
+		timer_set_delay_u64(&voodoo->wake_timer, WAKE_DELAY);
         }
 }
 
@@ -5881,8 +5888,6 @@ static void voodoo_wake_timer(void *p)
 {
         voodoo_t *voodoo = (voodoo_t *)p;
         
-        voodoo->wake_timer = 0;
-
         thread_set_event(voodoo->wake_fifo_thread); /*Wake up FIFO thread if moving from idle*/
 }
 
@@ -6126,13 +6131,22 @@ static uint32_t voodoo_readl(uint32_t addr, void *p)
                 break;
 
                 case SST_vRetrace:
-                timer_clock();
                 temp = voodoo->line & 0x1fff;
                 break;
                 case SST_hvRetrace:
-                timer_clock();
-                temp = voodoo->line & 0x1fff;
-                temp |= ((((voodoo->line_time - voodoo->timer_count) * voodoo->h_total) / voodoo->timer_count) << 16) & 0x7ff0000;
+                {
+                        uint32_t line_time = (uint32_t)(voodoo->line_time >> 32);
+                        uint32_t diff = (timer_get_ts_int(&voodoo->timer) > (tsc & 0xffffffff)) ? (timer_get_ts_int(&voodoo->timer) - (tsc & 0xffffffff)) : 0;
+                        uint32_t pre_div = diff * voodoo->h_total;
+                        uint32_t post_div = pre_div / line_time;
+                        uint32_t h_pos = (voodoo->h_total - 1) - post_div;
+                        
+                        if (h_pos >= voodoo->h_total)
+                                h_pos = 0;
+                        
+                        temp = voodoo->line & 0x1fff;
+                        temp |= (h_pos << 16);
+                }
                 break;
 
                 case SST_fbiInit5:
@@ -6208,7 +6222,7 @@ static void voodoo_pixelclock_update(voodoo_t *voodoo)
         voodoo->pixel_clock = t;
 
         clock_const = cpuclock / t;
-        voodoo->line_time = (int)((double)line_length * clock_const * (double)(1 << TIMER_SHIFT));
+        voodoo->line_time = (uint64_t)((double)line_length * clock_const * (double)(1ull << 32));
 }
 
 static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
@@ -7440,9 +7454,9 @@ skip_draw:
                 voodoo->v_retrace = 0;
         }
         if (voodoo->line_time)
-                voodoo->timer_count += voodoo->line_time;
+		timer_advance_u64(&voodoo->timer, voodoo->line_time);
         else
-                voodoo->timer_count += TIMER_USEC * 32;
+		timer_advance_u64(&voodoo->timer, TIMER_USEC * 32);
 }
 
 static void voodoo_add_status_info(char *s, int max_len, void *p)
@@ -7610,7 +7624,7 @@ void *voodoo_card_init()
                 }
         }
 
-        timer_add(voodoo_callback, &voodoo->timer_count, TIMER_ALWAYS_ENABLED, voodoo);
+        timer_add(&voodoo->timer, voodoo_callback, voodoo, 1);
         
         voodoo->svga = svga_get_pri();
         voodoo->fbiInit0 = 0;
@@ -7627,7 +7641,7 @@ void *voodoo_card_init()
         if (voodoo->render_threads == 2)
                 voodoo->render_thread[1] = thread_create(render_thread_2, voodoo);
 
-        timer_add(voodoo_wake_timer, &voodoo->wake_timer, &voodoo->wake_timer, (void *)voodoo);
+        timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
         
         for (c = 0; c < 0x100; c++)
         {

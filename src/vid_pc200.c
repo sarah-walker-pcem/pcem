@@ -35,7 +35,7 @@ typedef struct pc200_t
         cga_t cga;
 	mda_t mda;
 
-	int vidtime;
+        pc_timer_t timer;
 
 	uint8_t emulation;	/* Which display are we emulating? */
 	uint8_t dipswitches;	/* DIP switches 1-3 */
@@ -53,23 +53,6 @@ static uint8_t crtcmask[32] =
         0xff, 0xff, 0xff, 0xff, 0x7f, 0x1f, 0x7f, 0x7f, 0xf3, 0x1f, 0x7f, 0x1f, 0x3f, 0xff, 0x3f, 0xff,
         0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
-
-static void setvidtime(pc200_t *pc200)
-{
-	switch (pc200->emulation)
-	{
-		case PC200_CGA:
-		case PC200_TV:
-		case PC200_LCDC:
-		pc200->vidtime = pc200->cga.vidtime;
-		break;
-		
-		case PC200_MDA:
-		case PC200_LCDM:
-		pc200->vidtime = pc200->mda.vidtime;
-		break;
-	}
-}
 
 /* LCD colour mappings
  * 
@@ -193,7 +176,6 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
                         {
                                 fullchange = changeframecount;
                                 mda_recalctimings(mda);
-				setvidtime(pc200);
                         }
                 }
                 return;
@@ -204,7 +186,6 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
                 if ((mda->ctrl ^ old) & 3)
 		{
                 	mda_recalctimings(mda);
-			setvidtime(pc200);
 		}
 		pc200->crtc_index &= 0x1F;
                	pc200->crtc_index |= 0x80;
@@ -243,7 +224,6 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
                         {
                                 fullchange = changeframecount;
                                 cga_recalctimings(cga);
-				setvidtime(pc200);
                         }
                 }
                 return;
@@ -254,7 +234,6 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
                 if ((cga->cgamode ^ old) & 3)
 		{
                 	cga_recalctimings(cga);
-			setvidtime(pc200);
 		}
 		pc200->crtc_index &= 0x1F;
                	pc200->crtc_index |= 0x80;
@@ -280,6 +259,9 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
 			nmi = 1;
 			return;
 		}
+                timer_disable(&pc200->cga.timer);
+                timer_disable(&pc200->mda.timer);
+                timer_disable(&pc200->timer);
                 pc200->operation_ctrl = val;
 		/* Bits 0 and 1 control emulation and output mode */
 		if (val & 1)	/* Monitor */
@@ -296,6 +278,13 @@ void pc200_out(uint16_t addr, uint8_t val, void *p)
 
 		}
 		PC200LOG(("Video emulation set to %d\n", pc200->emulation));
+		if (pc200->emulation == PC200_CGA || pc200->emulation == PC200_TV)
+                        timer_advance_u64(&pc200->cga.timer, 1);
+		else if (pc200->emulation == PC200_MDA)
+                        timer_advance_u64(&pc200->mda.timer, 1);
+                else
+                        timer_advance_u64(&pc200->timer, 1);
+                        
 		/* Bit 2 disables the IDA. We don't support dynamic enabling
 		 * and disabling of the IDA (instead, PCEM disconnects the 
 		 * IDA from the bus altogether) so don't implement this */	
@@ -450,7 +439,7 @@ void lcdm_poll(pc200_t *pc200)
         int blink;
         if (!mda->linepos)
         {
-                pc200->vidtime += mda->dispofftime;
+                timer_advance_u64(&pc200->timer, mda->dispofftime);
                 mda->stat |= 1;
                 mda->linepos = 1;
                 oldsc = mda->sc;
@@ -487,7 +476,7 @@ void lcdm_poll(pc200_t *pc200)
         }
         else
         {
-                pc200->vidtime += mda->dispontime;
+                timer_advance_u64(&pc200->timer, mda->dispontime);
                 if (mda->dispon) mda->stat&=~1;
                 mda->linepos=0;
                 if (mda->vsynctime)
@@ -598,7 +587,7 @@ void lcdc_poll(pc200_t *pc200)
 
         if (!cga->linepos)
         {
-                pc200->vidtime += cga->dispofftime;
+                timer_advance_u64(&pc200->timer, cga->dispofftime);
                 cga->cgastat |= 1;
                 cga->linepos = 1;
                 oldsc = cga->sc;
@@ -670,7 +659,7 @@ void lcdc_poll(pc200_t *pc200)
         }
         else
         {
-                pc200->vidtime += cga->dispontime;
+                timer_advance_u64(&pc200->timer, cga->dispontime);
                 cga->linepos = 0;
                 if (cga->vsynctime)
                 {
@@ -796,18 +785,18 @@ void pc200_poll(void *p)
 
 	switch (pc200->emulation)
 	{
-		case PC200_CGA:
-		case PC200_TV:
-		pc200->cga.vidtime = pc200->vidtime;
-		cga_poll(&pc200->cga);
-		pc200->vidtime = pc200->cga.vidtime;
-		return;
+//		case PC200_CGA:
+//		case PC200_TV:
+//		pc200->cga.vidtime = pc200->vidtime;
+//		cga_poll(&pc200->cga);
+//		pc200->vidtime = pc200->cga.vidtime;
+//		return;
 
-		case PC200_MDA:
-		pc200->mda.vidtime = pc200->vidtime;
-		mda_poll(&pc200->mda);
-		pc200->vidtime = pc200->mda.vidtime;
-		return;
+//		case PC200_MDA:
+//		pc200->mda.vidtime = pc200->vidtime;
+//		mda_poll(&pc200->mda);
+//		pc200->vidtime = pc200->mda.vidtime;
+//		return;
 
 		case PC200_LCDM:
 		lcdm_poll(pc200);
@@ -870,8 +859,9 @@ void *pc200_init()
 	mda_setcol(0xC0, 0, 1, 0);
 
 	pc200->cga.fontbase = (device_get_config_int("codepage") & 3) * 256;
-                
-        timer_add(pc200_poll, &pc200->vidtime, TIMER_ALWAYS_ENABLED, pc200);
+
+//        pclog("pc200=%p pc200->timer=%p pc200->cga=%p pc200->mda=%p pc200->mda->timer=%p\n", pc200, &pc200->timer, &pc200->cga, &pc200->mda, &pc200->mda->timer);
+        timer_add(&pc200->timer, pc200_poll, pc200, 1);
         mem_mapping_add(&pc200->mda_mapping, 0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL,  NULL, 0, &pc200->mda);
         mem_mapping_add(&pc200->cga_mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, 0, &pc200->cga);
         io_sethandler(0x03d0, 0x0010, pc200_in, NULL, NULL, pc200_out, NULL, NULL, pc200);
@@ -881,6 +871,16 @@ void *pc200_init()
 	blue = makecol(0x0f, 0x21, 0x3f);
         cgapal_rebuild(display_type, contrast);
 	set_lcd_cols(0);
+
+        timer_disable(&pc200->cga.timer);
+        timer_disable(&pc200->mda.timer);
+        timer_disable(&pc200->timer);
+	if (pc200->emulation == PC200_CGA || pc200->emulation == PC200_TV)
+                timer_enable(&pc200->cga.timer);
+	else if (pc200->emulation == PC200_MDA)
+                timer_enable(&pc200->mda.timer);
+        else
+                timer_enable(&pc200->timer);
 
         return pc200;
 }
@@ -899,8 +899,6 @@ void pc200_speed_changed(void *p)
         
         cga_recalctimings(&pc200->cga);
 	mda_recalctimings(&pc200->mda);
-
-	setvidtime(pc200);
 }
 
 device_config_t pc200_config[] =

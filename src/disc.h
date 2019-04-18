@@ -30,8 +30,7 @@ void disc_stop(int drive);
 int disc_empty(int drive);
 void disc_set_rate(int drive, int drvden, int rate);
 void disc_set_drivesel(int drive);
-extern int disc_time;
-extern int disc_poll_time;
+void disc_set_motor_enable(int motor_enable);
 extern int disc_drivesel;
 
 void fdc_callback();
@@ -45,8 +44,7 @@ void fdc_writeprotect();
 int  fdc_getdata(int last);
 void fdc_sectorid(uint8_t track, uint8_t side, uint8_t sector, uint8_t size, uint8_t crc1, uint8_t crc2);
 void fdc_indexpulse();
-/*extern int fdc_time;
-extern int fdc_ready;
+/*extern int fdc_ready;
 extern int fdc_indexcount;*/
 
 extern int motorspin;

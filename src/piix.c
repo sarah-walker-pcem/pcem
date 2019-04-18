@@ -7,6 +7,7 @@
 
 #include "ibm.h"
 #include "ide.h"
+#include "ide_sff8038i.h"
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
@@ -14,10 +15,8 @@
 
 #include "piix.h"
 
-uint8_t piix_bus_master_read(uint16_t port, void *priv);
-void piix_bus_master_write(uint16_t port, uint8_t val, void *priv);
-
 static uint8_t card_piix[256], card_piix_ide[256];
+static sff_busmaster_t piix_busmaster[2];
 
 void piix_write(int func, int addr, uint8_t val, void *priv)
 {
@@ -62,9 +61,9 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                 if (addr == 4 || (addr & ~3) == 0x20) /*Bus master base address*/                
                 {
                         uint16_t base = (card_piix_ide[0x20] & 0xf0) | (card_piix_ide[0x21] << 8);
-                        io_removehandler(0, 0x10000, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
+                        io_removehandler(0, 0x10000, sff_bus_master_read, NULL, NULL, sff_bus_master_write, NULL, NULL,  piix_busmaster);
                         if (card_piix_ide[0x04] & 1)
-                                io_sethandler(base, 0x10, piix_bus_master_read, NULL, NULL, piix_bus_master_write, NULL, NULL,  NULL);
+                                io_sethandler(base, 0x10, sff_bus_master_read, NULL, NULL, sff_bus_master_write, NULL, NULL,  piix_busmaster);
                 }
                 if (addr == 4 || addr == 0x41 || addr == 0x43)
                 {
@@ -140,206 +139,6 @@ uint8_t piix_read(int func, int addr, void *priv)
            return card_piix[addr];
 }
 
-struct
-{
-        uint8_t command;
-        uint8_t status;
-        uint32_t ptr, ptr_cur;
-        int count;
-        uint32_t addr;
-        int eot;
-} piix_busmaster[2];
-
-static void piix_bus_master_next_addr(int channel)
-{
-        piix_busmaster[channel].addr = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur])) & ~1;
-        piix_busmaster[channel].count = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur + 4])) & 0xfffe;
-        if (!piix_busmaster[channel].count)
-                piix_busmaster[channel].count = 0x10000;
-        piix_busmaster[channel].eot = (*(uint32_t *)(&ram[piix_busmaster[channel].ptr_cur + 4])) >> 31;
-        piix_busmaster[channel].ptr_cur += 8;
-//        pclog("New DMA settings on channel %i - Addr %08X Count %04X EOT %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot);
-}
-
-void piix_bus_master_write(uint16_t port, uint8_t val, void *priv)
-{
-        int channel = (port & 8) ? 1 : 0;
-//        pclog("PIIX Bus Master write %04X %02X %04x:%08x\n", port, val, CS, pc);
-        switch (port & 7)
-        {
-                case 0:
-                if ((val & 1) && !(piix_busmaster[channel].command & 1)) /*Start*/
-                {
-                        piix_busmaster[channel].ptr_cur = piix_busmaster[channel].ptr;
-                        piix_bus_master_next_addr(channel);
-                        piix_busmaster[channel].status |= 1;
-                }
-                if (!(val & 1) && (piix_busmaster[channel].command & 1)) /*Stop*/
-                   piix_busmaster[channel].status &= ~1;
-                   
-                piix_busmaster[channel].command = val;
-                break;
-                case 2:
-                piix_busmaster[channel].status = (val & 0x60) | ((piix_busmaster[channel].status & ~val) & 6) | (piix_busmaster[channel].status & 1);
-                break;
-                case 4:
-                piix_busmaster[channel].ptr = (piix_busmaster[channel].ptr & 0xffffff00) | val;
-                break;
-                case 5:
-                piix_busmaster[channel].ptr = (piix_busmaster[channel].ptr & 0xffff00ff) | (val << 8);
-                break;
-                case 6:
-                piix_busmaster[channel].ptr = (piix_busmaster[channel].ptr & 0xff00ffff) | (val << 16);
-                break;
-                case 7:
-                piix_busmaster[channel].ptr = (piix_busmaster[channel].ptr & 0x00ffffff) | (val << 24);
-                break;
-        }
-}
-                
-uint8_t piix_bus_master_read(uint16_t port, void *priv)
-{
-        int channel = (port & 8) ? 1 : 0;
-//        pclog("PIIX Bus Master read %04X %04x:%08x\n", port, CS, pc);
-        switch (port & 7)
-        {
-                case 0:
-                return piix_busmaster[channel].command;
-                case 2:
-                return piix_busmaster[channel].status;
-                case 4:
-                return piix_busmaster[channel].ptr;
-                case 5:
-                return piix_busmaster[channel].ptr >> 8;
-                case 6:
-                return piix_busmaster[channel].ptr >> 16;
-                case 7:
-                return piix_busmaster[channel].ptr >> 24;
-        }
-        return 0xff;
-}
-
-int piix_bus_master_data_read(int channel, uint8_t *data, int size)
-{
-        int transferred = 0;
-        
-        if (!(piix_busmaster[channel].status & 1))
-           return 1;                                    /*DMA disabled*/
-           
-        while (transferred < size)
-        {
-                if (piix_busmaster[channel].count < (size - transferred) && piix_busmaster[channel].eot)
-                   fatal("DMA on channel %i - Read count less than size! Addr %08X Count %04X EOT %i size %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot, size);
-
-                mem_invalidate_range(piix_busmaster[channel].addr, piix_busmaster[channel].addr+(size-1));
-                
-                if (piix_busmaster[channel].count < (size - transferred))
-                {
-//                        pclog("Transferring smaller - %i bytes\n", piix_busmaster[channel].count);
-                        if (piix_busmaster[channel].addr < (mem_size * 1024))
-                        {
-                                int count = piix_busmaster[channel].count;
-                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024))
-                                        count = (mem_size * 1024) - piix_busmaster[channel].addr;
-                                memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
-                        }
-                        transferred += piix_busmaster[channel].count;
-                        piix_busmaster[channel].addr += piix_busmaster[channel].count;
-                        piix_busmaster[channel].count = 0;
-                }                       
-                else
-                {
-//                        pclog("Transferring larger - %i bytes\n", size - transferred);
-                        if (piix_busmaster[channel].addr < (mem_size * 1024))
-                        {
-                                int count = size - transferred;
-                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024))
-                                        count = (mem_size * 1024) - piix_busmaster[channel].addr;
-                                memcpy(&ram[piix_busmaster[channel].addr], data + transferred, count);
-                        }
-                        piix_busmaster[channel].addr += (size - transferred);
-                        piix_busmaster[channel].count -= (size - transferred);
-                        transferred += (size - transferred);                        
-                }
-
-//                pclog("DMA on channel %i - Addr %08X Count %04X EOT %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot);
-
-                if (!piix_busmaster[channel].count)
-                {
-//                        pclog("DMA on channel %i - block over\n", channel);
-                        if (piix_busmaster[channel].eot) /*End of transfer?*/
-                        {
-//                                pclog("DMA on channel %i - transfer over\n", channel);
-                                piix_busmaster[channel].status &= ~1;
-                        }
-                        else
-                           piix_bus_master_next_addr(channel);
-                }
-        }
-        return 0;
-}
-int piix_bus_master_data_write(int channel, uint8_t *data, int size)
-{
-        int transferred = 0;
-        
-        if (!(piix_busmaster[channel].status & 1))
-           return 1;                                    /*DMA disabled*/
-
-        while (transferred < size)
-        {
-                if (piix_busmaster[channel].count < (size - transferred) && piix_busmaster[channel].eot)
-                   fatal("DMA on channel %i - Write count less than size! Addr %08X Count %04X EOT %i size %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot, size);
-                
-                if (piix_busmaster[channel].count < (size - transferred))
-                {
-//                        pclog("Transferring smaller - %i bytes\n", piix_busmaster[channel].count);
-                        if (piix_busmaster[channel].addr < (mem_size * 1024))
-                        {
-                                int count = piix_busmaster[channel].count;
-                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024))
-                                        count = (mem_size * 1024) - piix_busmaster[channel].addr;
-                                memcpy(data + transferred, &ram[piix_busmaster[channel].addr], count);
-                        }
-                        transferred += piix_busmaster[channel].count;
-                        piix_busmaster[channel].addr += piix_busmaster[channel].count;
-                        piix_busmaster[channel].count = 0;
-                }                       
-                else
-                {
-//                        pclog("Transferring larger - %i bytes\n", size - transferred);
-                        if (piix_busmaster[channel].addr < (mem_size * 1024))
-                        {
-                                int count = size - transferred;
-                                if ((piix_busmaster[channel].addr + count) > (mem_size * 1024))
-                                        count = (mem_size * 1024) - piix_busmaster[channel].addr;
-                                memcpy(data + transferred, &ram[piix_busmaster[channel].addr], count);
-                        }
-                        piix_busmaster[channel].addr += (size - transferred);
-                        piix_busmaster[channel].count -= (size - transferred);
-                        transferred += (size - transferred);                        
-                }
-
-//                pclog("DMA on channel %i - Addr %08X Count %04X EOT %i\n", channel, piix_busmaster[channel].addr, piix_busmaster[channel].count, piix_busmaster[channel].eot);
-
-                if (!piix_busmaster[channel].count)
-                {
-//                        pclog("DMA on channel %i - block over\n", channel);
-                        if (piix_busmaster[channel].eot) /*End of transfer?*/
-                        {
-//                                pclog("DMA on channel %i - transfer over\n", channel);
-                                piix_busmaster[channel].status &= ~1;
-                        }
-                        else
-                           piix_bus_master_next_addr(channel);
-                }
-        }
-        return 0;
-}
-
-void piix_bus_master_set_irq(int channel)
-{
-        piix_busmaster[channel].status |= 4;
-}
 
 void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
 {
@@ -379,8 +178,8 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
         card_piix_ide[0x20] = 0x01; card_piix_ide[0x21] = card_piix_ide[0x22] = card_piix_ide[0x23] = 0x00; /*Bus master interface base address*/
         card_piix_ide[0x40] = card_piix_ide[0x41] = 0x00;
         card_piix_ide[0x42] = card_piix_ide[0x43] = 0x00;
-        
-        ide_set_bus_master(piix_bus_master_data_read, piix_bus_master_data_write, piix_bus_master_set_irq);
+
+        sff_bus_master_init(piix_busmaster);
         
         pci_set_card_routing(pci_a, PCI_INTA);
         pci_set_card_routing(pci_b, PCI_INTB);

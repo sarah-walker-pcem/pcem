@@ -73,8 +73,8 @@ void mda_recalctimings(mda_t *mda)
         _dispofftime = disptime - _dispontime;
         _dispontime *= MDACONST;
         _dispofftime *= MDACONST;
-	mda->dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	mda->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	mda->dispontime = (uint64_t)_dispontime;
+	mda->dispofftime = (uint64_t)_dispofftime;
 }
 
 void mda_poll(void *p)
@@ -89,7 +89,7 @@ void mda_poll(void *p)
         int blink;
         if (!mda->linepos)
         {
-                mda->vidtime += mda->dispofftime;
+                timer_advance_u64(&mda->timer, mda->dispofftime);
                 mda->stat |= 1;
                 mda->linepos = 1;
                 oldsc = mda->sc;
@@ -143,7 +143,7 @@ void mda_poll(void *p)
         }
         else
         {
-                mda->vidtime += mda->dispontime;
+                timer_advance_u64(&mda->timer, mda->dispontime);
                 if (mda->dispon) mda->stat&=~1;
                 mda->linepos=0;
                 if (mda->vsynctime)
@@ -246,7 +246,6 @@ void *mda_standalone_init()
 	mda_init(mda);
 
         mda->vram = malloc(0x1000);
-        timer_add(mda_poll, &mda->vidtime, TIMER_ALWAYS_ENABLED, mda);
         mem_mapping_add(&mda->mapping, 0xb0000, 0x08000, mda_read, NULL, NULL, mda_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, mda);
         io_sethandler(0x03b0, 0x0010, mda_in, NULL, NULL, mda_out, NULL, NULL, mda);
 
@@ -280,6 +279,8 @@ void mda_init(mda_t *mda)
         mdacols[0x08][0][1] = mdacols[0x08][1][1] = cgapal[0];
         mdacols[0x80][0][1] = mdacols[0x80][1][1] = cgapal[0];
         mdacols[0x88][0][1] = mdacols[0x88][1][1] = cgapal[0];
+        
+        timer_add(&mda->timer, mda_poll, mda, 1);
 }
 
 void mda_setcol(int chr, int blink, int fg, uint8_t cga_ink)

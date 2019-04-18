@@ -26,6 +26,8 @@ struct
         uint8_t key_waiting;
         uint8_t pa;        
         uint8_t pb;
+
+	pc_timer_t send_delay_timer;
 } keyboard_amstrad;
 
 static uint8_t key_queue[16];
@@ -35,7 +37,7 @@ static uint8_t amstrad_systemstat_1, amstrad_systemstat_2;
 
 void keyboard_amstrad_poll()
 {
-        keybsenddelay += (1000 * TIMER_USEC);
+        timer_advance_u64(&keyboard_amstrad.send_delay_timer, (1000 * TIMER_USEC));
         if (keyboard_amstrad.wantirq)
         {
                 keyboard_amstrad.wantirq = 0;
@@ -77,7 +79,6 @@ void keyboard_amstrad_write(uint16_t port, uint8_t val, void *priv)
                 ppi.pb = val;
 
                 timer_process();
-                timer_update_outstanding();
 
                 speaker_update();
                 speaker_gated = val & 1;
@@ -174,5 +175,5 @@ void keyboard_amstrad_init()
         keyboard_send = keyboard_amstrad_adddata;
         keyboard_poll = keyboard_amstrad_poll;
 
-        timer_add(keyboard_amstrad_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_amstrad.send_delay_timer, keyboard_amstrad_poll, NULL, 1);
 }

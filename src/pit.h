@@ -1,4 +1,4 @@
-extern double PITCONST;
+extern uint64_t PITCONST;
 void pit_init();
 void pit_ps2_init();
 void pit_reset();

@@ -64,15 +64,25 @@ case "${host_cpu}" in
     CPU=x86_64
     AC_MSG_RESULT(${host_cpu})
     ;;
+    armv7l)
+    CPU=arm
+    AC_MSG_RESULT(${host_cpu})
+    ;;
+    aarch64)
+    CPU=arm64
+    AC_MSG_RESULT(${host_cpu})
+    ;;
     *)
-    AC_MSG_ERROR([Unsupported CPU.])
+    AC_MSG_ERROR([Unsupported CPU. ${host_cpu}])
     ;;
 esac
 
 AM_CONDITIONAL(CPU_I386, test "$CPU" = "i386")
 AM_CONDITIONAL(CPU_X86_64, test "$CPU" = "x86_64")
+AM_CONDITIONAL(CPU_ARM, test "$CPU" = "arm")
+AM_CONDITIONAL(CPU_ARM64, test "$CPU" = "arm64")
 
-AC_MSG_CHECKING([for off64_t])
+AC_MSG_CHECKING([for off64_t $CPU])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],[[off64_t n=0;]])],[has_lfs="yes"],[has_lfs="no"])
 case "$host" in
     *-*-freebsd*) # has off64_t but no fopen64/etc.

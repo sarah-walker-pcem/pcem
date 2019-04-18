@@ -138,9 +138,9 @@ typedef struct sigma_t
         uint16_t ma, maback;
         int oddeven;
 
-        int dispontime, dispofftime;
-        int vidtime;
-        
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
+
         int firstline, lastline;
         
         int drawcursor;
@@ -398,8 +398,8 @@ void sigma_recalctimings(sigma_t *sigma)
         _dispontime *= CGACONST;
         _dispofftime *= CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
-	sigma->dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	sigma->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	sigma->dispontime = (uint64_t)_dispontime;
+	sigma->dispofftime = (uint64_t)_dispofftime;
 }
 
 
@@ -645,7 +645,7 @@ void sigma_poll(void *p)
 
         if (!sigma->linepos)
         {
-                sigma->vidtime += sigma->dispofftime;
+                timer_advance_u64(&sigma->timer, sigma->dispofftime);
                 sigma->sigmastat |= STATUS_RETR_H;
                 sigma->linepos = 1;
                 oldsc = sigma->sc;
@@ -727,7 +727,7 @@ void sigma_poll(void *p)
         }
         else
         {
-                sigma->vidtime += sigma->dispontime;
+                timer_advance_u64(&sigma->timer, sigma->dispontime);
                 sigma->linepos = 0;
                 if (sigma->vsynctime)
                 {
@@ -871,8 +871,8 @@ void *sigma_init()
 
         sigma->vram = malloc(0x8000 * 4);
                 
-        timer_add(sigma_poll, &sigma->vidtime, TIMER_ALWAYS_ENABLED, sigma);
-        mem_mapping_add(&sigma->mapping, 0xb8000, 0x08000, 
+        timer_add(&sigma->timer, sigma_poll, sigma, 1);
+        mem_mapping_add(&sigma->mapping, 0xb8000, 0x08000,
 		sigma_read, NULL, NULL, 
 		sigma_write, NULL, NULL,  
 		NULL, MEM_MAPPING_EXTERNAL, sigma);

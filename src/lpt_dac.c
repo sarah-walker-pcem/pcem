@@ -30,8 +30,6 @@ static void dac_write_data(uint8_t val, void *p)
 {
         lpt_dac_t *lpt_dac = (lpt_dac_t *)p;
         
-        timer_clock();
-
         if (lpt_dac->is_stereo)
         {
                 if (lpt_dac->channel)

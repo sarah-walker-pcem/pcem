@@ -36,7 +36,8 @@ typedef struct pc1512_t
         int dispon;
         int blink;
         
-        int dispontime, dispofftime, vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
         int firstline, lastline;
         
         uint8_t *vram;
@@ -154,8 +155,8 @@ static void pc1512_recalctimings(pc1512_t *pc1512)
         _dispontime  *= CGACONST;
         _dispofftime *= CGACONST;
 //        printf("Timings - on %f off %f frame %f second %f\n",dispontime,dispofftime,(dispontime+dispofftime)*262.0,(dispontime+dispofftime)*262.0*59.92);
-	pc1512->dispontime  = (int)(_dispontime * (1 << TIMER_SHIFT));
-	pc1512->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	pc1512->dispontime  = (uint64_t)_dispontime;
+	pc1512->dispofftime = (uint64_t)_dispofftime;
 }
 
 static void pc1512_poll(void *p)
@@ -172,7 +173,7 @@ static void pc1512_poll(void *p)
 
         if (!pc1512->linepos)
         {
-                pc1512->vidtime += pc1512->dispofftime;
+                timer_advance_u64(&pc1512->timer, pc1512->dispofftime);
                 pc1512->stat |= 1;
                 pc1512->linepos = 1;
                 oldsc = pc1512->sc;
@@ -338,7 +339,7 @@ static void pc1512_poll(void *p)
         }
         else
         {
-                pc1512->vidtime += pc1512->dispontime;
+                timer_advance_u64(&pc1512->timer, pc1512->dispontime);
                 if ((pc1512->lastline - pc1512->firstline) == 199) 
                         pc1512->dispon = 0; /*Amstrad PC1512 always displays 200 lines, regardless of CRTC settings*/
                 if (pc1512->dispon) 
@@ -463,7 +464,7 @@ static void *pc1512_init()
 	pc1512->fontbase = (device_get_config_int("codepage") & 3) * 256;
 	display_type = device_get_config_int("display_type");              
  
-        timer_add(pc1512_poll, &pc1512->vidtime, TIMER_ALWAYS_ENABLED, pc1512);
+        timer_add(&pc1512->timer, pc1512_poll, pc1512, 1);
         mem_mapping_add(&pc1512->mapping, 0xb8000, 0x08000, pc1512_read, NULL, NULL, pc1512_write, NULL, NULL,  NULL, 0, pc1512);
         io_sethandler(0x03d0, 0x0010, pc1512_in, NULL, NULL, pc1512_out, NULL, NULL, pc1512);
 	cgapal_rebuild(display_type, 0);

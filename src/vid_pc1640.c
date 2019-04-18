@@ -23,7 +23,8 @@ typedef struct pc1640_t
         rom_t bios_rom;
         
         int cga_enabled;
-        int dispontime, dispofftime, vidtime;
+        uint64_t dispontime, dispofftime;
+	pc_timer_t timer;
 } pc1640_t;
 
 void pc1640_out(uint16_t addr, uint8_t val, void *p)
@@ -33,29 +34,36 @@ void pc1640_out(uint16_t addr, uint8_t val, void *p)
         switch (addr)
         {
                 case 0x3db:
-                pc1640->cga_enabled = val & 0x40;
-                if (pc1640->cga_enabled)
+                if (pc1640->cga_enabled != (val & 0x40))
                 {
-                        mem_mapping_enable(&pc1640->cga_mapping);
-                        mem_mapping_disable(&pc1640->ega_mapping);
-                }
-                else
-                {
-                        mem_mapping_disable(&pc1640->cga_mapping);
-                        switch (pc1640->ega.gdcreg[6] & 0xc)
+                        pc1640->cga_enabled = val & 0x40;
+                        if (pc1640->cga_enabled)
                         {
-                                case 0x0: /*128k at A0000*/
-                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x20000);
-                                break;
-                                case 0x4: /*64k at A0000*/
-                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x10000);
-                                break;
-                                case 0x8: /*32k at B0000*/
-                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xb0000, 0x08000);
-                                break;
-                                case 0xC: /*32k at B8000*/
-                                mem_mapping_set_addr(&pc1640->ega_mapping, 0xb8000, 0x08000);
-                                break;
+                                timer_disable(&pc1640->ega.timer);
+                                timer_set_delay_u64(&pc1640->cga.timer, 0);
+                                mem_mapping_enable(&pc1640->cga_mapping);
+                                mem_mapping_disable(&pc1640->ega_mapping);
+                        }
+                        else
+                        {
+                                timer_disable(&pc1640->cga.timer);
+                                timer_set_delay_u64(&pc1640->ega.timer, 0);
+                                mem_mapping_disable(&pc1640->cga_mapping);
+                                switch (pc1640->ega.gdcreg[6] & 0xc)
+                                {
+                                        case 0x0: /*128k at A0000*/
+                                        mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x20000);
+                                        break;
+                                        case 0x4: /*64k at A0000*/
+                                        mem_mapping_set_addr(&pc1640->ega_mapping, 0xa0000, 0x10000);
+                                        break;
+                                        case 0x8: /*32k at B0000*/
+                                        mem_mapping_set_addr(&pc1640->ega_mapping, 0xb0000, 0x08000);
+                                        break;
+                                        case 0xC: /*32k at B8000*/
+                                        mem_mapping_set_addr(&pc1640->ega_mapping, 0xb8000, 0x08000);
+                                        break;
+                                }
                         }
                 }                
                 pclog("3DB write %02X\n", val);
@@ -93,23 +101,6 @@ void pc1640_recalctimings(pc1640_t *pc1640)
         }
 }
 
-void pc1640_poll(void *p)
-{
-        pc1640_t *pc1640 = (pc1640_t *)p;
-        if (pc1640->cga_enabled) 
-        {
-                pc1640->cga.vidtime = pc1640->vidtime;
-                cga_poll(&pc1640->cga);
-                pc1640->vidtime = pc1640->cga.vidtime;
-        }
-        else                     
-        {
-                pc1640->ega.vidtime = pc1640->vidtime;
-                ega_poll(&pc1640->ega);
-                pc1640->vidtime = pc1640->ega.vidtime;
-        }
-}
-
 void *pc1640_init()
 {
         pc1640_t *pc1640 = malloc(sizeof(pc1640_t));
@@ -123,8 +114,8 @@ void *pc1640_init()
         pc1640->cga.vram = pc1640->ega.vram;
         pc1640->cga_enabled = 1;
         cga_init(&pc1640->cga);
+        timer_disable(&pc1640->ega.timer);
                         
-        timer_add(pc1640_poll, &pc1640->vidtime, TIMER_ALWAYS_ENABLED, pc1640);
         mem_mapping_add(&pc1640->cga_mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, 0, cga);
         mem_mapping_add(&pc1640->ega_mapping, 0,       0,       ega_read, NULL, NULL, ega_write, NULL, NULL,  NULL, 0, ega);
         io_sethandler(0x03a0, 0x0040, pc1640_in, NULL, NULL, pc1640_out, NULL, NULL, pc1640);

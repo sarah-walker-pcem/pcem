@@ -823,7 +823,7 @@ static int check_agi(uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int op_3
         return 0;
 }
 
-void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+void codegen_timing_686_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
 {
         uint32_t *timings;
         uint64_t *deps;
@@ -1067,11 +1067,17 @@ void codegen_timing_686_block_end()
         }
 }
 
+int codegen_timing_686_jump_cycles()
+{
+        return 0;
+}
+
 codegen_timing_t codegen_timing_686 =
 {
         codegen_timing_686_start,
         codegen_timing_686_prefix,
         codegen_timing_686_opcode,
         codegen_timing_686_block_start,
-        codegen_timing_686_block_end
+        codegen_timing_686_block_end,
+        codegen_timing_686_jump_cycles
 };

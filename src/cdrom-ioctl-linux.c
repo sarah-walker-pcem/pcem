@@ -14,7 +14,6 @@ static ATAPI ioctl_atapi;
 static uint32_t last_block = 0;
 static uint32_t cdrom_capacity = 0;
 static int ioctl_inited = 0;
-static char ioctl_path[8];
 static int tocvalid = 0;
 static struct cdrom_tocentry toc[256];
 static int toc_tracks;
@@ -209,7 +208,7 @@ static int read_toc(int fd, struct cdrom_tocentry *btoc)
 	first_track = toc_hdr.cdth_trk0;
 	last_track = toc_hdr.cdth_trk1;
 //pclog("read_toc: first_track=%i last_track=%i\n", first_track, last_track);
-	memset(btoc, 0, sizeof(btoc));
+	memset(btoc, 0, sizeof(struct cdrom_tocentry));
 
 	c = 0;
 	for (track = 0; track < 256; track++)
@@ -233,8 +232,6 @@ static int read_toc(int fd, struct cdrom_tocentry *btoc)
 
 static int ioctl_ready(void)
 {
-        long size;
-        int temp;
 	struct cdrom_tochdr toc_hdr;
 	struct cdrom_tocentry toc_entry;
 	int err;
@@ -266,7 +263,6 @@ static int ioctl_ready(void)
             (toc_entry.cdte_addr.msf.frame  != toc[toc_hdr.cdth_trk1].cdte_addr.msf.frame ) ||
             !tocvalid)
         {
-		int track;
                 ioctl_cd_state = CD_STOPPED;
 
 		tocvalid = read_toc(ioctl_fd, toc);
@@ -306,8 +302,6 @@ static int ioctl_get_last_block(unsigned char starttrack, int msf, int maxlen, i
 
 static int ioctl_medium_changed(void)
 {
-        long size;
-        int temp;
 	struct cdrom_tochdr toc_hdr;
 	struct cdrom_tocentry toc_entry;
 	int err;
@@ -338,15 +332,12 @@ static int ioctl_medium_changed(void)
 
 static uint8_t ioctl_getcurrentsubchannel(uint8_t *b, int msf)
 {
-	struct cdrom_subchnl sub;
         uint32_t cdpos = ioctl_cd_pos;
         int track = get_track_nr(cdpos);
         uint32_t track_address = toc[track].cdte_addr.msf.frame +
                                 (toc[track].cdte_addr.msf.second * 75) +
                                 (toc[track].cdte_addr.msf.minute * 75 * 60);
-	long size;
 	int pos=0;
-	int err;
 	uint8_t ret;
 //pclog("ioctl_getsubchannel: cdpos=%x track_address=%x track=%i\n", cdpos, track_address, track);
         if (ioctl_cd_state == CD_PLAYING)
@@ -460,7 +451,6 @@ static void ioctl_readsector_raw(uint8_t *b, int sector)
 static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single)
 {
         int len=4;
-        long size;
         int c,d;
         uint32_t temp;
 	uint32_t last_address = 0;
@@ -644,7 +634,7 @@ static uint32_t ioctl_size()
 
 static int ioctl_status()
 {
-	if (!(ioctl_ready) && (cdrom_drive <= 0))  return CD_STATUS_EMPTY;
+	if (!ioctl_ready() && (cdrom_drive <= 0))  return CD_STATUS_EMPTY;
 
 	switch(ioctl_cd_state)
 	{
@@ -653,6 +643,7 @@ static int ioctl_status()
 		case CD_PAUSED:
 		return CD_STATUS_PAUSED;
 		case CD_STOPPED:
+		default:
 		return CD_STATUS_STOPPED;
 	}
 }

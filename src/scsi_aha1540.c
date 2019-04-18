@@ -126,7 +126,7 @@ typedef struct aha154x_t
 
         int bios_cmd_state;
                 
-        int timer;
+        pc_timer_t timer;
 
         int current_mbo;
         int current_mbo_is_bios;
@@ -2165,7 +2165,7 @@ static void aha154x_callback(void *p)
 {
         aha154x_t *scsi = (aha154x_t *)p;
 
-        scsi->timer += TIMER_USEC * POLL_TIME_US;
+        timer_advance_u64(&scsi->timer, TIMER_USEC * POLL_TIME_US);
 
 //        pclog("poll %i\n", scsi->cmd_state);
         process_cmd(scsi);
@@ -2253,7 +2253,7 @@ static void *scsi_aha1542c_init(char *bios_fn)
         scsi->ccb_state = CCB_STATE_IDLE;
         scsi->scsi_state = SCSI_STATE_IDLE;
         
-        timer_add(aha154x_callback, &scsi->timer, TIMER_ALWAYS_ENABLED, scsi);
+        timer_add(&scsi->timer, aha154x_callback, scsi, 1);
         
         addr = device_get_config_int("addr");
         io_sethandler(addr, 0x0004,
@@ -2298,7 +2298,7 @@ static void *scsi_bt545s_init(char *bios_fn)
         scsi->ccb_state = CCB_STATE_IDLE;
         scsi->scsi_state = SCSI_STATE_IDLE;
         
-        timer_add(aha154x_callback, &scsi->timer, TIMER_ALWAYS_ENABLED, scsi);
+        timer_add(&scsi->timer, aha154x_callback, scsi, 1);
         
         addr = device_get_config_int("addr");
         io_sethandler(addr, 0x0004,

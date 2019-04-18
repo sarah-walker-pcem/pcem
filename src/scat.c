@@ -1417,8 +1417,6 @@ void scat_init()
                 mem_mapping_add(&scat_ems_mapping[i], (i + (i >= 24 ? 28 : 16)) << 14, 0x04000, mem_read_scatb, mem_read_scatw, mem_read_scatl, mem_write_scatb, mem_write_scatw, mem_write_scatl, ram + ((i + (i >= 24 ? 28 : 16)) << 14), 0, &scat_stat[i]);
         }
 
-        for(i=4;i<10;i++) isram[i] = 0;
-
         for (i = (scat_regs[SCAT_VERSION] < 4 ? 0 : 8); i < 16; i++)
         {
                 mem_mapping_add(&scat_high_mapping[i], (i << 14) + 0xFC0000, 0x04000, mem_read_bios, mem_read_biosw, mem_read_biosl, mem_write_null, mem_write_nullw, mem_write_nulll, rom + ((i << 14) & biosmask), 0, NULL);

@@ -189,8 +189,8 @@ typedef struct wy700_t
 	int enabled;		/* Display enabled, 0 or 1 */
 	int detach;		/* Detach cursor, 0 or 1 */
 
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
         
         int linepos, displine;
         int vc;
@@ -489,8 +489,8 @@ void wy700_recalctimings(wy700_t *wy700)
         _dispofftime = disptime - _dispontime;
         _dispontime  *= MDACONST;
         _dispofftime *= MDACONST;
-	wy700->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	wy700->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	wy700->dispontime  = (uint64_t)_dispontime;
+	wy700->dispofftime = (uint64_t)_dispofftime;
 }
 
 
@@ -758,7 +758,7 @@ void wy700_poll(void *p)
 
         if (!wy700->linepos)
         {
-                wy700->vidtime += wy700->dispofftime;
+                timer_advance_u64(&wy700->timer, wy700->dispofftime);
                 wy700->cga_stat |= 1;
                 wy700->mda_stat |= 1;
                 wy700->linepos = 1;
@@ -819,7 +819,7 @@ void wy700_poll(void *p)
                 	wy700->cga_stat &= ~1;
                 	wy700->mda_stat &= ~1;
 		}
-                wy700->vidtime += wy700->dispontime;
+                timer_advance_u64(&wy700->timer, wy700->dispontime);
                 wy700->linepos = 0;
 
 		if (wy700->displine == 800)
@@ -867,7 +867,7 @@ void *wy700_init()
 	/* 128k video RAM */
         wy700->vram = malloc(0x20000);
 
-        timer_add(wy700_poll, &wy700->vidtime, TIMER_ALWAYS_ENABLED, wy700);
+        timer_add(&wy700->timer, wy700_poll, wy700, 1);
 
 	/* Occupy memory between 0xB0000 and 0xBFFFF (moves to 0xA0000 in
 	 * high-resolution modes)  */

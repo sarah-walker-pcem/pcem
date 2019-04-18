@@ -555,7 +555,7 @@ void gd5429_recalctimings(svga_t *svga)
                 vclk /= 3.0;
                 break;
         }
-        svga->clock = cpuclock / vclk;
+        svga->clock = (cpuclock * (float)(1ull << 32)) / vclk;
         
         svga->vram_display_mask = (svga->crtc[0x1b] & 2) ? gd5429->vram_mask : 0x3ffff;
 }

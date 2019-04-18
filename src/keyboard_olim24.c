@@ -34,6 +34,8 @@ struct
         uint8_t params[16];
         
         int mouse_mode;
+
+	pc_timer_t send_delay_timer;
 } keyboard_olim24;
 
 static uint8_t key_queue[16];
@@ -43,7 +45,7 @@ static uint8_t mouse_scancodes[7];
 
 void keyboard_olim24_poll()
 {
-        keybsenddelay += (1000 * TIMER_USEC);
+        timer_advance_u64(&keyboard_olim24.send_delay_timer, (1000 * TIMER_USEC));
         //pclog("poll %i\n", keyboard_olim24.wantirq);
         if (keyboard_olim24.wantirq)
         {
@@ -147,7 +149,6 @@ void keyboard_olim24_write(uint16_t port, uint8_t val, void *priv)
                 ppi.pb = val;
                 
                 timer_process();
-                timer_update_outstanding();
 
                 speaker_update();
                 speaker_gated = val & 1;
@@ -345,5 +346,5 @@ void keyboard_olim24_init()
         keyboard_send = keyboard_olim24_adddata;
         keyboard_poll = keyboard_olim24_poll;
         
-        timer_add(keyboard_olim24_poll, &keybsenddelay, TIMER_ALWAYS_ENABLED,  NULL);
+        timer_add(&keyboard_olim24.send_delay_timer, keyboard_olim24_poll, NULL, 1);
 }

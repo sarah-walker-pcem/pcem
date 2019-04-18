@@ -296,7 +296,7 @@ void codegen_timing_winchip_prefix(uint8_t prefix, uint32_t fetchdat)
         last_prefix = prefix;
 }
 
-void codegen_timing_winchip_opcode(uint8_t opcode, uint32_t fetchdat, int op_32)
+void codegen_timing_winchip_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
 {
         int **timings;
         uint64_t *deps;
@@ -422,11 +422,17 @@ void codegen_timing_winchip_block_end()
 {
 }
 
+int codegen_timing_winchip_jump_cycles()
+{
+        return 0;
+}
+
 codegen_timing_t codegen_timing_winchip =
 {
         codegen_timing_winchip_start,
         codegen_timing_winchip_prefix,
         codegen_timing_winchip_opcode,
         codegen_timing_winchip_block_start,
-        codegen_timing_winchip_block_end
+        codegen_timing_winchip_block_end,
+        codegen_timing_winchip_jump_cycles
 };

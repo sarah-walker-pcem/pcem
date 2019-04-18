@@ -241,10 +241,10 @@ void ega_recalctimings(ega_t *ega)
         _dispontime  *= crtcconst;
         _dispofftime *= crtcconst;
 
-	ega->dispontime  = (int)(_dispontime  * (1 << TIMER_SHIFT));
-	ega->dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
-        pclog("dispontime %i (%f)  dispofftime %i (%f)\n", ega->dispontime, (float)ega->dispontime / (1 << TIMER_SHIFT),
-                                                           ega->dispofftime, (float)ega->dispofftime / (1 << TIMER_SHIFT));
+	ega->dispontime  = (uint64_t)_dispontime;
+	ega->dispofftime = (uint64_t)_dispofftime;
+        pclog("dispontime %i (%f)  dispofftime %i (%f)\n", ega->dispontime, (float)ega->dispontime,
+                                                           ega->dispofftime, (float)ega->dispofftime);
 //        printf("EGA horiz total %i display end %i clock rate %i vidclock %i %i\n",crtc[0],crtc[1],egaswitchread,vidclock,((ega3c2>>2)&3) | ((tridentnewctrl2<<2)&4));
 //        printf("EGA vert total %i display end %i max row %i vsync %i\n",ega_vtotal,ega_dispend,(crtc[9]&31)+1,ega_vsyncstart);
 //        printf("total %f on %f cycles off %f cycles frame %f sec %f %02X\n",disptime*crtcconst,dispontime,dispofftime,(dispontime+dispofftime)*ega_vtotal,(dispontime+dispofftime)*ega_vtotal*70,seqregs[1]);
@@ -500,7 +500,7 @@ void ega_poll(void *p)
 
         if (!ega->linepos)
         {
-                ega->vidtime += ega->dispofftime;
+		timer_advance_u64(&ega->timer, ega->dispofftime);
 
                 ega->stat |= 1;
                 ega->linepos = 1;
@@ -567,7 +567,7 @@ void ega_poll(void *p)
         }
         else
         {
-                ega->vidtime += ega->dispontime;
+		timer_advance_u64(&ega->timer, ega->dispontime);
 //                if (output) printf("Display on %f\n",vidtime);
                 if (ega->dispon) 
                         ega->stat &= ~1;
@@ -983,6 +983,8 @@ void ega_init(ega_t *ega, int monitor_type, int is_mono)
         egaswitches = monitor_type & 0xf;
         ega->vram_limit = 256 * 1024;
         ega->vrammask = ega->vram_limit-1;
+
+        timer_add(&ega->timer, ega_poll, ega, 1);
 }
 
 void *ega_standalone_init()
@@ -1013,8 +1015,8 @@ void *ega_standalone_init()
         ega->vrammask = ega->vram_limit-1;
         
         mem_mapping_add(&ega->mapping, 0xa0000, 0x20000, ega_read, NULL, NULL, ega_write, NULL, NULL, NULL, MEM_MAPPING_EXTERNAL, ega);
-        timer_add(ega_poll, &ega->vidtime, TIMER_ALWAYS_ENABLED, ega);
         io_sethandler(0x03a0, 0x0040, ega_in, NULL, NULL, ega_out, NULL, NULL, ega);
+
         return ega;
 }
 

@@ -114,7 +114,8 @@ static struct
 
 static int sound_handlers_num;
 
-static int sound_poll_time = 0, sound_poll_latch;
+static pc_timer_t sound_poll_timer;
+static uint64_t sound_poll_latch;
 int sound_pos_global = 0;
 
 int soundon = 1;
@@ -226,7 +227,7 @@ void sound_add_handler(void (*get_buffer)(int32_t *buffer, int len, void *p), vo
 static int cd_pos = 0;
 void sound_poll(void *priv)
 {
-        sound_poll_time += sound_poll_latch;
+	timer_advance_u64(&sound_poll_timer, sound_poll_latch);
 
         cd_pos++;
         if (cd_pos == (CD_BUFLEN * 48000) / CD_FREQ)
@@ -269,12 +270,12 @@ void sound_poll(void *priv)
 
 void sound_speed_changed()
 {
-        sound_poll_latch = (int)((double)TIMER_USEC * (1000000.0 / 48000.0));
+        sound_poll_latch = (uint64_t)((double)TIMER_USEC * (1000000.0 / 48000.0));
 }
 
 void sound_reset()
 {
-        timer_add(sound_poll, &sound_poll_time, TIMER_ALWAYS_ENABLED, NULL);
+        timer_add(&sound_poll_timer, sound_poll, NULL, 1);
 
         sound_handlers_num = 0;
         

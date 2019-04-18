@@ -66,7 +66,6 @@ int start_in_fullscreen = 0;
 
 static int override_drive_a = 0, override_drive_b = 0;
 
-int CPUID;
 int vid_resize, vid_api;
 
 int cycles_lost = 0;
@@ -81,7 +80,6 @@ void fullspeed();
 
 int framecount,fps;
 
-int output;
 int atfullspeed;
 
 void saveconfig(char *fn);
@@ -106,7 +104,7 @@ void pclog(const char *format, ...)
         vsprintf(buf, format, ap);
         va_end(ap);
         fputs(buf,pclogf);
-        //fflush(pclogf);
+        fflush(pclogf);
 #endif
 }
 
@@ -360,8 +358,7 @@ void initpc(int argc, char *argv[])
         ali1429_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
 //        pclog("Init - CPUID %i %i\n",CPUID,cpuspeed);
-        shadowbios=0;
-        
+
 #if __unix
 	if (cdrom_drive == -1)
 	        cdrom_null_reset();	
@@ -387,7 +384,6 @@ void resetpc()
 //        cpuspeed2=(AT)?2:1;
 //        atfullspeed=0;
 ///*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
-        shadowbios=0;
 }
 
 void resetpc_cad()
@@ -410,7 +406,7 @@ void resetpchard()
         sound_reset();
         io_init();
         cpu_set();
-        mem_resize();
+        mem_alloc();
         fdc_init();
 	disc_reset();
         disc_load(0, discfns[0]);
@@ -449,7 +445,6 @@ void resetpchard()
 //        atfullspeed = 0;
 //        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
 
-        shadowbios = 0;
         ali1429_reset();
         
         keyboard_at_reset();
@@ -565,8 +560,6 @@ void runpc()
                 cpu_recomp_evicted_latched = cpu_recomp_evicted;
                 cpu_recomp_reuse_latched = cpu_recomp_reuse;
                 cpu_recomp_removed_latched = cpu_recomp_removed;
-                cpu_reps_latched = cpu_reps;
-                cpu_notreps_latched = cpu_notreps;
 
                 cpu_recomp_blocks = 0;
                 cpu_state.cpu_recomp_ins = 0;
@@ -576,8 +569,6 @@ void runpc()
                 cpu_recomp_evicted = 0;
                 cpu_recomp_reuse = 0;
                 cpu_recomp_removed = 0;
-                cpu_reps = 0;
-                cpu_notreps = 0;
 
                 updatestatus=1;
                 readlnum=writelnum=0;
@@ -624,6 +615,7 @@ void speedchanged()
 
 void closepc()
 {
+        codegen_close();
         atapi->exit();
 //        ioctl_close();
         dumppic();
@@ -916,7 +908,6 @@ void saveconfig(char *fn)
         config_set_int(CFG_MACHINE, NULL, "video_speed", video_speed);
         config_set_string(CFG_MACHINE, NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
         config_set_int(CFG_MACHINE, NULL, "cpu_speed", cpuspeed);
-        config_set_int(CFG_MACHINE, NULL, "has_fpu", hasfpu);
         config_set_string(CFG_MACHINE, NULL, "disc_a", discfns[0]);
         config_set_string(CFG_MACHINE, NULL, "disc_b", discfns[1]);
         config_set_string(CFG_MACHINE, NULL, "hdd_controller", hdd_controller_name);

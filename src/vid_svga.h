@@ -63,8 +63,8 @@ typedef struct svga_t
         uint32_t ma_latch;
         int bpp;
         
-        int dispontime, dispofftime;
-        int vidtime;
+        uint64_t dispontime, dispofftime;
+        pc_timer_t timer;
         
         uint8_t scrblank;
         

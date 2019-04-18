@@ -9,7 +9,7 @@
 #include "timer.h"
 
 int disc_drivesel = 0;
-int disc_poll_time = 16;
+pc_timer_t disc_poll_timer;
 
 int disc_track[2];
 int writeprot[2], fwriteprot[2];
@@ -21,9 +21,6 @@ int curdrive = 0;
 
 //char discfns[2][260] = {"", ""};
 int defaultwriteprot = 0;
-
-int fdc_time;
-int disc_time;
 
 int fdc_ready;
 
@@ -137,7 +134,7 @@ int disc_hole(int drive)
 
 void disc_poll()
 {
-        disc_poll_time += disc_period * TIMER_USEC;
+        timer_advance_u64(&disc_poll_timer, disc_period * TIMER_USEC);
 
         if (disc_drivesel < 2 && drives[disc_drivesel].poll)
                 drives[disc_drivesel].poll();
@@ -209,7 +206,7 @@ void disc_reset()
         
         curdrive = 0;
         disc_period = 32;
-	timer_add(disc_poll, &disc_poll_time, &motoron, NULL);
+	timer_add(&disc_poll_timer, disc_poll, NULL, 0);
 
         for (drive = 0; drive < 2; drive++)
         {
@@ -294,4 +291,13 @@ void disc_set_drivesel(int drive)
         drive ^= fdd_swap;
         
         disc_drivesel = drive;
+}
+
+void disc_set_motor_enable(int motor_enable)
+{
+	if (motor_enable && !motoron)
+		timer_set_delay_u64(&disc_poll_timer, disc_period * TIMER_USEC);
+	else if (!motor_enable)
+		timer_disable(&disc_poll_timer);
+	motoron = motor_enable;
 }

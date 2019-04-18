@@ -30,13 +30,13 @@
 
 typedef struct
 {
-        int poll_time;
+        pc_timer_t poll_timer;
         int poll_left;
         int poll_clock;
         uint64_t poll_data;
         int poll_mode;
                 
-        int trigger_time;
+        pc_timer_t trigger_timer;
         int data_mode;
 } sw_data;
 
@@ -44,33 +44,22 @@ static void sw_timer_over(void *p)
 {
         sw_data *sw = (sw_data *)p;
         
-        while (sw->poll_time <= 0 && sw->poll_left)
-        {
-                sw->poll_clock = !sw->poll_clock;
+        sw->poll_clock = !sw->poll_clock;
         
-                if (sw->poll_clock)
-                {
-                        sw->poll_data >>= (sw->poll_mode ? 3 : 1);
-                        sw->poll_left--;
-                }
-
-                if (sw->poll_left == 1 && !sw->poll_clock)
-                        sw->poll_time += TIMER_USEC * 160;
-                else if (sw->poll_left)
-                        sw->poll_time += TIMER_USEC * 5;
-                else
-                        sw->poll_time = 0;
+        if (sw->poll_clock)
+	{
+        	sw->poll_data >>= (sw->poll_mode ? 3 : 1);
+                sw->poll_left--;
         }
-        
-        if (!sw->poll_left)
-                sw->poll_time = 0;
+
+        if (sw->poll_left == 1 && !sw->poll_clock)
+                timer_advance_u64(&sw->poll_timer, TIMER_USEC * 160);
+        else if (sw->poll_left)
+                timer_advance_u64(&sw->poll_timer, TIMER_USEC * 5);
 }
 
 static void sw_trigger_timer_over(void *p)
 {
-        sw_data *sw = (sw_data *)p;
-
-        sw->trigger_time = 0;
 }
 
 static int sw_parity(uint16_t data)
@@ -91,8 +80,8 @@ static void *sw_init()
         sw_data *sw = (sw_data *)malloc(sizeof(sw_data));
         memset(sw, 0, sizeof(sw_data));
 
-        timer_add(sw_timer_over, &sw->poll_time, &sw->poll_time, sw);
-        timer_add(sw_trigger_timer_over, &sw->trigger_time, &sw->trigger_time, sw);
+        timer_add(&sw->poll_timer, sw_timer_over, sw, 0);
+        timer_add(&sw->trigger_timer, sw_trigger_timer_over, sw, 0);
                 
         return sw;
 }
@@ -112,7 +101,7 @@ static uint8_t sw_read(void *p)
         if (!JOYSTICK_PRESENT(0))
                 return 0xff;
 
-        if (sw->poll_time)
+        if (timer_is_enabled(&sw->poll_timer))
         {        
                 if (sw->poll_clock)
                         temp |= 0x10;
@@ -135,7 +124,7 @@ static uint8_t sw_read(void *p)
 static void sw_write(void *p)
 {
         sw_data *sw = (sw_data *)p;
-        int time_since_last = sw->trigger_time / TIMER_USEC;
+        int time_since_last = timer_get_remaining_us(&sw->trigger_timer);
 
         if (!JOYSTICK_PRESENT(0))
                 return;
@@ -145,7 +134,7 @@ static void sw_write(void *p)
         if (!sw->poll_left)
         {
                 sw->poll_clock = 1;
-                sw->poll_time = TIMER_USEC * 50;
+                timer_set_delay_u64(&sw->poll_timer, TIMER_USEC * 50);
                 
                 if (time_since_last > 9900 && time_since_last < 9940)
                 {
@@ -213,10 +202,8 @@ static void sw_write(void *p)
                         }
                 }
         }
-        
-        sw->trigger_time = 0;
-        
-        timer_update_outstanding();
+
+	timer_disable(&sw->trigger_timer);        
 }
 
 static int sw_read_axis(void *p, int axis)
@@ -231,7 +218,7 @@ static void sw_a0_over(void *p)
 {
         sw_data *sw = (sw_data *)p;
 
-        sw->trigger_time = TIMER_USEC * 10000;
+        timer_set_delay_u64(&sw->trigger_timer, TIMER_USEC * 10000);
 }
         
 joystick_if_t joystick_sw_pad =

@@ -25,8 +25,8 @@ void compaq_cga_recalctimings(compaq_cga_t *self)
         _dispofftime = disptime - _dispontime;
         _dispontime *= MDACONST;
         _dispofftime *= MDACONST;
-	self->cga.dispontime = (int)(_dispontime * (1 << TIMER_SHIFT));
-	self->cga.dispofftime = (int)(_dispofftime * (1 << TIMER_SHIFT));
+	self->cga.dispontime = (uint64_t)_dispontime;
+	self->cga.dispofftime = (uint64_t)_dispofftime;
 }
 
 void compaq_cga_poll(void *p)
@@ -52,7 +52,7 @@ void compaq_cga_poll(void *p)
 /* We are in Compaq 350-line CGA territory */
         if (!self->cga.linepos)
         {
-                self->cga.vidtime += self->cga.dispofftime;
+                timer_advance_u64(&self->cga.timer, self->cga.dispofftime);
                 self->cga.cgastat |= 1;
                 self->cga.linepos = 1;
                 oldsc = self->cga.sc;
@@ -194,7 +194,7 @@ void compaq_cga_poll(void *p)
         }
         else
         {
-                self->cga.vidtime += self->cga.dispontime;
+                timer_advance_u64(&self->cga.timer, self->cga.dispontime);
                 self->cga.linepos = 0;
                 if (self->cga.vsynctime)
                 {
@@ -325,7 +325,7 @@ void *compaq_cga_init()
 
         self->cga.vram = malloc(0x4000);
 
-        timer_add(compaq_cga_poll, &self->cga.vidtime, TIMER_ALWAYS_ENABLED, self);
+        timer_add(&self->cga.timer, compaq_cga_poll, self, 1);
         mem_mapping_add(&self->cga.mapping, 0xb8000, 0x08000, cga_read, NULL, NULL, cga_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, self);
         io_sethandler(0x03d0, 0x0010, cga_in, NULL, NULL, cga_out, NULL, NULL, self);
 
