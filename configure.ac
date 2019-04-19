@@ -150,6 +150,18 @@ case "$host" in
            exit -1])
        build_linux="yes"
        ;;
+    *-*-freebsd*)
+       CFLAGS="$CFLAGS -I/usr/local/include"
+       CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+       LDFLAGS="$LDFLAGS -L/usr/local/lib"
+       AC_CHECK_LIB([GL], [glGetError], [], \
+           [echo "You need to install the OpenGL library."
+           exit -1])
+       AC_CHECK_LIB([openal], [alGetError], [], \
+           [echo "You need to install the OpenAL library."
+           exit -1])
+       build_other="yes"
+       ;;
     *)
        AC_CHECK_LIB([GL], [glGetError], [], \
            [echo "You need to install the OpenGL library."
