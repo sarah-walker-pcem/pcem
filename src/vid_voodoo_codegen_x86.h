@@ -3292,17 +3292,7 @@ static void voodoo_codegen_init(voodoo_t *voodoo)
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        voodoo->codegen_data = malloc(sizeof(voodoo_x86_data_t) * BLOCK_NUM*2);
-#endif
-
-#if defined(__linux__) || defined(__APPLE__)
-	start = (void *)((long)voodoo->codegen_data & pagemask);
-	len = ((sizeof(voodoo_x86_data_t) * BLOCK_NUM*2) + pagesize) & pagemask;
-	if (mprotect(start, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-	{
-		perror("mprotect");
-		exit(-1);
-	}
+        voodoo->codegen_data = mmap(0, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
 #endif
 
         for (c = 0; c < 256; c++)
@@ -3332,6 +3322,6 @@ static void voodoo_codegen_close(voodoo_t *voodoo)
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         VirtualFree(voodoo->codegen_data, 0, MEM_RELEASE);
 #else
-        free(voodoo->codegen_data);
+        munmap(voodoo->codegen_data, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2);
 #endif
 }
