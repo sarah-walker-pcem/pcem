@@ -62,6 +62,7 @@ int loadbios()
         loadfont("mda.rom", FONT_MDA);
 	loadfont("wy700.rom", FONT_WY700);
 	loadfont("8x12.bin", FONT_MDSI);
+	loadfont("im1024font.bin", FONT_IM1024);
         
         biosmask = 0xffff;
         

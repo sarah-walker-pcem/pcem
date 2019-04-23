@@ -24,6 +24,7 @@
 #include "vid_genius.h"
 #include "vid_hercules.h"
 #include "vid_ht216.h"
+#include "vid_im1024.h"
 #include "vid_incolor.h"
 #include "vid_colorplus.h"
 #include "vid_mda.h"
@@ -35,6 +36,7 @@
 #include "vid_pc1640.h"
 #include "vid_pc200.h"
 #include "vid_pcjr.h"
+#include "vid_pgc.h"
 #include "vid_ps1_svga.h"
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
@@ -94,6 +96,7 @@ static VIDEO_CARD video_cards[] =
         {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Hercules",                               "hercules",       &hercules_device,                  GFX_HERCULES,        VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Image Manager 1024",                     "im1024",         &im1024_device,                    GFX_IM1024,          VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Number Nine 9FX (S3 Trio64)",            "n9_9fx",         &s3_9fx_device,                    GFX_N9_9FX,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
@@ -101,6 +104,9 @@ static VIDEO_CARD video_cards[] =
         {"OAK OTI-067",                            "oti067",         &oti067_device,                    GFX_OTI067,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
         {"Olivetti GO481 (Paradise PVGA1A)",       "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6,  8, 16,   6,  8, 16}},
         {"Paradise Bahamas 64 (S3 Vision864)",     "bahamas64",      &s3_bahamas64_device,              GFX_BAHAMAS64,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  5,  20, 20, 35}},
+/* Not offered as the emulation is very incomplete
+        {"Professional Graphics Controller",       "pgc",            &pgc_device,                       GFX_PGC,             VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+*/
         {"Phoenix S3 Trio32",                      "px_trio32",      &s3_phoenix_trio32_device,         GFX_PHOENIX_TRIO32,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
         {"Phoenix S3 Trio64",                      "px_trio64",      &s3_phoenix_trio64_device,         GFX_PHOENIX_TRIO64,  VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3,  2,  4,  25, 25, 40}},
         {"Plantronics ColorPlus",                  "plantronics",    &colorplus_device,                 GFX_COLORPLUS,       VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
@@ -817,6 +823,7 @@ uint8_t fontdat[2048][8];
 uint8_t fontdatm[2048][16];
 uint8_t fontdatw[512][32];	/* Wyse700 font */
 uint8_t fontdat8x12[256][16];	/* MDSI Genius font */
+uint8_t fontdat12x18[256][36];	/* IM1024 font */
 uint8_t fontdatksc5601[16384][32]; /* Korean KSC-5601 font */
 uint8_t fontdatksc5601_user[192][32]; /* Korean KSC-5601 user defined font */
 
@@ -952,6 +959,13 @@ void loadfont(char *s, fontformat_t format)
 			fread(&fontdatm[c][0], 1, 16, f);
 		}
 		break;
+		case FONT_IM1024: /* Image Manager 1024 native font */
+                for (c=0;c<256;c++)
+                {
+                        fread(&fontdat12x18[c][0], 1, 36, f);
+                }
+		break;
+
         }
         fclose(f);
 }

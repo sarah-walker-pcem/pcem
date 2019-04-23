@@ -93,7 +93,7 @@ typedef enum
 	FONT_T3100E,	/* Toshiba T3100e, four fonts */
 	FONT_KSC5601,	/* Korean KSC-5601 */
 	FONT_SIGMA400,	/* Sigma Color 400, 8x8 and 8x16 */
-
+ 	FONT_IM1024,	/* Image Manager 1024 */
 } fontformat_t;
 
 void loadfont(char *s, fontformat_t format);
