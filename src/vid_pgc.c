@@ -1984,7 +1984,7 @@ void pgc_recalctimings(pgc_core_t *pgc)
 	/* Use a fixed 640 columns, like the T3100e */
         disptime = pgc->screenw + 11;
         _dispontime = pgc->screenw * pixel_clock;
-        _dispofftime = (disptime - _dispontime) * pixel_clock;
+        _dispofftime = (disptime - pgc->screenw) * pixel_clock;
         pgc->dispontime  = (uint64_t)_dispontime;
         pgc->dispofftime = (uint64_t)_dispofftime;
 }
