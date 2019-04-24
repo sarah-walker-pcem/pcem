@@ -8,8 +8,8 @@ CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno
 CXXFLAGS = $(CFLAGS)
 OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o acc2036.o acer386sx.o ali1429.o amstrad.o \
 	cbm_io.o cdrom-ioctl.o cdrom-image.o cmd640.o codegen.o codegen_accumulate.o codegen_allocator.o \
-	codegen_backend.o codegen_backend_x86.o codegen_backend_x86_ops.o codegen_backend_x86_ops_fpu.o \
-	codegen_backend_x86_ops_sse.o codegen_backend_x86_uops.o codegen_ir.o codegen_ops.o \
+	codegen_backend_x86.o codegen_backend_x86_ops.o codegen_backend_x86_ops_fpu.o codegen_backend_x86_ops_sse.o \
+	codegen_backend_x86_uops.o codegen_block.o codegen_ir.o codegen_ops.o \
 	codegen_ops_3dnow.o codegen_ops_branch.o codegen_ops_arith.o codegen_ops_fpu_arith.o \
 	codegen_ops_fpu_constant.o codegen_ops_fpu_loadstore.o codegen_ops_fpu_misc.o codegen_ops_helpers.o codegen_ops_jump.o \
 	codegen_ops_logic.o codegen_ops_misc.o codegen_ops_mmx_arith.o codegen_ops_mmx_cmp.o \
