@@ -429,6 +429,13 @@ void host_x86_PMULLW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0x66, 0x0f, 0xd5, 0xc0 | src_reg | (dst_reg << 3)); /*PMULLW dst_reg, src_reg*/
 }
 
+void host_x86_PSHUFD_XREG_XREG_IMM(codeblock_t *block, int dst_reg, int src_reg, uint8_t shuffle)
+{
+        codegen_alloc_bytes(block, 5);
+        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | src_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
+        codegen_addbyte(block, shuffle);
+}
+
 void host_x86_PSLLW_XREG_IMM(codeblock_t *block, int dst_reg, int shift)
 {
         codegen_alloc_bytes(block, 5);
@@ -520,27 +527,6 @@ void host_x86_PSUBUSW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
         codegen_addbyte4(block, 0x66, 0x0f, 0xd9, 0xc0 | src_reg | (dst_reg << 3)); /*PSUBUSW dst_reg, src_reg*/
 }
 
-void host_x86_PUNPCKHBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
-{
-        codegen_alloc_bytes(block, 9);
-        codegen_addbyte4(block, 0x66, 0x0f, 0x60, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLBW dst_reg, src_reg*/
-        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
-        codegen_addbyte(block, 0xee);
-}
-void host_x86_PUNPCKHWD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
-{
-        codegen_alloc_bytes(block, 9);
-        codegen_addbyte4(block, 0x66, 0x0f, 0x61, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLWD dst_reg, src_reg*/
-        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
-        codegen_addbyte(block, 0xee);
-}
-void host_x86_PUNPCKHDQ_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
-{
-        codegen_alloc_bytes(block, 9);
-        codegen_addbyte4(block, 0x66, 0x0f, 0x62, 0xc0 | src_reg | (dst_reg << 3)); /*PUNPCKLDQ dst_reg, src_reg*/
-        codegen_addbyte4(block, 0x66, 0x0f, 0x70, 0xc0 | dst_reg | (dst_reg << 3)); /*PSHUFD dst_reg, dst_reg, 0xee (move top 64-bits to low 64-bits)*/
-        codegen_addbyte(block, 0xee);
-}
 void host_x86_PUNPCKLBW_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg)
 {
         codegen_alloc_bytes(block, 4);

@@ -2250,7 +2250,8 @@ static int codegen_PUNPCKHBW(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_PUNPCKHBW_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PUNPCKLBW_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PSHUFD_XREG_XREG_IMM(block, dest_reg, dest_reg, 0xee); /*0xee = move top 64-bits to low 64-bits*/
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2265,7 +2266,8 @@ static int codegen_PUNPCKHWD(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_PUNPCKHWD_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PUNPCKLWD_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PSHUFD_XREG_XREG_IMM(block, dest_reg, dest_reg, 0xee); /*0xee = move top 64-bits to low 64-bits*/
         }
 #ifdef RECOMPILER_DEBUG
         else
@@ -2280,7 +2282,8 @@ static int codegen_PUNPCKHDQ(codeblock_t *block, uop_t *uop)
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
         {
-                host_x86_PUNPCKHDQ_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PUNPCKLDQ_XREG_XREG(block, dest_reg, src_reg_b);
+                host_x86_PSHUFD_XREG_XREG_IMM(block, dest_reg, dest_reg, 0xee); /*0xee = move top 64-bits to low 64-bits*/
         }
 #ifdef RECOMPILER_DEBUG
         else
