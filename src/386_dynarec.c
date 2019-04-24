@@ -212,6 +212,8 @@ static void prefetch_run(int instr_cycles, int bytes, int modrm, int reads, int 
         }
         
         prefetch_prefixes = 0;
+        if (prefetch_bytes > 16)
+                prefetch_bytes = 16;
 }
 
 static void prefetch_flush()
