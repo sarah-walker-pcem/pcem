@@ -6,25 +6,43 @@ WXVERSION = 31
 WXINCLUDE = e:/mingwget/include/wx/
 CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing -DUSE_NETWORKING
 CXXFLAGS = $(CFLAGS)
-OBJ = 386.o 386_dynarec.o 386_dynarec_ops.o 808x.o acc2036.o acc2168.o acc3221.o acer386sx.o ali1429.o amstrad.o cassette.o cbm_io.o cdrom-ioctl.o cdrom-image.o \
-	cmd640.o codegen.o codegen_ops.o codegen_timing_486.o codegen_timing_686.o codegen_timing_common.o codegen_timing_pentium.o codegen_timing_winchip.o codegen_x86.o compaq.o config.o cpu.o \
-	device.o dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdd.o fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430hx.o i430lx.o i430fx.o \
-	i430vx.o ide.o ide_atapi.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \
-	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o laserxt.o lpt.o lpt_dac.o lpt_dss.o mca.o mcr.o mem.o mem_bios.o mfm_at.o mfm_xebec.o model.o mouse.o mouse_msystems.o mouse_ps2.o \
-	mouse_serial.o neat.o nmi.o nvr.o nvr_tc8521.o olivetti_m24.o opti495.o paths.o pc.o pc87306.o pci.o pic.o piix.o pit.o ppi.o ps1.o ps2.o ps2_mca.o ps2_nvr.o pzx.o rom.o rtc.o rtc_tc8521.o \
-	scat.o scsi.o scsi_53c400.o scsi_aha1540.o scsi_cd.o scsi_hd.o scsi_zip.o serial.o sio.o sis496.o sl82c460.o sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_audiopci.o sound_cms.o sound_dbopl.o \
-	sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o sound_pas16.o sound_ps1.o sound_pssj.o sound_resid.o \
-	sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o sound_ssi2001.o sound_wss.o \
-	sound_ym7128.o soundopenal.o t1000.o t3100e.o tandy_eeprom.o tandy_rom.o timer.o um8881f.o um8669f.o vid_ati_eeprom.o vid_ati_mach64.o vid_ati18800.o \
-	vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o vid_cl5429.o vid_colorplus.o vid_compaq_cga.o vid_ega.o vid_et4000.o \
-	vid_et4000w32.o vid_et4000w32i.o vid_genius.o vid_hercules.o vid_ht216.o vid_icd2061.o vid_ics2595.o vid_im1024.o vid_incolor.o vid_mda.o \
+OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o acc2036.o acc2168.o acc3221.o acer386sx.o ali1429.o amstrad.o cassette.o \
+	cbm_io.o cdrom-ioctl.o cdrom-image.o cmd640.o codegen.o codegen_accumulate.o codegen_allocator.o \
+	codegen_backend_x86.o codegen_backend_x86_ops.o codegen_backend_x86_ops_fpu.o codegen_backend_x86_ops_sse.o \
+	codegen_backend_x86_uops.o codegen_block.o codegen_ir.o codegen_ops.o \
+	codegen_ops_3dnow.o codegen_ops_branch.o codegen_ops_arith.o codegen_ops_fpu_arith.o \
+	codegen_ops_fpu_constant.o codegen_ops_fpu_loadstore.o codegen_ops_fpu_misc.o codegen_ops_helpers.o codegen_ops_jump.o \
+	codegen_ops_logic.o codegen_ops_misc.o codegen_ops_mmx_arith.o codegen_ops_mmx_cmp.o \
+	codegen_ops_mmx_loadstore.o codegen_ops_mmx_logic.o codegen_ops_mmx_pack.o codegen_ops_mmx_shift.o \
+	codegen_ops_mov.o codegen_ops_shift.o codegen_ops_stack.o codegen_reg.o codegen_timing_486.o \
+	codegen_timing_686.o codegen_timing_common.o codegen_timing_k6.o codegen_timing_pentium.o \
+	codegen_timing_winchip.o codegen_timing_winchip2.o compaq.o config.o cpu.o cpu_tables.o device.o \
+	dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdd.o \
+	fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430hx.o i430lx.o i430fx.o i430vx.o ide.o \
+	ide_atapi.o ide_sff8038i.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o \
+	joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \
+	keyboard_olim24.o keyboard_pcjr.o keyboard_xt.o laserxt.o lpt.o lpt_dac.o lpt_dss.o mca.o mcr.o \
+	mem.o mem_bios.o mfm_at.o mfm_xebec.o model.o mouse.o mouse_msystems.o mouse_ps2.o mouse_serial.o \
+	mvp3.o neat.o nmi.o nvr.o nvr_tc8521.o olivetti_m24.o opti495.o paths.o pc.o pc87306.o pci.o pic.o \
+	piix.o pit.o ppi.o ps1.o ps2.o ps2_mca.o ps2_nvr.o pzx.o rom.o rtc.o rtc_tc8521.o scat.o scsi.o \
+	scsi_53c400.o scsi_aha1540.o scsi_cd.o scsi_hd.o scsi_zip.o serial.o sio.o sis496.o sl82c460.o \
+	sound.o sound_ad1848.o sound_adlib.o sound_adlibgold.o sound_audiopci.o sound_cms.o sound_dbopl.o \
+	sound_emu8k.o sound_gus.o sound_mpu401_uart.o sound_opl.o sound_pas16.o sound_ps1.o sound_pssj.o \
+	sound_resid.o sound_sb.o sound_sb_dsp.o sound_sn76489.o sound_speaker.o sound_ssi2001.o sound_wss.o \
+	sound_ym7128.o soundopenal.o sst39sf010.o t1000.o t3100e.o tandy_eeprom.o tandy_rom.o timer.o um8881f.o um8669f.o \
+	vid_ati_eeprom.o vid_ati_mach64.o vid_ati18800.o vid_ati28800.o vid_ati68860_ramdac.o vid_cga.o \
+	vid_cl5429.o vid_colorplus.o vid_compaq_cga.o vid_ega.o vid_et4000.o vid_et4000w32.o \
+	vid_et4000w32i.o vid_genius.o vid_hercules.o vid_ht216.o vid_icd2061.o vid_ics2595.o vid_im1024.o vid_incolor.o vid_mda.o \
 	vid_olivetti_m24.o vid_oti037.c vid_oti067.o vid_paradise.o vid_pc1512.o vid_pc1640.o vid_pc200.o \
 	vid_pcjr.o vid_pgc.o vid_ps1_svga.o vid_s3.o vid_s3_virge.o vid_sdac_ramdac.o vid_sigma.o vid_stg_ramdac.o vid_svga.o \
-	vid_svga_render.o vid_t1000.o vid_t3100e.o vid_tandy.o vid_tandysl.o vid_tgui9440.o vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o \
-	vid_vga.o vid_voodoo.o vid_wy700.o video.o wd76c10.o x86seg.o x87.o xi8088.c xtide.o zenith.o win-midi.o \
-	wx-main.o wx-config_sel.o wx-dialogbox.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o wx-sdl2-keyboard.o wx-sdl2-video.o \
-	wx-sdl2.o wx-config.o wx-deviceconfig.o wx-hostconfig.o wx-status.o wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \
-	wx-sdl2-video-renderer.o wx-sdl2-video-gl3.o wx-glslp-parser.o wx-shader_man.o wx-shaderconfig.o wx-joystickconfig.o wx-createdisc.o wx.res
+	vid_svga_render.o vid_t1000.o vid_t3100e.o vid_tandy.o vid_tandysl.o vid_tgui9440.o \
+	vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o vid_voodoo.o vid_wy700.o video.o \
+	vt82c586b.o w83877tf.o wd76c10.o x86seg.o x87.o xi8088.c xtide.o win-midi.o wx-main.o \
+	wx-config_sel.o wx-dialogbox.o wx-hostconfig.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o \
+	wx-sdl2-keyboard.o wx-sdl2-video.o wx-sdl2.o wx-config.o wx-deviceconfig.o wx-status.o \
+	wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \
+	wx-sdl2-video-renderer.o wx-sdl2-video-gl3.o wx-glslp-parser.o wx-shader_man.o wx-shaderconfig.o \
+	wx-joystickconfig.o wx-createdisc.o wx.res
 DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
 NETOBJ = ne2000.o nethandler.o

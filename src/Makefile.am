@@ -132,8 +132,8 @@ pcem_CFLAGS += -DRELEASE_BUILD
 pcem_CXXFLAGS += -DRELEASE_BUILD
 endif
 
-pcem_CFLAGS += -mtune=cortex-a53
-pcem_CXXFLAGS += -mtune=cortex-a53
+#pcem_CFLAGS += -mtune=cortex-a53
+#pcem_CXXFLAGS += -mtune=cortex-a53
 #pcem_LDFLAGS = -flto -O3 -mtune=cortex-a15
 
 # pcem_CFLAGS += -fprofile-use
