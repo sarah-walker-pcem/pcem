@@ -62,6 +62,7 @@ int loadbios()
         loadfont("mda.rom", FONT_MDA);
 	loadfont("wy700.rom", FONT_WY700);
 	loadfont("8x12.bin", FONT_MDSI);
+	loadfont("im1024font.bin", FONT_IM1024);
         
         biosmask = 0xffff;
         
@@ -985,6 +986,19 @@ int loadbios()
                 romfread(rom, 0x20000, 1, f);
                 fclose(f);
                 biosmask = 0x1ffff;
+                return 1;
+				
+		case ROM_BULL_MICRAL_45:
+		f = romfopen("bull_micral_45/even.fil", "rb");
+                ff = romfopen("bull_micral_45/odd.fil", "rb");
+                if (!f || !ff) break;
+                for (c = 0x0000; c < 0x10000; c += 2)
+                {
+                        rom[c] = getc(f);
+                        rom[c+1] = getc(ff);
+                }
+                fclose(ff);
+                fclose(f);
                 return 1;
 
                 case ROM_FIC_VA503P:

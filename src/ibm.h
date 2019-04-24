@@ -250,6 +250,7 @@ enum
 	ROM_ZD_SUPERS,   /* [8088] Zenith Data Systems SupersPort */
 	ROM_PB410A,
         ROM_PPC512,
+	ROM_BULL_MICRAL_45,
 	ROM_FIC_VA503P,
 	
         ROM_MAX
@@ -297,6 +298,8 @@ enum
         GFX_OTI037,     /*Oak OTI-037*/
         GFX_COMPAQ_CGA,	/*Compaq CGA*/
 	GFX_SIGMA400,	/*Sigma Designs Color 400 */
+	GFX_PGC,	/*Professional Graphics Controller */
+	GFX_IM1024,	/*Vermont Microsystems IM1024 */
         GFX_MAX
 };
 
