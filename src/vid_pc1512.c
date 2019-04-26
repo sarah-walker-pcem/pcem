@@ -148,7 +148,7 @@ static uint8_t pc1512_read(uint32_t addr, void *p)
 static void pc1512_recalctimings(pc1512_t *pc1512)
 {
 	double _dispontime, _dispofftime, disptime;
-        disptime = 128; /*Fixed on PC1512*/
+        disptime = 114; /*Fixed on PC1512*/
         _dispontime = 80;
         _dispofftime = disptime - _dispontime;
 //        printf("%i %f %f %f  %i %i\n",cgamode&1,disptime,dispontime,dispofftime,crtc[0],crtc[1]);
