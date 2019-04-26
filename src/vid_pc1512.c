@@ -222,7 +222,7 @@ static void pc1512_poll(void *p)
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 3) + c + 8] = cols[(fontdat[chr + pc1512->fontbase][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 15;
+                                                        ((uint32_t *)buffer32->line[pc1512->displine])[(x << 3) + c + 8] = cols[(fontdat[chr + pc1512->fontbase][pc1512->sc & 7] & (1 << (c ^ 7))) ? 1 : 0] ^ 0xffffff;
                                         }
                                         else
                                         {
