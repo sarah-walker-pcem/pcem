@@ -64,7 +64,7 @@ static uint8_t batman_timer_read(uint16_t addr, void *p)
 {
         uint16_t batman_timer_latch;
         
-        cycles -= (int)PITCONST;
+        cycles -= (int)(PITCONST >> 32);
         
         batman_timer_latch = timer_get_remaining_us(&batman_timer);
 
