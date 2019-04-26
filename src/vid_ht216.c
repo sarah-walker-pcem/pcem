@@ -347,9 +347,9 @@ void ht216_recalctimings(svga_t *svga)
 //        pclog("clk_sel = %i\n", ht216->clk_sel);
         switch (ht216->clk_sel)
         {
-                case 5:  svga->clock = cpuclock / 65000000.0; break;
-                case 6:  svga->clock = cpuclock / 40000000.0; break;
-                case 10: svga->clock = cpuclock / 80000000.0; break;
+                case 5:  svga->clock = (cpuclock * (double)(1ull << 32)) / 65000000.0; break;
+                case 6:  svga->clock = (cpuclock * (double)(1ull << 32)) / 40000000.0; break;
+                case 10: svga->clock = (cpuclock * (double)(1ull << 32)) / 80000000.0; break;
         }
         svga->lowres = !(ht216->ht_regs[0xc8] & HT_REG_C8_E256);
         svga->ma_latch |= ((ht216->ht_regs[0xf6] & 0x30) << 12);
