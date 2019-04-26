@@ -65,6 +65,11 @@ void nvr_recalc()
 {
         int c;
 
+        if (!(nvrram[RTC_REGA] & RTC_RS))
+        {
+		timer_disable(&rtc_timer);
+                return;
+        }
         c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
 	timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
 }
