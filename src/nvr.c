@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "nvr.h"
 #include "nvr_tc8521.h"
@@ -20,10 +22,14 @@ int nvraddr;
 
 int nvr_dosave = 0;
 
-static pc_timer_t nvr_onesec_timer;
-static int nvr_onesec_cnt = 0;
+typedef struct nvr_t
+{
+        pc_timer_t rtc_timer;
+        pc_timer_t onesec_timer;
+        pc_timer_t update_end_timer;
 
-static pc_timer_t rtc_timer;
+        int onesec_cnt;
+} nvr_t;
 
 FILE *nvrfopen(char *fn, char *mode)
 {
@@ -61,37 +67,44 @@ void getnvrtime()
 	time_get(nvrram);
 }
 
-void nvr_recalc()
+static void nvr_speed_changed(void *p)
 {
-        int c;
+        nvr_t *nvr = (nvr_t *)p;
 
         if (!(nvrram[RTC_REGA] & RTC_RS))
         {
-		timer_disable(&rtc_timer);
+		timer_disable(&nvr->rtc_timer);
                 return;
         }
-        c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-	timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
+        else
+        {
+                int c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
+        	timer_set_delay_u64(&nvr->rtc_timer, (uint64_t)(RTCCONST * c));
+        }
 }
 
-void nvr_rtc(void *p)
+static void nvr_rtc(void *p)
 {
-        int c;
+        nvr_t *nvr = (nvr_t *)p;
+
         if (!(nvrram[RTC_REGA] & RTC_RS))
         {
-		timer_disable(&rtc_timer);
+		timer_disable(&nvr->rtc_timer);
                 return;
         }
-        c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-        timer_advance_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
-//        pclog("RTCtime now %f\n",rtctime);
-        nvrram[RTC_REGC] |= RTC_PF;
-        if (nvrram[RTC_REGB] & RTC_PIE)
+        else
         {
-                nvrram[RTC_REGC] |= RTC_IRQF;
-                if (AMSTRAD) picint(2);
-                else         picint(0x100);
-//                pclog("RTC int\n");
+                int c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
+                timer_advance_u64(&nvr->rtc_timer, (uint64_t)(RTCCONST * c));
+//                pclog("RTCtime now %f\n",rtctime);
+                nvrram[RTC_REGC] |= RTC_PF;
+                if (nvrram[RTC_REGB] & RTC_PIE)
+                {
+                        nvrram[RTC_REGC] |= RTC_IRQF;
+                        if (AMSTRAD) picint(2);
+                        else         picint(0x100);
+//                        pclog("RTC int\n");
+                }
         }
 }
 
@@ -104,10 +117,11 @@ int nvr_check_alarm(int nvraddr)
         return (nvrram[nvraddr + 1] == nvrram[nvraddr] || (nvrram[nvraddr + 1] & ALARM_DONTCARE) == ALARM_DONTCARE);
 }
 
-pc_timer_t nvr_update_end_timer;
 
-void nvr_update_end(void *p)
+static void nvr_update_end(void *p)
 {
+//        nvr_t *nvr = (nvr_t *)p;
+
         if (!(nvrram[RTC_REGB] & RTC_SET))
         {
                 getnvrtime();
@@ -138,25 +152,28 @@ void nvr_update_end(void *p)
 //                pclog("RTC onesec\n");
 }
 
-void nvr_onesec(void *p)
+static void nvr_onesec(void *p)
 {
-        nvr_onesec_cnt++;
-        if (nvr_onesec_cnt >= 100)
+        nvr_t *nvr = (nvr_t *)p;
+
+        nvr->onesec_cnt++;
+        if (nvr->onesec_cnt >= 100)
         {
                 if (!(nvrram[RTC_REGB] & RTC_SET))
                 {
                         nvr_update_status = RTC_UIP;
                         rtc_tick();
 
-                        timer_set_delay_u64(&nvr_update_end_timer, (uint64_t)((244.0 + 1984.0) * TIMER_USEC));
+                        timer_set_delay_u64(&nvr->update_end_timer, (uint64_t)((244.0 + 1984.0) * TIMER_USEC));
                 }
-                nvr_onesec_cnt = 0;
+                nvr->onesec_cnt = 0;
         }
-        timer_advance_u64(&nvr_onesec_timer, (uint64_t)(10000 * TIMER_USEC));
+        timer_advance_u64(&nvr->onesec_timer, (uint64_t)(10000 * TIMER_USEC));
 }
 
-void writenvr(uint16_t addr, uint8_t val, void *priv)
+static void writenvr(uint16_t addr, uint8_t val, void *p)
 {
+        nvr_t *nvr = (nvr_t *)p;
         int c, old;
         
         cycles -= ISA_CYCLES(8);
@@ -178,10 +195,10 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
                         if (val & RTC_RS)
                         {
                                 c = 1 << ((val & RTC_RS) - 1);
-				timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
+				timer_set_delay_u64(&nvr->rtc_timer, (uint64_t)(RTCCONST * c));
                         }
                         else
-				timer_disable(&rtc_timer);
+				timer_disable(&nvr->rtc_timer);
                 }
 		else
 		{
@@ -227,8 +244,9 @@ void writenvr(uint16_t addr, uint8_t val, void *priv)
         }
 }
 
-uint8_t readnvr(uint16_t addr, void *priv)
+uint8_t readnvr(uint16_t addr, void *p)
 {
+//        nvr_t *nvr = (nvr_t *)p;
         uint8_t temp;
 //        printf("Read NVR %03X %02X %02X %04X:%04X\n",addr,nvraddr,nvrram[nvraddr],cs>>4,pc);
         cycles -= ISA_CYCLES(8);
@@ -256,7 +274,7 @@ uint8_t readnvr(uint16_t addr, void *priv)
 void loadnvr()
 {
         FILE *f;
-        int c;
+
         nvrmask=63;
         oldromset=romset;
         switch (romset)
@@ -353,8 +371,6 @@ void loadnvr()
         fclose(f);
         nvrram[RTC_REGA] = 6;
         nvrram[RTC_REGB] = RTC_2412;
-        c = 1 << ((nvrram[RTC_REGA] & RTC_RS) - 1);
-        timer_set_delay_u64(&rtc_timer, (uint64_t)(RTCCONST * c));
 }
 void savenvr()
 {
@@ -436,11 +452,35 @@ void savenvr()
         fclose(f);
 }
 
-void nvr_init()
+static void *nvr_init()
 {
-        io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL,  NULL);
-        timer_add(&rtc_timer, nvr_rtc, NULL, 1);
-        timer_add(&nvr_onesec_timer, nvr_onesec, NULL, 1);
-        timer_add(&nvr_update_end_timer, nvr_update_end, NULL, 0);
+        nvr_t *nvr = (nvr_t *)malloc(sizeof(nvr_t));
+        memset(nvr, 0, sizeof(nvr_t));
 
+        io_sethandler(0x0070, 0x0002, readnvr, NULL, NULL, writenvr, NULL, NULL,  nvr);
+        timer_add(&nvr->rtc_timer, nvr_rtc, nvr, 1);
+        timer_add(&nvr->onesec_timer, nvr_onesec, nvr, 1);
+        timer_add(&nvr->update_end_timer, nvr_update_end, nvr, 0);
+
+        return nvr;
 }
+
+static void nvr_close(void *p)
+{
+        nvr_t *nvr = (nvr_t *)p;
+        
+        free(nvr);
+}
+
+device_t nvr_device =
+{
+        "Motorola MC146818 RTC",
+        0,
+        nvr_init,
+        nvr_close,
+        NULL,
+        nvr_speed_changed,
+        NULL,
+        NULL,
+        NULL
+};

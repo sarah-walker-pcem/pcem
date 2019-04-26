@@ -601,7 +601,6 @@ void fullspeed()
 //                else       setpitclock(clocks[AT?1:0][cpuspeed2][0]);
         }
         atfullspeed=1;
-        nvr_recalc();
 }
 
 void speedchanged()
@@ -610,7 +609,6 @@ void speedchanged()
                 setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
         else
                 setpitclock(14318184.0);
-        nvr_recalc();
 }
 
 void closepc()

@@ -372,7 +372,7 @@ void ams_init()
         lpt1_remove();
         amstrad_init();
         keyboard_amstrad_init();
-        nvr_init();
+        device_add(&nvr_device);
 	nmi_init();
 	fdc_set_dskchg_activelow();
         device_add(&gameport_device);
@@ -393,7 +393,7 @@ void olim24_init()
         common_init();
         mem_add_bios();
         keyboard_olim24_init();
-        nvr_init();
+        device_add(&nvr_device);
         olivetti_m24_init();
 	nmi_init();
         device_add(&gameport_device);
@@ -429,7 +429,7 @@ void xt_xi8088_init()
         keyboard_at_init();
         keyboard_at_init_ps2();
         nmi_init();
-        nvr_init();
+        device_add(&nvr_device);
         pic2_init();
         device_add(&gameport_device);
 }
@@ -442,7 +442,7 @@ void at_init()
         pit_set_out_func(&pit, 1, pit_refresh_timer_at);
         dma16_init();
         keyboard_at_init();
-        nvr_init();
+        device_add(&nvr_device);
         pic2_init();
         device_add(&gameport_device);
         nmi_mask = 0;
@@ -480,7 +480,7 @@ void ps1_common_init()
         pit_set_out_func(&pit, 1, pit_refresh_timer_at);
         dma16_init();
         keyboard_at_init();
-        nvr_init();
+        device_add(&nvr_device);
         pic2_init();
         fdc_set_dskchg_activelow();
         device_add(&ps1_audio_device);
@@ -511,7 +511,7 @@ void ps2_m30_286_init()
         dma16_init();
         keyboard_at_init();
 //        mouse_ps2_init();
-        nvr_init();
+        device_add(&nvr_device);
         pic2_init();
         ps2board_init();
         fdc_set_dskchg_activelow();
@@ -527,7 +527,7 @@ static void ps2_common_init()
         keyboard_at_init();
         keyboard_at_init_ps2();
 //        mouse_ps2_init();
-        nvr_init();
+        device_add(&nvr_device);
         pic2_init();
 
         pit_ps2_init();
