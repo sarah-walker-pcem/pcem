@@ -240,9 +240,9 @@ void et4000_recalctimings(svga_t *svga)
         switch (((svga->miscout >> 2) & 3) | ((svga->crtc[0x34] << 1) & 4))
         {
                 case 0: case 1: break;
-                case 3: svga->clock = cpuclock / 40000000.0; break;
-                case 5: svga->clock = cpuclock / 65000000.0; break;
-                default: svga->clock = cpuclock / 36000000.0; break;
+                case 3: svga->clock = (cpuclock * (double)(1ull << 32)) / 40000000.0; break;
+                case 5: svga->clock = (cpuclock * (double)(1ull << 32)) / 65000000.0; break;
+                default: svga->clock = (cpuclock * (double)(1ull << 32)) / 36000000.0; break;
         }
         
         switch (svga->bpp)

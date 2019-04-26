@@ -293,7 +293,7 @@ void et4000w32p_recalctimings(svga_t *svga)
         switch ((svga->miscout >> 2) & 3)
         {
                 case 0: case 1: break;
-                case 2: case 3: svga->clock = cpuclock / icd2061_getfreq(&et4000->icd2061, 2); break;
+                case 2: case 3: svga->clock = (cpuclock * (double)(1ull << 32)) / icd2061_getfreq(&et4000->icd2061, 2); break;
         }
         
         switch (svga->bpp)

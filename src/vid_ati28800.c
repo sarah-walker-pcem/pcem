@@ -272,20 +272,20 @@ void ati28800_recalctimings(svga_t *svga)
 
         switch (((ati28800->regs[0xbe] & 0x10) >> 1) | ((ati28800->regs[0xb9] & 2) << 1) | ((svga->miscout & 0x0C) >> 2))
         {
-                case 0x00: svga->clock = cpuclock / 42954000.0; break;
-                case 0x01: svga->clock = cpuclock / 48771000.0; break;
-                case 0x03: svga->clock = cpuclock / 36000000.0; break;
-                case 0x04: svga->clock = cpuclock / 50350000.0; break;
-                case 0x05: svga->clock = cpuclock / 56640000.0; break;
-                case 0x07: svga->clock = cpuclock / 44900000.0; break;
-                case 0x08: svga->clock = cpuclock / 30240000.0; break;
-                case 0x09: svga->clock = cpuclock / 32000000.0; break;
-                case 0x0A: svga->clock = cpuclock / 37500000.0; break;
-                case 0x0B: svga->clock = cpuclock / 39000000.0; break;
-                case 0x0C: svga->clock = cpuclock / 40000000.0; break;
-                case 0x0D: svga->clock = cpuclock / 56644000.0; break;
-                case 0x0E: svga->clock = cpuclock / 75000000.0; break;
-                case 0x0F: svga->clock = cpuclock / 65000000.0; break;
+                case 0x00: svga->clock = (cpuclock * (double)(1ull << 32)) / 42954000.0; break;
+                case 0x01: svga->clock = (cpuclock * (double)(1ull << 32)) / 48771000.0; break;
+                case 0x03: svga->clock = (cpuclock * (double)(1ull << 32)) / 36000000.0; break;
+                case 0x04: svga->clock = (cpuclock * (double)(1ull << 32)) / 50350000.0; break;
+                case 0x05: svga->clock = (cpuclock * (double)(1ull << 32)) / 56640000.0; break;
+                case 0x07: svga->clock = (cpuclock * (double)(1ull << 32)) / 44900000.0; break;
+                case 0x08: svga->clock = (cpuclock * (double)(1ull << 32)) / 30240000.0; break;
+                case 0x09: svga->clock = (cpuclock * (double)(1ull << 32)) / 32000000.0; break;
+                case 0x0A: svga->clock = (cpuclock * (double)(1ull << 32)) / 37500000.0; break;
+                case 0x0B: svga->clock = (cpuclock * (double)(1ull << 32)) / 39000000.0; break;
+                case 0x0C: svga->clock = (cpuclock * (double)(1ull << 32)) / 40000000.0; break;
+                case 0x0D: svga->clock = (cpuclock * (double)(1ull << 32)) / 56644000.0; break;
+                case 0x0E: svga->clock = (cpuclock * (double)(1ull << 32)) / 75000000.0; break;
+                case 0x0F: svga->clock = (cpuclock * (double)(1ull << 32)) / 65000000.0; break;
                 default: break;
         }
         if (ati28800->regs[0xb8] & 0x40)

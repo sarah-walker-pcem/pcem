@@ -482,7 +482,7 @@ void tgui_recalctimings(svga_t *svga)
         if (tgui->type >= TGUI_9440)
         {
                 if (svga->miscout & 8)
-                        svga->clock = cpuclock / (((tgui->clock_n + 8) * 14318180.0) / ((tgui->clock_m + 2) * (1 << tgui->clock_k)));
+                        svga->clock = (cpuclock * (double)(1ull << 32)) / (((tgui->clock_n + 8) * 14318180.0) / ((tgui->clock_m + 2) * (1 << tgui->clock_k)));
                         
                 if (svga->gdcreg[0xf] & 0x08)
                         svga->clock *= 2;
@@ -493,20 +493,20 @@ void tgui_recalctimings(svga_t *svga)
         {
                 switch (((svga->miscout >> 2) & 3) | ((tgui->newctrl2 << 2) & 4) | ((tgui->newctrl2 >> 3) & 8))
                 {
-                        case 0x02: svga->clock = cpuclock/ 44900000.0; break;
-                        case 0x03: svga->clock = cpuclock/ 36000000.0; break;
-                        case 0x04: svga->clock = cpuclock/ 57272000.0; break;
-                        case 0x05: svga->clock = cpuclock/ 65000000.0; break;
-                        case 0x06: svga->clock = cpuclock/ 50350000.0; break;
-                        case 0x07: svga->clock = cpuclock/ 40000000.0; break;
-                        case 0x08: svga->clock = cpuclock/ 88000000.0; break;
-                        case 0x09: svga->clock = cpuclock/ 98000000.0; break;
-                        case 0x0a: svga->clock = cpuclock/118800000.0; break;
-                        case 0x0b: svga->clock = cpuclock/108000000.0; break;
-                        case 0x0c: svga->clock = cpuclock/ 72000000.0; break;
-                        case 0x0d: svga->clock = cpuclock/ 77000000.0; break;
-                        case 0x0e: svga->clock = cpuclock/ 80000000.0; break;
-                        case 0x0f: svga->clock = cpuclock/ 75000000.0; break;
+                        case 0x02: svga->clock = (cpuclock * (double)(1ull << 32)) / 44900000.0; break;
+                        case 0x03: svga->clock = (cpuclock * (double)(1ull << 32)) / 36000000.0; break;
+                        case 0x04: svga->clock = (cpuclock * (double)(1ull << 32)) / 57272000.0; break;
+                        case 0x05: svga->clock = (cpuclock * (double)(1ull << 32)) / 65000000.0; break;
+                        case 0x06: svga->clock = (cpuclock * (double)(1ull << 32)) / 50350000.0; break;
+                        case 0x07: svga->clock = (cpuclock * (double)(1ull << 32)) / 40000000.0; break;
+                        case 0x08: svga->clock = (cpuclock * (double)(1ull << 32)) / 88000000.0; break;
+                        case 0x09: svga->clock = (cpuclock * (double)(1ull << 32)) / 98000000.0; break;
+                        case 0x0a: svga->clock = (cpuclock * (double)(1ull << 32)) /118800000.0; break;
+                        case 0x0b: svga->clock = (cpuclock * (double)(1ull << 32)) /108000000.0; break;
+                        case 0x0c: svga->clock = (cpuclock * (double)(1ull << 32)) / 72000000.0; break;
+                        case 0x0d: svga->clock = (cpuclock * (double)(1ull << 32)) / 77000000.0; break;
+                        case 0x0e: svga->clock = (cpuclock * (double)(1ull << 32)) / 80000000.0; break;
+                        case 0x0f: svga->clock = (cpuclock * (double)(1ull << 32)) / 75000000.0; break;
                 }
                 if (svga->gdcreg[0xf] & 0x08)
                 {
