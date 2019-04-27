@@ -1953,12 +1953,12 @@ uint32_t rop81_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
                         break;
                         
                         case 0x10: /*ADC*/
-                        get_cf(ir, IREG_temp2);
+                        get_cf(ir, IREG_temp3);
                         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
                                 uop_ADD(ir, IREG_temp1, IREG_temp0, IREG_temp2);
                         else
                                 uop_ADD_IMM(ir, IREG_temp1, IREG_temp0, imm);
-                        uop_ADD(ir, IREG_temp1, IREG_temp1, IREG_temp2);
+                        uop_ADD(ir, IREG_temp1, IREG_temp1, IREG_temp3);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
                         uop_MOV(ir, IREG_flags_op1, IREG_temp0);
                         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
@@ -1970,12 +1970,12 @@ uint32_t rop81_l(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
                         break;
 
                         case 0x18: /*SBB*/
-                        get_cf(ir, IREG_temp2);
+                        get_cf(ir, IREG_temp3);
                         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
                                 uop_SUB(ir, IREG_temp1, IREG_temp0, IREG_temp2);
                         else
                                 uop_SUB_IMM(ir, IREG_temp1, IREG_temp0, imm);
-                        uop_SUB(ir, IREG_temp1, IREG_temp1, IREG_temp2);
+                        uop_SUB(ir, IREG_temp1, IREG_temp1, IREG_temp3);
                         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp1);
                         uop_MOV(ir, IREG_flags_op1, IREG_temp0);
                         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
