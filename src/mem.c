@@ -54,6 +54,13 @@ uint32_t mem_logical_addr;
 int mmuflush=0;
 int mmu_perm=4;
 
+int mem_addr_is_ram(uint32_t addr)
+{
+        mem_mapping_t *mapping = read_mapping[addr >> 14];
+        
+        return (mapping == &ram_low_mapping) || (mapping == &ram_high_mapping) || (mapping == &ram_mid_mapping) || (mapping == &ram_remapped_mapping);
+}
+
 void resetreadlookup()
 {
         int c;

@@ -153,6 +153,8 @@ static inline int page_in_evict_list(page_t *p)
 void page_remove_from_evict_list(page_t *p);
 void page_add_to_evict_list(page_t *p);
 
+int mem_addr_is_ram(uint32_t addr);
+
 uint32_t mmutranslate_noabrt(uint32_t addr, int rw);
 extern uint32_t get_phys_virt,get_phys_phys;
 static inline uint32_t get_phys(uint32_t addr)
@@ -173,7 +175,7 @@ static inline uint32_t get_phys(uint32_t addr)
         else
         {
                 get_phys_phys = (mmutranslatereal(addr, 0) & rammask) & ~0xfff;
-                if (!cpu_state.abrt)
+                if (!cpu_state.abrt && mem_addr_is_ram(get_phys_phys))
                         addreadlookup(get_phys_virt, get_phys_phys);
         }
                 
@@ -192,7 +194,7 @@ static inline uint32_t get_phys_noabrt(uint32_t addr)
                 return ((uintptr_t)readlookup2[addr >> 12] + addr) - (uintptr_t)ram;
 
         phys_addr = mmutranslate_noabrt(addr, 0) & rammask;
-        if (phys_addr != 0xffffffff)
+        if (phys_addr != 0xffffffff && mem_addr_is_ram(phys_addr))
                 addreadlookup(addr, phys_addr);
 
         return phys_addr;
