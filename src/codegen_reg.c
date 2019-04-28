@@ -191,7 +191,7 @@ void codegen_reg_mark_as_required()
         }
 }
 
-static int reg_is_native_size(ir_reg_t ir_reg)
+int reg_is_native_size(ir_reg_t ir_reg)
 {
         int native_size = ireg_data[IREG_GET_REG(ir_reg.reg)].native_size;
         int requested_size = IREG_GET_SIZE(ir_reg.reg);

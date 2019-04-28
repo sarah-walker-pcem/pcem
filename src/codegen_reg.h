@@ -343,6 +343,8 @@ static inline ir_reg_t codegen_reg_read(int reg)
         return ireg;
 }
 
+int reg_is_native_size(ir_reg_t ir_reg);
+
 static inline ir_reg_t codegen_reg_write(int reg, int uop_nr)
 {
         ir_reg_t ireg;
@@ -357,7 +359,10 @@ static inline ir_reg_t codegen_reg_write(int reg, int uop_nr)
         
         if (IREG_GET_REG(reg) > IREG_EBX && last_version && !reg_version[IREG_GET_REG(reg)][last_version].refcount &&
                         !(reg_version[IREG_GET_REG(reg)][last_version].flags & REG_FLAGS_REQUIRED))
-                add_to_dead_list(&reg_version[IREG_GET_REG(reg)][last_version], IREG_GET_REG(reg), last_version);
+        {
+                if (reg_is_native_size(ireg)) /*Non-native size registers have an implicit dependency on the previous version, so don't add to dead list*/
+                        add_to_dead_list(&reg_version[IREG_GET_REG(reg)][last_version], IREG_GET_REG(reg), last_version);
+        }
         
         reg_last_version[IREG_GET_REG(reg)]++;
         if (!reg_last_version[IREG_GET_REG(reg)])
