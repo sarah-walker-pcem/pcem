@@ -455,8 +455,6 @@ int loadseg(uint16_t seg, x86seg *s)
                 s->access = (3 << 5) | 2;
                 s->base = seg << 4;
                 s->seg = seg;
-                if (s == &cpu_state.seg_ss)
-                        set_stack32(0);
                 s->checked = 1;
                 if (s == &cpu_state.seg_ds)
                         codegen_flat_ds = 0;
