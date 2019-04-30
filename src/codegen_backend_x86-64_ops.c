@@ -499,7 +499,7 @@ void host_x86_LEA_REG_REG_SHIFT(codeblock_t *block, int dst_reg, int src_reg_a, 
 
 void host_x86_MOV8_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
         if (offset >= -128 && offset < 127)
         {
@@ -519,7 +519,7 @@ void host_x86_MOV8_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data)
 }
 void host_x86_MOV32_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
         if (offset >= -128 && offset < 127)
         {
@@ -540,7 +540,7 @@ void host_x86_MOV32_ABS_IMM(codeblock_t *block, void *p, uint32_t imm_data)
 
 void host_x86_MOV8_ABS_REG(codeblock_t *block, void *p, int src_reg)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
         if (src_reg & 8)
                 fatal("host_x86_MOV8_ABS_REG - bad reg\n");
@@ -614,7 +614,7 @@ void host_x86_MOV32_ABS_REG(codeblock_t *block, void *p, int src_reg)
 }
 void host_x86_MOV64_ABS_REG(codeblock_t *block, void *p, int src_reg)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
         if (src_reg & 8)
                 fatal("host_x86_MOV64_ABS_REG - bad reg\n");
@@ -675,8 +675,9 @@ void host_x86_MOV32_BASE_INDEX_REG(codeblock_t *block, int base_reg, int index_r
 
 void host_x86_MOV8_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
-
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
+        
         if (dst_reg & 8)
                 fatal("host_x86_MOV8_REG_ABS reg & 8\n");
 
@@ -691,6 +692,12 @@ void host_x86_MOV8_REG_ABS(codeblock_t *block, int dst_reg, void *p)
                 codegen_addbyte2(block, 0x8a, 0x85 | ((dst_reg & 7) << 3)); /*MOV dst_reg, offset[RBP]*/
                 codegen_addlong(block, offset);
         }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                codegen_alloc_bytes(block, 8);
+                codegen_addbyte4(block, 0x41, 0x8a, 0x84 | ((dst_reg & 7) << 3), 0x24); /*MOV dst_reg, ram_offset[R12]*/
+                codegen_addlong(block, ram_offset);
+        }
         else
         {
                 fatal("host_x86_MOV8_REG_ABS - out of range\n");
@@ -698,7 +705,8 @@ void host_x86_MOV8_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 }
 void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
 
         if (dst_reg & 8)
                 fatal("host_x86_MOV16_REG_ABS reg & 8\n");
@@ -714,15 +722,28 @@ void host_x86_MOV16_REG_ABS(codeblock_t *block, int dst_reg, void *p)
                 codegen_addbyte3(block, 0x66, 0x8b, 0x85 | ((dst_reg & 7) << 3)); /*MOV dst_reg, offset[RBP]*/
                 codegen_addlong(block, offset);
         }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                codegen_alloc_bytes(block, 9);
+                codegen_addbyte4(block, 0x66, 0x41, 0x8b, 0x84 | ((dst_reg & 7) << 3)); /*MOV dst_reg, ram_offset[R12]*/
+                codegen_addbyte(block, 0x24);
+                codegen_addlong(block, ram_offset);
+        }
         else
         {
                 fatal("host_x86_MOV16_REG_ABS - out of range\n");
+                codegen_alloc_bytes(block, 10);
+		codegen_addbyte2(block, 0x49, 0xb9); /*MOV R9, p*/
+		codegen_addquad(block, (uintptr_t)p);
+                codegen_alloc_bytes(block, 1);
+                codegen_addbyte4(block, 0x66, 0x41, 0x8b, 0x01 | ((dst_reg & 7) << 3)); /*MOV dst_reg, [r9]*/
         }
 }
 void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
-
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
+        
         if (dst_reg & 8)
                 fatal("host_x86_MOV32_REG_ABS reg & 8\n");
 
@@ -737,6 +758,12 @@ void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
                 codegen_addbyte2(block, 0x8b, 0x85 | ((dst_reg & 7) << 3)); /*MOV dst_reg, offset[RBP]*/
                 codegen_addlong(block, offset);
         }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                codegen_alloc_bytes(block, 8);
+                codegen_addbyte4(block, 0x41, 0x8b, 0x84 | ((dst_reg & 7) << 3), 0x24); /*MOV dst_reg, ram_offset[R12]*/
+                codegen_addlong(block, ram_offset);
+        }
         else
         {
                 fatal("host_x86_MOV32_REG_ABS - out of range\n");
@@ -748,7 +775,7 @@ void host_x86_MOV32_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 }
 void host_x86_MOV64_REG_ABS(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
 
         if (dst_reg & 8)
                 fatal("host_x86_MOV64_REG_ABS reg & 8\n");
@@ -1062,8 +1089,9 @@ void host_x86_MOVZX_REG_32_16(codeblock_t *block, int dst_reg, int src_reg)
 
 void host_x86_MOVZX_REG_ABS_16_8(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
-
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
+        
         if (dst_reg & 8)
                 fatal("host_x86_MOVZX_REG_ABS_16_8 - bad reg\n");
 
@@ -1072,6 +1100,13 @@ void host_x86_MOVZX_REG_ABS_16_8(codeblock_t *block, int dst_reg, void *p)
                 codegen_alloc_bytes(block, 5);
                 codegen_addbyte(block, 0x66);
                 codegen_addbyte4(block, 0x0f, 0xb6, 0x45 | ((dst_reg & 7) << 3), offset); /*MOVZX dst_reg, offset[RBP]*/
+        }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                codegen_alloc_bytes(block, 10);
+                codegen_addbyte2(block, 0x66, 0x41);
+                codegen_addbyte4(block, 0x0f, 0xb6, 0x84 | ((dst_reg & 7) << 3), 0x24); /*MOVZX dst_reg, ram_offset[R12]*/
+                codegen_addlong(block, ram_offset);
         }
         else
         {
@@ -1085,8 +1120,9 @@ void host_x86_MOVZX_REG_ABS_16_8(codeblock_t *block, int dst_reg, void *p)
 }
 void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
-
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
+        
 //        if (dst_reg & 8)
 //                fatal("host_x86_MOVZX_REG_ABS_32_8 - bad reg\n");
 
@@ -1104,6 +1140,16 @@ void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p)
                         codegen_addbyte4(block, 0x0f, 0xb6, 0x45 | ((dst_reg & 7) << 3), offset); /*MOVZX dst_reg, offset[RBP]*/
                 }
         }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                if (dst_reg & 8)
+                        fatal("host_x86_MOVZX_REG_ABS_32_8 - bad reg\n");
+
+                codegen_alloc_bytes(block, 9);
+                codegen_addbyte(block, 0x41);
+                codegen_addbyte4(block, 0x0f, 0xb6, 0x84 | ((dst_reg & 7) << 3), 0x24); /*MOVZX dst_reg, ram_offset[R12]*/
+                codegen_addlong(block, ram_offset);
+        }
         else
         {
                 if (dst_reg & 8)
@@ -1118,8 +1164,9 @@ void host_x86_MOVZX_REG_ABS_32_8(codeblock_t *block, int dst_reg, void *p)
 }
 void host_x86_MOVZX_REG_ABS_32_16(codeblock_t *block, int dst_reg, void *p)
 {
-        int offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
-
+        int64_t offset = (uintptr_t)p - (((uintptr_t)&cpu_state) + 128);
+        int64_t ram_offset = (uintptr_t)p - (uintptr_t)ram;
+        
         if (dst_reg & 8)
                 fatal("host_x86_MOVZX_REG_ABS_32_16 - bad reg\n");
 
@@ -1127,6 +1174,13 @@ void host_x86_MOVZX_REG_ABS_32_16(codeblock_t *block, int dst_reg, void *p)
         {
                 codegen_alloc_bytes(block, 4);
                 codegen_addbyte4(block, 0x0f, 0xb7, 0x45 | ((dst_reg & 7) << 3), offset); /*MOVZX dst_reg, offset[RBP]*/
+        }
+        else if ((ram_offset < (1ull << 32)) && (block->flags & CODEBLOCK_NO_IMMEDIATES))
+        {
+                codegen_alloc_bytes(block, 9);
+                codegen_addbyte(block, 0x41);
+                codegen_addbyte4(block, 0x0f, 0xb7, 0x84 | ((dst_reg & 7) << 3), 0x24); /*MOVZX dst_reg, ram_offset[R12]*/
+                codegen_addlong(block, ram_offset);
         }
         else
         {
