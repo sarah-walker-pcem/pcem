@@ -460,6 +460,8 @@ int loadseg(uint16_t seg, x86seg *s)
                         codegen_flat_ds = 0;
                 if (s == &cpu_state.seg_ss)
                         codegen_flat_ss = 0;
+                if (s == &cpu_state.seg_ss && (cpu_state.eflags & VM_FLAG))
+                        set_stack32(0);
         }
         
         if (s == &cpu_state.seg_ds)
