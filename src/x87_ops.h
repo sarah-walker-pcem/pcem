@@ -208,7 +208,7 @@ static inline void x87_stmmx(MMX_REG r)
 
 static inline uint16_t x87_compare(double a, double b)
 {
-#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
+#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32 || defined __amd64__
         uint32_t out;
         
         /* Memory barrier, to force GCC to write to the input parameters
@@ -242,7 +242,7 @@ static inline uint16_t x87_compare(double a, double b)
 
 static inline uint16_t x87_ucompare(double a, double b)
 {
-#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32
+#if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32 || defined __amd64__
         uint32_t out;
         
         /* Memory barrier, to force GCC to write to the input parameters
