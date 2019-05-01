@@ -13,3 +13,4 @@ enum
 };
 
 void keyboard_set_scancode_set(int set);
+void keyboard_send_scancode(int code, int is_break);

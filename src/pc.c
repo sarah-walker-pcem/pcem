@@ -388,12 +388,12 @@ void resetpc()
 
 void resetpc_cad()
 {
-	keyboard_send(29);	/* Ctrl key pressed */
-	keyboard_send(56);	/* Alt key pressed */
-	keyboard_send(83);	/* Delete key pressed */
-	keyboard_send(157);	/* Ctrl key released */
-	keyboard_send(184);	/* Alt key released */
-	keyboard_send(211);	/* Delete key released */
+	keyboard_send_scancode(29, 0);	/* Ctrl key pressed */
+	keyboard_send_scancode(56, 0);	/* Alt key pressed */
+	keyboard_send_scancode(83, 0);	/* Delete key pressed */
+	keyboard_send_scancode(29, 1);	/* Ctrl key released */
+	keyboard_send_scancode(56, 1);	/* Alt key released */
+	keyboard_send_scancode(83, 1);	/* Delete key released */
 }
 
 void resetpchard()

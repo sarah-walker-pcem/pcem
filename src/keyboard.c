@@ -463,3 +463,22 @@ void keyboard_process()
                 }
         }
 }
+
+void keyboard_send_scancode(int code, int is_break)
+{
+        scancode *scancodes = (AT) ? at_scancodes : scancode_xt;
+        int d = 0;
+
+        if (!keyboard_scan) return;
+
+        if (!is_break)
+        {
+                while (scancodes[code].scancodes_make[d] != 0)
+                        keyboard_send(scancodes[code].scancodes_make[d++]);
+        }
+        else
+        {
+                while (scancodes[code].scancodes_break[d] != 0)
+                        keyboard_send(scancodes[code].scancodes_break[d++]);
+        }
+}
