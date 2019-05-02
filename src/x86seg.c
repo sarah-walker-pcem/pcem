@@ -1124,6 +1124,7 @@ void loadcscall(uint16_t seg, uint32_t old_pc)
                                         case 0x1800: case 0x1900: case 0x1A00: case 0x1B00: /*Non-conforming code*/
                                         if (DPL < CPL)
                                         {
+                                                uint16_t oldcs = CS;
                                                 oaddr = addr;
                                                 /*Load new stack*/
                                                 oldss=SS;
@@ -1239,6 +1240,7 @@ void loadcscall(uint16_t seg, uint32_t old_pc)
                                                                 pclog("ABRT PUSHL\n");
                                                                 SS = oldss;
                                                                 ESP = oldsp2;
+                                                                CS = oldcs;
                                                                 return;
                                                         }
 //                                                        if (output) pclog("Stack now %04X:%08X\n",SS,ESP);
@@ -1253,6 +1255,7 @@ void loadcscall(uint16_t seg, uint32_t old_pc)
                                                                                 pclog("ABRT COPYL\n");
                                                                                 SS = oldss;
                                                                                 ESP = oldsp2;
+                                                                                CS = oldcs;
                                                                                 return;
                                                                         }
                                                                 }
@@ -1270,6 +1273,7 @@ void loadcscall(uint16_t seg, uint32_t old_pc)
                                                                 pclog("ABRT PUSHW\n");
                                                                 SS = oldss;
                                                                 ESP = oldsp2;
+                                                                CS = oldcs;
                                                                 return;
                                                         }
                                                         if (output) pclog("Write SP to %04X:%04X\n",SS,SP);
@@ -1288,6 +1292,7 @@ void loadcscall(uint16_t seg, uint32_t old_pc)
                                                                                 pclog("ABRT COPYW\n");
                                                                                 SS = oldss;
                                                                                 ESP = oldsp2;
+                                                                                CS = oldcs;
                                                                                 return;
                                                                         }
                                                                 }
