@@ -2152,7 +2152,7 @@ void pmodeiret(int is32)
 //                        pclog("V86 IRET %04X:%08X\n",SS,ESP);
 //                        output=3;
                         
-                        cpu_state.pc=newpc;
+                        cpu_state.pc = newpc & 0xffff;
                         cpu_state.seg_cs.base=seg<<4;
                         cpu_state.seg_cs.limit=0xFFFF;
                         cpu_state.seg_cs.limit_low = 0;
