@@ -67,16 +67,16 @@ void ad1848_write(uint16_t addr, uint8_t val, void *p)
                                 case 7: freq /= 2560; break;
                         }
                         ad1848->freq = freq;
-                        ad1848->timer_latch = (int)((double)TIMER_USEC * (1000000.0 / (double)ad1848->freq));
+                        ad1848->timer_latch = (uint64_t)((double)TIMER_USEC * (1000000.0 / (double)ad1848->freq));
                         break;
                         
                         case 9:
 			if (!ad1848->enable && (val & 0x41) == 0x01)
 			{
 			        if (ad1848->timer_latch)
-		        	        timer_advance_u64(&ad1848->timer, ad1848->timer_latch);
+		        	        timer_set_delay_u64(&ad1848->timer, ad1848->timer_latch);
 			        else
-			                timer_advance_u64(&ad1848->timer, TIMER_USEC);
+			                timer_set_delay_u64(&ad1848->timer, TIMER_USEC);
 			}
                         ad1848->enable = ((val & 0x41) == 0x01);
                         if (!ad1848->enable)
@@ -122,7 +122,7 @@ static void ad1848_poll(void *p)
         if (ad1848->timer_latch)
                 timer_advance_u64(&ad1848->timer, ad1848->timer_latch);
         else
-                timer_advance_u64(&ad1848->timer, TIMER_USEC);
+                timer_advance_u64(&ad1848->timer, TIMER_USEC*1000);
         
         ad1848_update(ad1848);
         
