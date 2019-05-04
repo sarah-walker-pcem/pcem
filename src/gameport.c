@@ -87,15 +87,19 @@ typedef struct gameport_t
 
 static gameport_t *gameport_global = NULL;
 
-static uint64_t gameport_time(int axis)
+static void gameport_time(gameport_t *gameport, int nr, int axis)
 {
         if (axis == AXIS_NOT_PRESENT)
-                return 0;
-
-        axis += 32768;
-        axis = (axis * 100) / 65; /*Axis now in ohms*/
-        axis = (axis * 11) / 1000;
-        return TIMER_USEC * (axis + 24); /*max = 11.115 ms*/
+        {
+                timer_disable(&gameport->axis[nr].timer);
+        }
+        else
+        {
+                axis += 32768;
+                axis = (axis * 100) / 65; /*Axis now in ohms*/
+                axis = (axis * 11) / 1000;
+                timer_set_delay_u64(&gameport->axis[nr].timer, TIMER_USEC * (axis + 24)); /*max = 11.115 ms*/
+        }
 }
 
 void gameport_write(uint16_t addr, uint8_t val, void *p)
@@ -104,11 +108,11 @@ void gameport_write(uint16_t addr, uint8_t val, void *p)
 
         gameport->state |= 0x0f;
 //        pclog("gameport_write : joysticks_present=%i\n", joysticks_present);
-        
-        timer_set_delay_u64(&gameport->axis[0].timer, gameport_time(gameport->joystick->read_axis(gameport->joystick_dat, 0)));
-        timer_set_delay_u64(&gameport->axis[1].timer, gameport_time(gameport->joystick->read_axis(gameport->joystick_dat, 1)));
-        timer_set_delay_u64(&gameport->axis[2].timer, gameport_time(gameport->joystick->read_axis(gameport->joystick_dat, 2)));
-        timer_set_delay_u64(&gameport->axis[3].timer, gameport_time(gameport->joystick->read_axis(gameport->joystick_dat, 3)));
+
+        gameport_time(gameport, 0, gameport->joystick->read_axis(gameport->joystick_dat, 0));
+        gameport_time(gameport, 1, gameport->joystick->read_axis(gameport->joystick_dat, 1));
+        gameport_time(gameport, 2, gameport->joystick->read_axis(gameport->joystick_dat, 2));
+        gameport_time(gameport, 3, gameport->joystick->read_axis(gameport->joystick_dat, 3));
 
         gameport->joystick->write(gameport->joystick_dat);
         
