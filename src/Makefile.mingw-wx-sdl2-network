@@ -6,7 +6,7 @@ WXVERSION = 31
 WXINCLUDE = e:/mingwget/include/wx/
 CFLAGS = -O3 -march=i686 -fomit-frame-pointer -msse2 -mstackrealign -Werror -fno-strict-aliasing -DUSE_NETWORKING
 CXXFLAGS = $(CFLAGS)
-OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o acc2036.o acc2168.o acc3221.o acer386sx.o ali1429.o amstrad.o cassette.o \
+OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o 820911.o acc2036.o acc2168.o acc3221.o acer386sx.o ali1429.o amstrad.o cassette.o \
 	cbm_io.o cdrom-ioctl.o cdrom-image.o cmd640.o codegen.o codegen_accumulate.o codegen_allocator.o \
 	codegen_backend_x86.o codegen_backend_x86_ops.o codegen_backend_x86_ops_fpu.o codegen_backend_x86_ops_sse.o \
 	codegen_backend_x86_uops.o codegen_block.o codegen_ir.o codegen_ops.o \

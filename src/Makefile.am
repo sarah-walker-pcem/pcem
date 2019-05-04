@@ -23,7 +23,7 @@ wx-resources.cpp : pc.xrc
 	-wxrc -c pc.xrc -o wx-resources.cpp
 
 # PCem
-pcem_SOURCES = 386.c 386_common.c 386_dynarec.c 386_dynarec_ops.c 808x.c acc2036.c acc2168.c acc3221.c acer386sx.c \
+pcem_SOURCES = 386.c 386_common.c 386_dynarec.c 386_dynarec_ops.c 808x.c 820911.c acc2036.c acc2168.c acc3221.c acer386sx.c \
 ali1429.c amstrad.c cassette.c cbm_io.c cdrom-image.cc cdrom-null.c cmd640.c codegen.c codegen_accumulate.c \
 codegen_allocator.c codegen_block.c codegen_ir.c codegen_ops.c codegen_ops_3dnow.c codegen_ops_arith.c \
 codegen_ops_branch.c codegen_ops_fpu_arith.c codegen_ops_fpu_constant.c codegen_ops_fpu_loadstore.c \

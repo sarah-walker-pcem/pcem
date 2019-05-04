@@ -4,6 +4,7 @@
 #include "io.h"
 #include "mouse.h"
 
+#include "82091aa.h"
 #include "acc2036.h"
 #include "acc2168.h"
 #include "acc3221.h"
@@ -660,6 +661,7 @@ void at_pb520r_init()
         i430lx_init();
         sio_init(2, 0xc, 0xe, 0x6, 0);
         cmd640b_init(1);
+        aip_82091aa_init(0x22);
         intel_batman_init();
         device_add(&intel_flash_bxt_ami_device);
 }
