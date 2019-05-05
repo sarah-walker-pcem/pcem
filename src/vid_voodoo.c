@@ -4307,7 +4307,7 @@ static void wait_for_swap_complete(voodoo_t *voodoo)
         {
                 thread_wait_event(voodoo->wake_fifo_thread, -1);
                 thread_reset_event(voodoo->wake_fifo_thread);
-                if ((voodoo->swap_pending && voodoo->flush) || FIFO_ENTRIES >= 65536)
+                if ((voodoo->swap_pending && voodoo->flush) || FIFO_FULL)
                 {
                         /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
                         memset(voodoo->dirty_line, 1, 1024);
