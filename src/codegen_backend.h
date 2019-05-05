@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_H_
+#define _CODEGEN_BACKEND_H_
+
 //#ifdef __amd64__
 //#include "codegen_x86-64.h"
 #if defined __amd64__
@@ -25,5 +28,16 @@ typedef int (*uOpFn)(codeblock_t *codeblock, struct uop_t *uop);
 
 extern const uOpFn uop_handlers[];
 
-extern int codegen_host_reg_list[CODEGEN_HOST_REGS];
-extern int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS];
+/*Register will not be preserved across function calls*/
+#define HOST_REG_FLAG_VOLATILE (1 << 0)
+
+typedef struct host_reg_def_t
+{
+        int reg;
+        int flags;
+} host_reg_def_t;
+
+extern host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS];
+extern host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS];
+
+#endif

@@ -39,30 +39,30 @@ void *codegen_fp_round_quad;
 void *codegen_gpf_rout;
 void *codegen_exit_rout;
 
-int codegen_host_reg_list[CODEGEN_HOST_REGS] =
+host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
-        REG_X19,
-        REG_X20,
-        REG_X21,
-	REG_X22,
-	REG_X23,
-        REG_X24,
-        REG_X25,
-	REG_X26,
-	REG_X27,
-	REG_X28
+        {REG_X19, 0},
+        {REG_X20, 0},
+        {REG_X21, 0},
+	{REG_X22, 0},
+	{REG_X23, 0},
+        {REG_X24, 0},
+        {REG_X25, 0},
+	{REG_X26, 0},
+	{REG_X27, 0},
+	{REG_X28, 0}
 };
 
-int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
 {
-        REG_V8,
-        REG_V9,
-        REG_V10,
-	REG_V11,
-	REG_V12,
-        REG_V13,
-        REG_V14,
-	REG_V15
+        {REG_V8, 0},
+        {REG_V9, 0},
+        {REG_V10, 0},
+	{REG_V11, 0},
+	{REG_V12, 0},
+        {REG_V13, 0},
+        {REG_V14, 0},
+	{REG_V15, 0}
 };
 
 static void build_load_routine(codeblock_t *block, int size, int is_float)

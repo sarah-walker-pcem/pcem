@@ -36,21 +36,24 @@ void *codegen_mem_store_double;
 void *codegen_gpf_rout;
 void *codegen_exit_rout;
 
-int codegen_host_reg_list[CODEGEN_HOST_REGS] =
+host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
-        REG_EAX,
-        REG_EBX,
-        REG_EDX
+        /*Note: while EAX and EDX are normally volatile registers under x86
+          calling conventions, the recompiler will explicitly save and restore
+          them across funcion calls*/
+        {REG_EAX, 0},
+        {REG_EBX, 0},
+        {REG_EDX, 0}
 };
 
-int codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
+host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
 {
-        REG_XMM0,
-        REG_XMM1,
-        REG_XMM2,
-        REG_XMM3,
-        REG_XMM4,
-        REG_XMM5
+        {REG_XMM0, HOST_REG_FLAG_VOLATILE},
+        {REG_XMM1, HOST_REG_FLAG_VOLATILE},
+        {REG_XMM2, HOST_REG_FLAG_VOLATILE},
+        {REG_XMM3, HOST_REG_FLAG_VOLATILE},
+        {REG_XMM4, HOST_REG_FLAG_VOLATILE},
+        {REG_XMM5, HOST_REG_FLAG_VOLATILE}
 };
 
 static void build_load_routine(codeblock_t *block, int size, int is_float)

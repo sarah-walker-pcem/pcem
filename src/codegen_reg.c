@@ -22,7 +22,7 @@ typedef struct host_reg_set_t
 {
         ir_reg_t *regs;
         uint8_t *dirty;
-        int *reg_list;
+        host_reg_def_t *reg_list;
         uint16_t locked;
         int nr_regs;
 } host_reg_set_t;
@@ -274,72 +274,72 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_WORD !REG_INTEGER\n");
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
-                        codegen_direct_read_16_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_16_stack(block, reg_set->reg_list[c].reg, (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
-                        codegen_direct_read_16(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_16(block, reg_set->reg_list[c].reg, ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
 
                 case REG_DWORD:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_DWORD !REG_INTEGER\n");
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
-                        codegen_direct_read_32_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_32_stack(block, reg_set->reg_list[c].reg, (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
-                        codegen_direct_read_32(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_32(block, reg_set->reg_list[c].reg, ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
 
                 case REG_QWORD:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_QWORD !REG_FP\n");
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
-                        codegen_direct_read_64_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_64_stack(block, reg_set->reg_list[c].reg, (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
-                        codegen_direct_read_64(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_64(block, reg_set->reg_list[c].reg, ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
                 
                 case REG_POINTER:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_POINTER !REG_INTEGER\n");
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
-                        codegen_direct_read_pointer_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_pointer_stack(block, reg_set->reg_list[c].reg, (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
-                        codegen_direct_read_pointer(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_pointer(block, reg_set->reg_list[c].reg, ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
 
                 case REG_DOUBLE:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_DOUBLE !REG_FP\n");
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
-                        codegen_direct_read_double_stack(block, reg_set->reg_list[c], (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_double_stack(block, reg_set->reg_list[c].reg, (int)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
-                        codegen_direct_read_double(block, reg_set->reg_list[c], ireg_data[IREG_GET_REG(ir_reg.reg)].p);
+                        codegen_direct_read_double(block, reg_set->reg_list[c].reg, ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 break;
                 
                 case REG_FPU_ST_BYTE:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_FPU_ST_BYTE !REG_INTEGER\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_read_8(block, reg_set->reg_list[c], &cpu_state.tag[ir_reg.reg & 7]);
+                        codegen_direct_read_8(block, reg_set->reg_list[c].reg, &cpu_state.tag[ir_reg.reg & 7]);
                 else
-                        codegen_direct_read_st_8(block, reg_set->reg_list[c], &cpu_state.tag[0], ir_reg.reg & 7);
+                        codegen_direct_read_st_8(block, reg_set->reg_list[c].reg, &cpu_state.tag[0], ir_reg.reg & 7);
                 break;
 
                 case REG_FPU_ST_QWORD:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_FPU_ST_QWORD !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_read_64(block, reg_set->reg_list[c], &cpu_state.MM[ir_reg.reg & 7]);
+                        codegen_direct_read_64(block, reg_set->reg_list[c].reg, &cpu_state.MM[ir_reg.reg & 7]);
                 else
-                        codegen_direct_read_st_64(block, reg_set->reg_list[c], &cpu_state.MM[0], ir_reg.reg & 7);
+                        codegen_direct_read_st_64(block, reg_set->reg_list[c].reg, &cpu_state.MM[0], ir_reg.reg & 7);
                 break;
 
                 case REG_FPU_ST_DOUBLE:
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_FPU_ST_DOUBLE !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_read_double(block, reg_set->reg_list[c], &cpu_state.ST[ir_reg.reg & 7]);
+                        codegen_direct_read_double(block, reg_set->reg_list[c].reg, &cpu_state.ST[ir_reg.reg & 7]);
                 else
-                        codegen_direct_read_st_double(block, reg_set->reg_list[c], &cpu_state.ST[0], ir_reg.reg & 7);
+                        codegen_direct_read_st_double(block, reg_set->reg_list[c].reg, &cpu_state.ST[0], ir_reg.reg & 7);
                 break;
 
                 default:
@@ -367,7 +367,7 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                         fatal("codegen_reg_writeback - REG_BYTE !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_BYTE %p\n", p);
-                codegen_direct_write_8(block, p, reg_set->reg_list[c]);
+                codegen_direct_write_8(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_WORD:
@@ -375,25 +375,25 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                         fatal("codegen_reg_writeback - REG_WORD !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_WORD %p\n", p);
-                codegen_direct_write_16(block, p, reg_set->reg_list[c]);
+                codegen_direct_write_16(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_DWORD:
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_DWORD !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
-                        codegen_direct_write_32_stack(block, (int)p, reg_set->reg_list[c]);
+                        codegen_direct_write_32_stack(block, (int)p, reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_32(block, p, reg_set->reg_list[c]);
+                        codegen_direct_write_32(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_QWORD:
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_QWORD !REG_FP\n");
                 if ((uintptr_t)p < 256)
-                        codegen_direct_write_64_stack(block, (int)p, reg_set->reg_list[c]);
+                        codegen_direct_write_64_stack(block, (int)p, reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_64(block, p, reg_set->reg_list[c]);
+                        codegen_direct_write_64(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_POINTER:
@@ -401,43 +401,43 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                         fatal("codegen_reg_writeback - REG_POINTER !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_POINTER %p\n", p);
-                codegen_direct_write_ptr(block, p, reg_set->reg_list[c]);
+                codegen_direct_write_ptr(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_DOUBLE:
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_DOUBLE !REG_FP\n");
                 if ((uintptr_t)p < 256)
-                        codegen_direct_write_double_stack(block, (int)p, reg_set->reg_list[c]);
+                        codegen_direct_write_double_stack(block, (int)p, reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_double(block, p, reg_set->reg_list[c]);
+                        codegen_direct_write_double(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_FPU_ST_BYTE:
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_FPU_ST_BYTE !REG_INTEGER\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_write_8(block, &cpu_state.tag[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
+                        codegen_direct_write_8(block, &cpu_state.tag[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_st_8(block, &cpu_state.tag[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c]);
+                        codegen_direct_write_st_8(block, &cpu_state.tag[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_FPU_ST_QWORD:
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_FPU_ST_QWORD !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_write_64(block, &cpu_state.MM[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
+                        codegen_direct_write_64(block, &cpu_state.MM[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_st_64(block, &cpu_state.MM[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c]);
+                        codegen_direct_write_st_64(block, &cpu_state.MM[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_FPU_ST_DOUBLE:
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_FPU_ST_DOUBLE !REG_FP\n");
                 if (block->flags & CODEBLOCK_STATIC_TOP)
-                        codegen_direct_write_double(block, &cpu_state.ST[reg_set->regs[c].reg & 7], reg_set->reg_list[c]);
+                        codegen_direct_write_double(block, &cpu_state.ST[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
-                        codegen_direct_write_st_double(block, &cpu_state.ST[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c]);
+                        codegen_direct_write_st_double(block, &cpu_state.ST[0], reg_set->regs[c].reg & 7, reg_set->reg_list[c].reg);
                 break;
 
                 default:
@@ -595,7 +595,7 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
         if (host_reg_idx)
                 *host_reg_idx = c;
 //        pclog(" codegen_reg_alloc_read_reg: %i.%i %i  %02x.%i  %i\n", ir_reg.reg, ir_reg.version, codegen_host_reg_list[c],  reg_set->regs[c].reg,reg_set->regs[c].version,  c);
-        return reg_set->reg_list[c] | IREG_GET_SIZE(ir_reg.reg);
+        return reg_set->reg_list[c].reg | IREG_GET_SIZE(ir_reg.reg);
 }
 
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
@@ -623,7 +623,7 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                 reg_set->regs[c].version = ir_reg.version;
                 reg_set->dirty[c] = 1;
 //        pclog(" codegen_reg_alloc_write_reg: partial %i.%i %i\n", ir_reg.reg, ir_reg.version, codegen_host_reg_list[c]);
-                return reg_set->reg_list[c] | IREG_GET_SIZE(ir_reg.reg);
+                return reg_set->reg_list[c].reg | IREG_GET_SIZE(ir_reg.reg);
         }
         
         /*Search for previous version in host register*/
@@ -668,7 +668,7 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
         reg_set->regs[c].version = ir_reg.version;
         reg_set->dirty[c] = 1;
 //        pclog(" codegen_reg_alloc_write_reg: %i.%i %i\n", ir_reg.reg, ir_reg.version, codegen_host_reg_list[c]);
-        return reg_set->reg_list[c] | IREG_GET_SIZE(ir_reg.reg);
+        return reg_set->reg_list[c].reg | IREG_GET_SIZE(ir_reg.reg);
 }
 
 void codegen_reg_flush(ir_data_t *ir, codeblock_t *block)
@@ -683,6 +683,11 @@ void codegen_reg_flush(ir_data_t *ir, codeblock_t *block)
                 {
                         codegen_reg_writeback(reg_set, block, c, 0);
                 }
+                if (reg_set->reg_list[c].flags & HOST_REG_FLAG_VOLATILE)
+                {
+                        reg_set->regs[c] = invalid_ir_reg;
+                        reg_set->dirty[c] = 0;
+                }
         }
 
         reg_set = &host_fp_reg_set;
@@ -691,6 +696,11 @@ void codegen_reg_flush(ir_data_t *ir, codeblock_t *block)
                 if (!ir_reg_is_invalid(reg_set->regs[c]) && reg_set->dirty[c])
                 {
                         codegen_reg_writeback(reg_set, block, c, 0);
+                }
+                if (reg_set->reg_list[c].flags & HOST_REG_FLAG_VOLATILE)
+                {
+                        reg_set->regs[c] = invalid_ir_reg;
+                        reg_set->dirty[c] = 0;
                 }
         }
 }
