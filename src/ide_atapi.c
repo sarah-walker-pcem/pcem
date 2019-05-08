@@ -36,6 +36,7 @@ void atapi_data_write(atapi_device_t *atapi_dev, uint16_t val)
                 {
                         atapi_dev->state = ATAPI_STATE_GOT_COMMAND;
                         timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
+                        *atapi_dev->atastat = BUSY_STAT | (*atapi_dev->atastat & ERR_STAT);
                 }
                 break;
 
@@ -48,6 +49,7 @@ void atapi_data_write(atapi_device_t *atapi_dev, uint16_t val)
                         atapi_dev->bus_state = 0;
                         atapi_dev->state = ATAPI_STATE_WRITE_DATA;
                         timer_set_delay_u64(&ide_timer[atapi_dev->board], 6 * IDE_TIME);
+                        *atapi_dev->atastat = BUSY_STAT | (*atapi_dev->atastat & ERR_STAT);
                 }
                 break;
         }
@@ -74,6 +76,7 @@ uint16_t atapi_data_read(atapi_device_t *atapi_dev)
                 {
                         atapi_dev->state = ATAPI_STATE_NEXT_PHASE;
                         timer_set_delay_u64(&ide_timer[atapi_dev->board], 6*IDE_TIME);
+                        *atapi_dev->atastat = BUSY_STAT | (*atapi_dev->atastat & ERR_STAT);
                 }
                 break;
         }
