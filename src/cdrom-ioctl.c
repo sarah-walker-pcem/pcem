@@ -451,8 +451,8 @@ static int ioctl_readsector(uint8_t *b, int sector, int count)
         status = ReadFile(hIOCTL, b, count*2048, (LPDWORD)&size, NULL);
         ioctl_close();
 
-        /*If the read failed, try again using SPTI*/
-        if (!status || size != count*2048)
+        /*If the read 'succeeded' but didn't read all required data, try again using SPTI*/
+        if (status && size != count*2048)
         {
                 uint8_t cmd[12] = { 0xbe, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 };
                 SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb;
