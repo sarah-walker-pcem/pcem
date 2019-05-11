@@ -22,9 +22,10 @@ static struct
         x86seg *op_ea_seg;
         uint32_t op_32;
         int first_uop;
+        int TOP;
 } codegen_instructions[MAX_INSTRUCTION_COUNT];
 
-int codegen_get_instruction_uop(codeblock_t *block, uint32_t pc, int *first_instruction)
+int codegen_get_instruction_uop(codeblock_t *block, uint32_t pc, int *first_instruction, int *TOP)
 {
         int c;
         
@@ -33,6 +34,7 @@ int codegen_get_instruction_uop(codeblock_t *block, uint32_t pc, int *first_inst
                 if (codegen_instructions[c].pc == pc)
                 {
                         *first_instruction = c;
+                        *TOP = codegen_instructions[c].TOP;
                         return codegen_instructions[c].first_uop;
                 }
         }
@@ -590,6 +592,7 @@ generate_call:
         codegen_instructions[block->ins].op_ssegs = last_op_ssegs;
         codegen_instructions[block->ins].op_ea_seg = last_op_ea_seg;
         codegen_instructions[block->ins].op_32 = last_op_32;
+        codegen_instructions[block->ins].TOP = cpu_state.TOP;
         codegen_instructions[block->ins].first_uop = ir->wr_pos;
 
         codegen_timing_opcode(opcode, fetchdat, op_32, op_pc);
