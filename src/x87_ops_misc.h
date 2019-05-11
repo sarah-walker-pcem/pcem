@@ -117,8 +117,8 @@ static int FSTOR()
           something like this is needed*/
         if (cpu_state.MM_w4[0] == 0xffff && cpu_state.MM_w4[1] == 0xffff && cpu_state.MM_w4[2] == 0xffff && cpu_state.MM_w4[3] == 0xffff &&
             cpu_state.MM_w4[4] == 0xffff && cpu_state.MM_w4[5] == 0xffff && cpu_state.MM_w4[6] == 0xffff && cpu_state.MM_w4[7] == 0xffff &&
-            !cpu_state.TOP && !(*(uint64_t *)cpu_state.tag))
-        cpu_state.ismmx = 1;
+            !cpu_state.TOP && (*(uint64_t *)cpu_state.tag == 0x0101010101010101ull))
+                cpu_state.ismmx = 1;
 
         CLOCK_CYCLES((cr0 & 1) ? 34 : 44);
         if (fplog) pclog("FRSTOR %08X:%08X %i %i %04X\n", easeg, cpu_state.eaaddr, cpu_state.ismmx, cpu_state.TOP, x87_gettag());

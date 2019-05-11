@@ -35,7 +35,7 @@ uint16_t x87_gettag()
                         ret |= X87_TAG_EMPTY << (c * 2);
                 else if (cpu_state.tag[c] & TAG_UINT64)
                         ret |= 2 << (c*2);
-                else if (cpu_state.ST[c] == 0.0)
+                else if (cpu_state.ST[c] == 0.0 && !cpu_state.ismmx)
                         ret |= X87_TAG_ZERO << (c * 2);
                 else
                         ret |= X87_TAG_VALID << (c * 2);

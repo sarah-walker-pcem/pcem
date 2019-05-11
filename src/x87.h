@@ -9,7 +9,7 @@ uint16_t x87_pc_seg,x87_op_seg;
 static inline void x87_set_mmx()
 {
         cpu_state.TOP = 0;
-        *(uint64_t *)cpu_state.tag = 0;
+        *(uint64_t *)cpu_state.tag = 0x0101010101010101ull;
         cpu_state.ismmx = 1;
 }
 
