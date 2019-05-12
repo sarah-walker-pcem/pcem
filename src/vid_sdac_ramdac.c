@@ -9,14 +9,31 @@ static void sdac_control_write(sdac_ramdac_t *ramdac, svga_t *svga, uint8_t val)
 {
         ramdac->command = val;
 //        pclog("RAMDAC command reg now %02X\n", val);
-        switch (val >> 4)
+        switch (val & 0xf0)
         {
-                case 0x2: case 0x3: case 0xa: svga->bpp = 15; break;
-                case 0x4: case 0xe:           svga->bpp = 24; break;
-                case 0x5: case 0x6: case 0xc: svga->bpp = 16; break;
-                case 0x7:                     svga->bpp = 32; break;
-
-                case 0: case 1: default: svga->bpp = 8; break;
+                case 0x00: case 0x10:
+                svga->bpp = 8;
+                break;
+                
+                case 0x20: case 0x30: case 0x80: case 0xa0:
+                svga->bpp = 15;
+                break;
+                
+                case 0x50: case 0x60: case 0xc0:
+                svga->bpp = 16;
+                break;
+                
+                case 0x40: case 0x90: case 0xe0:
+                svga->bpp = 24;
+                break;
+                
+                case 0x70:
+                svga->bpp = 32;
+                break;
+                
+                default:
+                svga->bpp = 8;
+                break;
         }
 }
 
