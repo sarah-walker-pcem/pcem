@@ -148,10 +148,14 @@ float sdac_getclock(int clock, void *p)
         sdac_ramdac_t *ramdac = (sdac_ramdac_t *)p;
         float t;
         int m, n1, n2;
+        
+        if (ramdac->regs[0xe] & (1 << 5))
+                clock = ramdac->regs[0xe] & 7;
+                
 //        pclog("SDAC_Getclock %i %04X\n", clock, ramdac->regs[clock]);
+        clock &= 7;
         if (clock == 0) return 25175000.0;
         if (clock == 1) return 28322000.0;
-        clock ^= 1; /*Clocks 2 and 3 seem to be reversed*/
         m  =  (ramdac->regs[clock] & 0x7f) + 2;
         n1 = ((ramdac->regs[clock] >>  8) & 0x1f) + 2;
         n2 = ((ramdac->regs[clock] >> 13) & 0x07);

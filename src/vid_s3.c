@@ -1186,6 +1186,10 @@ void s3_recalctimings(svga_t *svga)
 {
         s3_t *s3 = (s3_t *)svga->p;
         svga->hdisp = svga->hdisp_old;
+        int clk_sel = (svga->miscout >> 2) & 3;
+
+        if (clk_sel == 3 && s3->chip == S3_VISION864)
+                clk_sel = svga->crtc[0x42] & 0xf;
 
 //        pclog("%i %i\n", svga->hdisp, svga->hdisp_time);
 //        pclog("recalctimings\n");
@@ -1206,7 +1210,7 @@ void s3_recalctimings(svga_t *svga)
         else if (svga->crtc[0x43] & 0x04) svga->rowoffset  += 0x100;
         if (!svga->rowoffset) svga->rowoffset = 256;
         svga->interlace = svga->crtc[0x42] & 0x20;
-        svga->clock = (cpuclock * (float)(1ull << 32)) / s3->getclock((svga->miscout >> 2) & 3, s3->getclock_p);
+        svga->clock = (cpuclock * (float)(1ull << 32)) / s3->getclock(clk_sel, s3->getclock_p);
 
         switch (svga->crtc[0x67] >> 4)
         {
