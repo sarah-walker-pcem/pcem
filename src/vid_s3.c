@@ -2907,11 +2907,10 @@ static device_config_t s3_bahamas64_config[] =
                                 .description = "2 MB",
                                 .value = 2
                         },
-                        {
-                                .description = "4 MB",
-                                .value = 4
-                        },
-                        /*Vision864 also supports 8 MB, however the Paradise BIOS is buggy (VESA modes don't work correctly)*/
+                        /*Vision864 also supports 4 and 8 MB, however the Paradise
+                          BIOS is buggy (VESA modes don't work correctly), and UNIVBE and
+                          OS/2 Warp misdetect the VRAM size. Bahamas 64 only supports
+                          up to 2 MB on the board anyway. */
                         {
                                 .description = ""
                         }
