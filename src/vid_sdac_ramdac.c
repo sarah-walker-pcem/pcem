@@ -96,7 +96,6 @@ void sdac_ramdac_out(uint16_t addr, uint8_t val, sdac_ramdac_t *ramdac, svga_t *
 
 uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga)
 {
-        uint8_t temp;
 //        /*if (CS!=0xC000) */pclog("IN RAMDAC %04X %04X:%04X %i  %i %i\n",addr,CS,cpu_state.pc, ramdac->rs2, ramdac->rindex, ramdac->windex);
         switch (addr)
         {
@@ -105,15 +104,15 @@ uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga)
                         ramdac->magic_count++;
                 if (ramdac->magic_count == 4)
                 {
-                        temp = 0x70; /*SDAC ID*/
                         ramdac->rs2 = 1;
+                        return 0x70; /*SDAC ID*/
                 }
                 if (ramdac->magic_count == 5)
                 {
-                        temp = ramdac->command;
                         ramdac->magic_count = 0;
+                        return ramdac->command;
                 }
-                return temp;
+                break;
                 case 3:
                 ramdac->magic_count=0;
                 break;
