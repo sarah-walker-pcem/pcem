@@ -21,6 +21,14 @@
 
 #define IDE_TIME (TIMER_USEC*10)//(5 * 100 * (1 << TIMER_SHIFT))
 
+/*Rough estimate - MFM drives spin at 3600 RPM, with 17 sectors per track,
+  meaning (3600/60)*17 = 1020 sectors per second, or 980us per sector.
+
+  This is required for OS/2 on slow 286 systems, as the hard drive formatter
+  will crash with 'internal processing error' if write sector interrupts are too
+  close in time*/
+#define SECTOR_TIME (TIMER_USEC * 980)
+
 #define STAT_ERR		0x01
 #define STAT_INDEX		0x02
 #define STAT_CORRECTED_DATA	0x04
@@ -313,7 +321,7 @@ void mfm_writew(uint16_t port, uint16_t val, void *p)
         {
                 mfm->pos = 0;
                 mfm->status = STAT_BUSY;
-              	timer_set_delay_u64(&mfm->callback_timer, 6*IDE_TIME);
+              	timer_set_delay_u64(&mfm->callback_timer, SECTOR_TIME);
         }
 }
 
@@ -382,7 +390,7 @@ uint16_t mfm_readw(uint16_t port, void *p)
                         {
                                 mfm_next_sector(mfm);
                                 mfm->status = STAT_BUSY;
-                                timer_set_delay_u64(&mfm->callback_timer, 6*IDE_TIME);
+                                timer_set_delay_u64(&mfm->callback_timer, SECTOR_TIME);
                         }
                 }
         }
