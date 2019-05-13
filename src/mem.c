@@ -1381,10 +1381,14 @@ static void mem_remap_top(int max_size)
                         
                 for (c = ((start * 1024) >> 12); c < (((start + size) * 1024) >> 12); c++)
                 {
-                        pages[c].mem = &ram[0xA0000 + ((c - ((start * 1024) >> 12)) << 12)];
+                        int offset = c - ((start * 1024) >> 12);
+                        pages[c].mem = &ram[0xA0000 + (offset << 12)];
                         pages[c].write_b = mem_write_ramb_page;
                         pages[c].write_w = mem_write_ramw_page;
                         pages[c].write_l = mem_write_raml_page;
+                        pages[c].evict_prev = EVICT_NOT_IN_LIST;
+                        pages[c].byte_dirty_mask = &byte_dirty_mask[offset * 64];
+                        pages[c].byte_code_present_mask = &byte_code_present_mask[offset * 64];
                 }
 
                 mem_set_mem_state(start * 1024, size * 1024, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
