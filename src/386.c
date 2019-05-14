@@ -165,6 +165,8 @@ void exec386(int cycs)
 //                pclog("%i %02X\n", ins, ram[8]);
                 while (cycdiff < cycle_period)
                 {
+                        int ins_cycles = cycles;
+                        
                 cpu_state.oldpc = cpu_state.pc;
                 cpu_state.op32 = use32;
                 
@@ -212,6 +214,9 @@ void exec386(int cycs)
                                 }
                         }
                 }
+                ins_cycles -= cycles;
+                tsc += ins_cycles;
+                
                 cycdiff=oldcyc-cycles;
 
                 if (trap)
@@ -289,7 +294,6 @@ void exec386(int cycs)
                 }
                 }
                 
-                tsc += cycdiff;
 		if (TIMER_VAL_LESS_THAN_VAL(timer_target, (uint32_t)tsc))
 			timer_process();
         }
