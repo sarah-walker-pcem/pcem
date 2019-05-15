@@ -750,7 +750,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 		atapi_sense_clear(data, temp_command, 0);
 
 		data->bytes_expected = data->data_pos_write = MIN(alloc_length, 18);
-		return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case SCSI_SEEK_6:
                 if (data->cmd_pos == CMD_POS_IDLE)
@@ -800,7 +800,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 			
                 data->data_pos_read = 0;
                 data->bytes_expected = data->data_pos_write = MIN(alloc_length, 8);
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case GPCMD_READ_TOC_PMA_ATIP:
 //                pclog("Read TOC ready? %08X\n",ide);
@@ -831,7 +831,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 }
                 data->data_pos_read = 0;
                 data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case GPCMD_READ_CD:
 //                pclog("Read CD : start LBA %02X%02X%02X%02X Length %02X%02X%02X Flags %02X\n",cdb[2],cdb[3],cdb[4],cdb[5],cdb[6],cdb[7],cdb[8],cdb[9]);
@@ -1032,7 +1032,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 data->data_in[1] = data->data_in[2] = data->data_in[3] = 0;
                 
                 data->bytes_expected = data->data_pos_write = MIN(6, alloc_length);
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
 		case GPCMD_MODE_SENSE_6:
 		case GPCMD_MODE_SENSE_10:
@@ -1070,7 +1070,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
                 data->bytes_expected = data->data_pos_write = MIN(len, alloc_length);
                 data->cmd_pos = CMD_POS_IDLE;
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
 		case GPCMD_MODE_SELECT_6:
                 case GPCMD_MODE_SELECT_10:
@@ -1176,7 +1176,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 
                 data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
                 data->cmd_pos = CMD_POS_IDLE;
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
 		case GPCMD_READ_DISC_INFORMATION:
                 alloc_length = cdb[8] | (cdb[7] << 8);
@@ -1192,7 +1192,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 			
                 data->bytes_expected = data->data_pos_write = MIN(alloc_length, 34);
                 data->cmd_pos = CMD_POS_IDLE;
-                return SCSI_PHASE_DATA_IN;
+                return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case GPCMD_PLAY_AUDIO_10:
                 case GPCMD_PLAY_AUDIO_12:
@@ -1245,7 +1245,7 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
                 if (!(cdb[2] & 0x40)) len=4;
 
 		data->bytes_expected = data->data_pos_write = MIN(alloc_length, len);
-		return SCSI_PHASE_DATA_IN;
+		return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case GPCMD_START_STOP_UNIT:
                 if (!cdb[4])          atapi->stop();
@@ -1345,7 +1345,7 @@ atapi_out:
 		data->data_in[size_idx] = idx - preamble_len;
 				
 		data->bytes_expected = data->data_pos_write = MIN(alloc_length, idx);
-		return SCSI_PHASE_DATA_IN;
+		return alloc_length ? SCSI_PHASE_DATA_IN : SCSI_PHASE_STATUS;
 
                 case GPCMD_PREVENT_REMOVAL:
                 data->cmd_pos = CMD_POS_IDLE;
