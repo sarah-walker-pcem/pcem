@@ -161,7 +161,10 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                 }
                 gd5429->dac_3c6_count = 0;
                 break;
-                
+                case 0x3c7: case 0x3c8: case 0x3c9:
+                gd5429->dac_3c6_count = 0;
+                break;
+
                 case 0x3cf:
 //                pclog("Write GDC %02x %02x\n", svga->gdcaddr, val);
                 if (svga->gdcaddr == 0)
@@ -372,6 +375,9 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                         return gd5429->hidden_dac_reg;
                 }
                 gd5429->dac_3c6_count++;
+                break;
+                case 0x3c7: case 0x3c8: case 0x3c9:
+                gd5429->dac_3c6_count = 0;
                 break;
 
                 case 0x3cf:
