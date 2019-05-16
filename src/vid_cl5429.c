@@ -71,6 +71,8 @@ typedef struct gd5429_t
         uint32_t lfb_base;
         
         int mmio_vram_overlap;
+        
+        uint8_t sr10_read, sr11_read;
 } gd5429_t;
 
 static void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
@@ -111,11 +113,13 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 case 0x10: case 0x30: case 0x50: case 0x70:
                                 case 0x90: case 0xb0: case 0xd0: case 0xf0:
                                 svga->hwcursor.x = (val << 3) | ((svga->seqaddr >> 5) & 7);
+                                gd5429->sr10_read = svga->seqaddr & 0xe0;
 //                                pclog("svga->hwcursor.x = %i\n", svga->hwcursor.x);
                                 break;
                                 case 0x11: case 0x31: case 0x51: case 0x71:
                                 case 0x91: case 0xb1: case 0xd1: case 0xf1:
                                 svga->hwcursor.y = (val << 3) | ((svga->seqaddr >> 5) & 7);
+                                gd5429->sr11_read = svga->seqaddr & 0xe0;
 //                                pclog("svga->hwcursor.y = %i\n", svga->hwcursor.y);
                                 break;
                                 case 0x12:
@@ -311,6 +315,13 @@ uint8_t gd5429_in(uint16_t addr, void *p)
         
         switch (addr)
         {
+                case 0x3c4:
+                if ((svga->seqaddr & 0x1f) == 0x10)
+                        return (svga->seqaddr & 0x1f) | gd5429->sr10_read;
+                if ((svga->seqaddr & 0x1f) == 0x11)
+                        return (svga->seqaddr & 0x1f) | gd5429->sr11_read;
+                return svga->seqaddr & 0x1f;
+                
                 case 0x3c5:
                 if (svga->seqaddr > 5)
                 {
