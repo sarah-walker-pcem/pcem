@@ -169,8 +169,8 @@ extern int AMSTRAD, AT, is386, PCI, TANDY;
 
 enum
 {
-        ROM_IBMPC = 0,  /*301 keyboard error, 131 cassette (!!!) error*/
-        ROM_IBMXT,      /*301 keyboard error*/
+        ROM_IBMPC = 0,
+        ROM_IBMXT,
         ROM_IBMPCJR,
         ROM_GENXT,      /*'Generic XT BIOS'*/
         ROM_DTKXT,
