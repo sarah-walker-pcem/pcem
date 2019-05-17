@@ -343,7 +343,7 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                                 return ((svga->seqregs[6] & 0x17) == 0x12) ? 0x12 : 0x0f;
 
                                 case 0x17:
-                                temp = svga->gdcreg[0x17];
+                                temp = svga->seqregs[0x17];
                                 temp &= ~(7 << 3);
                                 if (gd5429->type == CL_TYPE_GD5429)
                                 {
