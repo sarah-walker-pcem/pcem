@@ -6,12 +6,20 @@
 #include "serial.h"
 #include "w83877tf.h"
 
+enum
+{
+        CHIP_W83877F,
+        CHIP_W83877TF
+};
+
 typedef struct w83877tf_t
 {
         int enable_regs;
         uint8_t key[2];
+        uint8_t unlock_key;
         int index;
         uint8_t regs[256];
+        int chip;
 } w83877tf_t;
 
 static w83877tf_t w83877tf_global;
@@ -26,6 +34,13 @@ static void w83877tf_write_reg(w83877tf_t *w83877tf, int index, uint8_t val)
 //        pclog("w83877tf_write: index=%02x val=%02x\n", index, val);
         switch (index)
         {
+                case 0x0c:
+                if (w83877tf->regs[0x16] & 1)
+                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x87 : 0x86;
+                else
+                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x89 : 0x88;
+                break;
+
                 case 0x16:
                 if (val == 2) /*Written by VA-503+ BIOS. Apparently should not change IO mapping*/
                         return;
@@ -33,9 +48,15 @@ static void w83877tf_write_reg(w83877tf_t *w83877tf, int index, uint8_t val)
                 io_removehandler(0x0250, 0x0003, w83877tf_read_25x, NULL, NULL, w83877tf_write_25x, NULL, NULL,  &w83877tf_global);
                 io_removehandler(0x03f0, 0x0002, w83877tf_read_3fx, NULL, NULL, w83877tf_write_3fx, NULL, NULL,  &w83877tf_global);
                 if (val & 0x01)
+                {
                         io_sethandler(0x03f0, 0x0002, w83877tf_read_3fx, NULL, NULL, w83877tf_write_3fx, NULL, NULL,  &w83877tf_global);
+                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x87 : 0x86;
+                }
                 else
+                {
                         io_sethandler(0x0250, 0x0003, w83877tf_read_25x, NULL, NULL, w83877tf_write_25x, NULL, NULL,  &w83877tf_global);
+                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x89 : 0x88;
+                }
 
                 if ((w83877tf->regs[0x16] & 4) && !(val & 4))
                 {
@@ -81,7 +102,14 @@ static uint8_t w83877tf_read_reg(w83877tf_t *w83877tf, int index)
         switch (w83877tf->index)
         {
                 case 0x09:
-                return 0x0c; /*W83877TF ID*/
+                switch (w83877tf->chip)
+                {
+                        case CHIP_W83877F:
+                        return 0x0a; /*W83877F ID*/
+                        case CHIP_W83877TF:
+                        return 0x0c; /*W83877TF ID*/
+                }
+                break;
         }
         return w83877tf->regs[index];
 }
@@ -95,7 +123,7 @@ static void w83877tf_write_25x(uint16_t port, uint8_t val, void *p)
         switch (port)
         {
                 case 0x250: /*Enable register*/
-                w83877tf->enable_regs = (val == 0x89) ? 1 : 0;
+                w83877tf->enable_regs = (val == w83877tf->unlock_key) ? 1 : 0;
                 break;
                 case 0x251: /*Index*/
                 if (w83877tf->enable_regs)
@@ -148,7 +176,7 @@ static void w83877tf_write_3fx(uint16_t port, uint8_t val, void *p)
                 {
                         w83877tf->key[1] = w83877tf->key[0];
                         w83877tf->key[0] = val;
-                        w83877tf->enable_regs = (w83877tf->key[0] == 0x87 && w83877tf->key[1] == 0x87);
+                        w83877tf->enable_regs = (w83877tf->key[0] == w83877tf->unlock_key && w83877tf->key[1] == w83877tf->unlock_key);
                         /*The FDC conflicts with the 3fx config registers, so disable
                           it when enabling config registers*/
                         if (w83877tf->enable_regs)
@@ -187,12 +215,15 @@ static uint8_t w83877tf_read_3fx(uint16_t port, void *p)
         return ret;
 }
 
-void w83877tf_init()
+static void w83877_common_init(int chip, uint16_t base, uint8_t key)
 {
         memset(&w83877tf_global, 0, sizeof(w83877tf_t));
 
-        io_sethandler(0x0250, 0x0003, w83877tf_read_25x, NULL, NULL, w83877tf_write_25x, NULL, NULL,  &w83877tf_global);
-        
+        if (base == 0x250)
+                io_sethandler(0x0250, 0x0003, w83877tf_read_25x, NULL, NULL, w83877tf_write_25x, NULL, NULL,  &w83877tf_global);
+        else
+                io_sethandler(0x03f0, 0x0002, w83877tf_read_3fx, NULL, NULL, w83877tf_write_3fx, NULL, NULL,  &w83877tf_global);
+
         /*Defaults*/
         w83877tf_global.regs[0x03] = 0x30;
         w83877tf_global.regs[0x09] = 0x0c;
@@ -208,4 +239,16 @@ void w83877tf_init()
         w83877tf_global.regs[0x27] = 0x05;
         w83877tf_global.regs[0x28] = 0x43;
         w83877tf_global.regs[0x29] = 0x60;
+
+        w83877tf_global.chip = chip;
+        w83877tf_global.unlock_key = key;
+}
+
+void w83877f_init(uint16_t base, uint8_t key)
+{
+        w83877_common_init(CHIP_W83877F, base, key);
+}
+void w83877tf_init(uint16_t base, uint8_t key)
+{
+        w83877_common_init(CHIP_W83877TF, base, key);
 }

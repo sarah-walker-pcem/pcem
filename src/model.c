@@ -730,7 +730,7 @@ void at_p55tvp4_init()
         pci_slot(0x09);
         i430vx_init();
         piix_init(7, 0x0C, 0x0B, 0x0A, 0x09);
-        um8669f_init();
+        w83877f_init(0x3f0, 0x87);
         device_add(&intel_flash_bxt_device);
 }
 
@@ -758,7 +758,7 @@ void at_p55t2p4_init()
         pci_slot(0x09);
         i430hx_init();
         piix_init(7, 0x0C, 0x0B, 0x0A, 0x09);
-        um8669f_init();
+        w83877f_init(0x3f0, 0x87);
         device_add(&intel_flash_bxt_device);
 }
 
@@ -771,7 +771,7 @@ void at_mvp3_init()
         pci_slot(10);
         mvp3_init();
         vt82c586b_init(7, 8, 9, 10, 0);
-        w83877tf_init();
+        w83877tf_init(0x250, 0x89);
         device_add(&sst_39sf010_device);
 }
 
