@@ -437,7 +437,7 @@ void gd5429_recalc_mapping(gd5429_t *gd5429)
 {
         svga_t *svga = &gd5429->svga;
         
-        if (PCI && !(gd5429->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_MEM))
+        if (PCI && gd5429->type >= CL_TYPE_GD5430 && !(gd5429->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_MEM))
         {
                 mem_mapping_disable(&svga->mapping);
                 mem_mapping_disable(&gd5429->linear_mapping);
