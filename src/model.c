@@ -20,6 +20,7 @@
 #include "dma.h"
 #include "fdc.h"
 #include "fdc37c665.h"
+#include "fdc37c93x.h"
 #include "gameport.h"
 #include "headland.h"
 #include "i430fx.h"
@@ -716,7 +717,7 @@ void at_p55va_init()
         pci_slot(0x0B);
         i430vx_init();
         piix_init(7, 0x08, 0x09, 0x0A, 0x0B);
-        um8669f_init();
+        fdc37c932fr_init();
         device_add(&intel_flash_bxt_device);
 }
 
