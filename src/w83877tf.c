@@ -36,9 +36,9 @@ static void w83877tf_write_reg(w83877tf_t *w83877tf, int index, uint8_t val)
         {
                 case 0x0c:
                 if (w83877tf->regs[0x16] & 1)
-                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x87 : 0x86;
+                        w83877tf->unlock_key = (val & (1 << 5)) ? 0x87 : 0x86;
                 else
-                        w83877tf->unlock_key = (w83877tf->regs[0xc] & (1 << 5)) ? 0x89 : 0x88;
+                        w83877tf->unlock_key = (val & (1 << 5)) ? 0x89 : 0x88;
                 break;
 
                 case 0x16:
@@ -228,9 +228,15 @@ static void w83877_common_init(int chip, uint16_t base, uint8_t key)
         w83877tf_global.regs[0x03] = 0x30;
         w83877tf_global.regs[0x09] = 0x0c;
         w83877tf_global.regs[0x0b] = 0x0c;
-        w83877tf_global.regs[0x0c] = 0x28;
+        if (key == 0x88 || key == 0x86)
+                w83877tf_global.regs[0x0c] = 0x08;
+        else
+                w83877tf_global.regs[0x0c] = 0x28;
         w83877tf_global.regs[0x0d] = 0xa3;
-        w83877tf_global.regs[0x16] = 0x04;
+        if (base == 0x250)
+                w83877tf_global.regs[0x16] = 0x04;
+        else
+                w83877tf_global.regs[0x16] = 0x05;
         w83877tf_global.regs[0x20] = 0xfc;
         w83877tf_global.regs[0x23] = 0xde;
         w83877tf_global.regs[0x24] = 0xfe;
