@@ -167,9 +167,7 @@ static void w83877tf_write_3fx(uint16_t port, uint8_t val, void *p)
                 case 0x3f0: /*Enable/index register*/
                 if (val == 0xaa)
                 {
-                        fdc_remove();
-                        if (w83877tf->enable_regs && w83877tf->regs[0x20] >= 0x40)
-                                fdc_add();
+                        fdc_3f1_enable(1);
                         w83877tf->enable_regs = 0;
                 }
                 else if (!w83877tf->enable_regs)
@@ -180,7 +178,7 @@ static void w83877tf_write_3fx(uint16_t port, uint8_t val, void *p)
                         /*The FDC conflicts with the 3fx config registers, so disable
                           it when enabling config registers*/
                         if (w83877tf->enable_regs)
-                                fdc_remove();
+                                fdc_3f1_enable(0);
                 }
                 else
                         w83877tf->index = val;
