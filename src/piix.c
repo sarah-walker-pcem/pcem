@@ -8,6 +8,7 @@
 #include "ibm.h"
 #include "ide.h"
 #include "ide_sff8038i.h"
+#include "keyboard_at.h"
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
@@ -17,6 +18,8 @@
 
 static uint8_t card_piix[256], card_piix_ide[256];
 static sff_busmaster_t piix_busmaster[2];
+static uint8_t piix_rc = 0;
+static void (*piix_nb_reset)();
 
 void piix_write(int func, int addr, uint8_t val, void *priv)
 {
@@ -140,7 +143,28 @@ uint8_t piix_read(int func, int addr, void *priv)
 }
 
 
-void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
+uint8_t piix_rc_read(uint16_t port, void *p)
+{
+        return piix_rc;
+}
+
+void piix_rc_write(uint16_t port, uint8_t val, void *p)
+{
+        if (val & 4)
+        {
+                if (val & 2) /*Hard reset*/
+                {
+                        piix_nb_reset();
+                        keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
+                        ide_reset_devices();
+                }
+                resetx86();
+        }
+
+        piix_rc = val & ~4;
+}
+
+void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
 {
         pci_add_specific(card, piix_read, piix_write, NULL);
         
@@ -190,4 +214,7 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d)
         ide_sec_disable();
         
         pic_init_elcrx();
+
+        io_sethandler(0x0cf9, 0x0001, piix_rc_read, NULL, NULL, piix_rc_write, NULL, NULL, NULL);
+        piix_nb_reset = nb_reset;
 }

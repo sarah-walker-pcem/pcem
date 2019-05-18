@@ -142,3 +142,8 @@ void i430hx_init()
         card_i430hx[0x65] = card_i430hx[0x66] = card_i430hx[0x67] = 0x02;
         card_i430hx[0x68] = 0x11;
 }
+
+void i430hx_reset()
+{
+        i430hx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
+}

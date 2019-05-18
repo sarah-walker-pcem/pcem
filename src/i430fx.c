@@ -119,23 +119,6 @@ uint8_t i430fx_read(int func, int addr, void *priv)
         return card_i430fx[addr];
 }
 
-static uint8_t trc = 0;
-
-void i430fx_trc_write(uint16_t port, uint8_t val, void *p)
-{
-        if ((val & 4) && !(trc & 4))
-        {
-                if (val & 2) /*Hard reset*/
-                {
-                        i430fx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
-                        keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
-                }
-                resetx86();
-        }
-                
-        trc = val;
-}
-
 void i430fx_init()
 {
         pci_add_specific(0, i430fx_read, i430fx_write, NULL);
@@ -158,6 +141,9 @@ void i430fx_init()
         card_i430fx[0x72] = 0x02;
 //        card_i430fx[0x74] = 0x0e;
 //        card_i430fx[0x78] = 0x23;
+}
 
-        io_sethandler(0x0cf9, 0x0001, NULL, NULL, NULL, i430fx_trc_write, NULL, NULL, NULL);
+void i430fx_reset()
+{
+        i430fx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
 }

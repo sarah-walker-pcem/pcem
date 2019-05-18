@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "ibm.h"
+#include "ide.h"
 #include "io.h"
 #include "keyboard_at.h"
 #include "mem.h"
@@ -134,10 +135,11 @@ void i430lx_trc_write(uint16_t port, uint8_t val, void *p)
                 {
                         i430lx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
                         keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
+                        ide_reset_devices();
                 }
                 resetx86();
         }
-                
+
         trc = val;
 }
 

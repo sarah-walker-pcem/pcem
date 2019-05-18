@@ -824,6 +824,7 @@ void callbackide(int ide_board)
                 if (ide->type == IDE_NONE)
                 {
                         ide->cylinder=0xFFFF;
+                        ide->error = 0xff;
                         atapi->stop();
                 }
                 if (IDE_DRIVE_IS_CDROM(ide_other))
@@ -835,6 +836,7 @@ void callbackide(int ide_board)
                 if (ide_other->type == IDE_NONE)
                 {
                         ide_other->cylinder=0xFFFF;
+                        ide_other->error = 0xff;
                         atapi->stop();
                 }
 //                pclog("Reset callback\n");
@@ -1279,6 +1281,30 @@ void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size, v
         ide_bus_master_write_data = write_data;
         ide_bus_master_set_irq = set_irq;
         ide_bus_master_p = p;
+}
+
+void ide_reset_devices()
+{
+        if (ide_drives[0].type != IDE_NONE || ide_drives[1].type != IDE_NONE)
+        {
+                timer_set_delay_u64(&ide_timer[0], 500*IDE_TIME);
+                ide_drives[0].reset = ide_drives[1].reset = 1;
+                ide_drives[0].atastat = ide_drives[1].atastat = BUSY_STAT;
+                if (ide_drives[0].type != IDE_NONE)
+                        cur_ide[0] = 0;
+                else
+                        cur_ide[0] = 1;
+        }
+        if (ide_drives[2].type != IDE_NONE || ide_drives[3].type != IDE_NONE)
+        {
+                timer_set_delay_u64(&ide_timer[1], 500*IDE_TIME);
+                ide_drives[2].reset = ide_drives[3].reset = 1;
+                ide_drives[2].atastat = ide_drives[3].atastat = BUSY_STAT;
+                if (ide_drives[2].type != IDE_NONE)
+                        cur_ide[1] = 2;
+                else
+                        cur_ide[1] = 3;
+        }
 }
 
 device_t ide_device =

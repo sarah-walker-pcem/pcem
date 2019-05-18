@@ -675,7 +675,7 @@ void at_endeavor_init()
         pci_slot(0xf);
         pci_slot(0x10);
         i430fx_init();
-        piix_init(7, 0xd, 0xe, 0xf, 0x10);
+        piix_init(7, 0xd, 0xe, 0xf, 0x10, i430fx_reset);
         pc87306_init(0x2e);
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
@@ -687,7 +687,7 @@ void at_pb570_init()
         pci_slot(0x11);
         pci_slot(0x13);
         i430fx_init();
-        piix_init(7, 0x11, 0x13, 0xb, 0x8);
+        piix_init(7, 0x11, 0x13, 0xb, 0x8, i430fx_reset);
         pc87306_init(0x2e);
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
@@ -701,7 +701,7 @@ void at_zappa_init()
         pci_slot(0xf);
         pci_slot(0x10);
         i430fx_init();
-        piix_init(7, 0xd, 0xf, 0xe, 0x10);
+        piix_init(7, 0xd, 0xf, 0xe, 0x10, i430fx_reset);
         pc87306_init(0x2e);
         intel_zappa_init();
         device_add(&intel_flash_bxt_ami_device);
@@ -716,7 +716,7 @@ void at_p55va_init()
         pci_slot(0x0A);
         pci_slot(0x0B);
         i430vx_init();
-        piix_init(7, 0x08, 0x09, 0x0A, 0x0B);
+        piix_init(7, 0x08, 0x09, 0x0A, 0x0B, i430vx_reset);
         fdc37c932fr_init();
         device_add(&intel_flash_bxt_device);
 }
@@ -730,7 +730,7 @@ void at_p55tvp4_init()
         pci_slot(0x0A);
         pci_slot(0x09);
         i430vx_init();
-        piix_init(7, 0x0C, 0x0B, 0x0A, 0x09);
+        piix_init(7, 0x0C, 0x0B, 0x0A, 0x09, i430vx_reset);
         w83877f_init(0x3f0, 0x87);
         device_add(&intel_flash_bxt_device);
 }
@@ -744,7 +744,7 @@ void at_i430vx_init()
         pci_slot(0x13);
         pci_slot(0x14);
         i430vx_init();
-        piix_init(7, 18, 17, 20, 19);
+        piix_init(7, 18, 17, 20, 19, i430vx_reset);
         um8669f_init();
         device_add(&intel_flash_bxt_device);
 }
@@ -758,7 +758,7 @@ void at_p55t2p4_init()
         pci_slot(0x0A);
         pci_slot(0x09);
         i430hx_init();
-        piix_init(7, 0x0C, 0x0B, 0x0A, 0x09);
+        piix_init(7, 0x0C, 0x0B, 0x0A, 0x09, i430hx_reset);
         w83877f_init(0x3f0, 0x87);
         device_add(&intel_flash_bxt_device);
 }
