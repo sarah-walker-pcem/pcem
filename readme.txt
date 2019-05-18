@@ -189,6 +189,14 @@ ROM files needed:
 ltxt\27c64.bin
 
 
+Zenith Data SupersPort (1987)
+
+8088 at 8 MHz, 128-640kb RAM. Built-in LCD video is not currently emulated
+
+ROM files needed:
+ zdsupers/z184m v3.1d.10d
+
+
 Xi8088 (2015)
 
 8088 at 4.77 - 13.33 MHz, 640kb RAM
@@ -239,6 +247,16 @@ ROM files needed:
  pc3086\c000.bin
 
 
+Amstrad PPC512/640 (1988)
+
+8086 at 8 MHz, 512-640kb RAM, built-in CGA driving plasma display.
+
+ROM files needed:
+ ppc512/40107.v2
+ ppc512/40108.v2
+ ppc512/40109.bin
+
+
 Olivetti M24 (1984)
 
 8086 at 8 MHz, 128kb-640kb RAM, built-in enhanced CGA (supports 640x400x2).
@@ -250,7 +268,7 @@ ROM files needed:
 
 Sinclair PC200/Amstrad PC20 (1988)
 
-8086 at 8 MHz, 512-640kb RAM, built-in CGA.
+8086 at 8 MHz, 512-640kb RAM, built-in CGA. Video supports TV out (50 HZ PAL).
 
 ROM files needed:
  pc200\pc20v2.0
@@ -310,6 +328,15 @@ Award 286 clone (1990)
 
 ROM files needed:
  award286\award.bin
+
+
+Bull Micral 45 (1988)
+
+286 at 12 MHz, 1-6MB RAM.
+
+ROM files needed:
+ bull_micral_45/even.fil
+ bull_micral_45/odd.fil
 
 
 Commodore PC30-III (1988)
@@ -439,6 +466,15 @@ PCem maps [Fn] to right-Ctrl and right-Alt.
 ROM files needed :
  t3100e\t3100e_font.bin
  t3100e\t3100e.rom
+
+
+Tulip AT Compact (198x)
+
+286 at MHz, 640kb - 16 MB RAM
+
+ROM files needed :
+ tulip_tc7/tc7be.bin
+ tulip_tc7/tc7bo.bin
 
 
 
@@ -623,17 +659,65 @@ ROM files needed :
  ibmps2_m70_type3/70-a_odd.bin
 
 
+Packard Bell PB410A (1993)
+
+486 at 25-120 MHz, Am5x86 at 133-160 MHz, Cx5x86 at 100-133 MHz, Pentium Overdrive
+at 63-83 MHz. 1-64MB RAM. Built-in HT-216 video.
+
+ROM files needed:
+ pb410a/PB410A.080337.4ABF.U25.bin
+
+
+
 Pentium based :
+
+
+ASUS P/I-P55TVP4 (1996)
+
+Pentium at 75-200 MHz, Pentium MMX at 166-233 MHz, Mobile Pentium MMX at 120-300 MHz,
+Cyrix 6x86 at PR90(80 MHz)-PR200(200 MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-
+PR400(285 MHz), IDT WinChip at 75-240 MHz, IDT Winchip 2 at 200-240 MHz, IDT Winchip
+2A at 200-233 MHz, AMD K6 at 166-300 MHz, AMD K6-2 at 233 to 300 (AFR-66) MHz. 1-128MB
+RAM.
+
+ROM files needed:
+ p55tvp4/tv5i0204.awd
+
+
+ASUS P/I-P55T2P4 (1996)
+
+Pentium at 75-200 MHz, Pentium MMX at 166-233 MHz, Mobile Pentium MMX at 120-300 MHz,
+Cyrix 6x86 at PR90(80 MHz)-PR200(200 MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-
+PR400(285 MHz), IDT WinChip at 75-240 MHz, IDT Winchip 2 at 200-240 MHz, IDT Winchip
+2A at 200-233 MHz, AMD K6 at 166-300 MHz, AMD K6-2 at 233 to 300 (AFR-66) MHz. 1-512MB
+RAM.
+
+ROM files needed:
+ p55t2p4/0207_j2.bin
 
 
 Award 430VX PCI (1996)
 
 Pentium at 75-200 MHz, Pentium MMX at 166-233 MHz, Mobile Pentium MMX at 120-300 MHz,
 Cyrix 6x86 at PR90(80 MHz)-PR200(200 MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-
-PR400(285 MHz), IDT WinChip at 75-240 MHz. 1-128MB RAM (PCem allows up to 256).
+PR400(285 MHz), IDT WinChip at 75-240 MHz, IDT Winchip 2 at 200-240 MHz, IDT Winchip
+2A at 200-233 MHz, AMD K6 at 166-300 MHz, AMD K6-2 at 233 to 300 (AFR-66) MHz. 1-128MB
+RAM.
 
 ROM files needed:
  430vx\55xwuq0e.bin
+
+
+Epox P55-VA (1997)
+
+Pentium at 75-200 MHz, Pentium MMX at 166-233 MHz, Mobile Pentium MMX at 120-300 MHz,
+Cyrix 6x86 at PR90(80 MHz)-PR200(200 MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-
+PR400(285 MHz), IDT WinChip at 75-240 MHz, IDT Winchip 2 at 200-240 MHz, IDT Winchip
+2A at 200-233 MHz, AMD K6 at 166-300 MHz, AMD K6-2 at 233 to 300 (AFR-66) MHz. 1-128MB
+RAM.
+
+ROM files needed:
+ p55va/va021297.bin
 
 
 Intel Advanced/EV (Endeavor) (1995)
@@ -686,6 +770,23 @@ ROM files needed:
  pb570/1007by0r.bio
  pb570/1007by0r.bi1
  pb570/gd5430.bin
+
+
+
+Super Socket 7 :
+
+FIC VA-503+ (1998)
+
+AMD K6 at 166-300 MHz, AMD K6-2 at 233-550 MHz, AMD K6-III at 400-450 MHz, AMD K6-2+
+at 450-550 MHz, AMD K6-III+ at 400-500 MHz, Pentium at 75-200 MHz, Pentium MMX at
+166-233 MHz, Mobile Pentium MMX at 120-300 MHz, Cyrix 6x86 at PR90(80 MHz)-PR200(200
+MHz), Cyrix 6x86MX/MII at PR166(133 MHz)-PR400(285 MHz), IDT WinChip at 75-240 MHz,
+IDT WinChip2 at 200-250 MHz, IDT Winchip 2A at PR200(200 MHz)-PR300(250 MHz). 1-512MB
+RAM.
+
+ROM files needed:
+ fic_va503p/je4333.bin
+
 
 
 PCem emulates the following graphics adapters :
@@ -953,6 +1054,9 @@ Paradise EGA. Can use external video card.
 Amstrad PC2086/PC3086
 Paradise PVGA1. An early SVGA clone with 256kb VRAM. Can use external video card.
 
+Amstrad PPC512/640
+CGA/MDA outputting to 640x200 plasma display. Can use external video card.
+
 Elonex PC-425X
 Trident TGUI9400CXi with 512kb VRAM.
 
@@ -973,6 +1077,9 @@ CGA with double-res text modes and a 640x400 mode. I haven't seen a dump of the 
 ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd
 as it is 14-line instead of 16-line.
 
+Packard Bell PB410A
+Headland HT-216. Can use external video card.
+
 Packard Bell PB520R
 Cirrus Logic GD-5434. Can use external video card.
 
@@ -980,7 +1087,8 @@ Packard Bell PB570
 Cirrus Logic GD-5430. Can use external video card.
 
 Sinclair PC200
-CGA. Can use external video card.
+CGA. Can use external video card. Internal video can output to a TV, as this is a UK machine
+this runs at 50 Hz.
 
 Tandy 1000
 Clone of PCjr video. Widely supported in 80s games.
@@ -1189,254 +1297,3 @@ Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've 
 
 Software tested:
 
-CP/M-86 1.0
-
-PC-DOS 1.0
-MS-DOS 2.11
-MS-DOS 3.30
-PC-DOS 4.01
-MS-DOS 5.0
-PC-DOS 5.02
-MS-DOS 6.0
-MS-DOS 6.22
-
-Windows 1.03
-Windows/286 2.11
-Windows/386 2.11
-Windows 3.0
-Windows 3.1
-Windows for Workgroups 3.11
-Windows 95
-Windows 95 OSR2
-Windows 98
-Windows 98 SE
-Windows ME
-
-Windows NT 3.51
-Windows NT 4
-Windows 2000
-Windows XP
-
-OS/2 v1.0
-OS/2 v1.1
-OS/2 v1.2
-OS/2 v1.3
-OS/2 v2.1
-OS/2 Warp 3
-OS/2 Warp 4
-
-Corel Linux 1.2
-Red Hat Linux 7.1 (Seawolf)
-
-Solaris 2.4
-Solaris 2.5.1
-
-BeOS 5 Personal
-BeOS 5 Professional
-
-DESQview/X
-
-GEM Desktop 3.11
-
-After Dark 3.0
-Aldus PageMaker 5.0
-Ami Pro 3.0
-Borland C++ 3.1
-Cubasis v1.13
-Fasttracker 2.08
-Firefox 12.0
-Internet Explorer 5 (windows 3.x and 9x versions tested)
-Microsoft Basic 4.0
-Microsoft Office 95
-Microsoft Visual C++ 6.0 Standard Edition
-Microsoft Word 1.1
-Microsoft Word for Windows 1.1
-Microsoft Word for Windows 2.0c
-Microsoft Word 6.0
-Microsoft Works 2.0
-Microsoft Works for Windows 3.0
-Netscape Communicator 4.73
-Norton Utilities 8.0
-PC Paintbrush v1.05
-Photoshop v3.0.4
-Tantrakr
-
-Actua Soccer
-Age of Empires
-Aladdin
-All New World of Lemmings
-American McGee's Alice
-Area 51
-Arkanoid
-Ascendancy
-Battlezone
-Beyond Castle Wolfenstein
-Bio Menace (shareware)
-Blood 2
-Boppin'
-Brix (shareware)
-Bust-A-Move 2
-Caesar 3
-Cannon Fodder 2
-CART: Precision Racing
-Civilization II
-Clusterball
-Command and Conquer : Red Alert
-Commando
-Commandos: Behind Enemy Lines
-Commandos: Beyond the Call of Duty
-Conquest
-Corridor 7
-Curse of Monkey Island
-Dawn Patrol
-Desert Strike
-Dethkarz
-Deus Ex
-Discworld II
-Digger
-Dogz
-Doom (v1.2 registered)
-Doom II (v1.666)
-Double Dragon
-Down Under Dan
-Drakan : Order of the Flame
-Dreamweb
-Duke Nukem 3D (shareware)
-Dune
-Dune II
-Dungeon Keeper 2
-Earthworm Jim (DOS)
-Epic Pinball (v2.1 registered)
-Final Fantasy VII
-Forsaken
-Frogger
-G-Police
-Grand Theft Auto
-Hardwar
-Heartlight
-Heretic
-Heretic II
-Hitch-Hiker's Guide to the Galaxy
-Hocus Pocus (v1.1 shareware)
-House of the Dead 2
-Incoming
-Jazz Jackrabbit
-Jazz Jackrabbit 2
-Joe Montana Football
-Jumpman
-King's Quest
-King's Quest II
-Lemmings
-Lemmings 2 : The Tribes
-Little Big Adventure 2
-Lotus III
-Mageslayer
-Maniac Mansion
-Maniac Mansion (enhanced)
-Microsoft Arcade
-Monkey Island 2
-Monster Bash (shareware)
-Monster Truck Madness
-Mortal Kombat II
-Mortal Kombat Trilogy
-Necrodome
-Need for Speed II SE
-Nerf Arena Blast
-Network Q RAC Rally
-NFL Blitz
-NFL Blitz 2000
-Pax Corpus
-Pinball Fantasies
-Pinball Illusions
-Police Quest II
-Power Drive
-Prince of Persia
-Pro Pinball : Big Race USA
-Pro Pinball : The Web
-Pro Pinball : Timeshock
-Puyo Puyo Tsu
-Quake (v1.01 registered)
-Quake 2
-Quake III Arena
-Railroad Tycoon II
-Rampage World Tour
-Rayman
-Redline Racer (1998 US release)
-Revolution X
-Rollercoaster Tycoon
-Rollo and the Brush Bros
-Screamer
-Screamer 2
-Secret of Monkey Island
-SimCity 2000 (DOS)
-SimCity 2000 (OS/2)
-SimCity 3000 (Linux)
-Slipstream 5000
-Sonic R
-Space Strike
-Star Trek : Starfleet Command
-Star Trek : Voyager - Elite Force
-Stargunner
-Super Zaxxon
-Syndicate
-System Shock
-Take No Prisoners
-Terminal Velocity
-TFX
-The Humans
-The Lion King
-The Ultimate Doom (v1.9)
-Theme Hospital
-Theme Park (floppy version)
-Tomb Raider
-Tomb Raider II
-Tony Hawks Pro Skater 2
-Total Annihilation
-Transport Tycoon
-Transport Tycoon Deluxe
-Turok : Dinosaur Hunter
-Turrican II
-UFO : Enemy Unknown (v1.2)
-Unreal
-Unreal Tournament
-Wacky Wheels
-Warcraft II
-Wargasm
-Wetrix
-Wing Commander 3
-Wing Commander Privateer
-Wolfenstein 3D (v1.4 registered)
-Worms
-Worms United
-Worms 2
-X-Wing (floppy version)
-Zak McKracken
-Zone 66 (shareware)
-Zone Raiders
-
-Cascada - Cronologia
-Complex - Cyboman 2
-EMF - Verses
-Future Crew - Second Reality
-Gazebo - Cyboman!
-Hornet - Introjr
-Logic Design - Fashion
-Orange - X14
-Renaissance - Amnesia
-Skull - Putrefaction
-Tran - Ambience
-Tran - Luminati
-Tran - Timeless
-Triton - Crystal Dream
-Triton - Crystal Dream II
-Ultraforce - Coldcut
-Ultraforce - Vectdemo
-Witan - Witan House
-
-BeebInC v0.99f
-Fellow v0.33
-KGen98 v0.4b
-PaCifiST v0.45
-SNES9x v0.96
-vMac v1.9.1.1
-ZSNES v0.800
