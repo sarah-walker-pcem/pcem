@@ -187,7 +187,7 @@ static inline void x87_ld_frstor(int reg)
         }
         else
         {
-                cpu_state.tag[reg] = TAG_VALID;
+                cpu_state.tag[reg] &= ~TAG_UINT64;
                 cpu_state.ST[reg] = x87_ld80();
         }
 }

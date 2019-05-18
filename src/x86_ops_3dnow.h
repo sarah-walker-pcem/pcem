@@ -20,7 +20,7 @@ static int opPREFETCH_a32(uint32_t fetchdat)
 static int opFEMMS(uint32_t fetchdat)
 {
         ILLEGAL_ON(!cpu_has_feature(CPU_FEATURE_MMX));
-        if (cr0 & 4)
+        if (cr0 & 0xc)
         {
                 x86_int(7);
                 return 1;

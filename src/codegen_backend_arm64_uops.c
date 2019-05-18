@@ -839,8 +839,9 @@ static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
 
 	host_arm64_branch_set_offset(branch_ptr, &block->data[block_pos]);
 
-	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[0] - (uintptr_t)&cpu_state);
-	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[4] - (uintptr_t)&cpu_state);
+	host_arm64_mov_imm(block, REG_TEMP, 0x01010101);
+	host_arm64_STR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[0] - (uintptr_t)&cpu_state);
+	host_arm64_STR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.tag[4] - (uintptr_t)&cpu_state);
 	host_arm64_STR_IMM_W(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
 	host_arm64_STRB_IMM(block, REG_WZR, REG_CPUSTATE, (uintptr_t)&cpu_state.ismmx - (uintptr_t)&cpu_state);
 

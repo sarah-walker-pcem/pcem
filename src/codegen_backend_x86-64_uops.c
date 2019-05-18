@@ -826,8 +826,8 @@ static int codegen_MMX_ENTER(codeblock_t *block, uop_t *uop)
         host_x86_CALL(block, x86_int);
         host_x86_JMP(block, codegen_exit_rout);
         *branch_offset = (uint32_t)((uintptr_t)&block_write_data[block_pos] - (uintptr_t)branch_offset) - 4;
-        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[0], 0);
-        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[4], 0);
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[0], 0x01010101);
+        host_x86_MOV32_ABS_IMM(block, &cpu_state.tag[4], 0x01010101);
         host_x86_MOV32_ABS_IMM(block, &cpu_state.TOP, 0);
         host_x86_MOV8_ABS_IMM(block, &cpu_state.ismmx, 1);
 

@@ -38,7 +38,7 @@ static int opEMMS(uint32_t fetchdat)
                 x86illegal();
                 return 1;
         }
-        if (cr0 & 4)
+        if (cr0 & 0xc)
         {
                 x86_int(7);
                 return 1;
