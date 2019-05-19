@@ -1,34 +1,22 @@
-PCem v14
+PCem v15
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v13.1:
+Changes since v14:
+- New machines added - Zenith Data SupersPort, Bull Micral 45, Tulip AT Compact, 
+  Amstrad PPC512/640, Packard Bell PB410A, ASUS P/I-P55TVP4, ASUS P/I-P55T2P4,
+  Epox P55-VA, FIC VA-503+
+- New graphics cards added - Image Manager 1024, Sigma Designs Color 400,
+  Trigem Korean VGA
+- Added emulation of AMD K6 family and IDT Winchip 2
+- New CPU recompiler. This provides several optimisations, and the new design allows
+  for greater portability and more scope for optimisation in the future
+- Experimental ARM and ARM64 host support
+- Read-only cassette emulation for IBM PC and PCjr
+- Numerous bug fixes
 
-- New machines added - Compaq Portable Plus, Compaq Portable II, Elonex PC-425X,
-  IBM PS/2 Model 70 (types 3 & 4), Intel Advanced/ZP, NCR PC4i, Packard Bell Legend 300SX,
-  Packard Bell PB520R, Packard Bell PB570, Thomson TO16 PC, Toshiba T1000, Toshiba T1200, Xi8088
-- New graphics cards added - ATI Korean VGA, Cirrus Logic CL-GD5429, Cirrus Logic CL-GD5430,
-  Cirrus Logic CL-GD5435, OAK OTI-037, Trident TGUI9400CXi
-- New network adapters added - Realtek RTL8029AS
-- Iomega Zip drive emulation
-- Added option for default video timing
-- Added dynamic low-pass filter for SB16/AWE32 DSP playback
-- Can select external video card on some systems with built-in video
-- Can use IDE hard drives up to 127 GB
-- Can now use 7 SCSI devices
-- Implemented CMPXCHG8B on Winchip. Can now boot Windows XP on Winchip processors
-- CD-ROM emulation on OS X
-- Tweaks to Pentium and 6x86 timing
-- Numerous bug fixes - fixes Wing Commander : Privateer, Wing Commander III, Wings of Fury,
-  Zone Raiders, NFL Blitz 2000, Joe Montana Football, SB16 with Earthworm Jim, SB16 with SimCity
-  2000, SB16 with Visual Player 2.0, AHA-1542C with Solaris 2.4, Voodoo 2 with FMV in Urban Chaos,
-  SB2.0 with Syndicate, floppy on early Linux kernels, clicking ADPCM sound playback, varying speed
-  in Desert Strike, keyboard hang on KMX-C-02, S3 video cards with Linux and OS/2 Warp, AudioPCI
-  hangs on Windows 2000/XP, OS/2 v2.0 on machines with remapped memory (eg PS/2), OS/2 v2.0 IO
-  performance with PS/2 ESDI, etc etc
-
-Thanks to darksabre76, dns2kv2, EluanCM, Greatpsycho, ja've, John Elliott, leilei and nerd73 for
-contributions towards this release.
+Thanks to dns2kv2, Greatpsycho, Greg V, John Elliott, Koutakun, leilei, Martin_Riarte,
+rene, Tale and Tux for contributions towards this release.
 
 
 PCem emulates the following machines:
@@ -1297,3 +1285,337 @@ Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've 
 
 Software tested:
 
+PC-DOS 1.0
+PC-DOS 2.10
+PC-DOS 3.30
+MS-DOS 3.30
+MS-DOS 3.31
+PC-DOS 4.0
+MS-DOS 4.01
+PC-DOS 5.02
+MS-DOS 6.22
+
+Windows 1.03
+Windows 2.03
+Windows/286 2.11
+Windows/386 2.11
+Windows 3.0
+Windows 3.1
+Windows for Workgroups 3.11
+Windows 95
+Windows 95 OSR2
+Windows 98SE
+Windows ME
+
+Windows NT 3.1
+Windows NT 3.51
+Windows NT 4 Workstation (SP6a)
+Windows 2000
+Windows XP
+
+OS/2 v1.0
+OS/2 v1.1
+OS/2 v1.2
+OS/2 v1.3
+OS/2 v2.1
+OS/2 Warp 3
+OS/2 Warp 4
+
+Corel Linux 1.2
+Red Hat Linux 7.1 (Seawolf)
+SuSE Linux 6.3
+Ubuntu 6.06.1
+
+BeOS 5.0 Personal Edition
+BeOS 5.0 Professional Edition
+
+CorelDRAW! v2.5 for OS/2
+Cubasis
+Fasttracker 2.08
+Lotus SmartSuite 97
+Microsoft Office 95
+Microsoft Word 1.1 for OS/2
+Microsoft Word 1.1 for Windows
+Microsoft Word 2.0
+Microsoft Word 6.1
+Microsoft Works for Windows 3.0
+Mozilla Firefox 1.5.0.5
+Visual Basic 4.0
+Winzip 6.2
+
+3-Demon
+Abuse
+Abuse (demo)
+Actua Soccer
+Age of Empires
+Aladdin
+Aladdin (demo)
+Alien Breed : Tower Assault (demo)
+Alien Carnage (shareware)
+Alien vs Predator
+All New World of Lemmings
+American McGee's Alice
+Apache (demo)
+Atomic Bomberman
+Backtrack (demo)
+Balls of Steel (demo)
+Battlezone
+Battlezone (1998)
+Battlezone II
+Big Red Racing
+Bio Menace (shareware)
+Blackthorne (demo)
+Blake Stone (shareware)
+Blast Doors
+Blood (demo)
+Blood 2
+Breakneck
+Brix (shareware)
+Bust-a-Move 2 : Arcade Edition
+Cannon Fodder 2
+Caesar III
+Captain Claw
+Carmageddon
+Carnivores 2
+Catacomb Abyss (demo)
+Carmageddon (demo)
+CD-MAN
+Charlie the Duck (demo)
+Clusterball
+Colin McRae Rally
+Colonization
+Command and Conquer (demo)
+Command and Conquer : Red Alert
+Commander Keen : Goodbye Galaxy
+Commander Keen : Invasion of the Vorticons
+Corridor 7
+Counter-Strike 2D
+Curse of Monkey Island
+Cyril Cyberpunk (demo)
+Dark Forces (demo)
+Dark Forces
+Dawn Patrol
+Death Rally
+Descent (v1.4)
+Descent (demo)
+Desert Strike
+Destruction Derby
+Destruction Derby (demo)
+Deus Ex
+Diablo
+Digger
+Discworld II
+Dogz
+Doom (v1.2)
+Doom (shareware)
+Doom II (v1.666)
+Doom II for Windows 95
+Dune
+Dune II
+Duke Nukem (shareware)
+Duke Nukem 3D (shareware)
+DX-Ball 2
+Earthworm Jim (demo)
+Ecstatica
+Epic Pinball
+Epic Pinball (shareware)
+Eradicator
+Expendable
+Expendable (demo)
+Extreme Assault
+Final Fantasy VII
+Flashback (demo)
+Frogger
+Frogger (1998)
+Frontier : First Encounters
+Full Throttle (demo)
+G-Police
+Galactix
+GLQuake (v0.93)
+Gods (demo)
+Grand Theft Auto
+Grand Theft Auto 2
+Grim Fandango
+Half-Life (1.0.0.9)
+Heartlight (shareware)
+Heretic
+Heretic (demo)
+Hexen
+Hexen (demo)
+Hexen95
+Hocus Pocus (shareware)
+House of the Dead 2
+Hover!
+Incoming
+Indiana Jones and the Fate of Atlantis (demo)
+Indy Car Racing 2 (demo)
+Interstate 76 Nitro Riders
+Interstate 82
+Jazz Jackrabbit (shareware)
+Jazz Jackrabbit 2
+Jedi Knight
+Jumpman
+Kings Quest
+Kings Quest II
+Lamborghini American Challenge (demo)
+LBA 2
+Lemmings
+Lemmings (demo)
+Lemmings 2 : The Tribes
+Lemmings Paintball
+Lotus III
+Mageslayer
+Magic Carpet
+MDK
+MegaMan X (demo)
+Metal Gear Solid
+Microsoft Arcade
+Monster Bash (shareware)
+Mortal Kombat
+Mortal Kombat II
+Mortal Kombat Trilogy
+Moto Racer
+NASCAR Heat
+NBA Hangtime
+Need for Speed (demo)
+Need for Speed II SE
+Need for Speed III
+Nerf Arena Blast
+Network Q RAC Rally
+No One Lives Forever
+No One Lives Forever (tech demo)
+Oddworld : Abe's Oddysee
+Out of this World (demo)
+Panzer Dragoon
+Pinball Fantasies
+Pinball Illusions
+Populous : The Beginning
+Prince of Persia (demo)
+Prince of Persia 2 (demo)
+Pro Pinball : Big Race USA
+Pro Pinball : Timeshock!
+Pro Pinball : The Web
+Project X (demo)
+Psycho Pinball
+Quake (v1.01)
+Quake (shareware)
+Quake II
+Quake III Arena (1.27g)
+Quake III Arena (1.30)
+Radix (demo)
+Railroad Tycoon II (demo)
+Raptor (shareware)
+Rayman
+Realms of Chaos (shareware)
+Red Faction
+Resident Evil 2
+Return to Castle Wolfenstein (v1.32)
+Rise of the Triad (shareware)
+Road Rash
+Rogue Spear (demo)
+Rollcage (demo)
+Rollercoaster Tycoon
+Sam and Max Hit the Road (demo)
+Screamer
+Screamer 2 (demo)
+Screamer Rally (NOT 3DFX)
+Secret of Monkey Island (demo)
+Serious Sam
+Shadow Warrior (demo)
+Simcity 2000
+Simcity 2000 (demo)
+Simcity 2000 for OS/2 Warp
+SimCity 3000
+Simcopter
+Sonic 3 & Knuckles
+Speed Haste (demo)
+Star Trek Voyager : Elite Force
+Stargunner
+Street Racer (demo)
+Streets of Simcity
+Striker 95
+Super Angelo (demo)
+Superkarts
+Super Street Fighter 2 (demo)
+Syndicate
+Syndicate (demo)
+System Shock
+Tennis Elbow (demo)
+Terminal velocity
+Terminal Velocity (shareware)
+The Adventures of Captain Comic
+The Chaos Engine
+The Chaos Engine (demo)
+The Humans
+The Incredible Machine (demo)
+The Lion King
+The Lion King (demo)
+Thief II
+Theme Hospital
+Theme Hospital (demo)
+Theme Park
+Threat (demo)
+Tie Fighter (demo)
+Tomb Raider
+Tomb Raider (demo)
+Tomb Raider II
+Tomb Raider III
+Tony Hawk's Pro Skater 2
+Transport Tycoon
+Transport Tycoon Deluxe
+Turok (demo)
+Tyrian
+Tyrian (shareware)
+UFO : Enemy Unknown
+Ultimate Doom (v1.9)
+Unreal
+Unreal Gold
+Unreal Tournament
+Unreal Tournament (v436 GOTY)
+Virtual Pool (demo)
+Wacky Wheels
+Warcraft (demo)
+Warcraft II (demo)
+Wing Commander
+Wolfenstein 3D (v1.4)
+Wolfenstein 3D (shareware)
+World Cup 98
+Worms
+Worms (demo)
+Worms 2
+Worms World Party
+X-Com : Terror From The Deep
+X-Wing
+Z (demo)
+Z.A.R. (demo)
+Zone 66
+Zone 66 (shareware)
+
+Cascada - Cronologia
+Complex - Cyboman 2
+EMF - Verses
+Exceed - Heaven 7
+Future Crew - Second Reality
+Gazebo - Cyboman!
+KFMF - Dance, Move, Shake
+KFMF - Trip
+Logic Design - Fashion
+Orange - x14
+Renaissance - Amnesia
+Skull - Putre Faction
+Tran - Ambience
+Tran - Luminati
+Tran - Timeless
+Triton - Crystal Dream II
+Triton - Crystal Dream
+Ultraforce - Coldcut
+Ultraforce - Vector Demo
+
+BeebInC v0.99f
+Fellow v0.3.3
+KGen98 v0.4
+PaCifiST v0.45
+SNES9x v0.96
+UltraHLE v1.0.0
+vMac v0.1.9.1
+ZSNES v0.800c
