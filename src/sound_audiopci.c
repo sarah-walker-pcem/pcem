@@ -47,7 +47,8 @@ typedef struct es1371_t
                 uint32_t addr, addr_latch;
                 uint16_t count, size;
                 
-                uint16_t samp_ct, curr_samp_ct;
+                uint16_t samp_ct;
+                int curr_samp_ct;
                 
                 pc_timer_t timer; 
 		uint64_t latch;
@@ -579,8 +580,6 @@ static void es1371_outl(uint16_t port, uint32_t val, void *p)
                         case 0xc:
                         es1371->dac[0].size = val & 0xffff;
                         es1371->dac[0].count = val >> 16;
-                        if (es1371->dac[0].count)
-                                es1371->dac[0].count -= 4;
                         break;
                         
                         case 0xd:
@@ -1101,16 +1100,13 @@ static void es1371_poll(void *p)
                         es1371_next_sample_filtered(es1371, 0, es1371->dac[0].f_pos ? 16 : 0);
                         es1371->dac[0].f_pos = (es1371->dac[0].f_pos + 1) & 1;
 
-                        es1371->dac[0].curr_samp_ct++;
-                        if (es1371->dac[0].curr_samp_ct == es1371->dac[0].samp_ct)
+                        es1371->dac[0].curr_samp_ct--;
+                        if (es1371->dac[0].curr_samp_ct < 0)
                         {
 //                                pclog("DAC1 IRQ\n");
                                 es1371->int_status |= INT_STATUS_DAC1;
                                 es1371_update_irqs(es1371);
-                        }
-                        if (es1371->dac[0].curr_samp_ct > es1371->dac[0].samp_ct)
-                        {
-                                es1371->dac[0].curr_samp_ct = 0;
+                                es1371->dac[0].curr_samp_ct = es1371->dac[0].samp_ct;
                         }
                 }
         }
@@ -1134,16 +1130,14 @@ static void es1371_poll(void *p)
                         es1371_next_sample_filtered(es1371, 1, es1371->dac[1].f_pos ? 16 : 0);
                         es1371->dac[1].f_pos = (es1371->dac[1].f_pos + 1) & 1;
 
-                        es1371->dac[1].curr_samp_ct++;
-                        if (es1371->dac[1].curr_samp_ct == es1371->dac[1].samp_ct)
+                        es1371->dac[1].curr_samp_ct--;
+                        if (es1371->dac[1].curr_samp_ct < 0)
                         {
-//                                es1371->dac[1].curr_samp_ct = 0;
 //                                pclog("DAC2 IRQ\n");
                                 es1371->int_status |= INT_STATUS_DAC2;
                                 es1371_update_irqs(es1371);
+                                es1371->dac[1].curr_samp_ct = es1371->dac[1].samp_ct;
                         }
-                        if (es1371->dac[1].curr_samp_ct > es1371->dac[1].samp_ct)
-                                es1371->dac[1].curr_samp_ct = 0;
                 }
         }
 }
