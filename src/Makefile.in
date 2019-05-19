@@ -140,8 +140,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__pcem_SOURCES_DIST = 386.c 386_common.c 386_dynarec.c \
-	386_dynarec_ops.c 808x.c acc2036.c acc2168.c acc3221.c \
-	acer386sx.c ali1429.c amstrad.c cassette.c cbm_io.c \
+	386_dynarec_ops.c 808x.c 82091aa.c acc2036.c acc2168.c \
+	acc3221.c acer386sx.c ali1429.c amstrad.c cassette.c cbm_io.c \
 	cdrom-image.cc cdrom-null.c cmd640.c codegen.c \
 	codegen_accumulate.c codegen_allocator.c codegen_block.c \
 	codegen_ir.c codegen_ops.c codegen_ops_3dnow.c \
@@ -159,12 +159,12 @@ am__pcem_SOURCES_DIST = 386.c 386_common.c 386_dynarec.c \
 	codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c \
 	config.c cpu.c cpu_tables.c dells200.c device.c disc.c \
 	disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c \
-	fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
-	hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c \
-	ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
-	jim.c joystick_ch_flightstick_pro.c joystick_standard.c \
-	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
-	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	fdc37c665.c fdc37c93x.c fdd.c fdi2raw.c gameport.c hdd.c \
+	hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430hx.c \
+	i430vx.c ide.c ide_atapi.c ide_sff8038i.c intel.c \
+	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
+	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
+	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c lpt_dac.c \
 	lpt_dss.c mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c \
 	model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c \
@@ -278,13 +278,14 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @OS_WINDOWS_TRUE@	pcem-wx-sdl2-display-win.$(OBJEXT)
 am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_common.$(OBJEXT) \
 	pcem-386_dynarec.$(OBJEXT) pcem-386_dynarec_ops.$(OBJEXT) \
-	pcem-808x.$(OBJEXT) pcem-acc2036.$(OBJEXT) \
-	pcem-acc2168.$(OBJEXT) pcem-acc3221.$(OBJEXT) \
-	pcem-acer386sx.$(OBJEXT) pcem-ali1429.$(OBJEXT) \
-	pcem-amstrad.$(OBJEXT) pcem-cassette.$(OBJEXT) \
-	pcem-cbm_io.$(OBJEXT) pcem-cdrom-image.$(OBJEXT) \
-	pcem-cdrom-null.$(OBJEXT) pcem-cmd640.$(OBJEXT) \
-	pcem-codegen.$(OBJEXT) pcem-codegen_accumulate.$(OBJEXT) \
+	pcem-808x.$(OBJEXT) pcem-82091aa.$(OBJEXT) \
+	pcem-acc2036.$(OBJEXT) pcem-acc2168.$(OBJEXT) \
+	pcem-acc3221.$(OBJEXT) pcem-acer386sx.$(OBJEXT) \
+	pcem-ali1429.$(OBJEXT) pcem-amstrad.$(OBJEXT) \
+	pcem-cassette.$(OBJEXT) pcem-cbm_io.$(OBJEXT) \
+	pcem-cdrom-image.$(OBJEXT) pcem-cdrom-null.$(OBJEXT) \
+	pcem-cmd640.$(OBJEXT) pcem-codegen.$(OBJEXT) \
+	pcem-codegen_accumulate.$(OBJEXT) \
 	pcem-codegen_allocator.$(OBJEXT) pcem-codegen_block.$(OBJEXT) \
 	pcem-codegen_ir.$(OBJEXT) pcem-codegen_ops.$(OBJEXT) \
 	pcem-codegen_ops_3dnow.$(OBJEXT) \
@@ -319,12 +320,13 @@ am_pcem_OBJECTS = pcem-386.$(OBJEXT) pcem-386_common.$(OBJEXT) \
 	pcem-disc_fdi.$(OBJEXT) pcem-disc_img.$(OBJEXT) \
 	pcem-disc_sector.$(OBJEXT) pcem-dma.$(OBJEXT) \
 	pcem-esdi_at.$(OBJEXT) pcem-fdc.$(OBJEXT) \
-	pcem-fdc37c665.$(OBJEXT) pcem-fdd.$(OBJEXT) \
-	pcem-fdi2raw.$(OBJEXT) pcem-gameport.$(OBJEXT) \
-	pcem-hdd.$(OBJEXT) pcem-hdd_esdi.$(OBJEXT) \
-	pcem-hdd_file.$(OBJEXT) pcem-headland.$(OBJEXT) \
-	pcem-i430lx.$(OBJEXT) pcem-i430fx.$(OBJEXT) \
-	pcem-i430hx.$(OBJEXT) pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) \
+	pcem-fdc37c665.$(OBJEXT) pcem-fdc37c93x.$(OBJEXT) \
+	pcem-fdd.$(OBJEXT) pcem-fdi2raw.$(OBJEXT) \
+	pcem-gameport.$(OBJEXT) pcem-hdd.$(OBJEXT) \
+	pcem-hdd_esdi.$(OBJEXT) pcem-hdd_file.$(OBJEXT) \
+	pcem-headland.$(OBJEXT) pcem-i430lx.$(OBJEXT) \
+	pcem-i430fx.$(OBJEXT) pcem-i430hx.$(OBJEXT) \
+	pcem-i430vx.$(OBJEXT) pcem-ide.$(OBJEXT) \
 	pcem-ide_atapi.$(OBJEXT) pcem-ide_sff8038i.$(OBJEXT) \
 	pcem-intel.$(OBJEXT) pcem-intel_flash.$(OBJEXT) \
 	pcem-io.$(OBJEXT) pcem-jim.$(OBJEXT) \
@@ -640,11 +642,11 @@ WINDRES = $(shell $(WX_CONFIG_PATH) --rescomp)
 
 # resid-fp
 pcem_SOURCES = 386.c 386_common.c 386_dynarec.c 386_dynarec_ops.c \
-	808x.c acc2036.c acc2168.c acc3221.c acer386sx.c ali1429.c \
-	amstrad.c cassette.c cbm_io.c cdrom-image.cc cdrom-null.c \
-	cmd640.c codegen.c codegen_accumulate.c codegen_allocator.c \
-	codegen_block.c codegen_ir.c codegen_ops.c codegen_ops_3dnow.c \
-	codegen_ops_arith.c codegen_ops_branch.c \
+	808x.c 82091aa.c acc2036.c acc2168.c acc3221.c acer386sx.c \
+	ali1429.c amstrad.c cassette.c cbm_io.c cdrom-image.cc \
+	cdrom-null.c cmd640.c codegen.c codegen_accumulate.c \
+	codegen_allocator.c codegen_block.c codegen_ir.c codegen_ops.c \
+	codegen_ops_3dnow.c codegen_ops_arith.c codegen_ops_branch.c \
 	codegen_ops_fpu_arith.c codegen_ops_fpu_constant.c \
 	codegen_ops_fpu_loadstore.c codegen_ops_fpu_misc.c \
 	codegen_ops_mmx_arith.c codegen_ops_mmx_cmp.c \
@@ -658,12 +660,12 @@ pcem_SOURCES = 386.c 386_common.c 386_dynarec.c 386_dynarec_ops.c \
 	codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c \
 	config.c cpu.c cpu_tables.c dells200.c device.c disc.c \
 	disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c \
-	fdc37c665.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
-	hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c \
-	ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
-	jim.c joystick_ch_flightstick_pro.c joystick_standard.c \
-	joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
-	keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
+	fdc37c665.c fdc37c93x.c fdd.c fdi2raw.c gameport.c hdd.c \
+	hdd_esdi.c hdd_file.c headland.c i430lx.c i430fx.c i430hx.c \
+	i430vx.c ide.c ide_atapi.c ide_sff8038i.c intel.c \
+	intel_flash.c io.c jim.c joystick_ch_flightstick_pro.c \
+	joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c \
+	keyboard.c keyboard_amstrad.c keyboard_at.c keyboard_olim24.c \
 	keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c lpt_dac.c \
 	lpt_dss.c mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c \
 	model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c \
@@ -912,6 +914,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-386_dynarec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-386_dynarec_ops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-808x.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-82091aa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-acc2036.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-acc2168.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-acc3221.Po@am__quote@
@@ -991,6 +994,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-esdi_at.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc37c665.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdc37c93x.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-fdi2raw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcem-gameport.Po@am__quote@
@@ -1312,6 +1316,20 @@ pcem-808x.obj: 808x.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='808x.c' object='pcem-808x.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-808x.obj `if test -f '808x.c'; then $(CYGPATH_W) '808x.c'; else $(CYGPATH_W) '$(srcdir)/808x.c'; fi`
+
+pcem-82091aa.o: 82091aa.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-82091aa.o -MD -MP -MF $(DEPDIR)/pcem-82091aa.Tpo -c -o pcem-82091aa.o `test -f '82091aa.c' || echo '$(srcdir)/'`82091aa.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-82091aa.Tpo $(DEPDIR)/pcem-82091aa.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='82091aa.c' object='pcem-82091aa.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-82091aa.o `test -f '82091aa.c' || echo '$(srcdir)/'`82091aa.c
+
+pcem-82091aa.obj: 82091aa.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-82091aa.obj -MD -MP -MF $(DEPDIR)/pcem-82091aa.Tpo -c -o pcem-82091aa.obj `if test -f '82091aa.c'; then $(CYGPATH_W) '82091aa.c'; else $(CYGPATH_W) '$(srcdir)/82091aa.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-82091aa.Tpo $(DEPDIR)/pcem-82091aa.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='82091aa.c' object='pcem-82091aa.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-82091aa.obj `if test -f '82091aa.c'; then $(CYGPATH_W) '82091aa.c'; else $(CYGPATH_W) '$(srcdir)/82091aa.c'; fi`
 
 pcem-acc2036.o: acc2036.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-acc2036.o -MD -MP -MF $(DEPDIR)/pcem-acc2036.Tpo -c -o pcem-acc2036.o `test -f 'acc2036.c' || echo '$(srcdir)/'`acc2036.c
@@ -2124,6 +2142,20 @@ pcem-fdc37c665.obj: fdc37c665.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fdc37c665.c' object='pcem-fdc37c665.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdc37c665.obj `if test -f 'fdc37c665.c'; then $(CYGPATH_W) 'fdc37c665.c'; else $(CYGPATH_W) '$(srcdir)/fdc37c665.c'; fi`
+
+pcem-fdc37c93x.o: fdc37c93x.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdc37c93x.o -MD -MP -MF $(DEPDIR)/pcem-fdc37c93x.Tpo -c -o pcem-fdc37c93x.o `test -f 'fdc37c93x.c' || echo '$(srcdir)/'`fdc37c93x.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-fdc37c93x.Tpo $(DEPDIR)/pcem-fdc37c93x.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fdc37c93x.c' object='pcem-fdc37c93x.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdc37c93x.o `test -f 'fdc37c93x.c' || echo '$(srcdir)/'`fdc37c93x.c
+
+pcem-fdc37c93x.obj: fdc37c93x.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdc37c93x.obj -MD -MP -MF $(DEPDIR)/pcem-fdc37c93x.Tpo -c -o pcem-fdc37c93x.obj `if test -f 'fdc37c93x.c'; then $(CYGPATH_W) 'fdc37c93x.c'; else $(CYGPATH_W) '$(srcdir)/fdc37c93x.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcem-fdc37c93x.Tpo $(DEPDIR)/pcem-fdc37c93x.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fdc37c93x.c' object='pcem-fdc37c93x.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -c -o pcem-fdc37c93x.obj `if test -f 'fdc37c93x.c'; then $(CYGPATH_W) 'fdc37c93x.c'; else $(CYGPATH_W) '$(srcdir)/fdc37c93x.c'; fi`
 
 pcem-fdd.o: fdd.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcem_CFLAGS) $(CFLAGS) -MT pcem-fdd.o -MD -MP -MF $(DEPDIR)/pcem-fdd.Tpo -c -o pcem-fdd.o `test -f 'fdd.c' || echo '$(srcdir)/'`fdd.c
