@@ -37,7 +37,7 @@ void ati_eeprom_load(ati_eeprom_t *eeprom, char *fn, int type)
         f = nvrfopen(eeprom->fn, "rb");
         if (!f)
         {
-                memset(eeprom->data, 0, eeprom->type ? 512 : 128);
+                memset(eeprom->data, 0xff, eeprom->type ? 512 : 128);
                 return;
         }
         fread(eeprom->data, 1, eeprom->type ? 512 : 128, f);

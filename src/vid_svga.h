@@ -129,6 +129,11 @@ typedef struct svga_t
         void *p;
 
         uint8_t ksc5601_sbyte_mask;
+        
+        int vertical_linedbl;
+        
+        /*Used to implement CRTC[0x17] bit 2 hsync divisor*/
+        int hsync_divisor;
 } svga_t;
 
 extern int svga_init(svga_t *svga, void *p, int memsize, 

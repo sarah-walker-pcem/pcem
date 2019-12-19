@@ -582,6 +582,11 @@ void svga_poll(void *p)
                                 svga->ma = svga->maback;
                         }
                 }
+                svga->hsync_divisor = !svga->hsync_divisor;
+                
+                if (svga->hsync_divisor && (svga->crtc[0x17] & 4))
+                        return;
+
                 svga->vc++;
                 svga->vc &= 2047;
 
@@ -1296,7 +1301,10 @@ void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga)
                 if (xsize<64) xsize=656;
                 if (ysize<32) ysize=200;
 
-                updatewindowsize(xsize,ysize);
+                if (svga->vertical_linedbl)
+                        updatewindowsize(xsize,ysize*2);
+                else
+                        updatewindowsize(xsize,ysize);
         }
         if (vid_resize)
         {

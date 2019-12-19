@@ -300,6 +300,7 @@ enum
 	GFX_SIGMA400,	/*Sigma Designs Color 400 */
 	GFX_PGC,	/*Professional Graphics Controller */
 	GFX_IM1024,	/*Vermont Microsystems IM1024 */
+	GFX_EGAWONDER800, /*ATI EGA Wonder 800+*/
         GFX_MAX
 };
 
