@@ -1229,6 +1229,7 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
         svga_t *svga = (svga_t *)p;
         uint8_t temp, temp2, temp3, temp4;
         int readplane = svga->readplane;
+        uint32_t latch_addr = (addr << 2) & svga->decode_mask;
   
         cycles -= video_timing_read_b;
         cycles_lost += video_timing_read_b;
@@ -1253,15 +1254,24 @@ uint8_t svga_read_linear(uint32_t addr, void *p)
 
         addr &= svga->decode_mask;
         
+        if (latch_addr >= svga->vram_max)
+        {
+                svga->la = svga->lb = svga->lc = svga->ld = 0xff;
+        }
+        else
+        {
+                latch_addr &= svga->vram_mask;
+                svga->la = svga->vram[latch_addr];
+                svga->lb = svga->vram[latch_addr | 0x1];
+                svga->lc = svga->vram[latch_addr | 0x2];
+                svga->ld = svga->vram[latch_addr | 0x3];
+        }
+
         if (addr >= svga->vram_max)
                 return 0xff;
                 
         addr &= svga->vram_mask;
 
-        svga->la = svga->vram[addr];
-        svga->lb = svga->vram[addr | 0x1];
-        svga->lc = svga->vram[addr | 0x2];
-        svga->ld = svga->vram[addr | 0x3];
         if (svga->readmode)
         {
                 temp   = svga->la;
