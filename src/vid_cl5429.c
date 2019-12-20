@@ -15,7 +15,8 @@
 
 enum
 {
-        CL_TYPE_GD5429 = 0,
+        CL_TYPE_AVGA2 = 0,
+        CL_TYPE_GD5429,
         CL_TYPE_GD5430,
         CL_TYPE_GD5434
 };
@@ -73,7 +74,13 @@ typedef struct gd5429_t
         int mmio_vram_overlap;
         
         uint8_t sr10_read, sr11_read;
+
+        uint8_t latch_ext[4];
 } gd5429_t;
+
+#define GRB_X8_ADDRESSING (1 << 1)
+#define GRB_WRITEMODE_EXT (1 << 2)
+#define GRB_8B_LATCHES    (1 << 3)
 
 static void gd5429_mmio_write(uint32_t addr, uint8_t val, void *p);
 static void gd5429_mmio_writew(uint32_t addr, uint16_t val, void *p);
@@ -88,13 +95,15 @@ void gd5429_blt_write_l(uint32_t addr, uint32_t val, void *p);
 void gd5429_recalc_banking(gd5429_t *gd5429);
 void gd5429_recalc_mapping(gd5429_t *gd5429);
 
+uint8_t gd5429_read_linear(uint32_t addr, void *p);
+
 void gd5429_out(uint16_t addr, uint8_t val, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
         uint8_t old;
         
-        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1)) 
+        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1))
                 addr ^= 0x60;
 
 //        pclog("gd5429 out %04X %02X\n", addr, val);
@@ -143,7 +152,8 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 case 0x07:
                                 svga->set_reset_disabled = svga->seqregs[7] & 1;
                                 case 0x17:
-                                gd5429_recalc_mapping(gd5429);
+                                if (gd5429->type >= CL_TYPE_GD5429)
+                                        gd5429_recalc_mapping(gd5429);
                                 break;
                         }
                         return;
@@ -196,6 +206,8 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                 if (svga->gdcaddr > 8)
                 {
                         svga->gdcreg[svga->gdcaddr & 0x3f] = val;
+                        if (gd5429->type < CL_TYPE_GD5429 && (svga->gdcaddr > 0xb))
+                                return;
                         switch (svga->gdcaddr)
                         {
                                 case 0x09: case 0x0a: case 0x0b:
@@ -318,7 +330,7 @@ uint8_t gd5429_in(uint16_t addr, void *p)
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
 
-        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3d0) && !(svga->miscout & 1)) 
+        if (((addr & 0xfff0) == 0x3d0 || (addr & 0xfff0) == 0x3b0) && !(svga->miscout & 1))
                 addr ^= 0x60;
         
 //        if (addr != 0x3da) pclog("IN gd5429 %04X\n", addr);
@@ -343,6 +355,8 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                                 return ((svga->seqregs[6] & 0x17) == 0x12) ? 0x12 : 0x0f;
 
                                 case 0x17:
+                                if (gd5429->type < CL_TYPE_GD5429)
+                                        break;
                                 temp = svga->seqregs[0x17];
                                 temp &= ~(7 << 3);
                                 if (gd5429->type == CL_TYPE_GD5429)
@@ -395,6 +409,8 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                         case 0x27: /*ID*/
                         switch (gd5429->type)
                         {
+                                case CL_TYPE_AVGA2:
+                                return 0x18; /*AVGA2*/
                                 case CL_TYPE_GD5429:
                                 return 0x9c; /*GD5429*/
                                 case CL_TYPE_GD5430:
@@ -654,10 +670,10 @@ static void gd5429_write(uint32_t addr, uint8_t val, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
-//        pclog("gd5429_write : %05X %02X  ", addr, val);
+        
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
-//        pclog("%08X\n", addr);
+
         gd5429_write_linear(addr, val, p);
 }
 static void gd5429_writew(uint32_t addr, uint16_t val, void *p)
@@ -668,7 +684,7 @@ static void gd5429_writew(uint32_t addr, uint16_t val, void *p)
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
 
-        if (svga->writemode < 4)
+        if ((svga->writemode < 4) && !(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
                 svga_writew_linear(addr, val, svga);
         else
         {
@@ -684,7 +700,7 @@ static void gd5429_writel(uint32_t addr, uint32_t val, void *p)
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
 
-        if (svga->writemode < 4)
+        if ((svga->writemode < 4) && !(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
                 svga_writel_linear(addr, val, svga);
         else
         {
@@ -699,13 +715,10 @@ static uint8_t gd5429_read(uint32_t addr, void *p)
 {
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
-        uint8_t ret;
-//        pclog("gd5429_read : %05X ", addr);
+
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
-        ret = svga_read_linear(addr, &gd5429->svga);
-//        pclog("%08X %02X\n", addr, ret);  
-        return ret;      
+        return gd5429_read_linear(addr, gd5429);
 }
 static uint16_t gd5429_readw(uint32_t addr, void *p)
 {
@@ -714,7 +727,10 @@ static uint16_t gd5429_readw(uint32_t addr, void *p)
 
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
-        return svga_readw_linear(addr, &gd5429->svga);
+
+        if (!(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
+                return svga_readw_linear(addr, &gd5429->svga);
+        return gd5429_read_linear(addr, gd5429) | (gd5429_read_linear(addr+1, gd5429) << 8);
 }
 static uint32_t gd5429_readl(uint32_t addr, void *p)
 {
@@ -723,7 +739,11 @@ static uint32_t gd5429_readl(uint32_t addr, void *p)
 
         addr &= svga->banked_mask;
         addr = (addr & 0x7fff) + gd5429->bank[(addr >> 15) & 1];
-        return svga_readl_linear(addr, &gd5429->svga);
+
+        if (!(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
+                return svga_readl_linear(addr, &gd5429->svga);
+        return gd5429_read_linear(addr, gd5429) | (gd5429_read_linear(addr+1, gd5429) << 8) |
+                (gd5429_read_linear(addr+2, gd5429) << 16) | (gd5429_read_linear(addr+3, gd5429) << 24);
 }
 
 void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
@@ -731,7 +751,7 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         gd5429_t *gd5429 = (gd5429_t *)p;
         svga_t *svga = &gd5429->svga;
         uint8_t vala, valb, valc, vald, wm = svga->writemask;
-        int writemask2 = svga->writemask;
+        int writemask2 = svga->seqregs[2];
 
         cycles -= video_timing_write_b;
         cycles_lost += video_timing_write_b;
@@ -741,7 +761,9 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
 //        if (svga_output) pclog("Write LFB %08X %02X ", addr, val);
         if (!(svga->gdcreg[6] & 1)) 
                 svga->fullchange = 2;
-        if ((svga->chain4 || svga->fb_only) && (svga->writemode < 4))
+        if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
+                addr <<= 3;
+        else if ((svga->chain4 || svga->fb_only) && (svga->writemode < 4))
         {
                 writemask2 = 1 << (addr & 3);
                 addr &= ~3;
@@ -818,7 +840,6 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 else
                 {
 //                        pclog("Writemode 4 : %X ", addr);
-                        addr <<= 1;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
                         if (val & svga->seqregs[2] & 0x80)
@@ -891,7 +912,6 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 else
                 {
 //                        pclog("Writemode 5 : %X ", addr);
-                        addr <<= 1;
                         svga->changedvram[addr >> 12] = changeframecount;
 //                        pclog("%X %X  %02x\n", addr, val, svga->gdcreg[0xb]);
                         if (svga->seqregs[2] & 0x80)
@@ -914,10 +934,27 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 break;
                 
                 case 1:
-                if (writemask2 & 1) svga->vram[addr]       = svga->la;
-                if (writemask2 & 2) svga->vram[addr | 0x1] = svga->lb;
-                if (writemask2 & 4) svga->vram[addr | 0x2] = svga->lc;
-                if (writemask2 & 8) svga->vram[addr | 0x3] = svga->ld;
+                if (svga->gdcreg[0xb] & GRB_WRITEMODE_EXT)
+                {
+                        if (writemask2 & 0x80) svga->vram[addr]       = svga->la;
+                        if (writemask2 & 0x40) svga->vram[addr | 0x1] = svga->lb;
+                        if (writemask2 & 0x20) svga->vram[addr | 0x2] = svga->lc;
+                        if (writemask2 & 0x10) svga->vram[addr | 0x3] = svga->ld;
+                        if (svga->gdcreg[0xb] & GRB_8B_LATCHES)
+                        {
+                                if (writemask2 & 0x08) svga->vram[addr | 0x4] = gd5429->latch_ext[0];
+                                if (writemask2 & 0x04) svga->vram[addr | 0x5] = gd5429->latch_ext[1];
+                                if (writemask2 & 0x02) svga->vram[addr | 0x6] = gd5429->latch_ext[2];
+                                if (writemask2 & 0x01) svga->vram[addr | 0x7] = gd5429->latch_ext[3];
+                        }
+                }
+                else
+                {
+                        if (writemask2 & 1) svga->vram[addr]       = svga->la;
+                        if (writemask2 & 2) svga->vram[addr | 0x1] = svga->lb;
+                        if (writemask2 & 4) svga->vram[addr | 0x2] = svga->lc;
+                        if (writemask2 & 8) svga->vram[addr | 0x3] = svga->ld;
+                }
                 break;
                 case 0:
                 if (svga->gdcreg[3] & 7) 
@@ -1055,13 +1092,92 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
         }
 }
 
+uint8_t gd5429_read_linear(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+        uint8_t temp, temp2, temp3, temp4;
+        int readplane = svga->readplane;
+        uint32_t latch_addr = (addr << 2) & svga->decode_mask;
+        
+        cycles -= video_timing_read_b;
+        cycles_lost += video_timing_read_b;
+
+        egareads++;
+
+        if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
+                addr <<= 3;
+        else if (svga->chain4 || svga->fb_only)
+        {
+                addr &= svga->decode_mask;
+                if (addr >= svga->vram_max)
+                        return 0xff;
+                return svga->vram[addr & svga->vram_mask];
+        }
+        else if (svga->chain2_read)
+        {
+                readplane = (readplane & 2) | (addr & 1);
+                addr &= ~1;
+                addr <<= 2;
+        }
+        else
+                addr<<=2;
+
+        addr &= svga->decode_mask;
+
+        if (latch_addr >= svga->vram_max)
+        {
+                svga->la = svga->lb = svga->lc = svga->ld = 0xff;
+                if (svga->gdcreg[0xb] & GRB_8B_LATCHES)
+                        gd5429->latch_ext[0] = gd5429->latch_ext[1] = gd5429->latch_ext[2] = gd5429->latch_ext[3] = 0xff;
+        }
+        else
+        {
+                latch_addr &= svga->vram_mask;
+                svga->la = svga->vram[latch_addr];
+                svga->lb = svga->vram[latch_addr | 0x1];
+                svga->lc = svga->vram[latch_addr | 0x2];
+                svga->ld = svga->vram[latch_addr | 0x3];
+                if (svga->gdcreg[0xb] & GRB_8B_LATCHES)
+                {
+                        gd5429->latch_ext[0] = svga->vram[latch_addr | 0x4];
+                        gd5429->latch_ext[1] = svga->vram[latch_addr | 0x5];
+                        gd5429->latch_ext[2] = svga->vram[latch_addr | 0x6];
+                        gd5429->latch_ext[3] = svga->vram[latch_addr | 0x7];
+                }
+        }
+
+        if (addr >= svga->vram_max)
+                return 0xff;
+
+        addr &= svga->vram_mask;
+
+        if (svga->readmode)
+        {
+                temp   = svga->la;
+                temp  ^= (svga->colourcompare & 1) ? 0xff : 0;
+                temp  &= (svga->colournocare & 1)  ? 0xff : 0;
+                temp2  = svga->lb;
+                temp2 ^= (svga->colourcompare & 2) ? 0xff : 0;
+                temp2 &= (svga->colournocare & 2)  ? 0xff : 0;
+                temp3  = svga->lc;
+                temp3 ^= (svga->colourcompare & 4) ? 0xff : 0;
+                temp3 &= (svga->colournocare & 4)  ? 0xff : 0;
+                temp4  = svga->ld;
+                temp4 ^= (svga->colourcompare & 8) ? 0xff : 0;
+                temp4 &= (svga->colournocare & 8)  ? 0xff : 0;
+                return ~(temp | temp2 | temp3 | temp4);
+        }
+//printf("Read %02X %04X %04X\n",vram[addr|svga->readplane],addr,svga->readplane);
+        return svga->vram[addr | readplane];
+}
+
 static void gd5429_writeb_linear(uint32_t addr, uint8_t val, void *p)
 {
         svga_t *svga = (svga_t *)p;
         gd5429_t *gd5429 = (gd5429_t *)svga->p;
 
-//        pclog("gd5429_writeb : %08X %02X\n", addr, val);
-        if (svga->writemode < 4)
+        if ((svga->writemode < 4) && !(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
                 svga_write_linear(addr, val, svga);
         else
                 gd5429_write_linear(addr, val & 0xff, gd5429);
@@ -1071,8 +1187,7 @@ static void gd5429_writew_linear(uint32_t addr, uint16_t val, void *p)
         svga_t *svga = (svga_t *)p;
         gd5429_t *gd5429 = (gd5429_t *)svga->p;
 
-//        pclog("gd5429_writew : %08X %04X\n", addr, val);
-        if (svga->writemode < 4)
+        if ((svga->writemode < 4) && !(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
                 svga_writew_linear(addr, val, svga);
         else
         {
@@ -1085,8 +1200,7 @@ static void gd5429_writel_linear(uint32_t addr, uint32_t val, void *p)
         svga_t *svga = (svga_t *)p;
         gd5429_t *gd5429 = (gd5429_t *)svga->p;
 
-//        pclog("gd5429_writel : %08X %08X %i\n", addr, val, svga->writemode);
-        if (svga->writemode < 4)
+        if ((svga->writemode < 4) && !(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
                 svga_writel_linear(addr, val, svga);
         else
         {
@@ -1096,7 +1210,36 @@ static void gd5429_writel_linear(uint32_t addr, uint32_t val, void *p)
                 gd5429_write_linear(addr+3, val >> 24, gd5429);
         }
 }
-        
+
+static uint8_t gd5429_readb_linear(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        if (!(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
+                return svga_read_linear(addr, &gd5429->svga);
+        return gd5429_read_linear(addr, gd5429);
+}
+static uint16_t gd5429_readw_linear(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        if (!(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
+                return svga_readw_linear(addr, &gd5429->svga);
+        return gd5429_read_linear(addr, gd5429) | (gd5429_read_linear(addr+1, gd5429) << 8);
+}
+static uint32_t gd5429_readl_linear(uint32_t addr, void *p)
+{
+        gd5429_t *gd5429 = (gd5429_t *)p;
+        svga_t *svga = &gd5429->svga;
+
+        if (!(svga->gdcreg[0xb] & (GRB_X8_ADDRESSING | GRB_8B_LATCHES)))
+                return svga_readl_linear(addr, &gd5429->svga);
+        return gd5429_read_linear(addr, gd5429) | (gd5429_read_linear(addr+1, gd5429) << 8) |
+                (gd5429_read_linear(addr+2, gd5429) << 16) | (gd5429_read_linear(addr+3, gd5429) << 24);
+}
+
 
 void gd5429_start_blit(uint32_t cpu_dat, int count, void *p)
 {
@@ -1685,13 +1828,16 @@ static void *cl_init(int type, char *fn, int pci_card)
         memset(gd5429, 0, sizeof(gd5429_t));
         
         vram_size = device_get_config_int("memory");
-        gd5429->vram_mask = (vram_size << 20) - 1;
+        if (vram_size >= 256)
+                gd5429->vram_mask = (vram_size << 10) - 1;
+        else
+                gd5429->vram_mask = (vram_size << 20) - 1;
         
         gd5429->type = type;
 
         rom_init(&gd5429->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
-        svga_init(&gd5429->svga, gd5429, vram_size << 20,
+        svga_init(&gd5429->svga, gd5429, (vram_size >= 256) ? (vram_size << 10) : (vram_size << 20),
                    gd5429_recalctimings,
                    gd5429_in, gd5429_out,
                    gd5429_hwcursor_draw,
@@ -1701,9 +1847,15 @@ static void *cl_init(int type, char *fn, int pci_card)
         mem_mapping_set_p(&gd5429->svga.mapping, gd5429);
 
         mem_mapping_add(&gd5429->mmio_mapping, 0, 0, gd5429_mmio_read, gd5429_mmio_readw, gd5429_mmio_readl, gd5429_mmio_write, gd5429_mmio_writew, gd5429_mmio_writel,  NULL, 0, gd5429);
-        mem_mapping_add(&gd5429->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear,  NULL, 0, svga);
+        mem_mapping_add(&gd5429->linear_mapping, 0, 0, gd5429_readb_linear, gd5429_readw_linear, gd5429_readl_linear, gd5429_writeb_linear, gd5429_writew_linear, gd5429_writel_linear,  NULL, 0, svga);
 
         io_sethandler(0x03c0, 0x0020, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
+        if (type == CL_TYPE_AVGA2)
+        {
+                io_sethandler(0x0102, 0x0001, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
+                io_sethandler(0x46e8, 0x0002, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
+                svga->decode_mask = svga->vram_mask;
+        }
 
         svga->hwcursor.yoff = 32;
         svga->hwcursor.xoff = 0;
@@ -1741,6 +1893,10 @@ static void *cl_init(int type, char *fn, int pci_card)
 }
 
 
+static void *avga2_cbm_sl386sx_init()
+{
+        return cl_init(CL_TYPE_AVGA2, "cbm_sl386sx25/c000.rom", -1);
+}
 static void *gd5429_init()
 {
         return cl_init(CL_TYPE_GD5429, "5429.vbi", -1);
@@ -1805,6 +1961,33 @@ void gd5429_add_status_info(char *s, int max_len, void *p)
         svga_add_status_info(s, max_len, &gd5429->svga);
 }
 
+static device_config_t avga2_config[] =
+{
+        {
+                .name = "memory",
+                .description = "Memory size",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "256 kB",
+                                .value = 256
+                        },
+                        {
+                                .description = "512 kB",
+                                .value = 512
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 512
+        },
+        {
+                .type = -1
+        }
+};
+
 static device_config_t gd5429_config[] =
 {
         {
@@ -1856,6 +2039,19 @@ static device_config_t gd5434_config[] =
         {
                 .type = -1
         }
+};
+
+device_t avga2_cbm_sl386sx_device =
+{
+        "AVGA2 (Commodore SL386SX-25)",
+        0,
+        avga2_cbm_sl386sx_init,
+        gd5429_close,
+        gd5430_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        avga2_config
 };
 
 device_t gd5429_device =

@@ -1008,6 +1008,13 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x1ffff;
                 return 1;
+
+                case ROM_CBM_SL386SX25:
+                f = romfopen("cbm_sl386sx25/f000.rom", "rb");
+                if (!f) break;
+                romfread(rom, 0x10000, 1, f);
+                fclose(f);
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

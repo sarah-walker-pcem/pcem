@@ -54,6 +54,7 @@
 #include "ps1.h"
 #include "ps2.h"
 #include "ps2_mca.h"
+#include "scamp.h"
 #include "scat.h"
 #include "serial.h"
 #include "sio.h"
@@ -96,6 +97,7 @@ void ps2_model_55sx_init();
 void   ps2_model_70_init();
 void   ps2_model_80_init();
 void        at_neat_init();
+void       at_scamp_init();
 void        at_scat_init();
 void      at_scatsx_init();
 void   at_acer386sx_init();
@@ -184,6 +186,7 @@ MODEL models[] =
         {"[386SX] AMA-932J",              ROM_AMA932J,          "ama932j",        { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_HAS_IDE,                          512, 8192, 128,    at_headland_init, NULL},
         {"[386SX] AMI 386SX clone",       ROM_AMI386SX,         "ami386",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                           512,16384, 128,    at_headland_init, NULL},
         {"[386SX] Amstrad MegaPC",        ROM_MEGAPC,           "megapc",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_DISABLE_HW|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,             1,   16,   1,     at_wd76c10_init, NULL},
+        {"[386SX] Commodore SL386SX-25",  ROM_CBM_SL386SX25,    "cbm_sl386sx25",  { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,               1024,16384, 512,       at_scamp_init, NULL},
         {"[386SX] DTK 386SX clone",       ROM_DTK386,           "dtk386",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                           512,16384, 128,        at_neat_init, NULL},
         {"[386SX] Epson PC AX3",          ROM_EPSON_PCAX3,      "epson_pcax3",    { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT,                                         256,15872, 128,             at_init, NULL},
         {"[386SX] IBM PS/1 model 2121",   ROM_IBMPS1_2121,      "ibmps1_2121",    { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                  1,   16,   1,      ps1_m2121_init, NULL},
@@ -565,6 +568,12 @@ void at_neat_init()
 {
         at_init();
         neat_init();
+}
+
+void at_scamp_init()
+{
+        at_init();
+        scamp_init();
 }
 
 void at_scat_init()

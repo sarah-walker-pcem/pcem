@@ -38,7 +38,7 @@ jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c joysti
 keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c lpt_dac.c lpt_dss.c \
 mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c mvp3.c \
 neat.c nmi.c nvr.c olivetti_m24.c opti495.c paths.c pc.c pc87306.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c \
-ps2_nvr.c nvr_tc8521.c pzx.c rom.c rtc.c rtc_tc8521.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
+ps2_nvr.c nvr_tc8521.c pzx.c rom.c rtc.c rtc_tc8521.c scamp.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 scsi_zip.c serial.c sio.c sis496.c sl82c460.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c \
 sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c \
 sound_sb.c sound_sb_dsp.c sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c \

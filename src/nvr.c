@@ -347,6 +347,7 @@ void loadnvr()
 		case ROM_PB410A:           f = nvrfopen("pb410a.nvr",          "rb"); nvrmask = 127; break;
 		case ROM_BULL_MICRAL_45:   f = nvrfopen("bull_micral_45.nvr",  "rb"); break;
                 case ROM_FIC_VA503P:       f = nvrfopen("fic_va503p.nvr",      "rb"); nvrmask = 127; break;
+                case ROM_CBM_SL386SX25:    f = nvrfopen("cbm_sl386sx25.nvr",   "rb"); nvrmask = 127; break;
                 
                 default: return;
         }
@@ -445,6 +446,7 @@ void savenvr()
  		case ROM_PB410A:       	   f = nvrfopen("pb410a.nvr",          "wb"); break;
 		case ROM_BULL_MICRAL_45:   f = nvrfopen("bull_micral_45.nvr",  "wb"); break;
                 case ROM_FIC_VA503P:       f = nvrfopen("fic_va503p.nvr",      "wb"); break;
+                case ROM_CBM_SL386SX25:    f = nvrfopen("cbm_sl386sx25.nvr",   "wb"); break;
                 
                 default: return;
         }

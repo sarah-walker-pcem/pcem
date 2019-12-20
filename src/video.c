@@ -130,6 +130,7 @@ static video_timings_t timing_pc200    = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_m24      = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_pvga1a   = {VIDEO_ISA, 6, 8,16, 6, 8,16};
 static video_timings_t timing_wd90c11  = {VIDEO_ISA, 3, 3, 6, 5, 5,10};
+static video_timings_t timing_avga2    = {VIDEO_ISA, 3, 3, 6, 5, 5,10};
 static video_timings_t timing_oti067   = {VIDEO_ISA, 6, 8,16, 6, 8,16};
 static video_timings_t timing_vga      = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_ps1_svga = {VIDEO_ISA, 6, 8,16, 6, 8,16};
@@ -242,6 +243,9 @@ device_t *video_card_getdevice(int card, int romset)
                 
                 case ROM_PB520R:
                 return &gd5434_pb520r_device;
+                
+                case ROM_CBM_SL386SX25:
+                return &avga2_cbm_sl386sx_device;
         }
         return video_cards[card].device;
 }
@@ -365,6 +369,7 @@ int video_is_mda()
                 case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
+                case ROM_CBM_SL386SX25:
                 return 0;
         }
         return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_MDA;
@@ -411,6 +416,7 @@ int video_is_cga()
                 case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
+                case ROM_CBM_SL386SX25:
                 return 0;
         }
         return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_CGA;
@@ -449,6 +455,7 @@ int video_is_ega_vga()
                 case ROM_PB410A:
                 case ROM_PB570:
                 case ROM_PB520R:
+                case ROM_CBM_SL386SX25:
                 return 1;
         }
         return (video_cards[video_old_to_new(gfxcard)].flags & VIDEO_FLAG_TYPE_MASK) == VIDEO_FLAG_TYPE_SPECIAL;
@@ -613,6 +620,10 @@ void video_updatetiming()
 
                         case ROM_PB520R:
                         timing = &timing_pb520r;
+                        break;
+
+                        case ROM_CBM_SL386SX25:
+                        timing = &timing_avga2;
                         break;
                 }
                 
@@ -812,6 +823,10 @@ void video_init()
                         svga_set_override(svga_get_pri(), 1);
                         break;
                 }
+                return;
+
+                case ROM_CBM_SL386SX25:
+                device_add(&avga2_cbm_sl386sx_device);
                 return;
         }
         device_add(video_cards[video_old_to_new(gfxcard)].device);

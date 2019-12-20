@@ -252,7 +252,8 @@ enum
         ROM_PPC512,
 	ROM_BULL_MICRAL_45,
 	ROM_FIC_VA503P,
-	
+        ROM_CBM_SL386SX25,
+
         ROM_MAX
 };
 
