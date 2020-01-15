@@ -592,11 +592,19 @@ void svga_poll(void *p)
 
                 if (svga->vc == svga->split)
                 {
-//                        pclog("VC split\n");
-                        svga->ma = svga->maback = 0;
-                        svga->sc = 0;
-                        if (svga->attrregs[0x10] & 0x20) 
-                                svga->scrollcache = 0;
+                        int ret = 1;
+                        
+                        if (svga->line_compare)
+                                ret = svga->line_compare(svga);
+                                
+                        if (ret)
+                        {
+//                               pclog("VC split\n");
+                                svga->ma = svga->maback = 0;
+                                svga->sc = 0;
+                                if (svga->attrregs[0x10] & 0x20)
+                                        svga->scrollcache = 0;
+                        }
                 }
                 if (svga->vc == svga->dispend)
                 {

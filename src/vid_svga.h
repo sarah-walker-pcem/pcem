@@ -123,6 +123,11 @@ typedef struct svga_t
         
         void (*vblank_start)(struct svga_t *svga);
         
+        /*Called when VC=R18 and friends. If this returns zero then MA resetting
+          is skipped. Matrox Mystique in Power mode reuses this counter for
+          vertical line interrupt*/
+        int (*line_compare)(struct svga_t *svga);
+        
         /*If set then another device is driving the monitor output and the SVGA
           card should not attempt to display anything */
         int override;

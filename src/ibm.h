@@ -302,6 +302,8 @@ enum
 	GFX_PGC,	/*Professional Graphics Controller */
 	GFX_IM1024,	/*Vermont Microsystems IM1024 */
 	GFX_EGAWONDER800, /*ATI EGA Wonder 800+*/
+	GFX_MYSTIQUE,   /*Matrox Mystique*/
+
         GFX_MAX
 };
 
