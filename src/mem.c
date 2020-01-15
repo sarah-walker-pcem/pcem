@@ -1486,6 +1486,9 @@ void mem_alloc()
         mem_a20_key = 2;
         mem_a20_alt = 0;
         mem_a20_recalc();
+
+        purgable_page_list_head = 0;
+        purgeable_page_count = 0;
 }
 
 void mem_reset_page_blocks()
