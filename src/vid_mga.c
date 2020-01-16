@@ -882,9 +882,18 @@ static void mystique_recalc_mapping(mystique_t *mystique)
                 return;
         }
 
-        mem_mapping_set_addr(&mystique->ctrl_mapping,  mystique->ctrl_base,    0x4000);
-        mem_mapping_set_addr(&mystique->lfb_mapping,   mystique->lfb_base,   0x800000);
-        mem_mapping_set_addr(&mystique->iload_mapping, mystique->iload_base, 0x800000);
+        if (mystique->ctrl_base)
+                mem_mapping_set_addr(&mystique->ctrl_mapping,  mystique->ctrl_base,    0x4000);
+        else
+                mem_mapping_disable(&mystique->ctrl_mapping);
+        if (mystique->lfb_base)
+                mem_mapping_set_addr(&mystique->lfb_mapping,   mystique->lfb_base,   0x800000);
+        else
+                mem_mapping_disable(&mystique->lfb_mapping);
+        if (mystique->iload_base)
+                mem_mapping_set_addr(&mystique->iload_mapping, mystique->iload_base, 0x800000);
+        else
+                mem_mapping_disable(&mystique->iload_mapping);
 
         if (mystique->pci_regs[0x41] & 1)
         {
