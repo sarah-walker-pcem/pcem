@@ -214,4 +214,43 @@ void thread_sleep(int t)
 {
 	usleep(t * 1000);
 }
+
+
+typedef struct pt_mutex_t
+{
+        pthread_mutex_t mutex;
+} pt_mutex_t;
+
+mutex_t *thread_create_mutex(void)
+{
+        pt_mutex_t *mutex = malloc(sizeof(pt_mutex_t));
+        
+        pthread_mutex_init(&mutex->mutex, NULL);
+        
+        return mutex;
+
+}
+
+void thread_lock_mutex(mutex_t *_mutex)
+{
+        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+        
+        pthread_mutex_lock(&mutex->mutex);
+}
+
+void thread_unlock_mutex(mutex_t *_mutex)
+{
+        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+        
+        pthread_mutex_unlock(&mutex->mutex);
+}
+
+void thread_destroy_mutex(mutex_t *_mutex)
+{
+        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+
+        pthread_mutex_destroy(&mutex->mutex);
+
+        free(mutex);
+}
 #endif
