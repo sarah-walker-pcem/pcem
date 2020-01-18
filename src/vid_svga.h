@@ -77,6 +77,7 @@ typedef struct svga_t
         int linepos, vslines, linecountff, oddeven;
         int con, cursoron, blink;
         int scrollcache;
+        int char_width;
         
         int firstline, lastline;
         int firstline_draw, lastline_draw;

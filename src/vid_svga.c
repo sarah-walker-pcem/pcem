@@ -418,13 +418,14 @@ void svga_recalctimings(svga_t *svga)
         
         svga->linedbl = svga->crtc[9] & 0x80;
         svga->rowcount = svga->crtc[9] & 31;
+        svga->char_width = (svga->seqregs[1] & 1) ? 8 : 9;
         if (svga->recalctimings_ex) 
                 svga->recalctimings_ex(svga);
 
         if (svga->vblankstart < svga->dispend)
                 svga->dispend = svga->vblankstart;
 
-        crtcconst = (svga->seqregs[1] & 1) ? (svga->clock * 8.0) : (svga->clock * 9.0);
+        crtcconst = svga->clock * svga->char_width;
 
         disptime  = svga->htotal;
         _dispontime = svga->hdisp_time;
@@ -670,7 +671,7 @@ void svga_poll(void *p)
 //                        pclog("%i %i %i\n", svga->video_res_x, svga->video_res_y, svga->lowres);
                         if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) /*Text mode*/
                         {
-                                svga->video_res_x /= (svga->seqregs[1] & 1) ? 8 : 9;
+                                svga->video_res_x /= svga->char_width;
                                 svga->video_res_y /= (svga->crtc[9] & 31) + 1;
                                 svga->video_bpp = 0;
                         }
