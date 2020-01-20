@@ -1098,13 +1098,18 @@ uint8_t gd5429_read_linear(uint32_t addr, void *p)
         svga_t *svga = &gd5429->svga;
         uint8_t temp, temp2, temp3, temp4;
         int readplane = svga->readplane;
-        uint32_t latch_addr = (addr << 2) & svga->decode_mask;
+        uint32_t latch_addr;
         
         cycles -= video_timing_read_b;
         cycles_lost += video_timing_read_b;
 
         egareads++;
 
+        if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
+                latch_addr = (addr << 3) & svga->decode_mask;
+        else
+                latch_addr = (addr << 2) & svga->decode_mask;
+        
         if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
                 addr <<= 3;
         else if (svga->chain4 || svga->fb_only)
