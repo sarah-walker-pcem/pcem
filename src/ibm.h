@@ -303,6 +303,7 @@ enum
 	GFX_IM1024,	/*Vermont Microsystems IM1024 */
 	GFX_EGAWONDER800, /*ATI EGA Wonder 800+*/
 	GFX_MYSTIQUE,   /*Matrox Mystique*/
+	GFX_AVGA2,      /*Acumos AVGA2 / Cirrus Logic CL-GD5402*/
 
         GFX_MAX
 };

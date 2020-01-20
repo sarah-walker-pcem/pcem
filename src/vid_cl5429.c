@@ -1886,6 +1886,10 @@ static void *cl_init(int type, char *fn, int pci_card)
 }
 
 
+static void *avga2_init()
+{
+        return cl_init(CL_TYPE_AVGA2, "avga2vram.vbi", -1);
+}
 static void *avga2_cbm_sl386sx_init()
 {
         return cl_init(CL_TYPE_AVGA2, "cbm_sl386sx25/c000.rom", -1);
@@ -1911,6 +1915,10 @@ static void *gd5434_pb520r_init()
         return cl_init(CL_TYPE_GD5434, "pb520r/gd5434.bin", 3);
 }
 
+static int avga2_available()
+{
+        return rom_present("avga2vram.vbi");
+}
 static int gd5429_available()
 {
         return rom_present("5429.vbi");
@@ -2032,6 +2040,19 @@ static device_config_t gd5434_config[] =
         {
                 .type = -1
         }
+};
+
+device_t avga2_device =
+{
+        "AVGA2 / Cirrus Logic GD5402",
+        0,
+        avga2_init,
+        gd5429_close,
+        avga2_available,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        avga2_config
 };
 
 device_t avga2_cbm_sl386sx_device =
