@@ -165,6 +165,8 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                                 temp = 0x7D;
                         else            
                                 temp = 0x6D;
+                        if (hasfpu)
+                                temp |= 0x02;
                 }
                 else if ((romset == ROM_ATARIPC3) && (keyboard_xt.pb & 0x80))
                 {
@@ -209,7 +211,7 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                                         temp = 6;
                         }
                         else
-                                temp = 0xD;
+                                temp = hasfpu ? 0xf : 0xd;
                 }
                 temp |= (ppispeakon ? 0x20 : 0);
                 if (keyboard_xt.tandy)

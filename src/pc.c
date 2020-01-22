@@ -7,6 +7,7 @@
 #include "ali1429.h"
 #include "cdrom-ioctl.h"
 #include "cdrom-image.h"
+#include "cpu.h"
 #include "disc.h"
 #include "disc_img.h"
 #include "mem.h"
@@ -709,6 +710,8 @@ void loadconfig(char *fn)
         romset = model_getromset();
         cpu_manufacturer = config_get_int(CFG_MACHINE, NULL, "cpu_manufacturer", 0);
         cpu = config_get_int(CFG_MACHINE, NULL, "cpu", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "fpu", "none");
+        fpu_type = fpu_get_type(model, cpu_manufacturer, cpu, p);
         cpu_use_dynarec = config_get_int(CFG_MACHINE, NULL, "cpu_use_dynarec", 0);
         cpu_waitstates = config_get_int(CFG_MACHINE, NULL, "cpu_waitstates", 0);
                 
@@ -899,6 +902,7 @@ void saveconfig(char *fn)
         config_set_string(CFG_MACHINE, NULL, "model", model_get_internal_name());
         config_set_int(CFG_MACHINE, NULL, "cpu_manufacturer", cpu_manufacturer);
         config_set_int(CFG_MACHINE, NULL, "cpu", cpu);
+        config_set_string(CFG_MACHINE, NULL, "fpu", (char *)fpu_get_internal_name(model, cpu_manufacturer, cpu, fpu_type));
         config_set_int(CFG_MACHINE, NULL, "cpu_use_dynarec", cpu_use_dynarec);
         config_set_int(CFG_MACHINE, NULL, "cpu_waitstates", cpu_waitstates);
         

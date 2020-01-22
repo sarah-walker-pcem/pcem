@@ -7,6 +7,7 @@
 #include "pci.h"
 #include "codegen.h"
 
+int fpu_type;
 uint32_t cpu_features;
 
 static int cpu_turbo_speed, cpu_nonturbo_speed;
@@ -125,10 +126,59 @@ void cpu_set_edx()
         EDX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
 }
 
+int fpu_get_type(int model, int manu, int cpu, const char *internal_name)
+{
+        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        const FPU *fpus = cpu_s->fpus;
+        int fpu_type = fpus[0].type;
+        int c = 0;
+        
+        while (fpus[c].internal_name)
+        {
+                if (!strcmp(internal_name, fpus[c].internal_name))
+                        fpu_type = fpus[c].type;
+                c++;
+        }
+        
+        return fpu_type;
+}
+
+const char *fpu_get_internal_name(int model, int manu, int cpu, int type)
+{
+        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        const FPU *fpus = cpu_s->fpus;
+        int c = 0;
+
+        while (fpus[c].internal_name)
+        {
+                if (fpus[c].type == type)
+                        return fpus[c].internal_name;
+                c++;
+        }
+
+        return fpus[0].internal_name;
+}
+
+const char *fpu_get_name_from_index(int model, int manu, int cpu, int c)
+{
+        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        const FPU *fpus = cpu_s->fpus;
+        
+        return fpus[c].name;
+}
+
+int fpu_get_type_from_index(int model, int manu, int cpu, int c)
+{
+        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        const FPU *fpus = cpu_s->fpus;
+
+        return fpus[c].type;
+}
+
 void cpu_set()
 {
         CPU *cpu_s;
-        
+
         if (!models[model].cpu[cpu_manufacturer].cpus)
         {
                 /*CPU is invalid, set to default*/
@@ -143,7 +193,8 @@ void cpu_set()
         is8086   = (cpu_s->cpu_type > CPU_8088);
         is386    = (cpu_s->cpu_type >= CPU_386SX);
         is486    = (cpu_s->cpu_type >= CPU_i486SX) || (cpu_s->cpu_type == CPU_486SLC || cpu_s->cpu_type == CPU_486DLC);
-        hasfpu   = (cpu_s->cpu_type >= CPU_i486DX);
+        hasfpu   = (fpu_type != FPU_NONE);
+
          cpu_iscyrix = (cpu_s->cpu_type == CPU_486SLC || cpu_s->cpu_type == CPU_486DLC || cpu_s->cpu_type == CPU_Cx486S || cpu_s->cpu_type == CPU_Cx486DX || cpu_s->cpu_type == CPU_Cx5x86 || cpu_s->cpu_type == CPU_Cx6x86 || cpu_s->cpu_type == CPU_Cx6x86MX || cpu_s->cpu_type == CPU_Cx6x86L || cpu_s->cpu_type == CPU_CxGX1);
         cpu_16bitbus = (cpu_s->cpu_type == CPU_286 || cpu_s->cpu_type == CPU_386SX || cpu_s->cpu_type == CPU_486SLC);
         if (cpu_s->multi) 

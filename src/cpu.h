@@ -2,6 +2,7 @@
 #define _CPU_H_
 
 extern int cpu, cpu_manufacturer;
+extern int fpu_type;
 
 /*808x class CPUs*/
 #define CPU_8088 0
@@ -60,10 +61,27 @@ extern int timing_jmp_rm, timing_jmp_pm, timing_jmp_pm_gate;
 
 extern int timing_misaligned;
 
+enum
+{
+        FPU_NONE,
+        FPU_8087,
+        FPU_287,
+        FPU_387,
+        FPU_BUILTIN
+};
+
+typedef struct
+{
+        const char *name;
+        const char *internal_name;
+        const int type;
+} FPU;
+
 typedef struct
 {
         char name[32];
         int cpu_type;
+        const FPU *fpus;
         int speed;
         int rspeed;
         int multi;
@@ -170,5 +188,10 @@ void cpu_set_turbo(int turbo);
 int cpu_get_speed();
 
 extern int has_vlb;
+
+int fpu_get_type(int model, int manu, int cpu, const char *internal_name);
+const char *fpu_get_internal_name(int model, int manu, int cpu, int type);
+const char *fpu_get_name_from_index(int model, int manu, int cpu, int c);
+int fpu_get_type_from_index(int model, int manu, int cpu, int c);
 
 #endif

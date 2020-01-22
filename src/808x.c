@@ -1104,6 +1104,8 @@ static void rep(int fv)
 static int inhlt=0;
 static int skipnextprint=0;
 
+#include "8087.h"
+
 void execx86(int cycs)
 {
         uint8_t temp,temp2;
@@ -2945,10 +2947,78 @@ void execx86(int cycs)
                         AL=readmemb(ds+addr);
                         cycles-=11;
                         break;
-                        case 0xD9: case 0xDA: case 0xDB: case 0xDD: /*ESCAPE*/
-                        case 0xDC: case 0xDE: case 0xDF: case 0xD8:
+                        
+                        case 0xd8:
                         fetchea();
-                        geteab();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_d8_a16[rmdat >> 3](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xd9:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_d9_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xda:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_da_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xdb:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_db_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xdc:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_dc_a16[rmdat >> 3](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xdd:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_dd_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xde:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_de_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
+                        break;
+                        case 0xdf:
+                        fetchea();
+                        if (hasfpu)
+                        {
+                                uint16_t save_pc = cpu_state.pc;
+                                ops_808x_fpu_df_a16[rmdat](rmdat);
+                                cpu_state.pc = save_pc;
+                        }
                         break;
 
                         case 0xE0: /*LOOPNE*/

@@ -76,6 +76,33 @@ static int mouse_valid(int type, int model)
         return FALSE;
 }*/
 
+static void recalc_fpu_list(void *hdlg, int model, int manu, int cpu, int fpu)
+{
+        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
+        int c = 0;
+        
+        wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
+        wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+
+        while (1)
+        {
+                const char *name = fpu_get_name_from_index(model, manu, cpu, c);
+                int type = fpu_get_type_from_index(model, manu, cpu, c);
+                if (!name)
+                        break;
+
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)name);
+                if (!c || type == fpu)
+                        wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
+
+                c++;
+        }
+        if (c > 1)
+                wx_enablewindow(h, TRUE);
+        else
+                wx_enablewindow(h, FALSE);
+}
+
 static void recalc_vid_list(void* hdlg, int model, int force_builtin_video)
 {
         void* h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOVID"));
@@ -405,8 +432,8 @@ int config_dlgsave(void* hdlg)
         char temp_str[256];
         void* h;
         int c;
-        int gfx, fpu;
-        int temp_cpu, temp_cpu_m, temp_model;
+        int gfx;//, fpu;
+        int temp_cpu, temp_cpu_m, temp_model, temp_fpu;
         int temp_GAMEBLASTER, temp_GUS, temp_SSI2001, temp_voodoo, temp_sound_card_current;
         int temp_dynarec;
         int temp_fda_type, temp_fdb_type;
@@ -442,8 +469,11 @@ int config_dlgsave(void* hdlg)
         temp_cpu_m = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO3"));
         temp_cpu = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-        fpu = (models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type
-        >= CPU_i486DX) ? 1 : 0;
+//        fpu = (models[temp_model].cpu[temp_cpu_m].cpus[temp_cpu].cpu_type
+//        >= CPU_i486DX) ? 1 : 0;
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
+        temp_fpu = fpu_get_type_from_index(temp_model, temp_cpu_m, temp_cpu, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECK3"));
         temp_GAMEBLASTER = wx_sendmessage(h, WX_BM_GETCHECK, 0, 0);
@@ -490,8 +520,8 @@ int config_dlgsave(void* hdlg)
         temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
 #endif                        
 
-        if (temp_model != model || gfx != gfxcard || mem != mem_size ||
-            fpu != hasfpu || temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
+        if (temp_model != model || gfx != gfxcard || mem != mem_size || temp_fpu != fpu_type ||
+            temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
             temp_SSI2001 != SSI2001 || temp_sound_card_current != sound_card_current ||
             temp_voodoo != voodoo_enabled || temp_dynarec != cpu_use_dynarec ||
             temp_fda_type != fdd_get_type(0) || temp_fdb_type != fdd_get_type(1) ||
@@ -511,6 +541,7 @@ int config_dlgsave(void* hdlg)
                         mem_size = mem;
                         cpu_manufacturer = temp_cpu_m;
                         cpu = temp_cpu;
+                        fpu_type = temp_fpu;
                         GAMEBLASTER = temp_GAMEBLASTER;
                         GUS = temp_GUS;
                         SSI2001 = temp_SSI2001;
@@ -600,7 +631,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
         void* h;
         int c, d;
         int gfx, mem;
-        int temp_cpu, temp_cpu_m, temp_model;
+        int temp_cpu, temp_cpu_m, temp_model, temp_fpu;
         int temp_sound_card_current;
         int temp_dynarec;
         int cpu_flags;
@@ -664,6 +695,8 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         }
                         wx_enablewindow(h, TRUE);
                         wx_sendmessage(h, WX_CB_SETCURSEL, cpu, 0);
+
+                        recalc_fpu_list(hdlg, romstomodel[romset], cpu_manufacturer, cpu, fpu_type);
 
                         recalc_snd_list(hdlg, romstomodel[romset]);
 
@@ -926,6 +959,10 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                         temp_cpu = c - 1;
                                 wx_sendmessage(h, WX_CB_SETCURSEL, temp_cpu, 0);
 
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
+                                temp_fpu = fpu_get_type_from_index(temp_model, temp_cpu_m, temp_cpu, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
+                                recalc_fpu_list(hdlg, temp_model, temp_cpu_m, temp_cpu, temp_fpu);
+                        
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECKDYNAREC"));
                                 temp_dynarec = wx_sendmessage(h, WX_BM_GETCHECK, 0, 0);
 
@@ -1035,6 +1072,10 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 temp_cpu = c - 1;
                                 wx_sendmessage(h, WX_CB_SETCURSEL, temp_cpu, 0);
 
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
+                                temp_fpu = fpu_get_type_from_index(temp_model, temp_cpu_m, temp_cpu, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
+                                recalc_fpu_list(hdlg, temp_model, temp_cpu_m, temp_cpu, temp_fpu);
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECKDYNAREC"));
                                 temp_dynarec = wx_sendmessage(h, WX_BM_GETCHECK, 0, 0);
 
@@ -1066,6 +1107,10 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 temp_cpu_m = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO3"));
                                 temp_cpu = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
+                                temp_fpu = fpu_get_type_from_index(temp_model, temp_cpu_m, temp_cpu, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
+                                recalc_fpu_list(hdlg, temp_model, temp_cpu_m, temp_cpu, temp_fpu);
 
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECKDYNAREC"));
                                 temp_dynarec = wx_sendmessage(h, WX_BM_GETCHECK, 0, 0);

@@ -286,6 +286,9 @@ typedef union
         uint64_t i;
 } x87_td;
 
+#ifdef X8087
+#define FP_ENTER() fpucount++
+#else
 #define FP_ENTER() do                   \
         {                               \
                 if (cr0 & 0xc)          \
@@ -295,6 +298,7 @@ typedef union
                 }                       \
                 fpucount++;             \
         } while (0)
+#endif
 
 #include "x87_ops_arith.h"
 #include "x87_ops_misc.h"
