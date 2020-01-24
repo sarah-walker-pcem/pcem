@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "pci.h"
 #include "codegen.h"
+#include "x87_timings.h"
 
 int fpu_type;
 uint32_t cpu_features;
@@ -1006,6 +1007,29 @@ void cpu_set()
 
                 default:
                 fatal("cpu_set : unknown CPU type %i\n", cpu_s->cpu_type);
+        }
+        
+        switch (fpu_type)
+        {
+                case FPU_NONE:
+                break;
+
+                case FPU_8087:
+                x87_timings = x87_timings_8087;
+                break;
+
+                case FPU_287:
+                x87_timings = x87_timings_287;
+                break;
+
+                case FPU_287XL:
+                case FPU_387:
+                x87_timings = x87_timings_387;
+                break;
+                
+                default:
+                x87_timings = x87_timings_486;
+                break;
         }
 }
 

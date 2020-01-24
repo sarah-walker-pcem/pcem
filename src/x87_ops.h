@@ -1,5 +1,6 @@
 #include <math.h>
 #include <fenv.h>
+#include "x87_timings.h"
 
 #define fplog 0
 

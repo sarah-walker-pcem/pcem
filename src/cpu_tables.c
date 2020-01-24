@@ -35,8 +35,9 @@ FPU fpus_8088[] =
 };
 FPU fpus_80286[] =
 {
-        {"None", "none", FPU_NONE},
-        {"287",  "287",  FPU_287},
+        {"None",  "none", FPU_NONE},
+        {"287",   "287",  FPU_287},
+        {"287XL", "287xl",  FPU_287XL},
         {NULL, NULL, 0}
 };
 FPU fpus_80386[] =

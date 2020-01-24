@@ -66,6 +66,7 @@ enum
         FPU_NONE,
         FPU_8087,
         FPU_287,
+        FPU_287XL,
         FPU_387,
         FPU_BUILTIN
 };
