@@ -1,3 +1,30 @@
+static int opFDISI(uint32_t fetchdat)
+{
+        FP_ENTER();
+        cpu_state.pc++;
+        if (fpu_type == FPU_8087)
+        {
+                cpu_state.npxc |= FPCW_DISI;
+                CLOCK_CYCLES(x87_timings.fdisi_eni);
+        }
+        else
+                CLOCK_CYCLES(x87_timings.fnop);
+        return 0;
+}
+static int opFENI(uint32_t fetchdat)
+{
+        FP_ENTER();
+        cpu_state.pc++;
+        if (fpu_type == FPU_8087)
+        {
+                cpu_state.npxc &= ~FPCW_DISI;
+                CLOCK_CYCLES(x87_timings.fdisi_eni);
+        }
+        else
+                CLOCK_CYCLES(x87_timings.fnop);
+        return 0;
+}
+
 static int opFSTSW_AX(uint32_t fetchdat)
 {
         FP_ENTER();

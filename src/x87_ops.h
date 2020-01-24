@@ -10,6 +10,8 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
 
 #define STATUS_ZERODIVIDE 4
 
+#define FPCW_DISI (1 << 7)
+
 #define x87_div(dst, src1, src2) do                             \
         {                                                       \
                 if (((double)src2) == 0.0)                      \
@@ -639,7 +641,7 @@ OpFn OP_TABLE(fpu_db_a16)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
-        ILLEGAL,       opFNOP,        opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
+        opFENI,        opFDISI,       opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
@@ -679,7 +681,7 @@ OpFn OP_TABLE(fpu_db_a32)[256] =
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
-        ILLEGAL,       opFNOP,        opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
+        opFENI,        opFDISI,       opFCLEX,       opFINIT,       opFNOP,        opFNOP,        ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
         ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,       ILLEGAL,
