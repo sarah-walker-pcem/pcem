@@ -165,7 +165,7 @@ int driveempty[2];
 #define PCJR (romset == ROM_IBMPCJR)
 
 int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
-extern int AMSTRAD, AT, is386, PCI, TANDY;
+extern int AMSTRAD, AT, is386, PCI, TANDY, MCA;
 
 enum
 {
@@ -304,6 +304,8 @@ enum
 	GFX_EGAWONDER800, /*ATI EGA Wonder 800+*/
 	GFX_MYSTIQUE,   /*Matrox Mystique*/
 	GFX_AVGA2,      /*Acumos AVGA2 / Cirrus Logic CL-GD5402*/
+        GFX_CL_GD5428,  /*Cirrus Logic CL-GD5428*/
+        GFX_IBM_GD5428, /*IBM 1MB SVGA Adapter/A*/
 
         GFX_MAX
 };

@@ -127,7 +127,7 @@ void      xt_zenith_init();
 void        at_mvp3_init();
 int model;
 
-int AMSTRAD, AT, PCI, TANDY;
+int AMSTRAD, AT, PCI, TANDY, MCA;
 
 MODEL models[] =
 {
@@ -174,7 +174,7 @@ MODEL models[] =
         {"[286] IBM AT",                  ROM_IBMAT,            "ibmat",          { {"",      cpus_ibmat},       {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT,                                         256,15872, 128,         ibm_at_init, NULL},
         {"[286] IBM PS/1 model 2011",     ROM_IBMPS1_2011,      "ibmps1es",       { {"",      cpus_ps1_m2011},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2,                              512,16384, 512,      ps1_m2011_init, NULL},
         {"[286] IBM PS/2 Model 30-286",   ROM_IBMPS2_M30_286,   "ibmps2_m30_286", { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2,                                1,   16,   1,    ps2_m30_286_init, NULL},
-        {"[286] IBM PS/2 Model 50",       ROM_IBMPS2_M50,       "ibmps2_m50",     { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,                      1,   16,   1,   ps2_model_50_init, NULL},
+        {"[286] IBM PS/2 Model 50",       ROM_IBMPS2_M50,       "ibmps2_m50",     { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,                 1,   16,   1,   ps2_model_50_init, NULL},
         {"[286] IBM XT Model 286",        ROM_IBMXT286,         "ibmxt286",       { {"",      cpus_ibmxt286},    {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT,                                         256,15872, 128,         ibm_at_init, NULL},
         {"[286] Samsung SPC-4200P",       ROM_SPC4200P,         "spc4200p",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                 512, 2048, 128,        at_scat_init, NULL},
         {"[286] Samsung SPC-4216P",       ROM_SPC4216P,         "spc4216p",       { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                   1,    5,   1,        at_scat_init, NULL},
@@ -190,21 +190,21 @@ MODEL models[] =
         {"[386SX] DTK 386SX clone",       ROM_DTK386,           "dtk386",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                           512,16384, 128,        at_neat_init, NULL},
         {"[386SX] Epson PC AX3",          ROM_EPSON_PCAX3,      "epson_pcax3",    { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT,                                         256,15872, 128,             at_init, NULL},
         {"[386SX] IBM PS/1 model 2121",   ROM_IBMPS1_2121,      "ibmps1_2121",    { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                  1,   16,   1,      ps1_m2121_init, NULL},
-        {"[386SX] IBM PS/2 Model 55SX",   ROM_IBMPS2_M55SX,     "ibmps2_m55sx",   { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,                      1,    8,   1, ps2_model_55sx_init, NULL},
+        {"[386SX] IBM PS/2 Model 55SX",   ROM_IBMPS2_M55SX,     "ibmps2_m55sx",   { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,                 1,    8,   1, ps2_model_55sx_init, NULL},
         {"[386SX] KMX-C-02",              ROM_KMXC02,           "kmxc02",         { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT,                                         512,16384, 512,      at_scatsx_init, NULL},
         {"[386SX] Packard Bell Legend 300SX", ROM_PB_L300SX,    "pb_l300sx",      { {"Intel", cpus_i386SX},      {"AMD", cpus_Am386SX}, {"Cyrix", cpus_486SLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                   1,   16,   1,      pb_l300sx_init, NULL},
 
         {"[386DX] AMI 386DX clone",       ROM_AMI386DX_OPTI495, "ami386dx",       { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
         {"[386DX] Compaq Deskpro 386",    ROM_DESKPRO_386,      "deskpro386",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT,                                           1,   15,   1,     deskpro386_init, NULL},
-        {"[386DX] IBM PS/2 Model 70 (type 3)", ROM_IBMPS2_M70_TYPE3, "ibmps2_m70_type3", { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,               2,   16,   2,   ps2_model_70_init, NULL},
-        {"[386DX] IBM PS/2 Model 80",     ROM_IBMPS2_M80,       "ibmps2_m80",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,                      1,   12,   1,   ps2_model_80_init, NULL},
+        {"[386DX] IBM PS/2 Model 70 (type 3)", ROM_IBMPS2_M70_TYPE3, "ibmps2_m70_type3", { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,          2,   16,   2,   ps2_model_70_init, NULL},
+        {"[386DX] IBM PS/2 Model 80",     ROM_IBMPS2_M80,       "ibmps2_m80",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,                 1,   12,   1,   ps2_model_80_init, NULL},
         {"[386DX] MR 386DX clone",        ROM_MR386DX_OPTI495,  "mr386dx",        { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
 
         {"[486] AMI 486 clone",           ROM_AMI486,           "ami486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_ali1429_init, NULL},
         {"[486] AMI WinBIOS 486",         ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_ali1429_init, NULL},
         {"[486] Award SiS 496/497",       ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,                   1,  256,   1,      at_sis496_init, NULL},
         {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_HAS_IDE,                            1,  256,   1,    at_sl82c460_init, NULL},
-        {"[486] IBM PS/2 Model 70 (type 4)",   ROM_IBMPS2_M70_TYPE4, "ibmps2_m70_type4", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2|MODEL_MCA,               2,   16,   2,   ps2_model_70_init, NULL},
+        {"[486] IBM PS/2 Model 70 (type 4)",   ROM_IBMPS2_M70_TYPE4, "ibmps2_m70_type4", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,          2,   16,   2,   ps2_model_70_init, NULL},
         {"[486] Packard Bell PB410A",     ROM_PB410A,           "pb410a",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,             1,   64,   1,      at_pb410a_init, NULL},
         
         {"[Socket 4] Intel Premiere/PCI", ROM_REVENGE,          "revenge",        { {"Intel", cpus_Pentium5V},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         1,  128,   1,      at_batman_init, NULL},
@@ -788,7 +788,7 @@ void at_mvp3_init()
 void model_init()
 {
         pclog("Initting as %s\n", model_getname());
-        AMSTRAD = AT = PCI = TANDY = 0;
+        AMSTRAD = AT = PCI = TANDY = MCA = 0;
         ide_set_bus_master(NULL, NULL, NULL, NULL);
         
         models[model].init();

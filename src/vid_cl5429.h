@@ -1,5 +1,7 @@
 extern device_t avga2_device;
 extern device_t avga2_cbm_sl386sx_device;
+extern device_t gd5428_device;
+extern device_t ibm_gd5428_device;
 extern device_t gd5429_device;
 extern device_t gd5430_device;
 extern device_t gd5430_pb570_device;

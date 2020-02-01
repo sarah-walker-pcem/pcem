@@ -999,7 +999,7 @@ void *sb_mcv_init()
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
         sound_add_handler(sb_get_buffer_sb2, sb);
         /* I/O handlers activated in sb_mcv_write */
-        mca_add(sb_mcv_read, sb_mcv_write, sb);
+        mca_add(sb_mcv_read, sb_mcv_write, NULL, sb);
         sb->pos_regs[0] = 0x84;
         sb->pos_regs[1] = 0x50;
         return sb;
@@ -1124,7 +1124,7 @@ void *sb_pro_mcv_init()
         sound_add_handler(sb_get_buffer_sbpro, sb);
 
         /* I/O handlers activated in sb_pro_mcv_write */
-        mca_add(sb_pro_mcv_read, sb_pro_mcv_write, sb);
+        mca_add(sb_pro_mcv_read, sb_pro_mcv_write, NULL, sb);
         sb->pos_regs[0] = 0x03;
         sb->pos_regs[1] = 0x51;
 

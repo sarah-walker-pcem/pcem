@@ -9,6 +9,7 @@
 #include "ps2_nvr.h"
 #include "rom.h"
 #include "serial.h"
+#include "vid_vga.h"
 #include "x86.h"
 
 //static uint8_t ps2_92, ps2_94, ps2_102, ps2_103, ps2_104, ps2_105, ps2_190;
@@ -652,6 +653,8 @@ static void ps2_mca_write(uint16_t port, uint8_t val, void *p)
                 ps2.setup = val;
                 break;
                 case 0x96:
+                if ((val & 0x80) && !(ps2.adapter_setup & 0x80))
+                        mca_reset();
                 ps2.adapter_setup = val;
                 mca_set_index(val & 7);
                 break;
@@ -671,7 +674,15 @@ static void ps2_mca_write(uint16_t port, uint8_t val, void *p)
                 if (!(ps2.setup & PS2_SETUP_IO))
                         ps2.planar_write(port, val);
                 else if (!(ps2.setup & PS2_SETUP_VGA))
+                {
+                        if (mb_vga)
+                        {
+                                vga_disable(mb_vga);
+                                if (val & 1)
+                                        vga_enable(mb_vga);
+                        }
                         ps2.pos_vga = val;
+                }
                 else if (ps2.adapter_setup & PS2_ADAPTER_SETUP)
                         mca_write(port, val);
                 break;
@@ -1018,7 +1029,7 @@ void ps2_mca_board_model_70_type34_init(int is_type4)
                         break;
                 }
 
-                mca_add(ps2_mem_expansion_read, ps2_mem_expansion_write, NULL);
+                mca_add(ps2_mem_expansion_read, ps2_mem_expansion_write, NULL, NULL);
                 mem_mapping_add(&ps2.expansion_mapping,
                             0x800000,
                             (mem_size - 8192)*1024,
@@ -1119,7 +1130,7 @@ void ps2_mca_board_model_80_type2_init()
                         break;
                 }
 
-                mca_add(ps2_mem_expansion_read, ps2_mem_expansion_write, NULL);
+                mca_add(ps2_mem_expansion_read, ps2_mem_expansion_write, NULL, NULL);
                 mem_mapping_add(&ps2.expansion_mapping,
                             0x400000,
                             (mem_size - 4096)*1024,

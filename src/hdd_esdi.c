@@ -917,7 +917,7 @@ static void *esdi_init()
                 
         timer_add(&esdi->callback_timer, esdi_callback, esdi, 0);
         
-        mca_add(esdi_mca_read, esdi_mca_write, esdi);
+        mca_add(esdi_mca_read, esdi_mca_write, NULL, esdi);
         
         esdi->pos_regs[0] = 0xff;
         esdi->pos_regs[1] = 0xdd;

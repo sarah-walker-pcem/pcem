@@ -90,6 +90,7 @@ static VIDEO_CARD video_cards[] =
         {"ATI VGA Charger (ATI-28800)",            "ati28800",       &ati28800_device,                  GFX_VGACHARGER,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"ATI VGA Edge-16 (ATI-18800)",            "ati18800",       &ati18800_device,                  GFX_VGAEDGE16,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"CGA",                                    "cga",            &cga_device,                       GFX_CGA,             VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Cirrus Logic CL-GD5428",                 "cl_gd5428",      &gd5428_device,                    GFX_CL_GD5428,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Cirrus Logic CL-GD5429",                 "cl_gd5429",      &gd5429_device,                    GFX_CL_GD5429,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Cirrus Logic CL-GD5430",                 "cl_gd5430",      &gd5430_device,                    GFX_CL_GD5430,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Cirrus Logic CL-GD5434",                 "cl_gd5434",      &gd5434_device,                    GFX_CL_GD5434,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
@@ -99,6 +100,7 @@ static VIDEO_CARD video_cards[] =
         {"EGA",                                    "ega",            &ega_device,                       GFX_EGA,             VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Hercules",                               "hercules",       &hercules_device,                  GFX_HERCULES,        VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"IBM 1MB SVGA Adapter/A (CL GD5428)",     "ibm1mbsvga",     &ibm_gd5428_device,                GFX_IBM_GD5428,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Image Manager 1024",                     "im1024",         &im1024_device,                    GFX_IM1024,          VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Matrox Mystique",                        "mystique",       &mystique_device,                  GFX_MYSTIQUE,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  4,  10, 10, 10}},
         {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
@@ -218,13 +220,17 @@ device_t *video_card_getdevice(int card, int romset)
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
+                return &ps1vga_device;
+
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
                 case ROM_IBMPS2_M70_TYPE3:
                 case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
-                return &ps1vga_device;
-
+                if (card == GFX_BUILTIN)
+                        return &ps1vga_device;
+                break;
+                
                 case ROM_IBMPS1_2121:
                 return &ps1_m2121_svga_device;
 
@@ -588,12 +594,16 @@ void video_updatetiming()
                 
                         case ROM_IBMPS1_2011:
                         case ROM_IBMPS2_M30_286:
+                        timing = &timing_vga;
+                        break;
+
                         case ROM_IBMPS2_M50:
                         case ROM_IBMPS2_M55SX:
                         case ROM_IBMPS2_M70_TYPE3:
                         case ROM_IBMPS2_M70_TYPE4:
                         case ROM_IBMPS2_M80:
-                        timing = &timing_vga;
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_vga;
                         break;
 
                         case ROM_IBMPS1_2121:
@@ -776,13 +786,18 @@ void video_init()
                 
                 case ROM_IBMPS1_2011:
                 case ROM_IBMPS2_M30_286:
+                device_add(&ps1vga_device);
+                return;
+
                 case ROM_IBMPS2_M50:
                 case ROM_IBMPS2_M55SX:
                 case ROM_IBMPS2_M70_TYPE3:
                 case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 device_add(&ps1vga_device);
-                return;
+                if (gfxcard == GFX_BUILTIN)
+                        return;
+                break;
 
                 case ROM_IBMPS1_2121:
                 device_add(&ps1_m2121_svga_device);

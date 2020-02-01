@@ -9,6 +9,8 @@
 #include "vid_svga.h"
 #include "vid_vga.h"
 
+svga_t *mb_vga = NULL;
+
 typedef struct vga_t
 {
         svga_t svga;
@@ -84,6 +86,30 @@ uint8_t vga_in(uint16_t addr, void *p)
         return temp;
 }
 
+void vga_disable(void *p)
+{
+        vga_t *vga = (vga_t *)p;
+        svga_t *svga = &vga->svga;
+
+//        pclog("vga_disable\n");
+        io_removehandler(0x03a0, 0x0040, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);
+        mem_mapping_disable(&svga->mapping);
+}
+
+void vga_enable(void *p)
+{
+        vga_t *vga = (vga_t *)p;
+        svga_t *svga = &vga->svga;
+        
+//        pclog("vga_enable\n");
+        io_sethandler(0x03c0, 0x0020, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);
+        if (!(svga->miscout & 1))
+                io_sethandler(0x03a0, 0x0020, vga_in, NULL, NULL, vga_out, NULL, NULL, vga);
+
+        mem_mapping_enable(&svga->mapping);
+}
+
+
 void *vga_init()
 {
         vga_t *vga = malloc(sizeof(vga_t));
@@ -122,6 +148,8 @@ void *ps1vga_init()
         vga->svga.bpp = 8;
         vga->svga.miscout = 1;
         
+        mb_vga = &vga->svga;
+        
         return vga;
 }
 
@@ -134,6 +162,8 @@ void vga_close(void *p)
 {
         vga_t *vga = (vga_t *)p;
 
+        mb_vga = NULL;
+        
         svga_close(&vga->svga);
         
         free(vga);

@@ -147,7 +147,10 @@ static void recalc_vid_list(void* hdlg, int model, int force_builtin_video)
                         break;
 
                 if (video_card_available(c) && gfx_present[video_new_to_old(c)] &&
-                    ((models[model].flags & MODEL_PCI) || !(video_card_getdevice(c, romset)->flags & DEVICE_PCI)))
+                    ((models[model].flags & MODEL_PCI) || !(video_card_getdevice(c, romset)->flags & DEVICE_PCI)) &&
+                    ((models[model].flags & MODEL_MCA) || !(video_card_getdevice(c, romset)->flags & DEVICE_MCA)) &&
+                    (!(models[model].flags & MODEL_MCA) || (video_card_getdevice(c, romset)->flags & DEVICE_MCA))
+                    )
                 {
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                         if (video_new_to_old(c) == gfxcard && !found_card)
