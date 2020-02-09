@@ -412,7 +412,7 @@ void keyboard_process()
 {
         int c;
         int d;
-        scancode *scancodes = (AT) ? at_scancodes : scancode_xt;
+        scancode *scancodes = (AT || romset == ROM_XI8088) ? at_scancodes : scancode_xt;
         if (!keyboard_scan) return;
         if (TANDY) scancodes = scancode_tandy;
                 
@@ -466,7 +466,7 @@ void keyboard_process()
 
 void keyboard_send_scancode(int code, int is_break)
 {
-        scancode *scancodes = (AT) ? at_scancodes : scancode_xt;
+        scancode *scancodes = (AT || romset == ROM_XI8088) ? at_scancodes : scancode_xt;
         int d = 0;
 
         if (!keyboard_scan) return;
