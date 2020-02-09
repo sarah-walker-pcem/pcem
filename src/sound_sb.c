@@ -521,7 +521,7 @@ void sb_ct1345_mixer_write(uint16_t addr, uint8_t val, void *p)
                         {
                                 /* Compatibility: chain registers 0x02 and 0x22 as well as 0x06 and 0x26 */
                                 case 0x02: case 0x06:
-                                mixer->regs[mixer->index+0x20]=((val&0xE) << 4)||(val&0xE) << 4;
+                                mixer->regs[mixer->index+0x20]=((val&0xE) << 4) | (val&0xE);
                                 break;
                                 
                                 case 0x22: case 0x26:
