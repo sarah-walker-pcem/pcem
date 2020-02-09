@@ -323,7 +323,7 @@ int pic_current[16];
 
 void picint(uint16_t num)
 {
-        if (AT && num == (1 << 2))
+        if ((AT || romset == ROM_XI8088) && num == (1 << 2))
                 num = 1 << 9;
 //        pclog("picint : %04X\n", num);
 //        if (num == 0x10) pclog("PICINT 10\n");
@@ -345,7 +345,7 @@ void picintlevel(uint16_t num)
 {
         int c = 0;
         while (!(num & (1 << c))) c++;
-        if (AT && c == 2)
+        if ((AT || romset == ROM_XI8088) && num == (1 << 2))
         {
                 c = 9;
                 num = 1 << 9;
@@ -371,7 +371,7 @@ void picintc(uint16_t num)
         if (!num)
                 return;
         while (!(num & (1 << c))) c++;
-        if (AT && c == 2)
+        if ((AT || romset == ROM_XI8088) && num == (1 << 2))
         {
                 c = 9;
                 num = 1 << 9;
