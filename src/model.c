@@ -70,6 +70,7 @@
 #include "vid_pcjr.h"
 #include "vid_tandy.h"
 #include "vid_t1000.h"
+#include "vl82c480.h"
 #include "vt82c586b.h"
 #include "w83877tf.h"
 #include "wd76c10.h"
@@ -91,6 +92,7 @@ void     deskpro386_init();
 void      pb_l300sx_init();
 void      ps1_m2011_init();
 void      ps1_m2121_init();
+void      ps1_m2133_init(void);
 void    ps2_m30_286_init();
 void   ps2_model_50_init();
 void ps2_model_55sx_init();
@@ -204,6 +206,7 @@ MODEL models[] =
         {"[486] AMI WinBIOS 486",         ROM_WIN486,           "win486",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_ali1429_init, NULL},
         {"[486] Award SiS 496/497",       ROM_SIS496,           "sis496",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_HAS_IDE,                   1,  256,   1,      at_sis496_init, NULL},
         {"[486] Elonex PC-425X",          ROM_ELX_PC425X,       "elx_pc425x",     { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_HAS_IDE,                            1,  256,   1,    at_sl82c460_init, NULL},
+        {"[486] IBM PS/1 Model 2133 (EMEA 451)",ROM_IBMPS1_2133_451, "ibmps1_2133", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2,                              2,   64,   2,      ps1_m2133_init, NULL},
         {"[486] IBM PS/2 Model 70 (type 4)",   ROM_IBMPS2_M70_TYPE4, "ibmps2_m70_type4", { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,          2,   16,   2,   ps2_model_70_init, NULL},
         {"[486] Packard Bell PB410A",     ROM_PB410A,           "pb410a",         { {"Intel", cpus_i486},        {"AMD", cpus_Am486},   {"Cyrix", cpus_Cx486}},  MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,             1,   64,   1,      at_pb410a_init, NULL},
         
@@ -505,6 +508,13 @@ void ps1_m2121_init()
         ps1_common_init();
         ps1mb_m2121_init();
         fdc_set_ps1();
+}
+
+void ps1_m2133_init(void)
+{
+        at_init();
+        vl82c480_init();
+        ps1mb_m2133_init();
 }
 
 void ps2_m30_286_init()

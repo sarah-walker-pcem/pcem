@@ -18,6 +18,7 @@
 enum
 {
         CL_TYPE_AVGA2 = 0,
+        CL_TYPE_GD5426,
         CL_TYPE_GD5428,
         CL_TYPE_GD5429,
         CL_TYPE_GD5430,
@@ -226,13 +227,27 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 svga->gdcreg[6] = val;
                                 gd5429_recalc_mapping(gd5429);
                         }
+
+                        /*Hack - the Windows 3.x drivers for the GD5426/8 require VRAM wraparound
+                          for pattern & cursor writes to work correctly, but the BIOSes require
+                          no wrapping to detect memory size - albeit with odd/even mode enabled.
+                          This may be a quirk of address mapping. So change wrapping mode based on
+                          odd/even mode for now*/
+                        if (gd5429->type == CL_TYPE_GD5426 || gd5429->type == CL_TYPE_GD5428)
+                        {
+                                if (val & 2) /*Odd/Even*/
+                                        svga->decode_mask = 0x1fffff;
+                                else
+                                        svga->decode_mask = svga->vram_mask;
+                        }
+
                         svga->gdcreg[6] = val;
                         return;
                 }
                 if (svga->gdcaddr > 8)
                 {
                         svga->gdcreg[svga->gdcaddr & 0x3f] = val;
-                        if (gd5429->type < CL_TYPE_GD5428 && (svga->gdcaddr > 0xb))
+                        if (gd5429->type < CL_TYPE_GD5426 && (svga->gdcaddr > 0xb))
                                 return;
                         switch (svga->gdcaddr)
                         {
@@ -403,11 +418,11 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                                 return ((svga->seqregs[6] & 0x17) == 0x12) ? 0x12 : 0x0f;
 
                                 case 0x17:
-                                if (gd5429->type < CL_TYPE_GD5428)
+                                if (gd5429->type < CL_TYPE_GD5426)
                                         break;
                                 temp = svga->seqregs[0x17];
                                 temp &= ~(7 << 3);
-                                if (gd5429->type == CL_TYPE_GD5428)
+                                if (gd5429->type == CL_TYPE_GD5426 || gd5429->type == CL_TYPE_GD5428)
                                 {
                                         if (MCA)
                                                 temp |= (CL_GD5428_SYSTEM_BUS_MCA << 3);
@@ -468,6 +483,8 @@ uint8_t gd5429_in(uint16_t addr, void *p)
                         {
                                 case CL_TYPE_AVGA2:
                                 return 0x18; /*AVGA2*/
+                                case CL_TYPE_GD5426:
+                                return 0x90; /*GD5426*/
                                 case CL_TYPE_GD5428:
                                 return 0x98; /*GD5428*/
                                 case CL_TYPE_GD5429:
@@ -644,8 +661,12 @@ void gd5429_recalctimings(svga_t *svga)
         n = svga->seqregs[0xb + clock] & 0x7f;
         d = (svga->seqregs[0x1b + clock] >> 1) & 0x1f;
         p = svga->seqregs[0x1b + clock] & 1;
-        
-        vclk = (14318184.0 * ((float)n / (float)d)) / (float)(1 + p);
+
+        /*Prevent divide by zero during clock setup*/
+        if (d && n)
+                vclk = (14318184.0 * ((float)n / (float)d)) / (float)(1 + p);
+        else
+                vclk = 14318184.0;
         switch (svga->seqregs[7] & ((gd5429->type >= CL_TYPE_GD5434) ? 0xe : 0x6))
         {
                 case 2:
@@ -1980,7 +2001,8 @@ static void *cl_init(int type, char *fn, int pci_card, uint32_t force_vram_size)
         
         gd5429->type = type;
 
-        rom_init(&gd5429->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        if (fn)
+                rom_init(&gd5429->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
         svga_init(&gd5429->svga, gd5429, (vram_size >= 256) ? (vram_size << 10) : (vram_size << 20),
                    gd5429_recalctimings,
@@ -2001,8 +2023,6 @@ static void *cl_init(int type, char *fn, int pci_card, uint32_t force_vram_size)
                 io_sethandler(0x46e8, 0x0002, gd5429_in, NULL, NULL, gd5429_out, NULL, NULL, gd5429);
                 svga->decode_mask = svga->vram_mask;
         }
-        if (type == CL_TYPE_GD5428)
-                svga->decode_mask = svga->vram_mask;
 
         svga->hwcursor.yoff = 32;
         svga->hwcursor.xoff = 0;
@@ -2047,6 +2067,10 @@ static void *avga2_init()
 static void *avga2_cbm_sl386sx_init()
 {
         return cl_init(CL_TYPE_AVGA2, "cbm_sl386sx25/c000.rom", -1, 0);
+}
+static void *gd5426_ps1_init()
+{
+        return cl_init(CL_TYPE_GD5426, NULL, -1, 1);
 }
 static void *gd5428_init()
 {
@@ -2253,6 +2277,19 @@ device_t avga2_cbm_sl386sx_device =
         gd5429_force_redraw,
         gd5429_add_status_info,
         avga2_config
+};
+
+device_t gd5426_ps1_device =
+{
+        "Cirrus Logic GD5426 (IBM PS/1)",
+        0,
+        gd5426_ps1_init,
+        gd5429_close,
+        NULL,
+        gd5429_speed_changed,
+        gd5429_force_redraw,
+        gd5429_add_status_info,
+        NULL
 };
 
 device_t gd5428_device =

@@ -234,6 +234,9 @@ device_t *video_card_getdevice(int card, int romset)
                 case ROM_IBMPS1_2121:
                 return &ps1_m2121_svga_device;
 
+                case ROM_IBMPS1_2133_451:
+                return &gd5426_ps1_device;
+
 		case ROM_T3100E:
                 return &t3100e_device;
 
@@ -372,7 +375,8 @@ int video_is_mda()
                 case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
-        	case ROM_T3100E:
+                case ROM_IBMPS1_2133_451:
+                case ROM_T3100E:
         	case ROM_T1000:
                 case ROM_ELX_PC425X:
                 case ROM_PB410A:
@@ -421,6 +425,7 @@ int video_is_cga()
                 case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
+                case ROM_IBMPS1_2133_451:
                 case ROM_ELX_PC425X:
                 case ROM_PB410A:
                 case ROM_PB570:
@@ -460,6 +465,7 @@ int video_is_ega_vga()
                 case ROM_IBMPS2_M70_TYPE4:
                 case ROM_IBMPS2_M80:
                 case ROM_IBMPS1_2121:
+                case ROM_IBMPS1_2133_451:
                 case ROM_ELX_PC425X:
                 case ROM_PB410A:
                 case ROM_PB570:
@@ -610,6 +616,10 @@ void video_updatetiming()
                         timing = &timing_ps1_svga;
                         break;
 
+                        case ROM_IBMPS1_2133_451:
+                        timing = &timing_pb570;
+                        break;
+                                
         		case ROM_T3100E:
                         timing = &timing_t3100e;
                         break;
@@ -801,6 +811,10 @@ void video_init()
 
                 case ROM_IBMPS1_2121:
                 device_add(&ps1_m2121_svga_device);
+                return;
+
+                case ROM_IBMPS1_2133_451:
+                device_add(&gd5426_ps1_device);
                 return;
 
 		case ROM_T3100E:

@@ -301,3 +301,65 @@ void ps1mb_m2121_init()
         
         mem_remap_top_384k();
 }
+
+
+/*Not sure what this SuperIO chip is, so define it here for now*/
+static struct
+{
+        int idx;
+        uint8_t regs[3];
+} ps1_m2133_superio;
+
+static uint16_t ps1_lpt_io[4] = {0x378, 0x3bc, 0x278, 0x378};
+static uint16_t ps1_com_io[4] = {0x3f8, 0x2f8, 0x3e8, 0x2e8};
+
+static uint8_t ps1_m2133_read(uint16_t port, void *p)
+{
+        uint8_t ret = 0xff;
+        switch (port)
+        {
+                case 0x398:
+                ret = ps1_m2133_superio.idx;
+                break;
+                
+                case 0x399:
+                if (ps1_m2133_superio.idx < 3)
+                        ret = ps1_m2133_superio.regs[ps1_m2133_superio.idx];
+                break;
+        }
+        return ret;
+}
+
+static void ps1_m2133_write(uint16_t port, uint8_t val, void *p)
+{
+//        pclog("ps1_m2133_write: port=%04x val=%02x\n", port, val);
+        switch (port)
+        {
+                case 0x398:
+                ps1_m2133_superio.idx = val;
+                break;
+                
+                case 0x399:
+                if (ps1_m2133_superio.idx < 3)
+                {
+                        ps1_m2133_superio.regs[ps1_m2133_superio.idx] = val;
+
+                        lpt1_remove();
+                        serial1_remove();
+                        serial2_remove();
+                        
+                        if (ps1_m2133_superio.regs[0] & 1)
+                                lpt1_init(ps1_lpt_io[ps1_m2133_superio.regs[1] & 3]);
+                        if (ps1_m2133_superio.regs[0] & 2)
+                                serial1_set(ps1_com_io[(ps1_m2133_superio.regs[1] >> 2) & 3], 4);
+                        if (ps1_m2133_superio.regs[0] & 4)
+                                serial2_set(ps1_com_io[(ps1_m2133_superio.regs[1] >> 4) & 3], 3);
+                }
+                break;
+        }
+}
+
+void ps1mb_m2133_init(void)
+{
+        io_sethandler(0x0398, 0x0002, ps1_m2133_read, NULL, NULL, ps1_m2133_write, NULL, NULL, NULL);
+}

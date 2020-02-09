@@ -1015,6 +1015,14 @@ int loadbios()
                 romfread(rom, 0x10000, 1, f);
                 fclose(f);
                 return 1;
+
+                case ROM_IBMPS1_2133_451:
+                f = romfopen("ibmps1_2133/PS1_2133_52G2974_ROM.bin", "rb");
+                if (!f) break;
+                romfread(rom, 0x20000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

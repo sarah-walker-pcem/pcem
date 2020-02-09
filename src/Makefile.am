@@ -49,7 +49,7 @@ vid_incolor.c vid_mda.c vid_mga.c vid_olivetti_m24.c vid_oti037.c vid_oti067.c v
 vid_pc1640.c vid_pcjr.c vid_pgc.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c vid_sigma.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c vt82c586b.c \
-w83877tf.c x86seg.c x87.c x87_timings.c xi8088.c xtide.c sound_dbopl.cc sound_resid.cc
+vl82c480.c w83877tf.c x86seg.c x87.c x87_timings.c xi8088.c xtide.c sound_dbopl.cc sound_resid.cc
 
 # DOSBox
 pcem_SOURCES += dosbox/cdrom_image.cpp dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c
