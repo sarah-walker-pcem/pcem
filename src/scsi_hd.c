@@ -414,7 +414,9 @@ static int scsi_hd_command(uint8_t *cdb, void *p)
                 }       
                 
                 for (; len >= 0; len--)
+                {
                         add_data_len(0);
+                }
                 
                 len = data->data_pos_write;
                 if (cdb[0] == SCSI_MODE_SENSE_6)
