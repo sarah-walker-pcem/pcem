@@ -2011,6 +2011,10 @@ static device_config_t ne2000_config[] =
                                 .value = 11
                         },
                         {
+                                .description = "IRQ 12",
+                                .value = 12
+                        },
+                        {
                                 .description = ""
                         }
                 },
