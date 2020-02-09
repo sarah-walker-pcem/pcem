@@ -58,7 +58,10 @@ static int opFINIT(uint32_t fetchdat)
 {
         FP_ENTER();
         cpu_state.pc++;
-        cpu_state.npxc = 0x37F;
+        if (fpu_type == FPU_8087)
+                cpu_state.npxc = 0x3ff;
+        else
+                cpu_state.npxc = 0x37f;
         codegen_set_rounding_mode(X87_ROUNDING_NEAREST);
         cpu_state.npxs = 0;
         *(uint64_t *)cpu_state.tag = 0;
