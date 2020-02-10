@@ -123,6 +123,7 @@ void mouse_ps2_write(uint8_t val, void *p)
                         mouse->mode  = MOUSE_STREAM;
                         mouse->flags = 0;
                         mouse->intellimouse_mode = 0;
+                        mouse_queue_start = mouse_queue_end = 0;
                         keyboard_at_adddata_mouse(0xfa);
                         keyboard_at_adddata_mouse(0xaa);
                         keyboard_at_adddata_mouse(0x00);

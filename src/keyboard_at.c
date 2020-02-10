@@ -26,6 +26,8 @@
 
 #define PS2_REFRESH_TIME (16 * TIMER_USEC)
 
+#define RESET_DELAY_TIME (100 * 10) /*600ms*/
+
 struct
 {
         int initialised;
@@ -58,6 +60,8 @@ struct
         int is_ps2;
 
 	pc_timer_t send_delay_timer;
+	
+	int reset_delay;
 } keyboard_at;
 
 /*Translation table taken from https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#ss10.3*/
@@ -88,6 +92,8 @@ static int key_queue_start = 0, key_queue_end = 0;
 
 static uint8_t mouse_queue[16];
 int mouse_queue_start = 0, mouse_queue_end = 0;
+
+void keyboard_at_adddata_keyboard(uint8_t val);
 
 void keyboard_at_poll()
 {
@@ -151,7 +157,14 @@ void keyboard_at_poll()
         {
                 keyboard_at.out_new = key_queue[key_queue_start];
                 key_queue_start = (key_queue_start + 1) & 0xf;
-        }                
+        }
+
+        if (keyboard_at.reset_delay)
+        {
+                keyboard_at.reset_delay--;
+                if (!keyboard_at.reset_delay)
+                        keyboard_at_adddata_keyboard(0xaa);
+        }
 }
 
 void keyboard_at_adddata(uint8_t val)
@@ -168,6 +181,8 @@ void keyboard_at_adddata(uint8_t val)
 
 void keyboard_at_adddata_keyboard(uint8_t val)
 {
+        if (keyboard_at.reset_delay)
+                return;
 /*        if (val == 0x1c)
         {
                 key_1c++;
@@ -406,7 +421,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                         case 0xff: /*Reset*/
                                         key_queue_start = key_queue_end = 0; /*Clear key queue*/
                                         keyboard_at_adddata_keyboard(0xfa);
-                                        keyboard_at_adddata_keyboard(0xaa);
+                                        keyboard_at.reset_delay = RESET_DELAY_TIME;
                                         break;
                                         
                                         default:
@@ -651,7 +666,10 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
         {
                 case 0x60:
                 temp = keyboard_at.out;
-                keyboard_at.status &= ~(STAT_OFULL/* | STAT_MFULL*/);
+                if (keyboard_at.last_irq == 0x1000)
+                        keyboard_at.status &= ~(STAT_OFULL | STAT_MFULL);
+                else
+                        keyboard_at.status &= ~(STAT_OFULL/* | STAT_MFULL*/);
                 picintc(keyboard_at.last_irq);
                 keyboard_at.last_irq = 0;
                 break;
@@ -699,6 +717,7 @@ void keyboard_at_reset()
         else
                 keyboard_at.input_port = (video_is_mda()) ? 0xf0 : 0xb0;
         keyboard_at.out_new = -1;
+        keyboard_at.out_delayed = -1;
         keyboard_at.last_irq = 0;
         
         keyboard_at.key_wantdata = 0;
