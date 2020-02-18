@@ -666,10 +666,7 @@ uint8_t keyboard_at_read(uint16_t port, void *priv)
         {
                 case 0x60:
                 temp = keyboard_at.out;
-                if (keyboard_at.last_irq == 0x1000)
-                        keyboard_at.status &= ~(STAT_OFULL | STAT_MFULL);
-                else
-                        keyboard_at.status &= ~(STAT_OFULL/* | STAT_MFULL*/);
+                keyboard_at.status &= ~(STAT_OFULL/* | STAT_MFULL*/);
                 picintc(keyboard_at.last_irq);
                 keyboard_at.last_irq = 0;
                 break;
