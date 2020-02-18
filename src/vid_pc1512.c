@@ -107,7 +107,8 @@ static uint8_t pc1512_in(uint16_t addr, void *p)
                 case 0x3d5:
                 return pc1512->crtc[pc1512->crtcreg];
                 case 0x3da:
-                return pc1512->stat;
+                pc1512->stat ^= 0x01; /*Bit 0 is toggle bit on PC1512*/
+                return pc1512->stat ^ 0x01;
         }
         return 0xff;
 }
@@ -174,7 +175,6 @@ static void pc1512_poll(void *p)
         if (!pc1512->linepos)
         {
                 timer_advance_u64(&pc1512->timer, pc1512->dispofftime);
-                pc1512->stat |= 1;
                 pc1512->linepos = 1;
                 oldsc = pc1512->sc;
                 if (pc1512->dispon)
@@ -342,8 +342,6 @@ static void pc1512_poll(void *p)
                 timer_advance_u64(&pc1512->timer, pc1512->dispontime);
                 if ((pc1512->lastline - pc1512->firstline) == 199) 
                         pc1512->dispon = 0; /*Amstrad PC1512 always displays 200 lines, regardless of CRTC settings*/
-                if (pc1512->dispon) 
-                        pc1512->stat &= ~1;
                 pc1512->linepos = 0;
                 if (pc1512->vsynctime)
                 {
