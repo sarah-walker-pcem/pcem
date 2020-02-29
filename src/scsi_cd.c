@@ -204,6 +204,8 @@ typedef struct scsi_cd_data_t
         
         int short_seek, long_seek;
         int max_speed, cur_speed;
+
+        int cur_model;
 } scsi_cd_data_t;
 
 static scsi_cd_data_t *cd_data = NULL;
@@ -264,6 +266,146 @@ void cd_set_speed(int speed)
                 cd_data->short_seek = cd_speeds[c].short_seek;
                 cd_data->long_seek = cd_speeds[c].long_seek;
         }
+}
+
+static struct
+{
+        // suffix numbers are sizes from the specs
+        char	*vendor_8;
+        char 	*model_and_firmware_40;
+        char	*serial_20;
+        char	*model_16;
+        char	*firmware_4;
+
+        char	*serial2_20;
+        char	*firmware2_8;
+        char	*model2_40;
+
+        // for PCem config only
+        char	*model_string_40;
+        char	*model_config_string_40;
+        int      interfaces;
+        int      speed; // Not an index, but a "speed" value. -1 == allow override
+} const cd_models[] =
+{
+        {
+                // Generic PCem CD
+                "PCem",
+                "PCemCD v1.0",
+                "53R141",
+                "PCemCD",
+                "1.0",
+
+                "",
+                "v1.0",
+                "PCemCD",
+                "PCemCD",
+                "pcemcd",
+                CD_MODEL_INTERFACE_ALL,
+                -1,
+        },
+        {
+                // A 4x CD-ROM drive from Aztech. Choose if your system image has the SGIDECD.SYS driver
+                "AZT",
+                "AZT 46802I v1.15",
+                "53R141", // TODO: clone serial from my real one
+                "46802I",
+                "1.15",
+
+                "",
+                "v1.15",
+                "CDA46802I",
+                "AZT CDA 468-02I 4X",
+                "azt_cda_468_02i_4x",
+                CD_MODEL_INTERFACE_IDE,
+                4,
+        },
+};
+
+char *cd_model = NULL;
+
+char *cd_get_model(int i)
+{
+        return cd_models[i].model_string_40;
+}
+
+char *cd_get_config_model(int i)
+{
+        return cd_models[i].model_config_string_40;
+}
+
+void cd_set_model(char *model)
+{
+        if (cd_data)
+        {
+                int c = 0;
+
+                while (1)
+                {
+                        if (!model)
+                                break;
+                        if (c > MAX_CD_MODEL)
+                                break;
+                        if (!strncmp(cd_models[c].model_string_40, model, 40))
+                                break;
+
+                        c++;
+                }
+
+                cd_data->cur_model = c;
+        }
+}
+
+int cd_get_model_interfaces(int i)
+{
+        return cd_models[i].interfaces;
+}
+
+int cd_get_model_speed(int i)
+{
+        return cd_models[i].speed;
+}
+
+char *cd_model_to_config(char *model)
+{
+        int c = 0;
+
+        while (1)
+        {
+                if (!model)
+                        break;
+                if (c > MAX_CD_MODEL)
+                {
+                        c = 0; // default
+                        break;
+                }
+                if (!strncmp(cd_models[c].model_string_40, model, 40))
+                        break;
+
+                c++;
+        }
+        return cd_models[c].model_config_string_40;
+}
+
+char *cd_model_from_config(char *config)
+{
+        int c = 0;
+
+        while (1)
+        {
+                if (!config)
+                        break;
+                if (c > MAX_CD_MODEL)
+                {
+                        c = 0; // default
+                        break;
+                }
+                if (!strncmp(cd_models[c].model_config_string_40, config, 40))
+                        break;
+
+                c++;
+        }
+        return cd_models[c].model_string_40;
 }
 
 static void scsi_cd_callback(void *p)
@@ -398,6 +540,7 @@ static void *scsi_cd_init(scsi_bus_t *bus, int id)
         
         cd_data = data;
         cd_set_speed(cd_speed);
+        cd_set_model(cd_model);
                 
         return data;
 }
@@ -1299,11 +1442,11 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 				data->data_in[idx++] = 0x01;
 				data->data_in[idx++] = 0x00;
 				data->data_in[idx++] = 68;
-				ide_padstr8(data->data_in + idx, 8, "PCem"); /* Vendor */
+				ide_padstr8(data->data_in + idx, 8, cd_models[cd_data->cur_model].vendor_8); /* Vendor */
 				idx += 8;
-				ide_padstr8(data->data_in + idx, 40, "PCemCD v1.0"); /* Product */
+				ide_padstr8(data->data_in + idx, 40, cd_models[cd_data->cur_model].model_and_firmware_40); /* Product */
 				idx += 40;
-				ide_padstr8(data->data_in + idx, 20, "53R141"); /* Product */
+				ide_padstr8(data->data_in + idx, 20, cd_models[cd_data->cur_model].serial_20); /* Product */
 				idx += 20;				
 				break;
 				
@@ -1334,9 +1477,9 @@ static int scsi_cd_command(uint8_t *cdb, void *p)
 			data->data_in[6] = 0;
 			data->data_in[7] = 0;
 
-                        ide_padstr8(data->data_in + 8, 8, "PCem"); /* Vendor */
-                        ide_padstr8(data->data_in + 16, 16, "PCemCD"); /* Product */
-                        ide_padstr8(data->data_in + 32, 4, "1.0"); /* Revision */
+                        ide_padstr8(data->data_in + 8, 8, cd_models[cd_data->cur_model].vendor_8); /* Vendor */
+                        ide_padstr8(data->data_in + 16, 16, cd_models[cd_data->cur_model].model_16); /* Product */
+                        ide_padstr8(data->data_in + 32, 4, cd_models[cd_data->cur_model].firmware_4); /* Revision */
 					
                         idx = 36;
 		}
@@ -1488,9 +1631,9 @@ static void scsi_cd_atapi_identify(uint16_t *buffer, void *p)
         memset(buffer, 0, 512);
         
         buffer[0] = 0x8000 | (5<<8) | 0x80 | (2<<5); /* ATAPI device, CD-ROM drive, removable media, accelerated DRQ */
-	ide_padstr((char *)(buffer + 10), "", 20); /* Serial Number */
-	ide_padstr((char *)(buffer + 23), "v1.0", 8); /* Firmware */
-	ide_padstr((char *)(buffer + 27), "PCemCD", 40); /* Model */
+	ide_padstr((char *)(buffer + 10), cd_models[cd_data->cur_model].serial2_20, 20); /* Serial Number */
+	ide_padstr((char *)(buffer + 23), cd_models[cd_data->cur_model].firmware2_8, 8); /* Firmware */
+	ide_padstr((char *)(buffer + 27), cd_models[cd_data->cur_model].model2_40, 40); /* Model */
 	buffer[49] = 0x300; /*DMA and LBA supported*/
 	buffer[51] = 120;
 	buffer[52] = 120;

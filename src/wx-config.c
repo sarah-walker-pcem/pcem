@@ -50,6 +50,8 @@ extern void deviceconfig_open(void* hwnd, device_t *device);
 extern int hdconf_init(void* hdlg);
 extern int hdconf_update(void* hdlg);
 
+static int hdd_controller_selected_is_ide(void* hdlg);
+static int hdd_controller_selected_is_scsi(void* hdlg);
 static int hdd_controller_selected_has_config(void *hdlg);
 static device_t *hdd_controller_selected_get_device(void *hdlg);
 
@@ -360,12 +362,64 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
         }
 }
 
-static void recalc_cd_list(void *hdlg, int cur_speed)
+// TODO: split this into model/speed recalcs?
+static void recalc_cd_list(void *hdlg, int cur_speed, char *cur_model)
 {
-        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+        int temp_model = -1;
+        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDMODEL"));
         int c = 0;
-        
+        int found = 0;
+
         wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
+        if (hdd_controller_selected_is_ide(hdlg) || hdd_controller_selected_is_scsi(hdlg))
+                wx_enablewindow(h, TRUE);
+        else
+                wx_enablewindow(h, FALSE);
+        while (1)
+        {
+                char s[40];
+                char *model;
+
+                if ((cd_get_model_interfaces(c) == CD_MODEL_INTERFACE_ALL) ||
+                    (cd_get_model_interfaces(c) == CD_MODEL_INTERFACE_IDE && hdd_controller_selected_is_ide(hdlg)) ||
+                    (cd_get_model_interfaces(c) == CD_MODEL_INTERFACE_SCSI && hdd_controller_selected_is_scsi(hdlg)))
+                {
+
+                        model = cd_get_model(c);
+                        sprintf(s, "%s", model);
+                        wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
+
+                        if (!strncmp(s, cur_model, 40))
+                        {
+                                wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
+                                temp_model = c;
+                                found = 1;
+                        }
+                }
+
+                c++;
+                if (c > MAX_CD_MODEL)
+                        break;
+        }
+        if (!found)
+                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0); // assume that there is always at least one TODO: is this necessary?
+
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+        c = 0;
+        found = 0;
+
+        wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
+        if (temp_model >= 0 && cd_get_model_speed(temp_model) != -1)
+        {
+                // this model has a specific speed
+                wx_enablewindow(h, FALSE);
+                cur_speed = cd_get_model_speed(temp_model);
+        }
+        else if (hdd_controller_selected_is_ide(hdlg) || hdd_controller_selected_is_scsi(hdlg))
+                wx_enablewindow(h, TRUE);
+        else
+                wx_enablewindow(h, FALSE);
         while (1)
         {
                 char s[8];
@@ -376,12 +430,17 @@ static void recalc_cd_list(void *hdlg, int cur_speed)
                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                 
                 if (speed == cur_speed)
+                {
                         wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
-                
+                        found = 1;
+                }
+
                 c++;
                 if (speed >= MAX_CD_SPEED)
                         break;
         }
+        if (!found)
+                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0); // fall back TODO: is this necessary?
 }
 
 #ifdef USE_NETWORKING
@@ -615,6 +674,10 @@ int config_dlgsave(void* hdlg)
         cd_speed = cd_get_speed(wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
         cd_set_speed(cd_speed);
 
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDMODEL"));
+        cd_model = cd_get_model(wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
+        cd_set_model(cd_model);
+
         if (has_been_inited)
                 saveconfig(NULL);
 
@@ -639,6 +702,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
         int temp_dynarec;
         int cpu_flags;
         int cpu_type;
+        int temp_cd_model, temp_cd_speed;
         int temp_mouse_type;
 #ifdef USE_NETWORKING
         int temp_network_card;
@@ -893,7 +957,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                         }
                         
-                        recalc_cd_list(hdlg, cd_speed);
+                        recalc_cd_list(hdlg, cd_speed, cd_model);
 
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, romstomodel[romset]);
@@ -1048,6 +1112,12 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                                 recalc_hdd_list(hdlg, temp_model, 1, force_ide);
 
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDMODEL"));
+                                temp_cd_model = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+                                temp_cd_speed = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                recalc_cd_list(hdlg, cd_get_speed(temp_cd_speed), cd_get_model(temp_cd_model));
+
                                 recalc_snd_list(hdlg, temp_model);
 #ifdef USE_NETWORKING
                                 recalc_net_list(hdlg, temp_model);
@@ -1198,10 +1268,24 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
                                 temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
                                 recalc_hdd_list(hdlg, temp_model, 1, 0);
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDMODEL"));
+                                temp_cd_model = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+                                temp_cd_speed = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                recalc_cd_list(hdlg, cd_get_speed(temp_cd_speed), cd_get_model(temp_cd_model));
                         }
                         else if (wParam == WX_ID("IDC_CONFIGUREHDD"))
                         {
                                 deviceconfig_open(hdlg, (void *)hdd_controller_selected_get_device(hdlg));
+                        }
+                        else if (wParam == WX_ID("IDC_COMBO_CDMODEL"))
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDMODEL"));
+                                temp_cd_model = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_CDSPEED"));
+                                temp_cd_speed = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                                recalc_cd_list(hdlg, cd_get_speed(temp_cd_speed), cd_get_model(temp_cd_model));
                         }
 #ifdef USE_NETWORKING
                         else if (wParam == WX_ID("IDC_COMBO_NETCARD"))
@@ -1335,6 +1419,22 @@ static int hdd_controller_selected_is_mfm(void* hdlg)
         int c = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
         if (hdd_names[c])
                 return hdd_controller_is_mfm(hdd_names[c]);
+        return 0;
+}
+static int hdd_controller_selected_is_ide(void* hdlg)
+{
+        void* h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOHDD"));
+        int c = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+        if (hdd_names[c])
+                return hdd_controller_is_ide(hdd_names[c]);
+        return 0;
+}
+static int hdd_controller_selected_is_scsi(void* hdlg)
+{
+        void* h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOHDD"));
+        int c = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+        if (hdd_names[c])
+                return hdd_controller_is_scsi(hdd_names[c]);
         return 0;
 }
 static int hdd_controller_selected_has_config(void* hdlg)
