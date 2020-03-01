@@ -389,7 +389,7 @@ uint16_t mfm_readw(uint16_t port, void *p)
                         if (mfm->secount)
                         {
                                 mfm_next_sector(mfm);
-                                mfm->status = STAT_BUSY;
+                                mfm->status = STAT_BUSY | STAT_READY | STAT_DSC;
                                 timer_set_delay_u64(&mfm->callback_timer, SECTOR_TIME);
                         }
                 }

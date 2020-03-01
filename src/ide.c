@@ -766,7 +766,7 @@ uint16_t readidew(int ide_board)
                                 if (ide->secount)
                                 {
                                         ide_next_sector(ide);
-                                        ide->atastat = BUSY_STAT;
+                                        ide->atastat = BUSY_STAT | READY_STAT | DSC_STAT;
                                         if (ide->command == WIN_READ_MULTIPLE)
                                                 callbackide(ide_board);
                                         else
