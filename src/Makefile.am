@@ -31,7 +31,7 @@ codegen_ops_fpu_misc.c codegen_ops_mmx_arith.c codegen_ops_mmx_cmp.c codegen_ops
 codegen_ops_mmx_logic.c codegen_ops_mmx_pack.c codegen_ops_mmx_shift.c codegen_ops_helpers.c codegen_ops_jump.c \
 codegen_ops_logic.c codegen_ops_shift.c codegen_ops_misc.c codegen_ops_mov.c codegen_ops_stack.c codegen_reg.c \
 codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_k6.c codegen_timing_pentium.c \
-codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c config.c cpu.c cpu_tables.c dells200.c device.c disc.c \
+codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c config.c cpu.c cpu_tables.c cs8230.c dells200.c device.c disc.c \
 disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c fdc.c fdc37c665.c fdc37c93x.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
 hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
 jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \

@@ -254,6 +254,7 @@ enum
 	ROM_FIC_VA503P,
         ROM_CBM_SL386SX25,
         ROM_IBMPS1_2133_451,
+        ROM_ECS_386_32,
 
         ROM_MAX
 };

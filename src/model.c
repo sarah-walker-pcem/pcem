@@ -14,6 +14,7 @@
 #include "cbm_io.h"
 #include "cmd640.h"
 #include "compaq.h"
+#include "cs8230.h"
 #include "dells200.h"
 #include "device.h"
 #include "cassette.h"
@@ -104,6 +105,7 @@ void        at_scat_init();
 void      at_scatsx_init();
 void   at_acer386sx_init();
 void     at_wd76c10_init();
+void      at_cs8230_init();
 void     at_ali1429_init();
 void    at_headland_init();
 void     at_opti495_init();
@@ -198,6 +200,7 @@ MODEL models[] =
 
         {"[386DX] AMI 386DX clone",       ROM_AMI386DX_OPTI495, "ami386dx",       { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
         {"[386DX] Compaq Deskpro 386",    ROM_DESKPRO_386,      "deskpro386",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT,                                           1,   15,   1,     deskpro386_init, NULL},
+        {"[386DX] ECS 386/32",            ROM_ECS_386_32,       "ecs_386_32",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT,                                           1,   16,   1,      at_cs8230_init, NULL},
         {"[386DX] IBM PS/2 Model 70 (type 3)", ROM_IBMPS2_M70_TYPE3, "ibmps2_m70_type3", { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,          2,   16,   2,   ps2_model_70_init, NULL},
         {"[386DX] IBM PS/2 Model 80",     ROM_IBMPS2_M80,       "ibmps2_m80",     { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_DISABLE_SW|MODEL_AT|MODEL_PS2|MODEL_MCA,                 1,   12,   1,   ps2_model_80_init, NULL},
         {"[386DX] MR 386DX clone",        ROM_MR386DX_OPTI495,  "mr386dx",        { {"Intel", cpus_i386DX},      {"AMD", cpus_Am386DX}, {"Cyrix", cpus_486DLC}}, MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                             1,  256,   1,     at_opti495_init, NULL},
@@ -620,6 +623,12 @@ void at_opti495_init()
 {
         at_init();
         opti495_init();
+}
+
+void at_cs8230_init()
+{
+        at_init();
+        cs8230_init();
 }
 
 void at_ali1429_init()
