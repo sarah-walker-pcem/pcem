@@ -403,8 +403,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                 {
                         fdc.tc = 0;
                         fdc.data_ready = 0;
-                        fdc.in_seek_mt = 0;
-                        
+
                         fdc.command=val;
 //                        pclog("Starting FDC command %02X\n",fdc.command);
                         switch (fdc.command&0x1F)
