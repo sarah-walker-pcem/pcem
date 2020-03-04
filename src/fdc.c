@@ -639,7 +639,7 @@ bad_command:
                                         
                                         case 0x0f: /*Seek*/
                                         fdc.stat =  1 << fdc.drive;
-                                        fdc.head = (fdc.params[0] & 4) ? 1 : 0;
+                                        fdc.head = 0;
                                         timer_disable(&fdc.timer);
                                         time = fdd_seek(fdc.drive, fdc.params[1] - fdc.track[fdc.drive]);
                                         if (time)
