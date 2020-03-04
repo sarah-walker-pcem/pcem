@@ -5,11 +5,22 @@
 #include "disc.h"
 #include "disc_sector.h"
 #include "dma.h"
+#include "fdc.h"
 #include "fdd.h"
 #include "io.h"
 #include "pic.h"
 #include "timer.h"
 #include "x86.h"
+
+#define ST1_DE (1 << 5)
+#define ST1_ND (1 << 2)
+#define ST1_NW (1 << 1)
+#define ST1_MA (1 << 0)
+
+#define ST2_DD (1 << 5)
+#define ST2_WC (1 << 4) /*Wrong cylinder*/
+#define ST2_BC (1 << 1) /*Bad cylinder*/
+#define ST2_MD (1 << 0)
 
 static int fdc_reset_stat = 0;
 /*FDC*/
@@ -790,7 +801,6 @@ uint8_t fdc_read(uint16_t addr, void *priv)
 void fdc_callback()
 {
         int temp;
-        int doseek = 0;
         int drive;
         
 //        pclog("fdc_callback %i\n", discint);
@@ -1187,15 +1197,33 @@ void fdc_finishread()
 //        rpclog("fdc_finishread\n");
 }
 
-void fdc_notfound()
+void fdc_notfound(int reason)
 {
+//        pclog("fdc_notfound: reason=%i\n", reason);
         timer_disable(&fdc.timer);
 
         fdc_int();
         fdc.stat=0xD0;
         fdc.res[4]=0x40|(fdc.head?4:0)|fdc.drive;
-        fdc.res[5]=5;
-        fdc.res[6]=0;
+        switch (reason)
+        {
+                case FDC_STATUS_AM_NOT_FOUND:
+                fdc.res[5] = ST1_ND | ST1_MA;
+                fdc.res[6] = 0;
+                break;
+                case FDC_STATUS_NOT_FOUND:
+                fdc.res[5] = ST1_ND;
+                fdc.res[6] = 0;
+                break;
+                case FDC_STATUS_WRONG_CYLINDER:
+                fdc.res[5] = ST1_ND;
+                fdc.res[6] = ST2_WC;
+                break;
+                case FDC_STATUS_BAD_CYLINDER:
+                fdc.res[5] = ST1_ND;
+                fdc.res[6] = ST2_WC | ST2_BC;
+                break;
+        }
         fdc.res[7] = fdc.rw_track;
         fdc.res[8] = fdc.head;
         fdc.res[9] = fdc.sector;

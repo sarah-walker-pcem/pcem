@@ -3,6 +3,7 @@
 #include "ibm.h"
 #include "disc.h"
 #include "disc_fdi.h"
+#include "fdc.h"
 #include "fdi2raw.h"
 
 static struct
@@ -314,7 +315,7 @@ void fdi_poll()
                 if (fdi_revs == 3)
                 {
 //                        pclog("Not found!\n");
-                        fdc_notfound();
+                        fdc_notfound(FDC_STATUS_NOT_FOUND);
                         fdi_inread = fdi_inreadaddr = 0;
                         return;
                 }

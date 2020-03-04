@@ -37,7 +37,7 @@ void fdc_callback();
 int  fdc_data(uint8_t dat);
 void fdc_spindown();
 void fdc_finishread();
-void fdc_notfound();
+void fdc_notfound(int reason);
 void fdc_datacrcerror();
 void fdc_headercrcerror();
 void fdc_writeprotect();

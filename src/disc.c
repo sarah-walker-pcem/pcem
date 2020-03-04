@@ -143,7 +143,7 @@ void disc_poll()
         {
                 disc_notfound--;
                 if (!disc_notfound)
-                        fdc_notfound();
+                        fdc_notfound(FDC_STATUS_AM_NOT_FOUND);
         }
 }
 

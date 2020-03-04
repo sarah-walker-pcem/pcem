@@ -24,3 +24,13 @@ void fdc_update_boot_drive(int boot_drive);
 void fdc_update_densel_polarity(int densel_polarity);
 void fdc_update_densel_force(int densel_force);
 void fdc_update_drvrate(int drive, int drvrate);
+
+
+
+enum
+{
+        FDC_STATUS_AM_NOT_FOUND,
+        FDC_STATUS_NOT_FOUND,
+        FDC_STATUS_WRONG_CYLINDER,
+        FDC_STATUS_BAD_CYLINDER
+};
