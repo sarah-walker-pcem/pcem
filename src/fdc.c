@@ -348,11 +348,6 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                 }
                 else
                 {
-                        if (val&4)
-                        {
-                                fdc.stat=0x80;
-                                fdc.pnum=fdc.ptot=0;
-                        }
                         if ((val&4) && !(fdc.dor&4))
                         {
 				timer_set_delay_u64(&fdc.timer, 8 * TIMER_USEC);
