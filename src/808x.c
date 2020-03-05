@@ -677,8 +677,15 @@ void softresetx86()
         //rammask=0xFFFFFFFF;
         cpu_state.flags=2;
         idt.base = 0;
-        idt.limit = is386 ? 0x03FF : 0xFFFF;
-        EAX = EBX = ECX = EDX = ESI = EDI = EBP = ESP = 0;
+        if (is386)
+        {
+                idt.limit = 0x03FF;
+                EAX = EBX = ECX = EDX = ESI = EDI = EBP = ESP = 0;
+        }
+        else
+        {
+                idt.limit = 0xFFFF;
+        }
         x86seg_reset();
         flushmmucache();
         x86_was_reset = 1;
