@@ -114,6 +114,7 @@ extern CPU cpus_Pentium5V[];
 extern CPU cpus_PentiumS5[];
 extern CPU cpus_Pentium[];
 extern CPU cpus_6x86[];
+extern CPU cpus_6x86_SS7[];
 extern CPU cpus_K6_S7[];
 extern CPU cpus_K6_SS7[];
 
