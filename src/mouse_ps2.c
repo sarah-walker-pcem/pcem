@@ -96,6 +96,27 @@ void mouse_ps2_write(uint8_t val, void *p)
                         keyboard_at_adddata_mouse(mouse->sample_rate);
                         break;
                         
+                        case 0xeb: /*Get mouse data*/
+                        keyboard_at_adddata_mouse(0xfa);
+
+                        temp = 0;
+                        if (mouse->x < 0)
+                                temp |= 0x10;
+                        if (mouse->y < 0)
+                                temp |= 0x20;
+                        if (mouse_buttons & 1)
+                                temp |= 1;
+                        if (mouse_buttons & 2)
+                                temp |= 2;
+                        if ((mouse_buttons & 4) && (mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON))
+                                temp |= 4;
+                        keyboard_at_adddata_mouse(temp);
+                        keyboard_at_adddata_mouse(mouse->x & 0xff);
+                        keyboard_at_adddata_mouse(mouse->y & 0xff);
+                        if (mouse->intellimouse_mode)
+                                keyboard_at_adddata_mouse(mouse->z);
+                        break;
+                        
                         case 0xf2: /*Read ID*/
                         keyboard_at_adddata_mouse(0xfa);
                         if (mouse->intellimouse_mode)
