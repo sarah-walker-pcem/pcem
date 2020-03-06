@@ -393,6 +393,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                         keyboard_at_adddata_keyboard(0xfa);
                                         break;
                                         
+                                        case 0xee: /*Diagnostic echo*/
+                                        keyboard_at_adddata_keyboard(0xee);
+                                        break;
+
                                         case 0xf0: /*Set scancode set*/
                                         keyboard_at.key_wantdata = 1;
                                         keyboard_at_adddata_keyboard(0xfa);
