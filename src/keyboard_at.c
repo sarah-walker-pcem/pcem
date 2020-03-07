@@ -663,6 +663,8 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 uint8_t keyboard_at_read(uint16_t port, void *priv)
 {
         uint8_t temp = 0xff;
+        
+        cycles -= ISA_CYCLES(8);
 //        if (port != 0x61) pclog("keyboard_at : read %04X ", port);
         if (romset == ROM_XI8088 && port == 0x63)
                 port = 0x61;
