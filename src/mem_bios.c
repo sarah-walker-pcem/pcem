@@ -372,6 +372,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_GDC212M:
+                f=romfopen("gdc212m/gdc212m_72h.bin","rb");
+                if (!f) break;
+                romfread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_GW286CT:
                 f=romfopen("gw286ct/2ctc001.bin","rb");
                 if (!f) break;

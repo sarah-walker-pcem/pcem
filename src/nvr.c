@@ -297,6 +297,7 @@ void loadnvr()
                 case ROM_AMI286:      f = nvrfopen("ami286.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_TG286M:      f = nvrfopen("tg286m.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_AWARD286:    f = nvrfopen("award286.nvr",    "rb"); nvrmask = 127; break;
+                case ROM_GDC212M:     f = nvrfopen("gdc212m.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "rb"); nvrmask = 127; break;
                 case ROM_SPC4216P:    f = nvrfopen("spc4216p.nvr",    "rb"); nvrmask = 127; break;
@@ -398,6 +399,7 @@ void savenvr()
                 case ROM_AMI286:      f = nvrfopen("ami286.nvr",      "wb"); break;
                 case ROM_TG286M:      f = nvrfopen("tg286m.nvr",      "wb"); break;
                 case ROM_AWARD286:    f = nvrfopen("award286.nvr",    "wb"); break;
+                case ROM_GDC212M:     f = nvrfopen("gdc212m.nvr",     "wb"); break;
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "wb"); break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "wb"); break;
                 case ROM_SPC4216P:    f = nvrfopen("spc4216p.nvr",    "wb"); break;
