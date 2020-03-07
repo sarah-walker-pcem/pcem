@@ -405,7 +405,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                         case 0xf2: /*Read ID*/
                                         keyboard_at_adddata_keyboard(0xfa);
                                         keyboard_at_adddata_keyboard(0xab);
-                                        keyboard_at_adddata_keyboard(0x41);
+                                        keyboard_at_adddata_keyboard(0x83);
                                         break;
                                         
                                         case 0xf3: /*Set typematic rate/delay*/
