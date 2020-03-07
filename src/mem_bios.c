@@ -1064,6 +1064,14 @@ int loadbios()
                 fclose(ff);
                 fclose(f);
                 return 1;
+
+                case ROM_LEDGE_MODELM:
+                f = romfopen("leadingedge_modelm/Leading Edge - Model M - BIOS ROM - Version 4.71.bin","rb");
+                if (!f) break;
+                romfread(rom, 0x4000, 1, f);
+                fclose(f);
+                biosmask = 0x3fff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

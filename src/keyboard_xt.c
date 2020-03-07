@@ -157,7 +157,7 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
         switch (port)
         {
                 case 0x60:
-                if ((romset == ROM_IBMPC) && (keyboard_xt.pb & 0x80))
+                if ((romset == ROM_IBMPC || romset == ROM_LEDGE_MODELM) && (keyboard_xt.pb & 0x80))
                 {
                         if (video_is_ega_vga())
                                 temp = 0x4D;
@@ -190,7 +190,12 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
                         else
                                 temp = ((mem_size-64) / 32) >> 4;
 
-			temp |= (cassette_input()) ? 0x10 : 0;
+        		temp |= (cassette_input()) ? 0x10 : 0;
+                }
+                else if (romset == ROM_LEDGE_MODELM)
+                {
+                        /*High bit of memory size is read from port 0xa0*/
+                        temp = ((mem_size-64) / 32) & 0xf;
                 }
                 else if (romset == ROM_ATARIPC3)
                 {
@@ -227,6 +232,16 @@ uint8_t keyboard_xt_read(uint16_t port, void *priv)
         return temp;
 }
 
+static uint8_t ledge_modelm_read(uint16_t port, void *p)
+{
+        uint8_t temp = 0;
+        
+        if (((mem_size-64) / 32) >> 4)
+                temp |= 0x40;
+
+        return temp;
+}
+
 void keyboard_xt_reset()
 {
         keyboard_xt.wantirq = 0;
@@ -238,6 +253,8 @@ void keyboard_xt_init()
 {
         //return;
         io_sethandler(0x0060, 0x0004, keyboard_xt_read, NULL, NULL, keyboard_xt_write, NULL, NULL,  NULL);
+        if (romset == ROM_LEDGE_MODELM)
+                io_sethandler(0x00a0, 0x0001, ledge_modelm_read, NULL, NULL, NULL, NULL, NULL, NULL);
         keyboard_xt_reset();
         keyboard_send = keyboard_xt_adddata;
         keyboard_poll = keyboard_xt_poll;
