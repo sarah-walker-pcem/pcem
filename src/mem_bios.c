@@ -418,6 +418,27 @@ int loadbios()
                 }
                 break;
 
+                case ROM_SPC4620P:
+                f=romfopen("spc4620p/svb6120a_font.rom","rb");
+                if (!f) break;
+                fclose(f);
+                f = romfopen("spc4620p/31005h.u8", "rb");
+                ff = romfopen("spc4620p/31005h.u10","rb");
+                if (f && ff)
+                {
+                        fseek(f,  0x8000, SEEK_SET);
+                        fseek(ff, 0x8000, SEEK_SET);                
+                        for (c = 0x0000; c < 0x10000; c += 2)
+                        {
+                                rom[c]     = getc(f);
+                                rom[c + 1] = getc(ff);
+                        }
+                        fclose(ff);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
                 case ROM_EUROPC:
 //                return 0;
                 f=romfopen("europc/50145","rb");

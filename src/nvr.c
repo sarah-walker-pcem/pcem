@@ -301,6 +301,7 @@ void loadnvr()
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "rb"); nvrmask = 127; break;
                 case ROM_SPC4216P:    f = nvrfopen("spc4216p.nvr",    "rb"); nvrmask = 127; break;
+                case ROM_SPC4620P:    f = nvrfopen("spc4620p.nvr",    "rb"); nvrmask = 127; break;
                 case ROM_DELL200:     f = nvrfopen("dell200.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_IBMAT386:    f = nvrfopen("at386.nvr",       "rb"); nvrmask = 127; break;
                 case ROM_DESKPRO_386: f = nvrfopen("deskpro386.nvr",  "rb"); break;
@@ -403,6 +404,7 @@ void savenvr()
                 case ROM_GW286CT:     f = nvrfopen("gw286ct.nvr",     "wb"); break;
                 case ROM_SPC4200P:    f = nvrfopen("spc4200p.nvr",    "wb"); break;
                 case ROM_SPC4216P:    f = nvrfopen("spc4216p.nvr",    "wb"); break;
+                case ROM_SPC4620P:    f = nvrfopen("spc4620p.nvr",    "wb"); break;
                 case ROM_DELL200:     f = nvrfopen("dell200.nvr",     "wb"); break;
                 case ROM_IBMAT386:    f = nvrfopen("at386.nvr",       "wb"); break;
                 case ROM_DESKPRO_386: f = nvrfopen("deskpro386.nvr",  "wb"); break;

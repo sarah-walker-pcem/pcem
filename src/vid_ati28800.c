@@ -383,6 +383,39 @@ void *ati28800k_init()
         return ati28800;
 }
 
+void *ati28800k_spc4620p_init()
+{
+        ati28800_t *ati28800 = malloc(sizeof(ati28800_t));
+        memset(ati28800, 0, sizeof(ati28800_t));
+
+        ati28800->port_03dd_val = 0;
+        ati28800->get_korean_font_base = 0;
+        ati28800->get_korean_font_index = 0;
+        ati28800->get_korean_font_enabled = 0;
+        ati28800->get_korean_font_kind = 0;
+        ati28800->in_get_korean_font_kind_set = 0;
+        ati28800->ksc5601_mode_enabled = 0;
+
+        rom_init_interleaved(&ati28800->bios_rom, "spc4620p/31005h.u8", "spc4620p/31005h.u10", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        loadfont("spc4620p/svb6120a_font.rom", 6);
+        
+        svga_init(&ati28800->svga, ati28800, 1 << 19, /*512kb*/
+                   ati28800k_recalctimings,
+                   ati28800k_in, ati28800k_out,
+                   NULL,
+                   NULL);
+
+        io_sethandler(0x01ce, 0x0002, ati28800k_in, NULL, NULL, ati28800k_out, NULL, NULL, ati28800);
+        io_sethandler(0x03c0, 0x0020, ati28800k_in, NULL, NULL, ati28800k_out, NULL, NULL, ati28800);
+
+        ati28800->svga.miscout = 1;
+        ati28800->svga.ksc5601_sbyte_mask = 0;
+
+        ati_eeprom_load(&ati28800->eeprom, "svb6120a.nvr", 0);
+
+        return ati28800;
+}
+
 static int ati28800_available()
 {
         return rom_present("bios.bin");
@@ -453,6 +486,18 @@ device_t ati28800k_device =
         ati28800k_init,
         ati28800_close,
         ati28800k_available,
+        ati28800_speed_changed,
+        ati28800_force_redraw,
+        ati28800k_add_status_info
+};
+
+device_t ati28800k_spc4620p_device =
+{
+        "SVB-6120A",
+        0,
+        ati28800k_spc4620p_init,
+        ati28800_close,
+        NULL,
         ati28800_speed_changed,
         ati28800_force_redraw,
         ati28800k_add_status_info

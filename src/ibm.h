@@ -200,6 +200,7 @@ enum
         ROM_GW286CT,
         ROM_SPC4200P,
         ROM_SPC4216P,
+        ROM_SPC4620P,
         ROM_DELL200,
         ROM_MISC286,
         ROM_IBMAT386,

@@ -141,6 +141,7 @@ static video_timings_t timing_vga      = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_ps1_svga = {VIDEO_ISA, 6, 8,16, 6, 8,16};
 static video_timings_t timing_t3100e   = {VIDEO_ISA, 8,16,32, 8,16,32};
 static video_timings_t timing_t1000    = {VIDEO_ISA, 8,16,32, 8,16,32};
+static video_timings_t timing_spc4620p = {VIDEO_ISA, 2, 2, 4, 4, 4, 8};
 static video_timings_t timing_pc425x   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
 static video_timings_t timing_pb410a   = {VIDEO_BUS, 5, 5, 9, 20,20,30};
 static video_timings_t timing_pb570    = {VIDEO_BUS, 4, 4, 8, 10,10,20};
@@ -211,7 +212,11 @@ device_t *video_card_getdevice(int card, int romset)
 
                 case ROM_MEGAPC:
                 return &paradise_wd90c11_megapc_device;
-                        
+
+                case ROM_SPC4620P:
+                if (card == GFX_BUILTIN)
+                        return &ati28800k_spc4620p_device;
+
                 case ROM_ACER386:
                 return &oti067_acer386_device;
                         
@@ -587,6 +592,11 @@ void video_updatetiming()
                         if (gfxcard == GFX_BUILTIN)
                                 timing = &timing_wd90c11;
                         break;
+
+                        case ROM_SPC4620P:
+                        if (gfxcard == GFX_BUILTIN)
+                                timing = &timing_spc4620p;
+                        break;
                         
                         case ROM_ACER386:
                         if (gfxcard == GFX_BUILTIN)
@@ -780,7 +790,15 @@ void video_init()
                         return;
                 }
                 break;
-                        
+
+                case ROM_SPC4620P:
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&ati28800k_spc4620p_device);
+                        return;
+                }
+                break;
+
                 case ROM_ACER386:
                 device_add(&oti067_acer386_device);
                 if (gfxcard != GFX_BUILTIN)

@@ -1369,6 +1369,7 @@ void scat_init()
         {
                 case ROM_GW286CT:
                 case ROM_SPC4216P:
+                case ROM_SPC4620P:
                 scat_regs[SCAT_VERSION] = 4;
                 break;
                 default:
