@@ -200,6 +200,6 @@ void pc87306_init(uint16_t port)
         pc87306_global.regs[REG_FAR] = 0x10;
         pc87306_global.regs[REG_GPBA] = 0x78 >> 2;
         pc87306_global.regs[REG_SCF0] = 0x30;
-        pc87306_global.gpio_2 = 0xfa;
+        pc87306_global.gpio_2 = 0xff; // this is a mask only, output will be defined by zappa_brdconfig and endeavor_brdconfig in intel.c
         io_sethandler(0x0078, 0x0002, pc87306_gpio_read, NULL, NULL, pc87306_gpio_write, NULL, NULL, &pc87306_global);
 }
