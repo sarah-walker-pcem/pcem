@@ -420,7 +420,7 @@ void genius_hiresline(genius_t *genius)
 {
 	int x, c;
 	uint32_t dat;
-	uint8_t ink;
+	uint32_t ink;
 	uint32_t addr;
         
 	ink = (genius->genius_control & 0x20) ? genius_pal[0] : genius_pal[3];
@@ -457,7 +457,7 @@ void genius_poll(void *p)
 {
         genius_t *genius = (genius_t *)p;
         int x;
-        uint8_t background;
+        uint32_t background;
 
         if (!genius->linepos)
         {
