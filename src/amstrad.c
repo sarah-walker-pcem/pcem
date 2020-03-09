@@ -11,6 +11,7 @@
 
 static uint8_t amstrad_dead;
 int amstrad_latch = 0;
+static uint8_t amstrad_language;
 
 uint8_t amstrad_read(uint16_t port, void *priv)
 {
@@ -22,7 +23,7 @@ uint8_t amstrad_read(uint16_t port, void *priv)
                 case 0x378:
                 return lpt1_read(port, NULL);
                 case 0x379:
-                return lpt1_read(port, NULL) | 7;
+                return lpt1_read(port, NULL) | (amstrad_language & 7);
                 case 0x37a:
                 temp = lpt1_read(port, NULL) & 0x1f;
                 if (romset == ROM_PC1512) return temp | 0x20;
@@ -164,4 +165,165 @@ void amstrad_init()
         io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         if ((romset == ROM_PC200 || romset == ROM_PPC512) && gfxcard != GFX_BUILTIN)        
                 io_sethandler(0x03de, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
+
+	
 }
+
+static void *ams1512_init()
+{
+	amstrad_language = device_get_config_int("language");
+	return &amstrad_language;
+}
+
+device_config_t ams1512_config[] = 
+{
+	{
+                .name = "language",
+                .description = "BIOS language",
+                .type = CONFIG_SELECTION,
+		.selection =
+		{
+			{
+				.description = "English",
+				.value = 7
+			},
+			{
+				.description = "German",
+				.value = 6
+			},
+			{
+				.description = "French",
+				.value = 5
+			},
+			{
+				.description = "Spanish",
+				.value = 4
+			},
+			{
+				.description = "Danish",
+				.value = 3
+			},
+			{
+				.description = "Swedish",
+				.value = 2
+			},
+			{
+				.description = "Italian",
+				.value = 1
+			},
+			{
+				.description = "Diagnostic mode",
+				.value = 0
+			},
+			{
+				.description = ""
+			}
+		},
+                .default_int = 7
+	},
+        {
+                .type = -1
+        }
+};
+	
+
+device_config_t ams2086_config[] = 
+{
+	{
+                .name = "language",
+                .description = "BIOS language",
+                .type = CONFIG_SELECTION,
+		.selection =
+		{
+			{
+				.description = "English",
+				.value = 7
+			},
+			{
+				.description = "Diagnostic mode",
+				.value = 0
+			},
+			{
+				.description = ""
+			}
+		},
+                .default_int = 7
+	},
+        {
+                .type = -1
+        }
+};
+		
+
+
+device_config_t ams3086_config[] = 
+{
+	{
+                .name = "language",
+                .description = "BIOS language",
+                .type = CONFIG_SELECTION,
+		.selection =
+		{
+			{
+				.description = "English",
+				.value = 7
+			},
+			{
+				.description = "Diagnostic mode",
+				.value = 3
+			},
+			{
+				.description = ""
+			}
+		},
+                .default_int = 7
+	},
+        {
+                .type = -1
+        }
+};
+	
+
+	
+
+device_t ams1512_device =
+{
+        "Amstrad PC1512 (BIOS)",
+        0,
+        ams1512_init,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        ams1512_config
+};
+
+
+
+device_t ams2086_device =
+{
+        "Amstrad PC2086 (BIOS)",
+        0,
+        ams1512_init,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        ams2086_config
+};
+
+
+device_t ams3086_device =
+{
+        "Amstrad PC3086 (BIOS)",
+        0,
+        ams1512_init,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        ams3086_config
+};
