@@ -6,6 +6,7 @@
 #include "mouse.h"
 #include "video.h"
 #include "fdc.h"
+#include "x86.h"
 
 #include "amstrad.h"
 
@@ -77,6 +78,10 @@ void amstrad_write(uint16_t port, uint8_t val, void *priv)
 {
         switch (port)
         {
+                case 0x66:
+                softresetx86();
+                break;
+                
                 case 0x378:
                 case 0x379:
                 case 0x37a:
@@ -161,6 +166,7 @@ void amstrad_init()
         
         io_sethandler(0x0078, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
         io_sethandler(0x007a, 0x0001, amstrad_mouse_read, NULL, NULL, amstrad_mouse_write, NULL, NULL,  NULL);
+        io_sethandler(0x0066, 0x0001, NULL,               NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         io_sethandler(0x0378, 0x0003, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         io_sethandler(0xdead, 0x0001, amstrad_read,       NULL, NULL, amstrad_write,       NULL, NULL,  NULL);
         if ((romset == ROM_PC200 || romset == ROM_PPC512) && gfxcard != GFX_BUILTIN)        

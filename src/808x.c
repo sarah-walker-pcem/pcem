@@ -689,6 +689,7 @@ void softresetx86()
         x86seg_reset();
         flushmmucache();
         x86_was_reset = 1;
+        FETCHCLEAR();
 }
 
 static void setznp8(uint8_t val)
