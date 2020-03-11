@@ -21,102 +21,6 @@ FILE* soundfsb = 0/*NULL*/;
 FILE* soundfsbin = 0/*NULL*/;
 #endif
 
-
-
-/* SB 2.0 CD version */
-typedef struct sb_ct1335_mixer_t
-{
-        int32_t master;
-        int32_t voice;
-        int32_t fm;
-        int32_t cd;
-
-        uint8_t index;
-        uint8_t regs[256];
-} sb_ct1335_mixer_t;
-/* SB PRO */
-typedef struct sb_ct1345_mixer_t
-{
-        int32_t master_l, master_r;
-        int32_t voice_l,  voice_r;
-        int32_t fm_l,     fm_r;
-        int32_t cd_l,     cd_r;
-        int32_t line_l,   line_r;
-        int32_t mic;
-        /*see sb_ct1745_mixer for values for input selector*/
-        int32_t input_selector;
-        
-        int input_filter;
-        int in_filter_freq;
-        int output_filter;
-        
-        int stereo;
-        int stereo_isleft;
-        
-        uint8_t index;
-        uint8_t regs[256];
-    
-} sb_ct1345_mixer_t;
-/* SB16 and AWE32 */
-typedef struct sb_ct1745_mixer_t
-{
-        int32_t master_l, master_r;
-        int32_t voice_l,  voice_r;
-        int32_t fm_l,     fm_r;
-        int32_t cd_l,     cd_r;
-        int32_t line_l,   line_r;
-        int32_t mic;
-        int32_t speaker;
-
-        int bass_l,   bass_r;
-        int treble_l, treble_r;
-        
-        int output_selector;
-        #define OUTPUT_MIC 1
-        #define OUTPUT_CD_R 2
-        #define OUTPUT_CD_L 4
-        #define OUTPUT_LINE_R 8
-        #define OUTPUT_LINE_L 16
-
-        int input_selector_left;
-        int input_selector_right;
-        #define INPUT_MIC 1
-        #define INPUT_CD_R 2
-        #define INPUT_CD_L 4
-        #define INPUT_LINE_R 8
-        #define INPUT_LINE_L 16
-        #define INPUT_MIDI_R 32
-        #define INPUT_MIDI_L 64
-
-        int mic_agc;
-        
-        int32_t input_gain_L;
-        int32_t input_gain_R;
-        int32_t output_gain_L;
-        int32_t output_gain_R;
-        
-        uint8_t index;
-        uint8_t regs[256];
-} sb_ct1745_mixer_t;
-
-typedef struct sb_t
-{
-        opl_t           opl;
-        sb_dsp_t        dsp;
-        union {
-                sb_ct1335_mixer_t mixer_sb2;
-                sb_ct1345_mixer_t mixer_sbpro;
-                sb_ct1745_mixer_t mixer_sb16;
-        };
-        mpu401_uart_t   mpu;
-        emu8k_t         emu8k;
-
-        int pos;
-        
-        uint8_t pos_regs[8];
-        
-        int opl_emu;
-} sb_t;
 /* 0 to 7 -> -14dB to 0dB i 2dB steps. 8 to 15 -> 0 to +14dB in 2dB steps.
   Note that for positive dB values, this is not amplitude, it is amplitude-1. */
 const float sb_bass_treble_4bits[]= {
@@ -195,7 +99,7 @@ static void sb_get_buffer_sb2_mixer(int32_t *buffer, int len, void *p)
         sb->dsp.pos = 0;
 }
 
-static void sb_get_buffer_sbpro(int32_t *buffer, int len, void *p)
+void sb_get_buffer_sbpro(int32_t *buffer, int len, void *p)
 {
         sb_t *sb = (sb_t *)p;
         sb_ct1345_mixer_t *mixer = &sb->mixer_sbpro;
@@ -950,7 +854,7 @@ void *sb_1_init()
         memset(sb, 0, sizeof(sb_t));
         
         opl2_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SB1);
+        sb_dsp_init(&sb->dsp, SB1, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -972,7 +876,7 @@ void *sb_15_init()
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SB15);
+        sb_dsp_init(&sb->dsp, SB15, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -993,7 +897,7 @@ void *sb_mcv_init()
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SB15);
+        sb_dsp_init(&sb->dsp, SB15, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, 0);//addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -1024,7 +928,7 @@ void *sb_2_init()
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SB2);
+        sb_dsp_init(&sb->dsp, SB2, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -1061,7 +965,7 @@ void *sb_pro_v1_init()
         memset(sb, 0, sizeof(sb_t));
 
         opl2_init(&sb->opl);
-        sb_dsp_init(&sb->dsp, SBPRO);
+        sb_dsp_init(&sb->dsp, SBPRO, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -1091,7 +995,7 @@ void *sb_pro_v2_init()
         uint16_t addr = device_get_config_int("addr");
         sb->opl_emu = device_get_config_int("opl_emu");
         opl3_init(&sb->opl, sb->opl_emu);
-        sb_dsp_init(&sb->dsp, SBPRO2);
+        sb_dsp_init(&sb->dsp, SBPRO2, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         sb_dsp_setirq(&sb->dsp, device_get_config_int("irq"));
         sb_dsp_setdma8(&sb->dsp, device_get_config_int("dma"));
@@ -1118,7 +1022,7 @@ void *sb_pro_mcv_init()
 
         sb->opl_emu = device_get_config_int("opl_emu");
         opl3_init(&sb->opl, sb->opl_emu);
-        sb_dsp_init(&sb->dsp, SBPRO2);
+        sb_dsp_init(&sb->dsp, SBPRO2, SB_SUBTYPE_DEFAULT, sb);
         sb_ct1345_mixer_reset(sb);
         /* I/O handlers activated in sb_mcv_write */
         sound_add_handler(sb_get_buffer_sbpro, sb);
@@ -1139,7 +1043,7 @@ void *sb_16_init()
         uint16_t addr = device_get_config_int("addr");
         sb->opl_emu = device_get_config_int("opl_emu");
         opl3_init(&sb->opl, sb->opl_emu);
-        sb_dsp_init(&sb->dsp, SB16);
+        sb_dsp_init(&sb->dsp, SB16, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         // TODO: irq and dma options too? 
         sb_ct1745_mixer_reset(sb);
@@ -1148,7 +1052,7 @@ void *sb_16_init()
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_ct1745_mixer_read, NULL, NULL, sb_ct1745_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_get_buffer_sb16, sb);
-        mpu401_uart_init(&sb->mpu, 0x330);
+        mpu401_uart_init(&sb->mpu, 0x330, -1);
 
 
         return sb;
@@ -1169,7 +1073,7 @@ void *sb_awe32_init()
         uint16_t emu_addr = device_get_config_int("emu_addr");
         sb->opl_emu = device_get_config_int("opl_emu");
         opl3_init(&sb->opl, sb->opl_emu);
-        sb_dsp_init(&sb->dsp, SB16 + 1);
+        sb_dsp_init(&sb->dsp, SB16 + 1, SB_SUBTYPE_DEFAULT, sb);
         sb_dsp_setaddr(&sb->dsp, addr);
         // TODO: irq and dma options too?
         sb_ct1745_mixer_reset(sb);
@@ -1178,7 +1082,7 @@ void *sb_awe32_init()
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_ct1745_mixer_read, NULL, NULL, sb_ct1745_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_get_buffer_emu8k, sb);
-        mpu401_uart_init(&sb->mpu, 0x330);
+        mpu401_uart_init(&sb->mpu, 0x330, -1);
         emu8k_init(&sb->emu8k, emu_addr, onboard_ram);
 
         return sb;

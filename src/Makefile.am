@@ -40,7 +40,7 @@ mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems
 neat.c nmi.c nvr.c olivetti_m24.c opti495.c paths.c pc.c pc87306.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c \
 ps2_nvr.c nvr_tc8521.c pzx.c rom.c rtc.c rtc_tc8521.c scamp.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 scsi_ibm.c scsi_zip.c serial.c sio.c sis496.c sl82c460.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c \
-sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c \
+sound_azt2316a.c sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c \
 sound_sb.c sound_sb_dsp.c sound_sn76489.c sound_speaker.c sound_ssi2001.c sound_wss.c sound_ym7128.c soundopenal.c \
 sst39sf010.c tandy_eeprom.c tandy_rom.c t1000.c t3100e.c timer.c um8669f.c um8881f.c vid_ati_eeprom.c vid_ati_mach64.c \
 vid_ati18800.c vid_ati28800.c vid_ati68860_ramdac.c vid_cga.c vid_cl5429.c vid_colorplus.c vid_compaq_cga.c vid_ega.c \

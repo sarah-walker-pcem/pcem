@@ -1,6 +1,20 @@
+#ifndef SOUND_SB_DSP_H
+#define SOUND_SB_DSP_H
+
+/*Sound Blaster Clones, for quirks*/
+#define SB_SUBTYPE_DEFAULT             0 /*Handle as a Creative card*/
+#define SB_SUBTYPE_CLONE_AZT2316A_0X11 1 /*Aztech Sound Galaxy Pro 16 AB, DSP 3.1 - SBPRO2 clone*/
+#define SB_SUBTYPE_CLONE_AZT1605_0X0C  2 /*Aztech Sound Galaxy Nova 16 Extra / Packard Bell Forte 16, DSP 2.1 - SBPRO2 clone*/
+
+// aztech-related
+#define IS_AZTECH(dsp) ((dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT2316A_0X11 || (dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT1605_0X0C) // check for future AZT cards here
+#define AZTECH_EEPROM_SIZE             16
+
 typedef struct sb_dsp_t
 {
         int sb_type;
+        int sb_subtype; // which clone
+        void *parent; // "sb_t *" if default subtype, "azt2316a_t *" if aztech.
 
         int sb_8_length,  sb_8_format,  sb_8_autoinit,  sb_8_pause,  sb_8_enable,  sb_8_autolen,  sb_8_output;
         int sb_8_dmanum;
@@ -67,9 +81,11 @@ typedef struct sb_dsp_t
         int16_t record_buffer[0xFFFF];
         int16_t buffer[MAXSOUNDBUFLEN * 2];
         int pos;
+
+        uint8_t azt_eeprom[AZTECH_EEPROM_SIZE]; // the eeprom in the Aztech cards is attached to the DSP
 } sb_dsp_t;
 
-void sb_dsp_init(sb_dsp_t *dsp, int type);
+void sb_dsp_init(sb_dsp_t *dsp, int type, int subtype, void *parent);
 void sb_dsp_close(sb_dsp_t *dsp);
 
 void sb_dsp_setirq(sb_dsp_t *dsp, int irq);
@@ -86,3 +102,5 @@ void sb_dsp_set_stereo(sb_dsp_t *dsp, int stereo);
 void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp);
 
 void sb_dsp_update(sb_dsp_t *dsp);
+
+#endif /* SOUND_SB_DSP_H */

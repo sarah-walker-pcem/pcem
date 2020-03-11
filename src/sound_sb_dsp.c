@@ -10,13 +10,16 @@
 #include "ibm.h"
 
 
+#include "device.h"
 #include "dma.h"
 #include "filters.h"
 #include "io.h"
 #include "pic.h"
 #include "sound.h"
+#include "sound_azt2316a.h"
 #include "sound_sb_dsp.h"
 #include "timer.h"
+#include "x86.h"
 
 /*The recording safety margin is intended for uneven "len" calls to the get_buffer mixer calls on sound_sb*/
 #define SB_DSP_REC_SAFEFTY_MARGIN 4096
@@ -205,10 +208,18 @@ void sb_doreset(sb_dsp_t *dsp)
         int c;
         
         sb_dsp_reset(dsp);
-        
-        if (dsp->sb_type==SB16) sb_commands[8] =  1;
-        else                    sb_commands[8] = -1;
-        
+
+        if (IS_AZTECH(dsp))
+        {
+                sb_commands[8] =  1;
+                sb_commands[9] =  1;
+        }
+        else
+        {
+                if (dsp->sb_type==SB16) sb_commands[8] =  1;
+                else                    sb_commands[8] = -1;
+        }
+
         for (c = 0; c < 256; c++)
             dsp->sb_asp_regs[c] = 0;
         dsp->sb_asp_regs[5] = 0x01;
@@ -579,6 +590,20 @@ void sb_exec_command(sb_dsp_t *dsp)
                 sb_add_data(dsp, ~dsp->sb_data[0]);
                 break;
                 case 0xE1: /*Get DSP version*/
+                if (IS_AZTECH(dsp))
+                {
+                        if (dsp->sb_subtype == SB_SUBTYPE_CLONE_AZT2316A_0X11)
+                        {
+                                sb_add_data(dsp, 0x3);
+                                sb_add_data(dsp, 0x1);
+                        }
+                        else if (dsp->sb_subtype == SB_SUBTYPE_CLONE_AZT1605_0X0C)
+                        {
+                                sb_add_data(dsp, 0x2);
+                                sb_add_data(dsp, 0x1);
+                        }
+                        break;
+                }
                 sb_add_data(dsp, sb_dsp_versions[dsp->sb_type] >> 8);
                 sb_add_data(dsp, sb_dsp_versions[dsp->sb_type] & 0xff);
                 break;
@@ -617,6 +642,32 @@ void sb_exec_command(sb_dsp_t *dsp)
                 case 0xFF:
                 break;
                 case 0x08: /*ASP get version*/
+                if (IS_AZTECH(dsp))
+                {
+                        if ((dsp->sb_data[0] == 0x55 || dsp->sb_data[0] == 0x05) && dsp->sb_subtype == SB_SUBTYPE_CLONE_AZT2316A_0X11)
+                                sb_add_data(dsp, 0x11); /* AZTECH get type, WASHINGTON/latest - according to devkit. E.g.: The one in the Itautec Infoway Multimidia */
+                        else if ((dsp->sb_data[0] == 0x55 || dsp->sb_data[0] == 0x05) && dsp->sb_subtype == SB_SUBTYPE_CLONE_AZT1605_0X0C)
+                                sb_add_data(dsp, 0x0C); /* AZTECH get type, CLINTON - according to devkit. E.g.: The one in the Packard Bell Legend 100CD */
+                        else if (dsp->sb_data[0] == 0x08)
+                        {
+                                // EEPROM address to write followed by byte
+                                if (dsp->sb_data[1] < 0 || dsp->sb_data[1] >= AZTECH_EEPROM_SIZE)
+                                        fatal("AZT EEPROM: out of bounds write to %02X\n", dsp->sb_data[1]);
+                                dsp->azt_eeprom[dsp->sb_data[1]] = dsp->sb_data[2];
+                                break;
+                        }
+                        else if (dsp->sb_data[0] == 0x07)
+                        {
+                                // EEPROM address to read
+                                if (dsp->sb_data[1] < 0 || dsp->sb_data[1] >= AZTECH_EEPROM_SIZE)
+                                        fatal("AZT EEPROM: out of bounds read to %02X\n", dsp->sb_data[1]);
+                                sb_add_data(dsp, dsp->azt_eeprom[dsp->sb_data[1]]);
+                                break;
+                        }
+                        else
+                                pclog("AZT2316A: UNKNOWN 0x08 COMMAND: %02X\n", dsp->sb_data[0]); // 0x08 (when shutting down, driver tries to read 1 byte of response), 0x55, 0x0D, 0x08D seen
+                        break;
+                }
                 if (dsp->sb_type < SB16) break;
                 sb_add_data(dsp, 0x18);
                 break;
@@ -644,10 +695,26 @@ void sb_exec_command(sb_dsp_t *dsp)
                 case 0x04:
                 case 0x05:
                 break;
-//                default:
-//                fatal("Exec bad SB command %02X\n",sb_command);
-                
-                
+                case 0x09: /*AZTECH mode set*/
+                if (dsp->sb_data[0] == 0x00)
+                {
+                        pclog("AZT2316A: WSS MODE!\n");
+                        azt2316a_enable_wss(1, dsp->parent);
+                }
+                else if (dsp->sb_data[0] == 0x01)
+                {
+                        pclog("AZT2316A: SB8PROV2 MODE!\n");
+                        azt2316a_enable_wss(0, dsp->parent);
+                }
+                else
+                        pclog("AZT2316A: UNKNOWN MODE!\n"); // sequences 0x02->0xFF, 0x04->0xFF seen
+                break;
+                case 0x38: /*TODO: AZTECH MIDI-related? */
+                break;
+                default:
+                fatal("Exec bad SB command %02X\n",dsp->sb_command);
+
+
                 /*TODO: Some more data about the DSP registeres
                  * http://the.earth.li/~tfm/oldpage/sb_dsp.html
                  * http://www.synchrondata.com/pheaven/www/area19.htm
@@ -680,7 +747,7 @@ void sb_write(uint16_t a, uint8_t v, void *priv)
                 dsp->sbreset = v;
                 return;
                 case 0xC: /*Command/data write*/
-		timer_set_delay_u64(&dsp->wb_timer, TIMER_USEC * 1);
+                timer_set_delay_u64(&dsp->wb_timer, TIMER_USEC * 1);
                 if (dsp->asp_data_len)
                 {
 //                        pclog("ASP data %i\n", dsp->asp_data_len);
@@ -699,11 +766,27 @@ void sb_write(uint16_t a, uint8_t v, void *priv)
                         dsp->sb_data_stat++;
                 }
                 else
-                   dsp->sb_data[dsp->sb_data_stat++] = v;
+                {
+                        dsp->sb_data[dsp->sb_data_stat++] = v;
+                        if (IS_AZTECH(dsp))
+                        {
+                                // variable length commands
+                                if (dsp->sb_command == 0x08 && dsp->sb_data_stat == 1 && dsp->sb_data[0] == 0x08)
+                                        sb_commands[dsp->sb_command] = 3;
+                                else if (dsp->sb_command == 0x08 && dsp->sb_data_stat == 1 && dsp->sb_data[0] == 0x07)
+                                        sb_commands[dsp->sb_command] = 2;
+                        }
+                }
                 if (dsp->sb_data_stat == sb_commands[dsp->sb_command] || sb_commands[dsp->sb_command] == -1)
                 {
                         sb_exec_command(dsp);
                         dsp->sb_data_stat = -1;
+                        if (IS_AZTECH(dsp))
+                        {
+                                // variable length commands
+                                if (dsp->sb_command == 0x08)
+                                        sb_commands[dsp->sb_command] = 1;
+                        }
                 }
                 break;
         }
@@ -732,13 +815,31 @@ uint8_t sb_read(uint16_t a, void *priv)
                 if (dsp->wb_full || (dsp->busy_count & 2))
                 {
                         dsp->wb_full = timer_is_enabled(&dsp->wb_timer);
-                        return 0xff;
+//                        pclog("SB read 0x80\n");
+                        if (IS_AZTECH(dsp))
+                                return 0x80;
+                        else
+                                return 0xFF;
                 }
-                return 0x7f;
+//                pclog("SB read 0x00\n");
+                if (IS_AZTECH(dsp))
+                        return 0x00;
+                else
+                        return 0x7F;
                 case 0xE: /*Read data ready*/
                 picintc(1 << dsp->sb_irqnum);
                 dsp->sb_irq8 = dsp->sb_irq16 = 0;
-                return (dsp->sb_read_rp == dsp->sb_read_wp) ? 0x7f : 0xff;
+                // Only bit 7 is defined but aztech diagnostics fail if the others are set. Keep the original behavior to not interfere with what's already working.
+                if (IS_AZTECH(dsp))
+                {
+//                        pclog("SB read %02X\n",(dsp->sb_read_rp == dsp->sb_read_wp) ? 0x00 : 0x80);
+                        return (dsp->sb_read_rp == dsp->sb_read_wp) ? 0x00 : 0x80;
+                }
+                else
+                {
+//                        pclog("SB read %02X\n",(dsp->sb_read_rp == dsp->sb_read_wp) ? 0x7F : 0xFF);
+                        return (dsp->sb_read_rp == dsp->sb_read_wp) ? 0x7F : 0xFF;
+                }
                 case 0xF: /*16-bit ack*/
                 dsp->sb_irq16 = 0;
                 if (!dsp->sb_irq8) picintc(1 << dsp->sb_irqnum);
@@ -751,9 +852,11 @@ static void sb_wb_clear(void *p)
 {
 }
 
-void sb_dsp_init(sb_dsp_t *dsp, int type)
+void sb_dsp_init(sb_dsp_t *dsp, int type, int subtype, void *parent)
 {
         dsp->sb_type = type;
+        dsp->sb_subtype = subtype;
+        dsp->parent = parent;
         
         // Default values. Use sb_dsp_setxxx() methods to change.
         dsp->sb_irqnum = 7;

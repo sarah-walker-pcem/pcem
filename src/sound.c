@@ -15,6 +15,7 @@
 #include "sound_adlib.h"
 #include "sound_adlibgold.h"
 #include "sound_audiopci.h"
+#include "sound_azt2316a.h"
 #include "sound_pas16.h"
 #include "sound_sb.h"
 #include "sound_sb_dsp.h"
@@ -35,23 +36,25 @@ typedef struct
 
 static SOUND_CARD sound_cards[] =
 {
-        {"None",                      "none",      NULL},
-        {"Adlib",                     "adlib",     &adlib_device},
-        {"Adlib",                     "adlib_mca", &adlib_mca_device},
-        {"Sound Blaster 1.0",         "sb",        &sb_1_device},
-        {"Sound Blaster 1.5",         "sb1.5",     &sb_15_device},
-        {"Sound Blaster MCV",         "sbmcv",     &sb_mcv_device},
-        {"Sound Blaster 2.0",         "sb2.0",     &sb_2_device},
-        {"Sound Blaster Pro v1",      "sbprov1",   &sb_pro_v1_device},
-        {"Sound Blaster Pro v2",      "sbprov2",   &sb_pro_v2_device},
-        {"Sound Blaster Pro MCV",     "sbpromcv",  &sb_pro_mcv_device},
-        {"Sound Blaster 16",          "sb16",      &sb_16_device},
-        {"Sound Blaster AWE32",       "sbawe32",   &sb_awe32_device},
-        {"Adlib Gold",                "adlibgold", &adgold_device},
-        {"Windows Sound System",      "wss",       &wss_device},        
-        {"Pro Audio Spectrum 16",     "pas16",     &pas16_device},
-        {"Ensoniq AudioPCI (ES1371)", "es1371",    &es1371_device},
-        {"Sound Blaster PCI 128",     "sbpci128",  &es1371_device},
+        {"None",                                        "none",      NULL},
+        {"Adlib",                                       "adlib",     &adlib_device},
+        {"Adlib",                                       "adlib_mca", &adlib_mca_device},
+        {"Sound Blaster 1.0",                           "sb",        &sb_1_device},
+        {"Sound Blaster 1.5",                           "sb1.5",     &sb_15_device},
+        {"Sound Blaster MCV",                           "sbmcv",     &sb_mcv_device},
+        {"Sound Blaster 2.0",                           "sb2.0",     &sb_2_device},
+        {"Sound Blaster Pro v1",                        "sbprov1",   &sb_pro_v1_device},
+        {"Sound Blaster Pro v2",                        "sbprov2",   &sb_pro_v2_device},
+        {"Sound Blaster Pro MCV",                       "sbpromcv",  &sb_pro_mcv_device},
+        {"Sound Blaster 16",                            "sb16",      &sb_16_device},
+        {"Sound Blaster AWE32",                         "sbawe32",   &sb_awe32_device},
+        {"Adlib Gold",                                  "adlibgold", &adgold_device},
+        {"Windows Sound System",                        "wss",       &wss_device},        
+        {"Aztech Sound Galaxy Pro 16 AB (Washington)",  "azt2316a",  &azt2316a_device},
+        {"Aztech Sound Galaxy Nova 16 Extra (Clinton)", "azt1605",   &azt1605_device},
+        {"Pro Audio Spectrum 16",                       "pas16",     &pas16_device},
+        {"Ensoniq AudioPCI (ES1371)",                   "es1371",    &es1371_device},
+        {"Sound Blaster PCI 128",                       "sbpci128",  &es1371_device},
         {"", "", NULL}
 };
 

@@ -84,7 +84,7 @@ void *wss_init()
 
         opl_emu = device_get_config_int("opl_emu");
         opl3_init(&wss->opl, opl_emu);
-        ad1848_init(&wss->ad1848);
+        ad1848_init(&wss->ad1848, AD1848_TYPE_DEFAULT);
         
         ad1848_setirq(&wss->ad1848, 7);
         ad1848_setdma(&wss->ad1848, 3);
