@@ -312,8 +312,8 @@ void common_init()
         lpt_init();
         pic_init();
         pit_init();
-        serial1_init(0x3f8, 4);
-        serial2_init(0x2f8, 3);
+        serial1_init(0x3f8, 4, 1);
+        serial2_init(0x2f8, 3, 1);
 }
 
 void xt_init()
@@ -343,7 +343,7 @@ void pcjr_init()
         pic_init();
         pit_init();
         pit_set_out_func(&pit, 0, pit_irq0_timer_pcjr);
-        serial1_init(0x2f8, 3);
+        serial1_init(0x2f8, 3, 1);
         keyboard_pcjr_init();
         device_add(&sn76489_device);
 	nmi_mask = 0x80;
@@ -427,7 +427,7 @@ void xt_zenith_init() /* [8088] Zenith Data Systems SupersPort */
         lpt2_remove(); /* only one parallel port */
         pic_init();
         pit_init();
-        serial1_init(0x3f8, 4); /* only one serial port */
+        serial1_init(0x3f8, 4, 1); /* only one serial port */
         mem_add_bios();
         device_add(&zenith_scratchpad_device);
         pit_set_out_func(&pit, 1, pit_refresh_timer_xt);

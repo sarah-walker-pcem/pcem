@@ -73,7 +73,7 @@ void ps1_write(uint16_t port, uint8_t val, void *p)
                 case 0x102:
                 lpt1_remove();
                 if (val & 0x04)
-                        serial1_init(0x3f8, 4);
+                        serial1_init(0x3f8, 4, 1);
                 else
                         serial1_remove();
                 if (val & 0x10)
@@ -238,7 +238,7 @@ void ps1_m2121_write(uint16_t port, uint8_t val, void *p)
                 case 0x102:
                 lpt1_remove();
                 if (val & 0x04)
-                        serial1_init(0x3f8, 4);
+                        serial1_init(0x3f8, 4, 1);
                 else
                         serial1_remove();
                 if (val & 0x10)

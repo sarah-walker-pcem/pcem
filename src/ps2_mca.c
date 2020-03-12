@@ -315,9 +315,9 @@ static void model_50_write(uint16_t port, uint8_t val)
                 if (val & 0x04)
                 {
                         if (val & 0x08)
-                                serial1_init(0x3f8, 4);
+                                serial1_init(0x3f8, 4, 1);
                         else
-                                serial1_init(0x2f8, 3);
+                                serial1_init(0x2f8, 3, 1);
                 }
                 else
                         serial1_remove();
@@ -371,9 +371,9 @@ static void model_55sx_write(uint16_t port, uint8_t val)
                 if (val & 0x04)
                 {
                         if (val & 0x08)
-                                serial1_init(0x3f8, 4);
+                                serial1_init(0x3f8, 4, 1);
                         else
-                                serial1_init(0x2f8, 3);
+                                serial1_init(0x2f8, 3, 1);
                 }
                 else
                         serial1_remove();
@@ -445,9 +445,9 @@ static void model_70_type3_write(uint16_t port, uint8_t val)
                 if (val & 0x04)
                 {
                         if (val & 0x08)
-                                serial1_init(0x3f8, 4);
+                                serial1_init(0x3f8, 4, 1);
                         else
-                                serial1_init(0x2f8, 3);
+                                serial1_init(0x2f8, 3, 1);
                 }
                 else
                         serial1_remove();
@@ -494,9 +494,9 @@ static void model_80_write(uint16_t port, uint8_t val)
                 if (val & 0x04)
                 {
                         if (val & 0x08)
-                                serial1_init(0x3f8, 4);
+                                serial1_init(0x3f8, 4, 1);
                         else
-                                serial1_init(0x2f8, 3);
+                                serial1_init(0x2f8, 3, 1);
                 }
                 else
                         serial1_remove();
