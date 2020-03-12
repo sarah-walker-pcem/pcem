@@ -921,6 +921,24 @@ int loadbios()
                 biosmask = 0x1ffff;
                 return 1;
 
+                // keep separate from generic Zappa because there is a BIOS logo
+                // in flash.bin
+                case ROM_ITAUTEC_INFOWAYM:
+                if (!rom_present("infowaym/gd5434.bin"))
+                        break;
+                f = romfopen("infowaym/1006bs0_.bio", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                romfread(rom + 0x10000, 0x10000, 1, f);
+                fclose(f);
+                f = romfopen("infowaym/1006bs0_.bi1", "rb");
+                if (!f) break;
+                fseek(f, 0x80, SEEK_SET);
+                romfread(rom, 0xd000, 1, f);
+                fclose(f);
+                biosmask = 0x1ffff;
+                return 1;
+
                 case ROM_PB520R:
                 if (!rom_present("pb520r/gd5434.bin"))
                         break;
