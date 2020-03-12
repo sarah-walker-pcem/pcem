@@ -639,6 +639,18 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         case 0xe0: /*Read test inputs*/
                         keyboard_at_adddata(0x00);
                         break;
+
+                        case 0xe8: /* Super-286TR: turbo ON */
+                        // TODO: 0xe8 is always followed by 0xba
+                        // TODO: I don't know where to call cpu_set_turbo(1) to avoid slow POST after ctrl-alt-del when on low speed (if this is the real behavior!)
+                        if (romset == ROM_HYUNDAI_SUPER286TR)
+                                cpu_set_turbo(1); // 12 MHz
+                        break;
+
+                        case 0xe9: /* Super-286TR: turbo OFF */
+                        if (romset == ROM_HYUNDAI_SUPER286TR)
+                                cpu_set_turbo(0); // 8 MHz
+                        break;
                         
                         case 0xef: /*??? - sent by AMI486*/
                         break;

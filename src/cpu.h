@@ -121,6 +121,7 @@ extern CPU cpus_K6_SS7[];
 extern CPU cpus_pcjr[];
 extern CPU cpus_europc[];
 extern CPU cpus_pc1512[];
+extern CPU cpus_super286tr[];
 extern CPU cpus_ibmat[];
 extern CPU cpus_ibmxt286[];
 extern CPU cpus_ps1_m2011[];

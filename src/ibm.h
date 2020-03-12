@@ -258,6 +258,7 @@ enum
         ROM_IBMPS1_2133_451,
         ROM_ECS_386_32,
         ROM_LEDGE_MODELM,
+        ROM_HYUNDAI_SUPER286TR,
 
         ROM_MAX
 };

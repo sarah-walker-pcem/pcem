@@ -17,7 +17,7 @@ OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o 82091aa.o acc203
 	codegen_ops_mov.o codegen_ops_shift.o codegen_ops_stack.o codegen_reg.o codegen_timing_486.o \
 	codegen_timing_686.o codegen_timing_common.o codegen_timing_k6.o codegen_timing_pentium.o \
 	codegen_timing_winchip.o codegen_timing_winchip2.o compaq.o config.o cpu.o cpu_tables.o cs8230.o device.o \
-	dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o fdc.o fdc37c665.o fdc37c93x.o fdd.o \
+	dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o f82c710_upc.o fdc.o fdc37c665.o fdc37c93x.o fdd.o \
 	fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430hx.o i430lx.o i430fx.o i430vx.o ide.o \
 	ide_atapi.o ide_sff8038i.o intel.o intel_flash.o io.o jim.o joystick_ch_flightstick_pro.o \
 	joystick_standard.o joystick_sw_pad.o joystick_tm_fcs.o keyboard.o keyboard_amstrad.o keyboard_at.o \

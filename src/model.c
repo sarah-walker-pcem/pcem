@@ -19,6 +19,7 @@
 #include "device.h"
 #include "cassette.h"
 #include "dma.h"
+#include "f82c710_upc.h"
 #include "fdc.h"
 #include "fdc37c665.h"
 #include "fdc37c93x.h"
@@ -177,6 +178,7 @@ MODEL models[] =
         {"[286] Epson PC AX2e",           ROM_EPSON_PCAX2E,     "epson_pcax2e",   { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2,                               256,15872, 128,             at_init, NULL},
         {"[286] Goldstar GDC-212M",       ROM_GDC212M,          "gdc212m",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_PS2|MODEL_HAS_IDE,                 512, 4096, 512,        at_scat_init, NULL},
         {"[286] GW-286CT GEAR",           ROM_GW286CT,          "gw286ct",        { {"",      cpus_286},         {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT,                                         512,16384, 128,        at_scat_init, NULL},
+        {"[286] Hyundai Super-286TR",     ROM_HYUNDAI_SUPER286TR, "super286tr",   { {"AMD",   cpus_super286tr},  {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT|MODEL_HAS_IDE,                          1024, 4096, 128,        at_scat_init, &f82c710_upc_device},
         {"[286] IBM AT",                  ROM_IBMAT,            "ibmat",          { {"",      cpus_ibmat},       {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_AT,                                         256,15872, 128,         ibm_at_init, NULL},
         {"[286] IBM PS/1 model 2011",     ROM_IBMPS1_2011,      "ibmps1es",       { {"",      cpus_ps1_m2011},   {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2,                              512,16384, 512,      ps1_m2011_init, NULL},
         {"[286] IBM PS/2 Model 30-286",   ROM_IBMPS2_M30_286,   "ibmps2_m30_286", { {"",      cpus_ps2_m30_286}, {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_AT|MODEL_PS2,                                1,   16,   1,    ps2_m30_286_init, NULL},

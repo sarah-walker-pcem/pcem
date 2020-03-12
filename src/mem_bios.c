@@ -379,6 +379,13 @@ int loadbios()
                 fclose(f);
                 return 1;
 
+                case ROM_HYUNDAI_SUPER286TR:
+                f=romfopen("super286tr/award.bin","rb");
+                if (!f) break;
+                romfread(rom,65536,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_GW286CT:
                 f=romfopen("gw286ct/2ctc001.bin","rb");
                 if (!f) break;
