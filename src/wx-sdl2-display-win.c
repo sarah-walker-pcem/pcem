@@ -68,6 +68,15 @@ extern void device_force_redraw();
 extern void mouse_wheel_update(int);
 extern void toggle_fullscreen();
 
+/*Minimum window width to prevent menu wrapping.
+  This is a horrible hack to work around issues with PCem, SDL2, and the
+  AdjustWindowRectEx() function. Allowing the menu to wrap causes some quite odd
+  window behaviour, mainly shooting to the bottom of the screen when you try to
+  move it.
+  This hard coded limit is highly fragile and will be replaced by a proper fix as
+  soon as I work out what that should be!*/
+#define MIN_WIDTH 360
+
 void display_resize(int width, int height)
 {
         winsizex = width*(video_scale+1) >> 1;
@@ -81,6 +90,8 @@ void display_resize(int width, int height)
         winsizex = rect.w;
         winsizey = rect.h;
 
+        if (winsizex < MIN_WIDTH)
+                winsizex = MIN_WIDTH;
         win_doresize = 1;
 }
 
