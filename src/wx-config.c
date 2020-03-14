@@ -46,6 +46,8 @@ static int new_zip_channel;
 
 extern int pause;
 
+static int memspin_old;
+
 extern void deviceconfig_open(void* hwnd, device_t *device);
 extern int hdconf_init(void* hdlg);
 extern int hdconf_update(void* hdlg);
@@ -810,9 +812,15 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         | models[romstomodel[romset]].max_ram);
                         wx_sendmessage(h, WX_UDM_SETINCR, 0, models[model].ram_granularity);
                         if (!((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128))
+                        {
                                 wx_sendmessage(h, WX_UDM_SETPOS, 0, mem_size);
+                                memspin_old = mem_size;
+                        }
                         else
+                        {
                                 wx_sendmessage(h, WX_UDM_SETPOS, 0, mem_size / 1024);
+                                memspin_old = mem_size / 1024;
+                        }
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREMOD"));
                         if (model_getdevice(model))
@@ -1371,20 +1379,18 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_MEMSPIN"));
                                 mem = wx_sendmessage(h, WX_UDM_GETPOS, 0, 0);
-                                if (mem & granularity_mask)
+                                if (mem < memspin_old)
                                 {
-                                        if ((mem & granularity_mask) < (granularity / 2))
-                                        {
-                                                /*Assume increase*/
-                                                mem = (mem + granularity_mask) & ~granularity_mask;
-                                        }
-                                        else
-                                        {
-                                                /*Assumg decrease*/
-                                                mem &= ~granularity_mask;
-                                        }
-                                        mem = wx_sendmessage(h, WX_UDM_SETPOS, 0, mem);
+                                        /*Assume decrease*/
+                                        mem &= ~granularity_mask;
                                 }
+                                else
+                                {
+                                        /*Assume increase*/
+                                        mem = (mem + granularity_mask) & ~granularity_mask;
+                                }
+                                wx_sendmessage(h, WX_UDM_SETPOS, 0, mem);
+                                memspin_old = mem;
                         }
 #endif
                         return 0;
