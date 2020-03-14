@@ -297,15 +297,6 @@ void ati28800_recalctimings(svga_t *svga)
                 svga->rowoffset <<= 1;
         }
 
-        if (svga->crtc[0x17] & 4)
-        {
-                svga->vtotal <<= 1;
-                svga->dispend <<= 1;
-                svga->vsyncstart <<= 1;
-                svga->split <<= 1;
-                svga->vblankstart <<= 1;
-        }
-
         if (!svga->scrblank && (ati28800->regs[0xb0] & 0x20)) /*Extended 256 colour modes*/
         {
                 pclog("8bpp_highres\n");
