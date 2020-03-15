@@ -637,6 +637,14 @@ uint8_t scamp_read(uint16_t addr, void *p)
                 ret = scamp.port_92;
                 break;
 
+                case 0xed:
+                if (scamp.cfg_enable)
+                {
+                        if (scamp.cfg_index >= 0x00 && scamp.cfg_index <= 0x16)
+                                ret = scamp.cfg_regs[scamp.cfg_index];
+                }
+                break;
+
                 case 0xee:
                 if (!mem_a20_alt)
                 {
