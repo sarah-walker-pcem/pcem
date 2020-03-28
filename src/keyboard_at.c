@@ -104,15 +104,23 @@ void keyboard_at_poll()
                 keyboard_at.wantirq = 0;
                 if (keyboard_at.out_new & 0x100)
                 {
-                        if (keyboard_at.mem[0] & 0x02)
-                                picint(0x1000);
-                        keyboard_at.out = keyboard_at.out_new & 0xff;
-                        keyboard_at.out_new = -1;
-                        keyboard_at.status |=  STAT_OFULL;
-                        keyboard_at.status &= ~STAT_IFULL;
-                        keyboard_at.status |=  STAT_MFULL;
-//                        pclog("keyboard_at : take IRQ12\n");
-                        keyboard_at.last_irq = 0x1000;
+                        if (mouse_scan)
+                        {
+//                                pclog("keyboard_at : take IRQ12\n");
+                                if (keyboard_at.mem[0] & 0x02)
+                                        picint(0x1000);
+                                keyboard_at.out = keyboard_at.out_new & 0xff;
+                                keyboard_at.out_new = -1;
+                                keyboard_at.status |=  STAT_OFULL;
+                                keyboard_at.status &= ~STAT_IFULL;
+                                keyboard_at.status |=  STAT_MFULL;
+                                keyboard_at.last_irq = 0x1000;
+                        }
+                        else
+                        {
+//                                pclog("keyboard_at: suppressing IRQ12\n");
+                                keyboard_at.out_new = -1;
+                        }
                 }
                 else
                 {
@@ -151,7 +159,7 @@ void keyboard_at_poll()
         {
                 keyboard_at.out_new = mouse_queue[mouse_queue_start] | 0x100;
                 mouse_queue_start = (mouse_queue_start + 1) & 0xf;
-        }                
+        }
         else if (!(keyboard_at.status & STAT_OFULL) && keyboard_at.out_new == -1 &&
                  !(keyboard_at.mem[0] & 0x10) && key_queue_start != key_queue_end)
         {
@@ -308,7 +316,12 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 
                                 case 0xd4: /*Write to mouse*/
                                 if (keyboard_at.mouse_write)
+                                {
                                         keyboard_at.mouse_write(val, keyboard_at.mouse_p);
+                                        /*Implicitly enable mouse*/
+                                        mouse_scan = 1;
+                                        keyboard_at.mem[0] &= ~0x20;
+                                }
                                 break;     
                                 
                                 default:
@@ -490,10 +503,12 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 
                         case 0xa7: /*Disable mouse port*/
                         mouse_scan = 0;
+                        keyboard_at.mem[0] |= 0x20;
                         break;
 
                         case 0xa8: /*Enable mouse port*/
                         mouse_scan = 1;
+                        keyboard_at.mem[0] &= ~0x20;
                         break;
                         
                         case 0xa9: /*Test mouse port*/
