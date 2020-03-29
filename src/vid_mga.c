@@ -87,7 +87,10 @@ typedef struct mystique_t
         uint8_t xmiscctrl;
         uint8_t xpixclkctrl;
         uint8_t xvrefctrl;
+        uint8_t xcolkeymskl, xcolkeymskh;
+        uint8_t xcolkeyl, xcolkeyh;
         int xzoomctrl;
+        uint8_t xcrcbitsel;
         
         uint8_t ien;
         
@@ -500,6 +503,17 @@ enum
 
 #define XREG_XZOOMCTRL   0x38
 
+#define XREG_XSENSETEST  0x3a
+
+#define XREG_XCRCREML    0x3c
+#define XREG_XCRCREMH    0x3d
+#define XREG_XCRCBITSEL  0x3e
+
+#define XREG_XCOLKEYMSKL 0x40
+#define XREG_XCOLKEYMSKH 0x41
+#define XREG_XCOLKEYL    0x42
+#define XREG_XCOLKEYH    0x43
+
 #define XREG_XPIXPLLCM   0x4c
 #define XREG_XPIXPLLCN   0x4d
 #define XREG_XPIXPLLCP   0x4e
@@ -520,6 +534,11 @@ enum
 #define XSYSPLLSTAT_SYSLOCK (1 << 6)
 
 #define XPIXPLLSTAT_SYSLOCK (1 << 6)
+
+#define XCURCTRL_CURMODE_MASK (3 << 0)
+#define XCURCTRL_CURMODE_3COL (1 << 0)
+#define XCURCTRL_CURMODE_XGA  (2 << 0)
+#define XCURCTRL_CURMODE_XWIN (3 << 0)
 
 #define DWGCTRL_OPCODE_MASK           (0xf << 0)
 #define DWGCTRL_OPCODE_LINE_OPEN      (0x0 << 0)
@@ -679,15 +698,15 @@ void mystique_out(uint16_t addr, uint8_t val, void *p)
                 case 0x3D5:
 //                if (svga->crtcreg == 0xc)
 //                        pclog("Buffer swap\n");
-                if (((svga->crtcreg & 31) < 7) && (svga->crtc[0x11] & 0x80))
+                if (((svga->crtcreg & 0x3f) < 7) && (svga->crtc[0x11] & 0x80))
                         return;
-                if (((svga->crtcreg & 31) == 7) && (svga->crtc[0x11] & 0x80))
+                if (((svga->crtcreg & 0x3f) == 7) && (svga->crtc[0x11] & 0x80))
                         val = (svga->crtc[7] & ~0x10) | (val & 0x10);
                 old = svga->crtc[svga->crtcreg & 0x3f];
-                svga->crtc[svga->crtcreg & 31] = val;
+                svga->crtc[svga->crtcreg & 0x3f] = val;
                 if (old != val)
                 {
-                        if ((svga->crtcreg & 31) < 0xE || (svga->crtcreg & 31) > 0x10)
+                        if ((svga->crtcreg & 0x3f) < 0xE || (svga->crtcreg & 0x3f) > 0x10)
                         {
                                 svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
@@ -1022,6 +1041,10 @@ static uint8_t mystique_read_xreg(mystique_t *mystique, int reg)
                 ret = mystique->xgenctrl;
                 break;
                 
+                case XREG_XVREFCTRL:
+                ret = mystique->xvrefctrl;
+                break;
+                
                 case XREG_XGENIOCTRL:
                 ret = mystique->xgenioctrl;
                 break;
@@ -1041,6 +1064,39 @@ static uint8_t mystique_read_xreg(mystique_t *mystique, int reg)
 
                 case XREG_XZOOMCTRL:
                 ret = mystique->xzoomctrl;
+                break;
+                
+                case XREG_XSENSETEST:
+                ret = 0;
+                if (mystique->svga.vgapal[0].b < 0x80)
+                        ret |= 1;
+                if (mystique->svga.vgapal[0].g < 0x80)
+                        ret |= 2;
+                if (mystique->svga.vgapal[0].r < 0x80)
+                        ret |= 4;
+                break;
+                
+                case XREG_XCRCREML: /*CRC not implemented*/
+                ret = 0;
+                break;
+                case XREG_XCRCREMH:
+                ret = 0;
+                break;
+                case XREG_XCRCBITSEL:
+                ret = mystique->xcrcbitsel;
+                break;
+
+                case XREG_XCOLKEYMSKL:
+                ret = mystique->xcolkeymskl;
+                break;
+                case XREG_XCOLKEYMSKH:
+                ret = mystique->xcolkeymskh;
+                break;
+                case XREG_XCOLKEYL:
+                ret = mystique->xcolkeyl;
+                break;
+                case XREG_XCOLKEYH:
+                ret = mystique->xcolkeyh;
                 break;
 
                 case XREG_XPIXCLKCTRL:
@@ -1147,6 +1203,36 @@ static void mystique_write_xreg(mystique_t *mystique, int reg, uint8_t val)
                 mystique->xzoomctrl = val & 3;
                 break;
                 
+                case XREG_XSENSETEST:
+                break;
+                        
+                case XREG_XCRCREML: /*CRC not implemented*/
+                break;
+                case XREG_XCRCREMH:
+                break;
+                case XREG_XCRCBITSEL:
+                mystique->xcrcbitsel = val & 0x1f;
+                break;
+
+                case XREG_XCOLKEYMSKL:
+                mystique->xcolkeymskl = val;
+                break;
+                case XREG_XCOLKEYMSKH:
+                mystique->xcolkeymskh = val;
+                break;
+                case XREG_XCOLKEYL:
+                mystique->xcolkeyl = val;
+                break;
+                case XREG_XCOLKEYH:
+                mystique->xcolkeyh = val;
+                break;
+
+                case XREG_XSYSPLLSTAT:
+                break;
+
+                case XREG_XPIXPLLSTAT:
+                break;
+
                 case XREG_XPIXCLKCTRL:
                 mystique->xpixclkctrl = val;
                 break;
@@ -1334,6 +1420,9 @@ static uint8_t mystique_ctrl_read_b(uint32_t addr, void *p)
                 case REG_ICLEAR: case REG_ICLEAR+1: case REG_ICLEAR+2: case REG_ICLEAR+3:
                 case 0x2c30: case 0x2c31: case 0x2c32: case 0x2c33:
                 case 0x3e08:
+                break;
+                
+                case 0x3c08: case 0x3c09: case 0x3c0b:
                 break;
                 
                 default:
@@ -2801,6 +2890,7 @@ static void blit_iload_iload(mystique_t *mystique, uint32_t data, int size)
         const int transc = mystique->dwgreg.dwgctrl_running & DWGCTRL_TRANSC;
         const int trans_sel = (mystique->dwgreg.dwgctrl_running & DWGCTRL_TRANS_MASK) >> DWGCTRL_TRANS_SHIFT;
         uint8_t const * const trans = &trans_masks[trans_sel][(mystique->dwgreg.selline & 3) * 4];
+        uint32_t data_mask = 1;
 
         switch (mystique->maccess_running & MACCESS_PWIDTH_MASK)
         {
@@ -2969,16 +3059,18 @@ static void blit_iload_iload(mystique_t *mystique, uint32_t data, int size)
 
                         case DWGCTRL_BLTMOD_BMONOWF:
                         data = (data >> 24) | ((data & 0x00ff0000) >> 8) | ((data & 0x0000ff00) << 8) | (data << 24);
+                        data_mask = (1 << 31);
+                        case DWGCTRL_BLTMOD_BMONOLEF:
                         while (size)
                         {
                                 if (mystique->dwgreg.xdst >= mystique->dwgreg.cxleft && mystique->dwgreg.xdst <= mystique->dwgreg.cxright &&
                                         mystique->dwgreg.ydst_lin >= mystique->dwgreg.ytop && mystique->dwgreg.ydst_lin <= mystique->dwgreg.ybot &&
-                                        ((data & 0x80000000) || !(mystique->dwgreg.dwgctrl_running & DWGCTRL_TRANSC)) &&
+                                        ((data & data_mask) || !(mystique->dwgreg.dwgctrl_running & DWGCTRL_TRANSC)) &&
                                         trans[mystique->dwgreg.xdst & 3])
                                 {
                                         uint32_t old_dst;
                                         
-                                        src = (data & 0x80000000) ? mystique->dwgreg.fcol : mystique->dwgreg.bcol;
+                                        src = (data & data_mask) ? mystique->dwgreg.fcol : mystique->dwgreg.bcol;
                                         switch (mystique->maccess_running & MACCESS_PWIDTH_MASK)
                                         {
                                                 case MACCESS_PWIDTH_8:
@@ -3046,7 +3138,10 @@ static void blit_iload_iload(mystique_t *mystique, uint32_t data, int size)
                                 }
                                 else
                                         mystique->dwgreg.xdst = (mystique->dwgreg.xdst + 1) & 0xffff;
-                                data <<= 1;
+                                if (data_mask == 1)
+                                        data >>= 1;
+                                else
+                                        data <<= 1;
                                 size--;
                         }
                         break;
@@ -4694,6 +4789,7 @@ static void blit_iload(mystique_t *mystique)
                 switch (mystique->dwgreg.dwgctrl_running & DWGCTRL_BLTMOD_MASK)
                 {
                         case DWGCTRL_BLTMOD_BFCOL:
+                        case DWGCTRL_BLTMOD_BMONOLEF:
                         case DWGCTRL_BLTMOD_BMONOWF:
                         case DWGCTRL_BLTMOD_BU24RGB:
 //                        pclog("fxleft=%i fxright=%i\n", mystique->dwgreg.fxleft, mystique->dwgreg.fxright);
@@ -4950,6 +5046,7 @@ static void mystique_start_blit(mystique_t *mystique)
 
 static void mystique_hwcursor_draw(svga_t *svga, int displine)
 {
+        mystique_t *mystique = (mystique_t *)svga->p;
         int x;
         uint64_t dat[2];
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
@@ -4957,16 +5054,21 @@ static void mystique_hwcursor_draw(svga_t *svga, int displine)
         dat[0] = *(uint64_t *)(&svga->vram[svga->hwcursor_latch.addr]);
         dat[1] = *(uint64_t *)(&svga->vram[svga->hwcursor_latch.addr + 8]);
         svga->hwcursor_latch.addr += 16;
-        for (x = 0; x < 64; x ++)
+        switch (mystique->xcurctrl & XCURCTRL_CURMODE_MASK)
         {
-                if (!(dat[1] & (1ull << 63)))
-                        ((uint32_t *)buffer32->line[displine])[offset + 32]  = (dat[0] & (1ull << 63)) ? 0xffffff : 0;
-                else if (dat[0] & (1ull << 63))
-                        ((uint32_t *)buffer32->line[displine])[offset + 32] ^= 0xffffff;
+                case XCURCTRL_CURMODE_XGA:
+                for (x = 0; x < 64; x ++)
+                {
+                        if (!(dat[1] & (1ull << 63)))
+                                ((uint32_t *)buffer32->line[displine])[offset + 32]  = (dat[0] & (1ull << 63)) ? mystique->cursor.col[1] : mystique->cursor.col[0];
+                        else if (dat[0] & (1ull << 63))
+                                ((uint32_t *)buffer32->line[displine])[offset + 32] ^= 0xffffff;
 
-                offset++;
-                dat[0] <<= 1;
-                dat[1] <<= 1;
+                        offset++;
+                        dat[0] <<= 1;
+                        dat[1] <<= 1;
+                }
+                break;
         }
 }
 
