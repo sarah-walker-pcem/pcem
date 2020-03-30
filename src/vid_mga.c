@@ -2235,9 +2235,8 @@ static void mystique_accel_iload_write_l(uint32_t addr, uint32_t val, void *p)
                 break;
 
                 case DMA_MODE_BLIT:
-                if (!mystique->busy)
-                        fatal("mystique_iload_write_l: !busy\n");
-                blit_iload_write(mystique, val, 32);
+                if (mystique->busy)
+                        blit_iload_write(mystique, val, 32);
                 break;
                 
                 default:
@@ -2470,10 +2469,8 @@ static void run_dma(mystique_t *mystique)
 //                                        pclog(" DMA_MODE_BLIT %08x %08x %08x %08x\n", mystique->dma.secaddress & DMA_ADDR_MASK, mystique->dma.secend & DMA_ADDR_MASK, mystique->dwgreg.dwgctrl_running, mystique->maccess_running);
                                         mystique->dma.secaddress += 4;
 
-                                        if (!mystique->busy)
-                                                fatal("mystique_iload_write_l: !busy\n");
-
-                                        blit_iload_write(mystique, val, 32);
+                                        if (mystique->busy)
+                                                blit_iload_write(mystique, val, 32);
 
                                         words_transferred++;
                                         if ((mystique->dma.secaddress & DMA_ADDR_MASK) == (mystique->dma.secend & DMA_ADDR_MASK))
