@@ -611,6 +611,7 @@ enum
 #define DMA_MODE_VECTOR 2
 
 #define STATUS_SOFTRAPEN   (1 << 0)
+#define STATUS_VSYNCPEN    (1 << 4)
 #define STATUS_VLINEPEN    (1 << 5)
 #define STATUS_DWGENGSTS   (1 << 16)
 #define STATUS_ENDPRDMASTS (1 << 17)
@@ -711,6 +712,12 @@ void mystique_out(uint16_t addr, uint8_t val, void *p)
                                 svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
+                        if (svga->crtcreg == 0x11)
+                        {
+                                if (!(val & 0x10))
+                                        mystique->status &= ~STATUS_VSYNCPEN;
+                                mystique_update_irqs(mystique);
+                        }
                 }
                 break;
                 
@@ -798,6 +805,18 @@ static int mystique_line_compare(svga_t *svga)
         mystique_update_irqs(mystique);
         
         return 0;
+}
+
+static void mystique_vsync_callback(svga_t *svga)
+{
+        mystique_t *mystique = (mystique_t *)svga->p;
+
+        if (svga->crtc[0x11] & 0x10)
+        {
+                mystique->status |= STATUS_VSYNCPEN;
+                mystique_update_irqs(mystique);
+        }
+        
 }
 
 void mystique_recalctimings(svga_t *svga)
@@ -976,9 +995,12 @@ static void mystique_recalc_mapping(mystique_t *mystique)
 
 static void mystique_update_irqs(mystique_t *mystique)
 {
+        svga_t *svga = &mystique->svga;
         int irq = 0;
         
         if ((mystique->status & mystique->ien) & STATUS_SOFTRAPEN)
+                irq = 1;
+        if ((mystique->status & STATUS_VSYNCPEN) && (svga->crtc[0x11] & 0x30) == 0x10)
                 irq = 1;
                 
         if (irq)
@@ -5297,6 +5319,8 @@ void *mystique_init()
         timer_add(&mystique->softrap_pending_timer, mystique_softrap_pending_timer, (void *)mystique, 1);
         
         mystique->status = STATUS_ENDPRDMASTS;
+
+        mystique->svga.vsync_callback = mystique_vsync_callback;
 
         return mystique;
 }

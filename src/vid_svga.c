@@ -697,6 +697,9 @@ void svga_poll(void *p)
 //                        if (svga_interlace && oddeven) ma=maback=ma+(svga_rowoffset<<2);
                         
 //                        pclog("Addr %08X vson %03X vsoff %01X  %02X %02X %02X %i %i\n",ma,svga_vsyncstart,crtc[0x11]&0xF,crtc[0xD],crtc[0xC],crtc[0x33], svga_interlace, oddeven);
+
+                        if (svga->vsync_callback)
+                                svga->vsync_callback(svga);
                 }
                 if (svga->vc == svga->vtotal)
                 {
