@@ -2384,11 +2384,10 @@ static void run_dma(mystique_t *mystique)
                                                 reg_addr += 0x1c00;
 
 //                                        pclog(" DMA pri write %08x to %02x %04x  %08x %08x\n", val, mystique->dma.pri_header & 0xff, reg_addr,  (mystique->dma.primaddress & DMA_ADDR_MASK), (mystique->dma.primend & DMA_ADDR_MASK));
-                                        if ((reg_addr & 0x300) == 0x100 && reg_addr != REG_DMAPAD)
+                                        if ((reg_addr & 0x300) == 0x100)
                                                 mystique->blitter_submit_dma_refcount++;
 
-                                        if (reg_addr != REG_DMAPAD)
-                                                mystique_accel_ctrl_write_l(reg_addr, val, mystique);
+                                        mystique_accel_ctrl_write_l(reg_addr, val, mystique);
                                 }
 
                                 mystique->dma.pri_header >>= 8;
@@ -2435,11 +2434,10 @@ static void run_dma(mystique_t *mystique)
                                                 reg_addr += 0x1c00;
 
 //                                        pclog(" DMA sec write %08x to %02x %04x  %08x %08x\n", val, mystique->dma.sec_header & 0xff, reg_addr,  (mystique->dma.secaddress & DMA_ADDR_MASK), (mystique->dma.secend & DMA_ADDR_MASK));
-                                        if ((reg_addr & 0x300) == 0x100 && reg_addr != REG_DMAPAD)
+                                        if ((reg_addr & 0x300) == 0x100)
                                                 mystique->blitter_submit_dma_refcount++;
 
-                                        if (reg_addr != REG_DMAPAD)
-                                                mystique_accel_ctrl_write_l(reg_addr, val, mystique);
+                                        mystique_accel_ctrl_write_l(reg_addr, val, mystique);
                                 }
 
                                 mystique->dma.sec_header >>= 8;
