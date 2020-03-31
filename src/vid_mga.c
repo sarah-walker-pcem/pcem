@@ -1968,28 +1968,28 @@ static void mystique_accel_ctrl_write_l(uint32_t addr, uint32_t val, void *p)
 
                 case REG_SRC0:
                 mystique->dwgreg.src[0] = val;
-                if ((mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
+                if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
                         blit_iload_write(mystique, mystique->dwgreg.src[0], 32);
                 break;
                 case REG_SRC1:
                 mystique->dwgreg.src[1] = val;
-                if ((mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
+                if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
                         blit_iload_write(mystique, mystique->dwgreg.src[1], 32);
                 break;
                 case REG_SRC2:
                 mystique->dwgreg.src[2] = val;
-                if ((mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
+                if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
                         blit_iload_write(mystique, mystique->dwgreg.src[2], 32);
                 break;
                 case REG_SRC3:
                 mystique->dwgreg.src[3] = val;
-                if ((mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
+                if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
                         blit_iload_write(mystique, mystique->dwgreg.src[3], 32);
                 break;
 
 
                 case REG_DMAPAD:
-                if ((mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
+                if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
                         blit_iload_write(mystique, mystique->dwgreg.src[0], 32);
                 break;
 
