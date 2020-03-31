@@ -1990,7 +1990,7 @@ static void mystique_accel_ctrl_write_l(uint32_t addr, uint32_t val, void *p)
 
                 case REG_DMAPAD:
                 if (mystique->busy && (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK) == DWGCTRL_OPCODE_ILOAD)
-                        blit_iload_write(mystique, mystique->dwgreg.src[0], 32);
+                        blit_iload_write(mystique, val, 32);
                 break;
 
                 case REG_AR0:
