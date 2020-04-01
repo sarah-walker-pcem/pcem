@@ -2341,7 +2341,15 @@ static void mystique_writel_linear(uint32_t addr, uint32_t val, void *p)
 }
 
 
-
+static uint32_t mystique_dma_read(uint32_t addr)
+{
+        if ((addr & DMA_ADDR_MASK) > (mem_size * 1024))
+        {
+//                pclog("PCI DMA out of range\n");
+                return -1;
+        }
+        return *(uint32_t *)&ram[addr & DMA_ADDR_MASK];
+}
 
 static void run_dma(mystique_t *mystique)
 {
@@ -2365,14 +2373,14 @@ static void run_dma(mystique_t *mystique)
                                 case DMA_MODE_REG:
                                 if (mystique->dma.pri_state == 0)
                                 {
-                                        mystique->dma.pri_header = *(uint32_t *)&ram[mystique->dma.primaddress & DMA_ADDR_MASK];
+                                        mystique->dma.pri_header = mystique_dma_read(mystique->dma.primaddress);
 //                                        pclog("DMA pri read header %08x from %08x  %08x\n", mystique->dma.pri_header, mystique->dma.primaddress, mystique->dma.primend);
                                         mystique->dma.primaddress += 4;
                                 }
 
 //                                if ((mystique->dma.pri_header & 0xff) != 0x15)
                                 {
-                                        uint32_t val = *(uint32_t *)&ram[mystique->dma.primaddress & DMA_ADDR_MASK];
+                                        uint32_t val = mystique_dma_read(mystique->dma.primaddress);
                                         uint32_t reg_addr;
 
                                         mystique->dma.primaddress += 4;
@@ -2415,14 +2423,14 @@ static void run_dma(mystique_t *mystique)
                                 case DMA_MODE_REG:
                                 if (mystique->dma.sec_state == 0)
                                 {
-                                        mystique->dma.sec_header = *(uint32_t *)&ram[mystique->dma.secaddress & DMA_ADDR_MASK];
+                                        mystique->dma.sec_header = mystique_dma_read(mystique->dma.secaddress);
 //                                        pclog("DMA sec read header %08x from %08x  %08x\n", mystique->dma.sec_header, mystique->dma.secaddress, mystique->dma.secend);
                                         mystique->dma.secaddress += 4;
                                 }
 
 //                                if ((mystique->dma.sec_header & 0xff) != 0x15)
                                 {
-                                        uint32_t val = *(uint32_t *)&ram[mystique->dma.secaddress & DMA_ADDR_MASK];
+                                        uint32_t val = mystique_dma_read(mystique->dma.secaddress);
                                         uint32_t reg_addr;
 
                                         mystique->dma.secaddress += 4;
@@ -2463,7 +2471,7 @@ static void run_dma(mystique_t *mystique)
 
                                 case DMA_MODE_BLIT:
                                 {
-                                        uint32_t val = *(uint32_t *)&ram[mystique->dma.secaddress & DMA_ADDR_MASK];
+                                        uint32_t val = mystique_dma_read(mystique->dma.secaddress);
 //                                        pclog(" DMA_MODE_BLIT %08x %08x %08x %08x\n", mystique->dma.secaddress & DMA_ADDR_MASK, mystique->dma.secend & DMA_ADDR_MASK, mystique->dwgreg.dwgctrl_running, mystique->maccess_running);
                                         mystique->dma.secaddress += 4;
 
