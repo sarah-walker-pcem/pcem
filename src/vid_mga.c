@@ -4655,6 +4655,17 @@ static void blit_bitblt(mystique_t *mystique)
                                                         svga->changedvram[(((mystique->dwgreg.ydst_lin + x) * 3) & mystique->vram_mask) >> 12] = changeframecount;
                                                         break;
 
+                                                        case MACCESS_PWIDTH_32:
+                                                        dst = ((uint32_t *)svga->vram)[(mystique->dwgreg.ydst_lin + x) & mystique->vram_mask_l];
+
+//                                                        pclog("    %02x %02x  ", src, dst);
+                                                        dst = bitop(src, dst, mystique->dwgreg.dwgctrl_running);// & DWGCTRL_BOP_MASK
+//                                                        pclog("%08x %08x %i dst=%02x\n", src_addr, mystique->dwgreg.ydst_lin + x, mystique->dwgreg.sgn.scanleft, dst);
+
+                                                        ((uint32_t *)svga->vram)[(mystique->dwgreg.ydst_lin + x) & mystique->vram_mask_l] = dst;
+                                                        svga->changedvram[((mystique->dwgreg.ydst_lin + x) & mystique->vram_mask_w) >> 10] = changeframecount;
+                                                        break;
+
                                                         default:
                                                         fatal("BITBLT RPL BMONOLEF PWIDTH %x %08x\n", mystique->maccess_running & MACCESS_PWIDTH_MASK, mystique->dwgreg.dwgctrl_running);
                                                 }
