@@ -5428,7 +5428,7 @@ static device_config_t mystique_config[] =
 device_t mystique_device =
 {
         "Matrox Mystique",
-        0,
+        DEVICE_NOT_WORKING,
         mystique_init,
         mystique_close,
         mystique_available,
