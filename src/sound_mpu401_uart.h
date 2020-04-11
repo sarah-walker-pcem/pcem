@@ -9,9 +9,11 @@ typedef struct mpu401_uart_t
         int uart_mode;
         uint16_t addr;
         int irq;
+        
+        int is_aztech;
 } mpu401_uart_t;
 
-void mpu401_uart_init(mpu401_uart_t *mpu, uint16_t addr, int irq);
+void mpu401_uart_init(mpu401_uart_t *mpu, uint16_t addr, int irq, int is_aztech);
 void mpu401_uart_update_addr(mpu401_uart_t *mpu, uint16_t addr);
 void mpu401_uart_update_irq(mpu401_uart_t *mpu, int irq);
 

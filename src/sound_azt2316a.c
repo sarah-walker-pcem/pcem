@@ -1446,7 +1446,7 @@ void *azt_common_init(const int type, char *nvr_filename)
         io_sethandler(azt2316a->cur_addr+8, 0x0002, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &azt2316a->sb->opl);
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &azt2316a->sb->opl);
         io_sethandler(azt2316a->cur_addr+4, 0x0002, sb_ct1345_mixer_read, NULL, NULL, sb_ct1345_mixer_write, NULL, NULL, azt2316a->sb);
-        mpu401_uart_init(&azt2316a->sb->mpu, azt2316a->cur_mpu401_addr, azt2316a->cur_mpu401_irq);
+        mpu401_uart_init(&azt2316a->sb->mpu, azt2316a->cur_mpu401_addr, azt2316a->cur_mpu401_irq, 1);
 
         azt2316a_create_config_word(azt2316a); // recreate even if we have read it from EEPROM, because we have some overrides (CD interfaces always off, etc)
         sound_add_handler(azt2316a_get_buffer, azt2316a);

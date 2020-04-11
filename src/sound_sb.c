@@ -1052,7 +1052,7 @@ void *sb_16_init()
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_ct1745_mixer_read, NULL, NULL, sb_ct1745_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_get_buffer_sb16, sb);
-        mpu401_uart_init(&sb->mpu, 0x330, -1);
+        mpu401_uart_init(&sb->mpu, 0x330, -1, 0);
 
 
         return sb;
@@ -1082,7 +1082,7 @@ void *sb_awe32_init()
         io_sethandler(0x0388, 0x0004, opl3_read,   NULL, NULL, opl3_write,   NULL, NULL, &sb->opl);
         io_sethandler(addr+4, 0x0002, sb_ct1745_mixer_read, NULL, NULL, sb_ct1745_mixer_write, NULL, NULL, sb);
         sound_add_handler(sb_get_buffer_emu8k, sb);
-        mpu401_uart_init(&sb->mpu, 0x330, -1);
+        mpu401_uart_init(&sb->mpu, 0x330, -1, 0);
         emu8k_init(&sb->emu8k, emu_addr, onboard_ram);
 
         return sb;

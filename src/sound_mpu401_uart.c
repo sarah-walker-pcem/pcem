@@ -31,16 +31,26 @@ static void mpu401_uart_write(uint16_t addr, uint8_t val, void *p)
                         // But actual behaviour is weird. For example, the MPU401 port test in the AZT1605 drivers for Windows NT
                         // want this to return an Ack but the IRQ test in the same driver wants this to raise no interrupts!
                         mpu->rx_data = 0xfe; /*Acknowledge*/
-                        mpu->status = STATUS_OUTPUT_NOT_READY;
                         mpu->uart_mode = 0;
-                        //mpu401_uart_raise_irq(p);
+                        if (mpu->is_aztech)
+                                mpu->status = STATUS_OUTPUT_NOT_READY;
+                        else
+                        {
+                                mpu->status = 0;
+                                mpu401_uart_raise_irq(p);
+                        }
                         break;
                         
                         case 0x3f: /*Enter UART mode*/
                         mpu->rx_data = 0xfe; /*Acknowledge*/
-                        mpu->status = STATUS_OUTPUT_NOT_READY;
                         mpu->uart_mode = 1;
-                        mpu401_uart_raise_irq(p);
+                        if (mpu->is_aztech)
+                        {
+                                mpu->status = STATUS_OUTPUT_NOT_READY;
+                                mpu401_uart_raise_irq(p);
+                        }
+                        else
+                                mpu->status = 0;
                         break;
                 }
                 return;
@@ -63,12 +73,13 @@ static uint8_t mpu401_uart_read(uint16_t addr, void *p)
         return mpu->rx_data;
 }
 
-void mpu401_uart_init(mpu401_uart_t *mpu, uint16_t addr, int irq)
+void mpu401_uart_init(mpu401_uart_t *mpu, uint16_t addr, int irq, int is_aztech)
 {
         mpu->status = STATUS_INPUT_NOT_READY;
         mpu->uart_mode = 0;
         mpu->addr = addr;
         mpu->irq = irq;
+        mpu->is_aztech = is_aztech;
         
         io_sethandler(addr, 0x0002, mpu401_uart_read, NULL, NULL, mpu401_uart_write, NULL, NULL, mpu);
 }
