@@ -711,8 +711,8 @@ void sb_exec_command(sb_dsp_t *dsp)
                 break;
                 case 0x38: /*TODO: AZTECH MIDI-related? */
                 break;
-                default:
-                fatal("Exec bad SB command %02X\n",dsp->sb_command);
+//                default:
+//                fatal("Exec bad SB command %02X\n",dsp->sb_command);
 
 
                 /*TODO: Some more data about the DSP registeres
