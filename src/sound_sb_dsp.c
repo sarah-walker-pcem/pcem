@@ -696,18 +696,21 @@ void sb_exec_command(sb_dsp_t *dsp)
                 case 0x05:
                 break;
                 case 0x09: /*AZTECH mode set*/
-                if (dsp->sb_data[0] == 0x00)
+                if (IS_AZTECH(dsp))
                 {
-                        pclog("AZT2316A: WSS MODE!\n");
-                        azt2316a_enable_wss(1, dsp->parent);
+                        if (dsp->sb_data[0] == 0x00)
+                        {
+                                pclog("AZT2316A: WSS MODE!\n");
+                                azt2316a_enable_wss(1, dsp->parent);
+                        }
+                        else if (dsp->sb_data[0] == 0x01)
+                        {
+                                pclog("AZT2316A: SB8PROV2 MODE!\n");
+                                azt2316a_enable_wss(0, dsp->parent);
+                        }
+                        else
+                                pclog("AZT2316A: UNKNOWN MODE!\n"); // sequences 0x02->0xFF, 0x04->0xFF seen
                 }
-                else if (dsp->sb_data[0] == 0x01)
-                {
-                        pclog("AZT2316A: SB8PROV2 MODE!\n");
-                        azt2316a_enable_wss(0, dsp->parent);
-                }
-                else
-                        pclog("AZT2316A: UNKNOWN MODE!\n"); // sequences 0x02->0xFF, 0x04->0xFF seen
                 break;
                 case 0x38: /*TODO: AZTECH MIDI-related? */
                 break;
