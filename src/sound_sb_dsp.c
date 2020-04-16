@@ -1385,4 +1385,5 @@ void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp)
                 sprintf(temps, "SB playback frequency : %iHz\n", freq);
                 strncat(s, temps, max_len);
         }
+        strncat(s, "\n", max_len);
 }

@@ -7477,8 +7477,6 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         if (!status_diff)
                 status_diff = 1;
 
-        svga_add_status_info(s, max_len, &voodoo->svga);
-        
         pixel_count_current[0] = voodoo->pixel_count[0];
         pixel_count_current[1] = voodoo->pixel_count[1];
         texel_count_current[0] = voodoo->texel_count[0];
