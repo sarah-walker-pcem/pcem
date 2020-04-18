@@ -924,8 +924,8 @@ int loadbios()
                 // keep separate from generic Zappa because there is a BIOS logo
                 // in flash.bin
                 case ROM_ITAUTEC_INFOWAYM:
-                if (!rom_present("infowaym/gd5434.bin"))
-                        break;
+//                if (!rom_present("infowaym/gd5434.bin"))
+//                        break;
                 f = romfopen("infowaym/1006bs0_.bio", "rb");
                 if (!f) break;
                 fseek(f, 0x80, SEEK_SET);
