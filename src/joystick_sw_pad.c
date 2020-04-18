@@ -4,7 +4,7 @@
         - Currently alternates between Mode A and Mode B (is there any way of
           actually controlling which is used?)
           - Windows 9x drivers require Mode B when more than 1 pad connected
-        - Packet preceeded by high data (currently 50us), and followed by low
+        - Packet preceeded by high data (currently 40us), and followed by low
           data (currently 160us) - timings are probably wrong, but good enough
           for everything I've tried
         - Analogue inputs are only used to time ID packet request. If A0 timing
@@ -55,7 +55,7 @@ static void sw_timer_over(void *p)
         if (sw->poll_left == 1 && !sw->poll_clock)
                 timer_advance_u64(&sw->poll_timer, TIMER_USEC * 160);
         else if (sw->poll_left)
-                timer_advance_u64(&sw->poll_timer, TIMER_USEC * 5);
+                timer_set_delay_u64(&sw->poll_timer, TIMER_USEC * 5);
 }
 
 static void sw_trigger_timer_over(void *p)
@@ -129,12 +129,10 @@ static void sw_write(void *p)
         if (!JOYSTICK_PRESENT(0))
                 return;
         
-        timer_process();
-
         if (!sw->poll_left)
         {
                 sw->poll_clock = 1;
-                timer_set_delay_u64(&sw->poll_timer, TIMER_USEC * 50);
+                timer_set_delay_u64(&sw->poll_timer, TIMER_USEC * 40);
                 
                 if (time_since_last > 9900 && time_since_last < 9940)
                 {
