@@ -684,8 +684,12 @@ void svga_poll(void *p)
                                 else if (!(svga->crtc[0x17] & 1))
                                    svga->video_res_y *= 2;
                                 svga->video_res_y /= (svga->crtc[9] & 31) + 1;                                   
-                                if (svga->lowres)
-                                   svga->video_res_x /= 2;
+                                if (svga->render == svga_render_8bpp_lowres ||
+                                    svga->render == svga_render_15bpp_lowres ||
+                                    svga->render == svga_render_16bpp_lowres ||
+                                    svga->render == svga_render_24bpp_lowres ||
+                                    svga->render == svga_render_32bpp_lowres)
+                                        svga->video_res_x /= 2;
 
                                 switch (svga->gdcreg[5] & 0x60)
                                 {
