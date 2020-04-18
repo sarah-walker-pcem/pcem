@@ -774,6 +774,7 @@ void keyboard_at_init()
         keyboard_at.mouse_p = NULL;
         keyboard_at.is_ps2 = 0;
         keyboard_set_scancode_set(SCANCODE_SET_2);
+        keyboard_at.scancode_set = SCANCODE_SET_2;
         
         timer_add(&keyboard_at.send_delay_timer, keyboard_at_poll, NULL, 1);
 }
