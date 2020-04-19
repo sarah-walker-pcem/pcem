@@ -1,22 +1,19 @@
-PCem v15
+PCem v16
 
 PCem is licensed under the GPL, see COPYING for more details.
 
-Changes since v14:
-- New machines added - Zenith Data SupersPort, Bull Micral 45, Tulip AT Compact, 
-  Amstrad PPC512/640, Packard Bell PB410A, ASUS P/I-P55TVP4, ASUS P/I-P55T2P4,
-  Epox P55-VA, FIC VA-503+
-- New graphics cards added - Image Manager 1024, Sigma Designs Color 400,
-  Trigem Korean VGA
-- Added emulation of AMD K6 family and IDT Winchip 2
-- New CPU recompiler. This provides several optimisations, and the new design allows
-  for greater portability and more scope for optimisation in the future
-- Experimental ARM and ARM64 host support
-- Read-only cassette emulation for IBM PC and PCjr
+Changes since v15
+- New machines added - Commodore SL386SX-25, ECS 386/32, Goldstar GDC-212M,
+  Hyundai Super-286TR, IBM PS/1 Model 2133 (EMEA 451), Itautec Infoway Multimidia,
+  Samsung SPC-4620P, Leading Edge Model M
+- New graphics cards added - ATI EGA Wonder 800+, AVGA2, Cirrus Logic GD5428,
+  IBM 1MB SVGA Adapter/A
+- New sound card added - Aztech Sound Galaxy Pro 16 AB (Washington)
+- New SCSI card added - IBM SCSI Adapter with Cache
+- Support FPU emulation on pre-486 machines
 - Numerous bug fixes
 
-Thanks to dns2kv2, Greatpsycho, Greg V, John Elliott, Koutakun, leilei, Martin_Riarte,
-rene, Tale and Tux for contributions towards this release.
+Thanks to EluanCM, Greatpsycho, John Elliott, and leilei for contributions towards this release.
 
 
 PCem emulates the following machines:
