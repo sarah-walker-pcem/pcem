@@ -95,12 +95,12 @@ typedef struct PIT
         int initial[3];
         int latched[3];
         int disabled[3];
-        
+
         uint8_t read_status[3];
         int do_read_status[3];
-        
+
         PIT_nr pit_nr[3];
-        
+
         void (*set_out_funcs[3])(int new_out, int old_out);
 } PIT;
 
@@ -127,7 +127,7 @@ typedef struct dma_t
         uint8_t stat, stat_rq;
         uint8_t command;
         int size;
-        
+
         uint8_t ps2_mode;
         uint8_t arb_level;
         uint16_t io_addr;
@@ -181,7 +181,7 @@ enum
         ROM_PC200,
         ROM_PC1640,
         ROM_PC2086,
-        ROM_PC3086,        
+        ROM_PC3086,
         ROM_AMIXT,      /*XT Clone with AMI BIOS*/
 	ROM_LTXT,
 	ROM_LXT3,
@@ -263,6 +263,7 @@ enum
         ROM_HYUNDAI_SUPER286TR,
         ROM_ITAUTEC_INFOWAYM,
         ROM_DESKPRO,
+        ROM_VS440FX,
 
         ROM_MAX
 };
@@ -288,7 +289,7 @@ enum
         GFX_N9_9FX,     /*S3 764/Trio64 (Number Nine 9FX)*/
         GFX_VIRGE,      /*S3 Virge*/
         GFX_TGUI9440,   /*Trident TGUI9440*/
-        GFX_VGA,        /*IBM VGA*/        
+        GFX_VGA,        /*IBM VGA*/
         GFX_VGAEDGE16,  /*ATI VGA Edge-16 (18800-1)*/
         GFX_ATIKOREANVGA, /*ATI Korean VGA (28800-5)*/
         GFX_VGACHARGER, /*ATI VGA Charger (28800-5)*/
@@ -298,7 +299,7 @@ enum
         GFX_VIRGEDX,    /*S3 Virge/DX*/
         GFX_PHOENIX_TRIO32, /*S3 732/Trio32 (Phoenix)*/
         GFX_PHOENIX_TRIO64, /*S3 764/Trio64 (Phoenix)*/
-       	GFX_INCOLOR,	/* Hercules InColor */ 
+       	GFX_INCOLOR,	/* Hercules InColor */
 	GFX_COLORPLUS,	/* Plantronics ColorPlus */
 	GFX_WY700,	/* Wyse 700 */
 	GFX_GENIUS,	/* MDSI Genius */

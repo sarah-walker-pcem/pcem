@@ -29,6 +29,7 @@
 #include "i430hx.h"
 #include "i430lx.h"
 #include "i430vx.h"
+#include "i440fx.h"
 #include "ide.h"
 #include "intel.h"
 #include "intel_flash.h"
@@ -49,6 +50,7 @@
 #include "olivetti_m24.h"
 #include "opti495.h"
 #include "pc87306.h"
+#include "pc87307.h"
 #include "pci.h"
 #include "pic.h"
 #include "piix.h"
@@ -130,6 +132,7 @@ void      compaq_xt_init();
 void      xt_xi8088_init();
 void      xt_zenith_init();
 void        at_mvp3_init();
+void     at_vs440fx_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
@@ -235,6 +238,8 @@ MODEL models[] =
         {"[Socket 7] Shuttle HOT-557",    ROM_430VX,            "430vx",          { {"Intel", cpus_Pentium},     {"AMD", cpus_K6_S7},   {"IDT", cpus_WinChip}, {"Cyrix", cpus_6x86}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         8,  128,   1,      at_i430vx_init, NULL},
 
         {"[Super 7] FIC VA-503+",         ROM_FIC_VA503P,       "fic_va503p",     { {"Intel", cpus_Pentium},     {"AMD", cpus_K6_SS7},  {"IDT", cpus_WinChip_SS7}, {"Cyrix", cpus_6x86_SS7}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,     1,  512,   1,        at_mvp3_init, NULL},
+
+        {"[Socket 8] Intel VS440FX",      ROM_VS440FX,          "vs440fx",        { {"Intel", cpus_PentiumPro}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         8,  256,   8,       at_vs440fx_init, NULL},
         
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };
@@ -811,6 +816,21 @@ void at_mvp3_init()
         vt82c586b_init(7, 8, 9, 10, 0);
         w83877tf_init(0x250, 0x89);
         device_add(&sst_39sf010_device);
+}
+
+void at_vs440fx_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0xb);
+        pci_slot(0xf);
+        pci_slot(0x11);
+        pci_slot(0x13);
+        i440fx_init();
+        piix_init(7, 0xb, 0xf, 0x11, 0x13, i440fx_reset);
+        pc87307_init(0x2e);
+//        i440fx_init();
+        device_add(&intel_flash_28fb200bxt_device);
 }
 
 void model_init()

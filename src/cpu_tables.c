@@ -501,3 +501,12 @@ CPU cpus_K6_SS7[] =
         {"",             -1,        0, 0, 0}
 };
 
+CPU cpus_PentiumPro[] =
+{
+        /*Intel Pentium Pro*/
+        {"Pentium Pro 150", CPU_PENTIUMPRO, fpus_builtin, 17, 150000000, 3, 30000000, 0x617, 0x617, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 15,15,7,7, (5*7)/2},
+        {"Pentium Pro 166", CPU_PENTIUMPRO, fpus_builtin, 19, 166666666, 3, 33333333, 0x617, 0x617, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 15,15,7,7, (5*8)/2},
+        {"Pentium Pro 180", CPU_PENTIUMPRO, fpus_builtin, 20, 180000000, 3, 30000000, 0x617, 0x617, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 3*8},
+        {"Pentium Pro 200", CPU_PENTIUMPRO, fpus_builtin, 21, 200000000, 3, 33333333, 0x617, 0x617, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 3*8},
+        {"",             -1,        0, 0, 0}
+};

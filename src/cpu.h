@@ -41,6 +41,7 @@ extern int fpu_type;
 #define CPU_K6_3        25
 #define CPU_K6_2P       26
 #define CPU_K6_3P       27
+#define CPU_PENTIUMPRO  28
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
@@ -117,6 +118,7 @@ extern CPU cpus_6x86[];
 extern CPU cpus_6x86_SS7[];
 extern CPU cpus_K6_S7[];
 extern CPU cpus_K6_SS7[];
+extern CPU cpus_PentiumPro[];
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_europc[];
