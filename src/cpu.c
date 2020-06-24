@@ -1051,7 +1051,7 @@ void cpu_set()
                 cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_VME | CPU_FEATURE_CX8;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE | CR4_PCE;
-                codegen_timing_set(&codegen_timing_pentium);
+                codegen_timing_set(&codegen_timing_p6);
                 break;
 
                 default:
