@@ -1606,8 +1606,26 @@ static p6_unit_t units[] =
 };
 const int nr_units = (sizeof(units) / sizeof(p6_unit_t));
 
+static int rat_timestamp = 0;
+static int rat_uops = 0;
+
 static int uop_run(const p6_uop_t *uop, int decode_time)
 {
+        /*Peak of 3 uOPs from decode to RAT per cycle*/
+        if (decode_time < rat_timestamp)
+                decode_time = rat_timestamp;
+        else if (decode_time > rat_timestamp)
+        {
+                rat_timestamp = decode_time;
+                rat_uops = 0;
+        }
+
+        rat_uops++;
+        if (rat_uops == 3)
+        {
+                rat_timestamp++;
+                rat_uops = 0;
+        }
 #if 0
         int c;
         p6_unit_t *best_unit = NULL;
@@ -1908,7 +1926,10 @@ void codegen_timing_p6_block_start()
 
         decode_timestamp = 0;
         last_complete_timestamp = 0;
-        
+
+        rat_timestamp = 0;
+        rat_uops = 0;
+
         for (c = 0; c < NR_REGS; c++)
                 reg_available_timestamp[c] = 0;
         for (c = 0; c < 8; c++)
