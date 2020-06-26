@@ -1559,7 +1559,8 @@ static int last_complete_timestamp;
 
 typedef struct p6_unit_t
 {
-        uint32_t uop_mask;
+        const uint32_t uop_mask;
+        const int port;
         int first_available_cycle;
 } p6_unit_t;
 
@@ -1582,6 +1583,8 @@ typedef struct p6_port_t
         uint32_t unit_mask;
 } p6_port_t;
 
+static int port_last_timestamps[5];
+
 static const p6_port_t ports[] =
 {
         {UNIT_INT0 | UNIT_FPU | UNIT_MMX_MUL},
@@ -1594,15 +1597,15 @@ static const p6_port_t ports[] =
 
 static p6_unit_t units[] =
 {
-        [UNIT_INT0]       = {.uop_mask = (1 << UOP_ALU0) | (1 << UOP_ALU01)},                 /*Integer 0*/
-        [UNIT_INT1]       = {.uop_mask = (1 << UOP_ALU1) | (1 << UOP_ALU01)},                 /*Integer 1*/
-        [UNIT_FPU]        = {.uop_mask = 1 << UOP_FLOAT},
-        [UNIT_MMX_ADD]    = {.uop_mask = 0},
-        [UNIT_MMX_MUL]    = {.uop_mask = 0},
-        [UNIT_JUMP]       = {.uop_mask = 1 << UOP_BRANCH},
-        [UNIT_LOAD]       = {.uop_mask = 1 << UOP_LOAD},
-        [UNIT_STORE_ADDR] = {.uop_mask = 1 << UOP_STOREADDR},
-        [UNIT_STORE_DATA] = {.uop_mask = 1 << UOP_STOREDATA}
+        [UNIT_INT0]       = {.uop_mask = (1 << UOP_ALU0) | (1 << UOP_ALU01), .port = 0},                 /*Integer 0*/
+        [UNIT_INT1]       = {.uop_mask = (1 << UOP_ALU1) | (1 << UOP_ALU01), .port = 1},                 /*Integer 1*/
+        [UNIT_FPU]        = {.uop_mask = 1 << UOP_FLOAT,                     .port = 0},
+        [UNIT_MMX_ADD]    = {.uop_mask = 0,                                  .port = 1},
+        [UNIT_MMX_MUL]    = {.uop_mask = 0,                                  .port = 0},
+        [UNIT_JUMP]       = {.uop_mask = 1 << UOP_BRANCH,                    .port = 1},
+        [UNIT_LOAD]       = {.uop_mask = 1 << UOP_LOAD,                      .port = 2},
+        [UNIT_STORE_ADDR] = {.uop_mask = 1 << UOP_STOREADDR,                 .port = 3},
+        [UNIT_STORE_DATA] = {.uop_mask = 1 << UOP_STOREDATA,                 .port = 4}
 };
 const int nr_units = (sizeof(units) / sizeof(p6_unit_t));
 
@@ -1611,6 +1614,10 @@ static int rat_uops = 0;
 
 static int uop_run(const p6_uop_t *uop, int decode_time)
 {
+        int c;
+        p6_unit_t *best_unit = NULL;
+        int best_start_cycle = 99999;
+
         /*Peak of 3 uOPs from decode to RAT per cycle*/
         if (decode_time < rat_timestamp)
                 decode_time = rat_timestamp;
@@ -1626,20 +1633,21 @@ static int uop_run(const p6_uop_t *uop, int decode_time)
                 rat_timestamp++;
                 rat_uops = 0;
         }
-#if 0
-        int c;
-        p6_unit_t *best_unit = NULL;
-        int best_start_cycle = 99999;
+
 
         /*Find execution unit for this uOP*/
         for (c = 0; c < nr_units; c++)
         {
-                if (units[c].uop_mask & (1 << uop->type))
+                p6_unit_t *unit = &units[c];
+                if (unit->uop_mask & (1 << uop->type))
                 {
-                        if (units[c].first_available_cycle < best_start_cycle)
+                        int start_cycle = MAX(unit->first_available_cycle,
+                                              port_last_timestamps[units[c].port]);
+
+                        if (start_cycle < best_start_cycle)
                         {
-                                best_unit = &units[c];
-                                best_start_cycle = units[c].first_available_cycle;
+                                best_unit = unit;
+                                best_start_cycle = start_cycle;
                         }
                 }
         }
@@ -1649,10 +1657,10 @@ static int uop_run(const p6_uop_t *uop, int decode_time)
         if (best_start_cycle < decode_time)
                 best_start_cycle = decode_time;
         best_unit->first_available_cycle = best_start_cycle + uop->throughput;
+        port_last_timestamps[best_unit->port] = best_start_cycle + 1;
 
         return best_start_cycle + uop->throughput;
-#endif
-        return decode_time+1;
+//        return decode_time+1;
 }
 
 /*The P6 decoder can decode up to three instructions per clock
@@ -1929,6 +1937,9 @@ void codegen_timing_p6_block_start()
 
         rat_timestamp = 0;
         rat_uops = 0;
+        
+        for (c = 0; c < 5; c++)
+                port_last_timestamps[c] = 0;
 
         for (c = 0; c < NR_REGS; c++)
                 reg_available_timestamp[c] = 0;
