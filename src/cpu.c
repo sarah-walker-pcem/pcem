@@ -70,6 +70,7 @@ enum
         CPUID_TSC = (1 << 4),
         CPUID_MSR = (1 << 5),
         CPUID_CMPXCHG8B = (1 << 8),
+        CPUID_SEP = (1 << 11),
         CPUID_CMOV = (1 << 15),
         CPUID_MMX = (1 << 23)
 };
@@ -1048,7 +1049,7 @@ void cpu_set()
                 timing_jmp_pm      = 3;
                 timing_jmp_pm_gate = 18;
                 timing_misaligned = 3;
-                cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_VME | CPU_FEATURE_CX8;
+                cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_VME | CPU_FEATURE_CX8 | CPU_FEATURE_SYSCALL;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE | CR4_PCE;
                 codegen_timing_set(&codegen_timing_p6);
@@ -1097,7 +1098,7 @@ void cpu_set()
                 timing_jmp_pm      = 3;
                 timing_jmp_pm_gate = 18;
                 timing_misaligned = 3;
-                cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_VME | CPU_FEATURE_CX8 | CPU_FEATURE_MMX;
+                cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_VME | CPU_FEATURE_CX8 | CPU_FEATURE_MMX | CPU_FEATURE_SYSCALL;
                 msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 19) | (1 << 21);
                 cpu_CR4_mask = CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | CR4_MCE | CR4_PCE;
                 codegen_timing_set(&codegen_timing_p6);
@@ -1637,7 +1638,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV;// | CPUID_SEP;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
@@ -1655,7 +1656,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX;// | CPUID_SEP;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
@@ -1726,6 +1727,17 @@ void cpu_RDMSR()
                 case CPU_K6_3:
                 case CPU_K6_2P:
                 case CPU_K6_3P:
+                EAX = EDX = 0;
+                switch (ECX)
+                {
+                        case 0x10:
+                        EAX = tsc & 0xffffffff;
+                        EDX = tsc >> 32;
+                        break;
+                }
+                break;
+                case CPU_PENTIUMPRO:
+                case CPU_PENTIUM_2:
                 EAX = EDX = 0;
                 switch (ECX)
                 {
@@ -1811,6 +1823,15 @@ void cpu_WRMSR()
                 case CPU_K6_3:
                 case CPU_K6_2P:
                 case CPU_K6_3P:
+                switch (ECX)
+                {
+                        case 0x10:
+                        tsc = EAX | ((uint64_t)EDX << 32);
+                        break;
+                }
+                break;
+                case CPU_PENTIUMPRO:
+                case CPU_PENTIUM_2:
                 switch (ECX)
                 {
                         case 0x10:

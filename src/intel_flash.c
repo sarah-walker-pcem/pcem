@@ -28,7 +28,7 @@ enum
 typedef struct flash_t
 {
         uint8_t command, status;
-	uint8_t flash_id;
+	uint16_t flash_id;
 	uint8_t type;
 	int invert_high_pin;
 	mem_mapping_t mapping[8], mapping_h[10];
@@ -71,7 +71,18 @@ static uint16_t flash_readw(uint32_t addr, void *p)
         flash_t *flash = (flash_t *)p;
 	addr &= flash->addr_mask;
 	if (flash->invert_high_pin)  addr ^= 0x10000;
-	return *(uint16_t *)&(flash->array[addr]);
+        switch (flash->command)
+        {
+		case CMD_READ_ARRAY:
+                default:
+                return *(uint16_t *)&(flash->array[addr]);
+
+                case CMD_IID:
+                return 0x89 | (flash->flash_id << 8);
+
+                case CMD_READ_STATUS:
+                return flash->status;
+        }
 }
 
 static uint32_t flash_readl(uint32_t addr, void *p)
@@ -187,7 +198,7 @@ static void intel_flash_add_mappings_inverted(flash_t *flash)
         }
 }
 
-void *intel_flash_init(uint8_t type)
+void *intel_flash_init(uint8_t type, uint8_t flash_id)
 {
         FILE *f;
         flash_t *flash = malloc(sizeof(flash_t));
@@ -232,24 +243,16 @@ void *intel_flash_init(uint8_t type)
 		case ROM_VS440FX:
 		strcpy(flash_path, "vs440fx/");
 		break;
+		case ROM_GA686BX:
+		strcpy(flash_path, "ga686bx/");
+		break;
 
 		default:
                 fatal("intel_flash_init on unsupported ROM set %i\n", romset);
 	}
 	// pclog("Flash init: Path is: %s\n", flash_path);
 
-        switch (type & (FLASH_IS_BXB | FLASH_2MBIT))
-        {
-                case 0:
-                flash->flash_id = 0x94;
-                break;
-                case FLASH_IS_BXB:
-                flash->flash_id = 0x95;
-                break;
-                case FLASH_2MBIT:
-                flash->flash_id = 0x74;
-                break;
-        }
+        flash->flash_id = flash_id;
         
         flash->addr_mask = (type & FLASH_2MBIT) ? 0x3ffff : 0x1ffff;
 
@@ -377,24 +380,29 @@ void *intel_flash_init(uint8_t type)
 /* For AMI BIOS'es - Intel 28F001BXT with high address pin inverted. */
 void *intel_flash_bxt_ami_init()
 {
-	return intel_flash_init(FLASH_INVERT);
+	return intel_flash_init(FLASH_INVERT, 0x94);
 }
 
 /* For Award BIOS'es - Intel 28F001BXT with high address pin not inverted. */
 void *intel_flash_bxt_init()
 {
-	return intel_flash_init(0);
+	return intel_flash_init(0, 0x94);
 }
 
 /* For Acer BIOS'es - Intel 28F001BXB. */
 void *intel_flash_bxb_init()
 {
-	return intel_flash_init(FLASH_IS_BXB);
+	return intel_flash_init(FLASH_IS_BXB, 0x95);
 }
 
 static void *intel_flash_28fb200bxt_init(void)
 {
-	return intel_flash_init(FLASH_INVERT | FLASH_2MBIT);
+	return intel_flash_init(FLASH_INVERT | FLASH_2MBIT, 0x74);
+}
+
+static void *intel_flash_28f002bc_init(void)
+{
+	return intel_flash_init(FLASH_INVERT | FLASH_2MBIT, 0x7c);
 }
 
 void intel_flash_close(void *p)
@@ -461,6 +469,19 @@ device_t intel_flash_28fb200bxt_device =
         "Intel 28FB200BX-T Flash BIOS",
         0,
         intel_flash_28fb200bxt_init,
+        intel_flash_close,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+device_t intel_flash_28f002bc_device =
+{
+        "Intel 28F002BC Flash BIOS",
+        0,
+        intel_flash_28f002bc_init,
         intel_flash_close,
         NULL,
         NULL,

@@ -357,6 +357,7 @@ void loadnvr()
                 case ROM_IBMPS1_2133_451:  f = nvrfopen("ibmps1_2133.nvr",     "rb"); nvrmask = 127; break;
                 case ROM_ECS_386_32:       f = nvrfopen("ecs_386_32.nvr",      "rb"); nvrmask = 127; break;
                 case ROM_VS440FX:          f = nvrfopen("vs440fx.nvr",         "rb"); nvrmask = 127; break;
+                case ROM_GA686BX:          f = nvrfopen("ga686bx.nvr",         "rb"); nvrmask = 127; break;
                 
                 default: return;
         }
@@ -465,6 +466,7 @@ void savenvr()
                 case ROM_IBMPS1_2133_451:  f = nvrfopen("ibmps1_2133.nvr",     "wb"); break;
                 case ROM_ECS_386_32:       f = nvrfopen("ecs_386_32.nvr",      "wb"); break;
                 case ROM_VS440FX:          f = nvrfopen("vs440fx.nvr",         "wb"); break;
+                case ROM_GA686BX:          f = nvrfopen("ga686bx.nvr",         "wb"); break;
                 
                 default: return;
         }

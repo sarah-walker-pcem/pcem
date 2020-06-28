@@ -1167,6 +1167,15 @@ int loadbios()
 
                 biosmask = 0x3ffff;
                 return 1;
+
+                case ROM_GA686BX:
+                f = romfopen("ga686bx/6BX.F2a", "rb");
+                if (!f) break;
+                romfread(rom, 0x40000, 1, f);
+                fclose(f);
+
+                biosmask = 0x3ffff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);

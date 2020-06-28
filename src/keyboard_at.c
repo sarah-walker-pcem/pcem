@@ -310,6 +310,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 keyboard_at.output_port = val;
                                 break;
                                 
+                                case 0xd2: /*Write to keyboard output buffer*/
+                                keyboard_at_adddata(val);
+                                break;
+
                                 case 0xd3: /*Write to mouse output buffer*/
                                 keyboard_at_adddata_mouse(val);
                                 break;
@@ -624,7 +628,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         break;
                         
                         case 0xca: /*AMI - read keyboard mode*/
-                        keyboard_at_adddata(0x00); /*ISA mode*/
+                        if (romset == ROM_GA686BX) /*TODO*/
+                                keyboard_at_adddata(0x01); /*PS2 mode*/
+                        else
+                                keyboard_at_adddata(0x00); /*ISA mode*/
                         break;
                         
                         case 0xcb: /*AMI - set keyboard mode*/
@@ -643,6 +650,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         keyboard_at.want60 = 1;
                         break;
                         
+                        case 0xd2: /*Write keyboard output buffer*/
+                        keyboard_at.want60 = 1;
+                        break;
+
                         case 0xd3: /*Write mouse output buffer*/
                         keyboard_at.want60 = 1;
                         break;

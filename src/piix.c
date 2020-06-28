@@ -16,15 +16,168 @@
 
 #include "piix.h"
 
+enum
+{
+        TYPE_PIIX = 0,
+        TYPE_PIIX3,
+        TYPE_PIIX4
+};
+
+static struct
+{
+        int type;
+        
+        /*PIIX4*/
+        uint8_t card_pm[256];
+        
+        uint16_t pmba;
+        struct
+        {
+                uint64_t timer_offset;
+        } pm;
+        
+        uint16_t smbba;
+        struct
+        {
+                uint8_t host_ctrl;
+        } smbus;
+        
+        uint8_t port_92;
+} piix;
+
 static uint8_t card_piix[256], card_piix_ide[256];
 static sff_busmaster_t piix_busmaster[2];
 static uint8_t piix_rc = 0;
 static void (*piix_nb_reset)();
 
+static void piix_pm_write(uint16_t port, uint8_t val, void *p)
+{
+//        pclog("piix_pm_write: port=%04x val=%02x\n", port, val);
+}
+static uint8_t piix_pm_read(uint16_t port, void *p)
+{
+        uint8_t ret = 0xff;
+
+        switch (port & 0x3f)
+        {
+                case 0x02: case 0x03:
+                ret = 0;
+                break;
+
+                case 0x04: case 0x05:
+                ret = 0;
+                break;
+                
+                case 0x08: case 0x09: case 0x0a: case 0x0b:
+                {
+                        uint64_t timer = tsc - piix.pm.timer_offset;
+                        uint32_t pm_timer = (timer * 3579545) / cpu_get_speed();
+                        
+                        ret = pm_timer >> ((port & 3) * 8);
+                        break;
+                }
+
+                case 0x0e: case 0x0f:
+                ret = 0;
+                break;
+
+                case 0x10: case 0x11:
+                ret = 0;
+                break;
+
+                case 0x18: case 0x19:
+                ret = 0;
+                break;
+
+                case 0x20: case 0x21:
+                ret = 0;
+                break;
+
+                case 0x28: case 0x29: case 0x2a: case 0x2b:
+                ret = 0;
+                break;
+                
+                case 0x2c: case 0x2d: case 0x2e: case 0x2f:
+                ret = 0;
+                break;
+
+                case 0x30:
+                ret = 0;
+                break;
+                case 0x31:
+                ret = 0;
+                break;
+                case 0x32:
+                ret = 0;
+                break;
+
+//                default:
+//                fatal("piix_pm_read: unknown read %04x\n", port);
+        }
+
+        return ret;
+}
+
+static void piix_smbus_write(uint16_t port, uint8_t val, void *p)
+{
+//        pclog("piix_smbus_write: port=%04x val=%02x\n", port, val);
+
+        switch (port & 0xf)
+        {
+                case 0x2:
+                piix.smbus.host_ctrl = (val & 0x5f) | (piix.smbus.host_ctrl & 0x40);
+                break;
+        }
+}
+static uint8_t piix_smbus_read(uint16_t port, void *p)
+{
+        uint8_t ret = 0xff;
+        
+        switch (port & 0x0f)
+        {
+                case 0x0:
+                ret = 0;
+                break;
+                
+                case 0x2:
+                ret = piix.smbus.host_ctrl;
+                break;
+                
+                case 0x5:
+                ret = 0;
+                break;
+                
+//                default:
+//                fatal("piix_smbus_read: unknown read %04x\n", port);
+        }
+        
+        return ret;
+}
+
+static void pm_clear_io(void)
+{
+        io_removehandler(piix.pmba, 0x0040, piix_pm_read, NULL, NULL, piix_pm_write, NULL, NULL,  NULL);
+        io_removehandler(piix.smbba, 0x0010, piix_smbus_read, NULL, NULL, piix_smbus_write, NULL, NULL,  NULL);
+}
+static void pm_set_io(void)
+{
+//        pclog("pm_set_io: %02x %04x\n", piix.card_pm[0x04], piix.smbba);
+        if ((piix.card_pm[0x04] & 0x01) && piix.pmba)
+        {
+//                pclog("PMBA=%04x\n", piix.pmba);
+                io_sethandler(piix.pmba, 0x0040, piix_pm_read, NULL, NULL, piix_pm_write, NULL, NULL,  NULL);
+        }
+        if ((piix.card_pm[0x04] & 0x01) && piix.smbba)
+        {
+//                pclog("SMBBA=%04x\n", piix.smbba);
+                io_sethandler(piix.smbba, 0x0010, piix_smbus_read, NULL, NULL, piix_smbus_write, NULL, NULL,  NULL);
+        }
+}
+
 void piix_write(int func, int addr, uint8_t val, void *priv)
 {
 //        pclog("piix_write: func=%d addr=%02x val=%02x %04x:%08x\n", func, addr, val, CS, pc);
-        if (func > 1)
+        if (func > ((piix.type == TYPE_PIIX4) ? 3 : 1))
            return;
         
         if (func == 1) /*IDE*/
@@ -82,6 +235,41 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                 }
 //                pclog("PIIX write %02X %02X\n", addr, val);
         }
+        else if (func == 2) /*USB*/
+        {
+                /*Not implemented*/
+        }
+        else if (func == 3) /*PM*/
+        {
+                switch (addr)
+                {
+                        case 0x04:
+                        pm_clear_io();
+                        piix.card_pm[0x04] = val & 1;
+                        pm_set_io();
+                        break;
+                        case 0x40:
+                        pm_clear_io();
+                        piix.pmba = (piix.pmba & 0xff00) | (val & 0xc0);
+                        pm_set_io();
+                        break;
+                        case 0x41:
+                        pm_clear_io();
+                        piix.pmba = (piix.pmba & 0xc0) | (val << 8);
+                        pm_set_io();
+                        break;
+                        case 0x90:
+                        pm_clear_io();
+                        piix.smbba = (piix.smbba & 0xff00) | (val & 0xf0);
+                        pm_set_io();
+                        break;
+                        case 0x91:
+                        pm_clear_io();
+                        piix.smbba = (piix.smbba & 0xf0) | (val << 8);
+                        pm_set_io();
+                        break;
+                }
+        }
         else
         {
                 if (addr >= 0x0f && addr < 0x4c)
@@ -130,16 +318,20 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
 uint8_t piix_read(int func, int addr, void *priv)
 {
 //        pclog("piix_read: func=%d addr=%02x %04x:%08x\n", func, addr, CS, pc);
-        if (func > 1)
-           return 0xff;
+        if (func > ((piix.type == TYPE_PIIX4) ? 3 : 1))
+                return 0xff;
 
         if (func == 1) /*IDE*/
         {
 //                pclog("PIIX IDE read %02X %02X\n", addr, card_piix_ide[addr]);                
                 return card_piix_ide[addr];
         }
+        else if (func == 2) /*USB*/
+                return 0xff; /*Not implemented*/
+        else if (func == 3)
+                return piix.card_pm[addr];
         else
-           return card_piix[addr];
+                return card_piix[addr];
 }
 
 
@@ -157,11 +349,31 @@ void piix_rc_write(uint16_t port, uint8_t val, void *p)
                         piix_nb_reset();
                         keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
                         ide_reset_devices();
+                        piix.pm.timer_offset = tsc;
                 }
                 resetx86();
         }
 
         piix_rc = val & ~4;
+}
+
+static uint8_t piix_92_read(uint16_t port, void *p)
+{
+        return piix.port_92;
+}
+static void piix_92_write(uint16_t port, uint8_t val, void *p)
+{
+        if ((mem_a20_alt ^ val) & 2)
+        {
+                mem_a20_alt = val & 2;
+                mem_a20_recalc();
+        }
+        if ((~piix.port_92 & val) & 1)
+        {
+                softresetx86();
+                cpu_set_edx();
+        }
+        piix.port_92 = val;
 }
 
 void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
@@ -217,4 +429,29 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_r
 
         io_sethandler(0x0cf9, 0x0001, piix_rc_read, NULL, NULL, piix_rc_write, NULL, NULL, NULL);
         piix_nb_reset = nb_reset;
+        
+        piix.type = TYPE_PIIX3;
+}
+
+void piix4_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
+{
+        piix_init(card, pci_a, pci_b, pci_c, pci_d, nb_reset);
+
+        piix.type = TYPE_PIIX4;
+        
+        card_piix[0x02] = 0x10; card_piix[0x03] = 0x71; /*82371EB (PIIX4)*/
+
+        card_piix_ide[0x02] = 0x11; card_piix_ide[0x03] = 0x71; /*82371EB (PIIX4)*/
+        
+        memset(&piix.card_pm, 0, sizeof(piix.card_pm));
+        piix.card_pm[0x00] = 0x86; piix.card_pm[0x01] = 0x80; /*Intel*/
+        piix.card_pm[0x02] = 0x13; piix.card_pm[0x03] = 0x71; /*82371EB (PIIX4)*/
+        piix.card_pm[0x06] = 0x80; piix.card_pm[0x07] = 0x02;
+        piix.card_pm[0x09] = 0x00; piix.card_pm[0x0a] = 0x80; piix.card_pm[0x0b] = 0x06; /*Bridge device*/
+        piix.card_pm[0x3d] = 0x01; /*IRQA*/
+        piix.card_pm[0x40] = 0x01;
+        piix.card_pm[0x90] = 0x01;
+        piix.pm.timer_offset = 0;
+        
+        io_sethandler(0x0092, 0x0001, piix_92_read, NULL, NULL, piix_92_write, NULL, NULL, NULL);
 }

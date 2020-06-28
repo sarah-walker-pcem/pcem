@@ -107,7 +107,7 @@ void mem_write_nulll(uint32_t addr, uint32_t val, void *p);
 FILE *romfopen(char *fn, char *mode);
 
 mem_mapping_t bios_mapping[8];
-mem_mapping_t bios_high_mapping[8];
+mem_mapping_t bios_high_mapping[9];
 
 extern mem_mapping_t ram_high_mapping;
 extern mem_mapping_t ram_remapped_mapping;

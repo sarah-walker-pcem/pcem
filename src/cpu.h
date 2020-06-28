@@ -120,6 +120,7 @@ extern CPU cpus_6x86_SS7[];
 extern CPU cpus_K6_S7[];
 extern CPU cpus_K6_SS7[];
 extern CPU cpus_PentiumPro[];
+extern CPU cpus_Slot1_100MHz[];
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_europc[];
@@ -138,13 +139,14 @@ extern int cpu_multi;
 /*Cyrix 5x86/6x86 only has data misalignment penalties when crossing 8-byte boundaries*/
 extern int cpu_cyrix_alignment;
 
-#define CPU_FEATURE_RDTSC (1 << 0)
-#define CPU_FEATURE_MSR   (1 << 1)
-#define CPU_FEATURE_MMX   (1 << 2)
-#define CPU_FEATURE_CR4   (1 << 3)
-#define CPU_FEATURE_VME   (1 << 4)
-#define CPU_FEATURE_CX8   (1 << 5)
-#define CPU_FEATURE_3DNOW (1 << 6)
+#define CPU_FEATURE_RDTSC   (1 << 0)
+#define CPU_FEATURE_MSR     (1 << 1)
+#define CPU_FEATURE_MMX     (1 << 2)
+#define CPU_FEATURE_CR4     (1 << 3)
+#define CPU_FEATURE_VME     (1 << 4)
+#define CPU_FEATURE_CX8     (1 << 5)
+#define CPU_FEATURE_3DNOW   (1 << 6)
+#define CPU_FEATURE_SYSCALL (1 << 7)
 
 extern uint32_t cpu_features;
 static inline int cpu_has_feature(int feature)

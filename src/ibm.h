@@ -265,6 +265,7 @@ enum
         ROM_ITAUTEC_INFOWAYM,
         ROM_DESKPRO,
         ROM_VS440FX,
+        ROM_GA686BX,
 
         ROM_MAX
 };

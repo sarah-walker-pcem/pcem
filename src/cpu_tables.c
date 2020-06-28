@@ -512,3 +512,16 @@ CPU cpus_PentiumPro[] =
         {"Pentium II Overdrive 333", CPU_PENTIUM_2, fpus_builtin, 21, 333333333, 3, 33333333, 0x1632, 0x1632, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 40},
         {"",             -1,        0, 0, 0}
 };
+
+CPU cpus_Slot1_100MHz[] =
+{
+        /*Intel Pentium II*/
+        {"Pentium II/233", CPU_PENTIUM_2, fpus_builtin, 20, 233333333, 3, 33333333, 0x634, 0x634, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 28},
+        {"Pentium II/266", CPU_PENTIUM_2, fpus_builtin, 20, 266666666, 3, 33333333, 0x634, 0x634, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 32},
+        {"Pentium II/300", CPU_PENTIUM_2, fpus_builtin, 20, 300000000, 3, 33333333, 0x634, 0x634, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 36},
+        {"Pentium II/333", CPU_PENTIUM_2, fpus_builtin, 20, 333333333, 3, 33333333, 0x651, 0x651, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 40},
+        {"Pentium II/350", CPU_PENTIUM_2, fpus_builtin, 20, 350000000, 3, 33333333, 0x651, 0x651, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 42},
+        {"Pentium II/400", CPU_PENTIUM_2, fpus_builtin, 20, 400000000, 3, 33333333, 0x652, 0x652, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 48},
+        {"Pentium II/450", CPU_PENTIUM_2, fpus_builtin, 20, 450000000, 3, 33333333, 0x652, 0x652, 0, CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC, 18,18,9,9, 54},
+        {"",             -1,        0, 0, 0}
+};

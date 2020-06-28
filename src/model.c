@@ -29,6 +29,7 @@
 #include "i430hx.h"
 #include "i430lx.h"
 #include "i430vx.h"
+#include "i440bx.h"
 #include "i440fx.h"
 #include "ide.h"
 #include "intel.h"
@@ -133,6 +134,7 @@ void      xt_xi8088_init();
 void      xt_zenith_init();
 void        at_mvp3_init();
 void     at_vs440fx_init();
+void     at_ga686bx_init();
 int model;
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
@@ -240,6 +242,8 @@ MODEL models[] =
         {"[Super 7] FIC VA-503+",         ROM_FIC_VA503P,       "fic_va503p",     { {"Intel", cpus_Pentium},     {"AMD", cpus_K6_SS7},  {"IDT", cpus_WinChip_SS7}, {"Cyrix", cpus_6x86_SS7}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,     1,  512,   1,        at_mvp3_init, NULL},
 
         {"[Socket 8] Intel VS440FX",      ROM_VS440FX,          "vs440fx",        { {"Intel", cpus_PentiumPro}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         8,  256,   8,       at_vs440fx_init, NULL},
+        
+        {"[Slot 1] Gigabyte GA-686BX",    ROM_GA686BX,          "ga686bx",        { {"Intel", cpus_Slot1_100MHz}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,       8,  512,   8,       at_ga686bx_init, NULL},
         
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };
@@ -831,6 +835,20 @@ void at_vs440fx_init()
         pc87307_init(0x2e);
 //        i440fx_init();
         device_add(&intel_flash_28fb200bxt_device);
+}
+
+void at_ga686bx_init()
+{
+        at_init();
+        pci_init(PCI_CONFIG_TYPE_1);
+        pci_slot(0x8);
+        pci_slot(0x9);
+        pci_slot(0xa);
+        pci_slot(0xb);
+        i440bx_init();
+        piix4_init(7, 0x8, 0x9, 0xa, 0xb, i440bx_reset);
+        w83877tf_init(0x250, 0x89);
+        device_add(&intel_flash_28f002bc_device);
 }
 
 void model_init()
