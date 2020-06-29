@@ -85,11 +85,12 @@ static int opSTI(uint32_t fetchdat)
         else
                 cpu_state.flags |= I_FLAG;
 
-        CPU_BLOCK_END();
+/*TODO - should end block after 1 further instruction*/
+//        CPU_BLOCK_END();
                                 
         CLOCK_CYCLES(2);
         PREFETCH_RUN(2, 1, -1, 0,0,0,0, 0);
-        return 0;
+        return 1;
 }
 
 static int opSAHF(uint32_t fetchdat)

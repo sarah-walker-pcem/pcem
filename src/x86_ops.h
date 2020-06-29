@@ -39,6 +39,7 @@ extern OpFn dynarec_ops_winchip2_0f[1024];
 extern OpFn dynarec_ops_pentium_0f[1024];
 extern OpFn dynarec_ops_pentiummmx_0f[1024];
 extern OpFn dynarec_ops_pentiumpro_0f[1024];
+extern OpFn dynarec_ops_pentium2_0f[1024];
 
 extern OpFn dynarec_ops_c6x86mx_0f[1024];
 
@@ -107,6 +108,7 @@ extern OpFn ops_winchip2_0f[1024];
 extern OpFn ops_pentium_0f[1024];
 extern OpFn ops_pentiummmx_0f[1024];
 extern OpFn ops_pentiumpro_0f[1024];
+extern OpFn ops_pentium2_0f[1024];
 
 extern OpFn ops_c6x86mx_0f[1024];
 

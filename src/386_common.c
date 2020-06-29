@@ -9,6 +9,9 @@ x86seg gdt, ldt, idt, tr;
 uint32_t cr2, cr3, cr4;
 uint32_t dr[8];
 
+uint16_t sysenter_cs;
+uint32_t sysenter_eip, sysenter_esp;
+
 uint32_t use32;
 int stack32;
 int optype;

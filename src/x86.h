@@ -175,6 +175,9 @@ extern x86seg gdt, ldt, idt, tr;
 extern uint32_t cr2, cr3, cr4;
 extern uint32_t dr[8];
 
+extern uint16_t sysenter_cs;
+extern uint32_t sysenter_eip, sysenter_esp;
+
 
 extern uint16_t cpu_cur_status;
 
@@ -293,6 +296,9 @@ void pmodeiret(int is32);
 void x86_int(int num);
 void x86_int_sw(int num);
 int x86_int_sw_rm(int num);
+
+void sysenter(void);
+void sysexit(void);
 
 int divl(uint32_t val);
 int idivl(int32_t val);

@@ -1056,7 +1056,7 @@ void cpu_set()
                 break;
 
                 case CPU_PENTIUM_2:
-                x86_setopcodes(ops_386, ops_c6x86mx_0f, dynarec_ops_386, dynarec_ops_c6x86mx_0f);
+                x86_setopcodes(ops_386, ops_pentium2_0f, dynarec_ops_386, dynarec_ops_pentium2_0f);
                 x86_dynarec_opcodes_da_a16 = dynarec_ops_fpu_686_da_a16;
                 x86_dynarec_opcodes_da_a32 = dynarec_ops_fpu_686_da_a32;
                 x86_dynarec_opcodes_db_a16 = dynarec_ops_fpu_686_db_a16;
@@ -1638,7 +1638,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV;// | CPUID_SEP;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_SEP;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
@@ -1656,7 +1656,7 @@ void cpu_CPUID()
                 {
                         EAX = CPUID;
                         EBX = ECX = 0;
-                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX;// | CPUID_SEP;
+                        EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX | CPUID_SEP;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
@@ -1744,6 +1744,19 @@ void cpu_RDMSR()
                         case 0x10:
                         EAX = tsc & 0xffffffff;
                         EDX = tsc >> 32;
+                        break;
+
+                        case 0x174:
+                        EAX = sysenter_cs;
+                        EDX = 0;
+                        break;
+                        case 0x175:
+                        EAX = sysenter_esp;
+                        EDX = 0;
+                        break;
+                        case 0x176:
+                        EAX = sysenter_eip;
+                        EDX = 0;
                         break;
                 }
                 break;
@@ -1836,6 +1849,16 @@ void cpu_WRMSR()
                 {
                         case 0x10:
                         tsc = EAX | ((uint64_t)EDX << 32);
+                        break;
+                        
+                        case 0x174:
+                        sysenter_cs = EAX & 0xffff;
+                        break;
+                        case 0x175:
+                        sysenter_esp = EAX;
+                        break;
+                        case 0x176:
+                        sysenter_eip = EAX;
                         break;
                 }
                 break;

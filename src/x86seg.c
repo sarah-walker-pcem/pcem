@@ -2873,3 +2873,67 @@ void taskswitch286(uint16_t seg, uint16_t *segdat, int is32)
         tr.access=segdat[2]>>8;
 }
 
+
+void sysenter(void)
+{
+        cpu_state.eflags &= ~VM_FLAG;
+        cpu_state.flags  &= ~I_FLAG;
+        
+        ESP = sysenter_esp;
+        cpu_state.pc = sysenter_eip;
+        
+        cpu_state.seg_cs.seg = sysenter_cs & 0xfffc;
+        cpu_state.seg_cs.base = 0;
+        cpu_state.seg_cs.limit_low = 0;
+        cpu_state.seg_cs.limit = 0xffffffff;
+        cpu_state.seg_cs.limit_high = 0xffffffff;
+        cpu_state.seg_cs.access = 0x1b;
+        cpu_state.seg_cs.checked = 1;
+        oldcpl = 0;
+        
+        cpu_state.seg_ss.seg = (sysenter_cs & 0xfffc) + 8;
+        cpu_state.seg_ss.base = 0;
+        cpu_state.seg_ss.limit_low = 0;
+        cpu_state.seg_ss.limit = 0xffffffff;
+        cpu_state.seg_ss.limit_high = 0xffffffff;
+        cpu_state.seg_ss.access = 0x13;
+        cpu_state.seg_ss.checked = 1;
+
+        cpu_cur_status &= ~(CPU_STATUS_NOTFLATSS | CPU_STATUS_V86);
+        cpu_cur_status |= (CPU_STATUS_USE32 | CPU_STATUS_STACK32 | CPU_STATUS_PMODE);
+        set_use32(1);
+        set_stack32(1);
+
+//        pclog("syscall to %04x:%08x %04x:%08x\n", CS, cpu_state.pc, SS, ESP);
+}
+
+void sysexit(void)
+{
+        ESP = ECX;
+        cpu_state.pc = EDX;
+
+        cpu_state.seg_cs.seg = (sysenter_cs | 3) + 16;
+        cpu_state.seg_cs.base = 0;
+        cpu_state.seg_cs.limit_low = 0;
+        cpu_state.seg_cs.limit = 0xffffffff;
+        cpu_state.seg_cs.limit_high = 0xffffffff;
+        cpu_state.seg_cs.access = 0x7b;
+        cpu_state.seg_cs.checked = 1;
+        oldcpl = 3;
+
+        cpu_state.seg_ss.seg = (sysenter_cs | 3) + 24;
+        cpu_state.seg_ss.base = 0;
+        cpu_state.seg_ss.limit_low = 0;
+        cpu_state.seg_ss.limit = 0xffffffff;
+        cpu_state.seg_ss.limit_high = 0xffffffff;
+        cpu_state.seg_ss.access = 0x73;
+        cpu_state.seg_ss.checked = 1;
+
+        cpu_cur_status &= ~(CPU_STATUS_NOTFLATSS | CPU_STATUS_V86);
+        cpu_cur_status |= (CPU_STATUS_USE32 | CPU_STATUS_STACK32 | CPU_STATUS_PMODE);
+        flushmmucache_cr3();
+        set_use32(1);
+        set_stack32(1);
+        
+//        pclog("sysexit to %04x:%08x %04x:%08x\n", CS, cpu_state.pc, SS, ESP);
+}

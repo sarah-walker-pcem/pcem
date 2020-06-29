@@ -970,3 +970,28 @@ static int opWRMSR(uint32_t fetchdat)
         return 1;
 }
 
+static int opSYSENTER(uint32_t fetchdat)
+{
+        if (!(cr0 & 1) || !(sysenter_cs & 0xfffc))
+        {
+                x86gpf(NULL,0);
+                return 1;
+        }
+//        pclog("opSYSENTER: CS=%04x EIP=%08x ESP=%08x  %04x:%08x  %i\n", sysenter_cs, sysenter_eip, sysenter_esp, CS,cpu_state.pc, times);
+        sysenter();
+        CPU_BLOCK_END();
+        return 0;
+}
+
+static int opSYSEXIT(uint32_t fetchdat)
+{
+        if (!(cr0 & 1) || !(sysenter_cs & 0xfffc) || CPL)
+        {
+                x86gpf(NULL,0);
+                return 1;
+        }
+//        pclog("opSYSEXIT\n");
+        sysexit();
+        CPU_BLOCK_END();
+        return 0;
+}
