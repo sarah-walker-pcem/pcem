@@ -43,6 +43,8 @@ extern int fpu_type;
 #define CPU_K6_3P       27
 #define CPU_PENTIUMPRO  28
 #define CPU_PENTIUM_2   29
+#define CPU_CELERON     30
+#define CPU_CELERON_A   31
 
 #define MANU_INTEL 0
 #define MANU_AMD   1

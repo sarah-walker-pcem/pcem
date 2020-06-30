@@ -1056,6 +1056,8 @@ void cpu_set()
                 break;
 
                 case CPU_PENTIUM_2:
+                case CPU_CELERON:
+                case CPU_CELERON_A:
                 x86_setopcodes(ops_386, ops_pentium2_0f, dynarec_ops_386, dynarec_ops_pentium2_0f);
                 x86_dynarec_opcodes_da_a16 = dynarec_ops_fpu_686_da_a16;
                 x86_dynarec_opcodes_da_a32 = dynarec_ops_fpu_686_da_a32;
@@ -1652,6 +1654,8 @@ void cpu_CPUID()
                 break;
                 
                 case CPU_PENTIUM_2:
+                case CPU_CELERON:
+                case CPU_CELERON_A:
                 if (!EAX)
                 {
                         EAX = 0x00000002;
@@ -1670,7 +1674,12 @@ void cpu_CPUID()
                         EAX = 0x03020101;
                         EBX = 0;
                         ECX = 0;
-                        EDX = 0x08040c43;
+                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_PENTIUM_2)
+                                EDX = 0x08040c43; /*512kb L2 cache*/
+                        else if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_CELERON)
+                                EDX = 0x08040c40; /*No L2 cache*/
+                        else
+                                EDX = 0x08040c41; /*128kb L2 cache*/
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
@@ -1752,6 +1761,8 @@ void cpu_RDMSR()
                 break;
                 case CPU_PENTIUMPRO:
                 case CPU_PENTIUM_2:
+                case CPU_CELERON:
+                case CPU_CELERON_A:
                 EAX = EDX = 0;
                 switch (ECX)
                 {
@@ -1859,6 +1870,8 @@ void cpu_WRMSR()
                 break;
                 case CPU_PENTIUMPRO:
                 case CPU_PENTIUM_2:
+                case CPU_CELERON:
+                case CPU_CELERON_A:
                 switch (ECX)
                 {
                         case 0x10:
