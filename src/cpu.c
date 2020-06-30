@@ -1629,7 +1629,7 @@ void cpu_CPUID()
                 case CPU_PENTIUMPRO:
                 if (!EAX)
                 {
-                        EAX = 0x00000001;
+                        EAX = 0x00000002;
                         EBX = 0x756e6547;
                         EDX = 0x49656e69;
                         ECX = 0x6c65746e;
@@ -1640,6 +1640,13 @@ void cpu_CPUID()
                         EBX = ECX = 0;
                         EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_SEP;
                 }
+                else if (EAX == 2)
+                {
+                        EAX = 0x03020101;
+                        EBX = 0;
+                        ECX = 0;
+                        EDX = 0x06040a42;
+                }
                 else
                         EAX = EBX = ECX = EDX = 0;
                 break;
@@ -1647,7 +1654,7 @@ void cpu_CPUID()
                 case CPU_PENTIUM_2:
                 if (!EAX)
                 {
-                        EAX = 0x00000001;
+                        EAX = 0x00000002;
                         EBX = 0x756e6547;
                         EDX = 0x49656e69;
                         ECX = 0x6c65746e;
@@ -1657,6 +1664,13 @@ void cpu_CPUID()
                         EAX = CPUID;
                         EBX = ECX = 0;
                         EDX = CPUID_FPU | CPUID_VME | CPUID_PSE | CPUID_TSC | CPUID_MSR | CPUID_CMPXCHG8B | CPUID_CMOV | CPUID_MMX | CPUID_SEP;
+                }
+                else if (EAX == 2)
+                {
+                        EAX = 0x03020101;
+                        EBX = 0;
+                        ECX = 0;
+                        EDX = 0x08040c43;
                 }
                 else
                         EAX = EBX = ECX = EDX = 0;
