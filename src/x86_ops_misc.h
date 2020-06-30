@@ -995,3 +995,14 @@ static int opSYSEXIT(uint32_t fetchdat)
         CPU_BLOCK_END();
         return 0;
 }
+
+static int opHINTNOP_a16(uint32_t fetchdat)
+{
+        fetch_ea_16(fetchdat);
+        return 0;
+}
+static int opHINTNOP_a32(uint32_t fetchdat)
+{
+        fetch_ea_32(fetchdat);
+        return 0;
+}
