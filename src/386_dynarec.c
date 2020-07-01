@@ -238,6 +238,8 @@ static void prefetch_flush()
 #define CACHE_ON() (!(cr0 & (1 << 30)) && !(cpu_state.flags & T_FLAG))
 //#define CACHE_ON() 0
 
+int cpu_end_block_after_ins = 0;
+
 static int cycles_main = 0;
 void exec386_dynarec(int cycs)
 {
@@ -297,10 +299,17 @@ void exec386_dynarec(int cycs)
                                                 CPU_BLOCK_END();
                                         if (nmi && nmi_enable && nmi_mask)
                                                 CPU_BLOCK_END();
+                                        if (cpu_end_block_after_ins)
+                                        {
+                                                cpu_end_block_after_ins--;
+                                                if (!cpu_end_block_after_ins)
+                                                        CPU_BLOCK_END();
+                                        }
                                         
                                         ins++;
                                         insc++;
                                 }
+                                cpu_end_block_after_ins = 0;
                         }
                         else
                         {
@@ -458,6 +467,13 @@ void exec386_dynarec(int cycs)
                                                 if (nmi && nmi_enable && nmi_mask)
                                                         CPU_BLOCK_END();
 
+                                                if (cpu_end_block_after_ins)
+                                                {
+                                                        cpu_end_block_after_ins--;
+                                                        if (!cpu_end_block_after_ins)
+                                                                CPU_BLOCK_END();
+                                                }
+
                                                 if (cpu_state.abrt)
                                                 {
                                                         codegen_block_remove();
@@ -467,6 +483,7 @@ void exec386_dynarec(int cycs)
                                                 ins++;
                                                 insc++;
                                         }
+                                        cpu_end_block_after_ins = 0;
                         
                                         if (!cpu_state.abrt && !x86_was_reset)
                                                 codegen_block_end_recompile(block);
@@ -530,6 +547,13 @@ void exec386_dynarec(int cycs)
                                                 if (nmi && nmi_enable && nmi_mask)
                                                         CPU_BLOCK_END();
 
+                                                if (cpu_end_block_after_ins)
+                                                {
+                                                        cpu_end_block_after_ins--;
+                                                        if (!cpu_end_block_after_ins)
+                                                                CPU_BLOCK_END();
+                                                }
+
                                                 if (cpu_state.abrt)
                                                 {
                                                         codegen_block_remove();
@@ -539,6 +563,7 @@ void exec386_dynarec(int cycs)
                                                 ins++;
                                                 insc++;
                                         }
+                                        cpu_end_block_after_ins = 0;
                         
                                         if (!cpu_state.abrt && !x86_was_reset)
                                                 codegen_block_end();

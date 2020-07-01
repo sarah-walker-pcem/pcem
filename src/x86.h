@@ -303,4 +303,6 @@ void sysexit(void);
 int divl(uint32_t val);
 int idivl(int32_t val);
 
+extern int cpu_end_block_after_ins;
+
 #endif
