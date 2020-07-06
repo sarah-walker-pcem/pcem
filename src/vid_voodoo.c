@@ -6190,12 +6190,8 @@ static void voodoo_writew(uint32_t addr, uint16_t val, void *p)
         voodoo_t *voodoo = (voodoo_t *)p;
         voodoo->wr_count++;
         addr &= 0xffffff;
-
-        if (addr == voodoo->last_write_addr+4)
-                cycles -= voodoo->burst_time;
-        else
-                cycles -= voodoo->write_time;
-        voodoo->last_write_addr = addr;
+        
+        cycles -= voodoo->write_time;
 
         if ((addr & 0xc00000) == 0x400000) /*Framebuffer*/
                 queue_command(voodoo, addr | FIFO_WRITEW_FB, val);
@@ -6585,23 +6581,45 @@ static void fifo_thread(void *param)
                         switch (fifo->addr_type & FIFO_TYPE)
                         {
                                 case FIFO_WRITEL_REG:
-                                voodoo_reg_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                while ((fifo->addr_type & FIFO_TYPE) == FIFO_WRITEL_REG)
+                                {
+                                        voodoo_reg_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                        fifo->addr_type = FIFO_INVALID;
+                                        voodoo->fifo_read_idx++;
+                                        fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
+                                }
                                 break;
                                 case FIFO_WRITEW_FB:
                                 wait_for_render_thread_idle(voodoo);
-                                voodoo_fb_writew(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                while ((fifo->addr_type & FIFO_TYPE) == FIFO_WRITEW_FB)
+                                {
+                                        voodoo_fb_writew(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                        fifo->addr_type = FIFO_INVALID;
+                                        voodoo->fifo_read_idx++;
+                                        fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
+                                }
                                 break;
                                 case FIFO_WRITEL_FB:
                                 wait_for_render_thread_idle(voodoo);
-                                voodoo_fb_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                while ((fifo->addr_type & FIFO_TYPE) == FIFO_WRITEL_FB)
+                                {
+                                        voodoo_fb_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                        fifo->addr_type = FIFO_INVALID;
+                                        voodoo->fifo_read_idx++;
+                                        fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
+                                }
                                 break;
                                 case FIFO_WRITEL_TEX:
-                                if (!(fifo->addr_type & 0x400000))
-                                        voodoo_tex_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                while ((fifo->addr_type & FIFO_TYPE) == FIFO_WRITEL_TEX)
+                                {
+                                        if (!(fifo->addr_type & 0x400000))
+                                                voodoo_tex_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
+                                        fifo->addr_type = FIFO_INVALID;
+                                        voodoo->fifo_read_idx++;
+                                        fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
+                                }
                                 break;
                         }
-                        voodoo->fifo_read_idx++;
-                        fifo->addr_type = FIFO_INVALID;
 
                         if (FIFO_ENTRIES > 0xe000)
                                 thread_set_event(voodoo->fifo_not_full_event);
@@ -6653,7 +6671,7 @@ static void fifo_thread(void *param)
                                         if ((addr & 0x3ff) == SST_triangleCMD || (addr & 0x3ff) == SST_ftriangleCMD ||
                                             (addr & 0x3ff) == SST_fastfillCMD || (addr & 0x3ff) == SST_nopCMD)
                                                 voodoo->cmd_written_fifo++;
-                                                
+
                                         voodoo_reg_writel(addr, val, voodoo);
                                 
                                         if (header & (1 << 15))
