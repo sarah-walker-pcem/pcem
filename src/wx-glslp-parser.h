@@ -22,7 +22,7 @@ struct texture {
 };
 
 struct shader {
-        char shader_fn[512];
+        char shader_fn[1024];
         char* shader_program;
         char alias[64];
         int filter_linear;

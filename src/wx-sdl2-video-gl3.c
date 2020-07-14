@@ -559,7 +559,7 @@ static glsl_t* load_glslp(glsl_t* glsl, int num_shader, const char* f)
         if (p)
         {
                 char path[512];
-                char file[512];
+                char file[1024];
                 int failed = 0;
                 strcpy(path, f);
                 char* filename = get_filename(path);

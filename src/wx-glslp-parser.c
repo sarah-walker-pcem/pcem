@@ -163,9 +163,9 @@ void get_glslp_name(const char* f, char* s, int size)
 glslp_t* glslp_parse(const char* f)
 {
         int i, j, len, sublen;
-        char s[512], t[512], z[512];
+        char s[512], t[512], z[540];
 
-        s[511] = 0;
+        memset(s, 0, sizeof(s));
         if (endswith(f, ".glsl"))
                 return glsl_parse(f);
 

@@ -504,7 +504,7 @@ int pc_main(int argc, char** argv)
         paths_init();
 
 #ifdef __linux__
-        char s[512];
+        char s[1024];
         /* create directories if they don't exist */
         if (!wx_setup(pcem_path))
                 return FALSE;
