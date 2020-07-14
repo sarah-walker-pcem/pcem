@@ -195,9 +195,9 @@ static int codegen_CALL_FUNC(codeblock_t *block, uop_t *uop)
 static int codegen_CALL_FUNC_RESULT(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
 #ifdef RECOMPILER_DEBUG
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
         if (!REG_IS_L(dest_size))
                 fatal("CALL_FUNC_RESULT %02x\n", uop->dest_reg_a_real);
 #endif
@@ -918,9 +918,9 @@ static int codegen_LOAD_FUNC_ARG3_IMM(codeblock_t *block, uop_t *uop)
 static int codegen_LOAD_SEG(codeblock_t *block, uop_t *uop)
 {
         int src_reg = HOST_REG_GET(uop->src_reg_a_real);
-        int src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
 #ifdef RECOMPILER_DEBUG
+        int src_size = IREG_GET_SIZE(uop->src_reg_a_real);
         if (!REG_IS_W(src_size))
                 fatal("LOAD_SEG %02x %p\n", uop->src_reg_a_real, uop->p);
 #endif
@@ -1029,9 +1029,9 @@ static int codegen_MEM_LOAD_REG(codeblock_t *block, uop_t *uop)
 static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
 #ifdef RECOMPILER_DEBUG
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
         if (!REG_IS_D(dest_size))
                 fatal("MEM_LOAD_SINGLE - %02x\n", uop->dest_reg_a_real);
 #endif
@@ -1048,9 +1048,9 @@ static int codegen_MEM_LOAD_SINGLE(codeblock_t *block, uop_t *uop)
 static int codegen_MEM_LOAD_DOUBLE(codeblock_t *block, uop_t *uop)
 {
         int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real);
-        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
 
 #ifdef RECOMPILER_DEBUG
+        int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real);
         if (!REG_IS_D(dest_size))
                 fatal("MEM_LOAD_DOUBLE - %02x\n", uop->dest_reg_a_real);
 #endif
@@ -1174,9 +1174,9 @@ static int codegen_MEM_STORE_REG(codeblock_t *block, uop_t *uop)
 static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
 {
         int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
-        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
 
 #ifdef RECOMPILER_DEBUG
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
         if (!REG_IS_D(src_size))
                 fatal("MEM_STORE_SINGLE - %02x\n", uop->src_reg_b_real);
 #endif
@@ -1193,9 +1193,9 @@ static int codegen_MEM_STORE_SINGLE(codeblock_t *block, uop_t *uop)
 static int codegen_MEM_STORE_DOUBLE(codeblock_t *block, uop_t *uop)
 {
         int seg_reg = HOST_REG_GET(uop->src_reg_a_real), addr_reg = HOST_REG_GET(uop->src_reg_b_real), src_reg = HOST_REG_GET(uop->src_reg_c_real);
-        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
 
 #ifdef RECOMPILER_DEBUG
+        int src_size = IREG_GET_SIZE(uop->src_reg_c_real);
         if (!REG_IS_D(src_size))
                 fatal("MEM_STORE_DOUBLE - %02x\n", uop->src_reg_b_real);
 #endif
@@ -1495,7 +1495,7 @@ static int codegen_OR(codeblock_t *block, uop_t *uop)
 }
 static int codegen_OR_IMM(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
         if (REG_IS_L(dest_size) && REG_IS_L(src_size))
@@ -2766,7 +2766,7 @@ static int codegen_TEST_JS_DEST(codeblock_t *block, uop_t *uop)
 
 static int codegen_XOR(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_a = HOST_REG_GET(uop->src_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg_b = HOST_REG_GET(uop->src_reg_b_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size_a = IREG_GET_SIZE(uop->src_reg_a_real), src_size_b = IREG_GET_SIZE(uop->src_reg_b_real);
 
         if (REG_IS_Q(dest_size) && REG_IS_Q(src_size_a) && REG_IS_Q(src_size_b) && uop->dest_reg_a_real == uop->src_reg_a_real)
@@ -2793,7 +2793,7 @@ static int codegen_XOR(codeblock_t *block, uop_t *uop)
 }
 static int codegen_XOR_IMM(codeblock_t *block, uop_t *uop)
 {
-        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real), src_reg = HOST_REG_GET(uop->src_reg_a_real);
+        int dest_reg = HOST_REG_GET(uop->dest_reg_a_real);
         int dest_size = IREG_GET_SIZE(uop->dest_reg_a_real), src_size = IREG_GET_SIZE(uop->src_reg_a_real);
 
         if (REG_IS_L(dest_size) && REG_IS_L(src_size))
