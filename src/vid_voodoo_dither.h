@@ -1,4 +1,4 @@
-uint8_t dither_rb[256][4][4] =
+static const uint8_t dither_rb[256][4][4] =
 {
 	{
 		{0, 0, 0, 0},
@@ -1538,7 +1538,7 @@ uint8_t dither_rb[256][4][4] =
 	},
 };
 
-uint8_t dither_g[256][4][4] =
+static const uint8_t dither_g[256][4][4] =
 {
 	{
 		{0, 0, 0, 0},
@@ -3078,7 +3078,7 @@ uint8_t dither_g[256][4][4] =
 	},
 };
 
-uint8_t dither_rb2x2[256][2][2] =
+static const uint8_t dither_rb2x2[256][2][2] =
 {
 	{
 		{0, 0},
@@ -4106,7 +4106,7 @@ uint8_t dither_rb2x2[256][2][2] =
 	},
 };
 
-uint8_t dither_g2x2[256][2][2] =
+static const uint8_t dither_g2x2[256][2][2] =
 {
 	{
 		{0, 0},

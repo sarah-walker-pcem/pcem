@@ -3227,7 +3227,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
         if (params->textureMode[1] & TEXTUREMODE_TRILINEAR)
                 cs = cs;
 }
-static int voodoo_recomp = 0;
+int voodoo_recomp = 0;
 
 static inline void *voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, voodoo_state_t *state, int odd_even)
 {
@@ -3279,7 +3279,7 @@ voodoo_recomp++;
         return data->code_block;
 }
 
-static void voodoo_codegen_init(voodoo_t *voodoo)
+void voodoo_codegen_init(voodoo_t *voodoo)
 {
         int c;
 #if defined(__linux__) || defined(__APPLE__)
@@ -3317,7 +3317,7 @@ static void voodoo_codegen_init(voodoo_t *voodoo)
         xmm_00_ff_w[1] = _mm_set_epi32(0, 0, 0xff | (0xff << 16), 0xff | (0xff << 16));
 }
 
-static void voodoo_codegen_close(voodoo_t *voodoo)
+void voodoo_codegen_close(voodoo_t *voodoo)
 {
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         VirtualFree(voodoo->codegen_data, 0, MEM_RELEASE);
