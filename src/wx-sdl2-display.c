@@ -541,7 +541,7 @@ int render()
                 }
                 }
         }
-        if (rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEDOWN)] &&
+        if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEDOWN)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_3)]) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
                 trigger_fullscreen = 1;
@@ -550,7 +550,7 @@ int render()
                 trigger_fullscreen = 0;
                 toggle_fullscreen();
         }
-        else if (rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEUP)] &&
+        else if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEUP)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_9)]) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
                 trigger_screenshot = 1;
@@ -559,7 +559,7 @@ int render()
                 trigger_screenshot = 0;
                 take_screenshot = 1;
         }
-        else if (event.key.keysym.scancode == SDL_SCANCODE_END &&
+        else if ((event.key.keysym.scancode == SDL_SCANCODE_END || event.key.keysym.scancode == SDL_SCANCODE_KP_1) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
                 trigger_inputrelease = 1;
         else if (trigger_inputrelease)
