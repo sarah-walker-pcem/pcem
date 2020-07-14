@@ -69,8 +69,6 @@ static __m128i xmm_01_w;// = 0x0001000100010001ull;
 static __m128i xmm_ff_w;// = 0x00ff00ff00ff00ffull;
 static __m128i xmm_ff_b;// = 0x00000000ffffffffull;
 
-static uint32_t zero = 0;
-
 static __m128i alookup[257], aminuslookup[256];
 static __m128i minus_254;// = 0xff02ff02ff02ff02ull;
 static __m128i bilinear_lookup[256*2];
@@ -3344,12 +3342,6 @@ voodoo_recomp++;
 static void voodoo_codegen_init(voodoo_t *voodoo)
 {
         int c;
-#if defined(__linux__) || defined(__APPLE__)
-	void *start;
-	size_t len;
-	long pagesize = sysconf(_SC_PAGESIZE);
-	long pagemask = ~(pagesize - 1);
-#endif
 
 #if WIN64
         voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM * 2, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
