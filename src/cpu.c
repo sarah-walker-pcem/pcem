@@ -1747,7 +1747,6 @@ uint8_t cyrix_read(uint16_t addr, void *priv)
                         case 0xfe: return models[model].cpu[cpu_manufacturer].cpus[cpu].cyrix_id & 0xff;
                         case 0xff: return models[model].cpu[cpu_manufacturer].cpus[cpu].cyrix_id >> 8;
                 }
-                if ((cyrix_addr & ~0xf0) == 0xc0) return 0xff;
                 if (cyrix_addr == 0x20 && models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_Cx5x86) return 0xff;
         }
         return 0xff;
