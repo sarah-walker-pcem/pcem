@@ -100,7 +100,7 @@ static const struct
   so we use separate routines for that special case*/
 static uint8_t ram_mirrored_256k_in_4mi_read(uint32_t addr, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
 
         addr -= scamp.ram_virt_base[bank];
@@ -128,7 +128,7 @@ static uint8_t ram_mirrored_256k_in_4mi_read(uint32_t addr, void *p)
 }
 static void ram_mirrored_256k_in_4mi_write(uint32_t addr, uint8_t val, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
 
         addr -= scamp.ram_virt_base[bank];
@@ -159,7 +159,7 @@ static void ram_mirrored_256k_in_4mi_write(uint32_t addr, uint8_t val, void *p)
   mapping linear, otherwise we won't be able to execute code from interleaved banks*/
 static uint8_t ram_mirrored_interleaved_read(uint32_t addr, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
 
         addr -= scamp.ram_virt_base[bank];
@@ -187,7 +187,7 @@ static uint8_t ram_mirrored_interleaved_read(uint32_t addr, void *p)
 }
 static void ram_mirrored_interleaved_write(uint32_t addr, uint8_t val, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
 
         addr -= scamp.ram_virt_base[bank];
@@ -216,7 +216,7 @@ static void ram_mirrored_interleaved_write(uint32_t addr, uint8_t val, void *p)
 
 static uint8_t ram_mirrored_read(uint32_t addr, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
         
         addr -= scamp.ram_virt_base[bank];
@@ -229,7 +229,7 @@ static uint8_t ram_mirrored_read(uint32_t addr, void *p)
 }
 static void ram_mirrored_write(uint32_t addr, uint8_t val, void *p)
 {
-        int bank = (int)p;
+        int bank = (intptr_t)p;
         int row, column, byte;
         
         addr -= scamp.ram_virt_base[bank];
@@ -246,7 +246,7 @@ static void recalc_mappings(void)
         int c;
         uint32_t virt_base = 0;
         uint8_t cur_rammap = scamp.cfg_regs[CFG_RAMMAP] & 0xf;
-        int bank_nr = 0;
+        intptr_t bank_nr = 0;
         
         for (c = 0; c < 2; c++)
                 mem_mapping_disable(&scamp.ram_mapping[c]);
@@ -667,7 +667,7 @@ uint8_t scamp_read(uint16_t addr, void *p)
 void scamp_init(void)
 {
         uint32_t addr;
-        int c;
+        intptr_t c;
         
         memset(&scamp, 0, sizeof(scamp));
         scamp.cfg_regs[CFG_ID] = ID_VL82C311;
