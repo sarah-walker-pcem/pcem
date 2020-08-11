@@ -30,14 +30,14 @@ codegen_ops_branch.c codegen_ops_fpu_arith.c codegen_ops_fpu_constant.c codegen_
 codegen_ops_fpu_misc.c codegen_ops_mmx_arith.c codegen_ops_mmx_cmp.c codegen_ops_mmx_loadstore.c \
 codegen_ops_mmx_logic.c codegen_ops_mmx_pack.c codegen_ops_mmx_shift.c codegen_ops_helpers.c codegen_ops_jump.c \
 codegen_ops_logic.c codegen_ops_shift.c codegen_ops_misc.c codegen_ops_mov.c codegen_ops_stack.c codegen_reg.c \
-codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_k6.c codegen_timing_pentium.c \
+codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_k6.c codegen_timing_p6.c codegen_timing_pentium.c \
 codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c config.c cpu.c cpu_tables.c cs8230.c dells200.c device.c disc.c \
 disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c f82c710_upc.c fdc.c fdc37c665.c fdc37c93x.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
-hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
+hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c i440fx.c i440bx.c ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
 jim.c joystick_ch_flightstick_pro.c joystick_standard.c joystick_sw_pad.c joystick_tm_fcs.c keyboard.c \
 keyboard_amstrad.c keyboard_at.c keyboard_olim24.c keyboard_pcjr.c keyboard_xt.c laserxt.c lpt.c lpt_dac.c lpt_dss.c \
 mca.c mcr.c mem.c mem_bios.c mfm_at.c mfm_xebec.c model.c mouse.c mouse_msystems.c mouse_ps2.c mouse_serial.c mvp3.c \
-neat.c nmi.c nvr.c olivetti_m24.c opti495.c paths.c pc.c pc87306.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c \
+neat.c nmi.c nvr.c olivetti_m24.c opti495.c paths.c pc.c pc87306.c pc87307.c pci.c pic.c piix.c pit.c ppi.c ps1.c ps2.c ps2_mca.c \
 ps2_nvr.c nvr_tc8521.c pzx.c rom.c rtc.c rtc_tc8521.c scamp.c scat.c scsi.c scsi_53c400.c scsi_aha1540.c scsi_cd.c scsi_hd.c \
 scsi_ibm.c scsi_zip.c serial.c sio.c sis496.c sl82c460.c sound.c sound_ad1848.c sound_adlib.c sound_adlibgold.c sound_audiopci.c \
 sound_azt2316a.c sound_cms.c sound_emu8k.c sound_gus.c sound_mpu401_uart.c sound_opl.c sound_pas16.c sound_ps1.c sound_pssj.c \
@@ -48,7 +48,9 @@ vid_et4000.c vid_et4000w32.c vid_genius.c vid_hercules.c vid_ht216.c vid_icd2061
 vid_incolor.c vid_mda.c vid_mga.c vid_olivetti_m24.c vid_oti037.c vid_oti067.c vid_paradise.c vid_pc200.c vid_pc1512.c \
 vid_pc1640.c vid_pcjr.c vid_pgc.c vid_ps1_svga.c vid_s3.c vid_s3_virge.c vid_sdac_ramdac.c vid_sigma.c \
 vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy.c vid_tandysl.c vid_tgui9440.c \
-vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c video.c wd76c10.c vid_wy700.c vt82c586b.c \
+vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c vid_voodoo_banshee.c vid_voodoo_banshee_blitter.c \
+vid_voodoo_blitter.c vid_voodoo_display.c vid_voodoo_fb.c vid_voodoo_fifo.c vid_voodoo_reg.c \
+vid_voodoo_render.c vid_voodoo_setup.c vid_voodoo_texture.c video.c wd76c10.c vid_wy700.c vt82c586b.c \
 vl82c480.c w83877tf.c x86seg.c x87.c x87_timings.c xi8088.c xtide.c sound_dbopl.cc sound_resid.cc
 
 # DOSBox
