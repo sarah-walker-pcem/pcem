@@ -34,6 +34,9 @@ void voodoo_recalc(voodoo_t *voodoo)
 {
         uint32_t buffer_offset = ((voodoo->fbiInit2 >> 11) & 511) * 4096;
 
+        if (voodoo->type >= VOODOO_BANSHEE)
+                return;
+
         voodoo->params.front_offset = voodoo->disp_buffer*buffer_offset;
         voodoo->back_offset = voodoo->draw_buffer*buffer_offset;
 
@@ -1050,6 +1053,114 @@ void *voodoo_card_init()
         return voodoo;
 }
 
+void *voodoo_2d3d_card_init(int type)
+{
+        int c;
+        voodoo_t *voodoo = malloc(sizeof(voodoo_t));
+        memset(voodoo, 0, sizeof(voodoo_t));
+
+        voodoo->bilinear_enabled = device_get_config_int("bilinear");
+        voodoo->scrfilter = 0;
+        voodoo->render_threads = device_get_config_int("render_threads");
+        voodoo->odd_even_mask = voodoo->render_threads - 1;
+#ifndef NO_CODEGEN
+        voodoo->use_recompiler = device_get_config_int("recompiler");
+#endif
+        voodoo->type = type;
+        voodoo->dual_tmus = 0;
+
+	/*generate filter lookup tables*/
+	voodoo_generate_filter_v2(voodoo);
+
+        for (c = 0; c < TEX_CACHE_MAX; c++)
+        {
+                voodoo->texture_cache[0][c].data = malloc((256*256 + 256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2) * 4);
+                voodoo->texture_cache[0][c].base = -1; /*invalid*/
+                voodoo->texture_cache[0][c].refcount = 0;
+                if (voodoo->dual_tmus)
+                {
+                        voodoo->texture_cache[1][c].data = malloc((256*256 + 256*256 + 128*128 + 64*64 + 32*32 + 16*16 + 8*8 + 4*4 + 2*2) * 4);
+                        voodoo->texture_cache[1][c].base = -1; /*invalid*/
+                        voodoo->texture_cache[1][c].refcount = 0;
+                }
+        }
+
+        timer_add(&voodoo->timer, voodoo_callback, voodoo, 1);
+
+        voodoo->fbiInit0 = 0;
+
+        voodoo->wake_fifo_thread = thread_create_event();
+        voodoo->wake_render_thread[0] = thread_create_event();
+        voodoo->wake_render_thread[1] = thread_create_event();
+        voodoo->wake_main_thread = thread_create_event();
+        voodoo->fifo_not_full_event = thread_create_event();
+        voodoo->render_not_full_event[0] = thread_create_event();
+        voodoo->render_not_full_event[1] = thread_create_event();
+        voodoo->fifo_thread = thread_create(voodoo_fifo_thread, voodoo);
+        voodoo->render_thread[0] = thread_create(voodoo_render_thread_1, voodoo);
+        if (voodoo->render_threads == 2)
+                voodoo->render_thread[1] = thread_create(voodoo_render_thread_2, voodoo);
+
+        timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
+
+        for (c = 0; c < 0x100; c++)
+        {
+                rgb332[c].r = c & 0xe0;
+                rgb332[c].g = (c << 3) & 0xe0;
+                rgb332[c].b = (c << 6) & 0xc0;
+                rgb332[c].r = rgb332[c].r | (rgb332[c].r >> 3) | (rgb332[c].r >> 6);
+                rgb332[c].g = rgb332[c].g | (rgb332[c].g >> 3) | (rgb332[c].g >> 6);
+                rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 2);
+                rgb332[c].b = rgb332[c].b | (rgb332[c].b >> 4);
+                rgb332[c].a = 0xff;
+
+                ai44[c].a = (c & 0xf0) | ((c & 0xf0) >> 4);
+                ai44[c].r = (c & 0x0f) | ((c & 0x0f) << 4);
+                ai44[c].g = ai44[c].b = ai44[c].r;
+        }
+
+        for (c = 0; c < 0x10000; c++)
+        {
+                rgb565[c].r = (c >> 8) & 0xf8;
+                rgb565[c].g = (c >> 3) & 0xfc;
+                rgb565[c].b = (c << 3) & 0xf8;
+                rgb565[c].r |= (rgb565[c].r >> 5);
+                rgb565[c].g |= (rgb565[c].g >> 6);
+                rgb565[c].b |= (rgb565[c].b >> 5);
+                rgb565[c].a = 0xff;
+
+                argb1555[c].r = (c >> 7) & 0xf8;
+                argb1555[c].g = (c >> 2) & 0xf8;
+                argb1555[c].b = (c << 3) & 0xf8;
+                argb1555[c].r |= (argb1555[c].r >> 5);
+                argb1555[c].g |= (argb1555[c].g >> 5);
+                argb1555[c].b |= (argb1555[c].b >> 5);
+                argb1555[c].a = (c & 0x8000) ? 0xff : 0;
+
+                argb4444[c].a = (c >> 8) & 0xf0;
+                argb4444[c].r = (c >> 4) & 0xf0;
+                argb4444[c].g = c & 0xf0;
+                argb4444[c].b = (c << 4) & 0xf0;
+                argb4444[c].a |= (argb4444[c].a >> 4);
+                argb4444[c].r |= (argb4444[c].r >> 4);
+                argb4444[c].g |= (argb4444[c].g >> 4);
+                argb4444[c].b |= (argb4444[c].b >> 4);
+
+                ai88[c].a = (c >> 8);
+                ai88[c].r = c & 0xff;
+                ai88[c].g = c & 0xff;
+                ai88[c].b = c & 0xff;
+        }
+#ifndef NO_CODEGEN
+        voodoo_codegen_init(voodoo);
+#endif
+
+        voodoo->disp_buffer = 0;
+        voodoo->draw_buffer = 1;
+
+        return voodoo;
+}
+
 void *voodoo_init()
 {
         voodoo_set_t *voodoo_set = malloc(sizeof(voodoo_set_t));
@@ -1116,14 +1227,17 @@ void voodoo_card_close(voodoo_t *voodoo)
         int c;
         
 #ifndef RELEASE_BUILD        
-        f = romfopen("texram.dmp", "wb");
-        fwrite(voodoo->tex_mem[0], voodoo->texture_size*1024*1024, 1, f);
-        fclose(f);
-        if (voodoo->dual_tmus)
+        if (voodoo->tex_mem[0])
         {
-                f = romfopen("texram2.dmp", "wb");
-                fwrite(voodoo->tex_mem[1], voodoo->texture_size*1024*1024, 1, f);
+                f = romfopen("texram.dmp", "wb");
+                fwrite(voodoo->tex_mem[0], voodoo->texture_size*1024*1024, 1, f);
                 fclose(f);
+                if (voodoo->dual_tmus)
+                {
+                        f = romfopen("texram2.dmp", "wb");
+                        fwrite(voodoo->tex_mem[1], voodoo->texture_size*1024*1024, 1, f);
+                        fclose(f);
+                }
         }
 #endif
 
@@ -1148,10 +1262,13 @@ void voodoo_card_close(voodoo_t *voodoo)
 #ifndef NO_CODEGEN
         voodoo_codegen_close(voodoo);
 #endif
-        free(voodoo->fb_mem);
-        if (voodoo->dual_tmus)
-                free(voodoo->tex_mem[1]);
-        free(voodoo->tex_mem[0]);
+        if (voodoo->type != VOODOO_BANSHEE && voodoo->fb_mem)
+        {
+                free(voodoo->fb_mem);
+                if (voodoo->dual_tmus)
+                        free(voodoo->tex_mem[1]);
+                free(voodoo->tex_mem[0]);
+        }
         free(voodoo);
 }
 

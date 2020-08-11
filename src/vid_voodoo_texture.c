@@ -157,7 +157,7 @@ void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu)
                         return;
                 }
         }
-
+        
         /*Texture not found, search for unused texture*/
         do
         {
@@ -469,7 +469,7 @@ void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu)
         voodoo->texture_cache[tmu][c].refcount++;
 }
 
-static void flush_texture_cache(voodoo_t *voodoo, uint32_t dirty_addr, int tmu)
+void flush_texture_cache(voodoo_t *voodoo, uint32_t dirty_addr, int tmu)
 {
         int wait_for_idle = 0;
         int c;
@@ -531,30 +531,41 @@ void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
         if (tmu && !voodoo->dual_tmus)
                 return;
 
-//        pclog("voodoo_tex_writel : %08X %08X %i\n", addr, val, voodoo->params.tformat);
-
-        lod = (addr >> 17) & 0xf;
-        t = (addr >> 9) & 0xff;
-        if (voodoo->params.tformat[tmu] & 8)
-                s = (addr >> 1) & 0xfe;
-        else
+        if (voodoo->type != VOODOO_BANSHEE)
         {
-                if (voodoo->params.textureMode[tmu] & (1 << 31))
-                        s = addr & 0xfc;
+                if (!(voodoo->params.tformat[tmu] & 8) && voodoo->type == VOODOO_BANSHEE)
+                {
+                        lod = (addr >> 16) & 0xf;
+                        t = (addr >> 8) & 0xff;
+                }
                 else
-                        s = (addr >> 1) & 0xfc;
+                {
+                        lod = (addr >> 17) & 0xf;
+                        t = (addr >> 9) & 0xff;
+                }
+                if (voodoo->params.tformat[tmu] & 8)
+                        s = (addr >> 1) & 0xfe;
+                else
+                {
+                        if ((voodoo->params.textureMode[tmu] & (1 << 31)) || voodoo->type == VOODOO_BANSHEE)
+                                s = addr & 0xfc;
+                        else
+                                s = (addr >> 1) & 0xfc;
+                }
+                if (lod > LOD_MAX)
+                        return;
+
+//                if (addr >= 0x200000)
+//                        return;
+
+                if (voodoo->params.tformat[tmu] & 8)
+                        addr = voodoo->params.tex_base[tmu][lod] + s*2 + (t << voodoo->params.tex_shift[tmu][lod])*2;
+                else
+                        addr = voodoo->params.tex_base[tmu][lod] + s + (t << voodoo->params.tex_shift[tmu][lod]);
         }
-
-        if (lod > LOD_MAX)
-                return;
-
-//        if (addr >= 0x200000)
-//                return;
-
-        if (voodoo->params.tformat[tmu] & 8)
-                addr = voodoo->params.tex_base[tmu][lod] + s*2 + (t << voodoo->params.tex_shift[tmu][lod])*2;
         else
-                addr = voodoo->params.tex_base[tmu][lod] + s + (t << voodoo->params.tex_shift[tmu][lod]);
+                addr = (addr & 0x1ffffc) + voodoo->params.tex_base[tmu][lod];
+
         if (voodoo->texture_present[tmu][(addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT])
         {
 //                pclog("texture_present at %08x %i\n", addr, (addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT);

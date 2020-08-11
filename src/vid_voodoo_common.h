@@ -20,8 +20,9 @@
 enum
 {
         VOODOO_1 = 0,
-        VOODOO_SB50 = 1,
-        VOODOO_2 = 2
+        VOODOO_SB50,
+        VOODOO_2,
+        VOODOO_BANSHEE
 };
 
 typedef union int_float
@@ -62,11 +63,12 @@ typedef union rgba_u
 
 enum
 {
-        FIFO_INVALID    = (0x00 << 24),
-        FIFO_WRITEL_REG = (0x01 << 24),
-        FIFO_WRITEW_FB  = (0x02 << 24),
-        FIFO_WRITEL_FB  = (0x03 << 24),
-        FIFO_WRITEL_TEX = (0x04 << 24)
+        FIFO_INVALID      = (0x00 << 24),
+        FIFO_WRITEL_REG   = (0x01 << 24),
+        FIFO_WRITEW_FB    = (0x02 << 24),
+        FIFO_WRITEL_FB    = (0x03 << 24),
+        FIFO_WRITEL_TEX   = (0x04 << 24),
+        FIFO_WRITEL_2DREG = (0x05 << 24)
 };
 
 #define PARAM_SIZE 1024
@@ -147,6 +149,7 @@ typedef struct voodoo_params_t
         int tformat[2];
 
         int clipLeft, clipRight, clipLowY, clipHighY;
+        int clipLeft1, clipRight1, clipLowY1, clipHighY1;
 
         int sign;
 
@@ -176,6 +179,12 @@ typedef struct vert_t
         float sW0, sS0, sT0;
         float sW1, sS1, sT1;
 } vert_t;
+
+typedef struct clip_t
+{
+        int x_min, x_max;
+        int y_min, y_max;
+} clip_t;
 
 typedef struct voodoo_t
 {
@@ -287,7 +296,7 @@ typedef struct voodoo_t
         voodoo_params_t params_buffer[PARAM_SIZE];
         volatile int params_read_idx[2], params_write_idx;
 
-        uint32_t cmdfifo_base, cmdfifo_end;
+        uint32_t cmdfifo_base, cmdfifo_end, cmdfifo_size;
         int cmdfifo_rp;
         volatile int cmdfifo_depth_rd, cmdfifo_depth_wr;
         uint32_t cmdfifo_amin, cmdfifo_amax;
@@ -296,6 +305,7 @@ typedef struct voodoo_t
         vert_t verts[4];
         int vertex_num;
         int num_verticies;
+        int cull_pingpong;
 
         int flush;
 
@@ -332,6 +342,8 @@ typedef struct voodoo_t
 
         uint32_t bltCommand;
 
+        uint32_t leftOverlayBuf;
+        
         struct
         {
                 int dst_x, dst_y;
@@ -340,6 +352,80 @@ typedef struct voodoo_t
                 int x_dir, y_dir;
                 int dst_stride;
         } blt;
+
+        struct
+        {
+                uint32_t bresError0, bresError1;
+                uint32_t clip0Min, clip0Max;
+                uint32_t clip1Min, clip1Max;
+                uint32_t colorBack, colorFore;
+                uint32_t command, commandExtra;
+                uint32_t dstBaseAddr;
+                uint32_t dstFormat;
+                uint32_t dstSize;
+                uint32_t dstXY;
+                uint32_t rop;
+                uint32_t srcBaseAddr;
+                uint32_t srcFormat;
+                uint32_t srcSize;
+                uint32_t srcXY;
+                
+                uint32_t colorPattern[64];
+
+                int bres_error_0, bres_error_1;
+                uint32_t colorPattern8[64], colorPattern16[64], colorPattern24[64];
+                int cur_x, cur_y;
+                uint32_t dstBaseAddr_tiled;
+                uint32_t dstColorkeyMin, dstColorkeyMax;
+                int dstSizeX, dstSizeY;
+                int dstX, dstY;
+                int dst_stride;
+                int patoff_x, patoff_y;
+                uint8_t rops[4];
+                uint32_t srcBaseAddr_tiled;
+                uint32_t srcColorkeyMin, srcColorkeyMax;
+                int srcSizeX, srcSizeY;
+                int srcX, srcY;
+                int src_stride;
+                int old_srcX;
+                
+                /*Used for handling packed 24bpp host data*/
+                int host_data_remainder;
+                uint32_t old_host_data;
+                
+                /*Polyfill coordinates*/
+                int lx[2], rx[2];
+                int ly[2], ry[2];
+
+                /*Polyfill state*/
+                int error[2];
+                int dx[2], dy[2];
+                int x_inc[2]; /*y_inc is always 1 for polyfill*/
+                int lx_cur, rx_cur;
+
+                clip_t clip[2];
+                
+                uint8_t host_data[16384];
+                int host_data_count;
+                int host_data_size_src, host_data_size_dest;
+                int src_stride_src, src_stride_dest;
+        } banshee_blt;
+        
+        struct
+        {
+                uint32_t vidOverlayStartCoords;
+                uint32_t vidOverlayEndScreenCoords;
+                uint32_t vidOverlayDudx, vidOverlayDudxOffsetSrcWidth;
+                uint32_t vidOverlayDvdy, vidOverlayDvdyOffset;
+                //uint32_t vidDesktopOverlayStride;
+                
+                int start_x, start_y;
+                int end_x, end_y;
+                int size_x, size_y;
+                int overlay_bytes;
+                
+                unsigned int src_y;
+        } overlay;
 
         rgb_t clutData[33];
         int clutData_dirty;
@@ -351,6 +437,9 @@ typedef struct voodoo_t
 
         int fb_write_buffer, fb_draw_buffer;
         int buffer_cutoff;
+        
+        uint32_t tile_base, tile_stride;
+        int tile_stride_shift, tile_x;
 
         int read_time, write_time, burst_time;
 
@@ -364,7 +453,7 @@ typedef struct voodoo_t
         uint16_t purpleline[256][3];
 
         texture_t texture_cache[2][TEX_CACHE_MAX];
-        uint8_t texture_present[2][4096];
+        uint8_t texture_present[2][16384];
         int texture_last_removed;
 
         uint32_t palette_checksum[2];
@@ -377,6 +466,11 @@ typedef struct voodoo_t
         void *codegen_data;
 
         struct voodoo_set_t *set;
+        
+        
+        uint8_t *vram, *changedvram;
+        
+        void *p;
 } voodoo_t;
 
 typedef struct voodoo_set_t
@@ -397,3 +491,5 @@ extern rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], a
 void voodoo_recalc(voodoo_t *voodoo);
 void voodoo_update_ncc(voodoo_t *voodoo, int tmu);
 
+void *voodoo_2d3d_card_init(int type);
+void voodoo_card_close(voodoo_t *voodoo);

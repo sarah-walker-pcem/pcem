@@ -8,6 +8,7 @@
 #include "vid_svga.h"
 #include "vid_voodoo.h"
 #include "vid_voodoo_common.h"
+#include "vid_voodoo_banshee_blitter.h"
 #include "vid_voodoo_fb.h"
 #include "vid_voodoo_fifo.h"
 #include "vid_voodoo_reg.h"
@@ -205,6 +206,18 @@ void voodoo_fifo_thread(void *param)
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
+                                case FIFO_WRITEL_2DREG:
+                                while ((fifo->addr_type & FIFO_TYPE) == FIFO_WRITEL_2DREG)
+                                {
+                                        voodoo_2d_reg_writel(voodoo, fifo->addr_type & FIFO_ADDR, fifo->val);
+                                        fifo->addr_type = FIFO_INVALID;
+                                        voodoo->fifo_read_idx++;
+                                        fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
+                                }
+                                break;
+
+                                default:
+                                fatal("Unknown fifo entry %08x\n", fifo->addr_type);
                         }
 
                         if (FIFO_ENTRIES > 0xe000)
@@ -226,7 +239,7 @@ void voodoo_fifo_thread(void *param)
                         int num_verticies;
                         int v_num;
 
-//                pclog(" CMDFIFO header %08x at %08x\n", header, voodoo->cmdfifo_rp);
+//                        pclog(" CMDFIFO header %08x at %08x\n", header, voodoo->cmdfifo_rp);
 
                         switch (header & 7)
                         {
@@ -254,17 +267,48 @@ void voodoo_fifo_thread(void *param)
                                 while (num--)
                                 {
                                         uint32_t val = cmdfifo_get(voodoo);
-                                        if ((addr & 0x3ff) == SST_triangleCMD || (addr & 0x3ff) == SST_ftriangleCMD ||
-                                            (addr & 0x3ff) == SST_fastfillCMD || (addr & 0x3ff) == SST_nopCMD)
-                                                voodoo->cmd_written_fifo++;
+                                        if ((addr & (1 << 13)) && voodoo->type == VOODOO_BANSHEE)
+                                        {
+//                                                if (voodoo->type != VOODOO_BANSHEE)
+//                                                        fatal("CMDFIFO1: Not Banshee\n");
+//                                                pclog("CMDFIFO1: write %08x %08x\n", addr, val);
+                                                voodoo_2d_reg_writel(voodoo, addr, val);
+                                        }
+                                        else
+                                        {
+                                                if ((addr & 0x3ff) == SST_triangleCMD || (addr & 0x3ff) == SST_ftriangleCMD ||
+                                                    (addr & 0x3ff) == SST_fastfillCMD || (addr & 0x3ff) == SST_nopCMD)
+                                                        voodoo->cmd_written_fifo++;
 
-                                        voodoo_reg_writel(addr, val, voodoo);
+                                                if (voodoo->type == VOODOO_BANSHEE && (addr & 0x3ff) == SST_swapbufferCMD)
+                                                        voodoo->cmd_written_fifo++;
+                                                voodoo_reg_writel(addr, val, voodoo);
+                                        }
 
                                         if (header & (1 << 15))
                                                 addr += 4;
                                 }
                                 break;
 
+                                case 2:
+                                if (voodoo->type != VOODOO_BANSHEE)
+                                        fatal("CMDFIFO2: Not Banshee\n");
+                                mask = (header >> 3);
+                                addr = 8;
+                                while (mask)
+                                {
+                                        if (mask & 1)
+                                        {
+                                                uint32_t val = cmdfifo_get(voodoo);
+
+                                                voodoo_2d_reg_writel(voodoo, addr, val);
+                                        }
+
+                                        addr += 4;
+                                        mask >>= 1;
+                                }
+                                break;
+                                
                                 case 3:
                                 num = (header >> 29) & 7;
                                 mask = header;//(header >> 10) & 0xff;
@@ -338,11 +382,24 @@ void voodoo_fifo_thread(void *param)
                                         if (mask & 1)
                                         {
                                                 uint32_t val = cmdfifo_get(voodoo);
-                                                if ((addr & 0x3ff) == SST_triangleCMD || (addr & 0x3ff) == SST_ftriangleCMD ||
-                                                    (addr & 0x3ff) == SST_fastfillCMD || (addr & 0x3ff) == SST_nopCMD)
-                                                        voodoo->cmd_written_fifo++;
 
-                                                voodoo_reg_writel(addr, val, voodoo);
+                                                if ((addr & (1 << 13)) && voodoo->type == VOODOO_BANSHEE)
+                                                {
+                                                        if (voodoo->type != VOODOO_BANSHEE)
+                                                                fatal("CMDFIFO1: Not Banshee\n");
+//                                                pclog("CMDFIFO1: write %08x %08x\n", addr, val);
+                                                        voodoo_2d_reg_writel(voodoo, addr, val);
+                                                }
+                                                else
+                                                {
+                                                        if ((addr & 0x3ff) == SST_triangleCMD || (addr & 0x3ff) == SST_ftriangleCMD ||
+                                                            (addr & 0x3ff) == SST_fastfillCMD || (addr & 0x3ff) == SST_nopCMD)
+                                                                voodoo->cmd_written_fifo++;
+
+                                                        if (voodoo->type == VOODOO_BANSHEE && (addr & 0x3ff) == SST_swapbufferCMD)
+                                                                voodoo->cmd_written_fifo++;
+                                                        voodoo_reg_writel(addr, val, voodoo);
+                                                }
                                         }
 
                                         addr += 4;
@@ -353,13 +410,29 @@ void voodoo_fifo_thread(void *param)
                                 break;
 
                                 case 5:
-                                if (header & 0x3fc0000)
-                                        fatal("CMDFIFO packet 5 has byte disables set %08x\n", header);
+//                                if (header & 0x3fc00000)
+//                                        fatal("CMDFIFO packet 5 has byte disables set %08x\n", header);
                                 num = (header >> 3) & 0x7ffff;
                                 addr = cmdfifo_get(voodoo) & 0xffffff;
+                                if (!num)
+                                        num = 1;
 //                                pclog("CMDFIFO5 addr=%08x num=%i\n", addr, num);
                                 switch (header >> 30)
                                 {
+                                        case 0: /*Linear framebuffer (Banshee)*/
+                                        if (voodoo->texture_present[0][(addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT])
+                                        {
+//                                                pclog("texture_present at %08x %i\n", addr, (addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT);
+                                                flush_texture_cache(voodoo, addr & voodoo->texture_mask, 0);
+                                        }
+                                        while (num--)
+                                        {
+                                                uint32_t val = cmdfifo_get(voodoo);
+                                                if (addr <= voodoo->fb_mask)
+                                                        *(uint32_t *)&voodoo->fb_mem[addr] = val;
+                                                addr += 4;
+                                        }
+                                        break;
                                         case 2: /*Framebuffer*/
                                         while (num--)
                                         {
@@ -383,7 +456,7 @@ void voodoo_fifo_thread(void *param)
                                 break;
 
                                 default:
-                                pclog("Bad CMDFIFO packet %08x %08x\n", header, voodoo->cmdfifo_rp);
+                                fatal("Bad CMDFIFO packet %08x %08x\n", header, voodoo->cmdfifo_rp);
                         }
 
                         end_time = timer_read();

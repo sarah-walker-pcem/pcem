@@ -144,6 +144,14 @@ enum
         SST_cmdFifoAMax = 0x1f0,
         SST_cmdFifoDepth = 0x1f4,
         SST_cmdFifoHoles = 0x1f8,
+        
+        SST_colBufferAddr = 0x1ec,   /*Banshee*/
+        SST_colBufferStride = 0x1f0, /*Banshee*/
+        SST_auxBufferAddr = 0x1f4,   /*Banshee*/
+        SST_auxBufferStride = 0x1f8, /*Banshee*/
+
+        SST_clipLeftRight1 = 0x200, /*Banshee*/
+        SST_clipTopBottom1 = 0x204, /*Banshee*/
 
         SST_fbiInit4 = 0x200,
         SST_vRetrace = 0x204,
@@ -164,7 +172,10 @@ enum
         SST_fbiInit5 = 0x244,
         SST_fbiInit6 = 0x248,
         SST_fbiInit7 = 0x24c,
-
+        
+        SST_swapPending = 0x24c, /*Banshee*/
+        SST_leftOverlayBuf = 0x250, /*Banshee*/
+        
         SST_sSetupMode = 0x260,
         SST_sVx    = 0x264,
         SST_sVy    = 0x268,

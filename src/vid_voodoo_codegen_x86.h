@@ -2175,6 +2175,8 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
 //        addbyte(0x7e);
 //        addbyte(0x87);
 //        addlong(offsetof(voodoo_state_t, out));
+        if (voodoo->type != VOODOO_BANSHEE) /*HACK*/
+        {
         if (params->fogMode & FOG_ENABLE)
         {
                 if (params->fogMode & FOG_CONSTANT)                     
@@ -2376,6 +2378,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
 /*                src_r = CLAMP(src_r);
                 src_g = CLAMP(src_g);
                 src_b = CLAMP(src_b);*/
+        }
         }
 
         if ((params->alphaMode & 1) && (alpha_func != AFUNC_NEVER) && (alpha_func != AFUNC_ALWAYS))

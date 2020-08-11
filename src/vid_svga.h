@@ -50,7 +50,7 @@ typedef struct svga_t
         int set_reset_disabled;
         
         uint8_t egapal[16];
-        uint32_t pallook[256];
+        uint32_t pallook[512];
         PALETTE vgapal;
         
         int ramdac_type;
@@ -93,6 +93,8 @@ typedef struct svga_t
         int fullchange;
         
         int video_res_x, video_res_y, video_bpp;
+        int video_res_override; /*If clear then SVGA code will set above variables, if
+                                  set then card code will*/
         int frames, fps;
 
         struct

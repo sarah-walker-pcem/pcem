@@ -16,3 +16,4 @@ static const uint32_t texture_offset[LOD_MAX+3] =
 void voodoo_recalc_tex(voodoo_t *voodoo, int tmu);
 void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu);
 void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p);
+void flush_texture_cache(voodoo_t *voodoo, uint32_t dirty_addr, int tmu);
