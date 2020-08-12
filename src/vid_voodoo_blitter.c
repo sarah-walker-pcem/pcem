@@ -443,11 +443,25 @@ void voodoo_fastfill(voodoo_t *voodoo, voodoo_params_t *params)
                 {
                         for (y = low_y; y < high_y; y++)
                         {
-                                uint16_t *cbuf = (uint16_t *)&voodoo->fb_mem[(params->draw_offset + y*voodoo->row_width) & voodoo->fb_mask];
-                                int x;
+                                if (voodoo->col_tiled)
+                                {
+                                        uint16_t *cbuf = (uint16_t *)&voodoo->fb_mem[(params->draw_offset + (y >> 5) * voodoo->row_width + (y & 31) * 128) & voodoo->fb_mask];
+                                        int x;
 
-                                for (x = params->clipLeft; x < params->clipRight; x++)
-                                        cbuf[x] = col;
+                                        for (x = params->clipLeft; x < params->clipRight; x++)
+                                        {
+                                                int x2 = (x & 63) | ((x >> 6) * 128*32/2);
+                                                cbuf[x2] = col;
+                                        }
+                                }
+                                else
+                                {
+                                        uint16_t *cbuf = (uint16_t *)&voodoo->fb_mem[(params->draw_offset + y * voodoo->row_width) & voodoo->fb_mask];
+                                        int x;
+
+                                        for (x = params->clipLeft; x < params->clipRight; x++)
+                                                cbuf[x] = col;
+                                }
                         }
                 }
         }
@@ -468,11 +482,25 @@ void voodoo_fastfill(voodoo_t *voodoo, voodoo_params_t *params)
                 {
                         for (y = low_y; y < high_y; y++)
                         {
-                                uint16_t *abuf = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + y*voodoo->row_width) & voodoo->fb_mask];
-                                int x;
+                                if (voodoo->aux_tiled)
+                                {
+                                        uint16_t *abuf = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + (y >> 5) * voodoo->aux_row_width + (y & 31) * 128) & voodoo->fb_mask];
+                                        int x;
 
-                                for (x = params->clipLeft; x < params->clipRight; x++)
-                                        abuf[x] = params->zaColor & 0xffff;
+                                        for (x = params->clipLeft; x < params->clipRight; x++)
+                                        {
+                                                int x2 = (x & 63) | ((x >> 6) * 128*32/2);
+                                                abuf[x2] = params->zaColor & 0xffff;
+                                        }
+                                }
+                                else
+                                {
+                                        uint16_t *abuf = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + y * voodoo->aux_row_width) & voodoo->fb_mask];
+                                        int x;
+
+                                        for (x = params->clipLeft; x < params->clipRight; x++)
+                                                abuf[x] = params->zaColor & 0xffff;
+                                }
                         }
                 }
         }

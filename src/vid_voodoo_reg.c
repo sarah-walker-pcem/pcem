@@ -562,15 +562,16 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_colBufferStride:
                 if (voodoo->type == VOODOO_BANSHEE)
                 {
-                        if (val & (1 << 15))
+                        voodoo->col_tiled = val & (1 << 15);
+                        if (voodoo->col_tiled)
                         {
-                                voodoo->row_width = (val & 0x7f) * 128;
-//                                pclog("colBufferStride = %i bytes, tiled\n", voodoo->row_width);
+                                voodoo->row_width = (val & 0x7f) * 128*32;
+//                                pclog("colBufferStride tiled = %i bytes, tiled  %08x\n", voodoo->row_width, val);
                         }
                         else
                         {
                                 voodoo->row_width = val & 0x3fff;
-//                                pclog("colBufferStride = %i bytes, linear\n", voodoo->row_width);
+//                                pclog("colBufferStride linear = %i bytes, linear\n", voodoo->row_width);
                         }
                 }
                 break;
@@ -579,6 +580,22 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 {
                         voodoo->params.aux_offset = val & 0xfffff0;
 //                        pclog("auxBufferAddr=%06x\n", voodoo->params.aux_offset);
+                }
+                break;
+                case SST_auxBufferStride:
+                if (voodoo->type == VOODOO_BANSHEE)
+                {
+                        voodoo->aux_tiled = val & (1 << 15);
+                        if (voodoo->aux_tiled)
+                        {
+                                voodoo->aux_row_width = (val & 0x7f) * 128*32;
+//                                pclog("auxBufferStride tiled = %i bytes, tiled\n", voodoo->aux_row_width);
+                        }
+                        else
+                        {
+                                voodoo->aux_row_width = val & 0x3fff;
+//                                pclog("auxBufferStride linear = %i bytes, linear\n", voodoo->aux_row_width);
+                        }
                 }
                 break;
 

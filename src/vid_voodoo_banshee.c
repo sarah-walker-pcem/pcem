@@ -66,6 +66,10 @@ typedef struct banshee_t
         mem_mapping_t reg_mapping_high; /*0c00000-1ffffff - Windows 2000 puts the BIOS ROM in between these two areas*/
         
         voodoo_t *voodoo;
+        
+        uint32_t desktop_addr;
+        int desktop_y;
+        uint32_t desktop_stride_tiled;
 } banshee_t;
 
 enum
@@ -275,6 +279,35 @@ static void banshee_updatemapping(banshee_t *banshee)
         mem_mapping_set_addr(&banshee->reg_mapping_high, banshee->memBaseAddr0 + 0xc00000, 20 << 20);
 }
 
+static void banshee_render_16bpp_tiled(svga_t *svga)
+{
+        banshee_t *banshee = (banshee_t *)svga->p;
+        int x;
+        int offset = 32;
+        uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
+        uint32_t addr = banshee->desktop_addr + (banshee->desktop_y & 31) * 128 + ((banshee->desktop_y >> 5) * banshee->desktop_stride_tiled);
+
+        if (svga->firstline_draw == 2000)
+                svga->firstline_draw = svga->displine;
+        svga->lastline_draw = svga->displine;
+
+        for (x = 0; x <= svga->hdisp; x += 64)
+        {
+                int xx;
+                
+                for (xx = 0; xx < 64; xx += 2)
+                {
+                        uint32_t dat = *(uint32_t *)(&svga->vram[(addr + (xx << 1)) & svga->vram_display_mask]);
+                        *p++ = video_16to32[dat & 0xffff];
+                        *p++ = video_16to32[dat >> 16];
+                }
+                        
+                addr += 128*32;
+        }
+
+        banshee->desktop_y++;
+}
+
 static void banshee_recalctimings(svga_t *svga)
 {
         banshee_t *banshee = (banshee_t *)svga->p;
@@ -312,7 +345,7 @@ static void banshee_recalctimings(svga_t *svga)
                         svga->bpp = 8;
                         break;
                         case PIX_FORMAT_RGB565:
-                        svga->render = svga_render_16bpp_highres;
+                        svga->render = (banshee->vidProcCfg & VIDPROCCFG_DESKTOP_TILE) ? banshee_render_16bpp_tiled : svga_render_16bpp_highres;
                         svga->bpp = 16;
                         break;
                         case PIX_FORMAT_RGB24:
@@ -331,6 +364,7 @@ static void banshee_recalctimings(svga_t *svga)
                 else
                         svga->rowoffset = (banshee->vidDesktopOverlayStride & 0x3fff) >> 3;
                 svga->ma_latch = banshee->vidDesktopStartAddr >> 2;
+                banshee->desktop_stride_tiled = (banshee->vidDesktopOverlayStride & 0x3fff) * 128 * 32;
                 pclog("Extended shift out %i rowoffset=%i %02x\n", VIDPROCCFG_DESKTOP_PIX_FORMAT, svga->rowoffset, svga->crtc[1]);
 
                 svga->char_width = 8;
@@ -350,7 +384,7 @@ static void banshee_recalctimings(svga_t *svga)
                 svga->overlay.ysize = voodoo->overlay.size_y;
                 svga->overlay.pitch = (banshee->vidDesktopOverlayStride & VID_STRIDE_OVERLAY_MASK) >> VID_STRIDE_OVERLAY_SHIFT;
                 if (banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE)
-                        svga->overlay.pitch *= 128;
+                        svga->overlay.pitch *= 128*32;
                 if (svga->overlay.xsize <= 0 || svga->overlay.ysize <= 0)
                         svga->overlay.ena = 0;
                 if (svga->overlay.ena)
@@ -440,6 +474,7 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
                 voodoo->tile_stride = 1024 << ((val >> 13) & 7);
                 voodoo->tile_stride_shift = 10 + ((val >> 13) & 7);
                 voodoo->tile_x = ((val >> 16) & 0x7f) * 128;
+                voodoo->tile_x_real = ((val >> 16) & 0x7f) * 128*32;
                 break;
 
                 case Init_miscInit0:
@@ -1180,7 +1215,7 @@ static uint8_t banshee_read_linear(uint32_t addr, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
 //                pclog("  Tile rb %08x->%08x %i %i\n", old_addr, addr, x, y);
         }
         if (addr >= svga->vram_max)
@@ -1213,7 +1248,7 @@ static uint16_t banshee_read_linear_w(uint32_t addr, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
 //                pclog("  Tile rb %08x->%08x %i %i\n", old_addr, addr, x, y);
         }
         if (addr >= svga->vram_max)
@@ -1246,7 +1281,7 @@ static uint32_t banshee_read_linear_l(uint32_t addr, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
 //                pclog("  Tile rb %08x->%08x %i %i\n", old_addr, addr, x, y);
         }
         if (addr >= svga->vram_max)
@@ -1280,7 +1315,7 @@ static void banshee_write_linear(uint32_t addr, uint8_t val, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
 //                pclog("  Tile b %08x->%08x %i %i\n", old_addr, addr, x, y);
         }
         if (addr >= svga->vram_max)
@@ -1314,7 +1349,7 @@ static void banshee_write_linear_w(uint32_t addr, uint16_t val, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
 //                pclog("  Tile b %08x->%08x %i %i\n", old_addr, addr, x, y);
         }
         if (addr >= svga->vram_max)
@@ -1355,9 +1390,9 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
                 
-                addr = voodoo->tile_base + x + y*voodoo->tile_x;
+                addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
                 addr2 = x + y*voodoo->tile_x;
-//                pclog("  Tile %08x->%08x->%08x->%08x %i %i  stride=%i tile_x=%i\n", old_addr, addr_off, addr2, addr, x, y, voodoo->tile_stride, voodoo->tile_x);
+//                pclog("  Tile %08x->%08x->%08x->%08x %i %i  tile_x=%i\n", old_addr, addr_off, addr2, addr, x, y, voodoo->tile_x_real);
         }
 
         if (addr >= svga->vram_max)
@@ -1440,6 +1475,23 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                                                                         \
                         banshee->overlay_buffer[wp++] = (r << 3) | (g << 10) | (b << 19); \
                         src += 2;                                       \
+                }                                                       \
+        } while (0)
+
+#define DECODE_RGB565_TILED()                                           \
+        do                                                              \
+        {                                                               \
+                int c;                                                  \
+                int wp = 0;                                             \
+                                                                        \
+                for (c = 0; c < voodoo->overlay.overlay_bytes; c += 2) \
+                {                                                       \
+                        uint16_t data = *(uint16_t *)&src[(c & 127) + (c >> 7)*128*32];               \
+                        int r = data & 0x1f;                            \
+                        int g = (data >> 5) & 0x3f;                     \
+                        int b = data >> 11;                             \
+                                                                        \
+                        banshee->overlay_buffer[wp++] = (r << 3) | (g << 10) | (b << 19); \
                 }                                                       \
         } while (0)
 
@@ -1543,7 +1595,10 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         break;                          \
                                                         \
                         case OVERLAY_FMT_565_DITHER:    \
-                        DECODE_RGB565();                \
+                        if (banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE)      \
+                                DECODE_RGB565_TILED();                          \
+                        else                                                    \
+                                DECODE_RGB565();                                \
                         break;                          \
                                                         \
                         default:                        \
@@ -1557,7 +1612,10 @@ static void banshee_overlay_draw(svga_t *svga, int displine)
         voodoo_t *voodoo = banshee->voodoo;
         uint32_t *p;
         int x;
-        uint32_t src_addr = svga->overlay_latch.addr + svga->overlay_latch.pitch * (voodoo->overlay.src_y >> 20);
+        int y = voodoo->overlay.src_y >> 20;
+        uint32_t src_addr = svga->overlay_latch.addr + ((banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE) ?
+                ((y & 31) * 128 + (y >> 5) * svga->overlay_latch.pitch) :
+                y * svga->overlay_latch.pitch);
         uint8_t *src = &svga->vram[src_addr & svga->vram_mask];
         uint32_t src_x = 0;
 
@@ -1616,6 +1674,8 @@ static void banshee_vsync_callback(svga_t *svga)
         }
 
         voodoo->overlay.src_y = 0;
+        banshee->desktop_addr = banshee->vidDesktopStartAddr;
+        banshee->desktop_y = 0;
 }
 
 static uint8_t banshee_pci_read(int func, int addr, void *p)
