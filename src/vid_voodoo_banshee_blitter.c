@@ -561,7 +561,12 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
 
         if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_PACKING_MASK) == SRC_FORMAT_PACKING_STRIDE)
         {
-                int last_byte = (voodoo->banshee_blt.srcX & 3) + voodoo->banshee_blt.host_data_size_dest;
+                int last_byte;
+
+                if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK) == SRC_FORMAT_COL_1_BPP)
+                        last_byte = (((voodoo->banshee_blt.srcX + 7) >> 3) & 3) + voodoo->banshee_blt.host_data_size_dest;
+                else
+                        last_byte = (voodoo->banshee_blt.srcX & 3) + voodoo->banshee_blt.host_data_size_dest;
                 
                 *(uint32_t *)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
                 voodoo->banshee_blt.host_data_count += 4;
