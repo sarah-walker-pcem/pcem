@@ -249,8 +249,8 @@ static void update_src_stride(voodoo_t *voodoo)
                 case SRC_FORMAT_PACKING_STRIDE:
                 voodoo->banshee_blt.src_stride_src = voodoo->banshee_blt.src_stride; //voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
                 voodoo->banshee_blt.src_stride_dest = voodoo->banshee_blt.src_stride; //voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
-                voodoo->banshee_blt.host_data_size_src = (voodoo->banshee_blt.srcSizeX * bpp + (voodoo->banshee_blt.srcX & 3) + 7) >> 3;
-                voodoo->banshee_blt.host_data_size_dest = (voodoo->banshee_blt.dstSizeX * bpp + (voodoo->banshee_blt.srcX & 3) + 7) >> 3;
+                voodoo->banshee_blt.host_data_size_src = (voodoo->banshee_blt.srcSizeX * bpp + 7) >> 3;
+                voodoo->banshee_blt.host_data_size_dest = (voodoo->banshee_blt.dstSizeX * bpp + 7) >> 3;
 //                pclog("Stride packing %08x %08x   bpp=%i dstSizeX=%i\n", voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest, bpp, voodoo->banshee_blt.dstSizeX);
                 break;
 
