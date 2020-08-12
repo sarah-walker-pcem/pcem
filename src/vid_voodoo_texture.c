@@ -564,7 +564,7 @@ void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
                         addr = voodoo->params.tex_base[tmu][lod] + s + (t << voodoo->params.tex_shift[tmu][lod]);
         }
         else
-                addr = (addr & 0x1ffffc) + voodoo->params.tex_base[tmu][lod];
+                addr = (addr & 0x1ffffc) + voodoo->params.tex_base[tmu][0];
 
         if (voodoo->texture_present[tmu][(addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT])
         {
