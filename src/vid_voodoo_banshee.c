@@ -966,20 +966,16 @@ static uint32_t banshee_reg_readl(uint32_t addr, void *p)
                         ret = voodoo->lfbMode;
                         break;
                         case SST_clipLeftRight:
-                        voodoo_flush(voodoo);
                         ret = voodoo->params.clipRight | (voodoo->params.clipLeft << 16);
                         break;
                         case SST_clipLowYHighY:
-                        voodoo_flush(voodoo);
                         ret = voodoo->params.clipHighY | (voodoo->params.clipLowY << 16);
                         break;
 
                         case SST_clipLeftRight1:
-                        voodoo_flush(voodoo);
                         ret = voodoo->params.clipRight1 | (voodoo->params.clipLeft1 << 16);
                         break;
                         case SST_clipTopBottom1:
-                        voodoo_flush(voodoo);
                         ret = voodoo->params.clipHighY1 | (voodoo->params.clipLowY1 << 16);
                         break;
 
