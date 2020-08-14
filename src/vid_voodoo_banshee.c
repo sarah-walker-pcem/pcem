@@ -581,8 +581,8 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
                 voodoo->overlay.vidOverlayEndScreenCoords = val;
                 voodoo->overlay.end_x = val & OVERLAY_END_X_MASK;
                 voodoo->overlay.end_y = (val & OVERLAY_END_Y_MASK) >> OVERLAY_END_Y_SHIFT;
-                voodoo->overlay.size_x = voodoo->overlay.end_x - voodoo->overlay.start_x;
-                voodoo->overlay.size_y = voodoo->overlay.end_y - voodoo->overlay.start_y;
+                voodoo->overlay.size_x = (voodoo->overlay.end_x - voodoo->overlay.start_x) + 1;
+                voodoo->overlay.size_y = (voodoo->overlay.end_y - voodoo->overlay.start_y) + 1;
                 svga_recalctimings(svga);
                 break;
                 case Video_vidOverlayDudx:
