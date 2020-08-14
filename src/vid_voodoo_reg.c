@@ -530,6 +530,9 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_fogTable18: case SST_fogTable19: case SST_fogTable1a: case SST_fogTable1b:
                 case SST_fogTable1c: case SST_fogTable1d: case SST_fogTable1e: case SST_fogTable1f:
                 addr = (addr - SST_fogTable00) >> 1;
+                if (voodoo->type == VOODOO_BANSHEE)
+                        val = ~val; /*Banshee fog table seems to be inverted. There's a reference
+                                      in the glide2x source to a "banshee (rev<3) fogTable hack"*/
                 voodoo->params.fogTable[addr].dfog   = val & 0xff;
                 voodoo->params.fogTable[addr].fog    = (val >> 8) & 0xff;
                 voodoo->params.fogTable[addr+1].dfog = (val >> 16) & 0xff;
