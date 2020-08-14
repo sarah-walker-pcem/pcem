@@ -18,8 +18,16 @@ uint16_t voodoo_fb_readw(uint32_t addr, void *p)
         uint32_t read_addr;
         uint16_t temp;
 
-        x = (addr >> 1) & 0x3ff;
-        y = (addr >> 11) & 0x3ff;
+        if (voodoo->type == VOODOO_BANSHEE)
+        {
+                x = addr & 0xffe;
+                y = (addr >> 12) & 0x3ff;
+        }
+        else
+        {
+                x = addr & 0x7fe;
+                y = (addr >> 11) & 0x3ff;
+        }
 
         if (SLI_ENABLED)
         {
@@ -33,7 +41,10 @@ uint16_t voodoo_fb_readw(uint32_t addr, void *p)
                 y >>= 1;
         }
 
-        read_addr = voodoo->fb_read_offset + (x << 1) + (y * voodoo->row_width);
+        if (voodoo->col_tiled)
+                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
 
         if (read_addr > voodoo->fb_mask)
                 return 0xffff;
@@ -50,8 +61,16 @@ uint32_t voodoo_fb_readl(uint32_t addr, void *p)
         uint32_t read_addr;
         uint32_t temp;
 
-        x = addr & 0x7fe;
-        y = (addr >> 11) & 0x3ff;
+        if (voodoo->type == VOODOO_BANSHEE)
+        {
+                x = addr & 0xffe;
+                y = (addr >> 12) & 0x3ff;
+        }
+        else
+        {
+                x = addr & 0x7fe;
+                y = (addr >> 11) & 0x3ff;
+        }
 
         if (SLI_ENABLED)
         {
@@ -65,7 +84,10 @@ uint32_t voodoo_fb_readl(uint32_t addr, void *p)
                 y >>= 1;
         }
 
-        read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
+        if (voodoo->col_tiled)
+                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
 
         if (read_addr > voodoo->fb_mask)
                 return 0xffffffff;
@@ -153,8 +175,16 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                 fatal("voodoo_fb_writew : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
-        x = addr & 0x7fe;
-        y = (addr >> 11) & 0x3ff;
+        if (voodoo->type == VOODOO_BANSHEE)
+        {
+                x = addr & 0xffe;
+                y = (addr >> 12) & 0x3ff;
+        }
+        else
+        {
+                x = addr & 0x7fe;
+                y = (addr >> 11) & 0x3ff;
+        }
 
         if (SLI_ENABLED)
         {
@@ -168,8 +198,14 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
         if (voodoo->fb_write_offset == voodoo->params.front_offset)
                 voodoo->dirty_line[y] = 1;
 
-        write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
-        write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
+        if (voodoo->col_tiled)
+                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
+        if (voodoo->aux_tiled)
+                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
 
 //        pclog("fb_writew %08x %i %i %i %08x\n", addr, x, y, voodoo->row_width, write_addr);
 
@@ -300,8 +336,16 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 fatal("voodoo_fb_writel : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
-        x = addr & 0x7fe;
-        y = (addr >> 11) & 0x3ff;
+        if (voodoo->type == VOODOO_BANSHEE)
+        {
+                x = addr & 0xffe;
+                y = (addr >> 12) & 0x3ff;
+        }
+        else
+        {
+                x = addr & 0x7fe;
+                y = (addr >> 11) & 0x3ff;
+        }
 
         if (SLI_ENABLED)
         {
@@ -314,8 +358,14 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
         if (voodoo->fb_write_offset == voodoo->params.front_offset)
                 voodoo->dirty_line[y] = 1;
 
-        write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
-        write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
+        if (voodoo->col_tiled)
+                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
+        if (voodoo->aux_tiled)
+                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+        else
+                write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
 
 //        pclog("fb_writel %08x x=%i y=%i rw=%i %08x wo=%08x\n", addr, x, y, voodoo->row_width, write_addr, voodoo->fb_write_offset);
 
