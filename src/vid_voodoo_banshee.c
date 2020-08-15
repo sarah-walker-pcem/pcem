@@ -1403,10 +1403,56 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
         *(uint32_t *)&svga->vram[addr & svga->vram_mask] = val;
         if (addr >= voodoo->cmdfifo_base && addr < voodoo->cmdfifo_end)
         {
-//                pclog("CMDFIFO write %08x %08x %04x:%08x\n", addr, val, CS,cpu_state.pc);
-                voodoo->cmdfifo_depth_wr++;
-//                if ((voodoo->cmdfifo_depth_wr - voodoo->cmdfifo_depth_rd) < 20)
+//                pclog("CMDFIFO write %08x %08x  old amin=%08x amax=%08x hlcnt=%i depth_wr=%i rp=%08x\n", addr, val, voodoo->cmdfifo_amin, voodoo->cmdfifo_amax, voodoo->cmdfifo_holecount, voodoo->cmdfifo_depth_wr, voodoo->cmdfifo_rp);
+                if (addr == voodoo->cmdfifo_base && !voodoo->cmdfifo_holecount)
+                {
+//                        if (voodoo->cmdfifo_holecount)
+//                                fatal("CMDFIFO reset pointers while outstanding holes\n");
+                        /*Reset pointers*/
+                        voodoo->cmdfifo_amin = voodoo->cmdfifo_base;
+                        voodoo->cmdfifo_amax = voodoo->cmdfifo_base;
+                        voodoo->cmdfifo_depth_wr++;
                         voodoo_wake_fifo_thread(voodoo);
+                }
+                else if (voodoo->cmdfifo_holecount)
+                {
+//                        if ((addr <= voodoo->cmdfifo_amin && voodoo->cmdfifo_amin != -4) || addr >= voodoo->cmdfifo_amax)
+//                                fatal("CMDFIFO holecount write outside of amin/amax - amin=%08x amax=%08x holecount=%i\n", voodoo->cmdfifo_amin, voodoo->cmdfifo_amax, voodoo->cmdfifo_holecount);
+//                        pclog("holecount %i\n", voodoo->cmdfifo_holecount);
+                        voodoo->cmdfifo_holecount--;
+                        if (!voodoo->cmdfifo_holecount)
+                        {
+                                int words_to_add = ((voodoo->cmdfifo_amax - voodoo->cmdfifo_amin) >> 2) + 1;
+                                /*Filled in holes, resume normal operation*/
+                                voodoo->cmdfifo_depth_wr += ((voodoo->cmdfifo_amax - voodoo->cmdfifo_amin) >> 2);
+                                voodoo->cmdfifo_amin = voodoo->cmdfifo_amax;
+                                voodoo_wake_fifo_thread(voodoo);
+//                                pclog("hole filled! amin=%08x amax=%08x added %i words\n", voodoo->cmdfifo_amin, voodoo->cmdfifo_amax, words_to_add);
+                        }
+                }
+                else if (addr == voodoo->cmdfifo_amax+4)
+                {
+                        /*In-order write*/
+                        voodoo->cmdfifo_amin = addr;
+                        voodoo->cmdfifo_amax = addr;
+                        voodoo->cmdfifo_depth_wr++;
+                        voodoo_wake_fifo_thread(voodoo);
+                }
+                else
+                {
+                        /*Out-of-order write*/
+                        if (addr < voodoo->cmdfifo_amin)
+                        {
+                                /*Reset back to start. Note that write is still out of order!*/
+                                voodoo->cmdfifo_amin = voodoo->cmdfifo_base-4;
+
+                        }
+//                        else if (addr < voodoo->cmdfifo_amax)
+//                                fatal("Out-of-order write really out of order\n");
+                        voodoo->cmdfifo_amax = addr;
+                        voodoo->cmdfifo_holecount = ((voodoo->cmdfifo_amax - voodoo->cmdfifo_amin) >> 2) - 1;
+//                        pclog("CMDFIFO out of order: amin=%08x amax=%08x holecount=%i\n", voodoo->cmdfifo_amin, voodoo->cmdfifo_amax, voodoo->cmdfifo_holecount);
+                }
         }
 }
 

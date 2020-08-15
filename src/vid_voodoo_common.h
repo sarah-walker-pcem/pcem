@@ -302,6 +302,7 @@ typedef struct voodoo_t
         int cmdfifo_rp;
         volatile int cmdfifo_depth_rd, cmdfifo_depth_wr;
         uint32_t cmdfifo_amin, cmdfifo_amax;
+        int cmdfifo_holecount;
 
         uint32_t sSetupMode;
         vert_t verts[4];
