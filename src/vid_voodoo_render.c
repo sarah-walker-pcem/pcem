@@ -1273,11 +1273,8 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                 if (cca_invert_output)
                                         src_a ^= 0xff;
 
-                                if (voodoo->type != VOODOO_BANSHEE) /*HACK*/
-                                {
-                                        if (params->fogMode & FOG_ENABLE)
-                                                APPLY_FOG(src_r, src_g, src_b, state->z, state->ia, state->w);
-                                }
+                                if (params->fogMode & FOG_ENABLE)
+                                        APPLY_FOG(src_r, src_g, src_b, state->z, state->ia, state->w);
 
                                 if (params->alphaMode & 1)
                                         ALPHA_TEST(src_a);
