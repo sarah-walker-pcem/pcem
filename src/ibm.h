@@ -321,7 +321,8 @@ enum
         GFX_CL_GD5428,  /*Cirrus Logic CL-GD5428*/
         GFX_IBM_GD5428, /*IBM 1MB SVGA Adapter/A*/
         GFX_TVGA9000B,  /*Trident TVGA9000B*/
-        GFX_BANSHEE,
+        GFX_BANSHEE,    /*Voodoo Banshee - reference PCI board with SGRAM*/
+        GFX_CL_BANSHEE, /*Creative Labs Voodoo Blaster Banshee PCI - with SDRAM*/
 
         GFX_MAX
 };

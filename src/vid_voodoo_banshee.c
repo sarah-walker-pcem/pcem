@@ -1864,7 +1864,7 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
         }
 }
 
-static device_config_t banshee_config[] =
+static device_config_t banshee_sgram_config[] =
 {
         {
                 .name = "memory",
@@ -1925,16 +1925,60 @@ static device_config_t banshee_config[] =
         }
 };
 
-static void *banshee_init()
+static device_config_t banshee_sdram_config[] =
+{
+        {
+                .name = "bilinear",
+                .description = "Bilinear filtering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
+                .name = "render_threads",
+                .description = "Render threads",
+                .type = CONFIG_SELECTION,
+                .selection =
+                {
+                        {
+                                .description = "1",
+                                .value = 1
+                        },
+                        {
+                                .description = "2",
+                                .value = 2
+                        },
+                        {
+                                .description = ""
+                        }
+                },
+                .default_int = 2
+        },
+#ifndef NO_CODEGEN
+        {
+                .name = "recompiler",
+                .description = "Recompiler",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+#endif
+        {
+                .type = -1
+        }
+};
+
+static void *banshee_init_common(char *fn, int has_sgram)
 {
         int mem_size;
         banshee_t *banshee = malloc(sizeof(banshee_t));
         memset(banshee, 0, sizeof(banshee_t));
 
- //       rom_init(&banshee->bios_rom, "gainward.BIN", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
-        rom_init(&banshee->bios_rom, "a-trend.VBI", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+        rom_init(&banshee->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
-        mem_size = device_get_config_int("memory");
+        if (has_sgram)
+                mem_size = device_get_config_int("memory");
+        else
+                mem_size = 16; /*SDRAM Banshee only supports 16 MB*/
+
         svga_init(&banshee->svga, banshee, mem_size << 20,
                    banshee_recalctimings,
                    banshee_in, banshee_out,
@@ -1976,9 +2020,10 @@ static void *banshee_init()
         banshee->svga.miscout = 1;
         
         banshee->dramInit0 = 1 << 27;
-        if (mem_size == 16)
+        if (has_sgram && mem_size == 16)
                 banshee->dramInit0 |= (1 << 26); /*2xSGRAM = 16 MB*/
-//        banshee->dramInit1 = 1 << 30; /*SDRAM*/
+        if (!has_sgram)
+                banshee->dramInit1 = 1 << 30; /*SDRAM*/
         banshee->svga.decode_mask = 0x1ffffff;
         
         pci_add(banshee_pci_read, banshee_pci_write, banshee);
@@ -1996,9 +2041,22 @@ static void *banshee_init()
         return banshee;
 }
 
+static void *banshee_init(FILE *f, int has_sgram)
+{
+        return banshee_init_common("pci_sg.rom", 1);
+}
+static void *creative_banshee_init(FILE *f, int has_sgram)
+{
+        return banshee_init_common("blasterpci.rom", 0);
+}
+
 static int banshee_available()
 {
-        return rom_present("a-trend.VBI");
+        return rom_present("pci_sg.rom");
+}
+static int creative_banshee_available()
+{
+        return rom_present("blasterpci.rom");
 }
 
 static void banshee_close(void *p)
@@ -2085,9 +2143,9 @@ static void banshee_add_status_info(char *s, int max_len, void *p)
         voodoo_recomp = 0;
 }
 
-device_t atrend_voodoo_banshee_device =
+device_t voodoo_banshee_device =
 {
-        "A-Trend Helios 3D (Voodoo Banshee)",
+        "Voodoo Banshee PCI (reference)",
         0,
         banshee_init,
         banshee_close,
@@ -2095,5 +2153,18 @@ device_t atrend_voodoo_banshee_device =
         banshee_speed_changed,
         banshee_force_redraw,
         banshee_add_status_info,
-        banshee_config
+        banshee_sgram_config
+};
+
+device_t creative_voodoo_banshee_device =
+{
+        "Creative Labs 3D Blaster Banshee PCI",
+        0,
+        creative_banshee_init,
+        banshee_close,
+        creative_banshee_available,
+        banshee_speed_changed,
+        banshee_force_redraw,
+        banshee_add_status_info,
+        banshee_sdram_config
 };
