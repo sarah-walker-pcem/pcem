@@ -1993,7 +1993,7 @@ static void *banshee_init_common(char *fn, int has_sgram)
                                                         banshee_write_linear_w,
                                                         banshee_write_linear_l,
                                                         NULL,
-                                                        0,
+                                                        MEM_MAPPING_EXTERNAL,
                                                         &banshee->svga);
         mem_mapping_add(&banshee->reg_mapping_low, 0, 0,banshee_reg_read,
                                                         banshee_reg_readw,
@@ -2002,7 +2002,7 @@ static void *banshee_init_common(char *fn, int has_sgram)
                                                         banshee_reg_writew,
                                                         banshee_reg_writel,
                                                         NULL,
-                                                        0,
+                                                        MEM_MAPPING_EXTERNAL,
                                                         banshee);
         mem_mapping_add(&banshee->reg_mapping_high, 0,0,banshee_reg_read,
                                                         banshee_reg_readw,
@@ -2011,7 +2011,7 @@ static void *banshee_init_common(char *fn, int has_sgram)
                                                         banshee_reg_writew,
                                                         banshee_reg_writel,
                                                         NULL,
-                                                        0,
+                                                        MEM_MAPPING_EXTERNAL,
                                                         banshee);
 
 //        io_sethandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
