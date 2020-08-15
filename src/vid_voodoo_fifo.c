@@ -173,6 +173,8 @@ void voodoo_fifo_thread(void *param)
                                         voodoo_reg_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
                                         fifo->addr_type = FIFO_INVALID;
                                         voodoo->fifo_read_idx++;
+                                        if (FIFO_EMPTY)
+                                                break;
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
@@ -183,6 +185,8 @@ void voodoo_fifo_thread(void *param)
                                         voodoo_fb_writew(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
                                         fifo->addr_type = FIFO_INVALID;
                                         voodoo->fifo_read_idx++;
+                                        if (FIFO_EMPTY)
+                                                break;
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
@@ -193,6 +197,8 @@ void voodoo_fifo_thread(void *param)
                                         voodoo_fb_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
                                         fifo->addr_type = FIFO_INVALID;
                                         voodoo->fifo_read_idx++;
+                                        if (FIFO_EMPTY)
+                                                break;
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
@@ -203,6 +209,8 @@ void voodoo_fifo_thread(void *param)
                                                 voodoo_tex_writel(fifo->addr_type & FIFO_ADDR, fifo->val, voodoo);
                                         fifo->addr_type = FIFO_INVALID;
                                         voodoo->fifo_read_idx++;
+                                        if (FIFO_EMPTY)
+                                                break;
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
@@ -212,6 +220,8 @@ void voodoo_fifo_thread(void *param)
                                         voodoo_2d_reg_writel(voodoo, fifo->addr_type & FIFO_ADDR, fifo->val);
                                         fifo->addr_type = FIFO_INVALID;
                                         voodoo->fifo_read_idx++;
+                                        if (FIFO_EMPTY)
+                                                break;
                                         fifo = &voodoo->fifo[voodoo->fifo_read_idx & FIFO_MASK];
                                 }
                                 break;
