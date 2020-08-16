@@ -447,7 +447,7 @@ static void banshee_ext_out(uint16_t addr, uint8_t val, void *p)
                 break;
                         
                 default:
-                fatal("bad banshee_ext_out: addr=%04x val=%02x\n", addr, val);
+                pclog("bad banshee_ext_out: addr=%04x val=%02x\n", addr, val);
         }
 }
 static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
@@ -649,7 +649,7 @@ static uint8_t banshee_ext_in(uint16_t addr, void *p)
                 break;
 
                 default:
-                fatal("bad banshee_ext_in: addr=%04x\n", addr);
+                pclog("bad banshee_ext_in: addr=%04x\n", addr);
                 break;
         }
 
