@@ -139,6 +139,7 @@ enum
 #define VIDPROCCFG_2X_MODE      (1 << 26)
 #define VIDPROCCFG_HWCURSOR_ENA (1 << 27)
 
+#define OVERLAY_FMT_565        (1)
 #define OVERLAY_FMT_YUYV422    (5)
 #define OVERLAY_FMT_UYVY422    (6)
 #define OVERLAY_FMT_565_DITHER (7)
@@ -1636,6 +1637,7 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         DECODE_UYUV422();               \
                         break;                          \
                                                         \
+                        case OVERLAY_FMT_565:           \
                         case OVERLAY_FMT_565_DITHER:    \
                         if (banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE)      \
                                 DECODE_RGB565_TILED();                          \
