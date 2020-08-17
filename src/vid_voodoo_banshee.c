@@ -1053,7 +1053,7 @@ static void banshee_cmd_write(banshee_t *banshee, uint32_t addr, uint32_t val)
         switch (addr & 0x1fc)
         {
                 case cmdBaseAddr0:
-                voodoo->cmdfifo_base = (val & 0x3ff) << 12;
+                voodoo->cmdfifo_base = (val & 0xfff) << 12;
                 voodoo->cmdfifo_end = voodoo->cmdfifo_base + (((voodoo->cmdfifo_size & 0xff) + 1) << 12);
 //                pclog("cmdfifo_base=%08x  cmdfifo_end=%08x %08x\n", voodoo->cmdfifo_base, voodoo->cmdfifo_end, val);
                 break;
