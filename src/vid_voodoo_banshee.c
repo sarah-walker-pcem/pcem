@@ -667,7 +667,7 @@ static uint32_t banshee_status(banshee_t *banshee)
         int fifo_size = 0xffff - fifo_entries;
         int swap_count = voodoo->swap_count;
         int written = voodoo->cmd_written + voodoo->cmd_written_fifo;
-        int busy = (written - voodoo->cmd_read) || (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr);
+        int busy = (written - voodoo->cmd_read) || (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr) || voodoo->render_voodoo_busy[0] || voodoo->render_voodoo_busy[1];
         uint32_t ret;
 
         ret = 0;
