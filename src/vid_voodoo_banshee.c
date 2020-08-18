@@ -58,7 +58,7 @@ typedef struct banshee_t
 
         uint32_t intrCtrl;
         
-        uint32_t overlay_buffer[4096];
+        uint32_t overlay_buffer[2][4096];
 
         mem_mapping_t linear_mapping;
 
@@ -130,6 +130,11 @@ enum
 #define VIDPROCCFG_OVERLAY_ENABLE (1 << 8)
 #define VIDPROCCFG_H_SCALE_ENABLE (1 << 14)
 #define VIDPROCCFG_V_SCALE_ENABLE (1 << 15)
+#define VIDPROCCFG_FILTER_MODE_MASK (3 << 16)
+#define VIDPROCCFG_FILTER_MODE_POINT      (0 << 16)
+#define VIDPROCCFG_FILTER_MODE_DITHER_2X2 (1 << 16)
+#define VIDPROCCFG_FILTER_MODE_DITHER_4X4 (2 << 16)
+#define VIDPROCCFG_FILTER_MODE_BILINEAR   (3 << 16)
 #define VIDPROCCFG_DESKTOP_PIX_FORMAT ((banshee->vidProcCfg >> 18) & 7)
 #define VIDPROCCFG_OVERLAY_PIX_FORMAT ((banshee->vidProcCfg >> 21) & 7)
 #define VIDPROCCFG_OVERLAY_PIX_FORMAT_SHIFT (21)
@@ -1503,7 +1508,7 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
         }                               \
         while (0)
 
-#define DECODE_RGB565()                                                  \
+#define DECODE_RGB565(buf)                                              \
         do                                                              \
         {                                                               \
                 int c;                                                  \
@@ -1516,12 +1521,12 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         int g = (data >> 5) & 0x3f;                     \
                         int b = data >> 11;                             \
                                                                         \
-                        banshee->overlay_buffer[wp++] = (r << 3) | (g << 10) | (b << 19); \
+                        banshee->overlay_buffer[buf][wp++] = (r << 3) | (g << 10) | (b << 19); \
                         src += 2;                                       \
                 }                                                       \
         } while (0)
 
-#define DECODE_RGB565_TILED()                                           \
+#define DECODE_RGB565_TILED(buf)                                        \
         do                                                              \
         {                                                               \
                 int c;                                                  \
@@ -1534,11 +1539,11 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         int g = (data >> 5) & 0x3f;                     \
                         int b = data >> 11;                             \
                                                                         \
-                        banshee->overlay_buffer[wp++] = (r << 3) | (g << 10) | (b << 19); \
+                        banshee->overlay_buffer[buf][wp++] = (r << 3) | (g << 10) | (b << 19); \
                 }                                                       \
         } while (0)
 
-#define DECODE_YUYV422()                                                  \
+#define DECODE_YUYV422(buf)                                             \
         do                                                              \
         {                                                               \
                 int c;                                                  \
@@ -1567,7 +1572,7 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         CLAMP(g);                                       \
                         b = y1 + dB;                                    \
                         CLAMP(b);                                       \
-                        banshee->overlay_buffer[wp++] = r | (g << 8) | (b << 16); \
+                        banshee->overlay_buffer[buf][wp++] = r | (g << 8) | (b << 16); \
                                                                         \
                         r = y2 + dR;                                    \
                         CLAMP(r);                                       \
@@ -1575,11 +1580,11 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         CLAMP(g);                                       \
                         b = y2 + dB;                                    \
                         CLAMP(b);                                       \
-                        banshee->overlay_buffer[wp++] = r | (g << 8) | (b << 16); \
+                        banshee->overlay_buffer[buf][wp++] = r | (g << 8) | (b << 16); \
                 }                                                       \
         } while (0)
 
-#define DECODE_UYUV422()                                                  \
+#define DECODE_UYUV422(buf)                                             \
         do                                                              \
         {                                                               \
                 int c;                                                  \
@@ -1608,7 +1613,7 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         CLAMP(g);                                       \
                         b = y1 + dB;                                    \
                         CLAMP(b);                                       \
-                        banshee->overlay_buffer[wp++] = r | (g << 8) | (b << 16); \
+                        banshee->overlay_buffer[buf][wp++] = r | (g << 8) | (b << 16); \
                                                                         \
                         r = y2 + dR;                                    \
                         CLAMP(r);                                       \
@@ -1616,12 +1621,12 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         CLAMP(g);                                       \
                         b = y2 + dB;                                    \
                         CLAMP(b);                                       \
-                        banshee->overlay_buffer[wp++] = r | (g << 8) | (b << 16); \
+                        banshee->overlay_buffer[buf][wp++] = r | (g << 8) | (b << 16); \
                 }                                                       \
         } while (0)
 
 
-#define OVERLAY_SAMPLE()                        \
+#define OVERLAY_SAMPLE(buf)                     \
         do                                      \
         {                                       \
                 switch (banshee->overlay_pix_fmt)       \
@@ -1630,19 +1635,19 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         break;                          \
                                                         \
                         case OVERLAY_FMT_YUYV422:       \
-                        DECODE_YUYV422();               \
+                        DECODE_YUYV422(buf);            \
                         break;                          \
                                                         \
                         case OVERLAY_FMT_UYVY422:       \
-                        DECODE_UYUV422();               \
+                        DECODE_UYUV422(buf);            \
                         break;                          \
                                                         \
                         case OVERLAY_FMT_565:           \
                         case OVERLAY_FMT_565_DITHER:    \
                         if (banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE)      \
-                                DECODE_RGB565_TILED();                          \
+                                DECODE_RGB565_TILED(buf);                       \
                         else                                                    \
-                                DECODE_RGB565();                                \
+                                DECODE_RGB565(buf);                             \
                         break;                          \
                                                         \
                         default:                        \
@@ -1660,29 +1665,91 @@ static void banshee_overlay_draw(svga_t *svga, int displine)
         uint32_t src_addr = svga->overlay_latch.addr + ((banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE) ?
                 ((y & 31) * 128 + (y >> 5) * svga->overlay_latch.pitch) :
                 y * svga->overlay_latch.pitch);
+        uint32_t src_addr2 = svga->overlay_latch.addr + ((banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE) ?
+                (((y + 1) & 31) * 128 + ((y + 1) >> 5) * svga->overlay_latch.pitch) :
+                (y + 1) * svga->overlay_latch.pitch);
         uint8_t *src = &svga->vram[src_addr & svga->vram_mask];
         uint32_t src_x = 0;
+        unsigned int y_coeff = (voodoo->overlay.src_y & 0xfffff) >> 4;
 
 //        pclog("displine=%i addr=%08x %08x  %08x  %08x\n", displine, svga->overlay_latch.addr, src_addr, voodoo->overlay.vidOverlayDvdy, *(uint32_t *)src);
 //        if (src_addr >= 0x800000)
 //                fatal("overlay out of range!\n");
         p = &((uint32_t *)buffer32->line[displine])[svga->overlay_latch.x + 32];
 
-        OVERLAY_SAMPLE();
+        OVERLAY_SAMPLE(0);
 
-        if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE)
+        switch (banshee->vidProcCfg & VIDPROCCFG_FILTER_MODE_MASK)
         {
-                for (x = 0; x < svga->overlay_latch.xsize; x++)
+                case VIDPROCCFG_FILTER_MODE_BILINEAR:
+                src = &svga->vram[src_addr2 & svga->vram_mask];
+                OVERLAY_SAMPLE(1);
+                if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE)
                 {
-                        p[x] = banshee->overlay_buffer[src_x >> 20];
-                
-                        src_x += voodoo->overlay.vidOverlayDudx;
+                        for (x = 0; x < svga->overlay_latch.xsize; x++)
+                        {
+                                unsigned int x_coeff = (src_x & 0xfffff) >> 4;
+                                unsigned int coeffs[4] = {
+                                        ((0x10000 - x_coeff) * (0x10000 - y_coeff)) >> 16,
+                                        (           x_coeff  * (0x10000 - y_coeff)) >> 16,
+                                        ((0x10000 - x_coeff) *            y_coeff) >> 16,
+                                        (           x_coeff  *            y_coeff) >> 16
+                                };
+                                uint32_t samp0 = banshee->overlay_buffer[0][src_x >> 20];
+                                uint32_t samp1 = banshee->overlay_buffer[0][(src_x >> 20) + 1];
+                                uint32_t samp2 = banshee->overlay_buffer[1][src_x >> 20];
+                                uint32_t samp3 = banshee->overlay_buffer[1][(src_x >> 20) + 1];
+                                int r = (((samp0 >> 16) & 0xff) * coeffs[0] +
+                                        ((samp1 >> 16) & 0xff) * coeffs[1] +
+                                        ((samp2 >> 16) & 0xff) * coeffs[2] +
+                                        ((samp3 >> 16) & 0xff) * coeffs[3]) >> 16;
+                                int g = (((samp0 >> 8) & 0xff) * coeffs[0] +
+                                        ((samp1 >> 8) & 0xff) * coeffs[1] +
+                                        ((samp2 >> 8) & 0xff) * coeffs[2] +
+                                        ((samp3 >> 8) & 0xff) * coeffs[3]) >> 16;
+                                int b = ((samp0 & 0xff) * coeffs[0] +
+                                        (samp1 & 0xff) * coeffs[1] +
+                                        (samp2 & 0xff) * coeffs[2] +
+                                        (samp3 & 0xff) * coeffs[3]) >> 16;
+                                p[x] = (r << 16) | (g << 8) | b;
+
+                                src_x += voodoo->overlay.vidOverlayDudx;
+                        }
                 }
-        }
-        else
-        {
-                for (x = 0; x < svga->overlay_latch.xsize; x++)
-                        p[x] = banshee->overlay_buffer[x];
+                else
+                {
+                        for (x = 0; x < svga->overlay_latch.xsize; x++)
+                        {
+                                uint32_t samp0 = banshee->overlay_buffer[0][src_x >> 20];
+                                uint32_t samp1 = banshee->overlay_buffer[1][src_x >> 20];
+                                int r = (((samp0 >> 16) & 0xff) * (0x10000 - y_coeff) +
+                                        ((samp1 >> 16) & 0xff) * y_coeff) >> 16;
+                                int g = (((samp0 >> 8) & 0xff) * (0x10000 - y_coeff) +
+                                        ((samp1 >> 8) & 0xff) * y_coeff) >> 16;
+                                int b = ((samp0 & 0xff) * (0x10000 - y_coeff) +
+                                        (samp1 & 0xff) * y_coeff) >> 16;
+                                p[x] = (r << 16) | (g << 8) | b;
+                        }
+                }
+                break;
+                
+                case VIDPROCCFG_FILTER_MODE_POINT:
+                default:
+                if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE)
+                {
+                        for (x = 0; x < svga->overlay_latch.xsize; x++)
+                        {
+                                p[x] = banshee->overlay_buffer[0][src_x >> 20];
+
+                                src_x += voodoo->overlay.vidOverlayDudx;
+                        }
+                }
+                else
+                {
+                        for (x = 0; x < svga->overlay_latch.xsize; x++)
+                                p[x] = banshee->overlay_buffer[0][x];
+                }
+                break;
         }
         
         if (banshee->vidProcCfg & VIDPROCCFG_V_SCALE_ENABLE)
