@@ -306,7 +306,8 @@ typedef struct voodoo_t
 
         uint32_t sSetupMode;
         vert_t verts[4];
-        int vertex_num;
+        unsigned int vertex_ages[3];
+        unsigned int vertex_next_age;
         int num_verticies;
         int cull_pingpong;
 

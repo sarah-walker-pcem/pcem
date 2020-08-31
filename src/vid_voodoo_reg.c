@@ -683,18 +683,66 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 case SST_sBeginTriCMD:
 //                pclog("sBeginTriCMD %i %f\n", voodoo->vertex_num, voodoo->verts[4].sVx);
                 voodoo->verts[0] = voodoo->verts[3];
-                voodoo->vertex_num = 1;
+                voodoo->verts[1] = voodoo->verts[3];
+                voodoo->verts[2] = voodoo->verts[3];
+                voodoo->vertex_next_age = 0;
+                voodoo->vertex_ages[0] = voodoo->vertex_next_age++;
+
                 voodoo->num_verticies = 1;
                 voodoo->cull_pingpong = 0;
                 break;
                 case SST_sDrawTriCMD:
-//                pclog("sDrawTriCMD %i %i %i\n", voodoo->num_verticies, voodoo->vertex_num, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);
-                if (voodoo->vertex_num == 3)
-                        voodoo->vertex_num = (voodoo->sSetupMode & SETUPMODE_STRIP_MODE) ? 1 : 0;
-                voodoo->verts[voodoo->vertex_num] = voodoo->verts[3];
+//                pclog("sDrawTriCMD %i %i\n", voodoo->num_verticies, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);
+                /*I'm not sure this is the vertex selection algorithm actually used in the 3dfx
+                  chips, but this works with a number of games that switch between strip and fan
+                  mode in the middle of a run (eg Black & White, Viper Racing)*/
+                if (voodoo->vertex_next_age < 3)
+                {
+                        /*Fewer than three vertices already written, store in next slot*/
+                        int vertex_nr = voodoo->vertex_next_age;
+
+                        voodoo->verts[vertex_nr] = voodoo->verts[3];
+                        voodoo->vertex_ages[vertex_nr] = voodoo->vertex_next_age++;
+                }
+                else
+                {
+                        int vertex_nr = 0;
+
+                        if (!(voodoo->sSetupMode & SETUPMODE_STRIP_MODE))
+                        {
+                                /*Strip - find oldest vertex*/
+                                if ((voodoo->vertex_ages[0] < voodoo->vertex_ages[1]) &&
+                                    (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
+                                        vertex_nr = 0;
+                                else if ((voodoo->vertex_ages[1] < voodoo->vertex_ages[0]) &&
+                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
+                                        vertex_nr = 1;
+                                else
+                                        vertex_nr = 2;
+                        }
+                        else
+                        {
+                                /*Fan - find second oldest vertex (ie pivot around oldest)*/
+                                if ((voodoo->vertex_ages[1] < voodoo->vertex_ages[0]) &&
+                                    (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
+                                        vertex_nr = 0;
+                                else if ((voodoo->vertex_ages[2] < voodoo->vertex_ages[0]) &&
+                                    (voodoo->vertex_ages[0] < voodoo->vertex_ages[1]))
+                                        vertex_nr = 0;
+                                else if ((voodoo->vertex_ages[0] < voodoo->vertex_ages[1]) &&
+                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
+                                        vertex_nr = 1;
+                                else if ((voodoo->vertex_ages[2] < voodoo->vertex_ages[1]) &&
+                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[0]))
+                                        vertex_nr = 1;
+                                else
+                                        vertex_nr = 2;
+                        }
+                        voodoo->verts[vertex_nr] = voodoo->verts[3];
+                        voodoo->vertex_ages[vertex_nr] = voodoo->vertex_next_age++;
+                }
 
                 voodoo->num_verticies++;
-                voodoo->vertex_num++;
                 if (voodoo->num_verticies == 3)
                 {
 //                        pclog("triangle_setup\n");
@@ -703,8 +751,6 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 
                         voodoo->num_verticies = 2;
                 }
-                if (voodoo->vertex_num == 4)
-                        fatal("sDrawTriCMD overflow\n");
                 break;
 
                 case SST_bltSrcBaseAddr:
