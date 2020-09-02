@@ -1691,6 +1691,8 @@ static int fpu_st_timestamp[8];
   dependent uop chains*/
 static int last_uop_timestamp = 0;
 
+static int ifetch_length = 0;
+
 static void decode_flush()
 {
         int c;
@@ -1727,6 +1729,7 @@ static void decode_flush()
         decode_timestamp++;
         decode_buffer.nr_uops = 0;
         decode_buffer.nr_ins = 0;
+        ifetch_length = 0;
 }
 
 /*The instruction is only of interest here if it's longer than 8 bytes, as that's the
@@ -1779,7 +1782,6 @@ static int codegen_timing_instr_length(uint64_t deps, uint32_t fetchdat, int op_
         return len;
 }
 
-static int ifetch_length = 0;
 static void decode_instruction(const p6_instruction_t *ins, uint64_t deps, uint32_t fetchdat, int op_32, uint32_t op_pc, int bit8)
 {
         uint32_t regmask_required;
@@ -1945,6 +1947,8 @@ void codegen_timing_p6_block_start()
                 reg_available_timestamp[c] = 0;
         for (c = 0; c < 8; c++)
                 fpu_st_timestamp[c] = 0;
+
+        ifetch_length = 0;
 }
 
 void codegen_timing_p6_start()
