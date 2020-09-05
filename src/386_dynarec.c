@@ -309,6 +309,29 @@ void exec386_dynarec(int cycs)
                                         ins++;
                                         insc++;
                                 }
+                                
+                                if (trap)
+                                {
+                                        trap = 0;
+                                        flags_rebuild();
+                                        if (msw&1)
+                                        {
+                                                pmodeint(1,0);
+                                        }
+                                        else
+                                        {
+                                                writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
+                                                writememw(ss,(SP-4)&0xFFFF,CS);
+                                                writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
+                                                SP-=6;
+                                                addr = (1 << 2) + idt.base;
+                                                cpu_state.flags &= ~I_FLAG;
+                                                cpu_state.flags &= ~T_FLAG;
+                                                cpu_state.pc=readmemw(0,addr);
+                                                loadcs(readmemw(0,addr+2));
+                                        }
+                                }
+
                                 cpu_end_block_after_ins = 0;
                         }
                         else
@@ -439,8 +462,6 @@ void exec386_dynarec(int cycs)
                                                         uint8_t opcode = fetchdat & 0xFF;
                                                         fetchdat >>= 8;
                                                         
-                                                        trap = cpu_state.flags & T_FLAG;
-
 //                                                        if (output == 3)
 //                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
 
@@ -461,7 +482,7 @@ void exec386_dynarec(int cycs)
                                                 if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
-                                                if (trap)
+                                                if (cpu_state.flags & T_FLAG)
                                                         CPU_BLOCK_END();
 
                                                 if (nmi && nmi_enable && nmi_mask)
@@ -521,8 +542,6 @@ void exec386_dynarec(int cycs)
                                                         uint8_t opcode = fetchdat & 0xFF;
                                                         fetchdat >>= 8;
 
-                                                        trap = cpu_state.flags & T_FLAG;
-
 //                                                        if (output == 3)
 //                                                                pclog("%04X(%06X):%04X : %08X %08X %08X %08X %04X %04X %04X(%08X) %04X %04X %04X(%08X) %08X %08X %08X SP=%04X:%08X %02X %04X %i %08X  %08X %i %i %02X %02X %02X   %02X %02X  %08x %08x\n",CS,cs,pc,EAX,EBX,ECX,EDX,CS,DS,ES,es,FS,GS,SS,ss,EDI,ESI,EBP,SS,ESP,opcode,flags,ins,0, ldt.base, CPL, stack32, pic.pend, pic.mask, pic.mask2, pic2.pend, pic2.mask, cs+pc, pccache);
 
@@ -541,7 +560,7 @@ void exec386_dynarec(int cycs)
                                                 if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                                         CPU_BLOCK_END();
                                         
-                                                if (trap)
+                                                if (cpu_state.flags & T_FLAG)
                                                         CPU_BLOCK_END();
 
                                                 if (nmi && nmi_enable && nmi_mask)
@@ -601,28 +620,7 @@ void exec386_dynarec(int cycs)
                                 }
                         }
                 
-                        if (trap)
-                        {
-                                trap = 0;
-                                flags_rebuild();
-                                if (msw&1)
-                                {
-                                        pmodeint(1,0);
-                                }
-                                else
-                                {
-                                        writememw(ss,(SP-2)&0xFFFF,cpu_state.flags);
-                                        writememw(ss,(SP-4)&0xFFFF,CS);
-                                        writememw(ss,(SP-6)&0xFFFF,cpu_state.pc);
-                                        SP-=6;
-                                        addr = (1 << 2) + idt.base;
-                                        cpu_state.flags &= ~I_FLAG;
-                                        cpu_state.flags &= ~T_FLAG;
-                                        cpu_state.pc=readmemw(0,addr);
-                                        loadcs(readmemw(0,addr+2));
-                                }
-                        }
-                        else if (nmi && nmi_enable && nmi_mask)
+                        if (nmi && nmi_enable && nmi_mask)
                         {
                                 cpu_state.oldpc = cpu_state.pc;
 //                                pclog("NMI\n");
