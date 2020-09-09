@@ -19,7 +19,10 @@ int checkio(int port);
                                 if (cpu_state.abrt) return 1; \
                                 if (tempi) \
                                 { \
-                                        x86gpf(NULL,0); \
+                                        if (cpu_state.eflags & VM_FLAG) \
+                                                x86gpf_expected(NULL,0); \
+                                        else \
+                                                x86gpf(NULL,0); \
                                         return 1; \
                                 } \
                         }

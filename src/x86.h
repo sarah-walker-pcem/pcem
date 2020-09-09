@@ -261,6 +261,16 @@ enum
         ABRT_PF  = 0xE
 };
 
+#define ABRT_MASK 0x7f
+/*An 'expected' exception is one that would be expected to occur on every execution
+  of this code path; eg a GPF due to being in v86 mode. An 'unexpected' exception is
+  one that would be unlikely to occur on the next exception, eg a page fault may be
+  fixed up by the exception handler and the next execution would not hit it.
+  
+  This distinction is used by the dynarec; a block that hits an 'expected' exception
+  would be compiled, a block that hits an 'unexpected' exception would be rejected so
+  that we don't end up with an unnecessarily short block*/
+#define ABRT_EXPECTED  0x80
 extern uint32_t abrt_error;
 
 void x86_doabrt(int x86_abrt);
@@ -275,6 +285,7 @@ void x86illegal();
 
 void x86seg_reset();
 void x86gpf(char *s, uint16_t error);
+void x86gpf_expected(char *s, uint16_t error);
 
 void resetx86();
 void softresetx86();

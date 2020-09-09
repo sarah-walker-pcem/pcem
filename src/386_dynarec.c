@@ -462,7 +462,8 @@ static inline void exec_recompiler(void)
 
                         if (cpu_state.abrt)
                         {
-                                codegen_block_remove();
+                                if (!(cpu_state.abrt & ABRT_EXPECTED))
+                                        codegen_block_remove();
                                 CPU_BLOCK_END();
                         }
 
@@ -471,7 +472,7 @@ static inline void exec_recompiler(void)
                 }
                 cpu_end_block_after_ins = 0;
 
-                if (!cpu_state.abrt && !x86_was_reset)
+                if ((!cpu_state.abrt || (cpu_state.abrt & ABRT_EXPECTED)) && !x86_was_reset)
                         codegen_block_end_recompile(block);
 
                 if (x86_was_reset)
@@ -540,7 +541,8 @@ static inline void exec_recompiler(void)
 
                         if (cpu_state.abrt)
                         {
-                                codegen_block_remove();
+                                if (!(cpu_state.abrt & ABRT_EXPECTED))
+                                        codegen_block_remove();
                                 CPU_BLOCK_END();
                         }
 
@@ -549,7 +551,8 @@ static inline void exec_recompiler(void)
                 }
                 cpu_end_block_after_ins = 0;
 
-                if (!cpu_state.abrt && !x86_was_reset)
+//                if (!cpu_state.abrt && !x86_was_reset)
+                if ((!cpu_state.abrt || (cpu_state.abrt & ABRT_EXPECTED)) && !x86_was_reset)
                         codegen_block_end();
 
                 if (x86_was_reset)
@@ -592,7 +595,7 @@ void exec386_dynarec(int cycs)
                         if (cpu_state.abrt)
                         {
                                 flags_rebuild();
-                                tempi = cpu_state.abrt;
+                                tempi = cpu_state.abrt & ABRT_MASK;
                                 cpu_state.abrt = 0;
                                 x86_doabrt(tempi);
                                 if (cpu_state.abrt)

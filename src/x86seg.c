@@ -161,8 +161,14 @@ void x86_doabrt(int x86_abrt)
 }
 void x86gpf(char *s, uint16_t error)
 {
-//        pclog("GPF %04X\n", error);
+//        pclog("GPF %04X %04x(%08x):%08x\n", error, CS,cs,cpu_state.pc);
         cpu_state.abrt = ABRT_GPF;
+        abrt_error = error;
+}
+void x86gpf_expected(char *s, uint16_t error)
+{
+//        pclog("GPF_v86 %04X %04x(%08x):%08x\n", error, CS,cs,cpu_state.pc);
+        cpu_state.abrt = ABRT_GPF | ABRT_EXPECTED;
         abrt_error = error;
 }
 void x86ss(char *s, uint16_t error)
@@ -1715,8 +1721,11 @@ void pmodeint(int num, int soft)
         if (output) pclog("Addr %08X seg %04X %04X %04X %04X\n",addr,segdat[0],segdat[1],segdat[2],segdat[3]);
         if (!(segdat[2]&0x1F00))
         {
-                //pclog("No seg\n");
-                x86gpf(NULL,(num*8)+2);
+//                pclog("No seg\n");
+                if (cpu_state.eflags & VM_FLAG) /*This fires on all V86 interrupts in EMM386. Mark as expected to prevent code churn*/
+                        x86gpf_expected(NULL,(num*8)+2);
+                else
+                        x86gpf(NULL,(num*8)+2);
                 return;
         }
         if (DPL<CPL && soft)

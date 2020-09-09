@@ -196,7 +196,7 @@ void exec386(int cycs)
                         flags_rebuild();
 //                        pclog("Abort\n");
 //                        if (CS == 0x228) pclog("Abort at %04X:%04X - %i %i %i\n",CS,pc,notpresent,nullseg,abrt);
-                        tempi = cpu_state.abrt;
+                        tempi = cpu_state.abrt & ABRT_MASK;
                         cpu_state.abrt = 0;
                         x86_doabrt(tempi);
                         if (cpu_state.abrt)

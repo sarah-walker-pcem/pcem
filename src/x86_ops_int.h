@@ -59,7 +59,7 @@ static int opINT(uint32_t fetchdat)
                                 }
                         }
                 }
-                x86gpf(NULL,0);
+                x86gpf_expected(NULL,0);
                 return 1;
         }
 //        /*if (temp == 0x10 && AH == 0xe) */pclog("INT %02X : %04X %04X %04X %04X   %c   %04X:%04X\n", temp, AX, BX, CX, DX, (AL < 32) ? ' ' : AL, CS, pc);
