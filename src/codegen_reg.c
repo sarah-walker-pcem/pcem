@@ -671,6 +671,42 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
         return reg_set->reg_list[c].reg | IREG_GET_SIZE(ir_reg.reg);
 }
 
+void codegen_reg_rename(codeblock_t *block, ir_reg_t src, ir_reg_t dst)
+{
+        host_reg_set_t *reg_set = get_reg_set(src);
+        int c;
+        int target;
+
+//        pclog("rename: %i.%i -> %i.%i\n", src.reg,src.version, dst.reg, dst.version);
+        /*Search for required register*/
+        for (c = 0; c < reg_set->nr_regs; c++)
+        {
+                if (!ir_reg_is_invalid(reg_set->regs[c]) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(src.reg) && reg_set->regs[c].version == src.version)
+                        break;
+        }
+        if (c == reg_set->nr_regs)
+                fatal("codegen_reg_rename: Can't find register to rename\n");
+
+        target = c;
+        if (reg_set->dirty[target])
+                codegen_reg_writeback(reg_set, block, target, 0);
+        reg_set->regs[target] = dst;
+        reg_set->dirty[target] = 1;
+//        pclog("renamed reg %i dest=%i.%i\n", target, dst.reg, dst.version);
+
+        /*Invalidate any stale copies of the dest register*/
+        for (c = 0; c < reg_set->nr_regs; c++)
+        {
+                if (c == target)
+                        continue;
+                if (!ir_reg_is_invalid(reg_set->regs[c]) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(dst.reg))
+                {
+                        reg_set->regs[c] = invalid_ir_reg;
+                        reg_set->dirty[c] = 0;
+                }
+        }
+}
+
 void codegen_reg_flush(ir_data_t *ir, codeblock_t *block)
 {
         host_reg_set_t *reg_set;

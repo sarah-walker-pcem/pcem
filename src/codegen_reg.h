@@ -399,6 +399,8 @@ void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_
 ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx);
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg);
 
+void codegen_reg_rename(codeblock_t *block, ir_reg_t src, ir_reg_t dst);
+
 void codegen_reg_mark_as_required();
 void codegen_reg_process_dead_list(struct ir_data_t *ir);
 #endif

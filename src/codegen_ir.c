@@ -107,37 +107,52 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                 if ((uop->type & UOP_MASK) == UOP_INVALID)
                         continue;
 
-                if (uop->type & UOP_TYPE_PARAMS_REGS)
-                {
-                        codegen_reg_alloc_register(uop->dest_reg_a, uop->src_reg_a, uop->src_reg_b, uop->src_reg_c);
-                        if (uop->src_reg_a.reg != IREG_INVALID)
-                        {
-                                uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a, NULL);
-                        }
-                        if (uop->src_reg_b.reg != IREG_INVALID)
-                        {
-                                uop->src_reg_b_real = codegen_reg_alloc_read_reg(block, uop->src_reg_b, NULL);
-                        }
-                        if (uop->src_reg_c.reg != IREG_INVALID)
-                        {
-                                uop->src_reg_c_real = codegen_reg_alloc_read_reg(block, uop->src_reg_c, NULL);
-                        }
-                }
-                
-                if (uop->type & UOP_TYPE_ORDER_BARRIER)
-                        codegen_reg_flush(ir, block);
 
-                if (uop->type & UOP_TYPE_PARAMS_REGS)
+                if ((uop->type & UOP_MASK) == (UOP_MOV & UOP_MASK) && reg_version[IREG_GET_REG(uop->src_reg_a.reg)][uop->src_reg_a.version].refcount <= 1  &&
+                                reg_is_native_size(uop->src_reg_a) && reg_is_native_size(uop->dest_reg_a))
                 {
-                        if (uop->dest_reg_a.reg != IREG_INVALID)
-                        {
-                                uop->dest_reg_a_real = codegen_reg_alloc_write_reg(block, uop->dest_reg_a);
-                        }
+                        /*Special case for UOP_MOV - if source register won't be used again then
+                          just rename it to dest register instead of moving*/
+                        codegen_reg_alloc_register(invalid_ir_reg, uop->src_reg_a, invalid_ir_reg, invalid_ir_reg);
+                        uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a, NULL);
+                        codegen_reg_rename(block, uop->src_reg_a, uop->dest_reg_a);
+                        if (uop->type & UOP_TYPE_ORDER_BARRIER)
+                                codegen_reg_flush(ir, block);
                 }
+                else
+                {
+                        if (uop->type & UOP_TYPE_PARAMS_REGS)
+                        {
+                                codegen_reg_alloc_register(uop->dest_reg_a, uop->src_reg_a, uop->src_reg_b, uop->src_reg_c);
+                                if (uop->src_reg_a.reg != IREG_INVALID)
+                                {
+                                        uop->src_reg_a_real = codegen_reg_alloc_read_reg(block, uop->src_reg_a, NULL);
+                                }
+                                if (uop->src_reg_b.reg != IREG_INVALID)
+                                {
+                                        uop->src_reg_b_real = codegen_reg_alloc_read_reg(block, uop->src_reg_b, NULL);
+                                }
+                                if (uop->src_reg_c.reg != IREG_INVALID)
+                                {
+                                        uop->src_reg_c_real = codegen_reg_alloc_read_reg(block, uop->src_reg_c, NULL);
+                                }
+                        }
+
+                        if (uop->type & UOP_TYPE_ORDER_BARRIER)
+                                codegen_reg_flush(ir, block);
+
+                        if (uop->type & UOP_TYPE_PARAMS_REGS)
+                        {
+                                if (uop->dest_reg_a.reg != IREG_INVALID)
+                                {
+                                        uop->dest_reg_a_real = codegen_reg_alloc_write_reg(block, uop->dest_reg_a);
+                                }
+                        }
                 
-                if (!uop_handlers[uop->type & UOP_MASK])
-                        fatal("!uop_handlers[uop->type & UOP_MASK] %08x\n", uop->type);
-                uop_handlers[uop->type & UOP_MASK](block, uop);
+                        if (!uop_handlers[uop->type & UOP_MASK])
+                                fatal("!uop_handlers[uop->type & UOP_MASK] %08x\n", uop->type);
+                        uop_handlers[uop->type & UOP_MASK](block, uop);
+                }
 
                 if (uop->type & UOP_TYPE_JUMP)
                 {
