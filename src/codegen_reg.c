@@ -449,6 +449,45 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
         reg_set->dirty[c] = 0;
 }
 
+#ifdef CODEGEN_BACKEND_HAS_MOV_IMM
+void codegen_reg_write_imm(codeblock_t *block, ir_reg_t ir_reg, uint32_t imm_data)
+{
+        int reg_idx = IREG_GET_REG(ir_reg.reg);
+        void *p = ireg_data[reg_idx].p;
+
+        switch (ireg_data[reg_idx].native_size)
+        {
+                case REG_BYTE:
+                if ((uintptr_t)p < 256)
+                        fatal("codegen_reg_write_imm - REG_BYTE %p\n", p);
+                codegen_direct_write_8_imm(block, p, imm_data);
+                break;
+
+                case REG_WORD:
+                if ((uintptr_t)p < 256)
+                        fatal("codegen_reg_write_imm - REG_WORD %p\n", p);
+                codegen_direct_write_16_imm(block, p, imm_data);
+                break;
+
+                case REG_DWORD:
+                if ((uintptr_t)p < 256)
+                        codegen_direct_write_32_imm_stack(block, (int)p, imm_data);
+                else
+                        codegen_direct_write_32_imm(block, p, imm_data);
+                break;
+                
+                case REG_POINTER:
+                case REG_QWORD:
+                case REG_DOUBLE:
+                case REG_FPU_ST_BYTE:
+                case REG_FPU_ST_QWORD:
+                case REG_FPU_ST_DOUBLE:
+                default:
+                fatal("codegen_reg_write_imm - native_size=%i\n", ireg_data[reg_idx].native_size);
+        }
+}
+#endif
+
 static void alloc_reg(ir_reg_t ir_reg)
 {
         host_reg_set_t *reg_set = get_reg_set(ir_reg);
@@ -670,6 +709,29 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
 //        pclog(" codegen_reg_alloc_write_reg: %i.%i %i\n", ir_reg.reg, ir_reg.version, codegen_host_reg_list[c]);
         return reg_set->reg_list[c].reg | IREG_GET_SIZE(ir_reg.reg);
 }
+
+#ifdef CODEGEN_BACKEND_HAS_MOV_IMM
+int codegen_reg_is_loaded(ir_reg_t ir_reg)
+{
+        host_reg_set_t *reg_set = get_reg_set(ir_reg);
+        int c;
+        
+        /*Search for previous version in host register*/
+        for (c = 0; c < reg_set->nr_regs; c++)
+        {
+                if (!ir_reg_is_invalid(reg_set->regs[c]) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(ir_reg.reg))
+                {
+                        if (reg_set->regs[c].version <= ir_reg.version-1)
+                        {
+                                if (reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount != 0)
+                                        fatal("codegen_reg_alloc_write_reg - previous version refcount != 0\n");
+                                return 1;
+                        }
+                }
+        }
+        return 0;
+}
+#endif
 
 void codegen_reg_rename(codeblock_t *block, ir_reg_t src, ir_reg_t dst)
 {

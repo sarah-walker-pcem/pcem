@@ -396,6 +396,11 @@ void codegen_reg_flush_invalidate(struct ir_data_t *ir, codeblock_t *block);
 /*Register ir_reg usage for this uOP. This ensures that required registers aren't evicted*/
 void codegen_reg_alloc_register(ir_reg_t dest_reg_a, ir_reg_t src_reg_a, ir_reg_t src_reg_b, ir_reg_t src_reg_c);
 
+#ifdef CODEGEN_BACKEND_HAS_MOV_IMM
+int codegen_reg_is_loaded(ir_reg_t ir_reg);
+void codegen_reg_write_imm(codeblock_t *block, ir_reg_t ir_reg, uint32_t imm_data);
+#endif
+
 ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, int *host_reg_idx);
 ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg);
 
