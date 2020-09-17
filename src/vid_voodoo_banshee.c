@@ -1212,7 +1212,6 @@ static uint8_t banshee_read_linear(uint32_t addr, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-//                uint32_t old_addr = addr;
 
                 addr -= voodoo->tile_base;
                 x = addr & (voodoo->tile_stride-1);
@@ -1246,7 +1245,6 @@ static uint16_t banshee_read_linear_w(uint32_t addr, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-//                uint32_t old_addr = addr;
 
                 addr -= voodoo->tile_base;
                 x = addr & (voodoo->tile_stride-1);
@@ -1280,7 +1278,6 @@ static uint32_t banshee_read_linear_l(uint32_t addr, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-//                uint32_t old_addr = addr;
 
                 addr -= voodoo->tile_base;
                 x = addr & (voodoo->tile_stride-1);
@@ -1315,7 +1312,6 @@ static void banshee_write_linear(uint32_t addr, uint8_t val, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-                uint32_t old_addr = addr;
 
                 addr -= voodoo->tile_base;
                 x = addr & (voodoo->tile_stride-1);
@@ -1350,7 +1346,6 @@ static void banshee_write_linear_w(uint32_t addr, uint16_t val, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-                uint32_t old_addr = addr;
 
                 addr -= voodoo->tile_base;
                 x = addr & (voodoo->tile_stride-1);
@@ -1391,17 +1386,12 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
         if (addr >= voodoo->tile_base)
         {
                 int x, y;
-                uint32_t old_addr = addr;
-                uint32_t addr_off;
-                uint32_t addr2;
-                
+
                 addr -= voodoo->tile_base;
-                addr_off = addr;
                 x = addr & (voodoo->tile_stride-1);
                 y = addr >> voodoo->tile_stride_shift;
                 
                 addr = voodoo->tile_base + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*voodoo->tile_x_real;
-                addr2 = x + y*voodoo->tile_x;
 //                pclog("  Tile %08x->%08x->%08x->%08x %i %i  tile_x=%i\n", old_addr, addr_off, addr2, addr, x, y, voodoo->tile_x_real);
         }
 
@@ -1436,7 +1426,6 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
                         voodoo->cmdfifo_holecount--;
                         if (!voodoo->cmdfifo_holecount)
                         {
-                                int words_to_add = ((voodoo->cmdfifo_amax - voodoo->cmdfifo_amin) >> 2) + 1;
                                 /*Filled in holes, resume normal operation*/
                                 voodoo->cmdfifo_depth_wr += ((voodoo->cmdfifo_amax - voodoo->cmdfifo_amin) >> 2);
                                 voodoo->cmdfifo_amin = voodoo->cmdfifo_amax;
