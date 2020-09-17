@@ -156,9 +156,10 @@ void codegen_ir_compile(ir_data_t *ir, codeblock_t *block)
                                         uop->dest_reg_a_real = codegen_reg_alloc_write_reg(block, uop->dest_reg_a);
                                 }
                         }
-                
+#ifndef RELEASE_BUILD
                         if (!uop_handlers[uop->type & UOP_MASK])
                                 fatal("!uop_handlers[uop->type & UOP_MASK] %08x\n", uop->type);
+#endif
                         uop_handlers[uop->type & UOP_MASK](block, uop);
                 }
 

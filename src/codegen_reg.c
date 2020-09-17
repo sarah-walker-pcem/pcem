@@ -271,8 +271,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
         switch (ireg_data[IREG_GET_REG(ir_reg.reg)].native_size)
         {
                 case REG_WORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_WORD !REG_INTEGER\n");
+#endif
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_16_stack(block, reg_set->reg_list[c].reg, (intptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
@@ -280,8 +282,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 case REG_DWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_DWORD !REG_INTEGER\n");
+#endif
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_32_stack(block, reg_set->reg_list[c].reg, (intptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
@@ -289,8 +293,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 case REG_QWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_QWORD !REG_FP\n");
+#endif
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_64_stack(block, reg_set->reg_list[c].reg, (intptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
@@ -298,8 +304,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
                 
                 case REG_POINTER:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_POINTER !REG_INTEGER\n");
+#endif
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_pointer_stack(block, reg_set->reg_list[c].reg, (intptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
@@ -307,8 +315,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 case REG_DOUBLE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_DOUBLE !REG_FP\n");
+#endif
                 if ((uintptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p < 256)
                         codegen_direct_read_double_stack(block, reg_set->reg_list[c].reg, (intptr_t)ireg_data[IREG_GET_REG(ir_reg.reg)].p);
                 else
@@ -316,8 +326,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
                 
                 case REG_FPU_ST_BYTE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_INTEGER)
                         fatal("codegen_reg_load - REG_FPU_ST_BYTE !REG_INTEGER\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_read_8(block, reg_set->reg_list[c].reg, &cpu_state.tag[ir_reg.reg & 7]);
                 else
@@ -325,8 +337,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 case REG_FPU_ST_QWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_FPU_ST_QWORD !REG_FP\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_read_64(block, reg_set->reg_list[c].reg, &cpu_state.MM[ir_reg.reg & 7]);
                 else
@@ -334,8 +348,10 @@ static void codegen_reg_load(host_reg_set_t *reg_set, codeblock_t *block, int c,
                 break;
 
                 case REG_FPU_ST_DOUBLE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[IREG_GET_REG(ir_reg.reg)].type != REG_FP)
                         fatal("codegen_reg_load - REG_FPU_ST_DOUBLE !REG_FP\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_read_double(block, reg_set->reg_list[c].reg, &cpu_state.ST[ir_reg.reg & 7]);
                 else
@@ -363,24 +379,30 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
         switch (ireg_data[ir_reg].native_size)
         {
                 case REG_BYTE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_BYTE !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_BYTE %p\n", p);
+#endif
                 codegen_direct_write_8(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_WORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_WORD !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_WORD %p\n", p);
+#endif
                 codegen_direct_write_16(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_DWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_DWORD !REG_INTEGER\n");
+#endif
                 if ((uintptr_t)p < 256)
                         codegen_direct_write_32_stack(block, (intptr_t)p, reg_set->reg_list[c].reg);
                 else
@@ -388,8 +410,10 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_QWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_QWORD !REG_FP\n");
+#endif
                 if ((uintptr_t)p < 256)
                         codegen_direct_write_64_stack(block, (intptr_t)p, reg_set->reg_list[c].reg);
                 else
@@ -397,16 +421,20 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_POINTER:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_POINTER !REG_INTEGER\n");
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_writeback - REG_POINTER %p\n", p);
+#endif
                 codegen_direct_write_ptr(block, p, reg_set->reg_list[c].reg);
                 break;
 
                 case REG_DOUBLE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_DOUBLE !REG_FP\n");
+#endif
                 if ((uintptr_t)p < 256)
                         codegen_direct_write_double_stack(block, (intptr_t)p, reg_set->reg_list[c].reg);
                 else
@@ -414,8 +442,10 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_FPU_ST_BYTE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_INTEGER)
                         fatal("codegen_reg_writeback - REG_FPU_ST_BYTE !REG_INTEGER\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_write_8(block, &cpu_state.tag[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
@@ -423,8 +453,10 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_FPU_ST_QWORD:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_FPU_ST_QWORD !REG_FP\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_write_64(block, &cpu_state.MM[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
@@ -432,8 +464,10 @@ static void codegen_reg_writeback(host_reg_set_t *reg_set, codeblock_t *block, i
                 break;
 
                 case REG_FPU_ST_DOUBLE:
+#ifndef RELEASE_BUILD
                 if (ireg_data[ir_reg].type != REG_FP)
                         fatal("codegen_reg_writeback - REG_FPU_ST_DOUBLE !REG_FP\n");
+#endif
                 if (block->flags & CODEBLOCK_STATIC_TOP)
                         codegen_direct_write_double(block, &cpu_state.ST[reg_set->regs[c].reg & 7], reg_set->reg_list[c].reg);
                 else
@@ -458,14 +492,18 @@ void codegen_reg_write_imm(codeblock_t *block, ir_reg_t ir_reg, uint32_t imm_dat
         switch (ireg_data[reg_idx].native_size)
         {
                 case REG_BYTE:
+#ifndef RELEASE_BUILD
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_write_imm - REG_BYTE %p\n", p);
+#endif
                 codegen_direct_write_8_imm(block, p, imm_data);
                 break;
 
                 case REG_WORD:
+#ifndef RELEASE_BUILD
                 if ((uintptr_t)p < 256)
                         fatal("codegen_reg_write_imm - REG_WORD %p\n", p);
+#endif
                 codegen_direct_write_16_imm(block, p, imm_data);
                 break;
 
@@ -498,8 +536,10 @@ static void alloc_reg(ir_reg_t ir_reg)
         {
                 if (IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(ir_reg.reg))
                 {
+#ifndef RELEASE_BUILD
                         if (reg_set->regs[c].version != ir_reg.version)
                                 fatal("alloc_reg - host_regs[c].version != ir_reg.version  %i %p %p  %i %i\n", c, reg_set, &host_reg_set, reg_set->regs[c].reg, ir_reg.reg);
+#endif
                         reg_set->locked |= (1 << c);
                         return;
                 }
@@ -591,9 +631,10 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
                         reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount++;
                         break;
                 }
-
+#ifndef RELEASE_BUILD
                 if (!ir_reg_is_invalid(reg_set->regs[c]) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(ir_reg.reg) && reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount)
                         fatal("codegen_reg_alloc_read_reg - version mismatch!\n");
+#endif
         }
 
         if (c == reg_set->nr_regs)
@@ -612,8 +653,10 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
                                 if (!(reg_set->locked & (1 << c)))
                                         break;
                         }
+#ifndef RELEASE_BUILD
                         if (c == reg_set->nr_regs)
                                 fatal("codegen_reg_alloc_read_reg - out of registers\n");
+#endif
                 }
                 if (reg_set->dirty[c])
                         codegen_reg_writeback(reg_set, block, c, 1);
@@ -628,8 +671,10 @@ ir_host_reg_t codegen_reg_alloc_read_reg(codeblock_t *block, ir_reg_t ir_reg, in
 //                pclog("   already loaded %i\n", c);
 
         reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount--;
+#ifndef RELEASE_BUILD
         if (reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount == (uint8_t)-1)
                 fatal("codegen_reg_alloc_read_reg - refcount < 0\n");
+#endif
 
         if (host_reg_idx)
                 *host_reg_idx = c;
@@ -653,11 +698,13 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                 
                 codegen_reg_alloc_read_reg(block, parent_reg, &c);
 
+#ifndef RELEASE_BUILD
                 if (IREG_GET_REG(reg_set->regs[c].reg) != IREG_GET_REG(ir_reg.reg) || reg_set->regs[c].version > ir_reg.version-1)
                         fatal("codegen_reg_alloc_write_reg sub_reg - doesn't match  %i %02x.%i %02x.%i\n", c,
                                         reg_set->regs[c].reg,reg_set->regs[c].version,
                                         ir_reg.reg,ir_reg.version);
-                        
+#endif
+
                 reg_set->regs[c].reg = ir_reg.reg;
                 reg_set->regs[c].version = ir_reg.version;
                 reg_set->dirty[c] = 1;
@@ -672,8 +719,10 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                 {
                         if (reg_set->regs[c].version <= ir_reg.version-1)
                         {
+#ifndef RELEASE_BUILD
                                 if (reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount != 0)
                                         fatal("codegen_reg_alloc_write_reg - previous version refcount != 0\n");
+#endif
                                 break;
                         }
                 }
@@ -696,8 +745,10 @@ ir_host_reg_t codegen_reg_alloc_write_reg(codeblock_t *block, ir_reg_t ir_reg)
                                 if (!(reg_set->locked & (1 << c)))
                                         break;
                         }
+#ifndef RELEASE_BUILD
                         if (c == reg_set->nr_regs)
                                 fatal("codegen_reg_alloc_write_reg - out of registers\n");
+#endif
                         if (reg_set->dirty[c])
                                 codegen_reg_writeback(reg_set, block, c, 1);
                 }
@@ -723,8 +774,10 @@ int codegen_reg_is_loaded(ir_reg_t ir_reg)
                 {
                         if (reg_set->regs[c].version <= ir_reg.version-1)
                         {
+#ifndef RELEASE_BUILD
                                 if (reg_version[IREG_GET_REG(reg_set->regs[c].reg)][reg_set->regs[c].version].refcount != 0)
                                         fatal("codegen_reg_alloc_write_reg - previous version refcount != 0\n");
+#endif
                                 return 1;
                         }
                 }
@@ -746,9 +799,10 @@ void codegen_reg_rename(codeblock_t *block, ir_reg_t src, ir_reg_t dst)
                 if (!ir_reg_is_invalid(reg_set->regs[c]) && IREG_GET_REG(reg_set->regs[c].reg) == IREG_GET_REG(src.reg) && reg_set->regs[c].version == src.version)
                         break;
         }
+#ifndef RELEASE_BUILD
         if (c == reg_set->nr_regs)
                 fatal("codegen_reg_rename: Can't find register to rename\n");
-
+#endif
         target = c;
         if (reg_set->dirty[target])
                 codegen_reg_writeback(reg_set, block, target, 0);

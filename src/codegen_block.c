@@ -69,8 +69,10 @@ static int dirty_list_size = 0;
 
 static void block_free_list_add(codeblock_t *block)
 {
+#ifndef RELEASE_BUILD
         if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
                 fatal("block_free_list_add: block=%p in dirty list\n", block);
+#endif
         if (block_free_list)
                 block->next = block_free_list;
         else
@@ -82,8 +84,10 @@ static void block_free_list_add(codeblock_t *block)
 
 static void block_dirty_list_add(codeblock_t *block)
 {
+#ifndef RELEASE_BUILD
         if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
                 fatal("block_dirty_list_add: block=%p already in dirty list\n", block);
+#endif
 //        pclog("block_dirty_list_add: block=%i size=%i %i head=%i tail=%i\n", get_block_nr(block), dirty_list_size, dirty_list_check_size(), block_dirty_list_head, block_dirty_list_tail);
         if (block_dirty_list_head != BLOCK_INVALID)
         {
@@ -108,12 +112,14 @@ static void block_dirty_list_add(codeblock_t *block)
                 /*Evict oldest block to the free list*/
                 codeblock_t *evict_block = &codeblock[block_dirty_list_tail];
 
+#ifndef RELEASE_BUILD
                 if (!(evict_block->flags & CODEBLOCK_IN_DIRTY_LIST))
                         fatal("block_dirty_list_add: evict_block=%p %x %x not in dirty list\n", evict_block, evict_block->phys, evict_block->flags);
                 if (!block_dirty_list_tail)
                         fatal("block_dirty_list_add - !block_dirty_list_tail\n");
                 if (evict_block->prev == BLOCK_INVALID)
                         fatal("block_dirty_list_add - evict_block->prev == BLOCK_INVALID\n");
+#endif
 
                 block_dirty_list_tail = evict_block->prev;
                 codeblock[evict_block->prev].next = BLOCK_INVALID;
@@ -132,8 +138,10 @@ static void block_dirty_list_remove(codeblock_t *block)
         codeblock_t *prev_block = &codeblock[block->prev];
         codeblock_t *next_block = &codeblock[block->next];
 
+#ifndef RELEASE_BUILD
         if (!(block->flags & CODEBLOCK_IN_DIRTY_LIST))
                 fatal("block_dirty_list_remove: block=%p not in dirty list\n", block);
+#endif
 
         /*Is block head of list*/
         if (block->prev == BLOCK_INVALID)
@@ -148,8 +156,10 @@ static void block_dirty_list_remove(codeblock_t *block)
                 next_block->prev = block->prev;
 
         dirty_list_size--;
+#ifndef RELEASE_BUILD
         if (dirty_list_size < 0)
                 fatal("remove - dirty_list_size < 0!\n");
+#endif
         block->flags &= ~CODEBLOCK_IN_DIRTY_LIST;
 //        pclog("  block_dirty_list_remove: %p flags = %x\n", block, block->flags);
 }
@@ -180,9 +190,10 @@ static codeblock_t *block_free_list_get()
                 /*Free list is empty, check the dirty list*/
                 if (block_dirty_list_tail)
                 {
+#ifndef RELEASE_BUILD
                         if (dirty_list_size <= 0)
                                 fatal("get - dirty_list_size <= 0!\n");
-
+#endif
                         /*Reuse oldest block*/
                         block = &codeblock[block_dirty_list_tail];
 
@@ -310,9 +321,10 @@ static void add_to_block_list(codeblock_t *block)
         uint16_t block_nr = get_block_nr(block);
 //pclog("Add to block list %p %08x %llx %x\n", block, block->phys, block->page_mask2, block->flags);
 
+#ifndef RELEASE_BUILD
         if (!block->page_mask)
                 fatal("add_to_block_list - mask = 0 %llx %llx\n", block->page_mask,block->page_mask2);
-
+#endif
         if (block_prev_nr)
         {
                 block->next = block_prev_nr;
@@ -327,8 +339,10 @@ static void add_to_block_list(codeblock_t *block)
 
         if (block->next)
         {
+#ifndef RELEASE_BUILD
                 if (codeblock[block->next].pc == BLOCK_PC_INVALID)
                         fatal("block->next->pc=BLOCK_PC_INVALID %p %p %x %x\n", (void *)&codeblock[block->next], (void *)codeblock, block_current, block_pos);
+#endif
         }
         
         if (block->page_mask2)
@@ -356,9 +370,10 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
 {
         if (!block->page_mask)
                 return;
+#ifndef RELEASE_BUILD
         if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
                 fatal("remove_from_block_list: in dirty list\n");
-
+#endif
         if (block->prev)
         {
                 codeblock[block->prev].next = block->next;
@@ -376,8 +391,10 @@ static void remove_from_block_list(codeblock_t *block, uint32_t pc)
 
         if (!(block->flags & CODEBLOCK_HAS_PAGE2))
         {
+#ifndef RELEASE_BUILD
                 if (block->prev_2 || block->next_2)
                         fatal("Invalid block_2 %x %p %08x\n", block->flags, block, block->phys);
+#endif
                 return;
         }
         block->flags &= ~CODEBLOCK_HAS_PAGE2;
@@ -404,11 +421,12 @@ static void invalidate_block(codeblock_t *block)
 {
         uint32_t old_pc = block->pc;
 
+#ifndef RELEASE_BUILD
         if (block->flags & CODEBLOCK_IN_DIRTY_LIST)
                 fatal("invalidate_block: already in dirty list\n");
         if (block->pc == BLOCK_PC_INVALID)
                 fatal("Invalidating deleted block\n");
-                
+#endif
         remove_from_block_list(block, old_pc);
         block_dirty_list_add(block);
         if (block->head_mem_block)
@@ -423,8 +441,10 @@ static void delete_block(codeblock_t *block)
         if (block == &codeblock[codeblock_hash[HASH(block->phys)]])
                 codeblock_hash[HASH(block->phys)] = BLOCK_INVALID;
 
+#ifndef RELEASE_BUILD
         if (block->pc == BLOCK_PC_INVALID)
                 fatal("Deleting deleted block\n");
+#endif
         block->pc = BLOCK_PC_INVALID;
 
         codeblock_tree_delete(block);
@@ -443,8 +463,10 @@ static void delete_dirty_block(codeblock_t *block)
         if (block == &codeblock[codeblock_hash[HASH(block->phys)]])
                 codeblock_hash[HASH(block->phys)] = BLOCK_INVALID;
 
+#ifndef RELEASE_BUILD
         if (block->pc == BLOCK_PC_INVALID)
                 fatal("Deleting deleted block\n");
+#endif
         block->pc = BLOCK_PC_INVALID;
 
         codeblock_tree_delete(block);
@@ -494,8 +516,10 @@ void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
                         invalidate_block(block);
                         cpu_recomp_evicted++;
                 }
+#ifndef RELEASE_BUILD
                 if (block_nr == next_block)
                         fatal("Broken 1\n");
+#endif
                 block_nr = next_block;
         }
 
@@ -512,8 +536,10 @@ void codegen_check_flush(page_t *page, uint64_t mask, uint32_t phys_addr)
                         invalidate_block(block);
                         cpu_recomp_evicted++;
                 }
+#ifndef RELEASE_BUILD
                 if (block_nr == next_block)
                         fatal("Broken 2\n");
+#endif
                 block_nr = next_block;
         }
         
@@ -541,8 +567,10 @@ void codegen_block_init(uint32_t phys_addr)
         if (!page->block)
                 mem_flush_write_page(phys_addr, cs+cpu_state.pc);
         block = block_free_list_get();
+#ifndef RELEASE_BUILD
         if (!block)
                 fatal("codegen_block_init: block_free_list_get() returned NULL\n");
+#endif
         block_current = get_block_nr(block);
 
         block_num = HASH(phys_addr);
@@ -582,10 +610,10 @@ void codegen_block_start_recompile(codeblock_t *block)
 
         block_num = HASH(block->phys);
         block_current = get_block_nr(block);//block->pnt;
-
+#ifndef RELEASE_BUILD
         if (block->pc != cs + cpu_state.pc || (block->flags & CODEBLOCK_WAS_RECOMPILED))
                 fatal("Recompile to used block!\n");
-
+#endif
         block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
         block->data = codeblock_allocator_get_ptr(block->head_mem_block);
 
@@ -695,6 +723,7 @@ void codegen_block_generate_end_mask_recompile()
                         if (!pages[block->phys_2 >> 12].block_2)
                                 mem_flush_write_page(block->phys_2, codegen_endpc);
 
+#ifndef RELEASE_BUILD
                         if (!block->page_mask2)
                                 fatal("!page_mask2\n");
                         if (block->next_2)
@@ -703,6 +732,7 @@ void codegen_block_generate_end_mask_recompile()
                                 if (codeblock[block->next_2].pc == BLOCK_PC_INVALID)
                                         fatal("block->next_2->pc=BLOCK_PC_INVALID %p\n", (void *)&codeblock[block->next_2]);
                         }
+#endif
                 }
                 else
                 {
@@ -724,9 +754,10 @@ void codegen_block_generate_end_mask_mark()
         uint32_t end_pc;
         page_t *p;
 
+#ifndef RELEASE_BUILD
         if (block->flags & CODEBLOCK_BYTE_MASK)
                 fatal("codegen_block_generate_end_mask2() - BYTE_MASK\n");
-
+#endif
         block->page_mask = 0;
         start_pc = (block->pc & 0xfff) & ~63;
         if ((block->pc ^ codegen_endpc) & ~0xfff)
@@ -771,7 +802,7 @@ void codegen_block_generate_end_mask_mark()
 
                         if (!pages[block->phys_2 >> 12].block_2)
                                 mem_flush_write_page(block->phys_2, codegen_endpc);
-
+#ifndef RELEASE_BUILD
                         if (!block->page_mask2)
                                 fatal("!page_mask2\n");
                         if (block->next_2)
@@ -780,7 +811,7 @@ void codegen_block_generate_end_mask_mark()
                                 if (codeblock[block->next_2].pc == BLOCK_PC_INVALID)
                                         fatal("block->next_2->pc=BLOCK_PC_INVALID %p\n", (void *)&codeblock[block->next_2]);
                         }
-
+#endif
                         block->dirty_mask2 = &page_2->dirty_mask;
                 }
                 else
