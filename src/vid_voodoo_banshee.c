@@ -1206,6 +1206,7 @@ static uint8_t banshee_read_linear(uint32_t addr, void *p)
         svga_t *svga = &banshee->svga;
         
         cycles -= voodoo->read_time;
+        cycles_lost += voodoo->read_time;
 
         addr &= svga->decode_mask;
         if (addr >= voodoo->tile_base)
@@ -1239,6 +1240,7 @@ static uint16_t banshee_read_linear_w(uint32_t addr, void *p)
         svga_t *svga = &banshee->svga;
         
         cycles -= voodoo->read_time;
+        cycles_lost += voodoo->read_time;
 
         addr &= svga->decode_mask;
         if (addr >= voodoo->tile_base)
@@ -1272,6 +1274,7 @@ static uint32_t banshee_read_linear_l(uint32_t addr, void *p)
         svga_t *svga = &banshee->svga;
         
         cycles -= voodoo->read_time;
+        cycles_lost += voodoo->read_time;
 
         addr &= svga->decode_mask;
         if (addr >= voodoo->tile_base)
@@ -1305,6 +1308,7 @@ static void banshee_write_linear(uint32_t addr, uint8_t val, void *p)
         svga_t *svga = &banshee->svga;
         
         cycles -= voodoo->write_time;
+        cycles_lost += voodoo->write_time;
 
 //        pclog("write_linear: addr=%08x val=%02x\n", addr, val);
         addr &= svga->decode_mask;
@@ -1339,6 +1343,7 @@ static void banshee_write_linear_w(uint32_t addr, uint16_t val, void *p)
         svga_t *svga = &banshee->svga;
         
         cycles -= voodoo->write_time;
+        cycles_lost += voodoo->write_time;
 
 //        pclog("write_linear: addr=%08x val=%02x\n", addr, val);
         addr &= svga->decode_mask;
@@ -1371,11 +1376,14 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
         banshee_t *banshee = (banshee_t *)p;
         voodoo_t *voodoo = banshee->voodoo;
         svga_t *svga = &banshee->svga;
+        int timing;
 
         if (addr == voodoo->last_write_addr+4)
-                cycles -= voodoo->burst_time;
+                timing = voodoo->burst_time;
         else
-                cycles -= voodoo->write_time;
+                timing = voodoo->write_time;
+        cycles -= timing;
+        cycles_lost += timing;
         voodoo->last_write_addr = addr;
 
 //        /*if (val) */pclog("write_linear_l: addr=%08x val=%08x  %08x\n", addr, val, voodoo->tile_base);
