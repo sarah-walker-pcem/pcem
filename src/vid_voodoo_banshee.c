@@ -292,23 +292,32 @@ static void banshee_render_16bpp_tiled(svga_t *svga)
         int offset = 32;
         uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
         uint32_t addr = banshee->desktop_addr + (banshee->desktop_y & 31) * 128 + ((banshee->desktop_y >> 5) * banshee->desktop_stride_tiled);
-
-        if (svga->firstline_draw == 2000)
-                svga->firstline_draw = svga->displine;
-        svga->lastline_draw = svga->displine;
+        int drawn = 0;
 
         for (x = 0; x <= svga->hdisp; x += 64)
         {
-                int xx;
-                
-                for (xx = 0; xx < 64; xx += 2)
+                if (svga->hwcursor_on || svga->overlay_on)
+                        svga->changedvram[addr >> 12] = 2;
+                if (svga->changedvram[addr >> 12] || svga->fullchange)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(addr + (xx << 1)) & svga->vram_display_mask]);
-                        *p++ = video_16to32[dat & 0xffff];
-                        *p++ = video_16to32[dat >> 16];
+                        uint16_t *vram_p = (uint16_t *)&svga->vram[addr & svga->vram_display_mask];
+                        int xx;
+
+                        for (xx = 0; xx < 64; xx++)
+                                *p++ = video_16to32[*vram_p++];
+
+                        drawn = 1;
                 }
-                        
+                else
+                        p += 64;
                 addr += 128*32;
+        }
+
+        if (drawn)
+        {
+                if (svga->firstline_draw == 2000)
+                        svga->firstline_draw = svga->displine;
+                svga->lastline_draw = svga->displine;
         }
 
         banshee->desktop_y++;
