@@ -409,6 +409,14 @@ static void banshee_recalctimings(svga_t *svga)
                                 voodoo->overlay.end_x, voodoo->overlay.end_y,
                                 voodoo->overlay.size_x, voodoo->overlay.size_y,
                                 svga->overlay.pitch);
+                        if (!voodoo->overlay.start_x && !voodoo->overlay.start_y &&
+                            svga->hdisp == voodoo->overlay.size_x && svga->dispend == voodoo->overlay.size_y)
+                        {
+                                /*Overlay is full screen, so don't bother rendering the desktop
+                                  behind it*/
+                                svga->render = svga_render_null;
+                                svga->bpp = 0;
+                        }
                 }
 
                 svga->video_res_override = 1;
