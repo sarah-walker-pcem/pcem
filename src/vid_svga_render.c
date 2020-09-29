@@ -4,6 +4,13 @@
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 
+void svga_render_null(svga_t *svga)
+{
+        if (svga->firstline_draw == 2000)
+                svga->firstline_draw = svga->displine;
+        svga->lastline_draw = svga->displine;
+}
+
 void svga_render_blank(svga_t *svga)
 {
         int x, xx;
