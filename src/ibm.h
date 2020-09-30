@@ -260,6 +260,7 @@ enum
         ROM_LEDGE_MODELM,
         ROM_HYUNDAI_SUPER286TR,
         ROM_ITAUTEC_INFOWAYM,
+        ROM_DESKPRO,
 
         ROM_MAX
 };

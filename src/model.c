@@ -126,7 +126,7 @@ void       at_zappa_init();
 void      at_pb410a_init();
 void      at_pb520r_init();
 void       at_pb570_init();
-void     compaq_pip_init();
+void      compaq_xt_init();
 void      xt_xi8088_init();
 void      xt_zenith_init();
 void        at_mvp3_init();
@@ -138,7 +138,7 @@ MODEL models[] =
 {
         {"[8088] AMI XT clone",           ROM_AMIXT,            "amixt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64,  640,  64,             xt_init, NULL},
         {"[8088] Atari PC3",              ROM_ATARIPC3,         "ataripc3",       { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64,  640,  64,             xt_init, NULL},
-        {"[8088] Compaq Portable Plus",   ROM_COMPAQ_PIP,       "compaq_pip",     { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  128,  640,  64,     compaq_pip_init, NULL},
+        {"[8088] Compaq Portable Plus",   ROM_COMPAQ_PIP,       "compaq_pip",     { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  128,  640,  64,      compaq_xt_init, NULL},
         {"[8088] DTK XT clone",           ROM_DTKXT,            "dtk",            { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64,  640,  64,             xt_init, NULL},
         {"[8088] Generic XT clone",       ROM_GENXT,            "genxt",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   32,  704,  16,             xt_init, NULL},
         {"[8088] IBM PC",                 ROM_IBMPC,            "ibmpc",          { {"",      cpus_8088},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                   64,  640,  32,             xt_init, NULL},
@@ -161,7 +161,8 @@ MODEL models[] =
         {"[8086] Amstrad PC1640",         ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams1512_device},
         {"[8086] Amstrad PC2086",         ROM_PC2086,           "pc2086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams2086_device},
         {"[8086] Amstrad PC3086",         ROM_PC3086,           "pc3086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams3086_device},
-        {"[8086] Amstrad PPC512/640",     ROM_PPC512,            "ppc512",        { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              512,  640, 128,            ams_init, &ams1512_device},
+        {"[8086] Amstrad PPC512/640",     ROM_PPC512,           "ppc512",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              512,  640, 128,            ams_init, &ams1512_device},
+        {"[8086] Compaq Deskpro",         ROM_DESKPRO,          "deskpro",        { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  128,  640, 128,      compaq_xt_init, NULL},
         {"[8086] Olivetti M24",           ROM_OLIM24,           "olivetti_m24",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_OLIM24,                                    128,  640, 128,         olim24_init, NULL},
         {"[8086] Sinclair PC200",         ROM_PC200,            "pc200",          { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              512,  640, 128,            ams_init, &ams1512_device},
         {"[8086] Tandy 1000 SL/2",        ROM_TANDY1000SL2,     "tandy1000sl2",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED,                                                 512,  768, 128,     tandy1ksl2_init, NULL},
@@ -331,7 +332,7 @@ void xt_init()
 		device_add(&cassette_device);
 }
 
-void compaq_pip_init()
+void compaq_xt_init()
 {
         xt_init();
         lpt1_remove();

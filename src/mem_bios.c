@@ -1097,6 +1097,14 @@ int loadbios()
                 fclose(f);
                 biosmask = 0x3fff;
                 return 1;
+
+                case ROM_DESKPRO:
+                f = romfopen("deskpro/Compaq - BIOS - Revision J - 106265-002.bin","rb");
+                if (!f) break;
+                romfread(rom, 0x2000, 1, f);
+                fclose(f);
+                biosmask = 0x1fff;
+                return 1;
         }
         printf("Failed to load ROM!\n");
         if (f) fclose(f);
