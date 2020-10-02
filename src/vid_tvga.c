@@ -161,6 +161,16 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         tvga_recalcbanking(tvga);
                 }
                 return;
+                case 0x3DB:
+                if (tvga->id == TVGA_8900D)
+                {
+                        /*3db appears to be a 4 bit clock select register on 8900D*/
+                        svga->miscout = (svga->miscout & ~0x0c) | ((val & 3) << 2);
+                        tvga->newctrl2 = (tvga->newctrl2 & ~0x01) | ((val & 4) >> 2);
+                        tvga->oldctrl1 = (tvga->oldctrl1 & ~0x10) | ((val & 8) << 1);
+                        svga_recalctimings(svga);
+                }
+                break;
         }
         svga_out(addr, val, svga);
 }
