@@ -11,6 +11,12 @@
 #include "vid_tkd8001_ramdac.h"
 #include "vid_tvga.h"
 
+enum
+{
+        TVGA_8900D = 0x33,
+        TVGA_9000  = 0x23
+};
+
 typedef struct tvga_t
 {
         mem_mapping_t linear_mapping;
@@ -28,6 +34,8 @@ typedef struct tvga_t
         
         int vram_size;
         uint32_t vram_mask;
+
+        uint8_t id;
 } tvga_t;
 
 static uint8_t crtc_mask[0x40] =
@@ -67,7 +75,7 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         case 0xd: 
                         if (tvga->oldmode) 
-                                tvga->oldctrl2 = val;                                
+                                tvga->oldctrl2 = val;
                         else
                         {
                                 tvga->newctrl2 = val;
@@ -76,7 +84,10 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                         break;
                         case 0xE:
                         if (tvga->oldmode) 
+                        {
                                 tvga->oldctrl1 = val; 
+                                svga_recalctimings(svga);
+                        }
                         else 
                         {
                                 svga->seqregs[0xe] = val ^ 2;
@@ -88,8 +99,12 @@ void tvga_out(uint16_t addr, uint8_t val, void *p)
                 break;
 
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                tkd8001_ramdac_out(addr, val, &tvga->ramdac, svga);
-                return;
+                if (tvga->id != TVGA_9000)
+                {
+                        tkd8001_ramdac_out(addr, val, &tvga->ramdac, svga);
+                        return;
+                }
+                break;
 
                 case 0x3CF:
                 switch (svga->gdcaddr & 15)
@@ -166,7 +181,7 @@ uint8_t tvga_in(uint16_t addr, void *p)
                 {
 //                        printf("Read Trident ID %04X:%04X %04X\n",CS,pc,readmemw(ss,SP));
                         tvga->oldmode = 0;
-                        return 0x33; /*TVGA8900D*/
+                        return tvga->id;
                 }
                 if ((svga->seqaddr & 0xf) == 0xc)
                 {
@@ -185,7 +200,9 @@ uint8_t tvga_in(uint16_t addr, void *p)
                 }
                 break;
                 case 0x3C6: case 0x3C7: case 0x3C8: case 0x3C9:
-                return tkd8001_ramdac_in(addr, &tvga->ramdac, svga);
+                if (tvga->id != TVGA_9000)
+                        return tkd8001_ramdac_in(addr, &tvga->ramdac, svga);
+                break;
                 case 0x3D4:
                 return svga->crtcreg;
                 case 0x3D5:
@@ -217,6 +234,9 @@ static void tvga_recalcbanking(tvga_t *tvga)
 void tvga_recalctimings(svga_t *svga)
 {
         tvga_t *tvga = (tvga_t *)svga->p;
+        int clksel;
+        int high_res_256 = 0;
+
         if (!svga->rowoffset) svga->rowoffset = 0x100; /*This is the only sensible way I can see this being handled,
                                                          given that TVGA8900D has no overflow bits.
                                                          Some sort of overflow is required for 320x200x24 and 1024x768x16*/
@@ -246,18 +266,43 @@ void tvga_recalctimings(svga_t *svga)
         if (svga->interlace)
                 svga->rowoffset >>= 1;
 
-        switch (((svga->miscout >> 2) & 3) | ((tvga->newctrl2 << 2) & 4))
+        if (tvga->id == TVGA_8900D)
+                clksel = ((svga->miscout >> 2) & 3) | ((tvga->newctrl2 & 0x01) << 2) | ((tvga->oldctrl1 & 0x10) >> 1);
+        else
+                clksel = ((svga->miscout >> 2) & 3) | ((tvga->newctrl2 & 0x01) << 2) | ((tvga->newctrl2 & 0x40) >> 3);
+        switch (clksel)
         {
-                case 2: svga->clock = (cpuclock * (double)(1ull << 32)) / 44900000.0; break;
-                case 3: svga->clock = (cpuclock * (double)(1ull << 32)) / 36000000.0; break;
-                case 4: svga->clock = (cpuclock * (double)(1ull << 32)) / 57272000.0; break;
-                case 5: svga->clock = (cpuclock * (double)(1ull << 32)) / 65000000.0; break;
-                case 6: svga->clock = (cpuclock * (double)(1ull << 32)) / 50350000.0; break;
-                case 7: svga->clock = (cpuclock * (double)(1ull << 32)) / 40000000.0; break;
+                case 0x2: svga->clock = (cpuclock * (double)(1ull << 32)) /  44900000.0; break;
+                case 0x3: svga->clock = (cpuclock * (double)(1ull << 32)) /  36000000.0; break;
+                case 0x4: svga->clock = (cpuclock * (double)(1ull << 32)) /  57272000.0; break;
+                case 0x5: svga->clock = (cpuclock * (double)(1ull << 32)) /  65000000.0; break;
+                case 0x6: svga->clock = (cpuclock * (double)(1ull << 32)) /  50350000.0; break;
+                case 0x7: svga->clock = (cpuclock * (double)(1ull << 32)) /  40000000.0; break;
+                case 0x8: svga->clock = (cpuclock * (double)(1ull << 32)) /  88000000.0; break;
+                case 0x9: svga->clock = (cpuclock * (double)(1ull << 32)) /  98000000.0; break;
+                case 0xa: svga->clock = (cpuclock * (double)(1ull << 32)) / 118800000.0; break;
+                case 0xb: svga->clock = (cpuclock * (double)(1ull << 32)) / 108000000.0; break;
+                case 0xc: svga->clock = (cpuclock * (double)(1ull << 32)) /  72000000.0; break;
+                case 0xd: svga->clock = (cpuclock * (double)(1ull << 32)) /  77000000.0; break;
+                case 0xe: svga->clock = (cpuclock * (double)(1ull << 32)) /  80000000.0; break;
+                case 0xf: svga->clock = (cpuclock * (double)(1ull << 32)) /  75000000.0; break;
         }
 
-        if (tvga->oldctrl2 & 0x10)
+        if (tvga->id == TVGA_9000)
         {
+                /*TVGA9000 doesn't seem to have support for a 'high res' 256 colour mode
+                  (without the VGA pixel doubling). Instead it implements these modes by
+                  doubling the horizontal pixel count and pixel clock. Hence we use a
+                  basic heuristic to detect this*/
+                if (svga->interlace)
+                        high_res_256 = (svga->htotal * 8) > (svga->vtotal * 4);
+                else
+                        high_res_256 = (svga->htotal * 8) > (svga->vtotal * 2);
+        }
+        if ((tvga->oldctrl2 & 0x10) || high_res_256)
+        {
+                if (high_res_256)
+                        svga->hdisp /= 2;
                 switch (svga->bpp)
                 {
                         case 8: 
@@ -280,30 +325,45 @@ void tvga_recalctimings(svga_t *svga)
         }
 }
 
-void *tvga8900d_init()
+static void *tvga_common_init(char *fn, uint32_t id, int vram_size)
 {
         tvga_t *tvga = malloc(sizeof(tvga_t));
         memset(tvga, 0, sizeof(tvga_t));
-        
-        tvga->vram_size = device_get_config_int("memory") << 10;
+
+        tvga->vram_size = vram_size << 10;
         tvga->vram_mask = tvga->vram_size - 1;
-        
-        rom_init(&tvga->bios_rom, "trident.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
-        
+        tvga->id = id;
+
+        rom_init(&tvga->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+
         svga_init(&tvga->svga, tvga, tvga->vram_size,
                    tvga_recalctimings,
                    tvga_in, tvga_out,
                    NULL,
                    NULL);
-       
+
         io_sethandler(0x03c0, 0x0020, tvga_in, NULL, NULL, tvga_out, NULL, NULL, tvga);
 
         return tvga;
+}
+static void *tvga8900d_init()
+{
+        int vram_size = device_get_config_int("memory");
+
+        return tvga_common_init("trident.bin", TVGA_8900D, vram_size);
+}
+static void *tvga9000b_init()
+{
+        return tvga_common_init("tvga9000b/BIOS.BIN", TVGA_9000, 512);
 }
 
 static int tvga8900d_available()
 {
         return rom_present("trident.bin");
+}
+static int tvga9000b_available()
+{
+        return rom_present("tvga9000b/BIOS.BIN");
 }
 
 void tvga_close(void *p)
@@ -379,4 +439,16 @@ device_t tvga8900d_device =
         tvga_force_redraw,
         tvga_add_status_info,
         tvga_config
+};
+device_t tvga9000b_device =
+{
+        "Trident TVGA 9000B",
+        0,
+        tvga9000b_init,
+        tvga_close,
+        tvga9000b_available,
+        tvga_speed_changed,
+        tvga_force_redraw,
+        tvga_add_status_info,
+        NULL
 };

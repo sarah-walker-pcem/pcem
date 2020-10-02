@@ -314,6 +314,7 @@ enum
 	GFX_AVGA2,      /*Acumos AVGA2 / Cirrus Logic CL-GD5402*/
         GFX_CL_GD5428,  /*Cirrus Logic CL-GD5428*/
         GFX_IBM_GD5428, /*IBM 1MB SVGA Adapter/A*/
+        GFX_TVGA9000B,  /*Trident TVGA9000B*/
 
         GFX_MAX
 };
