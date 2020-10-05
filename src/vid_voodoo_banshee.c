@@ -627,7 +627,7 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
 
 
                 case Video_vidDesktopStartAddr:
-                banshee->vidDesktopStartAddr = val;
+                banshee->vidDesktopStartAddr = val & 0xffffff;
 //                pclog("vidDesktopStartAddr=%08x\n", val);
                 svga->fullchange = changeframecount;
                 svga_recalctimings(svga);
