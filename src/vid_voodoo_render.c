@@ -1562,7 +1562,7 @@ static void render_thread(void *param, int odd_even)
                 thread_reset_event(voodoo->wake_render_thread[odd_even]);
                 voodoo->render_voodoo_busy[odd_even] = 1;
 
-                while (!(odd_even ? PARAM_EMPTY_2 : PARAM_EMPTY_1))
+                while (!PARAM_EMPTY(odd_even))
                 {
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
@@ -1572,7 +1572,7 @@ static void render_thread(void *param, int odd_even)
 
                         voodoo->params_read_idx[odd_even]++;
 
-                        if ((odd_even ? PARAM_ENTRIES_2 : PARAM_ENTRIES_1) > (PARAM_SIZE - 10))
+                        if (PARAM_ENTRIES(odd_even) > (PARAM_SIZE - 10))
                                 thread_set_event(voodoo->render_not_full_event[odd_even]);
 
                         end_time = timer_read();
@@ -1591,24 +1591,38 @@ void voodoo_render_thread_2(void *param)
 {
         render_thread(param, 1);
 }
+void voodoo_render_thread_3(void *param)
+{
+        render_thread(param, 2);
+}
+void voodoo_render_thread_4(void *param)
+{
+        render_thread(param, 3);
+}
 
 void voodoo_queue_triangle(voodoo_t *voodoo, voodoo_params_t *params)
 {
         voodoo_params_t *params_new = &voodoo->params_buffer[voodoo->params_write_idx & PARAM_MASK];
 
-        while (PARAM_FULL_1 || (voodoo->render_threads == 2 && PARAM_FULL_2))
+        while (PARAM_FULL(0) || (voodoo->render_threads >= 2 && PARAM_FULL(1)) ||
+                (voodoo->render_threads == 4 && (PARAM_FULL(2) || PARAM_FULL(3))))
         {
                 thread_reset_event(voodoo->render_not_full_event[0]);
-                if (voodoo->render_threads == 2)
+                if (voodoo->render_threads >= 2)
                         thread_reset_event(voodoo->render_not_full_event[1]);
-                if (PARAM_FULL_1)
+                if (voodoo->render_threads == 4)
                 {
+                        thread_reset_event(voodoo->render_not_full_event[2]);
+                        thread_reset_event(voodoo->render_not_full_event[3]);
+                }
+                if (PARAM_FULL(0))
                         thread_wait_event(voodoo->render_not_full_event[0], -1); /*Wait for room in ringbuffer*/
-                }
-                if (voodoo->render_threads == 2 && PARAM_FULL_2)
-                {
+                if (voodoo->render_threads >= 2 && PARAM_FULL(1))
                         thread_wait_event(voodoo->render_not_full_event[1], -1); /*Wait for room in ringbuffer*/
-                }
+                if (voodoo->render_threads == 4 && PARAM_FULL(2))
+                        thread_wait_event(voodoo->render_not_full_event[2], -1); /*Wait for room in ringbuffer*/
+                if (voodoo->render_threads == 4 && PARAM_FULL(3))
+                        thread_wait_event(voodoo->render_not_full_event[3], -1); /*Wait for room in ringbuffer*/
         }
 
         voodoo_use_texture(voodoo, params, 0);
@@ -1619,6 +1633,7 @@ void voodoo_queue_triangle(voodoo_t *voodoo, voodoo_params_t *params)
 
         voodoo->params_write_idx++;
 
-        if (PARAM_ENTRIES_1 < 4 || (voodoo->render_threads == 2 && PARAM_ENTRIES_2 < 4))
+        if (PARAM_ENTRIES(0) < 4 || (voodoo->render_threads >= 2 && PARAM_ENTRIES(1) < 4) ||
+                        (voodoo->render_threads == 4 && (PARAM_ENTRIES(2) < 4 || PARAM_ENTRIES(3) < 4)))
                 voodoo_wake_render_thread(voodoo);
 }

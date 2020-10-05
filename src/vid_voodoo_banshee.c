@@ -1999,6 +1999,10 @@ static device_config_t banshee_sgram_config[] =
                                 .value = 2
                         },
                         {
+                                .description = "4",
+                                .value = 4
+                        },
+                        {
                                 .description = ""
                         }
                 },
@@ -2038,6 +2042,10 @@ static device_config_t banshee_sdram_config[] =
                         {
                                 .description = "2",
                                 .value = 2
+                        },
+                        {
+                                .description = "4",
+                                .value = 4
                         },
                         {
                                 .description = ""
@@ -2182,27 +2190,30 @@ static void banshee_add_status_info(char *s, int max_len, void *p)
         banshee_t *banshee = (banshee_t *)p;
         voodoo_t *voodoo = banshee->voodoo;
         char temps[512];
-        int pixel_count_current[2];
+        int pixel_count_current[4];
         int pixel_count_total;
-        int texel_count_current[2];
+        int texel_count_current[4];
         int texel_count_total;
-        int render_time[2];
+        int render_time[4];
         uint64_t new_time = timer_read();
         uint64_t status_diff = new_time - status_time;
+        int c;
         status_time = new_time;
 
         svga_add_status_info(s, max_len, &banshee->svga);
 
 
-        pixel_count_current[0] = voodoo->pixel_count[0];
-        pixel_count_current[1] = voodoo->pixel_count[1];
-        texel_count_current[0] = voodoo->texel_count[0];
-        texel_count_current[1] = voodoo->texel_count[1];
-        render_time[0] = voodoo->render_time[0];
-        render_time[1] = voodoo->render_time[1];
+        for (c = 0; c < 4; c++)
+        {
+                pixel_count_current[c] = voodoo->pixel_count[c];
+                texel_count_current[c] = voodoo->texel_count[c];
+                render_time[c] = voodoo->render_time[c];
+        }
 
-        pixel_count_total = (pixel_count_current[0] + pixel_count_current[1]) - (voodoo->pixel_count_old[0] + voodoo->pixel_count_old[1]);
-        texel_count_total = (texel_count_current[0] + texel_count_current[1]) - (voodoo->texel_count_old[0] + voodoo->texel_count_old[1]);
+        pixel_count_total = (pixel_count_current[0] + pixel_count_current[1] + pixel_count_current[2] + pixel_count_current[3]) -
+                (voodoo->pixel_count_old[0] + voodoo->pixel_count_old[1] + voodoo->pixel_count_old[2] + voodoo->pixel_count_old[3]);
+        texel_count_total = (texel_count_current[0] + texel_count_current[1] + texel_count_current[2] + texel_count_current[3]) -
+                (voodoo->texel_count_old[0] + voodoo->texel_count_old[1] + voodoo->texel_count_old[2] + voodoo->texel_count_old[3]);
         sprintf(temps, "%f Mpixels/sec (%f)\n%f Mtexels/sec (%f)\n%f ktris/sec\n%f%% CPU (%f%% real)\n%d frames/sec (%i)\n%f%% CPU (%f%% real)\n"/*%d reads/sec\n%d write/sec\n%d tex/sec\n*/,
                 (double)pixel_count_total/1000000.0,
                 ((double)pixel_count_total/1000000.0) / ((double)render_time[0] / status_diff),
@@ -2210,25 +2221,35 @@ static void banshee_add_status_info(char *s, int max_len, void *p)
                 ((double)texel_count_total/1000000.0) / ((double)render_time[0] / status_diff),
                 (double)voodoo->tri_count/1000.0, ((double)voodoo->time * 100.0) / timer_freq, ((double)voodoo->time * 100.0) / status_diff, voodoo->frame_count, voodoo_recomp,
                 ((double)voodoo->render_time[0] * 100.0) / timer_freq, ((double)voodoo->render_time[0] * 100.0) / status_diff);
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
         {
                 char temps2[512];
                 sprintf(temps2, "%f%% CPU (%f%% real)\n",
                         ((double)voodoo->render_time[1] * 100.0) / timer_freq, ((double)voodoo->render_time[1] * 100.0) / status_diff);
                 strncat(temps, temps2, sizeof(temps)-1);
         }
+        if (voodoo->render_threads == 4)
+        {
+                char temps2[512];
+                sprintf(temps2, "%f%% CPU (%f%% real)\n%f%% CPU (%f%% real)\n",
+                        ((double)voodoo->render_time[2] * 100.0) / timer_freq, ((double)voodoo->render_time[2] * 100.0) / status_diff,
+                        ((double)voodoo->render_time[3] * 100.0) / timer_freq, ((double)voodoo->render_time[3] * 100.0) / status_diff);
+                strncat(temps, temps2, sizeof(temps)-1);
+        }
 
         strncat(s, temps, max_len);
         strncat(s, "\n", max_len);
 
-        voodoo->pixel_count_old[0] = pixel_count_current[0];
-        voodoo->pixel_count_old[1] = pixel_count_current[1];
-        voodoo->texel_count_old[0] = texel_count_current[0];
-        voodoo->texel_count_old[1] = texel_count_current[1];
+        for (c = 0; c < 4; c++)
+        {
+                voodoo->pixel_count_old[c] = pixel_count_current[c];
+                voodoo->texel_count_old[c] = texel_count_current[c];
+                voodoo->render_time[c] = 0;
+        }
+
         voodoo->tri_count = voodoo->frame_count = 0;
         voodoo->rd_count = voodoo->wr_count = voodoo->tex_count = 0;
         voodoo->time = 0;
-        voodoo->render_time[0] = voodoo->render_time[1] = 0;
 
         voodoo->read_time = pci_nonburst_time + pci_burst_time;
         

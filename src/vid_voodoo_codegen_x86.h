@@ -36,8 +36,8 @@ typedef struct voodoo_x86_data_t
         uint32_t trexInit1;        
 } voodoo_x86_data_t;
 
-static int last_block[2] = {0, 0};
-static int next_block_to_write[2] = {0, 0};
+static int last_block[4] = {0, 0};
+static int next_block_to_write[4] = {0, 0};
 
 #define addbyte(val)                                            \
         do {                                                    \
@@ -3286,7 +3286,7 @@ static inline void *voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, 
         
         for (c = 0; c < 8; c++)
         {
-                data = &codegen_data[odd_even + b*2];
+                data = &codegen_data[odd_even + b*4];
                 
                 if (state->xdir == data->xdir &&
                     params->alphaMode == data->alphaMode &&
@@ -3306,7 +3306,7 @@ static inline void *voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, 
                 b = (b + 1) & 7;
         }
 voodoo_recomp++;
-        data = &codegen_data[odd_even + next_block_to_write[odd_even]*2];
+        data = &codegen_data[odd_even + next_block_to_write[odd_even]*4];
 //        code_block = data->code_block;
         
         voodoo_generate(data->code_block, voodoo, params, state, depth_op);
@@ -3338,9 +3338,9 @@ void voodoo_codegen_init(voodoo_t *voodoo)
 #endif
 
 #if defined WIN32 || defined _WIN32 || defined _WIN32
-        voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM*4, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-        voodoo->codegen_data = mmap(0, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
+        voodoo->codegen_data = mmap(0, sizeof(voodoo_x86_data_t) * BLOCK_NUM*4, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
 #endif
 
         for (c = 0; c < 256; c++)
@@ -3370,6 +3370,6 @@ void voodoo_codegen_close(voodoo_t *voodoo)
 #if defined WIN32 || defined _WIN32 || defined _WIN32
         VirtualFree(voodoo->codegen_data, 0, MEM_RELEASE);
 #else
-        munmap(voodoo->codegen_data, sizeof(voodoo_x86_data_t) * BLOCK_NUM*2);
+        munmap(voodoo->codegen_data, sizeof(voodoo_x86_data_t) * BLOCK_NUM*4);
 #endif
 }

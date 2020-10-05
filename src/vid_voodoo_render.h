@@ -299,6 +299,8 @@ void voodoo_codegen_close(voodoo_t *voodoo);
 
 void voodoo_render_thread_1(void *param);
 void voodoo_render_thread_2(void *param);
+void voodoo_render_thread_3(void *param);
+void voodoo_render_thread_4(void *param);
 void voodoo_queue_triangle(voodoo_t *voodoo, voodoo_params_t *params);
 
 extern int voodoo_recomp;
@@ -307,18 +309,30 @@ extern int tris;
 static inline void voodoo_wake_render_thread(voodoo_t *voodoo)
 {
         thread_set_event(voodoo->wake_render_thread[0]); /*Wake up render thread if moving from idle*/
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
                 thread_set_event(voodoo->wake_render_thread[1]); /*Wake up render thread if moving from idle*/
+        if (voodoo->render_threads == 4)
+        {
+                thread_set_event(voodoo->wake_render_thread[2]); /*Wake up render thread if moving from idle*/
+                thread_set_event(voodoo->wake_render_thread[3]); /*Wake up render thread if moving from idle*/
+        }
 }
 
 static inline void voodoo_wait_for_render_thread_idle(voodoo_t *voodoo)
 {
-        while (!PARAM_EMPTY_1 || (voodoo->render_threads == 2 && !PARAM_EMPTY_2) || voodoo->render_voodoo_busy[0] || (voodoo->render_threads == 2 && voodoo->render_voodoo_busy[1]))
+        while (!PARAM_EMPTY(0) || (voodoo->render_threads >= 2 && !PARAM_EMPTY(1)) ||
+                (voodoo->render_threads == 4 && (!PARAM_EMPTY(2) || !PARAM_EMPTY(3))) ||
+                voodoo->render_voodoo_busy[0] || (voodoo->render_threads >= 2 && voodoo->render_voodoo_busy[1]) ||
+                (voodoo->render_threads == 4 && (voodoo->render_voodoo_busy[2] || voodoo->render_voodoo_busy[3])))
         {
                 voodoo_wake_render_thread(voodoo);
-                if (!PARAM_EMPTY_1 || voodoo->render_voodoo_busy[0])
+                if (!PARAM_EMPTY(0) || voodoo->render_voodoo_busy[0])
                         thread_wait_event(voodoo->render_not_full_event[0], 1);
-                if (voodoo->render_threads == 2 && (!PARAM_EMPTY_2 || voodoo->render_voodoo_busy[1]))
+                if (voodoo->render_threads >= 2 && (!PARAM_EMPTY(1) || voodoo->render_voodoo_busy[1]))
                         thread_wait_event(voodoo->render_not_full_event[1], 1);
+                if (voodoo->render_threads == 4 && (!PARAM_EMPTY(2) || voodoo->render_voodoo_busy[2]))
+                        thread_wait_event(voodoo->render_not_full_event[2], 1);
+                if (voodoo->render_threads == 4 && (!PARAM_EMPTY(3) || voodoo->render_voodoo_busy[3]))
+                        thread_wait_event(voodoo->render_not_full_event[3], 1);
         }
 }

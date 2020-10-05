@@ -820,35 +820,38 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
         voodoo_t *voodoo = voodoo_set->voodoos[0];
         voodoo_t *voodoo_slave = voodoo_set->voodoos[1];
         char temps[512], temps2[256];
-        int pixel_count_current[2];
+        int pixel_count_current[4];
         int pixel_count_total;
-        int texel_count_current[2];
+        int texel_count_current[4];
         int texel_count_total;
-        int render_time[2];
+        int render_time[4];
         uint64_t new_time = timer_read();
         uint64_t status_diff = new_time - status_time;
         status_time = new_time;
+        int c;
 
         if (!status_diff)
                 status_diff = 1;
 
-        pixel_count_current[0] = voodoo->pixel_count[0];
-        pixel_count_current[1] = voodoo->pixel_count[1];
-        texel_count_current[0] = voodoo->texel_count[0];
-        texel_count_current[1] = voodoo->texel_count[1];
-        render_time[0] = voodoo->render_time[0];
-        render_time[1] = voodoo->render_time[1];
+        for (c = 0; c < 4; c++)
+        {
+                pixel_count_current[c] = voodoo->pixel_count[c];
+                texel_count_current[c] = voodoo->texel_count[c];
+                render_time[c] = voodoo->render_time[c];
+        }
         if (voodoo_set->nr_cards == 2)
         {
-                pixel_count_current[0] += voodoo_slave->pixel_count[0];
-                pixel_count_current[1] += voodoo_slave->pixel_count[1];
-                texel_count_current[0] += voodoo_slave->texel_count[0];
-                texel_count_current[1] += voodoo_slave->texel_count[1];
-                render_time[0] = (render_time[0] + voodoo_slave->render_time[0]) / 2;
-                render_time[1] = (render_time[1] + voodoo_slave->render_time[1]) / 2;
+                for (c = 0; c < 4; c++)
+                {
+                        pixel_count_current[c] += voodoo_slave->pixel_count[c];
+                        texel_count_current[c] += voodoo_slave->texel_count[c];
+                        render_time[c] = (render_time[c] + voodoo_slave->render_time[c]) / 2;
+                }
         }
-        pixel_count_total = (pixel_count_current[0] + pixel_count_current[1]) - (voodoo->pixel_count_old[0] + voodoo->pixel_count_old[1]);
-        texel_count_total = (texel_count_current[0] + texel_count_current[1]) - (voodoo->texel_count_old[0] + voodoo->texel_count_old[1]);
+        pixel_count_total = (pixel_count_current[0] + pixel_count_current[1] + pixel_count_current[2] + pixel_count_current[3]) -
+                (voodoo->pixel_count_old[0] + voodoo->pixel_count_old[1] + voodoo->pixel_count_old[2] + voodoo->pixel_count_old[3]);
+        texel_count_total = (texel_count_current[0] + texel_count_current[1] + texel_count_current[2] + texel_count_current[3]) -
+                (voodoo->texel_count_old[0] + voodoo->texel_count_old[1] + voodoo->texel_count_old[2] + voodoo->texel_count_old[3]);
         sprintf(temps, "%f Mpixels/sec (%f)\n%f Mtexels/sec (%f)\n%f ktris/sec\n%f%% CPU (%f%% real)\n%d frames/sec (%i)\n%f%% CPU (%f%% real)\n"/*%d reads/sec\n%d write/sec\n%d tex/sec\n*/,
                 (double)pixel_count_total/1000000.0,
                 ((double)pixel_count_total/1000000.0) / ((double)render_time[0] / status_diff),
@@ -856,10 +859,17 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
                 ((double)texel_count_total/1000000.0) / ((double)render_time[0] / status_diff),
                 (double)voodoo->tri_count/1000.0, ((double)voodoo->time * 100.0) / timer_freq, ((double)voodoo->time * 100.0) / status_diff, voodoo->frame_count, voodoo_recomp,
                 ((double)voodoo->render_time[0] * 100.0) / timer_freq, ((double)voodoo->render_time[0] * 100.0) / status_diff);
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
         {
                 sprintf(temps2, "%f%% CPU (%f%% real)\n",
                         ((double)voodoo->render_time[1] * 100.0) / timer_freq, ((double)voodoo->render_time[1] * 100.0) / status_diff);
+                strncat(temps, temps2, sizeof(temps)-1);
+        }
+        if (voodoo->render_threads == 4)
+        {
+                sprintf(temps2, "%f%% CPU (%f%% real)\n%f%% CPU (%f%% real)\n",
+                        ((double)voodoo->render_time[2] * 100.0) / timer_freq, ((double)voodoo->render_time[2] * 100.0) / status_diff,
+                        ((double)voodoo->render_time[3] * 100.0) / timer_freq, ((double)voodoo->render_time[3] * 100.0) / status_diff);
                 strncat(temps, temps2, sizeof(temps)-1);
         }
         if (voodoo_set->nr_cards == 2)
@@ -868,33 +878,42 @@ static void voodoo_add_status_info(char *s, int max_len, void *p)
                         ((double)voodoo_slave->render_time[0] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[0] * 100.0) / status_diff);
                 strncat(temps, temps2, sizeof(temps)-1);
                         
-                if (voodoo_slave->render_threads == 2)
+                if (voodoo_slave->render_threads >= 2)
                 {
                         sprintf(temps2, "%f%% CPU (%f%% real)\n",
                                 ((double)voodoo_slave->render_time[1] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[1] * 100.0) / status_diff);
                         strncat(temps, temps2, sizeof(temps)-1);
                 }
+                if (voodoo_slave->render_threads == 4)
+                {
+                        sprintf(temps2, "%f%% CPU (%f%% real)\n%f%% CPU (%f%% real)\n",
+                                ((double)voodoo_slave->render_time[2] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[2] * 100.0) / status_diff,
+                                ((double)voodoo_slave->render_time[3] * 100.0) / timer_freq, ((double)voodoo_slave->render_time[3] * 100.0) / status_diff);
+                        strncat(temps, temps2, sizeof(temps)-1);
+                }
         }
         strncat(s, temps, max_len);
 
-        voodoo->pixel_count_old[0] = pixel_count_current[0];
-        voodoo->pixel_count_old[1] = pixel_count_current[1];
-        voodoo->texel_count_old[0] = texel_count_current[0];
-        voodoo->texel_count_old[1] = texel_count_current[1];
+        for (c = 0; c < 4; c++)
+        {
+                voodoo->pixel_count_old[c] = pixel_count_current[c];
+                voodoo->texel_count_old[c] = texel_count_current[c];
+                voodoo->render_time[c] = 0;
+        }
         voodoo->tri_count = voodoo->frame_count = 0;
         voodoo->rd_count = voodoo->wr_count = voodoo->tex_count = 0;
         voodoo->time = 0;
-        voodoo->render_time[0] = voodoo->render_time[1] = 0;
         if (voodoo_set->nr_cards == 2)
         {
-                voodoo_slave->pixel_count_old[0] = pixel_count_current[0];
-                voodoo_slave->pixel_count_old[1] = pixel_count_current[1];
-                voodoo_slave->texel_count_old[0] = texel_count_current[0];
-                voodoo_slave->texel_count_old[1] = texel_count_current[1];
+                for (c = 0; c < 4; c++)
+                {
+                        voodoo_slave->pixel_count_old[c] = pixel_count_current[c];
+                        voodoo_slave->texel_count_old[c] = texel_count_current[c];
+                        voodoo_slave->render_time[c] = 0;
+                }
                 voodoo_slave->tri_count = voodoo_slave->frame_count = 0;
                 voodoo_slave->rd_count = voodoo_slave->wr_count = voodoo_slave->tex_count = 0;
                 voodoo_slave->time = 0;
-                voodoo_slave->render_time[0] = voodoo_slave->render_time[1] = 0;
         }
         voodoo_recomp = 0;
 }
@@ -985,15 +1004,23 @@ void *voodoo_card_init()
         voodoo->wake_fifo_thread = thread_create_event();
         voodoo->wake_render_thread[0] = thread_create_event();
         voodoo->wake_render_thread[1] = thread_create_event();
+        voodoo->wake_render_thread[2] = thread_create_event();
+        voodoo->wake_render_thread[3] = thread_create_event();
         voodoo->wake_main_thread = thread_create_event();
         voodoo->fifo_not_full_event = thread_create_event();
         voodoo->render_not_full_event[0] = thread_create_event();
         voodoo->render_not_full_event[1] = thread_create_event();
+        voodoo->render_not_full_event[2] = thread_create_event();
+        voodoo->render_not_full_event[3] = thread_create_event();
         voodoo->fifo_thread = thread_create(voodoo_fifo_thread, voodoo);
         voodoo->render_thread[0] = thread_create(voodoo_render_thread_1, voodoo);
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
                 voodoo->render_thread[1] = thread_create(voodoo_render_thread_2, voodoo);
-
+        if (voodoo->render_threads == 4)
+        {
+                voodoo->render_thread[2] = thread_create(voodoo_render_thread_3, voodoo);
+                voodoo->render_thread[3] = thread_create(voodoo_render_thread_4, voodoo);
+        }
         timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
         
         for (c = 0; c < 0x100; c++)
@@ -1093,14 +1120,23 @@ void *voodoo_2d3d_card_init(int type)
         voodoo->wake_fifo_thread = thread_create_event();
         voodoo->wake_render_thread[0] = thread_create_event();
         voodoo->wake_render_thread[1] = thread_create_event();
+        voodoo->wake_render_thread[2] = thread_create_event();
+        voodoo->wake_render_thread[3] = thread_create_event();
         voodoo->wake_main_thread = thread_create_event();
         voodoo->fifo_not_full_event = thread_create_event();
         voodoo->render_not_full_event[0] = thread_create_event();
         voodoo->render_not_full_event[1] = thread_create_event();
+        voodoo->render_not_full_event[2] = thread_create_event();
+        voodoo->render_not_full_event[3] = thread_create_event();
         voodoo->fifo_thread = thread_create(voodoo_fifo_thread, voodoo);
         voodoo->render_thread[0] = thread_create(voodoo_render_thread_1, voodoo);
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
                 voodoo->render_thread[1] = thread_create(voodoo_render_thread_2, voodoo);
+        if (voodoo->render_threads == 4)
+        {
+                voodoo->render_thread[2] = thread_create(voodoo_render_thread_3, voodoo);
+                voodoo->render_thread[3] = thread_create(voodoo_render_thread_4, voodoo);
+        }
 
         timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
 
@@ -1244,8 +1280,13 @@ void voodoo_card_close(voodoo_t *voodoo)
 
         thread_kill(voodoo->fifo_thread);
         thread_kill(voodoo->render_thread[0]);
-        if (voodoo->render_threads == 2)
+        if (voodoo->render_threads >= 2)
                 thread_kill(voodoo->render_thread[1]);
+        if (voodoo->render_threads == 4)
+        {
+                thread_kill(voodoo->render_thread[2]);
+                thread_kill(voodoo->render_thread[3]);
+        }
         thread_destroy_event(voodoo->fifo_not_full_event);
         thread_destroy_event(voodoo->wake_main_thread);
         thread_destroy_event(voodoo->wake_fifo_thread);
@@ -1375,6 +1416,10 @@ static device_config_t voodoo_config[] =
                         {
                                 .description = "2",
                                 .value = 2
+                        },
+                        {
+                                .description = "4",
+                                .value = 4
                         },
                         {
                                 .description = ""

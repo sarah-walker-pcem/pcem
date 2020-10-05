@@ -75,12 +75,9 @@ enum
 #define PARAM_MASK (PARAM_SIZE - 1)
 #define PARAM_ENTRY_SIZE (1 << 31)
 
-#define PARAM_ENTRIES_1 (voodoo->params_write_idx - voodoo->params_read_idx[0])
-#define PARAM_ENTRIES_2 (voodoo->params_write_idx - voodoo->params_read_idx[1])
-#define PARAM_FULL_1 ((voodoo->params_write_idx - voodoo->params_read_idx[0]) >= PARAM_SIZE)
-#define PARAM_FULL_2 ((voodoo->params_write_idx - voodoo->params_read_idx[1]) >= PARAM_SIZE)
-#define PARAM_EMPTY_1   (voodoo->params_read_idx[0] == voodoo->params_write_idx)
-#define PARAM_EMPTY_2   (voodoo->params_read_idx[1] == voodoo->params_write_idx)
+#define PARAM_ENTRIES(x) (voodoo->params_write_idx - voodoo->params_read_idx[x])
+#define PARAM_FULL(x)    ((voodoo->params_write_idx - voodoo->params_read_idx[x]) >= PARAM_SIZE)
+#define PARAM_EMPTY(x)   (voodoo->params_read_idx[x] == voodoo->params_write_idx)
 
 typedef struct
 {
@@ -164,7 +161,7 @@ typedef struct texture_t
 {
         uint32_t base;
         uint32_t tLOD;
-        volatile int refcount, refcount_r[2];
+        volatile int refcount, refcount_r[4];
         int is16;
         uint32_t palette_checksum;
         uint32_t addr_start[4], addr_end[4];
@@ -258,21 +255,21 @@ typedef struct voodoo_t
         int ncc_dirty[2];
 
         thread_t *fifo_thread;
-        thread_t *render_thread[2];
+        thread_t *render_thread[4];
         event_t *wake_fifo_thread;
         event_t *wake_main_thread;
         event_t *fifo_not_full_event;
-        event_t *render_not_full_event[2];
-        event_t *wake_render_thread[2];
+        event_t *render_not_full_event[4];
+        event_t *wake_render_thread[4];
 
         int voodoo_busy;
-        int render_voodoo_busy[2];
+        int render_voodoo_busy[4];
 
         int render_threads;
         int odd_even_mask;
 
-        int pixel_count[2], texel_count[2], tri_count, frame_count;
-        int pixel_count_old[2], texel_count_old[2];
+        int pixel_count[4], texel_count[4], tri_count, frame_count;
+        int pixel_count_old[4], texel_count_old[4];
         int wr_count, rd_count, tex_count;
 
         int retrace_count;
@@ -296,7 +293,7 @@ typedef struct voodoo_t
         volatile int cmd_read, cmd_written, cmd_written_fifo;
 
         voodoo_params_t params_buffer[PARAM_SIZE];
-        volatile int params_read_idx[2], params_write_idx;
+        volatile int params_read_idx[4], params_write_idx;
 
         uint32_t cmdfifo_base, cmdfifo_end, cmdfifo_size;
         int cmdfifo_rp;
@@ -466,7 +463,7 @@ typedef struct voodoo_t
         int palette_dirty[2];
 
         uint64_t time;
-        int render_time[2];
+        int render_time[4];
 
         int use_recompiler;
         void *codegen_data;
