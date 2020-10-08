@@ -1106,6 +1106,44 @@ void cpu_set()
                 codegen_timing_set(&codegen_timing_p6);
                 break;
 
+                case CPU_CYRIX_III:
+                x86_setopcodes(ops_386, ops_winchip2_0f, dynarec_ops_386, dynarec_ops_winchip2_0f);
+                timing_rr  = 1; /*register dest - register src*/
+                timing_rm  = 1; /*register dest - memory src*/
+                timing_mr  = 1; /*memory dest   - register src*/
+                timing_mm  = 1;
+                timing_rml = 1; /*register dest - memory src long*/
+                timing_mrl = 1; /*memory dest   - register src long*/
+                timing_mml = 1;
+                timing_bt  = 1; /*branch taken*/
+                timing_bnt = 1; /*branch not taken*/
+                cpu_features = CPU_FEATURE_RDTSC | CPU_FEATURE_MMX | CPU_FEATURE_MSR | CPU_FEATURE_CR4 | CPU_FEATURE_3DNOW;
+                msr.fcr = (1 << 8) | (1 << 9) | (1 << 12) |  (1 << 16) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 21);
+                cpu_CR4_mask = CR4_TSD | CR4_DE | CR4_MCE | CR4_PCE;
+                /*unknown*/
+                timing_int_rm       = 26;
+                timing_int_v86      = 82;
+                timing_int_pm       = 44;
+                timing_int_pm_outer = 71;
+                timing_iret_rm       = 7;
+                timing_iret_v86      = 26;
+                timing_iret_pm       = 10;
+                timing_iret_pm_outer = 26;
+                timing_call_rm = 4;
+                timing_call_pm = 15;
+                timing_call_pm_gate = 26;
+                timing_call_pm_gate_inner = 35;
+                timing_retf_rm       = 4;
+                timing_retf_pm       = 7;
+                timing_retf_pm_outer = 23;
+                timing_jmp_rm      = 5;
+                timing_jmp_pm      = 7;
+                timing_jmp_pm_gate = 17;
+                timing_misaligned = 2;
+                cpu_cyrix_alignment = 1;
+                codegen_timing_set(&codegen_timing_cyrixiii);
+                break;
+
                 default:
                 fatal("cpu_set : unknown CPU type %i\n", cpu_s->cpu_type);
         }
@@ -1684,6 +1722,75 @@ void cpu_CPUID()
                 else
                         EAX = EBX = ECX = EDX = 0;
                 break;
+
+                case CPU_CYRIX_III:
+                switch (EAX)
+                {
+                        case 0:
+                        EAX = 1;
+                        EBX = 0x746e6543; /*CentaurHauls*/
+                        ECX = 0x736c7561;
+                        EDX = 0x48727561;
+                        break;
+                        case 1:
+                        EAX = models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
+                        EBX = ECX = 0;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
+			if (cpu_has_feature(CPU_FEATURE_CX8))
+				EDX |= CPUID_CMPXCHG8B;
+                        if (msr.fcr & (1 << 9))
+                                EDX |= CPUID_MMX;
+                        break;
+                        case 0x80000000:
+                        EAX = 0x80000006;
+                        break;
+                        case 0x80000001:
+                        EAX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
+                        EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
+			if (cpu_has_feature(CPU_FEATURE_CX8))
+				EDX |= CPUID_CMPXCHG8B;
+                        if (msr.fcr & (1 << 9))
+                                EDX |= CPUID_MMX;
+			if (cpu_has_feature(CPU_FEATURE_3DNOW))
+                                EDX |= CPUID_3DNOW;
+                        break;
+
+                        case 0x80000002: /*Processor name string*/
+                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
+                        {
+                                EAX = 0x20414956; /*VIA Samuel 2*/
+                                EBX = 0x756d6153;
+                                ECX = 0x32206c65;
+                                EDX = 0x00000000;
+                        }
+                        else
+                        {
+                                EAX = 0x20414956; /*VIA SamuelM*/
+                                EBX = 0x756d6153;
+                                ECX = 0x004d6c65;
+                                EDX = 0x00000000;
+                        }
+                        break;
+
+                        case 0x80000005: /*Cache information*/
+                        EBX = 0x08800880; /*TLBs*/
+                        ECX = 0x40040120; /*L1 data cache*/
+                        EDX = 0x40020120; /*L1 instruction cache*/
+                        break;
+
+                        case 0x80000006: /*L2 Cache information*/
+                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
+                                ECX = 0x40040120; /*L2 cache*/
+                        else
+                                ECX = 0;
+                        EAX = EBX = EDX = 0;
+                        break;
+
+                        default:
+                        EAX = EBX = ECX = EDX = 0;
+                        break;
+                }
+                break;
         }
 }
 
@@ -1693,6 +1800,7 @@ void cpu_RDMSR()
         {
                 case CPU_WINCHIP:
                 case CPU_WINCHIP2:
+                case CPU_CYRIX_III:
                 EAX = EDX = 0;
                 switch (ECX)
                 {
@@ -1794,6 +1902,7 @@ void cpu_WRMSR()
         {
                 case CPU_WINCHIP:
                 case CPU_WINCHIP2:
+                case CPU_CYRIX_III:
                 switch (ECX)
                 {
                         case 0x02:

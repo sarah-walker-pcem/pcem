@@ -243,7 +243,7 @@ MODEL models[] =
 
         {"[Socket 8] Intel VS440FX",      ROM_VS440FX,          "vs440fx",        { {"Intel", cpus_PentiumPro}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,         8,  256,   8,       at_vs440fx_init, NULL},
         
-        {"[Slot 1] Gigabyte GA-686BX",    ROM_GA686BX,          "ga686bx",        { {"Intel", cpus_Slot1_100MHz}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,       8,  512,   8,       at_ga686bx_init, NULL},
+        {"[Slot 1] Gigabyte GA-686BX",    ROM_GA686BX,          "ga686bx",        { {"Intel", cpus_Slot1_100MHz}, {"VIA", cpus_VIA_100MHz}},   MODEL_GFX_NONE|MODEL_AT|MODEL_PCI|MODEL_PS2|MODEL_HAS_IDE,       8,  512,   8,       at_ga686bx_init, NULL},
         
         {"", -1, "", {{"", 0}, {"", 0}, {"", 0}}, 0,0,0, 0}
 };

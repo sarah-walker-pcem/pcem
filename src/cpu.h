@@ -45,11 +45,13 @@ extern int fpu_type;
 #define CPU_PENTIUM_2   29
 #define CPU_CELERON     30
 #define CPU_CELERON_A   31
+#define CPU_CYRIX_III   32
 
 #define MANU_INTEL 0
 #define MANU_AMD   1
 #define MANU_CYRIX 2
 #define MANU_IDT   3
+#define MANU_VIA   4
 
 extern int timing_rr;
 extern int timing_mr, timing_mrl;
@@ -123,6 +125,7 @@ extern CPU cpus_K6_S7[];
 extern CPU cpus_K6_SS7[];
 extern CPU cpus_PentiumPro[];
 extern CPU cpus_Slot1_100MHz[];
+extern CPU cpus_VIA_100MHz[];
 
 extern CPU cpus_pcjr[];
 extern CPU cpus_europc[];

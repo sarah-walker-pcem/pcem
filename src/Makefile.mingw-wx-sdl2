@@ -15,7 +15,7 @@ OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o 82091aa.o acc203
 	codegen_ops_logic.o codegen_ops_misc.o codegen_ops_mmx_arith.o codegen_ops_mmx_cmp.o \
 	codegen_ops_mmx_loadstore.o codegen_ops_mmx_logic.o codegen_ops_mmx_pack.o codegen_ops_mmx_shift.o \
 	codegen_ops_mov.o codegen_ops_shift.o codegen_ops_stack.o codegen_reg.o codegen_timing_486.o \
-	codegen_timing_686.o codegen_timing_common.o codegen_timing_k6.o codegen_timing_p6.o codegen_timing_pentium.o \
+	codegen_timing_686.o codegen_timing_common.o codegen_timing_cyrixiii.o codegen_timing_k6.o codegen_timing_p6.o codegen_timing_pentium.o \
 	codegen_timing_winchip.o codegen_timing_winchip2.o compaq.o config.o cpu.o cpu_tables.o cs8230.o device.o \
 	dells200.o disc.o disc_fdi.o disc_img.o disc_sector.o dma.o esdi_at.o f82c710_upc.o fdc.o fdc37c665.o fdc37c93x.o fdd.o \
 	fdi2raw.o gameport.o hdd.o hdd_esdi.o hdd_file.o headland.o i430hx.o i430lx.o i430fx.o i430vx.o i440fx.o i440bx.o ide.o \

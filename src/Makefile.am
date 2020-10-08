@@ -30,7 +30,7 @@ codegen_ops_branch.c codegen_ops_fpu_arith.c codegen_ops_fpu_constant.c codegen_
 codegen_ops_fpu_misc.c codegen_ops_mmx_arith.c codegen_ops_mmx_cmp.c codegen_ops_mmx_loadstore.c \
 codegen_ops_mmx_logic.c codegen_ops_mmx_pack.c codegen_ops_mmx_shift.c codegen_ops_helpers.c codegen_ops_jump.c \
 codegen_ops_logic.c codegen_ops_shift.c codegen_ops_misc.c codegen_ops_mov.c codegen_ops_stack.c codegen_reg.c \
-codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_k6.c codegen_timing_p6.c codegen_timing_pentium.c \
+codegen_timing_486.c codegen_timing_686.c codegen_timing_common.c codegen_timing_cyrixiii.c codegen_timing_k6.c codegen_timing_p6.c codegen_timing_pentium.c \
 codegen_timing_winchip.c codegen_timing_winchip2.c compaq.c config.c cpu.c cpu_tables.c cs8230.c dells200.c device.c disc.c \
 disc_fdi.c disc_img.c disc_sector.c dma.c esdi_at.c f82c710_upc.c fdc.c fdc37c665.c fdc37c93x.c fdd.c fdi2raw.c gameport.c hdd.c hdd_esdi.c \
 hdd_file.c headland.c i430lx.c i430fx.c i430hx.c i430vx.c i440fx.c i440bx.c ide.c ide_atapi.c ide_sff8038i.c intel.c intel_flash.c io.c \
