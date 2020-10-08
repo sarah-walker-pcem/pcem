@@ -323,6 +323,8 @@ enum
         GFX_TVGA9000B,  /*Trident TVGA9000B*/
         GFX_BANSHEE,    /*Voodoo Banshee - reference PCI board with SGRAM*/
         GFX_CL_BANSHEE, /*Creative Labs Voodoo Blaster Banshee PCI - with SDRAM*/
+        GFX_VOODOO_3_2000, /*Voodoo 3 2000*/
+        GFX_VOODOO_3_3000, /*Voodoo 3 3000*/
 
         GFX_MAX
 };

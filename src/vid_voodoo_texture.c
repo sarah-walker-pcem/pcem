@@ -531,9 +531,9 @@ void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
         if (tmu && !voodoo->dual_tmus)
                 return;
 
-        if (voodoo->type != VOODOO_BANSHEE)
+        if (voodoo->type < VOODOO_BANSHEE)
         {
-                if (!(voodoo->params.tformat[tmu] & 8) && voodoo->type == VOODOO_BANSHEE)
+                if (!(voodoo->params.tformat[tmu] & 8) && voodoo->type >= VOODOO_BANSHEE)
                 {
                         lod = (addr >> 16) & 0xf;
                         t = (addr >> 8) & 0xff;
@@ -547,7 +547,7 @@ void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
                         s = (addr >> 1) & 0xfe;
                 else
                 {
-                        if ((voodoo->params.textureMode[tmu] & (1 << 31)) || voodoo->type == VOODOO_BANSHEE)
+                        if ((voodoo->params.textureMode[tmu] & (1 << 31)) || voodoo->type >= VOODOO_BANSHEE)
                                 s = addr & 0xfc;
                         else
                                 s = (addr >> 1) & 0xfc;
@@ -570,6 +570,11 @@ void voodoo_tex_writel(uint32_t addr, uint32_t val, void *p)
         {
 //                pclog("texture_present at %08x %i\n", addr, (addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT);
                 flush_texture_cache(voodoo, addr & voodoo->texture_mask, tmu);
+        }
+        if (voodoo->type == VOODOO_3 && voodoo->texture_present[tmu^1][(addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT])
+        {
+//                pclog("texture_present at %08x %i\n", addr, (addr & voodoo->texture_mask) >> TEX_DIRTY_SHIFT);
+                flush_texture_cache(voodoo, addr & voodoo->texture_mask, tmu^1);
         }
         *(uint32_t *)(&voodoo->tex_mem[tmu][addr & voodoo->texture_mask]) = val;
 }

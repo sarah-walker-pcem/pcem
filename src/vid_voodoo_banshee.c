@@ -20,6 +20,13 @@
 #undef CLAMP
 #endif
 
+enum
+{
+        TYPE_BANSHEE = 0,
+        TYPE_V3_2000,
+        TYPE_V3_3000
+};
+
 typedef struct banshee_t
 {
         svga_t svga;
@@ -70,6 +77,8 @@ typedef struct banshee_t
         uint32_t desktop_addr;
         int desktop_y;
         uint32_t desktop_stride_tiled;
+
+        int type;
 } banshee_t;
 
 enum
@@ -734,6 +743,9 @@ static uint32_t banshee_ext_inl(uint16_t addr, void *p)
                 case Init_status:
                 ret = banshee_status(banshee);
 //                pclog("Read status reg! %04x(%08x):%08x\n", CS, cs, cpu_state.pc);
+                break;
+                case Init_pciInit0:
+                ret = banshee->pciInit0;
                 break;
                 case Init_lfbMemoryConfig:
                 ret = banshee->lfbMemoryConfig;
@@ -1818,13 +1830,15 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
 //        svga_t *svga = &banshee->svga;
         uint8_t ret = 0;
 
+        if (func)
+                return 0xff;
         pclog("Banshee PCI read %08X  ", addr);
         switch (addr)
         {
                 case 0x00: ret = 0x1a; break; /*3DFX*/
                 case 0x01: ret = 0x12; break;
                 
-                case 0x02: ret = 0x03; break;
+                case 0x02: ret = (banshee->type == TYPE_BANSHEE) ? 0x03 : 0x05; break;
                 case 0x03: ret = 0x00; break;
 
                 case 0x04: ret = banshee->pci_regs[0x04] & 0x27; break;
@@ -1854,6 +1868,12 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
                 case 0x1a: ret = 0x00; break;
                 case 0x1b: ret = 0x00; break;
 
+                /*Undocumented, but Voodoo 3 BIOS checks this*/
+                case 0x2c: ret = 0x1a; break;
+                case 0x2d: ret = 0x12; break;
+                case 0x2e: ret = (banshee->type == TYPE_V3_3000) ? 0x3a : 0x30; break;
+                case 0x2f: ret = 0x00; break;
+
                 case 0x30: ret = banshee->pci_regs[0x30] & 0x01; break; /*BIOS ROM address*/
                 case 0x31: ret = 0x00; break;
                 case 0x32: ret = banshee->pci_regs[0x32]; break;
@@ -1880,6 +1900,8 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
         banshee_t *banshee = (banshee_t *)p;
 //        svga_t *svga = &banshee->svga;
 
+        if (func)
+                return;
         pclog("Banshee write %08X %02X %04X:%08X\n", addr, val, CS, cpu_state.pc);
         switch (addr)
         {
@@ -1941,7 +1963,7 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
                 {
                         uint32_t addr = (banshee->pci_regs[0x32] << 16) | (banshee->pci_regs[0x33] << 24);
                         pclog("Banshee bios_rom enabled at %08x\n", addr);
-                        mem_mapping_set_addr(&banshee->bios_rom.mapping, addr, 0x8000);
+                        mem_mapping_set_addr(&banshee->bios_rom.mapping, addr, 0x10000);
                         mem_mapping_enable(&banshee->bios_rom.mapping);
                 }
                 else
@@ -2066,14 +2088,17 @@ static device_config_t banshee_sdram_config[] =
         }
 };
 
-static void *banshee_init_common(char *fn, int has_sgram)
+static void *banshee_init_common(char *fn, int has_sgram, int type, int voodoo_type)
 {
         int mem_size;
         banshee_t *banshee = malloc(sizeof(banshee_t));
         memset(banshee, 0, sizeof(banshee_t));
-
-        rom_init(&banshee->bios_rom, fn, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         
+        banshee->type = type;
+
+        rom_init(&banshee->bios_rom, fn, 0xc0000, 0x10000, 0xffff, 0, MEM_MAPPING_EXTERNAL);
+        mem_mapping_disable(&banshee->bios_rom.mapping);
+
         if (has_sgram)
                 mem_size = device_get_config_int("memory");
         else
@@ -2125,10 +2150,10 @@ static void *banshee_init_common(char *fn, int has_sgram)
         if (!has_sgram)
                 banshee->dramInit1 = 1 << 30; /*SDRAM*/
         banshee->svga.decode_mask = 0x1ffffff;
-        
+
         pci_add(banshee_pci_read, banshee_pci_write, banshee);
         
-        banshee->voodoo = voodoo_2d3d_card_init(VOODOO_BANSHEE);
+        banshee->voodoo = voodoo_2d3d_card_init(voodoo_type);
         banshee->voodoo->p = banshee;
         banshee->voodoo->vram = banshee->svga.vram;
         banshee->voodoo->changedvram = banshee->svga.changedvram;
@@ -2136,18 +2161,28 @@ static void *banshee_init_common(char *fn, int has_sgram)
         banshee->voodoo->fb_mask = banshee->svga.vram_mask;
         banshee->voodoo->tex_mem[0] = banshee->svga.vram;
         banshee->voodoo->tex_mem_w[0] = (uint16_t *)banshee->svga.vram;
+        banshee->voodoo->tex_mem[1] = banshee->svga.vram;
+        banshee->voodoo->tex_mem_w[1] = (uint16_t *)banshee->svga.vram;
         banshee->voodoo->texture_mask = banshee->svga.vram_mask;
 
         return banshee;
 }
 
-static void *banshee_init(FILE *f, int has_sgram)
+static void *banshee_init()
 {
-        return banshee_init_common("pci_sg.rom", 1);
+        return banshee_init_common("pci_sg.rom", 1, TYPE_BANSHEE, VOODOO_BANSHEE);
 }
-static void *creative_banshee_init(FILE *f, int has_sgram)
+static void *creative_banshee_init()
 {
-        return banshee_init_common("blasterpci.rom", 0);
+        return banshee_init_common("blasterpci.rom", 0, TYPE_BANSHEE, VOODOO_BANSHEE);
+}
+static void *v3_2000_init()
+{
+        return banshee_init_common("voodoo3_2000/2k11sd.rom", 0, TYPE_V3_2000, VOODOO_3);
+}
+static void *v3_3000_init()
+{
+        return banshee_init_common("voodoo3_3000/3k12sd.rom", 0, TYPE_V3_3000, VOODOO_3);
 }
 
 static int banshee_available()
@@ -2157,6 +2192,14 @@ static int banshee_available()
 static int creative_banshee_available()
 {
         return rom_present("blasterpci.rom");
+}
+static int v3_2000_available()
+{
+        return rom_present("voodoo3_2000/2k11sd.rom");
+}
+static int v3_3000_available()
+{
+        return rom_present("voodoo3_3000/3k12sd.rom");
 }
 
 static void banshee_close(void *p)
@@ -2276,6 +2319,32 @@ device_t creative_voodoo_banshee_device =
         creative_banshee_init,
         banshee_close,
         creative_banshee_available,
+        banshee_speed_changed,
+        banshee_force_redraw,
+        banshee_add_status_info,
+        banshee_sdram_config
+};
+
+device_t voodoo_3_2000_device =
+{
+        "Voodoo 3 2000 PCI",
+        0,
+        v3_2000_init,
+        banshee_close,
+        v3_2000_available,
+        banshee_speed_changed,
+        banshee_force_redraw,
+        banshee_add_status_info,
+        banshee_sdram_config
+};
+
+device_t voodoo_3_3000_device =
+{
+        "Voodoo 3 3000 PCI",
+        0,
+        v3_3000_init,
+        banshee_close,
+        v3_3000_available,
         banshee_speed_changed,
         banshee_force_redraw,
         banshee_add_status_info,

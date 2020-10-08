@@ -83,6 +83,8 @@ typedef struct
 
 static VIDEO_CARD video_cards[] =
 {
+        {"3DFX Voodoo 3 2000",                     "v3_2000",        &voodoo_3_2000_device,             GFX_VOODOO_3_2000,   VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
+        {"3DFX Voodoo 3 3000",                     "v3_3000",        &voodoo_3_3000_device,             GFX_VOODOO_3_3000,   VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"Acumos AVGA2 / Cirrus Logic CL-GD5402",  "avga2",          &avga2_device,                     GFX_AVGA2,           VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"ATI Graphics Pro Turbo (Mach64 GX)",     "mach64gx",       &mach64gx_device,                  GFX_MACH64GX,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"ATI Video Xpression (Mach64 VT2)",       "mach64vt2",      &mach64vt2_device,                 GFX_MACH64VT2,       VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},

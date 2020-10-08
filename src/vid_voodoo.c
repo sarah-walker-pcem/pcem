@@ -1095,7 +1095,7 @@ void *voodoo_2d3d_card_init(int type)
         voodoo->use_recompiler = device_get_config_int("recompiler");
 #endif
         voodoo->type = type;
-        voodoo->dual_tmus = 0;
+        voodoo->dual_tmus = (type == VOODOO_3) ? 1 : 0;
 
 	/*generate filter lookup tables*/
 	voodoo_generate_filter_v2(voodoo);
@@ -1304,7 +1304,7 @@ void voodoo_card_close(voodoo_t *voodoo)
 #ifndef NO_CODEGEN
         voodoo_codegen_close(voodoo);
 #endif
-        if (voodoo->type != VOODOO_BANSHEE && voodoo->fb_mem)
+        if (voodoo->type < VOODOO_BANSHEE && voodoo->fb_mem)
         {
                 free(voodoo->fb_mem);
                 if (voodoo->dual_tmus)

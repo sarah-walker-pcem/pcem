@@ -18,7 +18,7 @@ uint16_t voodoo_fb_readw(uint32_t addr, void *p)
         uint32_t read_addr;
         uint16_t temp;
 
-        if (voodoo->type == VOODOO_BANSHEE)
+        if (voodoo->type >= VOODOO_BANSHEE)
         {
                 x = addr & 0xffe;
                 y = (addr >> 12) & 0x3ff;
@@ -61,7 +61,7 @@ uint32_t voodoo_fb_readl(uint32_t addr, void *p)
         uint32_t read_addr;
         uint32_t temp;
 
-        if (voodoo->type == VOODOO_BANSHEE)
+        if (voodoo->type >= VOODOO_BANSHEE)
         {
                 x = addr & 0xffe;
                 y = (addr >> 12) & 0x3ff;
@@ -175,7 +175,7 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                 fatal("voodoo_fb_writew : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
-        if (voodoo->type == VOODOO_BANSHEE)
+        if (voodoo->type >= VOODOO_BANSHEE)
         {
                 x = addr & 0xffe;
                 y = (addr >> 12) & 0x3ff;
@@ -336,7 +336,7 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 fatal("voodoo_fb_writel : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
-        if (voodoo->type == VOODOO_BANSHEE)
+        if (voodoo->type >= VOODOO_BANSHEE)
         {
                 x = addr & 0xffe;
                 y = (addr >> 12) & 0x3ff;

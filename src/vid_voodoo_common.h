@@ -22,7 +22,8 @@ enum
         VOODOO_1 = 0,
         VOODOO_SB50,
         VOODOO_2,
-        VOODOO_BANSHEE
+        VOODOO_BANSHEE,
+        VOODOO_3
 };
 
 typedef union int_float
