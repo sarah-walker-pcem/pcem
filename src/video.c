@@ -83,6 +83,7 @@ typedef struct
 
 static VIDEO_CARD video_cards[] =
 {
+        {"3DFX Voodoo Banshee (reference)",        "banshee",        &voodoo_banshee_device,            GFX_BANSHEE,         VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"3DFX Voodoo 3 2000",                     "v3_2000",        &voodoo_3_2000_device,             GFX_VOODOO_3_2000,   VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"3DFX Voodoo 3 3000",                     "v3_3000",        &voodoo_3_3000_device,             GFX_VOODOO_3_3000,   VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"Acumos AVGA2 / Cirrus Logic CL-GD5402",  "avga2",          &avga2_device,                     GFX_AVGA2,           VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
@@ -131,7 +132,6 @@ static VIDEO_CARD video_cards[] =
         {"Tseng ET4000AX",                         "et4000ax",       &et4000_device,                    GFX_ET4000,          VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"VGA",                                    "vga",            &vga_device,                       GFX_VGA,             VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"Wyse 700",                               "wy700",          &wy700_device,                     GFX_WY700,           VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
-        {"Voodoo Banshee (reference)",             "banshee",        &voodoo_banshee_device,     GFX_BANSHEE,         VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2,  2,  1,  20, 20, 21}},
         {"",                                       "",               NULL,                              0}
 };
 
