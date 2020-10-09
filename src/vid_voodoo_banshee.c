@@ -2302,7 +2302,7 @@ static void banshee_add_status_info(char *s, int max_len, void *p)
 device_t voodoo_banshee_device =
 {
         "Voodoo Banshee PCI (reference)",
-        0,
+        DEVICE_PCI,
         banshee_init,
         banshee_close,
         banshee_available,
@@ -2315,7 +2315,7 @@ device_t voodoo_banshee_device =
 device_t creative_voodoo_banshee_device =
 {
         "Creative Labs 3D Blaster Banshee PCI",
-        0,
+        DEVICE_PCI,
         creative_banshee_init,
         banshee_close,
         creative_banshee_available,
@@ -2328,7 +2328,7 @@ device_t creative_voodoo_banshee_device =
 device_t voodoo_3_2000_device =
 {
         "Voodoo 3 2000 PCI",
-        0,
+        DEVICE_PCI,
         v3_2000_init,
         banshee_close,
         v3_2000_available,
@@ -2341,7 +2341,7 @@ device_t voodoo_3_2000_device =
 device_t voodoo_3_3000_device =
 {
         "Voodoo 3 3000 PCI",
-        0,
+        DEVICE_PCI,
         v3_3000_init,
         banshee_close,
         v3_3000_available,
