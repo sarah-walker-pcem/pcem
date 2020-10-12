@@ -1098,6 +1098,7 @@ static void banshee_cmd_write(banshee_t *banshee, uint32_t addr, uint32_t val)
                 case cmdBaseSize0:
                 voodoo->cmdfifo_size = val;
                 voodoo->cmdfifo_end = voodoo->cmdfifo_base + (((voodoo->cmdfifo_size & 0xff) + 1) << 12);
+                voodoo->cmdfifo_enabled = val & 0x100;
 //                pclog("cmdfifo_base=%08x  cmdfifo_end=%08x\n", voodoo->cmdfifo_base, voodoo->cmdfifo_end);
                 break;
                 
@@ -1437,7 +1438,7 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
 
         svga->changedvram[addr >> 12] = changeframecount;
         *(uint32_t *)&svga->vram[addr & svga->vram_mask] = val;
-        if (addr >= voodoo->cmdfifo_base && addr < voodoo->cmdfifo_end)
+        if (voodoo->cmdfifo_enabled && addr >= voodoo->cmdfifo_base && addr < voodoo->cmdfifo_end)
         {
 //                pclog("CMDFIFO write %08x %08x  old amin=%08x amax=%08x hlcnt=%i depth_wr=%i rp=%08x\n", addr, val, voodoo->cmdfifo_amin, voodoo->cmdfifo_amax, voodoo->cmdfifo_holecount, voodoo->cmdfifo_depth_wr, voodoo->cmdfifo_rp);
                 if (addr == voodoo->cmdfifo_base && !voodoo->cmdfifo_holecount)

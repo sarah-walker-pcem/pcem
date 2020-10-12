@@ -237,7 +237,7 @@ void voodoo_fifo_thread(void *param)
                         voodoo->time += end_time - start_time;
                 }
 
-                while (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr)
+                while (voodoo->cmdfifo_enabled && voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr)
                 {
                         uint64_t start_time = timer_read();
                         uint64_t end_time;

@@ -603,7 +603,10 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 break;
                 case SST_fbiInit7:
                 if (voodoo->initEnable & 0x01)
+                {
                         voodoo->fbiInit7 = val;
+                        voodoo->cmdfifo_enabled = val & 0x100;
+                }
                 break;
 
                 case SST_cmdFifoBaseAddr:
