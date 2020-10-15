@@ -251,6 +251,12 @@ void ddc_i2c_change(int new_clock, int new_data)
                 case I2C_TRANSMIT_START:
                 if (!i2c.clock && new_clock)
                         i2c.state = I2C_TRANSMIT;
+                if (i2c.clock && new_clock && !i2c.last_data && new_data) /*Stop bit*/
+                {
+//                        pclog("Stop bit received\n");
+                        i2c.state = I2C_IDLE;
+                        prom_stop();
+                }
                 case I2C_TRANSMIT:
                 if (!i2c.clock && new_clock)
                 {
