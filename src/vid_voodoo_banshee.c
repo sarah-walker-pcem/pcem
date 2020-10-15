@@ -7,6 +7,7 @@
 #include "rom.h"
 #include "thread.h"
 #include "video.h"
+#include "vid_ddc.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 #include "vid_voodoo_banshee.h"
@@ -58,6 +59,7 @@ typedef struct banshee_t
         uint32_t vidDesktopStartAddr;
         uint32_t vidProcCfg;
         uint32_t vidScreenSize;
+        uint32_t vidSerialParallelPort;
         
         int overlay_pix_fmt;
         
@@ -110,6 +112,7 @@ enum
         Video_hwCurLoc     = 0x64,
         Video_hwCurC0      = 0x68,
         Video_hwCurC1      = 0x6c,
+        Video_vidSerialParallelPort = 0x78,
         Video_vidScreenSize = 0x98,
         Video_vidOverlayStartCoords = 0x9c,
         Video_vidOverlayEndScreenCoords = 0xa0,
@@ -180,6 +183,14 @@ enum
 #define PIX_FORMAT_RGB24  2
 #define PIX_FORMAT_RGB32  3
 
+#define VIDSERIAL_DDC_DCK_W (1 << 19)
+#define VIDSERIAL_DDC_DDA_W (1 << 20)
+#define VIDSERIAL_DDC_DCK_R (1 << 21)
+#define VIDSERIAL_DDC_DDA_R (1 << 22)
+#define VIDSERIAL_I2C_SCK_W (1 << 24)
+#define VIDSERIAL_I2C_SDA_W (1 << 25)
+#define VIDSERIAL_I2C_SCK_R (1 << 26)
+#define VIDSERIAL_I2C_SDA_R (1 << 27)
 
 static uint32_t banshee_status(banshee_t *banshee);
 
@@ -596,6 +607,12 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
                 banshee->hwCurC1 = val;
                 break;
 
+                case Video_vidSerialParallelPort:
+                banshee->vidSerialParallelPort = val;
+//                pclog("vidSerialParallelPort: write %08x %08x %04x(%08x):%08x\n", val, val & (VIDSERIAL_DDC_DCK_W | VIDSERIAL_DDC_DDA_W), CS,cs,cpu_state.pc);
+                ddc_i2c_change((val & VIDSERIAL_DDC_DCK_W) ? 1 : 0, (val & VIDSERIAL_DDC_DDA_W) ? 1 : 0);
+                break;
+
                 case Video_vidScreenSize:
                 banshee->vidScreenSize = val;
                 voodoo->h_disp = (val & 0xfff) + 1;
@@ -822,6 +839,20 @@ static uint32_t banshee_ext_inl(uint16_t addr, void *p)
                 break;
                 case Video_hwCurC1:
                 ret = banshee->hwCurC1;
+                break;
+
+                case Video_vidSerialParallelPort:
+                ret = banshee->vidSerialParallelPort & ~(VIDSERIAL_DDC_DCK_R | VIDSERIAL_DDC_DDA_R);
+                if ((banshee->vidSerialParallelPort & VIDSERIAL_DDC_DCK_W) && ddc_read_clock())
+                        ret |= VIDSERIAL_DDC_DCK_R;
+                if ((banshee->vidSerialParallelPort & VIDSERIAL_DDC_DDA_W) && ddc_read_data())
+                        ret |= VIDSERIAL_DDC_DDA_R;
+                ret = ret & ~(VIDSERIAL_I2C_SCK_R | VIDSERIAL_I2C_SDA_R);
+                if (banshee->vidSerialParallelPort & VIDSERIAL_I2C_SCK_W)
+                        ret |= VIDSERIAL_I2C_SCK_R;
+                if (banshee->vidSerialParallelPort & VIDSERIAL_I2C_SDA_W)
+                        ret |= VIDSERIAL_I2C_SDA_R;
+//                pclog("vidSerialParallelPort: read %08x %08x  %04x(%08x):%08x\n", ret, ret & (VIDSERIAL_DDC_DCK_R | VIDSERIAL_DDC_DDA_R), CS,cs,cpu_state.pc);
                 break;
 
                 case Video_vidScreenSize:
@@ -2168,6 +2199,10 @@ static void *banshee_init_common(char *fn, int has_sgram, int type, int voodoo_t
         banshee->voodoo->tex_mem[1] = banshee->svga.vram;
         banshee->voodoo->tex_mem_w[1] = (uint16_t *)banshee->svga.vram;
         banshee->voodoo->texture_mask = banshee->svga.vram_mask;
+
+        banshee->vidSerialParallelPort = VIDSERIAL_DDC_DCK_W | VIDSERIAL_DDC_DDA_W;
+
+        ddc_init();
 
         return banshee;
 }
