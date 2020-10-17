@@ -304,4 +304,7 @@ void ddc_init(void)
         for (c = 0; c < 127; c++)
                 checksum += edid_data[c];
         edid_data[127] = 256 - checksum;
+
+        i2c.clock = 1;
+        i2c.data = 1;
 }

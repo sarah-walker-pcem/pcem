@@ -8,6 +8,7 @@
 #include "rom.h"
 #include "thread.h"
 #include "video.h"
+#include "vid_ddc.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 #include "vid_ati68860_ramdac.h"
@@ -1838,10 +1839,26 @@ uint8_t mach64_ext_readb(uint32_t addr, void *p)
                 else
                         ret = ati68860_ramdac_in(addr & 3, &mach64->ramdac, &mach64->svga);
                 break;
-                case 0xc4: case 0xc5: case 0xc6: case 0xc7:
-                if (mach64->type == MACH64_VT2)
-                        mach64->dac_cntl |= (4 << 24);
+                case 0xc4: case 0xc5: case 0xc6:
                 READ8(addr, mach64->dac_cntl);
+                break;
+                case 0xc7:
+                READ8(addr, mach64->dac_cntl);
+                if (mach64->type == MACH64_VT2)
+                {
+                        uint8_t gpio_state = 6;
+
+                        if ((ret & (1 << 4)) && !(ret & (1 << 1)))
+                                gpio_state &= ~(1 << 1);
+                        if (!(ret & (1 << 4)) && !ddc_read_data())
+                                gpio_state &= ~(1 << 1);
+                        if ((ret & (1 << 5)) && !(ret & (1 << 2)))
+                                gpio_state &= ~(1 << 2);
+                        if (!(ret & (1 << 5)) && !ddc_read_clock())
+                                gpio_state &= ~(1 << 2);
+
+                        ret = (ret & ~6) | gpio_state;
+                }
                 break;
 
                 case 0xd0: case 0xd1: case 0xd2: case 0xd3:
@@ -2354,6 +2371,12 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p)
                 WRITE8(addr, mach64->dac_cntl, val);
                 svga_set_ramdac_type(svga, (mach64->dac_cntl & 0x100) ? RAMDAC_8BIT : RAMDAC_6BIT);
                 ati68860_set_ramdac_type(&mach64->ramdac, (mach64->dac_cntl & 0x100) ? RAMDAC_8BIT : RAMDAC_6BIT);
+                {
+                        int data = (val & (1 << 4)) ? ((val & (1 << 1)) ? 1 : 0) : 1;
+                        int clk  = (val & (1 << 5)) ? ((val & (1 << 2)) ? 1 : 0) : 1;
+
+                        ddc_i2c_change(clk, data);
+                }
                 break;
 
                 case 0xd0: case 0xd1: case 0xd2: case 0xd3:
@@ -3397,6 +3420,8 @@ static void *mach64_common_init()
         mach64->wake_fifo_thread = thread_create_event();
         mach64->fifo_not_full_event = thread_create_event();
         mach64->fifo_thread = thread_create(fifo_thread, mach64);
+
+        ddc_init();
         
         return mach64;
 }
