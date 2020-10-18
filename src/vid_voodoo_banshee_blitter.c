@@ -1190,6 +1190,8 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                 voodoo->banshee_blt.patoff_y = (val & COMMAND_PATOFF_Y_MASK) >> COMMAND_PATOFF_Y_SHIFT;
                 voodoo->banshee_blt.cur_x = 0;
                 voodoo->banshee_blt.cur_y = 0;
+                voodoo->banshee_blt.dstX = ((int32_t)(voodoo->banshee_blt.dstXY << 19)) >> 19;
+                voodoo->banshee_blt.dstY = ((int32_t)(voodoo->banshee_blt.dstXY << 3)) >> 19;
                 voodoo->banshee_blt.srcX = ((int32_t)(voodoo->banshee_blt.srcXY << 19)) >> 19;
                 voodoo->banshee_blt.srcY = ((int32_t)(voodoo->banshee_blt.srcXY << 3)) >> 19;
                 voodoo->banshee_blt.old_srcX = voodoo->banshee_blt.srcX;
