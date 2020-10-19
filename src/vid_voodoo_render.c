@@ -736,7 +736,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
         }
 
         if ((params->fbzMode & 1) && (yend >= params->clipHighY))
-                yend = params->clipHighY-1;
+                yend = params->clipHighY;
 
         state->y = ystart;
 //        yend--;
