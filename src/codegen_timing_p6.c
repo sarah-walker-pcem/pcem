@@ -1692,6 +1692,7 @@ static int fpu_st_timestamp[8];
 static int last_uop_timestamp = 0;
 
 static int ifetch_length = 0;
+static int has_66_prefix, has_67_prefix;
 
 static void decode_flush()
 {
@@ -1787,8 +1788,15 @@ static void decode_instruction(const p6_instruction_t *ins, uint64_t deps, uint3
         uint32_t regmask_required;
         uint32_t regmask_modified;
         int c, d;
-        int earliest_start = 0;
+        int earliest_start;
         int instr_length = codegen_timing_instr_length(deps, fetchdat, op_32);
+
+        if (has_66_prefix && (deps & HAS_IMM1632))
+                decode_timestamp += 2;
+        if (has_67_prefix && (deps & MODRM))
+                decode_timestamp += 4;
+
+        earliest_start = decode_timestamp;
 
         /*Generate input register mask, and determine the earliest time this
           instruction can start. This is not accurate, as this is calculated per
@@ -1957,6 +1965,8 @@ void codegen_timing_p6_start()
 //        nr_units = NR_P6_UNITS;
         last_prefix = 0;
         prefixes = 0;
+        has_66_prefix = 0;
+        has_67_prefix = 0;
 }
 
 /*Prefixes :
@@ -1968,6 +1978,10 @@ void codegen_timing_p6_prefix(uint8_t prefix, uint32_t fetchdat)
 {
         if (last_prefix) /*First prefix is free*/
                 decode_timestamp++;
+        if (prefix == 0x66)
+                has_66_prefix = 1;
+        if (prefix == 0x67)
+                has_67_prefix = 1;
 
         last_prefix = prefix;
         prefixes++;
