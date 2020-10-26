@@ -22,6 +22,8 @@ void voodoo_recalc_tex(voodoo_t *voodoo, int tmu)
         uint32_t base = voodoo->params.texBaseAddr[tmu];
         uint32_t offset = 0;
         int tex_lod = 0;
+        uint32_t offsets[LOD_MAX+3];
+        int widths[LOD_MAX+3], heights[LOD_MAX+3], shifts[LOD_MAX+3];
 
         if (voodoo->params.tLOD[tmu] & LOD_S_IS_WIDER)
                 height >>= aspect;
@@ -31,77 +33,78 @@ void voodoo_recalc_tex(voodoo_t *voodoo, int tmu)
                 shift -= aspect;
         }
 
-        if ((voodoo->params.tLOD[tmu] & LOD_SPLIT) && (voodoo->params.tLOD[tmu] & LOD_ODD))
+        for (lod = 0; lod <= LOD_MAX + 2; lod++)
         {
-                width >>= 1;
-                height >>= 1;
-                shift--;
-                tex_lod++;
-                if (voodoo->params.tLOD[tmu] & LOD_TMULTIBASEADDR)
-                        base = voodoo->params.texBaseAddr1[tmu];
+                offsets[lod] = offset;
+                widths[lod] = width >> lod;
+                heights[lod] = height >> lod;
+                shifts[lod] = shift - lod;
+
+                if (!widths[lod])
+                        widths[lod] = 1;
+                if (!heights[lod])
+                        heights[lod] = 1;
+                if (shifts[lod] < 0)
+                        shifts[lod] = 0;
+
+                if (!(voodoo->params.tLOD[tmu] & LOD_SPLIT) ||
+                                ((lod & 1) && (voodoo->params.tLOD[tmu] & LOD_ODD)) ||
+                                (!(lod & 1) && !(voodoo->params.tLOD[tmu] & LOD_ODD)))
+                {
+                        if (voodoo->params.tformat[tmu] & 8)
+                                offset += (width >> lod) * (height >> lod) * 2;
+                        else
+                                offset += (width >> lod) * (height >> lod);
+                }
         }
 
+
+        if ((voodoo->params.textureMode[tmu] & TEXTUREMODE_TRILINEAR) && (voodoo->params.tLOD[tmu] & LOD_ODD))
+                tex_lod++; /*Skip LOD 0*/
+
+        pclog("TMU %i:    %08x\n", tmu, voodoo->params.textureMode[tmu]);
         for (lod = 0; lod <= LOD_MAX+1; lod++)
         {
-                if (!width)
-                        width = 1;
-                if (!height)
-                        height = 1;
-                if (shift < 0)
-                        shift = 0;
-                voodoo->params.tex_base[tmu][lod] = base + offset;
+                if (voodoo->params.tLOD[tmu] & LOD_TMULTIBASEADDR)
+                {
+                        switch (tex_lod)
+                        {
+                                case 0:
+                                base = voodoo->params.texBaseAddr[tmu];
+                                break;
+                                case 1:
+                                base = voodoo->params.texBaseAddr1[tmu];
+                                break;
+                                case 2:
+                                base = voodoo->params.texBaseAddr2[tmu];
+                                break;
+                                default:
+                                base = voodoo->params.texBaseAddr38[tmu];
+                                break;
+                        }
+                }
+
+                voodoo->params.tex_base[tmu][lod] = base + offsets[tex_lod];
                 if (voodoo->params.tformat[tmu] & 8)
-                        voodoo->params.tex_end[tmu][lod] = base + offset + (width * height * 2);
+                        voodoo->params.tex_end[tmu][lod] = base + offsets[tex_lod] + (widths[tex_lod] * heights[tex_lod] * 2);
                 else
-                        voodoo->params.tex_end[tmu][lod] = base + offset + (width * height);
-                voodoo->params.tex_w_mask[tmu][lod] = width - 1;
-                voodoo->params.tex_w_nmask[tmu][lod] = ~(width - 1);
-                voodoo->params.tex_h_mask[tmu][lod] = height - 1;
-                voodoo->params.tex_shift[tmu][lod] = shift;
+                        voodoo->params.tex_end[tmu][lod] = base + offsets[tex_lod] + (widths[tex_lod] * heights[tex_lod]);
+                voodoo->params.tex_w_mask[tmu][lod] = widths[tex_lod] - 1;
+                voodoo->params.tex_w_nmask[tmu][lod] = ~(widths[tex_lod] - 1);
+                voodoo->params.tex_h_mask[tmu][lod] = heights[tex_lod] - 1;
+                voodoo->params.tex_shift[tmu][lod] = shifts[tex_lod];
                 voodoo->params.tex_lod[tmu][lod] = tex_lod;
 
-                if (!(voodoo->params.tLOD[tmu] & LOD_SPLIT) || ((lod & 1) && (voodoo->params.tLOD[tmu] & LOD_ODD)) || (!(lod & 1) && !(voodoo->params.tLOD[tmu] & LOD_ODD)))
+                if (!(voodoo->params.textureMode[tmu] & TEXTUREMODE_TRILINEAR) ||
+                                ((lod & 1) && (voodoo->params.tLOD[tmu] & LOD_ODD)) ||
+                                (!(lod & 1) && !(voodoo->params.tLOD[tmu] & LOD_ODD)))
                 {
                         if (!(voodoo->params.tLOD[tmu] & LOD_ODD) || lod != 0)
                         {
-                                if (voodoo->params.tformat[tmu] & 8)
-                                        offset += width * height * 2;
-                                else
-                                        offset += width * height;
-
-                                if (voodoo->params.tLOD[tmu] & LOD_SPLIT)
-                                {
-                                        width >>= 2;
-                                        height >>= 2;
-                                        shift -= 2;
+                                if (voodoo->params.textureMode[tmu] & TEXTUREMODE_TRILINEAR)
                                         tex_lod += 2;
-                                }
                                 else
-                                {
-                                        width >>= 1;
-                                        height >>= 1;
-                                        shift--;
                                         tex_lod++;
-                                }
-
-                                if (voodoo->params.tLOD[tmu] & LOD_TMULTIBASEADDR)
-                                {
-                                        switch (tex_lod)
-                                        {
-                                                case 0:
-                                                base = voodoo->params.texBaseAddr[tmu];
-                                                break;
-                                                case 1:
-                                                base = voodoo->params.texBaseAddr1[tmu];
-                                                break;
-                                                case 2:
-                                                base = voodoo->params.texBaseAddr2[tmu];
-                                                break;
-                                                default:
-                                                base = voodoo->params.texBaseAddr38[tmu];
-                                                break;
-                                        }
-                                }
                         }
                 }
         }
