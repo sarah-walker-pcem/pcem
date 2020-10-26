@@ -62,7 +62,7 @@ void voodoo_recalc_tex(voodoo_t *voodoo, int tmu)
         if ((voodoo->params.textureMode[tmu] & TEXTUREMODE_TRILINEAR) && (voodoo->params.tLOD[tmu] & LOD_ODD))
                 tex_lod++; /*Skip LOD 0*/
 
-        pclog("TMU %i:    %08x\n", tmu, voodoo->params.textureMode[tmu]);
+//        pclog("TMU %i:    %08x\n", tmu, voodoo->params.textureMode[tmu]);
         for (lod = 0; lod <= LOD_MAX+1; lod++)
         {
                 if (voodoo->params.tLOD[tmu] & LOD_TMULTIBASEADDR)
