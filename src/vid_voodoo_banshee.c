@@ -1880,7 +1880,7 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
                 
                 case 0x07: ret = banshee->pci_regs[0x07] & 0x36; break;
                                 
-                case 0x08: ret = 3; break; /*Revision ID*/
+                case 0x08: ret = (banshee->type == TYPE_BANSHEE) ? 3 : 1; break; /*Revision ID*/
                 case 0x09: ret = 0; break; /*Programming interface*/
                 
                 case 0x0a: ret = 0x00; break; /*Supports VGA interface*/
