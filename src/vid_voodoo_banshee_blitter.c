@@ -33,6 +33,8 @@
 #define COMMAND_CMD_POLYLINE                     (7 << 0)
 #define COMMAND_CMD_POLYFILL                     (8 << 0)
 #define COMMAND_INITIATE        (1 << 8)
+#define COMMAND_INC_X_START     (1 << 10)
+#define COMMAND_INC_Y_START     (1 << 11)
 #define COMMAND_PATTERN_MONO    (1 << 13)
 #define COMMAND_DX              (1 << 14)
 #define COMMAND_DY              (1 << 15)
@@ -281,6 +283,22 @@ static void update_src_stride(voodoo_t *voodoo)
         }
 }
 
+static void end_command(voodoo_t *voodoo)
+{
+        /*Update dest coordinates if required*/
+        if (voodoo->banshee_blt.command & COMMAND_INC_X_START)
+        {
+                voodoo->banshee_blt.dstXY &= ~0x0000ffff;
+                voodoo->banshee_blt.dstXY |= (voodoo->banshee_blt.dstX & 0xffff);
+        }
+
+        if (voodoo->banshee_blt.command & COMMAND_INC_Y_START)
+        {
+                voodoo->banshee_blt.dstXY &= ~0xffff0000;
+                voodoo->banshee_blt.dstXY |= (voodoo->banshee_blt.dstY << 16);
+        }
+}
+
 static void banshee_do_rectfill(voodoo_t *voodoo)
 {
         clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
@@ -318,8 +336,9 @@ static void banshee_do_rectfill(voodoo_t *voodoo)
                 if (!(voodoo->banshee_blt.commandExtra & CMDEXTRA_FORCE_PAT_ROW0))
                         pat_y += (voodoo->banshee_blt.command & COMMAND_DY) ? -1 : 1;
         }
-}
 
+        end_command(voodoo);
+}
 
 static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x_dir, int src_x, int src_tiled)
 {
@@ -548,6 +567,7 @@ static void banshee_do_screen_to_screen_blt(voodoo_t *voodoo)
 //                        pclog(" srcY=%i src_addr=%08x\n", voodoo->banshee_blt.srcY, src_addr);
                 do_screen_to_screen_line(voodoo, &voodoo->vram[src_addr], 1, voodoo->banshee_blt.srcX, voodoo->banshee_blt.srcBaseAddr_tiled);
         }
+        end_command(voodoo);
 }
 
 static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t data)
@@ -581,6 +601,8 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
                                 else
                                         do_screen_to_screen_line(voodoo, &voodoo->banshee_blt.host_data[voodoo->banshee_blt.srcX & 3], 0, 0, 0);
                                 voodoo->banshee_blt.cur_y++;
+                                if (voodoo->banshee_blt.cur_y == voodoo->banshee_blt.dstSizeY)
+                                        end_command(voodoo);
                         }
                         
                         if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK) == SRC_FORMAT_COL_1_BPP)
@@ -604,6 +626,8 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
                         {
                                 do_screen_to_screen_line(voodoo, voodoo->banshee_blt.host_data, 0, 0, 0);
                                 voodoo->banshee_blt.cur_y++;
+                                if (voodoo->banshee_blt.cur_y == voodoo->banshee_blt.dstSizeY)
+                                        end_command(voodoo);
                         }
 
                         if (voodoo->banshee_blt.host_data_count)
@@ -741,6 +765,7 @@ static void banshee_do_screen_to_screen_stretch_blt(voodoo_t *voodoo)
 //                        pclog(" srcY=%i src_addr=%08x\n", voodoo->banshee_blt.srcY, src_addr);
                 do_screen_to_screen_stretch_line(voodoo, &voodoo->vram[src_addr], voodoo->banshee_blt.srcX, &voodoo->banshee_blt.srcY);
         }
+        end_command(voodoo);
 }
 
 static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, uint32_t data)
@@ -769,6 +794,8 @@ static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, u
                                 else
                                         do_screen_to_screen_stretch_line(voodoo, &voodoo->banshee_blt.host_data[voodoo->banshee_blt.srcX & 3], 0, NULL);
                                 voodoo->banshee_blt.cur_y++;
+                                if (voodoo->banshee_blt.cur_y == voodoo->banshee_blt.dstSizeY)
+                                        end_command(voodoo);
                         }
 
                         if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK) == SRC_FORMAT_COL_1_BPP)
@@ -792,6 +819,8 @@ static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, u
                         {
                                 do_screen_to_screen_stretch_line(voodoo, voodoo->banshee_blt.host_data, 0, NULL);
                                 voodoo->banshee_blt.cur_y++;
+                                if (voodoo->banshee_blt.cur_y == voodoo->banshee_blt.dstSizeY)
+                                        end_command(voodoo);
                         }
 
                         if (voodoo->banshee_blt.host_data_count)
