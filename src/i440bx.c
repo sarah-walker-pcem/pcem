@@ -145,6 +145,19 @@ uint8_t i440bx_read(int func, int addr, void *priv)
         return card_i440bx[addr];
 }
 
+static void i440bx_smram_enable(void)
+{
+//        pclog("i440bx_smram_enable: 440BX 0x72=%02x\n", card_i440bx[0x72]);
+        if (card_i440bx[0x72] & 8)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+}
+static void i440bx_smram_disable(void)
+{
+//        pclog("i440bx_smram_disable: 440BX 0x72=%02x\n", card_i440bx[0x72]);
+        if (card_i440bx[0x72] & 8)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+}
+
 void i440bx_init()
 {
         pci_add_specific(0, i440bx_read, i440bx_write, NULL);
@@ -162,6 +175,9 @@ void i440bx_init()
         card_i440bx[0x72] = 0x02;
         card_i440bx[0x73] = 0x38;
         card_i440bx[0x7a] = 0x02; /*AGP disabled*/
+
+        smram_enable = i440bx_smram_enable;
+        smram_disable = i440bx_smram_disable;
 }
 
 void i440bx_reset()
