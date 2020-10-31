@@ -470,3 +470,14 @@ static int op0F01_286(uint32_t fetchdat)
         
         return op0F01_common(fetchdat, 0, 1, 0);
 }
+
+
+static int opRSM(uint32_t fetchdat)
+{
+        if (cpu_cur_status & CPU_STATUS_SMM)
+                x86_smi_leave();
+        else
+                x86illegal();
+
+        return 1;
+}

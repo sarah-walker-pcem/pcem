@@ -274,6 +274,8 @@ static inline void exec_interpreter(void)
 
                 if (cpu_state.abrt)
                         CPU_BLOCK_END();
+                if (cpu_state.smi_pending)
+                        CPU_BLOCK_END();
                 if (trap)
                         CPU_BLOCK_END();
                 if (nmi && nmi_enable && nmi_mask)
@@ -446,10 +448,10 @@ static inline void exec_recompiler(void)
                           hit, as host block size is only 2kB*/
                         if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                 CPU_BLOCK_END();
-
                         if (cpu_state.flags & T_FLAG)
                                 CPU_BLOCK_END();
-
+                        if (cpu_state.smi_pending)
+                                CPU_BLOCK_END();
                         if (nmi && nmi_enable && nmi_mask)
                                 CPU_BLOCK_END();
 
@@ -525,10 +527,10 @@ static inline void exec_recompiler(void)
                           hit, as host block size is only 2kB*/
                         if (((cs+cpu_state.pc) - start_pc) >= max_block_size)
                                 CPU_BLOCK_END();
-
                         if (cpu_state.flags & T_FLAG)
                                 CPU_BLOCK_END();
-
+                        if (cpu_state.smi_pending)
+                                CPU_BLOCK_END();
                         if (nmi && nmi_enable && nmi_mask)
                                 CPU_BLOCK_END();
 
@@ -614,7 +616,12 @@ void exec386_dynarec(int cycs)
                                 }
                         }
                 
-                        if (nmi && nmi_enable && nmi_mask)
+                        if (cpu_state.smi_pending)
+                        {
+                                cpu_state.smi_pending = 0;
+                                x86_smi_enter();
+                        }
+                        else if (nmi && nmi_enable && nmi_mask)
                         {
                                 cpu_state.oldpc = cpu_state.pc;
 //                                pclog("NMI\n");

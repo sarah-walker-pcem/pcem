@@ -40,7 +40,7 @@ typedef struct
 {
         uint32_t base;
         uint32_t limit;
-        uint8_t access;
+        uint8_t access, access2;
         uint16_t seg;
         uint32_t limit_low, limit_high;
         int checked; /*Non-zero if selector is known to be valid*/
@@ -90,6 +90,7 @@ struct
         int8_t ssegs;
         int8_t ismmx;
         int8_t abrt;
+        int8_t smi_pending;
 
         int _cycles;
         int cpu_recomp_ins;
@@ -118,6 +119,8 @@ struct
         } CR0;
 
         uint16_t flags, eflags;
+
+        uint32_t smbase;
 } cpu_state;
 
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
@@ -187,6 +190,7 @@ extern uint16_t cpu_cur_status;
 #define CPU_STATUS_STACK32 (1 << 1)
 #define CPU_STATUS_PMODE   (1 << 2)
 #define CPU_STATUS_V86     (1 << 3)
+#define CPU_STATUS_SMM     (1 << 4)
 #define CPU_STATUS_FLAGS 0xff
 
 /*If the flags below are set in cpu_cur_status, they must be set in block->status.
@@ -315,5 +319,9 @@ int divl(uint32_t val);
 int idivl(int32_t val);
 
 extern int cpu_end_block_after_ins;
+
+void x86_smi_trigger(void);
+void x86_smi_enter(void);
+void x86_smi_leave(void);
 
 #endif

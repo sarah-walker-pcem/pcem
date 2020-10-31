@@ -523,7 +523,7 @@ void dumpregs()
                 putc(readmembl(c+0x80000000),f);
         }
         fclose(f);
-        pclog("Dumping done\n");        
+        pclog("Dumping done\n");
 /*        f=fopen("rram6.dmp","wb");
         for (c=0;c<0x1000000;c++) putc(readmemb(c+0xBF000000),f);
         fclose(f);*/
@@ -583,6 +583,7 @@ void dumpregs()
         {
                 printf("386 in %s mode   stack in %s mode\n",(use32)?"32-bit":"16-bit",(stack32)?"32-bit":"16-bit");
                 printf("CR0=%08X CR2=%08X CR3=%08X CR4=%08x\n",cr0,cr2,cr3, cr4);
+                pclog("SMBASE=%08x\n", cpu_state.smbase);
         }
         printf("Entries in readlookup : %i    writelookup : %i\n",readlnum,writelnum);
         for (c=0;c<1024*1024;c++)
@@ -641,6 +642,7 @@ void resetx86()
         x86seg_reset();
         codegen_reset();
         x86_was_reset = 1;
+        cpu_state.smbase = 0x30000;
 }
 
 void softresetx86()

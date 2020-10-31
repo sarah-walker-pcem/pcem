@@ -219,7 +219,12 @@ void exec386(int cycs)
                 
                 cycdiff=oldcyc-cycles;
 
-                if (trap)
+                if (cpu_state.smi_pending)
+                {
+                        cpu_state.smi_pending = 0;
+                        x86_smi_enter();
+                }
+                else if (trap)
                 {
                         flags_rebuild();
 //                        oldpc=pc;
