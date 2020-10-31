@@ -566,7 +566,7 @@ static inline void exec_recompiler(void)
 }
 
 
-static int cycles_main = 0;
+int cycles_main = 0;
 void exec386_dynarec(int cycs)
 {
         uint8_t temp;

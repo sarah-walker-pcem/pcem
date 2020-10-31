@@ -14,6 +14,7 @@ class PopupMenuEvent;
 wxDECLARE_EVENT(WX_CALLBACK_EVENT, CallbackEvent);
 wxDECLARE_EVENT(WX_EXIT_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_STOP_EMULATION_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
@@ -155,6 +156,7 @@ private:
         void OnExitEvent(wxCommandEvent& event);
         void OnExitCompleteEvent(wxCommandEvent& event);
         void OnStopEmulationEvent(wxCommandEvent& event);
+        void OnStopEmulationNowEvent(wxCommandEvent& event);
         void OnShowWindowEvent(wxCommandEvent& event);
         void OnPopupMenuEvent(PopupMenuEvent& event);
         void OnCallbackEvent(CallbackEvent& event);

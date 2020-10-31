@@ -126,6 +126,7 @@ struct
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
 
 #define cycles cpu_state._cycles
+extern int cycles_main;
 
 #define cr0 cpu_state.CR0.l
 #define msw cpu_state.CR0.w

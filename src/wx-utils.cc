@@ -449,6 +449,13 @@ void wx_stop_emulation(void* window)
         wxQueueEvent((wxWindow*)window, event);
 }
 
+void wx_stop_emulation_now(void* window)
+{
+        wxCommandEvent* event = new wxCommandEvent(WX_STOP_EMULATION_NOW_EVENT, wxID_ANY);
+        event->SetEventObject((wxWindow*)window);
+        wxQueueEvent((wxWindow*)window, event);
+}
+
 int wx_yield()
 {
 	return wxYield();

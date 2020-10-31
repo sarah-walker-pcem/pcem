@@ -223,6 +223,14 @@ int mainthread(void* param)
         return TRUE;
 }
 
+void stop_emulation_now(void)
+{
+        /*Deduct a sufficiently large number of cycles that no instructions will
+          run before the main thread is terminated*/
+        cycles -= 99999999;
+        wx_stop_emulation_now(ghwnd);
+}
+
 int dir_exists(char* path)
 {
         return wx_dir_exists(path);

@@ -79,7 +79,10 @@ static void piix_pm_write(uint16_t port, uint8_t val, void *p)
                 {
                         pclog("PIIX transition to power state %i\n", (val >> 2) & 7);
                         if (val == 0x20)
-                                fatal("Power off\n");
+                        {
+                                pclog("Power off\n");
+                                stop_emulation_now();
+                        }
                 }
                 piix->pm.pmcntrl = (piix->pm.pmcntrl & ~0xff00) | ((val & 0x1c) << 8);
                 break;

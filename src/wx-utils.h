@@ -52,6 +52,7 @@ extern "C" {
 
         void wx_exit(void* window, int value);
         void wx_stop_emulation(void* window);
+        void wx_stop_emulation_now(void* window);
 
         void* wx_createtimer(void (*fn)());
         void wx_starttimer(void* timer, int milliseconds, int once);

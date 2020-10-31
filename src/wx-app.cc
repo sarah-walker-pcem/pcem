@@ -33,6 +33,7 @@ extern void InitXmlResource();
 wxDEFINE_EVENT(WX_CALLBACK_EVENT, CallbackEvent);
 wxDEFINE_EVENT(WX_EXIT_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_STOP_EMULATION_EVENT, wxCommandEvent);
+wxDEFINE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
@@ -89,6 +90,7 @@ Frame::Frame(App* app, const wxString& title, const wxPoint& pos,
         Bind(WX_EXIT_EVENT, &Frame::OnExitEvent, this);
         Bind(WX_EXIT_COMPLETE_EVENT, &Frame::OnExitCompleteEvent, this);
         Bind(WX_STOP_EMULATION_EVENT, &Frame::OnStopEmulationEvent, this);
+        Bind(WX_STOP_EMULATION_NOW_EVENT, &Frame::OnStopEmulationNowEvent, this);
         Bind(WX_CALLBACK_EVENT, &Frame::OnCallbackEvent, this);
 #ifdef _WIN32
         Bind(WX_WIN_SEND_MESSAGE_EVENT, &Frame::OnWinSendMessageEvent, this);
@@ -149,6 +151,15 @@ void Frame::OnStopEmulationEvent(wxCommandEvent& event)
                 else
                         resume_emulation();
         }
+}
+
+void Frame::OnStopEmulationNowEvent(wxCommandEvent& event)
+{
+        stop_emulation();
+        if (!config_override)
+                ShowConfigSelection();
+        else
+                Quit(1);
 }
 
 void Frame::OnShowWindowEvent(wxCommandEvent& event)

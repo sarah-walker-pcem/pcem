@@ -444,3 +444,5 @@ void saveconfig_global_only();
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 void ide_padstr(char *str, const char *src, int len);
+
+void stop_emulation_now(void);
