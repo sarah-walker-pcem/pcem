@@ -106,6 +106,30 @@ void i430hx_write(int func, int addr, uint8_t val, void *priv)
                         i430hx_map(0xec000, 0x04000, val >> 4);
                 pclog("i430hx_write : PAM6 write %02X\n", val);
                 break;
+
+                case 0x72: /*SMRAM*/
+                pclog("Write SMRAM %02x\n", val);
+                val = (val & 0x78) | 2; /*SMRAM always at A0000-BFFFF*/
+                val |= (card_i430hx[0x72] & 0x10); /*D_LCK can not be cleared by software*/
+                if (val & 0x10) /*D_LCK locks D_OPEN and G_SMRAME*/
+                {
+                        val &= ~0x48; /*D_OPEN is forced to 0, G_SMRAME is read only*/
+                        val |= (card_i430hx[0x72] & 0x08);
+                }
+                if ((card_i430hx[0x72] ^ val) & 0x40)
+                {
+                        if (val & 0x40) /*SMRAM enabled*/
+                        {
+                                pclog("Enable SMRAM\n");
+                                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                        }
+                        else
+                        {
+                                pclog("Disable SMRAM\n");
+                                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                        }
+                }
+                break;
         }
                 
         card_i430hx[addr] = val;
@@ -119,7 +143,17 @@ uint8_t i430hx_read(int func, int addr, void *priv)
         return card_i430hx[addr];
 }
  
-    
+static void i430hx_smram_enable(void)
+{
+        if (card_i430hx[0x72] & 8)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+}
+static void i430hx_smram_disable(void)
+{
+        if (card_i430hx[0x72] & 8)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+}
+
 void i430hx_init()
 {
         pci_add_specific(0, i430hx_read, i430hx_write, NULL);
@@ -141,6 +175,9 @@ void i430hx_init()
         card_i430hx[0x64] = card_i430hx[0x5F] = 0x02; 
         card_i430hx[0x65] = card_i430hx[0x66] = card_i430hx[0x67] = 0x02;
         card_i430hx[0x68] = 0x11;
+
+        smram_enable = i430hx_smram_enable;
+        smram_disable = i430hx_smram_disable;
 }
 
 void i430hx_reset()

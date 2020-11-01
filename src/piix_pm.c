@@ -291,7 +291,7 @@ static uint8_t piix_smbus_read(uint16_t port, void *p)
         return ret;
 }
 
-static uint8_t piix_apm_read(uint16_t port, void *p)
+static uint8_t piix4_apm_read(uint16_t port, void *p)
 {
         piix_t *piix = (piix_t *)p;
         uint8_t ret = 0xff;
@@ -309,7 +309,7 @@ static uint8_t piix_apm_read(uint16_t port, void *p)
 //        pclog("piix_apm_read: port=%04x ret=%02x\n", port, ret);
         return ret;
 }
-static void piix_apm_write(uint16_t port, uint8_t val, void *p)
+static void piix4_apm_write(uint16_t port, uint8_t val, void *p)
 {
         piix_t *piix = (piix_t *)p;
 
@@ -413,5 +413,5 @@ void piix_pm_init(piix_t *piix)
         piix->pm.timer_offset = 0;
         piix->pm.gporeg = 0x7fffbfff;
 
-        io_sethandler(0x00b2, 0x0002, piix_apm_read, NULL, NULL, piix_apm_write, NULL, NULL, piix);
+        io_sethandler(0x00b2, 0x0002, piix4_apm_read, NULL, NULL, piix4_apm_write, NULL, NULL, piix);
 }

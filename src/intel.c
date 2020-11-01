@@ -127,7 +127,7 @@ uint8_t endeavor_brdconfig(uint16_t port, void *p)
                         temp = 0x10;
                 else
                         temp = 0x10; // TODO: how are the overdrive processors configured?
-                return 0xe2 | temp;
+                return 0xe0 | temp;
         }
         return 0;
 }

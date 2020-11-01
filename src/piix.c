@@ -29,6 +29,12 @@ static sff_busmaster_t piix_busmaster[2];
 static uint8_t piix_rc = 0;
 static void (*piix_nb_reset)();
 
+#define REG_SMIEN 0xa2
+#define REG_SMIREQ 0xaa
+
+#define SMIEN_APMC   (1 << 7)
+#define SMIREQ_RAPMC (1 << 7)
+
 
 void piix_write(int func, int addr, uint8_t val, void *priv)
 {
@@ -139,6 +145,21 @@ void piix_write(int func, int addr, uint8_t val, void *priv)
                         else
                                 pci_set_irq_routing(PCI_INTD, val & 0xf);
                         break;
+                        case REG_SMIREQ:
+                        if (piix.type <= TYPE_PIIX3)
+                        {
+                                card_piix[addr] &= val;
+                                return;
+                        }
+                        break;
+                        case REG_SMIREQ+1:
+                        if (piix.type <= TYPE_PIIX3)
+                        {
+                                card_piix[addr] &= val;
+                                return;
+                        }
+                        break;
+
                 }
                 card_piix[addr] = val;
         }
@@ -179,8 +200,11 @@ void piix_rc_write(uint16_t port, uint8_t val, void *p)
                         keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
                         ide_reset_devices();
                         piix.pm.timer_offset = tsc;
+                        resetx86();
+                        piix.pm.apmc = piix.pm.apms = 0;
                 }
-                resetx86();
+                else
+                        softresetx86();
         }
 
         piix_rc = val & ~4;
@@ -205,9 +229,53 @@ static void piix_92_write(uint16_t port, uint8_t val, void *p)
         piix.port_92 = val;
 }
 
-
-void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
+static uint8_t piix_apm_read(uint16_t port, void *p)
 {
+        piix_t *piix = (piix_t *)p;
+        uint8_t ret = 0xff;
+
+        switch (port)
+        {
+                case 0xb2:
+                ret = piix->pm.apmc;
+                break;
+
+                case 0xb3:
+                ret = piix->pm.apms;
+                break;
+        }
+//        pclog("piix_apm_read: port=%04x ret=%02x\n", port, ret);
+        return ret;
+}
+
+static void piix_apm_write(uint16_t port, uint8_t val, void *p)
+{
+        piix_t *piix = (piix_t *)p;
+
+//        pclog("piix_apm_write: port=%04x val=%02x\n", port, val);
+
+        switch (port)
+        {
+                case 0xb2:
+                piix->pm.apmc = val;
+                if (card_piix[REG_SMIEN] & SMIEN_APMC)
+                {
+                        card_piix[REG_SMIREQ] |= SMIREQ_RAPMC;
+//                        pclog("APMC write causes SMI\n");
+                        x86_smi_trigger();
+                }
+                break;
+
+                case 0xb3:
+                piix->pm.apms = val;
+                break;
+        }
+}
+
+static void piix_common_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
+{
+        memset(&piix, 0, sizeof(piix_t));
+
         pci_add_specific(card, piix_read, piix_write, NULL);
         
         memset(card_piix, 0, 256);
@@ -261,6 +329,13 @@ void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_r
         piix_nb_reset = nb_reset;
         
         piix.type = TYPE_PIIX3;
+}
+
+void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
+{
+        piix_common_init(card, pci_a, pci_b, pci_c, pci_d, nb_reset);
+
+        io_sethandler(0x00b2, 0x0002, piix_apm_read, NULL, NULL, piix_apm_write, NULL, NULL, &piix);
 }
 
 void piix4_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)())
