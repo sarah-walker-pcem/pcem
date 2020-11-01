@@ -28,6 +28,16 @@ static struct
         struct
         {
                 uint16_t io_base;
+
+                uint16_t pm_status;
+                uint16_t pm_enable;
+                uint16_t pm_ctrl;
+
+                uint16_t gbl_status;
+                uint16_t gbl_enable;
+                uint16_t gbl_ctrl;
+
+                uint8_t smi_cmd;
         } power;
 } vt82c586b;
 
@@ -35,6 +45,12 @@ static struct
 
 #define ACPI_IO_ENABLE   (1 << 7)
 #define ACPI_TIMER_32BIT (1 << 3)
+
+#define GBL_SW_SMI_STS (1 << 6)
+#define GBL_SW_SMI_EN  (1 << 6)
+
+#define PM_CTRL_SLP_EN (1 << 13)
+#define PM_CTRL_SLP_TYP_MASK (7 << 10)
 
 static uint8_t vt82c586b_read(int func, int addr, void *priv)
 {
@@ -235,21 +251,110 @@ static void vt82c586b_usb_write(int addr, uint8_t val)
 static uint8_t power_reg_read(uint16_t addr, void *p)
 {
         uint32_t timer;
+        uint8_t ret = 0xff;
 
         switch (addr & 0xff)
         {
+                case 0x00: case 0x01:
+                ret = vt82c586b.power.pm_status >> ((addr & 1) * 8);
+                break;
+                case 0x02: case 0x03:
+                ret = vt82c586b.power.pm_enable >> ((addr & 1) * 8);
+                break;
+                case 0x04: case 0x05:
+                ret = vt82c586b.power.pm_ctrl >> ((addr & 1) * 8);
+                break;
+
                 case 0x08: case 0x09: case 0x0a: case 0x0b: /*ACPI timer*/
                 timer = (tsc * ACPI_TIMER_FREQ) / cpu_get_speed();
                 if (!(vt82c586b.power_regs[0x41] & ACPI_TIMER_32BIT))
                         timer &= 0x00ffffff;
                 return (timer >> (8 * (addr & 3))) & 0xff;
+
+                case 0x28: case 0x29:
+                ret = vt82c586b.power.gbl_status >> ((addr & 1) * 8);
+                break;
+                case 0x2a: case 0x2b:
+                ret = vt82c586b.power.gbl_enable >> ((addr & 1) * 8);
+                break;
+                case 0x2c: case 0x2d:
+                ret = vt82c586b.power.gbl_ctrl >> ((addr & 1) * 8);
+                break;
+
+                case 0x2f:
+                ret = vt82c586b.power.smi_cmd;
+                break;
         }
-//        pclog("power_reg_read: addr=%04x\n", addr);
-        return 0xff;
+//        pclog("power_reg_read: addr=%04x ret=%02x\n", addr, ret);
+        return ret;
 }
 static void power_reg_write(uint16_t addr, uint8_t val, void *p)
 {
 //        pclog("power_reg_write: addr=%04x val=%02x\n", addr, val);
+        switch (addr & 0xff)
+        {
+                case 0x00:
+                vt82c586b.power.pm_status &= ~(val & 0x31);
+                break;
+                case 0x01:
+                vt82c586b.power.pm_status &= ~((val & 0x8d) << 8);
+                break;
+
+                case 0x02:
+                vt82c586b.power.pm_enable = (vt82c586b.power.pm_enable & ~0xff) | (val & 0x21);
+                break;
+                case 0x03:
+                vt82c586b.power.pm_enable = (vt82c586b.power.pm_enable & ~0xff00) | ((val & 0x05) << 8);
+                break;
+
+                case 0x04:
+                vt82c586b.power.pm_ctrl = (vt82c586b.power.pm_ctrl & ~0xff) | (val & 0x07);
+                if (val & (1 << 2))
+                        pclog("VT82C586B set GBL_RLS\n");
+                break;
+                case 0x05:
+                vt82c586b.power.pm_ctrl = (vt82c586b.power.pm_ctrl & ~0xff00) | ((val & 0x1c) << 8);
+                /*Note: PM_CTRL_SLP_EN is write-only, hence not stored in pm_ctrl*/
+                if (val & (PM_CTRL_SLP_EN >> 8))
+                {
+                        pclog("VT82C586B transition to power state %i\n", (val >> 2) & 7);
+                        if (!(vt82c586b.power.pm_ctrl & PM_CTRL_SLP_TYP_MASK))
+                        {
+                                pclog("Power off\n");
+                                stop_emulation_now();
+                        }
+                }
+                break;
+
+                case 0x28:
+                vt82c586b.power.gbl_status &= ~(val & 0x7f);
+                break;
+
+                case 0x2a:
+                vt82c586b.power.gbl_enable = (vt82c586b.power.gbl_enable & ~0xff) | (val & 0x7f);
+                break;
+
+                case 0x2c:
+                vt82c586b.power.gbl_ctrl = (vt82c586b.power.gbl_ctrl & ~0xff) | (val & 0x17);
+                if (val & (1 << 1))
+                        pclog("VT82C586B set BIOS_RLS\n");
+                break;
+                case 0x2d:
+                if (val & 1)
+                        vt82c586b.power.gbl_ctrl &= ~0x100;
+                break;
+
+                case 0x2f:
+                vt82c586b.power.smi_cmd = val;
+                vt82c586b.power_regs[0x47] = val;
+                if (vt82c586b.power.gbl_enable & GBL_SW_SMI_EN)
+                {
+                        vt82c586b.power.gbl_status |= GBL_SW_SMI_STS;
+                        x86_smi_trigger();
+                }
+                pclog("SMI_CMD write %02x\n", val);
+                break;
+        }
 }
 static void vt82c586b_power_write(int addr, uint8_t val)
 {

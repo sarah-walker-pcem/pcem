@@ -107,6 +107,16 @@ static void mvp3_host_bridge_write(int addr, uint8_t val)
                 if ((mvp3.host_bridge_regs[0x63] ^ val) & 0xc0)
                         mvp3_map(0xe0000, 0x10000, (val & 0xc0) >> 6);
                 mvp3.host_bridge_regs[0x63] = val;
+                if ((val & 3) == 1 || ((val & 3) == 3 && (cpu_cur_status & CPU_STATUS_SMM))) /*SMRAM enabled*/
+                {
+                        pclog("Enable SMRAM\n");
+                        mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                }
+                else
+                {
+                        pclog("Disable SMRAM\n");
+                        mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                }
 //                if (val == 0xb0)
 //                        output = 3;
                 return;
@@ -169,6 +179,17 @@ static void mvp3_write(int func, int addr, uint8_t val, void *priv)
         }
 }
 
+static void mvp3_smram_enable(void)
+{
+        if ((mvp3.host_bridge_regs[0x63] & 3) == 3)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+}
+static void mvp3_smram_disable(void)
+{
+        if ((mvp3.host_bridge_regs[0x63] & 3) != 1)
+                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+}
+
 void mvp3_init()
 {
         pci_add_specific(0, mvp3_read, mvp3_write, NULL);
@@ -216,4 +237,7 @@ void mvp3_init()
 
         mvp3.pci_bridge_regs[0x24] = 0xf0;
         mvp3.pci_bridge_regs[0x25] = 0xff;
+
+        smram_enable = mvp3_smram_enable;
+        smram_disable = mvp3_smram_disable;
 }
