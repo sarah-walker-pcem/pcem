@@ -6,6 +6,7 @@
 #include "keyboard_at.h"
 #include "mem.h"
 #include "pci.h"
+#include "sio.h"
 #include "x86.h"
 
 #include "i430lx.h"
@@ -107,6 +108,30 @@ void i430lx_write(int func, int addr, uint8_t val, void *priv)
                         i430lx_map(0xec000, 0x04000, val >> 4);
                 pclog("i430lx_write : PAM6 write %02X\n", val);
                 break;
+
+                case 0x72: /*SMRAM*/
+                pclog("Write SMRAM %02x\n", val);
+                val = (val & 0x38) | 2; /*SMRAM always at A0000-BFFFF*/
+                val |= (card_i430lx[0x72] & 0x08); /*D_LCK can not be cleared by software*/
+                if (val & 0x08) /*D_LCK locks D_OPEN*/
+                {
+                        val &= ~0x20; /*D_OPEN is forced to 0*/
+                }
+                val |= (card_i430lx[0x72] & 0x08);
+                if ((card_i430lx[0x72] ^ val) & 0x20)
+                {
+                        if (val & 0x20) /*SMRAM enabled*/
+                        {
+                                pclog("Enable SMRAM\n");
+                                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                        }
+                        else
+                        {
+                                pclog("Disable SMRAM\n");
+                                mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                        }
+                }
+                break;
         }
                 
         card_i430lx[addr] = val;
@@ -134,13 +159,25 @@ void i430lx_trc_write(uint16_t port, uint8_t val, void *p)
                 if (val & 2) /*Hard reset*/
                 {
                         i430lx_write(0, 0x59, 0xf, NULL); /*Should reset all PCI devices, but just set PAM0 to point to ROM for now*/
+                        card_i430lx[0x72] = 0; /*Also clear SMRAM register so BIOS will relocate SMBASE*/
                         keyboard_at_reset(); /*Reset keyboard controller to reset system flag*/
                         ide_reset_devices();
+                        resetx86();
                 }
-                resetx86();
+                else
+                        softresetx86();
         }
 
         trc = val;
+}
+
+static void i430lx_smram_enable(void)
+{
+        mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+}
+static void i430lx_smram_disable(void)
+{
+        mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
 }
 
 void i430lx_init()
@@ -168,4 +205,7 @@ void i430lx_init()
 //        card_i430lx[0x78] = 0x23;
 
         io_sethandler(0x0cf9, 0x0001, i430lx_trc_read, NULL, NULL, i430lx_trc_write, NULL, NULL, NULL);
+
+        smram_enable = i430lx_smram_enable;
+        smram_disable = i430lx_smram_disable;
 }
