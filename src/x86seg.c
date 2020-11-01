@@ -3060,7 +3060,7 @@ void x86_smi_enter(void)
         cpu_state.seg_cs.limit = 0xffffffff;
         cpu_state.seg_cs.limit_low = 0;
         cpu_state.seg_cs.limit_high = 0xffffffff;
-        cpu_state.seg_cs.access = (3 << 5) | 2;
+        cpu_state.seg_cs.access = (0 << 5) | 2;
 
         use32 = 0;
         stack32 = 0;
@@ -3112,33 +3112,33 @@ void x86_smi_leave(void)
         cpu_state.smbase = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ef8);
         cpl_override = 0;
 
+        cr0 = new_cr0;
+
         cpu_cur_status = 0;
-        if (cpu_state.seg_cs.access2 & 0x40)
-        {
-                cpu_cur_status |= CPU_STATUS_USE32;
-                use32 = 0x300;
-        }
-        else
-                use32 = 0;
-        if (cpu_state.seg_ss.access2 & 0x40)
-        {
-                cpu_cur_status |= CPU_STATUS_STACK32;
-                stack32 = 1;
-        }
-        else
-                stack32 = 0;
+        use32 = stack32 = 0;
         if (cr0 & 1)
         {
                 cpu_cur_status |= CPU_STATUS_PMODE;
                 if (cpu_state.eflags & VM_FLAG)
                         cpu_cur_status |= CPU_STATUS_V86;
+                else
+                {
+                        if (cpu_state.seg_cs.access2 & 0x40)
+                        {
+                                cpu_cur_status |= CPU_STATUS_USE32;
+                                use32 = 0x300;
+                        }
+                        if (cpu_state.seg_ss.access2 & 0x40)
+                        {
+                                cpu_cur_status |= CPU_STATUS_STACK32;
+                                stack32 = 1;
+                        }
+                }
         }
         if (cpu_state.seg_ds.base == 0 && cpu_state.seg_ds.limit_low == 0 && cpu_state.seg_ds.limit_high == 0xffffffff)
                 cpu_cur_status |= CPU_STATUS_NOTFLATDS;
         if (cpu_state.seg_ss.base == 0 && cpu_state.seg_ss.limit_low == 0 && cpu_state.seg_ss.limit_high == 0xffffffff)
                 cpu_cur_status |= CPU_STATUS_NOTFLATSS;
-
-        cr0 = new_cr0;
 
         if (smram_disable)
                 smram_disable();
