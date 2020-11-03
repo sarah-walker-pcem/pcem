@@ -414,7 +414,9 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                 
                 case SST_swapbufferCMD:
                 voodoo->cmd_written++;
+                thread_lock_mutex(voodoo->swap_mutex);
                 voodoo->swap_count++;
+                thread_unlock_mutex(voodoo->swap_mutex);
                 if (voodoo->fbiInit7 & FBIINIT7_CMDFIFO_ENABLE)
                         return;
                 voodoo_queue_command(voodoo, addr | FIFO_WRITEL_REG, val);
@@ -495,7 +497,9 @@ static void voodoo_writel(uint32_t addr, uint32_t val, void *p)
                         if ((voodoo->fbiInit1 & FBIINIT1_VIDEO_RESET) && !(val & FBIINIT1_VIDEO_RESET))
                         {
                                 voodoo->line = 0;
+                                thread_lock_mutex(voodoo->swap_mutex);
                                 voodoo->swap_count = 0;
+                                thread_unlock_mutex(voodoo->swap_mutex);
                                 voodoo->retrace_count = 0;
                         }
                         voodoo->fbiInit1 = (val & ~5) | (voodoo->fbiInit1 & 5);
@@ -1024,6 +1028,7 @@ void *voodoo_card_init()
                 voodoo->render_thread[2] = thread_create(voodoo_render_thread_3, voodoo);
                 voodoo->render_thread[3] = thread_create(voodoo_render_thread_4, voodoo);
         }
+        voodoo->swap_mutex = thread_create_mutex();
         timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
         
         for (c = 0; c < 0x100; c++)
@@ -1140,7 +1145,7 @@ void *voodoo_2d3d_card_init(int type)
                 voodoo->render_thread[2] = thread_create(voodoo_render_thread_3, voodoo);
                 voodoo->render_thread[3] = thread_create(voodoo_render_thread_4, voodoo);
         }
-
+        voodoo->swap_mutex = thread_create_mutex();
         timer_add(&voodoo->wake_timer, voodoo_wake_timer, (void *)voodoo, 0);
 
         for (c = 0; c < 0x100; c++)

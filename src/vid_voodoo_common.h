@@ -229,6 +229,7 @@ typedef struct voodoo_t
 
         uint32_t tmuConfig;
 
+        mutex_t *swap_mutex;
         int swap_count;
 
         int disp_buffer, draw_buffer;
