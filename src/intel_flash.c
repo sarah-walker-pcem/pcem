@@ -43,11 +43,7 @@ static uint8_t flash_read(uint32_t addr, void *p)
 {
         flash_t *flash = (flash_t *)p;
 	if (flash->invert_high_pin)
-	{
-	        // pclog("flash_read : addr=%08x/%08x val=%02x command=%02x %04x:%08x\n", addr, addr ^ 0x10000, flash->array[(addr ^ 0x10000) & 0x1ffff], flash->command, CS, cpu_state.pc);
 		addr ^= 0x10000;
-		if (addr & 0xfff00000)  return flash->array[addr & flash->addr_mask];
-	}
         // pclog("flash_read : addr=%08x command=%02x %04x:%08x\n", addr, flash->command, CS, cpu_state.pc);
 	addr &= flash->addr_mask;
         switch (flash->command)
@@ -97,13 +93,10 @@ static void flash_write(uint32_t addr, uint8_t val, void *p)
 {
         flash_t *flash = (flash_t *)p;
 	int i;
-        pclog("flash_write : addr=%08x val=%02x command=%02x %04x:%08x\n", addr, val, flash->command, CS, cpu_state.pc);
+//        pclog("flash_write : addr=%08x val=%02x command=%02x %04x:%08x\n", addr, val, flash->command, CS, cpu_state.pc);
 
 	if (flash->invert_high_pin)
-	{
 		addr ^= 0x10000;
-		if (addr & 0xfff00000)  return;
-	}
 	addr &= flash->addr_mask;
 
         switch (flash->command)
