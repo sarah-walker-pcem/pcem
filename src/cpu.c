@@ -333,6 +333,7 @@ void cpu_set()
 
         timing_misaligned = 0;
         cpu_cyrix_alignment = 0;
+        cpu_CR4_mask = 0;
         
         switch (cpu_s->cpu_type)
         {
