@@ -38,6 +38,9 @@ uint32_t ropMOVD_d_r(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 {
         int src_reg = (fetchdat >> 3) & 7;
 
+        if (cpu_iscyrix && (cpu_cur_status & CPU_STATUS_SMM))
+                return 0;
+
         uop_MMX_ENTER(ir);
         codegen_mark_code_present(block, cs+op_pc, 1);
         if ((fetchdat & 0xc0) == 0xc0)

@@ -165,7 +165,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
         int dpl, valid, granularity;
         uint32_t addr, base, limit;
         uint16_t desc, sel;
-        uint8_t access;
+        uint8_t access, access2;
 
 //        pclog("op0F00 %02X %04X:%04X\n", rmdat & 0x38, CS, pc);        
         switch (rmdat & 0x38)
@@ -198,10 +198,12 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 limit = readmemw(0, addr) + ((readmemb(0, addr + 6) & 0xf) << 16);
                 base = (readmemw(0, addr + 2)) | (readmemb(0, addr + 4) << 16) | (readmemb(0, addr + 7) << 24);
                 access = readmemb(0, addr + 5);
+                access2 = readmemb(0, addr + 6);
                 granularity = readmemb(0, addr + 6) & 0x80;
                 if (cpu_state.abrt) return 1;
                 ldt.limit = limit;
                 ldt.access = access;
+                ldt.access2 = access2;
                 if (granularity)
                 {
                         ldt.limit <<= 12;
@@ -226,6 +228,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 limit = readmemw(0, addr) + ((readmemb(0, addr + 6) & 0xf) << 16);
                 base = (readmemw(0, addr + 2)) | (readmemb(0, addr + 4) << 16) | (readmemb(0, addr + 7) << 24);
                 access = readmemb(0, addr + 5);
+                access2 = readmemb(0, addr + 6);
                 granularity = readmemb(0, addr + 6) & 0x80;
                 if (cpu_state.abrt) return 1;
                 access |= 2;
@@ -234,6 +237,7 @@ static int op0F00_common(uint32_t fetchdat, int ea32)
                 tr.seg = sel;
                 tr.limit = limit;
                 tr.access = access;
+                tr.access2 = access2;
                 if (granularity)
                 {
                         tr.limit <<= 12;

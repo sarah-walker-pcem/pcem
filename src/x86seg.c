@@ -219,6 +219,7 @@ static void set_use32(int u)
 static void do_seg_load(x86seg *s, uint16_t *segdat)
 {
         s->limit = segdat[0] | ((segdat[3] & 0xF) << 16);
+        s->limit_raw = s->limit;
         if (segdat[3] & 0x80)
                 s->limit = (s->limit << 12) | 0xFFF;
         s->base = segdat[1] | ((segdat[2] & 0xFF) << 16);
@@ -2996,6 +2997,51 @@ static void smi_load_smi_selector(x86seg *seg)
         seg->access2 = 0;
 }
 
+void cyrix_write_seg_descriptor(uint32_t addr, x86seg *seg)
+{
+        writememl(0, addr, (seg->limit_raw & 0xffff) | (seg->base << 16));
+        writememl(0, addr+4, ((seg->base >> 16) & 0xff) |
+                                (seg->access << 8) |
+                                (seg->limit_raw & 0xf0000) |
+                                (seg->access2 << 16) |
+                                (seg->base & 0xff000000));
+}
+
+void cyrix_load_seg_descriptor(uint32_t addr, x86seg *seg)
+{
+        uint16_t segdat[4], selector;
+
+        segdat[0] = readmemw(0, addr);
+        segdat[1] = readmemw(0, addr+2);
+        segdat[2] = readmemw(0, addr+4);
+        segdat[3] = readmemw(0, addr+6);
+        selector = readmemw(0, addr+8);
+
+        if (!cpu_state.abrt)
+        {
+                do_seg_load(seg, segdat);
+                seg->seg = selector;
+                seg->checked = 0;
+                if (seg == &cpu_state.seg_ds)
+                {
+                        if (seg->base == 0 && seg->limit_low == 0 && seg->limit_high == 0xffffffff)
+                                cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
+                        else
+                                cpu_cur_status |= CPU_STATUS_NOTFLATDS;
+                        codegen_flat_ds = 0;
+                }
+                if (seg == &cpu_state.seg_ss)
+                {
+                        if (seg->base == 0 && seg->limit_low == 0 && seg->limit_high == 0xffffffff)
+                                cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
+                        else
+                                cpu_cur_status |= CPU_STATUS_NOTFLATSS;
+                        set_stack32((segdat[3] & 0x40) ? 1 : 0);
+                        codegen_flat_ss = 0;
+                }
+        }
+}
+
 void x86_smi_enter(void)
 {
         uint32_t old_cr0 = cr0;
@@ -3007,63 +3053,102 @@ void x86_smi_enter(void)
         cpu_386_flags_rebuild();
         cpl_override = 1;
         cr0 = 0; /*Disable MMU*/
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7ffc, old_cr0);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7ff8, cr3);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7ff4, cpu_state.flags | (cpu_state.eflags << 16));
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7ff0, cpu_state.pc);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fec, EDI);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fe8, ESI);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fe4, EBP);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fe0, ESP);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fdc, EBX);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fd8, EDX);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fd4, ECX);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fd0, EAX);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fcc, dr[6]);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fc8, dr[7]);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fc4, tr.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fc0, ldt.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fbc, cpu_state.seg_gs.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fb8, cpu_state.seg_fs.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fb4, cpu_state.seg_ds.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fb0, cpu_state.seg_ss.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fac, cpu_state.seg_cs.seg);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7fa8, cpu_state.seg_es.seg);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f9c, &tr);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f90, &idt);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f84, &gdt);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f78, &ldt);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f6c, &cpu_state.seg_gs);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f60, &cpu_state.seg_fs);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f54, &cpu_state.seg_ds);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f48, &cpu_state.seg_ss);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f3c, &cpu_state.seg_cs);
-        smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f30, &cpu_state.seg_es);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7f28, cr4);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7ef8, cpu_state.smbase);
-        writememl(0, cpu_state.smbase + 0x8000 + 0x7efc, 0x00020000);
-        cpl_override = 0;
 
-        cpu_cur_status = CPU_STATUS_SMM;
-        cpu_state.flags = 2;
-        cpu_state.eflags = 0;
-        cpu_state.pc = 0x8000;
-        cr0 &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 31));
-        dr[7] = 0x400;
-        smi_load_smi_selector(&cpu_state.seg_ds);
-        smi_load_smi_selector(&cpu_state.seg_es);
-        smi_load_smi_selector(&cpu_state.seg_fs);
-        smi_load_smi_selector(&cpu_state.seg_gs);
-        smi_load_smi_selector(&cpu_state.seg_ss);
-        cpu_state.seg_cs.seg = 0x3000;
-        cpu_state.seg_cs.base = cpu_state.smbase;
-        cpu_state.seg_cs.limit = 0xffffffff;
-        cpu_state.seg_cs.limit_low = 0;
-        cpu_state.seg_cs.limit_high = 0xffffffff;
-        cpu_state.seg_cs.access = (0 << 5) | 2;
+        if (cpu_iscyrix)
+        {
+                uint32_t base;
 
-        use32 = 0;
-        stack32 = 0;
+                if (!cyrix.smhr & SMHR_VALID)
+                        cyrix.smhr = (cyrix.arr[3].base + cyrix.arr[3].size) | SMHR_VALID;
+                base = cyrix.smhr & SMHR_ADDR_MASK;
+
+                writememl(0, base-4, dr[7]);
+                writememl(0, base-8, cpu_state.flags | (cpu_state.eflags << 16));
+                writememl(0, base-0xc, old_cr0);
+                writememl(0, base-0x10, cpu_state.oldpc);
+                writememl(0, base-0x14, cpu_state.pc);
+                writememl(0, base-0x18, CS | (CPL << 21));
+                cyrix_write_seg_descriptor(base-0x20, &cpu_state.seg_cs);
+                writememl(0, base-0x24, 0);
+
+                cpl_override = 0;
+
+                cpu_cur_status = CPU_STATUS_SMM;
+                cpu_state.flags = 2;
+                cpu_state.eflags = 0;
+                cpu_state.pc = 0;
+                cr0 &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 31));
+                dr[7] = 0x400;
+                cpu_state.seg_cs.seg = cyrix.arr[3].base >> 4; /*Guess*/
+                cpu_state.seg_cs.base = cyrix.arr[3].base;
+                cpu_state.seg_cs.limit = 0xffffffff;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffffffff;
+                cpu_state.seg_cs.access = (0 << 5) | 2;
+
+                use32 = 0;
+                stack32 = 0;
+        }
+        else
+        {
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7ffc, old_cr0);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7ff8, cr3);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7ff4, cpu_state.flags | (cpu_state.eflags << 16));
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7ff0, cpu_state.pc);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fec, EDI);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fe8, ESI);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fe4, EBP);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fe0, ESP);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fdc, EBX);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fd8, EDX);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fd4, ECX);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fd0, EAX);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fcc, dr[6]);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fc8, dr[7]);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fc4, tr.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fc0, ldt.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fbc, cpu_state.seg_gs.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fb8, cpu_state.seg_fs.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fb4, cpu_state.seg_ds.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fb0, cpu_state.seg_ss.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fac, cpu_state.seg_cs.seg);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7fa8, cpu_state.seg_es.seg);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f9c, &tr);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f90, &idt);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f84, &gdt);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f78, &ldt);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f6c, &cpu_state.seg_gs);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f60, &cpu_state.seg_fs);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f54, &cpu_state.seg_ds);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f48, &cpu_state.seg_ss);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f3c, &cpu_state.seg_cs);
+                smi_write_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f30, &cpu_state.seg_es);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7f28, cr4);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7ef8, cpu_state.smbase);
+                writememl(0, cpu_state.smbase + 0x8000 + 0x7efc, 0x00020000);
+                cpl_override = 0;
+
+                cpu_cur_status = CPU_STATUS_SMM;
+                cpu_state.flags = 2;
+                cpu_state.eflags = 0;
+                cpu_state.pc = 0x8000;
+                cr0 &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 31));
+                dr[7] = 0x400;
+                smi_load_smi_selector(&cpu_state.seg_ds);
+                smi_load_smi_selector(&cpu_state.seg_es);
+                smi_load_smi_selector(&cpu_state.seg_fs);
+                smi_load_smi_selector(&cpu_state.seg_gs);
+                smi_load_smi_selector(&cpu_state.seg_ss);
+                cpu_state.seg_cs.seg = 0x3000;
+                cpu_state.seg_cs.base = cpu_state.smbase;
+                cpu_state.seg_cs.limit = 0xffffffff;
+                cpu_state.seg_cs.limit_low = 0;
+                cpu_state.seg_cs.limit_high = 0xffffffff;
+                cpu_state.seg_cs.access = (0 << 5) | 2;
+
+                use32 = 0;
+                stack32 = 0;
+        }
 
 //        pclog("x86_smi_enter\n");
 }
@@ -3073,47 +3158,67 @@ void x86_smi_leave(void)
         uint32_t temp;
         uint32_t new_cr0;
 
-        cpl_override = 1;
-        new_cr0 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ffc);
-        cr3 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff8);
-        temp = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff4);
-        cpu_state.flags = temp & 0xffff;
-        cpu_state.eflags = temp >> 16;
-        cpu_state.pc = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff0);
-        EDI = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fec);
-        ESI = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe8);
-        EBP = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe4);
-        ESP = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe0);
-        EBX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fdc);
-        EDX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd8);
-        ECX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd4);
-        EAX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd0);
-        dr[6] = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fcc);
-        dr[7] = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc8);
-        tr.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc4);
-        ldt.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc0);
-        cpu_state.seg_gs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fbc);
-        cpu_state.seg_fs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb8);
-        cpu_state.seg_ds.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb4);
-        cpu_state.seg_ss.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb0);
-        cpu_state.seg_cs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fac);
-        cpu_state.seg_es.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fa8);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f9c, &tr);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f90, &idt);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f84, &gdt);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f78, &ldt);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f6c, &cpu_state.seg_gs);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f60, &cpu_state.seg_fs);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f54, &cpu_state.seg_ds);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f48, &cpu_state.seg_ss);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f3c, &cpu_state.seg_cs);
-        smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f30, &cpu_state.seg_es);
-        cr4 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7f28);
-        cpu_state.smbase = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ef8);
-        cpl_override = 0;
+        if (cpu_iscyrix)
+        {
+                uint32_t base = cyrix.smhr & SMHR_ADDR_MASK;
 
-        cr0 = new_cr0;
+                cpl_override = 1;
+                dr[7] = readmeml(0, base-4);
+                temp = readmeml(0, base-8);
+                cpu_state.flags = temp & 0xffff;
+                cpu_state.eflags = temp >> 16;
+                new_cr0 = readmeml(0, base-0xc);
+                cpu_state.pc = readmeml(0, base-0x14);
+                cyrix_load_seg_descriptor(base-0x20, &cpu_state.seg_cs);
+                cpl_override = 0;
 
+                cr0 = new_cr0;
+        }
+        else
+        {
+                cpl_override = 1;
+                new_cr0 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ffc);
+                cr3 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff8);
+                temp = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff4);
+                cpu_state.flags = temp & 0xffff;
+                cpu_state.eflags = temp >> 16;
+                cpu_state.pc = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ff0);
+                EDI = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fec);
+                ESI = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe8);
+                EBP = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe4);
+                ESP = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fe0);
+                EBX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fdc);
+                EDX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd8);
+                ECX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd4);
+                EAX = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fd0);
+                dr[6] = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fcc);
+                dr[7] = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc8);
+                tr.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc4);
+                ldt.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fc0);
+                cpu_state.seg_gs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fbc);
+                cpu_state.seg_fs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb8);
+                cpu_state.seg_ds.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb4);
+                cpu_state.seg_ss.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fb0);
+                cpu_state.seg_cs.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fac);
+                cpu_state.seg_es.seg = readmeml(0, cpu_state.smbase + 0x8000 + 0x7fa8);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f9c, &tr);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f90, &idt);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f84, &gdt);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f78, &ldt);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f6c, &cpu_state.seg_gs);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f60, &cpu_state.seg_fs);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f54, &cpu_state.seg_ds);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f48, &cpu_state.seg_ss);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f3c, &cpu_state.seg_cs);
+                smi_load_descriptor_cache(cpu_state.smbase + 0x8000 + 0x7f30, &cpu_state.seg_es);
+                cr4 = readmeml(0, cpu_state.smbase + 0x8000 + 0x7f28);
+                cpu_state.smbase = readmeml(0, cpu_state.smbase + 0x8000 + 0x7ef8);
+                cpl_override = 0;
+
+                cr0 = new_cr0;
+        }
+
+        cpu_386_flags_extract();
         cpu_cur_status = 0;
         use32 = stack32 = 0;
         if (cr0 & 1)

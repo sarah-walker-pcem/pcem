@@ -39,7 +39,7 @@ typedef union
 typedef struct
 {
         uint32_t base;
-        uint32_t limit;
+        uint32_t limit, limit_raw;
         uint8_t access, access2;
         uint16_t seg;
         uint32_t limit_low, limit_high;
@@ -324,5 +324,21 @@ extern int cpu_end_block_after_ins;
 void x86_smi_trigger(void);
 void x86_smi_enter(void);
 void x86_smi_leave(void);
+
+void cyrix_load_seg_descriptor(uint32_t addr, x86seg *seg);
+void cyrix_write_seg_descriptor(uint32_t addr, x86seg *seg);
+
+#define SMHR_VALID (1 << 0)
+#define SMHR_ADDR_MASK (0xfffffffc)
+
+struct
+{
+        struct
+        {
+                uint32_t base;
+                uint64_t size;
+        } arr[8];
+        uint32_t smhr;
+} cyrix;
 
 #endif

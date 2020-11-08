@@ -787,7 +787,7 @@ void cpu_set()
                 break;
 
   		case CPU_Cx6x86:
-                x86_setopcodes(ops_386, ops_pentium_0f, dynarec_ops_386, dynarec_ops_pentium_0f);
+                x86_setopcodes(ops_386, ops_c6x86_0f, dynarec_ops_386, dynarec_ops_c6x86_0f);
                 timing_rr  = 1; /*register dest - register src*/
                 timing_rm  = 1; /*register dest - memory src*/
                 timing_mr  = 2; /*memory dest   - register src*/
@@ -2003,6 +2003,13 @@ void cpu_WRMSR()
 
 static int cyrix_addr;
 
+#define CCR1_USE_SMI  (1 << 1)
+#define CCR1_SMAC     (1 << 2)
+#define CCR1_SM3      (1 << 7)
+
+#define CCR3_SMI_LOCK (1 << 0)
+#define CCR3_NMI_EN   (1 << 1)
+
 void cyrix_write(uint16_t addr, uint8_t val, void *priv)
 {
         if (!(addr & 1))
@@ -2013,14 +2020,46 @@ void cyrix_write(uint16_t addr, uint8_t val, void *priv)
                 ccr0 = val;
                 break;
                 case 0xc1: /*CCR1*/
+                if ((ccr3 & CCR3_SMI_LOCK) && !(cpu_cur_status & CPU_STATUS_SMM))
+                        val = (val & ~(CCR1_USE_SMI | CCR1_SMAC | CCR1_SM3)) | (ccr1 & (CCR1_USE_SMI | CCR1_SMAC | CCR1_SM3));
                 ccr1 = val;
                 break;
                 case 0xc2: /*CCR2*/
                 ccr2 = val;
                 break;
                 case 0xc3: /*CCR3*/
+                if ((ccr3 & CCR3_SMI_LOCK) && !(cpu_cur_status & CPU_STATUS_SMM))
+                        val = (val & ~(CCR3_NMI_EN)) | (ccr3 & CCR3_NMI_EN) | CCR3_SMI_LOCK;
                 ccr3 = val;
                 break;
+                case 0xcd:
+                if (!(ccr3 & CCR3_SMI_LOCK) || (cpu_cur_status & CPU_STATUS_SMM))
+                {
+                        cyrix.arr[3].base = (cyrix.arr[3].base & ~0xff000000) | (val << 24);
+                        cyrix.smhr &= ~SMHR_VALID;
+                }
+                break;
+                case 0xce:
+                if (!(ccr3 & CCR3_SMI_LOCK) || (cpu_cur_status & CPU_STATUS_SMM))
+                {
+                        cyrix.arr[3].base = (cyrix.arr[3].base & ~0x00ff0000) | (val << 16);
+                        cyrix.smhr &= ~SMHR_VALID;
+                }
+                break;
+                case 0xcf:
+                if (!(ccr3 & CCR3_SMI_LOCK) || (cpu_cur_status & CPU_STATUS_SMM))
+                {
+                        cyrix.arr[3].base = (cyrix.arr[3].base & ~0x0000f000) | ((val & 0xf0) << 8);
+                        if ((val & 0xf) == 0xf)
+                                cyrix.arr[3].size = 1ull << 32; /*4 GB*/
+                        else if (val & 0xf)
+                                cyrix.arr[3].size = 2048 << (val & 0xf);
+                        else
+                                cyrix.arr[3].size = 0; /*Disabled*/
+                        cyrix.smhr &= ~SMHR_VALID;
+                }
+                break;
+
                 case 0xe8: /*CCR4*/
                 if ((ccr3 & 0xf0) == 0x10)
                 {

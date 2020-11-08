@@ -41,6 +41,7 @@ extern OpFn dynarec_ops_pentiummmx_0f[1024];
 extern OpFn dynarec_ops_pentiumpro_0f[1024];
 extern OpFn dynarec_ops_pentium2_0f[1024];
 
+extern OpFn dynarec_ops_c6x86_0f[1024];
 extern OpFn dynarec_ops_c6x86mx_0f[1024];
 
 extern OpFn dynarec_ops_fpu_d8_a16[32];
@@ -110,6 +111,7 @@ extern OpFn ops_pentiummmx_0f[1024];
 extern OpFn ops_pentiumpro_0f[1024];
 extern OpFn ops_pentium2_0f[1024];
 
+extern OpFn ops_c6x86_0f[1024];
 extern OpFn ops_c6x86mx_0f[1024];
 
 extern OpFn ops_fpu_d8_a16[32];
