@@ -29,9 +29,11 @@ static sff_busmaster_t piix_busmaster[2];
 static uint8_t piix_rc = 0;
 static void (*piix_nb_reset)();
 
+#define REG_SMICNTL 0xa0
 #define REG_SMIEN 0xa2
 #define REG_SMIREQ 0xaa
 
+#define SMICNTL_CSMIGATE (1 << 0)
 #define SMIEN_APMC   (1 << 7)
 #define SMIREQ_RAPMC (1 << 7)
 
@@ -262,7 +264,8 @@ static void piix_apm_write(uint16_t port, uint8_t val, void *p)
                 {
                         card_piix[REG_SMIREQ] |= SMIREQ_RAPMC;
 //                        pclog("APMC write causes SMI\n");
-                        x86_smi_trigger();
+                        if (card_piix[REG_SMICNTL] & SMICNTL_CSMIGATE)
+                                x86_smi_trigger();
                 }
                 break;
 
