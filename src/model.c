@@ -78,6 +78,7 @@
 #include "vl82c480.h"
 #include "vt82c586b.h"
 #include "w83877tf.h"
+#include "w83977tf.h"
 #include "wd76c10.h"
 #include "xi8088.h"
 #include "zenith.h"
@@ -847,7 +848,7 @@ void at_ga686bx_init()
         pci_slot(0xb);
         i440bx_init();
         piix4_init(7, 0x8, 0x9, 0xa, 0xb, i440bx_reset);
-        w83877tf_init(0x250, 0x89);
+        w83977tf_init(0x3f0, 0x87);
         device_add(&intel_flash_28f002bc_device);
 }
 

@@ -51,7 +51,7 @@ vid_stg_ramdac.c vid_svga.c vid_svga_render.c vid_t1000.c vid_t3100e.c vid_tandy
 vid_tkd8001_ramdac.c vid_tvga.c vid_unk_ramdac.c vid_vga.c vid_voodoo.c vid_voodoo_banshee.c vid_voodoo_banshee_blitter.c \
 vid_voodoo_blitter.c vid_voodoo_display.c vid_voodoo_fb.c vid_voodoo_fifo.c vid_voodoo_reg.c \
 vid_voodoo_render.c vid_voodoo_setup.c vid_voodoo_texture.c video.c wd76c10.c vid_wy700.c vt82c586b.c \
-vl82c480.c w83877tf.c x86seg.c x87.c x87_timings.c xi8088.c xtide.c sound_dbopl.cc sound_resid.cc
+vl82c480.c w83877tf.c w83977tf.c x86seg.c x87.c x87_timings.c xi8088.c xtide.c sound_dbopl.cc sound_resid.cc
 
 # DOSBox
 pcem_SOURCES += dosbox/cdrom_image.cpp dosbox/dbopl.cpp dosbox/nukedopl.cpp dosbox/vid_cga_comp.c
