@@ -139,6 +139,7 @@ enum
 
 #define VGAINIT0_EXTENDED_SHIFT_OUT (1 << 12)
 
+#define VIDPROCCFG_HALF_MODE (1 << 4)
 #define VIDPROCCFG_OVERLAY_ENABLE (1 << 8)
 #define VIDPROCCFG_H_SCALE_ENABLE (1 << 14)
 #define VIDPROCCFG_V_SCALE_ENABLE (1 << 15)
@@ -311,8 +312,13 @@ static void banshee_render_16bpp_tiled(svga_t *svga)
         int x;
         int offset = 32;
         uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
-        uint32_t addr = banshee->desktop_addr + (banshee->desktop_y & 31) * 128 + ((banshee->desktop_y >> 5) * banshee->desktop_stride_tiled);
+        uint32_t addr;
         int drawn = 0;
+
+        if (banshee->vidProcCfg & VIDPROCCFG_HALF_MODE)
+                addr = banshee->desktop_addr + ((banshee->desktop_y >> 1) & 31) * 128 + ((banshee->desktop_y >> 6) * banshee->desktop_stride_tiled);
+        else
+                addr = banshee->desktop_addr + (banshee->desktop_y & 31) * 128 + ((banshee->desktop_y >> 5) * banshee->desktop_stride_tiled);
 
         for (x = 0; x <= svga->hdisp; x += 64)
         {
