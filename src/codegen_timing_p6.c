@@ -19,7 +19,8 @@ typedef enum uop_type_t
         UOP_LOAD,      /*Executes in port 2 Load unit*/
         UOP_STOREADDR, /*Executes in port 3 Store Address unit*/
         UOP_STOREDATA, /*Executes in port 4 Store Data unit*/
-        UOP_FLOAT      /*Executes in port 0 Floating Point unit*/
+        UOP_FLOAT,     /*Executes in port 0 Floating Point unit*/
+        UOP_ALU0_SEG   /*Executes in port 0 ALU, loads segment, causing pipeline flush on PPro*/
 } uop_type_t;
 
 #define MAX_UOPS 300
@@ -512,7 +513,7 @@ static const p6_instruction_t call_far_op =
         .uop[2] = {.type = UOP_STOREDATA, .throughput = 1, .latency = 1},
         .uop[3] = {.type = UOP_STOREADDR, .throughput = 1, .latency = 1},
         .uop[4] = {.type = UOP_STOREDATA, .throughput = 1, .latency = 1},
-        .uop[5] = {.type = UOP_ALU0, .throughput = 28, .latency = 28}
+        .uop[5] = {.type = UOP_ALU0_SEG,  .throughput = 28, .latency = 28}
 };
 static const p6_instruction_t load_call_far_op =
 {
@@ -523,7 +524,7 @@ static const p6_instruction_t load_call_far_op =
         .uop[3] = {.type = UOP_STOREDATA, .throughput = 1, .latency = 1},
         .uop[4] = {.type = UOP_STOREADDR, .throughput = 1, .latency = 1},
         .uop[5] = {.type = UOP_STOREDATA, .throughput = 1, .latency = 1},
-        .uop[6] = {.type = UOP_ALU0, .throughput = 28, .latency = 28}
+        .uop[6] = {.type = UOP_ALU0_SEG,  .throughput = 28, .latency = 28}
 };
 static const p6_instruction_t cli_op =
 {
@@ -676,15 +677,15 @@ static const p6_instruction_t invd_op =
 static const p6_instruction_t jmp_far_op =
 {
         .nr_uops = 2,
-        .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
-        .uop[1] = {.type = UOP_ALU0,  .throughput = 21, .latency = 21}
+        .uop[0] = {.type = UOP_LOAD,     .throughput = 1, .latency = 2},
+        .uop[1] = {.type = UOP_ALU0_SEG, .throughput = 21, .latency = 21}
 };
 static const p6_instruction_t load_jmp_far_op =
 {
         .nr_uops = 3,
-        .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
-        .uop[1] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
-        .uop[2] = {.type = UOP_ALU0,  .throughput = 21, .latency = 21}
+        .uop[0] = {.type = UOP_LOAD,     .throughput = 1, .latency = 2},
+        .uop[1] = {.type = UOP_LOAD,     .throughput = 1, .latency = 2},
+        .uop[2] = {.type = UOP_ALU0_SEG, .throughput = 21, .latency = 21}
 };
 static const p6_instruction_t lss_op =
 {
@@ -692,7 +693,7 @@ static const p6_instruction_t lss_op =
         .uop[0] = {.type = UOP_LOAD,   .throughput = 1, .latency = 2},
         .uop[1] = {.type = UOP_LOAD,   .throughput = 1, .latency = 2},
         .uop[2] = {.type = UOP_LOAD,   .throughput = 1, .latency = 2},
-        .uop[3] = {.type = UOP_ALU01,  .throughput = 1, .latency = 1},
+        .uop[3] = {.type = UOP_ALU0_SEG,.throughput = 1, .latency = 1},
         .uop[4] = {.type = UOP_ALU01,  .throughput = 1, .latency = 1},
         .uop[5] = {.type = UOP_ALU01,  .throughput = 1, .latency = 1},
         .uop[6] = {.type = UOP_ALU01,  .throughput = 1, .latency = 1},
@@ -712,7 +713,7 @@ static const p6_instruction_t mov_seg_mem_op =
 {
         .nr_uops = 9,
         .uop[0] = {.type = UOP_LOAD,   .throughput = 1, .latency = 2},
-        .uop[1] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
+        .uop[1] = {.type = UOP_ALU0_SEG,.throughput = 1, .latency = 1},
         .uop[2] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
         .uop[3] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
         .uop[4] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
@@ -725,7 +726,7 @@ static const p6_instruction_t mov_seg_reg_op =
 {
         .nr_uops = 8,
         .uop[0] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
-        .uop[1] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
+        .uop[1] = {.type = UOP_ALU0_SEG,.throughput = 1, .latency = 1},
         .uop[2] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
         .uop[3] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
         .uop[4] = {.type = UOP_ALU0,   .throughput = 1, .latency = 1},
@@ -1593,11 +1594,11 @@ static const p6_port_t ports[] =
         {UNIT_STORE_ADDR},
         {UNIT_STORE_DATA}
 };
-
+const int nr_ports = (sizeof(ports) / sizeof(p6_port_t));
 
 static p6_unit_t units[] =
 {
-        [UNIT_INT0]       = {.uop_mask = (1 << UOP_ALU0) | (1 << UOP_ALU01), .port = 0},                 /*Integer 0*/
+        [UNIT_INT0]       = {.uop_mask = (1 << UOP_ALU0) | (1 << UOP_ALU0_SEG) | (1 << UOP_ALU01), .port = 0},                 /*Integer 0*/
         [UNIT_INT1]       = {.uop_mask = (1 << UOP_ALU1) | (1 << UOP_ALU01), .port = 1},                 /*Integer 1*/
         [UNIT_FPU]        = {.uop_mask = 1 << UOP_FLOAT,                     .port = 0},
         [UNIT_MMX_ADD]    = {.uop_mask = 0,                                  .port = 1},
@@ -1654,6 +1655,24 @@ static int uop_run(const p6_uop_t *uop, int decode_time)
         if (!best_unit)
                 fatal("uop_run: can not find execution unit  %x\n", uop->type);
 
+        if (cpu_s->cpu_type == CPU_PENTIUMPRO && uop->type == UOP_ALU0_SEG)
+        {
+                /*Pentium Pro will flush pipeline on a segment load. Find last
+                  execution unit to complete, then set earliest start times on
+                  _all_ execution units to after this point*/
+                int last_start_cycle = 0;
+
+                for (c = 0; c < nr_units; c++)
+                {
+                        p6_unit_t *unit = &units[c];
+                        int start_cycle = unit->first_available_cycle;
+
+                        if (start_cycle > last_start_cycle)
+                                last_start_cycle = start_cycle;
+                }
+                for (c = 0; c < nr_units; c++)
+                        units[c].first_available_cycle = last_start_cycle+1;
+        }
         if (best_start_cycle < decode_time)
                 best_start_cycle = decode_time;
         best_unit->first_available_cycle = best_start_cycle + uop->throughput;

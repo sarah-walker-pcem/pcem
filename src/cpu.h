@@ -102,6 +102,8 @@ typedef struct
         int atclk_div;
 } CPU;
 
+extern CPU *cpu_s;
+
 extern CPU cpus_8088[];
 extern CPU cpus_8086[];
 extern CPU cpus_286[];

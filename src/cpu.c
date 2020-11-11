@@ -177,10 +177,10 @@ int fpu_get_type_from_index(int model, int manu, int cpu, int c)
         return fpus[c].type;
 }
 
+CPU *cpu_s;
+
 void cpu_set()
 {
-        CPU *cpu_s;
-
         if (!models[model].cpu[cpu_manufacturer].cpus)
         {
                 /*CPU is invalid, set to default*/
