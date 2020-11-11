@@ -375,7 +375,7 @@ static void banshee_recalctimings(svga_t *svga)
         if (svga->crtc[0x1b] & 0x04) svga->dispend     += 0x400;
         if (svga->crtc[0x1b] & 0x10) svga->vblankstart += 0x400;
         if (svga->crtc[0x1b] & 0x40) svga->vsyncstart  += 0x400;
-        pclog("svga->hdisp=%i\n", svga->hdisp);
+//        pclog("svga->hdisp=%i\n", svga->hdisp);
 
         if (banshee->vgaInit0 & VGAINIT0_EXTENDED_SHIFT_OUT)
         {
@@ -406,7 +406,7 @@ static void banshee_recalctimings(svga_t *svga)
                         svga->rowoffset = (banshee->vidDesktopOverlayStride & 0x3fff) >> 3;
                 svga->ma_latch = banshee->vidDesktopStartAddr >> 2;
                 banshee->desktop_stride_tiled = (banshee->vidDesktopOverlayStride & 0x3fff) * 128 * 32;
-                pclog("Extended shift out %i rowoffset=%i %02x\n", VIDPROCCFG_DESKTOP_PIX_FORMAT, svga->rowoffset, svga->crtc[1]);
+//                pclog("Extended shift out %i rowoffset=%i %02x\n", VIDPROCCFG_DESKTOP_PIX_FORMAT, svga->rowoffset, svga->crtc[1]);
 
                 svga->char_width = 8;
                 svga->split = 99999;
@@ -430,11 +430,11 @@ static void banshee_recalctimings(svga_t *svga)
                         svga->overlay.ena = 0;
                 if (svga->overlay.ena)
                 {
-                        pclog("Overlay enabled : start=%i,%i end=%i,%i size=%i,%i pitch=%x\n",
+/*                        pclog("Overlay enabled : start=%i,%i end=%i,%i size=%i,%i pitch=%x\n",
                                 voodoo->overlay.start_x, voodoo->overlay.start_y,
                                 voodoo->overlay.end_x, voodoo->overlay.end_y,
                                 voodoo->overlay.size_x, voodoo->overlay.size_y,
-                                svga->overlay.pitch);
+                                svga->overlay.pitch);*/
                         if (!voodoo->overlay.start_x && !voodoo->overlay.start_y &&
                             svga->hdisp == voodoo->overlay.size_x && svga->dispend == voodoo->overlay.size_y)
                         {
@@ -452,7 +452,7 @@ static void banshee_recalctimings(svga_t *svga)
         }
         else
         {
-                pclog("Normal shift out\n");
+//                pclog("Normal shift out\n");
                 svga->bpp = 8;
                 svga->video_res_override = 0;
         }
@@ -1880,7 +1880,7 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
 
         if (func)
                 return 0xff;
-        pclog("Banshee PCI read %08X  ", addr);
+//        pclog("Banshee PCI read %08X  ", addr);
         switch (addr)
         {
                 case 0x00: ret = 0x1a; break; /*3DFX*/
@@ -1935,7 +1935,7 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
                 case 0x3f: ret = 0xff; break;
                 
         }
-        pclog("%02X\n", ret);
+//        pclog("%02X\n", ret);
         return ret;
 }
 
@@ -1950,7 +1950,7 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
 
         if (func)
                 return;
-        pclog("Banshee write %08X %02X %04X:%08X\n", addr, val, CS, cpu_state.pc);
+//        pclog("Banshee write %08X %02X %04X:%08X\n", addr, val, CS, cpu_state.pc);
         switch (addr)
         {
                 case 0x00: case 0x01: case 0x02: case 0x03:
