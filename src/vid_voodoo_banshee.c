@@ -2282,10 +2282,6 @@ static uint8_t banshee_pci_read(int func, int addr, void *p)
         return ret;
 }
 
-static void banshee_update_mapping(banshee_t *banshee)
-{
-}
-
 static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
 {
         banshee_t *banshee = (banshee_t *)p;
@@ -2302,7 +2298,6 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
                 return;
                 
                 case PCI_REG_COMMAND:
-                banshee_update_mapping(banshee);
                 if (val & PCI_COMMAND_IO)
                 {
                         io_removehandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
@@ -2319,7 +2314,7 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
                         io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
                 }
                 banshee->pci_regs[PCI_REG_COMMAND] = val & 0x27;
-//                s3_virge_updatemapping(virge); 
+                banshee_updatemapping(banshee);
                 return;
                 case 0x07:
                 banshee->pci_regs[0x07] = val & 0x3e;
@@ -2330,7 +2325,7 @@ static void banshee_pci_write(int func, int addr, uint8_t val, void *p)
                 
                 case 0x13:
                 banshee->memBaseAddr0 = (val & 0xfe) << 24;
-                banshee_updatemapping(banshee); 
+                banshee_updatemapping(banshee);
                 return;
 
                 case 0x17:
