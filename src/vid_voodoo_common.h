@@ -451,11 +451,10 @@ typedef struct voodoo_t
 
         pc_timer_t wake_timer;
 
-        uint8_t thefilter[256][256]; // pixel filter, feeding from one or two
-        uint8_t thefilterg[256][256]; // for green
-        uint8_t thefilterb[256][256]; // for blue
-
-        /* the voodoo adds purple lines for some reason */
+        /* screen filter tables */
+        uint8_t thefilter[256][256];
+        uint8_t thefilterg[256][256];
+        uint8_t thefilterb[256][256];
         uint16_t purpleline[256][3];
 
         texture_t texture_cache[2][TEX_CACHE_MAX];
@@ -492,7 +491,7 @@ typedef struct voodoo_set_t
 extern rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
 
 
-
+void voodoo_generate_vb_filters(voodoo_t *voodoo, int fcr, int fcg);
 
 void voodoo_recalc(voodoo_t *voodoo);
 void voodoo_update_ncc(voodoo_t *voodoo, int tmu);

@@ -1096,7 +1096,7 @@ void *voodoo_2d3d_card_init(int type)
         memset(voodoo, 0, sizeof(voodoo_t));
 
         voodoo->bilinear_enabled = device_get_config_int("bilinear");
-        voodoo->scrfilter = 0;
+        voodoo->scrfilter = device_get_config_int("dacfilter");
         voodoo->render_threads = device_get_config_int("render_threads");
         voodoo->odd_even_mask = voodoo->render_threads - 1;
 #ifndef NO_CODEGEN

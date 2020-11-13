@@ -196,7 +196,7 @@ void voodoo_generate_filter_v2(voodoo_t *voodoo)
 {
         int g, h;
         float difference;
-        float thiscol, thiscolg, thiscolb, lined;
+        float thiscol, thiscolg, thiscolb;
 	float clr, clg, clb = 0;
 	float fcr, fcg, fcb = 0;
 
@@ -282,12 +282,6 @@ void voodoo_generate_filter_v2(voodoo_t *voodoo)
 			//pclog("Voodoofilter: %ix%i - %f difference, %f average difference, R=%f, G=%f, B=%f\n", g, h, difference, avgdiff, thiscol, thiscolg, thiscolb);
                 }
 
-                lined = g + 3;
-                if (lined > 255)
-                        lined = 255;
-                voodoo->purpleline[g][0] = lined;
-                voodoo->purpleline[g][1] = 0;
-                voodoo->purpleline[g][2] = lined;
         }
 }
 
@@ -317,6 +311,9 @@ void voodoo_threshold_check(voodoo_t *voodoo)
 			voodoo_generate_filter_v2(voodoo);
 		else
 			voodoo_generate_filter_v1(voodoo);
+
+		if (voodoo->type >= VOODOO_BANSHEE)
+			voodoo_generate_vb_filters(voodoo, FILTCAP, FILTCAPG);
 	}
 }
 
