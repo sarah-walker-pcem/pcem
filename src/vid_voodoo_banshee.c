@@ -1896,6 +1896,17 @@ static void banshee_overlay_draw(svga_t *svga, int displine)
         unsigned int y_coeff = (voodoo->overlay.src_y & 0xfffff) >> 4;
         int skip_filtering;
 
+        if (svga->render == svga_render_null && !svga->changedvram[src_addr >> 12] && !svga->changedvram[src_addr2 >> 12] &&
+                        !svga->fullchange && !voodoo->dirty_line[voodoo->overlay.src_y >> 20])
+        {
+                if (banshee->vidProcCfg & VIDPROCCFG_V_SCALE_ENABLE)
+                        voodoo->overlay.src_y += voodoo->overlay.vidOverlayDvdy;
+                else
+                        voodoo->overlay.src_y += (1 << 20);
+                return;
+        }
+
+        voodoo->dirty_line[voodoo->overlay.src_y >> 20] = 0;
 //        pclog("displine=%i addr=%08x %08x  %08x  %08x\n", displine, svga->overlay_latch.addr, src_addr, voodoo->overlay.vidOverlayDvdy, *(uint32_t *)src);
 //        if (src_addr >= 0x800000)
 //                fatal("overlay out of range!\n");
@@ -2169,9 +2180,11 @@ static void banshee_overlay_draw(svga_t *svga, int displine)
 void banshee_set_overlay_addr(void *p, uint32_t addr)
 {
         banshee_t *banshee = (banshee_t *)p;
+        voodoo_t *voodoo = banshee->voodoo;
         
         banshee->svga.overlay.addr = banshee->voodoo->leftOverlayBuf & 0xfffffff;
         banshee->svga.overlay_latch.addr = banshee->voodoo->leftOverlayBuf & 0xfffffff;
+        memset(voodoo->dirty_line, 1, 1024);
 }
 
 static void banshee_vsync_callback(svga_t *svga)
