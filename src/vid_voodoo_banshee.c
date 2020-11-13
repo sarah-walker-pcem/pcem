@@ -147,6 +147,7 @@ enum
 
 #define VGAINIT0_EXTENDED_SHIFT_OUT (1 << 12)
 
+#define VIDPROCCFG_CURSOR_MODE (1 << 1)
 #define VIDPROCCFG_HALF_MODE (1 << 4)
 #define VIDPROCCFG_OVERLAY_ENABLE (1 << 8)
 #define VIDPROCCFG_H_SCALE_ENABLE (1 << 14)
@@ -1567,25 +1568,51 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
         
         x_off = svga->hwcursor_latch.x;
         
-        for (x = 0; x < 64; x += 8)
+        if (banshee->vidProcCfg & VIDPROCCFG_CURSOR_MODE)
         {
-                if (x_off > (32-8))
+                /*X11 mode*/
+                for (x = 0; x < 64; x += 8)
                 {
-                        int xx;
-                
-                        for (xx = 0; xx < 8; xx++)
+                        if (x_off > (32-8))
                         {
-                                if (!(plane0[x >> 3] & (1 << 7)))
-                                        ((uint32_t *)buffer32->line[displine])[x_off + xx] = (plane1[x >> 3] & (1 << 7)) ? col1 : col0;
-                                else if (plane1[x >> 3] & (1 << 7))
-                                        ((uint32_t *)buffer32->line[displine])[x_off + xx] ^= 0xffffff;
+                                int xx;
 
-                                plane0[x >> 3] <<= 1;
-                                plane1[x >> 3] <<= 1;
+                                for (xx = 0; xx < 8; xx++)
+                                {
+                                        if (plane0[x >> 3] & (1 << 7))
+                                                ((uint32_t *)buffer32->line[displine])[x_off + xx] = (plane1[x >> 3] & (1 << 7)) ? col1 : col0;
+
+                                        plane0[x >> 3] <<= 1;
+                                        plane1[x >> 3] <<= 1;
+                                }
                         }
-                }
 
-                x_off += 8;
+                        x_off += 8;
+                }
+        }
+        else
+        {
+                /*Windows mode*/
+                for (x = 0; x < 64; x += 8)
+                {
+                        if (x_off > (32-8))
+                        {
+                                int xx;
+
+                                for (xx = 0; xx < 8; xx++)
+                                {
+                                        if (!(plane0[x >> 3] & (1 << 7)))
+                                                ((uint32_t *)buffer32->line[displine])[x_off + xx] = (plane1[x >> 3] & (1 << 7)) ? col1 : col0;
+                                        else if (plane1[x >> 3] & (1 << 7))
+                                                ((uint32_t *)buffer32->line[displine])[x_off + xx] ^= 0xffffff;
+
+                                        plane0[x >> 3] <<= 1;
+                                        plane1[x >> 3] <<= 1;
+                                }
+                        }
+
+                        x_off += 8;
+                }
         }
 }
 
