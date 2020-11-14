@@ -368,6 +368,10 @@ void *ati28800k_init()
 
         ati28800->svga.miscout = 1;
         ati28800->svga.ksc5601_sbyte_mask = 0;
+        ati28800->svga.ksc5601_udc_area_msb[0] = 0xC9;
+        ati28800->svga.ksc5601_udc_area_msb[1] = 0xFE;
+        ati28800->svga.ksc5601_swap_mode = 0;
+        ati28800->svga.ksc5601_english_font_type = 0;
 
         ati_eeprom_load(&ati28800->eeprom, "atikorvga.nvr", 0);
 
@@ -401,6 +405,10 @@ void *ati28800k_spc4620p_init()
 
         ati28800->svga.miscout = 1;
         ati28800->svga.ksc5601_sbyte_mask = 0;
+        ati28800->svga.ksc5601_udc_area_msb[0] = 0xC9;
+        ati28800->svga.ksc5601_udc_area_msb[1] = 0xFE;
+        ati28800->svga.ksc5601_swap_mode = 0;
+        ati28800->svga.ksc5601_english_font_type = 0;
 
         ati_eeprom_load(&ati28800->eeprom, "svb6120a.nvr", 0);
 
@@ -434,7 +442,10 @@ void *ati28800k_spc6033p_init()
 
         ati28800->svga.miscout = 1;
         ati28800->svga.ksc5601_sbyte_mask = 0;
-
+        ati28800->svga.ksc5601_udc_area_msb[0] = 0xC9;
+        ati28800->svga.ksc5601_udc_area_msb[1] = 0xFE;
+        ati28800->svga.ksc5601_swap_mode = 0;
+        ati28800->svga.ksc5601_english_font_type = 0;
 
         ati_eeprom_load(&ati28800->eeprom, "svb6120a_spc6033p.nvr", 0);
 

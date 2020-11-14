@@ -138,7 +138,10 @@ typedef struct svga_t
         void *p;
 
         uint8_t ksc5601_sbyte_mask;
-        
+        uint8_t ksc5601_udc_area_msb[2];
+        int ksc5601_swap_mode;
+        uint16_t ksc5601_english_font_type;
+
         int vertical_linedbl;
         
         /*Used to implement CRTC[0x17] bit 2 hsync divisor*/

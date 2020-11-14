@@ -102,6 +102,7 @@ static VIDEO_CARD video_cards[] =
         {"Hercules InColor",                       "incolor",        &incolor_device,                   GFX_INCOLOR,         VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"IBM 1MB SVGA Adapter/A (CL GD5428)",     "ibm1mbsvga",     &ibm_gd5428_device,                GFX_IBM_GD5428,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  8,  10, 10, 20}},
         {"Image Manager 1024",                     "im1024",         &im1024_device,                    GFX_IM1024,          VIDEO_FLAG_TYPE_CGA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
+        {"Kasan Hangulmadang-16 (Tseng ET4000AX)", "kasan16",        &et4000_kasan_device,                   GFX_KASAN16VGA,      VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3,  3,  6,   5,  5, 10}},
         {"Matrox Mystique",                        "mystique",       &mystique_device,                  GFX_MYSTIQUE,        VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4,  4,  4,  10, 10, 10}},
         {"MDA",                                    "mda",            &mda_device,                       GFX_MDA,             VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},
         {"MDSI Genius",                            "genius",         &genius_device,                    GFX_GENIUS,          VIDEO_FLAG_TYPE_MDA,     {VIDEO_ISA, 8, 16, 32,   8, 16, 32}},

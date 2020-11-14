@@ -281,6 +281,7 @@ enum
         GFX_EGA,        /*Using IBM EGA BIOS*/
         GFX_TVGA,       /*Using Trident TVGA8900D BIOS*/
         GFX_ET4000,     /*Tseng ET4000*/
+        GFX_KASAN16VGA, /*Kasan Hangulmadang-16 (Tseng ET4000AX)*/
         GFX_TGKOREANVGA, /*Trigem Korean VGA(Tseng ET4000AX)*/
         GFX_ET4000W32,  /*Tseng ET4000/W32p (Diamond Stealth 32)*/
         GFX_BAHAMAS64,  /*S3 Vision864 (Paradise Bahamas 64)*/
