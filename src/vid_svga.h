@@ -60,7 +60,7 @@ typedef struct svga_t
         int lowres, interlace;
         int linedbl, rowcount;
         double clock;
-        uint32_t ma_latch;
+        uint32_t ma_latch, ca_adj;
         int bpp;
         
         uint64_t dispontime, dispofftime;

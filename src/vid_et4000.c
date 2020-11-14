@@ -264,6 +264,11 @@ void et4000k_recalctimings(svga_t *svga)
 
         if (svga->render == svga_render_text_80 && ((svga->crtc[0x37] & 0x0A) == 0x0A))
         {
+                if(et4000->port_32cb_val & 0x80)
+                {
+                        svga->ma_latch -= 2;
+                        svga->ca_adj = -2;
+                }
                 if((et4000->port_32cb_val & 0xB4) == ((svga->crtc[0x37] & 3) == 2 ? 0xB4 : 0xB0))
                 {
                         svga->render = svga_render_text_80_ksc5601;
