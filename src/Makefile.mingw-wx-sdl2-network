@@ -1,4 +1,4 @@
-VPATH = . dosbox resid-fp
+VPATH = . dosbox resid-fp minivhd
 CPP  = g++
 CC   = gcc
 WINDRES = windres.exe
@@ -45,12 +45,13 @@ OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o 82091aa.o acc203
 	wx-joystickconfig.o wx-createdisc.o wx.res
 DBOBJ = cdrom_image.o dbopl.o nukedopl.o vid_cga_comp.o
 SIDOBJ = convolve.o convolve-sse.o envelope.o extfilt.o filter.o pot.o sid.o voice.o wave6581__ST.o wave6581_P_T.o wave6581_PS_.o wave6581_PST.o wave8580__ST.o wave8580_P_T.o wave8580_PS_.o wave8580_PST.o wave.o
+MVHDOBJ = cwalk.o libxml2_encoding.o minivhd_convert.o minivhd_create.o minivhd_io.o minivhd_manage.o minivhd_struct_rw.o minivhd_util.o
 NETOBJ = ne2000.o nethandler.o
 
 LIBS = -Wl,--subsystem,windows -mthreads -mwindows -lwxmsw$(WXVERSION)u_xrc -lwxmsw$(WXVERSION)u_html -lwxmsw$(WXVERSION)u_adv -lwxbase$(WXVERSION)u_xml -lwxmsw$(WXVERSION)u_core -lwxbase$(WXVERSION)u -lwxtiff -lwxjpeg -lwxpng -lwxzlib -lwxregexu -lwxexpat -lkernel32 -lcomdlg32 -lwinspool -lcomctl32 -lole32 -loleaut32 -luuid -lrpcrt4 -ladvapi32 -lmingw32 -lopengl32 -lopenal32 -lstdc++ -lSDL2main -lSDL2 -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static-libgcc -lwsock32 -liphlpapi
 
-PCem-wx-SDL2.exe: $(OBJ) $(DBOBJ) $(SIDOBJ) $(NETOBJ) libslirp.a
-	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) $(NETOBJ) slirp/libslirp.a -o "PCem-wx-SDL2.exe" $(LIBS)
+PCem-wx-SDL2.exe: $(OBJ) $(DBOBJ) $(SIDOBJ) $(MVHDOBJ) $(NETOBJ) libslirp.a
+	$(CC) $(OBJ) $(DBOBJ) $(SIDOBJ) $(MVHDOBJ) $(NETOBJ) slirp/libslirp.a -o "PCem-wx-SDL2.exe" $(LIBS)
 	strip -s PCem-wx-SDL2.exe
 
 libslirp.a:

@@ -2840,11 +2840,37 @@
 						<growablerows></growablerows>
 						<object class="sizeritem">
 							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText">
+								<label>Image Format:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_HDFORMAT">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
 							<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
 							<border>5</border>
 							<object class="wxStaticText">
 								<size>80,-1</size>
-								<label>File:</label>
+								<label>New File:</label>
 								<wrap>-1</wrap>
 							</object>
 						</object>
@@ -2853,7 +2879,6 @@
 							<flag>wxALL</flag>
 							<border>5</border>
 							<object class="wxTextCtrl" name="IDC_EDITC">
-								<style>wxTE_READONLY</style>
 								<size>350,-1</size>
 								<value></value>
 							</object>
@@ -2975,6 +3000,32 @@
 							<flag>wxALL</flag>
 							<border>5</border>
 							<object class="wxComboBox" name="IDC_HDTYPE">
+								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+								<size>350,-1</size>
+								<value></value>
+								<content />
+							</object>
+						</object>
+						<object class="spacer">
+							<option>1</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<size>0,0</size>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_HDBLOCKSIZELABEL">
+								<label>Block size:</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxComboBox" name="IDC_HDBLOCKSIZE">
 								<style>wxCB_DROPDOWN|wxCB_READONLY</style>
 								<size>350,-1</size>
 								<value></value>

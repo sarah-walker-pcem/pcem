@@ -761,6 +761,16 @@ int getsfile(void* hwnd, char *f, char *fn, char *dir, char *ext)
         return ret;
 }
 
+int getfilewithcaption(void* hwnd, char *f, char *fn, char *caption)
+{
+        int ret = wx_filedialog(hwnd, caption, fn, f, 0, 1, openfilestring);
+#ifdef __APPLE__
+        /* wxWidgets on OSX may mess up the SDL-window somehow, so just in case we reset it here */
+        window_doreset = 1;
+#endif
+        return ret;
+}
+
 void atapi_close(void)
 {
         switch (cdrom_drive)

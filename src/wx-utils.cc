@@ -402,6 +402,21 @@ int wx_sendmessage(void* window, int type, LONG_PARAM param1, LONG_PARAM param2)
                 ((wxWindow *)window)->Reparent((wxWindow *)param1);
                 break;
         }
+        case WX_WM_ENABLE:
+        {
+                ((wxWindow*)window)->Enable((bool)param2);
+                break;
+        }
+        case WX_WM_SHOW:
+        {
+                ((wxWindow*)window)->Show((bool)param2);
+                break;
+        }
+        case WX_WM_LAYOUT:
+        {
+                ((wxWindow*)window)->Layout();
+                break;
+        }
         }
 
         ((wxWindow*)window)->Fit();

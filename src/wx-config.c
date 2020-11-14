@@ -20,6 +20,9 @@
 #include "video.h"
 #include "vid_voodoo.h"
 
+#include "MiniVHD/minivhd.h"
+#include "MiniVHD/minivhd_util.h"
+
 //#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
 #define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/
 extern int pause;
@@ -84,7 +87,7 @@ static void recalc_fpu_list(void *hdlg, int model, int manu, int cpu, int fpu)
 {
         void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
         int c = 0;
-        
+
         wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
 
@@ -117,7 +120,7 @@ static void recalc_vid_list(void* hdlg, int model, int force_builtin_video)
 
         wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
-        
+
         if (model_has_fixed_gfx(model))
         {
                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Built-in video");
@@ -139,10 +142,10 @@ static void recalc_vid_list(void* hdlg, int model, int force_builtin_video)
                 }
                 d++;
         }
-        
+
         if (cur_gfxcard == GFX_BUILTIN && !model_has_fixed_gfx(model) && !model_has_optional_gfx(model))
                 cur_gfxcard = 0;
-        
+
         while (1)
         {
                 char *s = video_card_getname(c);
@@ -297,7 +300,7 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOHDD"));
         hdd_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
         h = wx_getdlgitem(hdlg, WX_ID("IDC_HDCBOOK"));
-        
+
         while (wx_sendmessage(h, WX_CHB_GETPAGECOUNT, 0, 0))
                 wx_sendmessage(h, WX_CHB_REMOVEPAGE, 0, 0);
 
@@ -305,20 +308,20 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
         {
                 void *page;
                 char s[80];
-                        
+
                 sprintf(s, "IDC_HDPANEL[%i]", c);
-                        
+
                 page = wx_getdlgitem(hdlg, WX_ID(s));
                 wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
                 wx_sendmessage(h, WX_CHB_ADDPAGE, (LONG_PARAM)page, (LONG_PARAM)"dummy name");
-        }                
+        }
         if (hdd_controller_is_scsi(hdd_names[hdd_type]))
-        {                
+        {
                 for (c = 0; c < 7; c++)
                 {
                         void *page;
                         char s[80];
-                        
+
                         sprintf(s, "IDC_HDPANEL[%i]", c);
                         page = wx_getdlgitem(hdlg, WX_ID(s));
                         wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
@@ -350,7 +353,7 @@ static void recalc_hdd_list(void* hdlg, int model, int use_selected_hdd, int for
                 {
                         void *page;
                         char s[80];
-                        
+
                         sprintf(s, "IDC_HDPANEL[%i]", c);
                         page = wx_getdlgitem(hdlg, WX_ID(s));
                         wx_sendmessage(page, WX_REPARENT, (LONG_PARAM)h, 0);
@@ -426,11 +429,11 @@ static void recalc_cd_list(void *hdlg, int cur_speed, char *cur_model)
         {
                 char s[8];
                 int speed;
-                
+
                 speed = cd_get_speed(c);
                 sprintf(s, "%iX", speed);
                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                
+
                 if (speed == cur_speed)
                 {
                         wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
@@ -567,7 +570,7 @@ int config_dlgsave(void* hdlg)
 
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
         temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-        
+
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOMOUSE"));
         temp_mouse_type = settings_list_to_mouse[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
 
@@ -582,7 +585,7 @@ int config_dlgsave(void* hdlg)
 #ifdef USE_NETWORKING
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
         temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
-#endif                        
+#endif
 
         if (temp_model != model || gfx != gfxcard || mem != mem_size || temp_fpu != fpu_type ||
             temp_GAMEBLASTER != GAMEBLASTER || temp_GUS != GUS ||
@@ -945,13 +948,13 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         hd_changed = 0;
                         new_cdrom_channel = cdrom_channel;
                         new_zip_channel = zip_channel;
-                        
+
                         hdconf_init(hdlg);
-                        
+
                         for (c = 0; c < 7; c++)
                         {
                                 char s[80];
-                                
+
                                 sprintf(s, "IDC_COMBODRIVETYPE[%i]", c);
                                 h = wx_getdlgitem(hdlg, WX_ID(s));
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Hard drive");
@@ -964,7 +967,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 else
                                         wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                         }
-                        
+
                         recalc_cd_list(hdlg, cd_speed, cd_model);
 
 #ifdef USE_NETWORKING
@@ -984,15 +987,15 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                 {
                         if (wParam == WX_ID("IDC_COMBO1"))
                         {
-                                int force_ide = 0;                                
+                                int force_ide = 0;
                                 int force_builtin_video = 0;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
                                 temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
-                                
+
                                 if (temp_model == prev_model)
                                         break;
-                                
+
                                 if ((models[temp_model].flags & MODEL_HAS_IDE) && !(models[prev_model].flags & MODEL_HAS_IDE))
                                         force_ide = 1;
                                 if (model_has_optional_gfx(temp_model))
@@ -1037,7 +1040,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOFPU"));
                                 temp_fpu = fpu_get_type_from_index(temp_model, temp_cpu_m, temp_cpu, wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0));
                                 recalc_fpu_list(hdlg, temp_model, temp_cpu_m, temp_cpu, temp_fpu);
-                        
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CHECKDYNAREC"));
                                 temp_dynarec = wx_sendmessage(h, WX_BM_GETCHECK, 0, 0);
 
@@ -1300,7 +1303,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         {
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
                                 temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGURE_NETCARD"));
                                 if (network_card_has_config(temp_network_card))
                                         wx_enablewindow(h, TRUE);
@@ -1311,14 +1314,14 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         {
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
                                 temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
-                                
+
                                 deviceconfig_open(hdlg, (void *)network_card_getdevice(temp_network_card));
                         }
 #endif
                         else if (wParam == WX_ID("IDC_COMBOJOY"))
                         {
                                 int temp_joystick_type;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
 
@@ -1334,7 +1337,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else if (wParam == WX_ID("IDC_JOY1"))
                         {
                                 int temp_joystick_type;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 joystickconfig_open(hdlg, 0, temp_joystick_type);
@@ -1342,7 +1345,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else if (wParam == WX_ID("IDC_JOY2"))
                         {
                                 int temp_joystick_type;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 joystickconfig_open(hdlg, 1, temp_joystick_type);
@@ -1350,7 +1353,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else if (wParam == WX_ID("IDC_JOY3"))
                         {
                                 int temp_joystick_type;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 joystickconfig_open(hdlg, 2, temp_joystick_type);
@@ -1358,7 +1361,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         else if (wParam == WX_ID("IDC_JOY4"))
                         {
                                 int temp_joystick_type;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBOJOY"));
                                 temp_joystick_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
                                 joystickconfig_open(hdlg, 3, temp_joystick_type);
@@ -1370,7 +1373,7 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 int mem;
                                 int granularity;
                                 int granularity_mask;
-                                
+
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
                                 temp_model = listtomodel[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
 
@@ -1558,7 +1561,7 @@ static void update_hdd_cdrom(void* hdlg)
 }
 
 static volatile int create_drive_pos;
-static int create_drive(void* data)
+static int create_drive_raw(void* data)
 {
         int c;
         uint8_t buf[512];
@@ -1575,6 +1578,134 @@ static int create_drive(void* data)
         return 1;
 }
 
+static void vhd_progress_callback(uint32_t current_sector, uint32_t total_sectors)
+{
+        create_drive_pos = (int)current_sector;
+}
+
+/* If the disk geometry requested in the PCem GUI is not compatible with the internal VHD geometry,
+ * we adjust it to the next-largest size that is compatible. On average, this will be a difference
+ * of about 21 MB, and should only be necessary for VHDs larger than 31.5 GB, so should never be more
+ * than a tenth of a percent change in size.
+ */
+static void adjust_pcem_geometry_for_vhd(MVHDGeom *vhd_geometry)
+{
+        if (hd_new_cyl <= 65535)
+                return;
+
+        int desired_sectors = hd_new_cyl * hd_new_hpc * hd_new_spt;
+        if (desired_sectors > 267321600)
+                desired_sectors = 267321600;
+
+        int remainder = desired_sectors % 85680; /* 8560 is the LCM of 1008 (63*16) and 4080 (255*16) */
+        if (remainder > 0)
+                desired_sectors += (85680 - remainder);
+
+        hd_new_cyl = desired_sectors / (16 * 63);
+        hd_new_hpc = 16;
+        hd_new_spt = 63;
+
+        vhd_geometry->cyl = desired_sectors / (16 * 255);
+        vhd_geometry->heads = 16;
+        vhd_geometry->spt = 255;
+}
+
+static void adjust_vhd_geometry_for_pcem()
+{
+        if (hd_new_spt <= 63)
+                return;
+
+        int desired_sectors = hd_new_cyl * hd_new_hpc * hd_new_spt;
+        if (desired_sectors > 267321600)
+                desired_sectors = 267321600;
+
+        int remainder = desired_sectors % 85680; /* 8560 is the LCM of 1008 (63*16) and 4080 (255*16) */
+        if (remainder > 0)
+                desired_sectors -= remainder;
+
+        hd_new_cyl = desired_sectors / (16 * 63);
+        hd_new_hpc = 16;
+        hd_new_spt = 63;
+}
+
+static int create_drive_vhd_fixed(void *data)
+{
+        MVHDGeom geometry = { .cyl = hd_new_cyl, .heads = hd_new_hpc, .spt = hd_new_spt };
+        adjust_pcem_geometry_for_vhd(&geometry);
+
+        int vhd_error = 0;
+        MVHDMeta *vhd = mvhd_create_fixed(hd_new_name, geometry, &vhd_error, vhd_progress_callback);
+        if (vhd == NULL)
+        {
+                return 0;
+        }
+        else
+        {
+                mvhd_close(vhd);
+                return 1;
+        }
+}
+
+static int create_drive_vhd_dynamic(int blocksize)
+{
+        MVHDGeom geometry = { .cyl = hd_new_cyl, .heads = hd_new_hpc, .spt = hd_new_spt };
+        adjust_pcem_geometry_for_vhd(&geometry);
+        int vhd_error = 0;
+        MVHDCreationOptions options;
+        options.block_size_in_sectors = blocksize;
+        options.path = hd_new_name;
+        options.size_in_bytes = 0;
+        options.geometry = geometry;
+        options.type = MVHD_TYPE_DYNAMIC;
+
+        MVHDMeta *vhd = mvhd_create_ex(options, &vhd_error);
+        if (vhd == NULL)
+        {
+                return 0;
+        }
+        else
+        {
+                mvhd_close(vhd);
+                return 1;
+        }
+}
+
+static int create_drive_vhd_diff(char* parent_filename, int blocksize)
+{
+        int vhd_error = 0;
+        MVHDCreationOptions options;
+        options.block_size_in_sectors = blocksize;
+        options.path = hd_new_name;
+        options.parent_path = parent_filename;
+        options.type = MVHD_TYPE_DIFF;
+
+        MVHDMeta *vhd = mvhd_create_ex(options, &vhd_error);
+        if (vhd == NULL)
+        {
+                return 0;
+        }
+        else
+        {
+                MVHDGeom vhd_geom = mvhd_get_geometry(vhd);
+
+                if (vhd_geom.spt > 63)
+                {
+                        hd_new_cyl = mvhd_calc_size_sectors(&vhd_geom) / (16 * 63);
+                        hd_new_hpc = 16;
+                        hd_new_spt = 63;
+                }
+                else
+                {
+                        hd_new_cyl = vhd_geom.cyl;
+                        hd_new_hpc = vhd_geom.heads;
+                        hd_new_spt = vhd_geom.spt;
+                }
+
+                mvhd_close(vhd);
+                return 1;
+        }
+}
+
 static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
         char s[260];
@@ -1582,7 +1713,7 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
         int c;
         PcemHDC hd[7];
         FILE *f;
-        int hd_type;
+        int hd_type, hd_format, hd_blocksize;
         int size;
 
         switch (message)
@@ -1614,6 +1745,22 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                         wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                 }
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDFORMAT"));
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Raw (.img)");
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Fixed-size VHD (.vhd)");
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Dynamic-size VHD (.vhd)");
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Differencing VHD (.vhd)");
+                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZE"));
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Large blocks (2 MB)");
+                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)"Small blocks (512 KB)");
+                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                wx_sendmessage(h, WX_WM_SHOW, 0, (LONG_PARAM)0);
+
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZELABEL"));
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)" ");
 
                 return TRUE;
                 case WX_COMMAND:
@@ -1653,13 +1800,49 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                                 return TRUE;
                         }
 
-                        f = fopen64(hd_new_name, "wb");
-                        if (!f)
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDFORMAT"));
+                        hd_format = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZE"));
+                        hd_blocksize = (wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0) == 0) ? MVHD_BLOCK_LARGE : MVHD_BLOCK_SMALL;
+
+                        if (hd_format == 0) /* Raw .img */
                         {
-                                wx_messagebox(hdlg, "Can't open file for write", "PCem error", WX_MB_OK);
-                                return TRUE;
+                                f = fopen64(hd_new_name, "wb");
+                                if (!f)
+                                {
+                                        wx_messagebox(hdlg, "Can't open file for write", "PCem error", WX_MB_OK);
+                                        return TRUE;
+                                }
+                                wx_progressdialog(hdlg, "PCem", "Creating drive, please wait...", create_drive_raw, f, hd_new_cyl * hd_new_hpc * hd_new_spt, &create_drive_pos);
                         }
-                        wx_progressdialog(hdlg, "PCem", "Creating drive, please wait...", create_drive, f, hd_new_cyl * hd_new_hpc * hd_new_spt, &create_drive_pos);
+                        else if (hd_format == 1) /* Fixed VHD */
+                        {
+                                if (!wx_progressdialog(hdlg, "PCem", "Creating drive, please wait...", create_drive_vhd_fixed, NULL, hd_new_cyl * hd_new_hpc * hd_new_spt, &create_drive_pos))
+                                {
+                                       wx_messagebox(hdlg, "Can't create VHD", "PCem error", WX_MB_OK);
+                                       return TRUE;
+                                }
+                        }
+                        else if (hd_format == 2) /* Dynamic VHD */
+                        {
+                                if (!create_drive_vhd_dynamic(hd_blocksize))
+                                {
+                                       wx_messagebox(hdlg, "Can't create VHD", "PCem error", WX_MB_OK);
+                                       return TRUE;
+                                }
+                        }
+                        else if (hd_format == 3) /* Differencing VHD */
+                        {
+                                if (!getfilewithcaption(hdlg, "VHD file (*.vhd)|*.vhd|All files (*.*)|*.*", "", "Select the parent VHD"))
+                                {
+                                        if (!create_drive_vhd_diff(openfilestring, hd_blocksize))
+                                        {
+                                                wx_messagebox(hdlg, "Can't create VHD", "PCem error", WX_MB_OK);
+                                                return TRUE;
+                                        }
+                                }
+                        }
 
                         wx_messagebox(hdlg, "Drive created, remember to partition and format the new drive.", "PCem", WX_MB_OK);
 
@@ -1669,7 +1852,13 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                         wx_enddialog(hdlg, 0);
                         return TRUE;
                 } else if (ID_IS("IDC_CFILE")) {
-                        if (!getsfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", "", NULL, "img"))
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDFORMAT"));
+                        hd_format = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                        if (!getsfile(hdlg,
+                                hd_format == 0 ? "Raw Hard disc image (*.img)|*.img|All files (*.*)|*.*" : "VHD file (*.vhd)|*.vhd|All files (*.*)|*.*",
+                                "",
+                                NULL,
+                                hd_format == 0 ? "img" : "vhd"))
                         {
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_EDITC"));
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM) openfilestring);
@@ -1747,6 +1936,68 @@ static int hdnew_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM l
                                 sprintf(s, "%i", (int)(((uint64_t)hd_types[hd_type-1].cylinders*hd_types[hd_type-1].heads*17*512)/1024)/1024);
                                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
                         }
+                        return TRUE;
+                }
+                else if (ID_IS("IDC_HDFORMAT")) {
+                        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDFORMAT"));
+                        hd_format = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+                        if (hd_format == 3) /* They switched to a dynamic VHD; disable the geometry fields. */
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT1"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"(use parent)");
+                                wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT2"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"(use parent)");
+                                wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT3"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"(use parent)");
+                                wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)0);
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"(use parent)");
+                                wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)0);
+
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDTYPE"));
+                                wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
+                                wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)0);
+                        }
+                        else /* Restore geometry fields if necessary. */
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT1"));
+                                wx_sendmessage(h, WX_WM_GETTEXT, 0, (LONG_PARAM)s);
+                                if (!strncmp(s, "(use parent)", 12))
+                                {
+                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"63");
+                                        wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)1);
+                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT2"));
+                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"16");
+                                        wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)1);
+                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT3"));
+                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"511");
+                                        wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)1);
+                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT4"));
+                                        wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"251");
+                                        wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)1);
+
+                                        h = wx_getdlgitem(hdlg, WX_ID("IDC_HDTYPE"));
+                                        wx_sendmessage(h, WX_WM_ENABLE, 0, (LONG_PARAM)1);
+                                }
+                        }
+
+                        if (hd_format == 2 || hd_format == 3) /* For dynamic and diff VHDs, show the block size dropdown. */
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZELABEL"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)"Block size:");
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZE"));
+                                wx_sendmessage(h, WX_WM_SHOW, 0, (LONG_PARAM)1);
+                        }
+                        else /* Hide it otherwise. */
+                        {
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZELABEL"));
+                                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)" ");
+                                h = wx_getdlgitem(hdlg, WX_ID("IDC_HDBLOCKSIZE"));
+                                wx_sendmessage(h, WX_WM_SHOW, 0, (LONG_PARAM)0);
+                        }
+
                         return TRUE;
                 }
                 break;
@@ -1848,12 +2099,12 @@ static int hdsize_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM 
 int hdconf_init(void* hdlg)
 {
         int c;
-        
+
         for (c = 0; c < 7; c++)
         {
                 char s[260];
                 void *h;
-                
+
                 sprintf(s, "IDC_EDIT_SPT[%i]", c);
                 h = wx_getdlgitem(hdlg, WX_ID(s));
                 sprintf(s, "%i", hdc[c].spt);
@@ -1899,7 +2150,7 @@ int hdconf_update(void* hdlg)
                 wx_enablewindow(wx_getdlgitem(hdlg, WX_ID(s)), !is_mfm);
         }
 
-        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREHDD"));                
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_CONFIGUREHDD"));
         if (hdd_controller_selected_has_config(hdlg))
                 wx_enablewindow(h, TRUE);
         else
@@ -1911,7 +2162,7 @@ int hdconf_update(void* hdlg)
 static int hd_eject(void *hdlg, int drive)
 {
         char s[80];
-        
+
         ide_fn[drive][0] = 0;
         sprintf(s, "IDC_EDIT_SPT[%i]", drive);
         wx_setdlgitemtext(hdlg, WX_ID(s), "0");
@@ -1922,7 +2173,7 @@ static int hd_eject(void *hdlg, int drive)
         sprintf(s, "IDC_EDIT_FN[%i]", drive);
         wx_setdlgitemtext(hdlg, WX_ID(s), "");
         hd_changed = 1;
-        
+
         return TRUE;
 }
 
@@ -1933,7 +2184,7 @@ static int hd_new(void *hdlg, int drive)
                 char s[80];
                 char id[80];
                 void *h;
-                
+
                 sprintf(id, "IDC_EDIT_SPT[%i]", drive);
                 h = wx_getdlgitem(hdlg, WX_ID(id));
                 sprintf(s, "%i", hd_new_spt);
@@ -1962,7 +2213,7 @@ static int hd_new(void *hdlg, int drive)
 
 static int hd_file(void *hdlg, int drive)
 {
-        if (!getfile(hdlg, "Hard disc image (*.img)|*.img|All files (*.*)|*.*", ""))
+        if (!getfile(hdlg, "Hard disc image (*.img;*.vhd)|*.img;*.vhd|All files (*.*)|*.*", ""))
         {
                 off64_t sz;
                 FILE *f = fopen64(openfilestring, "rb");
@@ -1971,17 +2222,64 @@ static int hd_file(void *hdlg, int drive)
                         wx_messagebox(hdlg,"Can't open file for read","PCem error",WX_MB_OK);
                         return TRUE;
                 }
-                fseeko64(f, -1, SEEK_END);
-                sz = ftello64(f) + 1;
-                fclose(f);
-                check_hd_type(hdlg, sz);
+
+                if (mvhd_file_is_vhd(f))
+                {
+                        fclose(f);
+                        int vhdError = 0;
+                        MVHDMeta *vhd = mvhd_open(openfilestring, false, &vhdError);
+                        if (vhd == NULL)
+                        {
+                                wx_messagebox(hdlg,mvhd_strerr(vhdError),"PCem error",WX_MB_OK);
+                                return TRUE;
+                        }
+                        else if (vhdError == MVHD_ERR_TIMESTAMP)
+                        {
+                                const char ts_warning[] =
+                                        "WARNING: VHD PARENT/CHILD TIMESTAMPS DO NOT MATCH!\n\n"
+                                        "This could indicate that the parent image was modified after this VHD was created.\n\n"
+                                        "This could also happen if the VHD files were moved/copied, or the differencing VHD was created with DiskPart.\n\n"
+                                        "Do you wish to fix this error after a file copy or DiskPart creation?";
+                                int wx_res = wx_messagebox(hdlg,ts_warning,"PCem error", WX_MB_NODEFAULT);
+                                if (wx_res == WX_MB_YES)
+                                {
+                                        int ts_res = mvhd_diff_update_par_timestamp(vhd, &vhdError);
+                                        if (ts_res != 0)
+                                        {
+                                                wx_messagebox(hdlg,"Can't fix VHD timestamps","PCem error",WX_MB_OK);
+                                                mvhd_close(vhd);
+                                                return TRUE;
+                                        }
+                                }
+                                else
+                                {
+                                        mvhd_close(vhd);
+                                        return TRUE;
+                                }
+
+                        }
+                        MVHDGeom geom = mvhd_get_geometry(vhd);
+                        hd_new_cyl = geom.cyl;
+                        hd_new_hpc = geom.heads;
+                        hd_new_spt = geom.spt;
+                        hd_new_type = 0;
+                        adjust_vhd_geometry_for_pcem();
+                        mvhd_close(vhd);
+                }
+                else
+                {
+                        fseeko64(f, -1, SEEK_END);
+                        sz = ftello64(f) + 1;
+                        fclose(f);
+                        check_hd_type(hdlg, sz);
+                }
 
                 if (wx_dialogbox(hdlg, "HdSizeDlg", hdsize_dlgproc) == 1)
                 {
                         char s[80];
                         char id[80];
                         void *h;
-                        
+
                         sprintf(id, "IDC_EDIT_SPT[%i]", drive);
                         h = wx_getdlgitem(hdlg, WX_ID(id));
                         sprintf(s, "%i", hd_new_spt);
@@ -2015,7 +2313,7 @@ static int hd_edit(void *hdlg, int drive)
         char id[80];
         void *h;
         int spt, hpc, tracks;
-        
+
         sprintf(id, "IDC_EDIT_SPT[%i]", drive);
         h = wx_getdlgitem(hdlg, WX_ID(id));
         wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
@@ -2033,7 +2331,7 @@ static int hd_edit(void *hdlg, int drive)
         h = wx_getdlgitem(hdlg, WX_ID(id));
         sprintf(s, "%imb", ((((tracks*hpc)*spt)*512)/1024)/1024);
         wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)s);
-        
+
         return TRUE;
 }
 

@@ -62,6 +62,10 @@ resid-fp/wave6581_P_T.cc resid-fp/wave6581__ST.cc resid-fp/wave8580_PS_.cc \
 resid-fp/wave8580_PST.cc resid-fp/wave8580_P_T.cc resid-fp/wave8580__ST.cc \
 resid-fp/wave.cc
 
+#MiniVHD
+pcem_SOURCES += minivhd/cwalk.c minivhd/libxml2_encoding.c minivhd/minivhd_convert.c minivhd/minivhd_create.c \
+minivhd/minivhd_io.c minivhd/minivhd_manage.c minivhd/minivhd_struct_rw.c minivhd/minivhd_util.c
+
 pcem_CFLAGS = $(subst -fpermissive,,$(shell $(WX_CONFIG_PATH) --cxxflags) $(shell sdl2-config --cflags))
 pcem_CXXFLAGS = $(shell $(WX_CONFIG_PATH) --cxxflags) $(shell sdl2-config --cflags)
 pcem_LDADD = @LIBS@
