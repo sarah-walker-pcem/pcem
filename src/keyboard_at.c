@@ -522,9 +522,9 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                                 key_ctrl_queue_start = key_ctrl_queue_end = 0;
                                 keyboard_at.status &= ~STAT_OFULL;
                         }
-			/* T3100e expects STAT_IFULL to be set immediately
+			/* T3100e and Samsung SPC-6000A expects STAT_IFULL to be set immediately
 			 * after sending 0xAA */
-                        if(romset == ROM_T3100E) keyboard_at.status |= STAT_IFULL;
+                        if(romset == ROM_T3100E || romset == ROM_SPC6000A) keyboard_at.status |= STAT_IFULL;
                         keyboard_at.status |= STAT_SYSFLAG;
                         keyboard_at.mem[0] |= 0x04;
                         keyboard_at_adddata(0x55);

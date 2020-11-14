@@ -217,6 +217,12 @@ device_t *video_card_getdevice(int card, int romset)
                 case ROM_SPC4620P:
                 if (card == GFX_BUILTIN)
                         return &ati28800k_spc4620p_device;
+                break;
+                
+                case ROM_SPC6033P:
+                if (card == GFX_BUILTIN)
+                        return &ati28800k_spc6033p_device;
+                break;
 
                 case ROM_ACER386:
                 return &oti067_acer386_device;
@@ -595,6 +601,7 @@ void video_updatetiming()
                         break;
 
                         case ROM_SPC4620P:
+                        case ROM_SPC6033P:
                         if (gfxcard == GFX_BUILTIN)
                                 timing = &timing_spc4620p;
                         break;
@@ -796,6 +803,14 @@ void video_init()
                 if (gfxcard == GFX_BUILTIN)
                 {
                         device_add(&ati28800k_spc4620p_device);
+                        return;
+                }
+                break;
+
+                case ROM_SPC6033P:
+                if (gfxcard == GFX_BUILTIN)
+                {
+                        device_add(&ati28800k_spc6033p_device);
                         return;
                 }
                 break;

@@ -209,6 +209,8 @@ enum
         ROM_MEGAPC,
         ROM_AMA932J,
         ROM_AMI386SX,
+        ROM_SPC6000A,
+        ROM_SPC6033P,
         ROM_AMI486,
         ROM_WIN486,
         ROM_PCI486,

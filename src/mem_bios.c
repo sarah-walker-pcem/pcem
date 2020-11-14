@@ -446,6 +446,37 @@ int loadbios()
                 }
                 break;
 
+                case ROM_SPC6000A:
+                f = romfopen("spc6000a/3c80.u27", "rb");
+                ff = romfopen("spc6000a/9f80.u26","rb");
+                if (f && ff)
+                {
+                        for (c = 0x8000; c < 0x10000; c += 2)
+                        {
+                                rom[c]     = getc(f);
+                                rom[c + 1] = getc(ff);
+                        }
+                        fclose(ff);
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
+                case ROM_SPC6033P:
+                f=romfopen("spc6033p/svb6120a_font.rom","rb");
+                if (!f) break;
+                fclose(f);
+                f=romfopen("spc6033p/phoenix.bin","rb");
+                if (f)
+                {
+                        fseek(f,  0x10000, SEEK_SET);
+                        romfread(rom,65536,1,f);
+
+                        fclose(f);
+                        return 1;
+                }
+                break;
+
                 case ROM_EUROPC:
 //                return 0;
                 f=romfopen("europc/50145","rb");
