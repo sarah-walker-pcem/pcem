@@ -139,8 +139,8 @@ FILE* mvhd_fopen(const char* path, const char* mode, int* err) {
     int path_res = UTF8ToUTF16LE((unsigned char*)new_path, &new_path_len, (const unsigned char*)path, (int*)&path_len);
     int mode_res = UTF8ToUTF16LE((unsigned char*)mode_str, &new_mode_len, (const unsigned char*)mode, (int*)&mode_len);
     if (path_res > 0 && mode_res > 0) {
-        int wfopen_err = _wfopen_s(&f, new_path, mode_str);
-        if (wfopen_err != 0 || f == NULL) {
+        f = _wfopen(new_path, mode_str);
+        if (f == NULL) {
             mvhd_errno = errno;
             *err = MVHD_ERR_FILE;
         }
