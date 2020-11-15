@@ -249,6 +249,14 @@ int loadbios()
                 biosmask = 0x3fff;
                 return 1;
 
+                case ROM_PC5086:
+                f  = romfopen("pc5086/sys_rom.bin" ,"rb");
+                if (!f) break;
+                romfread(rom, 65536, 1, f);
+                fclose(f);
+                return 1;
+
+
                 case ROM_IBMAT:
 /*                f=romfopen("amic206.bin","rb");
                 if (!f) break;

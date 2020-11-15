@@ -68,6 +68,7 @@
 #include "sound_ps1.h"
 #include "sound_pssj.h"
 #include "sound_sn76489.h"
+#include "superxt.h"
 #include "sst39sf010.h"
 #include "tandy_eeprom.h"
 #include "tandy_rom.h"
@@ -88,6 +89,7 @@ void           pcjr_init();
 void        tandy1k_init();
 void     tandy1ksl2_init();
 void            ams_init();
+void         pc5086_init();
 void         europc_init();
 void         olim24_init();
 void             at_init();
@@ -167,6 +169,7 @@ MODEL models[] =
         {"[8086] Amstrad PC1640",         ROM_PC1640,           "pc1640",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams1512_device},
         {"[8086] Amstrad PC2086",         ROM_PC2086,           "pc2086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams2086_device},
         {"[8086] Amstrad PC3086",         ROM_PC3086,           "pc3086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              640,  640,   0,            ams_init, &ams3086_device},
+        {"[8086] Amstrad PC5086",         ROM_PC5086,           "pc5086",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE|MODEL_PS2,                                        640,  640,   0,         pc5086_init, &f82c710_upc_device},
         {"[8086] Amstrad PPC512/640",     ROM_PPC512,           "ppc512",         { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_DISABLE_HW|MODEL_AMSTRAD,                              512,  640, 128,            ams_init, &ams1512_device},
         {"[8086] Compaq Deskpro",         ROM_DESKPRO,          "deskpro",        { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_NONE,                                                  128,  640, 128,      compaq_xt_init, NULL},
         {"[8086] Olivetti M24",           ROM_OLIM24,           "olivetti_m24",   { {"",      cpus_8086},        {"",    NULL},         {"",      NULL}},        MODEL_GFX_FIXED|MODEL_OLIM24,                                    128,  640, 128,         olim24_init, NULL},
@@ -403,9 +406,21 @@ void ams_init()
         amstrad_init();
         keyboard_amstrad_init();
         device_add(&nvr_device);
-	nmi_init();
-	fdc_set_dskchg_activelow();
+        nmi_init();
+        fdc_set_dskchg_activelow();
         device_add(&gameport_device);
+}
+
+void pc5086_init()
+{
+        xt_init();
+        lpt1_remove();      /* remove LPT ports, they will be enabled by 82C710 */
+        lpt2_remove();
+        serial1_remove();   /* remove COM ports, they will be enabled by 82C710 */
+        serial2_remove();
+        device_add(&nvr_device);
+	    fdc_set_dskchg_activelow();
+        superxt_init();
 }
 
 void europc_init()

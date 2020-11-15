@@ -266,6 +266,7 @@ enum
         ROM_DESKPRO,
         ROM_VS440FX,
         ROM_GA686BX,
+        ROM_PC5086,
 
         ROM_MAX
 };

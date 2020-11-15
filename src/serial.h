@@ -4,6 +4,8 @@ void serial1_init(uint16_t addr, int irq, int has_fifo);
 void serial2_init(uint16_t addr, int irq, int has_fifo);
 void serial1_set(uint16_t addr, int irq);
 void serial2_set(uint16_t addr, int irq);
+void serial1_set_has_fifo(int has_fifo);
+void serial2_set_has_fifo(int has_fifo);
 void serial1_remove();
 void serial2_remove();
 void serial_reset();
