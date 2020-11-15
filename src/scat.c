@@ -78,10 +78,19 @@ void scat_shadow_state_update()
 {
         int i, val;
 
-        for (i = 0; i < 24; i++)
+        if ((scat_regs[SCAT_DRAM_CONFIGURATION] & 0xF) < 4)
         {
-                val = ((scat_regs[SCAT_SHADOW_RAM_ENABLE_1 + (i >> 3)] >> (i & 7)) & 1) ? MEM_READ_INTERNAL | MEM_WRITE_INTERNAL : MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL;
-                mem_set_mem_state((i + 40) << 14, 0x4000, val);
+                /*Less than 1MB low memory, no shadow RAM available*/
+                for (i = 0; i < 24; i++)
+                        mem_set_mem_state((i + 40) << 14, 0x4000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        }
+        else
+        {
+                for (i = 0; i < 24; i++)
+                {
+                        val = ((scat_regs[SCAT_SHADOW_RAM_ENABLE_1 + (i >> 3)] >> (i & 7)) & 1) ? MEM_READ_INTERNAL | MEM_WRITE_INTERNAL : MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL;
+                        mem_set_mem_state((i + 40) << 14, 0x4000, val);
+                }
         }
 
         flushmmucache();
@@ -1043,6 +1052,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                         break;
                         case SCAT_DRAM_CONFIGURATION:
                         scat_map_update = 1;
+                        scat_shadow_update = 1;
 
                         if((scat_regs[SCAT_VERSION] & 0xF0) == 0)
                         {
