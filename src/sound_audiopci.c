@@ -130,7 +130,7 @@ const int32_t codec_attn[]=
 };
 
 static void es1371_fetch(es1371_t *es1371, int dac_nr);
-static void update_legacy(es1371_t *es1371);
+static void update_legacy(es1371_t *es1371, uint32_t old_legacy_ctrl);
 
 static void es1371_update_irqs(es1371_t *es1371)
 {
@@ -353,6 +353,7 @@ static uint32_t es1371_inl(uint16_t port, void *p)
 static void es1371_outb(uint16_t port, uint8_t val, void *p)
 {
         es1371_t *es1371 = (es1371_t *)p;
+        uint32_t old_legacy_ctrl;
 
 //        pclog("es1371_outb: port=%04x val=%02x %04x:%08x\n", port, val, cs, cpu_state.pc);
         switch (port & 0x3f)
@@ -397,14 +398,16 @@ static void es1371_outb(uint16_t port, uint8_t val, void *p)
                 nmi = 0;
                 break;
                 case 0x1a:
+                old_legacy_ctrl = es1371->legacy_ctrl;
                 es1371->legacy_ctrl = (es1371->legacy_ctrl & 0xff00ffff) | (val << 16);
-                update_legacy(es1371);
+                update_legacy(es1371, old_legacy_ctrl);
                 break;
                 case 0x1b:
+                old_legacy_ctrl = es1371->legacy_ctrl;
                 es1371->legacy_ctrl = (es1371->legacy_ctrl & 0x00ffffff) | (val << 24);
                 es1371_update_irqs(es1371);
 //                output = 3;
-                update_legacy(es1371);
+                update_legacy(es1371, old_legacy_ctrl);
                 break;
                 
                 case 0x20:
@@ -721,26 +724,44 @@ static uint8_t capture_read_slave_dma(uint16_t port, void *p)
         return 0xff;
 }
 
-static void update_legacy(es1371_t *es1371)
+static void update_legacy(es1371_t *es1371, uint32_t old_legacy_ctrl)
 {
-        io_removehandler(0x0320, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371);
-        io_removehandler(0x0330, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371);
-        io_removehandler(0x0340, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371);
-        io_removehandler(0x0350, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371);
-
-        io_removehandler(0x5300, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371);
-        io_removehandler(0xe800, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371);
-        io_removehandler(0xf400, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371);
-
-        io_removehandler(0x0220, 0x0010, capture_read_sb,NULL,NULL, capture_write_sb,NULL,NULL, es1371);
-        io_removehandler(0x0240, 0x0010, capture_read_sb,NULL,NULL, capture_write_sb,NULL,NULL, es1371);
-
-        io_removehandler(0x0388, 0x0004, capture_read_adlib,NULL,NULL, capture_write_adlib,NULL,NULL, es1371);
-
-        io_removehandler(0x0020, 0x0002, capture_read_master_pic,NULL,NULL, capture_write_master_pic,NULL,NULL, es1371);
-        io_removehandler(0x0000, 0x0010, capture_read_master_dma,NULL,NULL, capture_write_master_dma,NULL,NULL, es1371);
-        io_removehandler(0x00a0, 0x0002, capture_read_slave_pic,NULL,NULL, capture_write_slave_pic,NULL,NULL, es1371);
-        io_removehandler(0x00c0, 0x0020, capture_read_slave_dma,NULL,NULL, capture_write_slave_dma,NULL,NULL, es1371);
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SSCAPE)
+        {
+                switch ((old_legacy_ctrl >> LEGACY_SSCAPE_ADDR_SHIFT) & 3)
+                {
+                        case 0: io_removehandler(0x0320, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371); break;
+                        case 1: io_removehandler(0x0330, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371); break;
+                        case 2: io_removehandler(0x0340, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371); break;
+                        case 3: io_removehandler(0x0350, 0x0008, capture_read_sscape,NULL,NULL, capture_write_sscape,NULL,NULL, es1371); break;
+                }
+        }
+        if (old_legacy_ctrl & LEGACY_CAPTURE_CODEC)
+        {
+                switch ((old_legacy_ctrl >> LEGACY_CODEC_ADDR_SHIFT) & 3)
+                {
+                        case 0: io_removehandler(0x5300, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371); break;
+                        case 2: io_removehandler(0xe800, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371); break;
+                        case 3: io_removehandler(0xf400, 0x0080, capture_read_codec,NULL,NULL, capture_write_codec,NULL,NULL, es1371); break;
+                }
+        }
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SB)
+        {
+                if (!(old_legacy_ctrl & LEGACY_SB_ADDR))
+                        io_removehandler(0x0220, 0x0010, capture_read_sb,NULL,NULL, capture_write_sb,NULL,NULL, es1371);
+                else
+                        io_removehandler(0x0240, 0x0010, capture_read_sb,NULL,NULL, capture_write_sb,NULL,NULL, es1371);
+        }
+        if (old_legacy_ctrl & LEGACY_CAPTURE_ADLIB)
+                io_removehandler(0x0388, 0x0004, capture_read_adlib,NULL,NULL, capture_write_adlib,NULL,NULL, es1371);
+        if (old_legacy_ctrl & LEGACY_CAPTURE_MASTER_PIC)
+                io_removehandler(0x0020, 0x0002, capture_read_master_pic,NULL,NULL, capture_write_master_pic,NULL,NULL, es1371);
+        if (old_legacy_ctrl & LEGACY_CAPTURE_MASTER_DMA)
+                io_removehandler(0x0000, 0x0010, capture_read_master_dma,NULL,NULL, capture_write_master_dma,NULL,NULL, es1371);
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SLAVE_PIC)
+                io_removehandler(0x00a0, 0x0002, capture_read_slave_pic,NULL,NULL, capture_write_slave_pic,NULL,NULL, es1371);
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SLAVE_DMA)
+                io_removehandler(0x00c0, 0x0020, capture_read_slave_dma,NULL,NULL, capture_write_slave_dma,NULL,NULL, es1371);
 
         if (es1371->legacy_ctrl & LEGACY_CAPTURE_SSCAPE)
         {
