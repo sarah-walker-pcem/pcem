@@ -20,8 +20,8 @@
 #include "video.h"
 #include "vid_voodoo.h"
 
-#include "MiniVHD/minivhd.h"
-#include "MiniVHD/minivhd_util.h"
+#include "minivhd/minivhd.h"
+#include "minivhd/minivhd_util.h"
 
 //#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
 #define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/

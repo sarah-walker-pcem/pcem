@@ -98,7 +98,7 @@ static int mvhd_gen_par_loc(MVHDSparseHeader* header,
     char child_dir[MVHD_MAX_PATH_BYTES] = {0};
     size_t child_dir_len;
     if (strlen(child_path) < sizeof child_dir) {
-        strcpy_s(child_dir, MVHD_MAX_PATH_BYTES, child_path);
+        strcpy(child_dir, child_path);
     } else {
         *err = MVHD_ERR_PATH_LEN;
         rv = -1;

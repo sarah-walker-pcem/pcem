@@ -171,7 +171,7 @@ static bool mvhd_parent_path_exists(struct MVHDPaths* paths, uint32_t plat_code)
     if (plat_code == MVHD_DIF_LOC_W2RU && *paths->w2ru_path) {
         cwk_ret = cwk_path_join((const char*)paths->dir_path, (const char*)paths->w2ru_path, paths->joined_path, sizeof paths->joined_path);
     } else if (plat_code == MVHD_DIF_LOC_W2KU && *paths->w2ku_path) {
-        strncpy_s(paths->joined_path, sizeof paths->joined_path, (const char*)paths->w2ku_path, sizeof paths->joined_path);
+        memcpy(paths->joined_path, paths->w2ku_path, (sizeof paths->joined_path) - 1);
         cwk_ret = 0;
     } else if (plat_code == 0) {
         cwk_ret = cwk_path_join((const char*)paths->dir_path, (const char*)paths->file_name, paths->joined_path, sizeof paths->joined_path);
@@ -182,7 +182,8 @@ static bool mvhd_parent_path_exists(struct MVHDPaths* paths, uint32_t plat_code)
     f = mvhd_fopen((const char*)paths->joined_path, "rb", &ferr);
     if (f != NULL) {
         /* We found a file at the requested path! */
-        strncpy_s(tmp_open_path, sizeof tmp_open_path, paths->joined_path, sizeof tmp_open_path);
+        memcpy(tmp_open_path, paths->joined_path, (sizeof paths->joined_path) - 1);
+        tmp_open_path[sizeof tmp_open_path - 1] = '\0';
         fclose(f);
         return true;
     } else {
@@ -225,7 +226,7 @@ static char* mvhd_get_diff_parent_path(MVHDMeta* vhdm, int* err) {
         *err = MVHD_ERR_PATH_LEN;
         goto paths_cleanup;
     }
-    strncpy_s(paths->dir_path, sizeof paths->dir_path, vhdm->filename, dirlen);
+    memcpy(paths->dir_path, vhdm->filename, dirlen);
     /* Get the filename field from the sparse header. */
     utf_outlen = (int)sizeof paths->file_name;
     utf_inlen = (int)sizeof vhdm->sparse.par_utf16_name;
@@ -373,7 +374,8 @@ MVHDMeta* mvhd_open(const char* path, bool readonly, int* err) {
         *err = MVHD_ERR_PATH_LEN;
         goto cleanup_vhdm;
     }
-    strcpy_s(vhdm->filename, sizeof vhdm->filename, path);
+    //This is safe, as we've just checked for potential overflow above
+    strcpy(vhdm->filename, path);
     vhdm->f = readonly ? mvhd_fopen((const char*)vhdm->filename, "rb", err) : mvhd_fopen((const char*)vhdm->filename, "rb+", err);
     if (vhdm->f == NULL) {
         /* note, mvhd_fopen sets err for us */
