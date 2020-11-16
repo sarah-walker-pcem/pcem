@@ -339,6 +339,8 @@ void svga_recalctimings(svga_t *svga)
         svga->ma_latch = ((svga->crtc[0xc] << 8) | svga->crtc[0xd]) + ((svga->crtc[8] & 0x60) >> 5);
         svga->ca_adj = 0;
 
+        svga->rowcount = svga->crtc[9] & 31;
+
         svga->hdisp_time = svga->hdisp;
         svga->render = svga_render_blank;
         if (!svga->scrblank && svga->attr_palette_enable)
@@ -418,7 +420,6 @@ void svga_recalctimings(svga_t *svga)
 //        pclog("svga_render %08X : %08X %08X %08X %08X %08X  %i %i %02X %i %i\n", svga_render, svga_render_text_40, svga_render_text_80, svga_render_8bpp_lowres, svga_render_8bpp_highres, svga_render_blank, scrblank,gdcreg[6]&1,gdcreg[5]&0x60,bpp,seqregs[1]&8);
         
         svga->linedbl = svga->crtc[9] & 0x80;
-        svga->rowcount = svga->crtc[9] & 31;
         svga->char_width = (svga->seqregs[1] & 1) ? 8 : 9;
         if (svga->recalctimings_ex) 
                 svga->recalctimings_ex(svga);
