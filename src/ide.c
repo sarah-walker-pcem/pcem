@@ -1273,6 +1273,13 @@ static void *ide_init()
 
 static void ide_close(void *p)
 {
+        int c;
+
+        for (c = 0; c < 4; c++)
+        {
+                ide_drives[c].type = IDE_NONE;
+                hdd_close(&ide_drives[c].hdd_file);
+        }
 }
 
 void ide_set_bus_master(int (*read_data)(int channel, uint8_t *data, int size, void *p), int (*write_data)(int channel, uint8_t *data, int size, void *p), void (*set_irq)(int channel, void *p), void *p)
