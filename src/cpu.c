@@ -212,6 +212,7 @@ void cpu_set()
                 cpu_nonturbo_speed = cpu_s->rspeed;
         else
                 cpu_nonturbo_speed = 8000000;
+        cpu_turbo = 1;
 
         cpu_update_waitstates();
   
@@ -2181,9 +2182,25 @@ void cpu_set_turbo(int turbo)
         }
 }
 
+int cpu_get_turbo()
+{
+        return cpu_turbo;
+}
+
 int cpu_get_speed()
 {
         if (cpu_turbo)
                 return cpu_turbo_speed;
         return cpu_nonturbo_speed;
+}
+
+void cpu_set_nonturbo_divider(int divider)
+{
+        if (divider < 2)
+                cpu_set_turbo(1);
+        else
+        {
+                cpu_nonturbo_speed = cpu_turbo_speed / divider;
+                cpu_set_turbo(0);
+        }
 }

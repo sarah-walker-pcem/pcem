@@ -1046,8 +1046,7 @@ void scat_write(uint16_t port, uint8_t val, void *priv)
                         scat_reg_valid = 1;
                         break;
                         case SCAT_POWER_MANAGEMENT:
-                        // TODO - Only use AUX parity disable bit for this version. Other bits should be implemented later.
-                        val &= (scat_regs[SCAT_VERSION] & 0xF0) == 0 ? 0x40 : 0x60;
+                        cpu_set_nonturbo_divider((val & 0xc) > 0 ? 1 << ((val & 0xc) >> 2) : 0);
                         scat_reg_valid = 1;
                         break;
                         case SCAT_DRAM_CONFIGURATION:
@@ -1219,6 +1218,9 @@ uint8_t scat_read(uint16_t port, void *priv)
                 {
                         case SCAT_MISCELLANEOUS_STATUS:
                         val = (scat_regs[scat_index] & 0x3f) | (~nmi_mask & 0x80) | ((mem_a20_key & 2) << 5);
+                        break;
+                        case SCAT_POWER_MANAGEMENT:
+                        val = (scat_regs[scat_index] & (cpu_get_turbo() ? 0xF3 : 0xFF));
                         break;
                         case SCAT_DRAM_CONFIGURATION:
                         if ((scat_regs[SCAT_VERSION] & 0xF0) == 0) val = (scat_regs[scat_index] & 0x8f) | (cpu_waitstates == 1 ? 0 : 0x10);

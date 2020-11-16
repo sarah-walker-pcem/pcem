@@ -196,10 +196,13 @@ extern uint64_t xt_cpu_multi;
 extern int isa_cycles;
 #define ISA_CYCLES(x) (x * isa_cycles)
 
+#define CPU_CLOCK_DIVIDER_MAX 16384
 void cpu_update_waitstates();
 void cpu_set();
 void cpu_set_edx();
 void cpu_set_turbo(int turbo);
+int cpu_get_turbo();
+void cpu_set_nonturbo_divider(int divider);
 int cpu_get_speed();
 
 extern int has_vlb;
