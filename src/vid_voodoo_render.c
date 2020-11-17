@@ -915,19 +915,19 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
                 if (SLI_ENABLED)
                 {
-                        state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + ((real_y >> 1) * voodoo->row_width)];
-                        state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + ((real_y >> 1) * voodoo->row_width)) & voodoo->fb_mask];
+                        state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + ((real_y >> 1) * params->row_width)];
+                        state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + ((real_y >> 1) * params->row_width)) & voodoo->fb_mask];
                 }
                 else
                 {
-                        if (voodoo->col_tiled)
-                                state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + (real_y >> 5) * voodoo->row_width + (real_y & 31) * 128];
+                        if (params->col_tiled)
+                                state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + (real_y >> 5) * params->row_width + (real_y & 31) * 128];
                         else
-                                state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + (real_y * voodoo->row_width)];
-                        if (voodoo->aux_tiled)
-                                state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + (real_y >> 5) * voodoo->aux_row_width + (real_y & 31) * 128) & voodoo->fb_mask];
+                                state->fb_mem = fb_mem = (uint16_t *)&voodoo->fb_mem[params->draw_offset + (real_y * params->row_width)];
+                        if (params->aux_tiled)
+                                state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + (real_y >> 5) * params->aux_row_width + (real_y & 31) * 128) & voodoo->fb_mask];
                         else
-                                state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + (real_y * voodoo->row_width)) & voodoo->fb_mask];
+                                state->aux_mem = aux_mem = (uint16_t *)&voodoo->fb_mem[(params->aux_offset + (real_y * params->row_width)) & voodoo->fb_mask];
                 }
 
                 if (voodoo_output)
@@ -992,12 +992,12 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
                                 if (params->fbzMode & FBZ_DEPTH_ENABLE)
                                 {
-                                        uint16_t old_depth = voodoo->aux_tiled ? aux_mem[x_tiled] : aux_mem[x];
+                                        uint16_t old_depth = voodoo->params.aux_tiled ? aux_mem[x_tiled] : aux_mem[x];
 
                                         DEPTH_TEST((params->fbzMode & FBZ_DEPTH_SOURCE) ? (params->zaColor & 0xffff) : new_depth);
                                 }
 
-                                dat = voodoo->col_tiled ? fb_mem[x_tiled] : fb_mem[x];
+                                dat = voodoo->params.col_tiled ? fb_mem[x_tiled] : fb_mem[x];
                                 dest_r = (dat >> 8) & 0xf8;
                                 dest_g = (dat >> 3) & 0xfc;
                                 dest_b = (dat << 3) & 0xf8;
@@ -1308,14 +1308,14 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
 
                                         if (params->fbzMode & FBZ_RGB_WMASK)
                                         {
-                                                if (voodoo->col_tiled)
+                                                if (voodoo->params.col_tiled)
                                                         fb_mem[x_tiled] = src_b | (src_g << 5) | (src_r << 11);
                                                 else
                                                         fb_mem[x] = src_b | (src_g << 5) | (src_r << 11);
                                         }
                                         if ((params->fbzMode & (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE)) == (FBZ_DEPTH_WMASK | FBZ_DEPTH_ENABLE))
                                         {
-                                                if (voodoo->aux_tiled)
+                                                if (voodoo->params.aux_tiled)
                                                         aux_mem[x_tiled] = new_depth;
                                                 else
                                                         aux_mem[x] = new_depth;

@@ -156,6 +156,9 @@ typedef struct voodoo_params_t
         uint32_t swapbufferCMD;
 
         uint32_t stipple;
+
+        int col_tiled, aux_tiled;
+        int row_width, aux_row_width;
 } voodoo_params_t;
 
 typedef struct texture_t

@@ -567,6 +567,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->col_tiled = val & (1 << 15);
+                        voodoo->params.col_tiled = voodoo->col_tiled;
                         if (voodoo->col_tiled)
                         {
                                 voodoo->row_width = (val & 0x7f) * 128*32;
@@ -577,6 +578,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                                 voodoo->row_width = val & 0x3fff;
 //                                pclog("colBufferStride linear = %i bytes, linear\n", voodoo->row_width);
                         }
+                        voodoo->params.row_width = voodoo->row_width;
                 }
                 break;
                 case SST_auxBufferAddr:
@@ -590,6 +592,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->aux_tiled = val & (1 << 15);
+                        voodoo->params.aux_tiled = voodoo->aux_tiled;
                         if (voodoo->aux_tiled)
                         {
                                 voodoo->aux_row_width = (val & 0x7f) * 128*32;
@@ -600,6 +603,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                                 voodoo->aux_row_width = val & 0x3fff;
 //                                pclog("auxBufferStride linear = %i bytes, linear\n", voodoo->aux_row_width);
                         }
+                        voodoo->params.aux_row_width = voodoo->aux_row_width;
                 }
                 break;
 
