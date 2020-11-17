@@ -102,7 +102,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo_wait_for_render_thread_idle(voodoo);
                 if (!(val & 1))
                 {
-                        memset(voodoo->dirty_line, 1, 1024);
+                        memset(voodoo->dirty_line, 1, sizeof(voodoo->dirty_line));
                         voodoo->front_offset = voodoo->params.front_offset;
                         thread_lock_mutex(voodoo->swap_mutex);
                         if (voodoo->swap_count > 0)

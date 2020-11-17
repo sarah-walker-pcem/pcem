@@ -95,7 +95,7 @@ void voodoo_wait_for_swap_complete(voodoo_t *voodoo)
                 if ((voodoo->swap_pending && voodoo->flush) || FIFO_FULL)
                 {
                         /*Main thread is waiting for FIFO to empty, so skip vsync wait and just swap*/
-                        memset(voodoo->dirty_line, 1, 1024);
+                        memset(voodoo->dirty_line, 1, sizeof(voodoo->dirty_line));
                         voodoo->front_offset = voodoo->params.front_offset;
                         if (voodoo->swap_count > 0)
                                 voodoo->swap_count--;

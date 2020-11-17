@@ -195,7 +195,7 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
         }
 
 
-        if (voodoo->fb_write_offset == voodoo->params.front_offset)
+        if (voodoo->fb_write_offset == voodoo->params.front_offset && y < 2048)
                 voodoo->dirty_line[y] = 1;
 
         if (voodoo->col_tiled)
@@ -355,7 +355,7 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 y >>= 1;
         }
 
-        if (voodoo->fb_write_offset == voodoo->params.front_offset)
+        if (voodoo->fb_write_offset == voodoo->params.front_offset && y < 2048)
                 voodoo->dirty_line[y] = 1;
 
         if (voodoo->col_tiled)

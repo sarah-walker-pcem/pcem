@@ -438,7 +438,7 @@ typedef struct voodoo_t
         rgb_t clutData256[256];
         uint32_t video_16to32[0x10000];
 
-        uint8_t dirty_line[1024];
+        uint8_t dirty_line[2048];
         int dirty_line_low, dirty_line_high;
 
         int fb_write_buffer, fb_draw_buffer;
