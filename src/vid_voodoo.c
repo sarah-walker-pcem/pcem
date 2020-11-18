@@ -100,7 +100,9 @@ void voodoo_recalc(voodoo_t *voodoo)
         if (voodoo->fbiInit1 & (1 << 24))
                 voodoo->block_width += 32;
         voodoo->row_width = voodoo->block_width * 32 * 2;
+        voodoo->params.row_width = voodoo->row_width;
         voodoo->aux_row_width = voodoo->row_width;
+        voodoo->params.aux_row_width = voodoo->aux_row_width;
 
 /*        pclog("voodoo_recalc : front_offset %08X  back_offset %08X  aux_offset %08X draw_offset %08x\n", voodoo->params.front_offset, voodoo->back_offset, voodoo->params.aux_offset, voodoo->params.draw_offset);
         pclog("                fb_read_offset %08X  fb_write_offset %08X  row_width %i  %08x %08x\n", voodoo->fb_read_offset, voodoo->fb_write_offset, voodoo->row_width, voodoo->lfbMode, voodoo->params.fbzMode);*/
