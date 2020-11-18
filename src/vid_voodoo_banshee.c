@@ -1950,7 +1950,8 @@ static void banshee_overlay_draw(svga_t *svga, int displine)
                             !(banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE) && !(banshee->vidProcCfg & VIDPROCCFG_FILTER_MODE_DITHER_4X4) &&
                             !(banshee->vidProcCfg & VIDPROCCFG_FILTER_MODE_DITHER_2X2));
         else
-                skip_filtering = ((banshee->vidProcCfg & VIDPROCCFG_FILTER_MODE_MASK) != VIDPROCCFG_FILTER_MODE_BILINEAR);
+                skip_filtering = ((banshee->vidProcCfg & VIDPROCCFG_FILTER_MODE_MASK) != VIDPROCCFG_FILTER_MODE_BILINEAR &&
+                                !(banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE));
 
         if (skip_filtering)
         {
