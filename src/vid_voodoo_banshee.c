@@ -409,10 +409,11 @@ static void banshee_recalctimings(svga_t *svga)
                         default:
                         fatal("Unknown pixel format %08x\n", banshee->vgaInit0);
                 }
+                svga->rowcount = 0;
                 if (!(banshee->vidProcCfg & VIDPROCCFG_DESKTOP_TILE) && (banshee->vidProcCfg & VIDPROCCFG_HALF_MODE))
-                        svga->rowcount = 1;
+                        svga->linedbl = 1;
                 else
-                        svga->rowcount = 0;
+                        svga->linedbl = 0;
                 if (banshee->vidProcCfg & VIDPROCCFG_DESKTOP_TILE)
                         svga->rowoffset = ((banshee->vidDesktopOverlayStride & 0x3fff) * 128) >> 3;
                 else
