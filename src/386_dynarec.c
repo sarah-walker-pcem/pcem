@@ -591,8 +591,6 @@ void exec386_dynarec(int cycs)
                                 exec_interpreter();
                         else
                                 exec_recompiler();
-                        cycdiff=oldcyc-cycles;
-                        tsc += cycdiff;
                 
                         if (cpu_state.abrt)
                         {
@@ -643,6 +641,9 @@ void exec386_dynarec(int cycs)
 //                                        pclog("IRQ %02X %04X:%04X %04X:%04X\n", temp, SS, SP, CS, pc);
                                 }
                         }
+
+                        cycdiff=oldcyc-cycles;
+                        tsc += cycdiff;
                 }
         
 		if (TIMER_VAL_LESS_THAN_VAL(timer_target, (uint32_t)tsc))
