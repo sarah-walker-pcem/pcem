@@ -214,10 +214,6 @@ void exec386(int cycs)
                                 }
                         }
                 }
-                ins_cycles -= cycles;
-                tsc += ins_cycles;
-                
-                cycdiff=oldcyc-cycles;
 
                 if (cpu_state.smi_pending)
                 {
@@ -290,6 +286,11 @@ void exec386(int cycs)
 
                 ins++;
                 insc++;
+
+                ins_cycles -= cycles;
+                tsc += ins_cycles;
+
+                cycdiff=oldcyc-cycles;
 
                 if (timetolive)
                 {
