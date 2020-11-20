@@ -126,7 +126,10 @@ void voodoo_triangle_setup(voodoo_t *voodoo)
         voodoo->params.vertexCy = (int32_t)(int16_t)((int32_t)(verts[vc].sVy * 16.0f) & 0xffff);
 
         if (voodoo->params.vertexAy > voodoo->params.vertexBy || voodoo->params.vertexBy > voodoo->params.vertexCy)
-                fatal("triangle_setup wrong order %d %d %d\n", voodoo->params.vertexAy, voodoo->params.vertexBy, voodoo->params.vertexCy);
+        {
+                pclog("triangle_setup wrong order %d %d %d\n", voodoo->params.vertexAy, voodoo->params.vertexBy, voodoo->params.vertexCy);
+                return;
+        }
 
         if (voodoo->sSetupMode & SETUPMODE_RGB)
         {
