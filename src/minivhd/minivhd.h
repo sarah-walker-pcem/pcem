@@ -192,6 +192,46 @@ void mvhd_close(MVHDMeta* vhdm);
 MVHDGeom mvhd_calculate_geometry(uint64_t size);
 
 /**
+ * \brief Get the CHS geometry from the image
+ * 
+ * \param [in] vhdm MiniVHD data structure
+ * 
+ * \return The CHS geometry as stored in the image
+ */
+MVHDGeom mvhd_get_geometry(MVHDMeta* vhdm);
+
+/**
+ * \brief Get the 'current_size' value from the image
+ * 
+ * Note that the size returned may not match the size calculated from the
+ * CHS geometry. It is up to the caller to decide how best to handle this.
+ * 
+ * \param [in] vhdm MiniVHD data structure
+ * 
+ * \return The 'current_size' value in bytes, as stored in the image.
+ *         Note, this may not match the CHS geometry.
+ */
+uint64_t mvhd_get_current_size(MVHDMeta* vhdm);
+
+/**
+ * \brief Calculate CHS geometry size in bytes
+ * 
+ * \param [in] geom the CHS geometry to calculate
+ * 
+ * \return the size in bytes
+ */
+uint64_t mvhd_calc_size_bytes(MVHDGeom *geom);
+
+/**
+ * \brief Calculate CHS geometry size in sectors
+ * 
+ * \param [in] geom the CHS geometry to calculate
+ * 
+ * \return the size in sectors
+ */
+uint32_t mvhd_calc_size_sectors(MVHDGeom *geom);
+
+/**
  * \brief Convert a raw disk image to a fixed VHD image
  * 
  * \param [in] utf8_raw_path is the path of the raw image to convert

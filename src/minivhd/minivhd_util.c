@@ -16,6 +16,7 @@
 #include "libxml2_encoding.h"
 #include "minivhd_internal.h"
 #include "minivhd_util.h"
+#include "minivhd.h"
 
 const char MVHD_CONECTIX_COOKIE[] = "conectix";
 const char MVHD_CREATOR[] = "pcem";
@@ -184,6 +185,10 @@ uint32_t mvhd_calc_size_sectors(MVHDGeom *geom) {
 MVHDGeom mvhd_get_geometry(MVHDMeta* vhdm) {
     MVHDGeom geometry = { .cyl = vhdm->footer.geom.cyl, .heads = vhdm->footer.geom.heads, .spt = vhdm->footer.geom.spt };
     return geometry;
+}
+
+uint64_t mvhd_get_current_size(MVHDMeta* vhdm) {
+    return vhdm->footer.curr_sz;
 }
 
 uint32_t mvhd_gen_footer_checksum(MVHDFooter* footer) {

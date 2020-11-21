@@ -77,9 +77,6 @@ time_t vhd_get_created_time(MVHDMeta *vhdm);
 FILE* mvhd_fopen(const char* path, const char* mode, int* err);
 
 void mvhd_set_encoding_err(int encoding_retval, int* err);
-uint64_t mvhd_calc_size_bytes(MVHDGeom *geom);
-uint32_t mvhd_calc_size_sectors(MVHDGeom *geom);
-MVHDGeom mvhd_get_geometry(MVHDMeta* vhdm);
 
 /**
  * \brief Generate VHD footer checksum
