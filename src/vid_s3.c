@@ -999,7 +999,11 @@ void s3_out(uint16_t addr, uint8_t val, void *p)
                         return;
                 if ((svga->crtcreg == 7) && (svga->crtc[0x11] & 0x80))
                         val = (svga->crtc[7] & ~0x10) | (val & 0x10);
-                if (svga->crtcreg >= 0x20 && svga->crtcreg != 0x38 && (svga->crtc[0x38] & 0xcc) != 0x48) return;
+                if (svga->crtcreg >= 0x20 && svga->crtcreg != 0x38 && svga->crtcreg != 0x39 && (svga->crtc[0x38] & 0xcc) != 0x48)
+                {
+                        if (!((svga->crtc[0x39] & 0xe0) == 0xa0 && svga->crtcreg >= 0x40 && svga->crtcreg <= 0x6d))
+                                return;
+                }
                 old = svga->crtc[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
                 switch (svga->crtcreg)
