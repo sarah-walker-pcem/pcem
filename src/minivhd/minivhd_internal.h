@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "minivhd.h" /* Pull in the MVHDMeta typedef */
 
 #define MVHD_FOOTER_SIZE 512
 #define MVHD_SPARSE_SIZE 1024
@@ -74,7 +75,6 @@ typedef struct MVHDSparseHeader {
     uint8_t reserved_2[256];
 } MVHDSparseHeader;
 
-typedef struct MVHDMeta MVHDMeta;
 struct MVHDMeta {
     FILE* f;
     bool readonly;
