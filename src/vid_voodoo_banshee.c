@@ -616,7 +616,7 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
 
                 case Video_hwCurPatAddr:
                 banshee->hwCurPatAddr = val;
-                svga->hwcursor.addr = val & 0xfffff0;
+                svga->hwcursor.addr = (val & 0xfffff0) + (svga->hwcursor.yoff * 16);
                 break;
                 case Video_hwCurLoc:
                 banshee->hwCurLoc = val;
@@ -629,6 +629,7 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
                 }
                 else
                         svga->hwcursor.yoff = 0;
+                svga->hwcursor.addr = (banshee->hwCurPatAddr & 0xfffff0) + (svga->hwcursor.yoff * 16);
                 svga->hwcursor.xsize = 64;
                 svga->hwcursor.ysize = 64;
 //                pclog("hwCurLoc %08x %i\n", val, svga->hwcursor.y);
