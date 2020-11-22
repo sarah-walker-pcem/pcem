@@ -996,7 +996,7 @@ uint8_t svga_read(uint32_t addr, void *p)
         
         cycles -= video_timing_read_b;
         cycles_lost += video_timing_read_b;
-        
+
         egareads++;
 //        pclog("Readega %06X   ",addr);
 
@@ -1012,6 +1012,11 @@ uint8_t svga_read(uint32_t addr, void *p)
                 addr &= svga->decode_mask;
                 if (addr >= svga->vram_max)
                         return 0xff;
+                latch_addr = addr & svga->vram_mask & ~3;
+                svga->la = svga->vram[latch_addr];
+                svga->lb = svga->vram[latch_addr | 0x1];
+                svga->lc = svga->vram[latch_addr | 0x2];
+                svga->ld = svga->vram[latch_addr | 0x3];
                 return svga->vram[addr & svga->vram_mask];
         }
         else if (svga->chain2_read)
@@ -1060,7 +1065,6 @@ uint8_t svga_read(uint32_t addr, void *p)
                 return ~(temp | temp2 | temp3 | temp4);
         }
 //pclog("Read %02X %04X %04X\n",vram[addr|svga->readplane],addr,svga->readplane);
-
         return svga->vram[addr | readplane];
 }
 
