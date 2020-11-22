@@ -1339,6 +1339,9 @@ static uint16_t banshee_read_linear_w(uint32_t addr, void *p)
         voodoo_t *voodoo = banshee->voodoo;
         svga_t *svga = &banshee->svga;
         
+        if (addr & 1)
+                return banshee_read_linear(addr, p) | (banshee_read_linear(addr+1, p) << 8);
+
         cycles -= voodoo->read_time;
         cycles_lost += voodoo->read_time;
 
@@ -1372,6 +1375,9 @@ static uint32_t banshee_read_linear_l(uint32_t addr, void *p)
         voodoo_t *voodoo = banshee->voodoo;
         svga_t *svga = &banshee->svga;
         
+        if (addr & 3)
+                return banshee_read_linear_w(addr, p) | (banshee_read_linear_w(addr+2, p) << 16);
+
         cycles -= voodoo->read_time;
         cycles_lost += voodoo->read_time;
 
@@ -1439,6 +1445,13 @@ static void banshee_write_linear_w(uint32_t addr, uint16_t val, void *p)
         voodoo_t *voodoo = banshee->voodoo;
         svga_t *svga = &banshee->svga;
         
+        if (addr & 1)
+        {
+                banshee_write_linear(addr, val, p);
+                banshee_write_linear(addr + 1, val >> 8, p);
+                return;
+        }
+
         cycles -= voodoo->write_time;
         cycles_lost += voodoo->write_time;
 
@@ -1473,6 +1486,13 @@ static void banshee_write_linear_l(uint32_t addr, uint32_t val, void *p)
         voodoo_t *voodoo = banshee->voodoo;
         svga_t *svga = &banshee->svga;
         int timing;
+
+        if (addr & 3)
+        {
+                banshee_write_linear_w(addr, val, p);
+                banshee_write_linear_w(addr + 2, val >> 16, p);
+                return;
+        }
 
         if (addr == voodoo->last_write_addr+4)
                 timing = voodoo->burst_time;
