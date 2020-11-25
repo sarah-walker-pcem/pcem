@@ -124,7 +124,7 @@ uint8_t ati18800_in(uint16_t addr, void *p)
 {
         ati18800_t *ati18800 = (ati18800_t *)p;
         svga_t *svga = &ati18800->svga;
-        uint8_t temp;
+        uint8_t temp = 0xff;
 
 //        if (addr != 0x3da) pclog("ati18800_in : %04X ", addr);
                 
