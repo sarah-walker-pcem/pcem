@@ -45,7 +45,8 @@ static inline void mvhd_check_sectors(uint32_t offset, int num_sectors, uint32_t
 
 void mvhd_write_empty_sectors(FILE* f, int sector_count) {
     uint8_t zero_bytes[MVHD_SECTOR_SIZE] = {0};
-    for (int i = 0; i < sector_count; i++) {
+    int i;
+    for (i = 0; i < sector_count; i++) {
         fwrite(zero_bytes, sizeof zero_bytes, 1, f);
     }
 }
@@ -126,7 +127,8 @@ static void mvhd_create_block(MVHDMeta* vhdm, int blk) {
         /* Yikes! We're supposed to be on a sector boundary. Add some padding */
         int64_t padding_amount = (int64_t)MVHD_SECTOR_SIZE - (abs_offset % MVHD_SECTOR_SIZE);
         uint8_t zero_byte = 0;
-        for (int i = 0; i < padding_amount; i++) {
+        int i;
+        for (i = 0; i < padding_amount; i++) {
             fwrite(&zero_byte, sizeof zero_byte, 1, vhdm->f);
         }
         abs_offset += padding_amount;

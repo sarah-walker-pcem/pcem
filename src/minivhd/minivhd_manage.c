@@ -103,7 +103,8 @@ static int mvhd_read_bat(MVHDMeta *vhdm, MVHDError* err) {
         return -1;
     }
     mvhd_fseeko64(vhdm->f, vhdm->sparse.bat_offset, SEEK_SET);
-    for (uint32_t i = 0; i < vhdm->sparse.max_bat_ent; i++) {
+    uint32_t i;
+    for (i = 0; i < vhdm->sparse.max_bat_ent; i++) {
         fread(&vhdm->block_offset[i], sizeof *vhdm->block_offset, 1, vhdm->f);
         vhdm->block_offset[i] = mvhd_from_be32(vhdm->block_offset[i]);
     }
@@ -239,7 +240,8 @@ static char* mvhd_get_diff_parent_path(MVHDMeta* vhdm, int* err) {
     }
     /* Now read the parent locator entries, both relative and absolute, if they exist */
     unsigned char* loc_path;
-    for (int i = 0; i < 8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         utf_outlen = MVHD_MAX_PATH_BYTES - 1;
         if (vhdm->sparse.par_loc_entry[i].plat_code == MVHD_DIF_LOC_W2RU) {
             loc_path = (unsigned char*)paths->w2ru_path;
@@ -526,7 +528,8 @@ int mvhd_write_sectors(MVHDMeta* vhdm, uint32_t offset, int num_sectors, void* i
 int mvhd_format_sectors(MVHDMeta* vhdm, uint32_t offset, int num_sectors) {
     int num_full = num_sectors / vhdm->format_buffer.sector_count;
     int remain = num_sectors % vhdm->format_buffer.sector_count;
-    for (int i = 0; i < num_full; i++) {
+    int i;
+    for (i = 0; i < num_full; i++) {
         vhdm->write_sectors(vhdm, offset, vhdm->format_buffer.sector_count, vhdm->format_buffer.zero_data);
         offset += vhdm->format_buffer.sector_count;
     }

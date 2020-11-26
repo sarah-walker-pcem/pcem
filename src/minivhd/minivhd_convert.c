@@ -64,8 +64,8 @@ MVHDMeta* mvhd_convert_to_vhd_sparse(const char* utf8_raw_path, const char* utf8
     uint8_t buff[4096] = {0}; // 8 sectors
     uint8_t empty_buff[4096] = {0};
     int total_sectors = mvhd_calc_size_sectors(&geom);
-    int copy_sect = 0;
-    for (int i = 0; i < total_sectors; i += 8) {
+    int copy_sect = 0, i;
+    for (i = 0; i < total_sectors; i += 8) {
         copy_sect = 8;
         if ((i + 8) >= total_sectors) {
             copy_sect = total_sectors - i;
@@ -93,8 +93,8 @@ FILE* mvhd_convert_to_raw(const char* utf8_vhd_path, const char* utf8_raw_path, 
     }
     uint8_t buff[4096] = {0}; // 8 sectors
     int total_sectors = mvhd_calc_size_sectors((MVHDGeom*)&vhdm->footer.geom);
-    int copy_sect = 0;
-    for (int i = 0; i < total_sectors; i += 8) {
+    int copy_sect = 0, i;
+    for (i = 0; i < total_sectors; i += 8) {
         copy_sect = 8;
         if ((i + 8) >= total_sectors) {
             copy_sect = total_sectors - i;

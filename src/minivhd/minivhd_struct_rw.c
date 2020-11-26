@@ -133,7 +133,8 @@ void mvhd_buffer_to_header(MVHDSparseHeader* header, uint8_t* buffer) {
     mvhd_next_buffer_to_struct(&header->par_timestamp, sizeof header->par_timestamp, true, &buff_ptr);
     mvhd_next_buffer_to_struct(&header->reserved_1, sizeof header->reserved_1, true, &buff_ptr);
     mvhd_next_buffer_to_struct(&header->par_utf16_name, sizeof header->par_utf16_name, false, &buff_ptr);
-    for (int i = 0; i < 8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         mvhd_next_buffer_to_struct(&header->par_loc_entry[i].plat_code, sizeof header->par_loc_entry[i].plat_code, true, &buff_ptr);
         mvhd_next_buffer_to_struct(&header->par_loc_entry[i].plat_data_space, sizeof header->par_loc_entry[i].plat_data_space, true, &buff_ptr);
         mvhd_next_buffer_to_struct(&header->par_loc_entry[i].plat_data_len, sizeof header->par_loc_entry[i].plat_data_len, true, &buff_ptr);
@@ -156,7 +157,8 @@ void mvhd_header_to_buffer(MVHDSparseHeader* header, uint8_t* buffer) {
     mvhd_next_struct_to_buffer(&header->par_timestamp, sizeof header->par_timestamp, true, &buff_ptr);
     mvhd_next_struct_to_buffer(&header->reserved_1, sizeof header->reserved_1, true, &buff_ptr);
     mvhd_next_struct_to_buffer(&header->par_utf16_name, sizeof header->par_utf16_name, false, &buff_ptr);
-    for (int i = 0; i < 8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         mvhd_next_struct_to_buffer(&header->par_loc_entry[i].plat_code, sizeof header->par_loc_entry[i].plat_code, true, &buff_ptr);
         mvhd_next_struct_to_buffer(&header->par_loc_entry[i].plat_data_space, sizeof header->par_loc_entry[i].plat_data_space, true, &buff_ptr);
         mvhd_next_struct_to_buffer(&header->par_loc_entry[i].plat_data_len, sizeof header->par_loc_entry[i].plat_data_len, true, &buff_ptr);

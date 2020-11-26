@@ -356,7 +356,8 @@ static MVHDMeta* mvhd_create_sparse_diff(const char* path, const char* par_path,
     mvhd_header_to_buffer(&vhdm->sparse, sparse_buff);
     fwrite(sparse_buff, sizeof sparse_buff, 1, f);
     /* The BAT sectors need to be filled with 0xffffffff */
-    for (uint32_t i = 0; i < num_bat_sect; i++) {
+    uint32_t i;
+    for (i = 0; i < num_bat_sect; i++) {
         fwrite(bat_sect, sizeof bat_sect, 1, f);
     }
     mvhd_write_empty_sectors(f, 5);
@@ -370,8 +371,10 @@ static MVHDMeta* mvhd_create_sparse_diff(const char* path, const char* par_path,
         assert(curr_pos == par_loc_offset);
         /* Fill the space required for location data with zero */
         uint8_t empty_sect[MVHD_SECTOR_SIZE] = {0};
-        for (int i = 0; i < 2; i++) {
-            for (uint32_t j = 0; j < (vhdm->sparse.par_loc_entry[i].plat_data_space / MVHD_SECTOR_SIZE); j++) {
+        int i;
+        uint32_t j;
+        for (i = 0; i < 2; i++) {
+            for (j = 0; j < (vhdm->sparse.par_loc_entry[i].plat_data_space / MVHD_SECTOR_SIZE); j++) {
                 fwrite(empty_sect, sizeof empty_sect, 1, f);
             }
         }
