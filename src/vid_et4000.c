@@ -71,6 +71,21 @@ void et4000_out(uint16_t addr, uint8_t val, void *p)
                 et4000->banking = val;
 //                pclog("Banking write %08X %08X %02X\n", svga->write_bank, svga->read_bank, val);
                 return;
+
+                case 0x3cf:
+                if ((svga->gdcaddr & 15) == 6)
+                {
+                        old = svga->gdcreg[6];
+                        svga_out(addr, val, svga);
+                        if ((old & 0xc) != 0 && (val & 0xc) == 0)
+                        {
+                                /*override mask - ET4000 supports linear 128k at A0000*/
+                                svga->banked_mask = 0x1ffff;
+                        }
+                        return;
+                }
+                break;
+
                 case 0x3D4:
                 svga->crtcreg = val & 0x3f;
                 return;
