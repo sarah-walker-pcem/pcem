@@ -590,6 +590,11 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         	keyboard_at.want60 = 1;
 			break;
 
+                        case 0xba:
+                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA)
+                                keyboard_at_adddata(0);
+                        break;
+
 			/* T3100e commands not implemented:
 			 * 0xB7: Emulate PS/2 keyboard
 			 * 0xB8: Emulate AT keyboard */ 
@@ -620,7 +625,11 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 			if (romset == ROM_T3100E)
 				keyboard_at.input_port = (t3100e_mono_get() & 1) ? 0xFF : 0xBF;
 
-                        keyboard_at_adddata(keyboard_at.input_port | 4);
+                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA)
+                                keyboard_at_adddata(keyboard_at.input_port | 4 | 0x40);
+                        else
+                                keyboard_at_adddata(keyboard_at.input_port | 4);
+
                         keyboard_at.input_port = ((keyboard_at.input_port + 1) & 3) | (keyboard_at.input_port & 0xfc);
                         break;
                         
