@@ -3150,6 +3150,8 @@ void x86_smi_enter(void)
                 stack32 = 0;
         }
 
+        oldcpl = 0;
+
 //        pclog("x86_smi_enter\n");
 }
 
@@ -3240,14 +3242,16 @@ void x86_smi_leave(void)
                         }
                 }
         }
-        if (cpu_state.seg_ds.base == 0 && cpu_state.seg_ds.limit_low == 0 && cpu_state.seg_ds.limit_high == 0xffffffff)
+        if (!(cpu_state.seg_ds.base == 0 && cpu_state.seg_ds.limit_low == 0 && cpu_state.seg_ds.limit_high == 0xffffffff))
                 cpu_cur_status |= CPU_STATUS_NOTFLATDS;
-        if (cpu_state.seg_ss.base == 0 && cpu_state.seg_ss.limit_low == 0 && cpu_state.seg_ss.limit_high == 0xffffffff)
+        if (!(cpu_state.seg_ss.base == 0 && cpu_state.seg_ss.limit_low == 0 && cpu_state.seg_ss.limit_high == 0xffffffff))
                 cpu_cur_status |= CPU_STATUS_NOTFLATSS;
 
         if (smram_disable)
                 smram_disable();
         flushmmucache();
+
+        oldcpl = CPL;
 
 //        pclog("x86_smi_leave\n");
 }
