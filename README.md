@@ -99,6 +99,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 ### 8086 based
 Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 :-: | --- | ---
+1984 | <b>Compaq Deskpro</b><br/>8086 at 8 MHz<br/>128KB - 640KB RAM | deskpro/Compaq - BIOS - Revision J - 106265-002.bin
 1984 | <b>Olivetti M24</b> <i>[[5]](#system-note-5)</i><br/>8086 at 8 MHz<br/>128KB - 640KB RAM<br/>Built-in enhanced CGA (supports 640x400x2) | olivetti_m24/olivetti_m24_version_1.43_low.bin<br/>olivetti_m24/olivetti_m24_version_1.43_high.bin
 1986 | <b>Amstrad PC1512</b> <i>[[5]](#system-note-5)</i><br/>8086 at 8 MHz<br/>512KB - 640KB RAM<br/>Enhanced CGA (supports 640x200x16)<br/>Custom mouse port | pc1512/40043.v1<br/>pc1512/40044.v2<br/>pc1512/40078.ic127
 1987 | <b>Amstrad PC1640</b> <i>[[5]](#system-note-5)</i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in Paradise EGA<br/>Custom mouse port | pc1640/40043.v3<br/>pc1640/40044.v3<br/>pc1640/40100
@@ -109,6 +110,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1989 | <b>Amstrad PC2086</b> <i>[[5]](#system-note-5)</i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in VGA | pc2086/40179.ic129<br/>pc2086/40180.ic132<br/>pc2086/40186.ic171
 1989 | <b>Tandy 1000SL/2</b> <i>[[5]](#system-note-5)</i><br/>8086 at 9.54 MHz<br/>512KB - 768KB RAM<br/>Built-in 16 colour graphics<br/>4 voice sound | tandy1000sl2/8079047.hu1<br/>tandy1000sl2/8079048.hu2
 1990 | <b>Amstrad PC3086</b> <i>[[5]](#system-note-5)</i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in VGA | pc3086/fc00.bin<br/>pc3086/c000.bin
+1991 | <b>Amstrad PC5086</b><br/>8086 at 8 MHz<br/>640KB RAM | pc5086/sys_rom.bin
 
 ### 286 based
 Release | Machine | ROM file needed<br/>(within ./roms/ folder)
@@ -125,7 +127,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1989 | <b>Epson PC AX2e</b><br/>286 at 12 MHz<br/>256KB - 16MB RAM | epson_pcax2e/EVAX<br/>epson_pcax2e/ODAX
 1990 | <b>AMI 286 clone</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM | ami286/amic206.bin
 1990 | <b>Award 286 clone</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM | award286/award.bin
-1990? | <b>Dell System 200</b><br/>286 at 12 MHz<br/>640KB - 16MB RAM | dells200/dell0.bin<br/>dells200/dell1.bin
+1990 | <b>Dell System 200</b><br/>286 at 12 MHz<br/>640KB - 16MB RAM | dells200/dell0.bin<br/>dells200/dell1.bin
 1990 | <b>IBM PS/1 Model 2011</b> <i>[[5]](#system-note-5)</i><br/>286 at 10 MHz<br/>512KB - 16MB RAM<br/>Built-in VGA<br/>DOS 4.01 + GUI menu system in ROM | ibmps1/f80000.bin
 ? | <b>Goldstar GDC-212M</b><br/>286 at 12 MHz<br/>512KB - 4MB RAM | gdc212m/gdc212m_72h.bin
 ? | <b>GW-286CT GEAR</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM | gw286ct/2ctc001.bin
@@ -146,10 +148,12 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1989 | <b>IBM PS/2 Model 55SX</b><br/>386SX at 16 MHz<br/>1MB - 8MB RAM<br/>Built-in VGA<br/>MCA bus | i8555081/33f8146.zm41<br/>i8555081/33f8145.zm40
 1990 | <b>DTK 386SX clone</b><br/>386SX<br/>512KB - 16MB RAM | dtk386/3cto001.bin
 1990 | <b>IBM PS/1 Model 2121</b> <i>[[5]](#system-note-5)</i><br/>386SX at 20 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA | ibmps1_2121/fc0000.bin
-1992? | <b>Acermate 386SX/25N</b> <i>[[5]](#system-note-5)</i><br/>386SX at 25 MHz<br/>2MB - 16MB RAM<br/>Built-in Oak SVGA | acer386/acer386.bin<br/>acer386/oti067.bin
+1990 | <b>Samsung SPC-6000A</b><br/>386DX<br/>1MB - 32 MB RAM | spc6000a/3c80.u27<br/>spc6000a/9f80.u26
+1992 | <b>Acermate 386SX/25N</b> <i>[[5]](#system-note-5)</i><br/>386SX at 25 MHz<br/>2MB - 16MB RAM<br/>Built-in Oak SVGA | acer386/acer386.bin<br/>acer386/oti067.bin
 1992 | <b>Amstrad MegaPC</b> <i>[[2]](#system-note-2)</i> <i>[[5]](#system-note-5)</i><br/>386SX at 25 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA<br/> | megapc/41651-bios lo.u18<br/>megapc/211253-bios hi.u19
 1992 | <b>Commodore SL386SX-25</b> <i>[[5]](#system-note-5)</i><br/>386SX at 25 MHz<br/>1MB - 16MB RAM<br/>Built-in AVGA2 | cbm_sl386sx25/f000.bin<br/>cbm_sl386sx25/c000.bin
 1992 | <b>Packard Bell Legend 300SX</b><br/>386SX at 16 MHz<br/>1MB - 16MB RAM | pb_l300sx/pb_l300sx.bin
+1992 | <b>Samsung SPC-6033P</b><br/>386SX at 33 MHz<br/>2MB - 12 MB RAM | spc6033p/phoenix.bin<br/>spc6033p/svb6120a_font.rom
 1994 | <b>AMI 386DX clone</b><br/>386DX at 40 MHz<br/>1MB - 32MB RAM | ami386dx/opt495sx.ami
 1994 | <b>AMI 386SX clone</b><br/>386SX at 25 MHz<br/>1MB - 16MB RAM | ami386/ami386.bin
 1994 | <b>MR 386DX clone</b><br/>This is a generic 386DX clone with an MR BIOS | mr386dx/opt495sx.mr
@@ -184,6 +188,16 @@ Release | Machine<br/>(+ addl. hardware) | CPU(s) Supported | ROM file needed<br
 Release | Machine<br/>(+ addl. hardware) | CPU(s) Supported | ROM file needed<br/>(within ./roms/ folder)
 :-: | --- | --- | ---
 1998 | <b>FIC VA-503+</b><br/>1MB - 512MB RAM | <b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> at 233-550 MHz<br/><b>AMD K6-2+</b> at 450-550 MHz<br/><b>AMD K6-III</b> at 400-450 MHz<br/><b>AMD K6-III+</b> at 400-500 MHz<br/><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT WinChip2</b> at 200-250 MHz<br/><b>IDT Winchip 2A</b> at PR200<i>(200 MHz)</i>-PR300<i>(250 MHz)</i> | fic_va503p/je4333.bin
+
+### Socket 8 based
+Release | Machine<br/>(+ addl. hardware) | CPU(s) Supported | ROM file needed<br/>(within ./roms/ folder)
+:-: | --- | --- | ---
+1996 | <b>Intel VS440FX</b><br/>8MB - 256 MB RAM | <b>Pentium Pro</b> at 150-200 MHz<br/><b>Pentium II Overdrive</b> at 300-333 MHz | vs440fx/1018CS1_.BI1<br/>vs440fx/1018CS1_.BI2<br/>vs440fx/1018CS1_.BI3<br/>vs440fx/1018CS1_.BIO<br/>vs440fx/1018CS1_.RCV
+
+### Slot 1 based
+Release | Machine<br/>(+ addl. hardware) | CPU(s) Supported | ROM file needed<br/>(within ./roms/ folder)
+:-: | --- | --- | ---
+1998 | <b>Gigabyte GA-686BX</b><br/>8MB - 512MB RAM | <b>Pentium II</b> at 233-450 MHz<br/><b>Celeron</b> at 266-533 MHz<br/><b>Cyrix III</b>at 500 MHz | ga686bx/6BX.F2a
 
 #### Additional Notes
 <a name="system-note-1">`[1]`</a> <b>Toshiba Button Mapping</b>:
@@ -255,11 +269,14 @@ Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 <b>ATI VGA Charger</b> | ATI-28800 based<br/>512KB VRAM<br/>Supports up to 8-bit colour | bios.bin
 <b>AVGA2</b> | Also known as Cirrus Logic GD5402<br/>256KB - 512KB VRAM<br/>Supports up to 8-bit colour | avga2vram.vbi
 <b>IBM VGA</b> <i>(1987)</i> | 256KB VRAM<br/>Text up to 80x50<br/>Graphics up to 320x200 in 256 colours or 640x480 in 16 colours | ibm_vga.bin
+<b>Kasan Hangulmadang-16</b> | ET4000AX based<br/>1MB VRAM<br/>Supports up to 8-bit colour<br/>Korean font support | et4000_kasan16.bin<br/>kasan_ksc5601.rom
 <b>OAK OTI-037C</b> | 256KB VRAM<br/>Supports up to 8-bit colour | oti037/bios.bin
 <b>OAK OTI-067</b> | 256KB - 512KB VRAM<br/>Supports up to 8-bit colour | oti067/bios.bin
 <b>Olivetti GO481 (Paradise PVGA1A)</b> | 256KB VRAM<br/>Supports up to 8-bit colour | oli_go481_lo.bin<br/>oli_go481_hi.bin
 <b>Trident 8900D SVGA</b> | 256KB - 1MB VRAM<br/>Supports up to 24-bit colour | trident.bin
+<b>Trident 9000B SVGA</b> | 512KB VRAM<br/>Supports up to 8-bit colour | tvga9000b/BIOS.BIN
 <b>Trident TGUI9400CXi</b> | 1MB - 2MB VRAM<br/>Supports up to 24-bit colour | 9440.vbi
+<b>Trigem Korean VGA</b> | ET4000AX based<br/>1MB VRAM<br/>Supports up to 8-bit colour<br/>Korean font support | tgkorvga.bin<br/>tg_ksc5601.rom
 <b>Tseng ET4000AX SVGA</b> | 1MB VRAM<br/>Supports up to 8-bit colour | et4000.bin
 
 ### 2D Accelerated SVGA cards
@@ -282,6 +299,10 @@ Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 ### 3D Accelerated SVGA cards
 Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 --- | --- | ---
+<b>3DFX Voodoo Banshee (reference)</b> | Voodoo Banshee based<br/>8MB - 16MB VRAM | pci_sg.rom
+<b>3DFX Voodoo 3 2000</b> | Voodoo 3 based<br/>16MB VRAM | voodoo3_2000/2k11sd.rom
+<b>3DFX Voodoo 3 3000</b> | Voodoo 3 based<br/>16MB VRAM | voodoo3_3000/3k12sd.rom
+<b>Creative Labs 3D Blaster Banshee</b> | Voodoo Banshee based<br/>16MB VRAM | blasterpci.rom
 <b>Diamond Stealth 3D 2000</b> <i>[[2]](#graphics-note-2)</i>| S3 ViRGE/325 based<br/>2MB - 4MB VRAM | s3virge.bin
 <b>S3 ViRGE/DX</b> <i>[[3]](#graphics-note-3)</i>| S3 ViRGE/DX based<br/>2MB - 4MB VRAM | 86c375_1.bin
 
