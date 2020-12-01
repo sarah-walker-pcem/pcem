@@ -408,8 +408,11 @@ static void banshee_recalctimings(svga_t *svga)
                         svga->render = svga_render_32bpp_highres;
                         svga->bpp = 32;
                         break;
+
+#ifndef RELEASE_BUILD
                         default:
                         fatal("Unknown pixel format %08x\n", banshee->vgaInit0);
+#endif
                 }
                 svga->rowcount = 0;
                 if (!(banshee->vidProcCfg & VIDPROCCFG_DESKTOP_TILE) && (banshee->vidProcCfg & VIDPROCCFG_HALF_MODE))
@@ -967,9 +970,11 @@ static uint32_t banshee_cmd_read(banshee_t *banshee, uint32_t addr)
 
                 case 0x108:
                 break;
-                
+
+#ifndef RELEASE_BUILD
                 default:
                 fatal("Unknown banshee_cmd_read %08x\n", addr);
+#endif
         }
         
         return ret;
@@ -1239,7 +1244,9 @@ static void banshee_reg_writel(uint32_t addr, uint32_t val, void *p)
                         break;
 
                         case SST_userIntrCMD:
+#ifndef RELEASE_BUILD
                         fatal("userIntrCMD write %08x\n", val);
+#endif
                         break;
 
                         case SST_swapbufferCMD:
@@ -1805,9 +1812,6 @@ void banshee_hwcursor_draw(svga_t *svga, int displine)
                         else                                                    \
                                 DECODE_RGB565(buf);                             \
                         break;                          \
-                                                        \
-                        default:                        \
-                        fatal("Unknown overlay pix fmt %i\n", banshee->overlay_pix_fmt);        \
                 }                                       \
         } while (0)
 

@@ -563,9 +563,10 @@ static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x
                                                         src_data = *(uint32_t *)&src_p[src_x_real];
                                                         break;
                                                 }
-
+#ifndef RELEASE_BUILD
                                                 default:
                                                 fatal("banshee_do_screen_to_screen_blt: unknown srcFormat %08x\n", voodoo->banshee_blt.srcFormat);
+#endif
                                         }
 
                                         if ((voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK) == DST_FORMAT_COL_16_BPP &&
@@ -1101,8 +1102,10 @@ static void banshee_do_2d_blit(voodoo_t *voodoo, int count, uint32_t data)
                 banshee_do_line(voodoo, 0);
                 break;
 
+#ifndef RELEASE_BUILD
                 default:
                 fatal("banshee_do_2d_blit: unknown command=%08x\n", voodoo->banshee_blt.command);
+#endif
         }
 }
 
@@ -1389,8 +1392,10 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                         banshee_polyfill_continue(voodoo, val);
                         break;
 
+#ifndef RELEASE_BUILD
                         default:
                         fatal("launch area write, command=%08x\n", voodoo->banshee_blt.command);
+#endif
                 }
                 break;
 
@@ -1437,7 +1442,9 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
 //                pclog("colorPattern%02x=%08x\n", (addr >> 2) & 63, val);
                 break;
 
+#ifndef RELEASE_BUILD
                 default:
                 fatal("Unknown 2D reg write %03x %08x\n", addr & 0x1fc, val);
+#endif
         }
 }
