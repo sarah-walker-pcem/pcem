@@ -1,15 +1,15 @@
 # [PCem](https://pcem-emulator.co.uk/)
-## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV16Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV16Linux.tar.gz)
+## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
 
-Latest version: <b>v16</b> [Changelog](https://pcem-emulator.co.uk/index.html)
+Latest version: <b>v17</b> [Changelog](https://pcem-emulator.co.uk/index.html)
 
 PCem is licensed under GPL v2.0, see [COPYING](COPYING) for more details.
 
-You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3/viewforum.php?f=4). Before you do, please note the [guidelines](https://pcem-emulator.co.uk/phpBB3/viewtopic.php?f=3&t=5) for submitting patches.
+You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3). Before you do, please note the [guidelines](https://pcem-emulator.co.uk/phpBB3/viewtopic.php?f=3&t=5) for submitting patches.
 
 :exclamation: Note: <b>NO COPYRIGHTED ROM FILES ARE INCLUDED NOR WILL THEY BE. PLEASE DO NOT ASK FOR THEM.</b>
 
-## BSD and Linux supplement (v16)
+## BSD and Linux supplement (v17)
 
 You will need the following libraries (and their dependencies):
 - SDL2
@@ -47,7 +47,7 @@ CD-ROM support currently only accesses `/dev/cdrom`. It has not been heavily tes
 
 ## Links
 
-### PCem emulates the following hardware (as of v16):
+### PCem emulates the following hardware (as of v17):
 
 Hardware | Links
 --- | ---
@@ -218,7 +218,8 @@ Fn + SysRQ | Toggle window
 <a name="system-note-4">`[4]`</a> <b>Intel Advanced/EV (Endeavor)</b> <i>(Pentium)</i>: The real board has a Sound Blaster 16 onboard and optionally an S3 Trio64V+. Neither are emulated as onboard devices.
 
 <a name="system-note-5">`[5]`</a> Some systems have fixed graphics adapters:<br/>
-<i>** = Can use external video card.</i>
+<i>** = Can use external video card.</i><br/>
+
 System | Graphics | Addl. Info | **
 --- | --- | --- | :-:
 <b>Amstrad MegaPC</b> | Paradise 90C11 | A development of the PVGA1 with 512KB VRAM | &#10004;

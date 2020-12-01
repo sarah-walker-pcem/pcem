@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>readme</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 50em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="pcem"><a href="https://pcem-emulator.co.uk/">PCem</a></h1>
+<h2 id="download-windowslinux">Download: <a href="https://pcem-emulator.co.uk/files/PCemV17Win.zip">Windows</a>/<a href="https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz">Linux</a></h2>
+<p>Latest version: <b>v17</b> <a href="https://pcem-emulator.co.uk/index.html">Changelog</a></p>
+<p>PCem is licensed under GPL v2.0, see <a href="COPYING">COPYING</a> for more details.</p>
+<p>You can submit patches on our <a href="https://pcem-emulator.co.uk/phpBB3/viewforum.php?f=4">forum</a>. Before you do, please note the <a href="https://pcem-emulator.co.uk/phpBB3/viewtopic.php?f=3&amp;t=5">guidelines</a> for submitting patches.</p>
+<p><span class="emoji" data-emoji="exclamation">❗</span> Note: <b>NO COPYRIGHTED ROM FILES ARE INCLUDED NOR WILL THEY BE. PLEASE DO NOT ASK FOR THEM.</b></p>
+<h2 id="bsd-and-linux-supplement-v17">BSD and Linux supplement (v17)</h2>
+<p>You will need the following libraries (and their dependencies):</p>
+<ul>
+<li>SDL2</li>
+<li>wxWidgets 3.x</li>
+<li>OpenAL</li>
+</ul>
+<p>Open a terminal window, navigate to the PCem directory then enter:</p>
+<h3 id="linux">Linux</h3>
+<pre><code>./configure --enable-release
+make</code></pre>
+<h3 id="bsd">BSD</h3>
+<pre><code>./configure --enable-release-build
+gmake</code></pre>
+<p>then <code>./pcem</code> to run.</p>
+<p>The Linux/BSD versions store BIOS ROM images, configuration files, and other data in <code>~/.pcem</code></p>
+<p>configure options are :</p>
+<pre><code>  --enable-release-build : Generate release build. Recommended for regular use.
+  --enable-debug         : Compile with debugging enabled.
+  --enable-networking    : Build with networking support.
+  --enable-alsa          : Build with support for MIDI output through ALSA. Requires libasound.</code></pre>
+<p>The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not captured.</p>
+<p>CD-ROM support currently only accesses <code>/dev/cdrom</code>. It has not been heavily tested.</p>
+<h2 id="links">Links</h2>
+<h3 id="pcem-emulates-the-following-hardware-as-of-v17">PCem emulates the following hardware (as of v17):</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Links</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Systems</td>
+<td><a href="#8088-based">8088</a><br/><a href="#8086-based">8086</a><br/><a href="#286-based">286</a><br/><a href="#386-based">386</a><br/><a href="#486-based">486</a><br/><a href="#pentium-based">Pentium</a><br/><a href="#super-socket-7-based">Super Socket 7</a></td>
+</tr>
+<tr class="even">
+<td>Graphics</td>
+<td><a href="#basic-cards">Basic</a><br/><a href="#unaccelerated-svga-cards">Unaccelerated (S)VGA cards</a><br/><a href="#2d-accelerated-svga-cards">2D accelerated SVGA cards</a><br/><a href="#3d-accelerated-svga-cards">3D accelerated SVGA cards</a><br/><a href="#3d-only-cards">3D only cards</a></td>
+</tr>
+<tr class="odd">
+<td>Sound</td>
+<td><a href="#sound-cards">Cards</a></td>
+</tr>
+<tr class="even">
+<td>HDD Controller</td>
+<td><a href="#hdd-controller-cards">Cards</a></td>
+</tr>
+<tr class="odd">
+<td>Misc</td>
+<td><a href="#misc-cards">Cards</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="software-tested-list"><a href="TESTED.md">Software Tested</a> (list)</h3>
+<ul>
+<li><a href="TESTED.md#dos">DOS</a><br/></li>
+<li><a href="TESTED.md#windows">Windows</a><br/></li>
+<li><a href="TESTED.md#windows-nt">Windows NT</a><br/></li>
+<li><a href="TESTED.md#os2">OS/2</a><br/></li>
+<li><a href="TESTED.md#linux">Linux</a><br/></li>
+<li><a href="TESTED.md#applications">Applications</a><br/></li>
+<li><a href="TESTED.md#games">Games</a><br/></li>
+<li><a href="TESTED.md#demos">Demos</a><br/></li>
+<li><a href="TESTED.md#emulators">Emulators</a><br/></li>
+</ul>
+<hr>
+
+<h2 id="systems">Systems</h2>
+<h3 id="8088-based">8088 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1981</td>
+<td><b>IBM PC</b><br/>8088 at 4.77 MHz<br/>16KB - 640KB RAM (min. 64KB)</td>
+<td>ibmpc/pc102782.bin<br/>ibmpc/basicc11.f6<br/>ibmpc/basicc11.f8<br/>ibmpc/basicc11.fa<br/>ibmpc/basicc11.fc</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1983</td>
+<td><b>Compaq Portable Plus</b><br/>8088 at 4.77 MHz<br/>128KB - 640KB RAM</td>
+<td>compaq_pip/Compaq Portable Plus 100666-001 Rev C.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1983</td>
+<td><b>IBM XT</b><br/>8088 at 4.77 MHz<br/>64KB - 640KB RAM</td>
+<td>ibmxt/5000027.u19<br/>ibmxt/1501512.u18</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1983</td>
+<td><b>Leading Edge Model M</b><br/>8088 at 7.16 MHz<br/>128KB - 704KB RAM</td>
+<td>leadingedge_modelm/Leading Edge - Model M - BIOS ROM - Version 4.71.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1984</td>
+<td><b>IBM PCjr</b> <i><a href="#system-note-5">[5]</a></i><br/>8088 at 4.77 MHz<br/>64KB - 640KB RAM (min. 128KB)<br/>Built-in 16 colour graphics<br/>3 voice sound<br/>Not generally PC compatible.</td>
+<td>ibmpcjr/bios.rom</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1984</td>
+<td><b>Tandy 1000</b> <i><a href="#system-note-5">[5]</a></i><br/>8088 at 4.77 MHz<br/>128KB - 640KB RAM<br/>Built-in 16 colour graphics<br/>3 voice sound</td>
+<td>tandy/tandy1t1.020</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1985</td>
+<td><b>NCR PC4i</b><br/>8088 at 4.77 MHz<br/>256KB - 640KB RAM</td>
+<td>ncr_pc4i/NCR_PC4i_BIOSROM_1985.BIN</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1986</td>
+<td><b>DTK Clone XT</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM</td>
+<td>dtk/dtk_erso_2.42_2764.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1986</td>
+<td><b>Phoenix XT clone</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM</td>
+<td>pxxt/000p001.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1987</td>
+<td><b>Tandy 1000HX</b><br/>8088 at 7.16 MHz<br/>256KB - 640KB RAM<br/>Built-in 16 colour graphics<br/>3 voice sound<br/>Has DOS 2.11 in ROM</td>
+<td>tandy1000hx/v020000.u12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1987</td>
+<td><b>Thomson TO16 PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM</td>
+<td>to16_pc/TO16_103.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1987</td>
+<td><b>Toshiba T1000</b> <i><a href="#system-note-1">[1]</a></i> <i><a href="#system-note-5">[5]</a></i><br/>8088 at 4.77 MHz<br/>512KB - 1024KB RAM<br/>CGA on built-in LCD</td>
+<td>t1000/t1000.rom<br/>t1000/t1000font.rom</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1987</td>
+<td><b>VTech Laser Turbo XT</b><br/>8088 at 10 MHz<br/>640KB RAM</td>
+<td>ltxt/27c64.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1987</td>
+<td><b>Zenith Data SupersPort</b><br/>8088 at 8 MHz<br/>128KB - 640KB RAM<br/>Built-in LCD video is not currently emulated</td>
+<td>zdsupers/z184m v3.1d.10d</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1988?</td>
+<td><b>©Anonymous Generic Turbo XT BIOS</b><br/>8088 at 8+ MHz<br/>64KB - 640KB RAM</td>
+<td>genxt/pcxt.rom</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>Atari PC3</b><br/>8088 at 8 MHz<br/>640KB RAM</td>
+<td>ataripc3/AWARD_ATARI_PC_BIOS_3.08.BIN</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1988</td>
+<td><b>Juko XT clone</b></td>
+<td>jukopc/000o001.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>Schneider Euro PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM</td>
+<td>europc/50145<br/>europc/50146</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1989</td>
+<td><b>AMI XT clone</b><br/>8088 at 8+ MHz<br/>64KB - 640KB RAM</td>
+<td>amixt/ami_8088_bios_31jan89.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2015</td>
+<td><b>Xi8088</b><br/>8088 at 4.77-13.33 MHz<br/>640KB RAM</td>
+<td>xi8088/bios-xi8088.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="8086-based">8086 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1984</td>
+<td><b>Compaq Deskpro</b><br/>8086 at 8 MHz<br/>128KB - 640KB RAM</td>
+<td>deskpro/Compaq - BIOS - Revision J - 106265-002.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1984</td>
+<td><b>Olivetti M24</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>128KB - 640KB RAM<br/>Built-in enhanced CGA (supports 640x400x2)</td>
+<td>olivetti_m24/olivetti_m24_version_1.43_low.bin<br/>olivetti_m24/olivetti_m24_version_1.43_high.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1986</td>
+<td><b>Amstrad PC1512</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>512KB - 640KB RAM<br/>Enhanced CGA (supports 640x200x16)<br/>Custom mouse port</td>
+<td>pc1512/40043.v1<br/>pc1512/40044.v2<br/>pc1512/40078.ic127</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1987</td>
+<td><b>Amstrad PC1640</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in Paradise EGA<br/>Custom mouse port</td>
+<td>pc1640/40043.v3<br/>pc1640/40044.v3<br/>pc1640/40100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1987</td>
+<td><b>Toshiba T1200</b> <i><a href="#system-note-1">[1]</a></i> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 9.54 MHz<br/>1MB - 2MB RAM<br/>CGA on built-in LCD</td>
+<td>t1200/t1200_019e.ic15.bin<br/>t1200/t1000font.rom</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>Amstrad PPC512/640</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>512KB - 640KB RAM<br/>Built-in CGA w/ plasma display</td>
+<td>ppc512/40107.v2<br/>ppc512/40108.v2<br/>ppc512/40109.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1988</td>
+<td><b>Sinclair PC200/Amstrad PC20</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>512KB - 640KB RAM<br/>Built-in CGA (supports TV-out 50hz PAL)</td>
+<td>pc200/pc20v2.0<br/>pc200/pc20v2.1<br/>pc200/40109.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>VTech Laser XT3</b><br/>8086 at 10 MHz<br/>512KB - 1152KB RAM</td>
+<td>lxt3/27c64d.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1989</td>
+<td><b>Amstrad PC2086</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in VGA</td>
+<td>pc2086/40179.ic129<br/>pc2086/40180.ic132<br/>pc2086/40186.ic171</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1989</td>
+<td><b>Tandy 1000SL/2</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 9.54 MHz<br/>512KB - 768KB RAM<br/>Built-in 16 colour graphics<br/>4 voice sound</td>
+<td>tandy1000sl2/8079047.hu1<br/>tandy1000sl2/8079048.hu2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>Amstrad PC3086</b> <i><a href="#system-note-5">[5]</a></i><br/>8086 at 8 MHz<br/>640KB RAM<br/>Built-in VGA</td>
+<td>pc3086/fc00.bin<br/>pc3086/c000.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1991</td>
+<td><b>Amstrad PC5086</b><br/>8086 at 8 MHz<br/>640KB RAM</td>
+<td>pc5086/sys_rom.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="286-based">286 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1984</td>
+<td><b>IBM AT</b><br/>286 at 6 or 8 MHz<br/>256KB - 16MB RAM</td>
+<td>ibmat/at111585.0<br/>ibmat/at111585.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1986</td>
+<td><b>Compaq Portable II</b><br/>286 at 8 MHz<br/>256KB - 15MB RAM</td>
+<td>compaq_pii/109739-001.rom<br/>compaq_pii/109740-001.rom</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1986</td>
+<td><b>IBM XT Model 286</b><br/>286 at 6 MHz<br/>256KB - 16MB RAM</td>
+<td>ibmxt286/BIOS_5162_21APR86_U34_78X7460_27256.BIN<br/>ibmxt286/BIOS_5162_21APR86_U35_78X7461_27256.BIN</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1986</td>
+<td><b>Toshiba T3100e</b> <i><a href="#system-note-1">[1]</a></i> <i><a href="#system-note-5">[5]</a></i><br/>286 at 12 MHz<br/>1MB - 5MB RAM<br/>CGA on gas-plasma display</td>
+<td>t3100e/t3100e_font.bin<br/>t3100e/t3100e.rom</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1987</td>
+<td><b>IBM PS/2 Model 50</b> <i><a href="#system-note-5">[5]</a></i><br/>286 at 10 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td>i8550021/90x7420.zm13<br/>i8550021/90x7423.zm14<br/>i8550021/90x7426.zm16<br/>i8550021/90x7429.zm18</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>Bull Micral 45</b><br/>286 at 12 MHz<br/>1MB - 6MB RAM</td>
+<td>bull_micral_45/even.fil<br/>bull_micral_45/odd.fil</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1988</td>
+<td><b>Commodore PC30-III</b><br/>286 at 12 MHz<br/>512KB - 16MB RAM</td>
+<td>cmdpc30/commodore pc 30 iii even.bin<br/>cmdpc30/commodore pc 30 iii odd.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>IBM PS/2 Model 30-286</b><br/>286 at 10 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td>ibmps2_m30_286/33f5381a.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1989</td>
+<td><b>Epson PC AX</b><br/>286<br/>256KB - 16MB RAM</td>
+<td>epson_pcax/EVAX<br/>epson_pcax/ODAX</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1989</td>
+<td><b>Epson PC AX2e</b><br/>286 at 12 MHz<br/>256KB - 16MB RAM</td>
+<td>epson_pcax2e/EVAX<br/>epson_pcax2e/ODAX</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>AMI 286 clone</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM</td>
+<td>ami286/amic206.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1990</td>
+<td><b>Award 286 clone</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM</td>
+<td>award286/award.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>Dell System 200</b><br/>286 at 12 MHz<br/>640KB - 16MB RAM</td>
+<td>dells200/dell0.bin<br/>dells200/dell1.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1990</td>
+<td><b>IBM PS/1 Model 2011</b> <i><a href="#system-note-5">[5]</a></i><br/>286 at 10 MHz<br/>512KB - 16MB RAM<br/>Built-in VGA<br/>DOS 4.01 + GUI menu system in ROM</td>
+<td>ibmps1/f80000.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">?</td>
+<td><b>Goldstar GDC-212M</b><br/>286 at 12 MHz<br/>512KB - 4MB RAM</td>
+<td>gdc212m/gdc212m_72h.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">?</td>
+<td><b>GW-286CT GEAR</b><br/>286 at 8+ MHz<br/>512KB - 16MB RAM</td>
+<td>gw286ct/2ctc001.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">?</td>
+<td><b>Hyundai Super-286TR</b><br/>286 at 12 MHz<br/>1MB - 4MB RAM</td>
+<td>super286tr/award.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">?</td>
+<td><b>Samsung SPC-4200P</b><br/>286 at 12 MHz<br/>512KB - 2MB RAM</td>
+<td>spc4200p/u8.01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">?</td>
+<td><b>Samsung SPC-4216P</b><br/>286 at 12 MHz<br/>1MB - 5MB RAM</td>
+<td>spc4216p/phoenix.bin<br/>   <i>or</i><br/>spc4216p/7101.u8<br/>spc4216p/ac64.u10</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">?</td>
+<td><b>Samsung SPC-4620P</b><br/>286 at 12 MHz<br/>1MB - 5MB RAM<br/>Built-in Korean ATI-28800</td>
+<td>spc4620p/31005h.u8<br/>spc4620p/31005h.u10<br/>spc4620p/svb6120a_font.rom<br/>spc4620p/31005h.u8<br/>spc4620p/31005h.u10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">?</td>
+<td><b>Tulip AT Compact</b><br/>286<br/>640KB - 16MB RAM</td>
+<td>tulip_tc7/tc7be.bin<br/>tulip_tc7/tc7bo.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="386-based">386 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1987</td>
+<td><b>IBM PS/2 Model 80</b> <i><a href="#system-note-5">[5]</a></i><br/>386DX at 20 MHz<br/>1MB - 12MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td>i8580111/15f6637.bin<br/>i8580111/15f6639.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1988</td>
+<td><b>ECS 386/32</b><br/>386DX at 20 MHz<br/>1MB - 16MB RAM</td>
+<td>ecs386_32/386_32_even.bin<br/>ecs386_32/386_32_odd.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1989</td>
+<td><b>IBM PS/2 Model 70 (type 3)</b> <i><a href="#system-note-5">[5]</a></i><br/>386DX at 25 MHz<br/>2MB - 16MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td>ibmps2_m70_type3/70-a_even.bin<br/>ibmps2_m70_type3/70-a_odd.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1989</td>
+<td><b>Compaq Deskpro 386</b><br/>386DX at 20 MHz<br/>1MB - 15MB RAM</td>
+<td>deskpro386/109592-005.u11.bin<br/>deskpro386/109591-005.u13.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1989</td>
+<td><b>Epson PC AX3</b><br/>386SX at 16 MHz<br/>256KB - 16MB RAM</td>
+<td>epson_pcax3/EVAX3<br/>epson_pcax3/ODAX3</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1989</td>
+<td><b>IBM PS/2 Model 55SX</b><br/>386SX at 16 MHz<br/>1MB - 8MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td>i8555081/33f8146.zm41<br/>i8555081/33f8145.zm40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>DTK 386SX clone</b><br/>386SX<br/>512KB - 16MB RAM</td>
+<td>dtk386/3cto001.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1990</td>
+<td><b>IBM PS/1 Model 2121</b> <i><a href="#system-note-5">[5]</a></i><br/>386SX at 20 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA</td>
+<td>ibmps1_2121/fc0000.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>Samsung SPC-6000A</b><br/>386DX<br/>1MB - 32 MB RAM</td>
+<td>spc6000a/3c80.u27<br/>spc6000a/9f80.u26</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1992</td>
+<td><b>Acermate 386SX/25N</b> <i><a href="#system-note-5">[5]</a></i><br/>386SX at 25 MHz<br/>2MB - 16MB RAM<br/>Built-in Oak SVGA</td>
+<td>acer386/acer386.bin<br/>acer386/oti067.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1992</td>
+<td><b>Amstrad MegaPC</b> <i><a href="#system-note-2">[2]</a></i> <i><a href="#system-note-5">[5]</a></i><br/>386SX at 25 MHz<br/>1MB - 16MB RAM<br/>Built-in VGA<br/></td>
+<td>megapc/41651-bios lo.u18<br/>megapc/211253-bios hi.u19</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1992</td>
+<td><b>Commodore SL386SX-25</b> <i><a href="#system-note-5">[5]</a></i><br/>386SX at 25 MHz<br/>1MB - 16MB RAM<br/>Built-in AVGA2</td>
+<td>cbm_sl386sx25/f000.bin<br/>cbm_sl386sx25/c000.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1992</td>
+<td><b>Packard Bell Legend 300SX</b><br/>386SX at 16 MHz<br/>1MB - 16MB RAM</td>
+<td>pb_l300sx/pb_l300sx.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1992</td>
+<td><b>Samsung SPC-6033P</b><br/>386SX at 33 MHz<br/>2MB - 12 MB RAM</td>
+<td>spc6033p/phoenix.bin<br/>spc6033p/svb6120a_font.rom</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1994</td>
+<td><b>AMI 386DX clone</b><br/>386DX at 40 MHz<br/>1MB - 32MB RAM</td>
+<td>ami386dx/opt495sx.ami</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1994</td>
+<td><b>AMI 386SX clone</b><br/>386SX at 25 MHz<br/>1MB - 16MB RAM</td>
+<td>ami386/ami386.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1994</td>
+<td><b>MR 386DX clone</b><br/>This is a generic 386DX clone with an MR BIOS</td>
+<td>mr386dx/opt495sx.mr</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">?</td>
+<td><b>KMX-C-02</b><br/>386SX<br/>512KB - 16MB RAM</td>
+<td>kmxc02/3ctm005.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="486-based">486 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine<br/>(+ addl. hardware)</th>
+<th>CPU(s) Supported</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1990</td>
+<td><b>IBM PS/2 Model 70 (type 4)</b> <i><a href="#system-note-3">[3]</a></i><br/>2MB - 16MB RAM<br/>Built-in VGA<br/>MCA bus</td>
+<td><b>486DX</b> at 25 MHz</td>
+<td>ibmps2_m70_type3/70-a_even.bin<br/>ibmps2_m70_type3/70-a_odd.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1993</td>
+<td><b>AMI 486 clone</b><br/>1MB - 32MB RAM</td>
+<td><b>486</b> at 16-66 MHz</td>
+<td>ami486/ami486.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1993</td>
+<td><b>Elonex PC-425X</b> <i><a href="#system-note-5">[5]</a></i><br/>1MB - 256MB RAM<br/>Built-in Trident TGUI9440CXi</td>
+<td><b>486SX</b> at 25 MHz</td>
+<td>elx_pc425x/elx_pc425x.bin<br/>   <i>or</i><br/>elx_pc425x/elx_pc425x_bios.bin<br/>elx_pc425x/elx_pc425x_vbios.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1993</td>
+<td><b>IBM PS/1 Model 2133 (EMEA 451)</b><br/>2MB - 64MB RAM<br/>Built-in Cirrus Logic GD5426</td>
+<td><b>486SX</b> at 25 MHz</td>
+<td>ibmps1_2133/PS1_2133_52G2974_ROM.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1993</td>
+<td><b>Packard Bell PB410A</b> <i><a href="#system-note-5">[5]</a></i><br/>1MB - 64MB RAM<br/>Built-in HT-216 video</td>
+<td><b>486</b> at 25-120 MHz<br/><b>Am5x86</b> at 133-160 MHz<br/><b>Cx5x86</b> at 100-133 MHz<br/><b>Pentium Overdrive</b> at 63-83 MHz</td>
+<td>pb410a/PB410A.080337.4ABF.U25.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1994</td>
+<td><b>AMI WinBIOS 486 clone</b><br/>1MB - 32MB RAM</td>
+<td><b>486</b> at 16-66 MHz</td>
+<td>win486/ali1429g.amw</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1995</td>
+<td><b>Award SiS 496/497</b><br/>1MB - 64MB RAM</td>
+<td><b>486</b> at 16-120 MHz<br/><b>Am5x86</b> at 133-160 MHz<br/><b>Cx5x86</b> at 100-133 MHz<br/><b>Pentium Overdrive</b> at 63-83 MHz</td>
+<td>sis496/sis496-1.awa</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pentium-based">Pentium based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine<br/>(+ addl. hardware)</th>
+<th>CPU(s) Supported</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1994</td>
+<td><b>Intel Premiere/PCI (Batman's Revenge)</b><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 60-66 MHz<br/><b>Pentium Overdrive</b> at 120-133 MHz</td>
+<td>revenge/1009af2_.bi0<br/>revenge/1009af2_.bi1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1995</td>
+<td><b>Intel Advanced/EV (Endeavor)</b> <i><a href="#system-note-4">[4]</a></i><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-133 MHz<br/><b>Pentium Overdrive</b> at 125-200 MHz</td>
+<td>endeavor/1006cb0_.bi0<br/>endeavor/1006cb0_.bi1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1995</td>
+<td><b>Intel Advanced/ZP (Zappa)</b><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-133 MHz<br/><b>Pentium Overdrive</b> at 125-200 MHz</td>
+<td>zappa/1006bs0_.bio<br/>zappa/1006bs0_.bi1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1995</td>
+<td><b>Packard Bell PB520R (Robin LC)</b> <i><a href="#system-note-5">[5]</a></i><br/>1MB - 128MB RAM<br/>Built-in Cirrus Logic GD-5434</td>
+<td><b>Pentium</b> at 60-66 MHz<br/><b>Pentium Overdrive</b> at 120-133 MHz</td>
+<td>pb520r/1009bc0r.bio<br/>pb520r/1009bc0r.bi1<br/>pb520r/gd5434.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1995</td>
+<td><b>Packard Bell PB570 (Hillary)</b> <i><a href="#system-note-5">[5]</a></i><br/>1MB - 128MB RAM<br/>Built-in Cirrus Logic GD-5430</td>
+<td><b>Pentium</b> at 75-133 MHz<br/><b>Pentium Overdrive</b> at 125-200 MHz</td>
+<td>pb570/1007by0r.bio<br/>pb570/1007by0r.bi1<br/>pb570/gd5430.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1996</td>
+<td><b>ASUS P/I-P55TVP4</b><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT Winchip 2</b> at 200-240 MHz<br/><b>IDT Winchip 2A</b> at 200-233 MHz<br/><b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> <i>(AFR-66)</i> at 233-300 MHz</td>
+<td>p55tvp4/tv5i0204.awd</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1996</td>
+<td><b>ASUS P/I-P55T2P4</b><br/>1MB - 512MB RAM</td>
+<td><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT Winchip 2</b> at 200-240 MHz<br/><b>IDT Winchip 2A</b> at 200-233 MHz<br/><b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> <i>(AFR-66)</i> at 233-300 MHz</td>
+<td>p55t2p4/0207_j2.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1996</td>
+<td><b>Award 430VX PCI</b><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT Winchip 2</b> at 200-240 MHz<br/><b>IDT Winchip 2A</b> at 200-233 MHz<br/><b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> <i>(AFR-66)</i> at 233-300 MHz</td>
+<td>430vx/55xwuq0e.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1996</td>
+<td><b>Itautec Infoway Multimidia</b><br/>8MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-133 MHz<br/><b>Pentium Overdrive</b> at 125-200 MHz</td>
+<td>infowaym/1006bs0_.bio<br/>infowaym/1006bs0_.bi1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1997</td>
+<td><b>Epox P55-VA</b><br/>1MB - 128MB RAM</td>
+<td><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT Winchip 2</b> at 200-240 MHz<br/><b>IDT Winchip 2A</b> at 200-233 MHz<br/><b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> <i>(AFR-66)</i> at 233-300 MHz</td>
+<td>p55va/va021297.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="super-socket-7-based">Super Socket 7 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine<br/>(+ addl. hardware)</th>
+<th>CPU(s) Supported</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1998</td>
+<td><b>FIC VA-503+</b><br/>1MB - 512MB RAM</td>
+<td><b>AMD K6</b> at 166-300 MHz<br/><b>AMD K6-2</b> at 233-550 MHz<br/><b>AMD K6-2+</b> at 450-550 MHz<br/><b>AMD K6-III</b> at 400-450 MHz<br/><b>AMD K6-III+</b> at 400-500 MHz<br/><b>Pentium</b> at 75-200 MHz<br/><b>Pentium MMX</b> at 166-233 MHz<br/><b>Mobile Pentium MMX</b> at 120-300 MHz<br/><b>Cyrix 6x86</b> at PR90<i>(80 MHz)</i>-PR200<i>(200 MHz)</i><br/><b>Cyrix 6x86MX/MII</b> at PR166<i>(133 MHz)</i>-PR400<i>(285 MHz)</i><br/><b>IDT WinChip</b> at 75-240 MHz<br/><b>IDT WinChip2</b> at 200-250 MHz<br/><b>IDT Winchip 2A</b> at PR200<i>(200 MHz)</i>-PR300<i>(250 MHz)</i></td>
+<td>fic_va503p/je4333.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="socket-8-based">Socket 8 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine<br/>(+ addl. hardware)</th>
+<th>CPU(s) Supported</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1996</td>
+<td><b>Intel VS440FX</b><br/>8MB - 256 MB RAM</td>
+<td><b>Pentium Pro</b> at 150-200 MHz<br/><b>Pentium II Overdrive</b> at 300-333 MHz</td>
+<td>vs440fx/1018CS1_.BI1<br/>vs440fx/1018CS1_.BI2<br/>vs440fx/1018CS1_.BI3<br/>vs440fx/1018CS1_.BIO<br/>vs440fx/1018CS1_.RCV</td>
+</tr>
+</tbody>
+</table>
+<h3 id="slot-1-based">Slot 1 based</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Release</th>
+<th>Machine<br/>(+ addl. hardware)</th>
+<th>CPU(s) Supported</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1998</td>
+<td><b>Gigabyte GA-686BX</b><br/>8MB - 512MB RAM</td>
+<td><b>Pentium II</b> at 233-450 MHz<br/><b>Celeron</b> at 266-533 MHz<br/><b>Cyrix III</b>at 500 MHz</td>
+<td>ga686bx/6BX.F2a</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-notes">Additional Notes</h4>
+<p><a name="system-note-1"><code>[1]</code></a> <b>Toshiba Button Mapping</b>: PCem maps [Fn] to <code>right-Ctrl</code> and <code>right-Alt</code>. The following functions are supported: Key Combo | Function ---|--- Fn + Num Lock | toggle numpad Fn + Home | Internal LCD display Fn + Page Down | Turbo on Fn + Right | Toggle LCD font Fn + End | External CRT display Fn + SysRQ | Toggle window</p>
+<p><a name="system-note-2"><code>[2]</code></a> <b>Amstrad MegaPC</b> <i>(386SX)</i>: The original machine had a built-in Sega MegaDrive. This is not emulated in PCem.</p>
+<p><a name="system-note-3"><code>[3]</code></a> <b>IBM PS/2 Model 70 (type 4)</b> <i>(486DX)</i>: PCem's FPU emulation is not bit accurate and can not pass IBM's floating point tests. As a result, this machine will always print 12903 and 162 errors on bootup. These can be ignored - F1 will boot the machine.</p>
+<p><a name="system-note-4"><code>[4]</code></a> <b>Intel Advanced/EV (Endeavor)</b> <i>(Pentium)</i>: The real board has a Sound Blaster 16 onboard and optionally an S3 Trio64V+. Neither are emulated as onboard devices.</p>
+<p><a name="system-note-5"><code>[5]</code></a> Some systems have fixed graphics adapters:<br/> <i>** = Can use external video card.</i><br/></p>
+<table>
+<thead>
+<tr class="header">
+<th>System</th>
+<th>Graphics</th>
+<th>Addl. Info</th>
+<th style="text-align: center;">**</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>Amstrad MegaPC</b></td>
+<td>Paradise 90C11</td>
+<td>A development of the PVGA1 with 512KB VRAM</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="even">
+<td><b>Acer 386SX/25N</b></td>
+<td>Oak OTI-067</td>
+<td>Another 512KB SVGA clone</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="odd">
+<td><b>Amstrad PC1512</b></td>
+<td>CGA</td>
+<td>Has a new mode (640x200x16)</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>Amstrad PC1640</b></td>
+<td>Paradise EGA</td>
+<td> </td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="odd">
+<td><b>Amstrad PC2086/PC3086</b></td>
+<td>Paradise PVGA1</td>
+<td>An early SVGA clone with 256KB VRAM</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="even">
+<td><b>Amstrad PPC512/640</b></td>
+<td>CGA/MDA</td>
+<td>Outputs to 640x200 plasma display</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="odd">
+<td><b>Commodore SL386SX-25</b></td>
+<td>AVGA2</td>
+<td>256KB - 512KB VRAM</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>Elonex PC-425X</b></td>
+<td>Trident TGUI9400CXi</td>
+<td>512KB VRAM</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="odd">
+<td><b>IBM PCjr</b></td>
+<td>CGA</td>
+<td>Has various new modes: <br/>160x200 x 16<br/>320x200 x 16<br/>640x200 x 4</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>IBM PS/1 Model 2011</b></td>
+<td>Stock VGA</td>
+<td>256KB VRAM</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="odd">
+<td><b>IBM PS/1 Model 2121</b></td>
+<td>Basic (and unknown) SVGA</td>
+<td>256KB VRAM</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>IBM PS/2 machines</b></td>
+<td>Stock VGA</td>
+<td>256KB VRAM</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="odd">
+<td><b>Olivetti M24</b> <i><a href="#system-note-6">[6]</a></i></td>
+<td>CGA</td>
+<td>Has double-res text modes + 640x400 mode</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>Packard Bell PB410A</b></td>
+<td>Headland HT-216</td>
+<td> </td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="odd">
+<td><b>Packard Bell PB520R</b></td>
+<td>Cirrus Logic GD-5434</td>
+<td> </td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="even">
+<td><b>Packard Bell PB570</b></td>
+<td>Cirrus Logic GD-5430</td>
+<td> </td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="odd">
+<td><b>Sinclair PC200</b></td>
+<td>CGA</td>
+<td>Can output to TV @ 50hz (UK)</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr class="even">
+<td><b>Tandy 1000</b></td>
+<td>Clone of PCjr video</td>
+<td>Widely supported in 80s games</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="odd">
+<td><b>Tandy 1000 SL/2</b></td>
+<td>Improved Tandy 1000</td>
+<td>Has support for 640x200x16</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr class="even">
+<td><b>Toshiba T-series</b></td>
+<td>CGA</td>
+<td>Outputs to built-in LCD or plasma display</td>
+<td style="text-align: center;">X</td>
+</tr>
+</tbody>
+</table>
+<p><a name="system-note-6"><code>[6]</code></a> <b>Olivetti M24 (display)</b>: I haven't seen a dump of the font ROM for this yet, so if one is not provided the MDA font will be used - which looks slightly odd as it is 14-line instead of 16-line.</p>
+<hr>
+
+<h2 id="graphics-cards">Graphics Cards</h2>
+<h3 id="basic-cards">Basic cards</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Addl. Info</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>MDA</b> <i>(1981)</i></td>
+<td>80x25 monochrome text</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="even">
+<td><b>CGA</b> <i>(1981)</i></td>
+<td>40x25 and 80x25 text<br/>320x200 in 4 colours<br/>620x200 in 2 colours<br/>Supports composite output for ~16 colours.</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="odd">
+<td><b>Hercules</b> <i>(1982)</i></td>
+<td>80x25 monochrome text<br/>720x348 in monochrome</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="even">
+<td><b>Plantronics ColorPlus</b></td>
+<td>An enhanced CGA board with support for 320x200x16 and 640x200x4</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="odd">
+<td><b>Wyse WY-700</b></td>
+<td>A CGA-compatible board with support for a 1280x800 mode</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="even">
+<td><b>MDSI Genius</b></td>
+<td>Mono portrait board with support for a 728x1008 mode</td>
+<td>8x12.bin</td>
+</tr>
+<tr class="odd">
+<td><b>IBM EGA</b> <i>(1984)</i></td>
+<td>Text up to 80x43<br/>Graphics up to 640x350 in 16 colours</td>
+<td>ibm_6277356_ega_card_u44_27128.bin</td>
+</tr>
+<tr class="even">
+<td><b>ATI EGA Wonder 800+</b></td>
+<td>An enhanced EGA-compatible board with support for up to 800x600 in 16 colours</td>
+<td>ATI EGA Wonder 800+ N1.00.BIN</td>
+</tr>
+<tr class="odd">
+<td><b>Hercules InColor</b></td>
+<td>An enhanced Hercules with a custom 720x350 16 colour mode</td>
+<td><i>(none)</i></td>
+</tr>
+</tbody>
+</table>
+<h3 id="unaccelerated-svga-cards">Unaccelerated (S)VGA cards</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Addl. Info</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>ATI Korean VGA</b></td>
+<td>ATI-28800 based.<br/>512KB VRAM<br/>Supports up to 8-bit colour<br/>Korean font support</td>
+<td>atikorvga.bin<br/>ati_ksc5601.rom</td>
+</tr>
+<tr class="even">
+<td><b>ATI VGA Edge-16</b></td>
+<td>ATI-18800 based<br/>512KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>vgaedge16.vbi</td>
+</tr>
+<tr class="odd">
+<td><b>ATI VGA Charger</b></td>
+<td>ATI-28800 based<br/>512KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>bios.bin</td>
+</tr>
+<tr class="even">
+<td><b>AVGA2</b></td>
+<td>Also known as Cirrus Logic GD5402<br/>256KB - 512KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>avga2vram.vbi</td>
+</tr>
+<tr class="odd">
+<td><b>IBM VGA</b> <i>(1987)</i></td>
+<td>256KB VRAM<br/>Text up to 80x50<br/>Graphics up to 320x200 in 256 colours or 640x480 in 16 colours</td>
+<td>ibm_vga.bin</td>
+</tr>
+<tr class="even">
+<td><b>Kasan Hangulmadang-16</b></td>
+<td>ET4000AX based<br/>1MB VRAM<br/>Supports up to 8-bit colour<br/>Korean font support</td>
+<td>et4000_kasan16.bin<br/>kasan_ksc5601.rom</td>
+</tr>
+<tr class="odd">
+<td><b>OAK OTI-037C</b></td>
+<td>256KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>oti037/bios.bin</td>
+</tr>
+<tr class="even">
+<td><b>OAK OTI-067</b></td>
+<td>256KB - 512KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>oti067/bios.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Olivetti GO481 (Paradise PVGA1A)</b></td>
+<td>256KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>oli_go481_lo.bin<br/>oli_go481_hi.bin</td>
+</tr>
+<tr class="even">
+<td><b>Trident 8900D SVGA</b></td>
+<td>256KB - 1MB VRAM<br/>Supports up to 24-bit colour</td>
+<td>trident.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Trident 9000B SVGA</b></td>
+<td>512KB VRAM<br/>Supports up to 8-bit colour</td>
+<td>tvga9000b/BIOS.BIN</td>
+</tr>
+<tr class="even">
+<td><b>Trident TGUI9400CXi</b></td>
+<td>1MB - 2MB VRAM<br/>Supports up to 24-bit colour</td>
+<td>9440.vbi</td>
+</tr>
+<tr class="odd">
+<td><b>Trigem Korean VGA</b></td>
+<td>ET4000AX based<br/>1MB VRAM<br/>Supports up to 8-bit colour<br/>Korean font support</td>
+<td>tgkorvga.bin<br/>tg_ksc5601.rom</td>
+</tr>
+<tr class="even">
+<td><b>Tseng ET4000AX SVGA</b></td>
+<td>1MB VRAM<br/>Supports up to 8-bit colour</td>
+<td>et4000.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2d-accelerated-svga-cards">2D Accelerated SVGA cards</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Addl. Info</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>ATI Graphics Pro Turbo</b></td>
+<td>Mach64GX based<br/>1MB - 4MB VRAM</td>
+<td>mach64gx/bios.bin</td>
+</tr>
+<tr class="even">
+<td><b>ATI Video Xpression</b></td>
+<td>Mach64VT2 based<br/>2MB - 4MB VRAM<br/>Has video acceleration</td>
+<td>atimach64vt2pci.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Cirrus Logic GD-5428</b></td>
+<td>1MB - 2MB VRAM</td>
+<td>Machspeed_VGA_GUI_2100_VLB.vbi</td>
+</tr>
+<tr class="even">
+<td><b>Cirrus Logic GD-5429</b></td>
+<td>1MB - 2MB VRAM</td>
+<td>5429.vbi</td>
+</tr>
+<tr class="odd">
+<td><b>Cirrus Logic GD-5430</b></td>
+<td>1MB - 2MB VRAM</td>
+<td>gd5430/pci.bin</td>
+</tr>
+<tr class="even">
+<td><b>Cirrus Logic GD-5434</b> <i><a href="#graphics-note-1">[1]</a></i></td>
+<td>2MB - 4MB VRAM</td>
+<td>gd5434.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Diamond Stealth 32 SVGA</b></td>
+<td>ET4000/W32p based<br/>1MB - 2MB VRAM</td>
+<td>et4000w32.bin</td>
+</tr>
+<tr class="even">
+<td><b>IBM 1MB SVGA Adapter/A</b></td>
+<td>Cirrus Logic GD5428 based<br/>1 MB VRAM<br/>Only supported on PS/2 models</td>
+<td>SVGA141.ROM</td>
+</tr>
+<tr class="odd">
+<td><b>Number Nine 9FX</b></td>
+<td>S3 Trio64 based<br/>1MB - 2MB VRAM</td>
+<td>s3_764.bin</td>
+</tr>
+<tr class="even">
+<td><b>Paradise Bahamas 64</b></td>
+<td>S3 Vision864 based<br/>1MB - 4MB VRAM</td>
+<td>bahamas64.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Phoenix S3 Trio32</b></td>
+<td>S3 Trio32 based<br/>512KB - 2MB VRAM</td>
+<td>86c732p.bin</td>
+</tr>
+<tr class="even">
+<td><b>Phoenix S3 Trio64</b></td>
+<td>S3 Trio64 based<br/>1MB - 4MB VRAM</td>
+<td>86c764x1.bin</td>
+</tr>
+<tr class="odd">
+<td><b>Trident TGUI9440</b></td>
+<td>1MB - 2MB VRAM</td>
+<td>9440.vbi</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3d-accelerated-svga-cards">3D Accelerated SVGA cards</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Addl. Info</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>3DFX Voodoo Banshee (reference)</b></td>
+<td>Voodoo Banshee based<br/>8MB - 16MB VRAM</td>
+<td>pci_sg.rom</td>
+</tr>
+<tr class="even">
+<td><b>3DFX Voodoo 3 2000</b></td>
+<td>Voodoo 3 based<br/>16MB VRAM</td>
+<td>voodoo3_2000/2k11sd.rom</td>
+</tr>
+<tr class="odd">
+<td><b>3DFX Voodoo 3 3000</b></td>
+<td>Voodoo 3 based<br/>16MB VRAM</td>
+<td>voodoo3_3000/3k12sd.rom</td>
+</tr>
+<tr class="even">
+<td><b>Creative Labs 3D Blaster Banshee</b></td>
+<td>Voodoo Banshee based<br/>16MB VRAM</td>
+<td>blasterpci.rom</td>
+</tr>
+<tr class="odd">
+<td><b>Diamond Stealth 3D 2000</b> <i><a href="#graphics-note-2">[2]</a></i></td>
+<td>S3 ViRGE/325 based<br/>2MB - 4MB VRAM</td>
+<td>s3virge.bin</td>
+</tr>
+<tr class="even">
+<td><b>S3 ViRGE/DX</b> <i><a href="#graphics-note-3">[3]</a></i></td>
+<td>S3 ViRGE/DX based<br/>2MB - 4MB VRAM</td>
+<td>86c375_1.bin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3d-only-cards">3D only cards</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Addl. Info</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>3DFX Voodoo Graphics</b> <i><a href="#graphics-note-4">[4]</a></i></td>
+<td>3D accelerator. Widely supported in late 90s games.</td>
+</tr>
+<tr class="even">
+<td><b>Obsidian SB50</b> <i><a href="#graphics-note-5">[5]</a></i></td>
+<td>Voodoo with 2 TMUs</td>
+</tr>
+<tr class="odd">
+<td><b>3DFX Voodoo 2</b> <i><a href="#graphics-note-6">[6]</a></i></td>
+<td>Improved Voodoo Graphics<br/>Higher clocks<br/>2 TMUs<br/>Triangle setup, etc.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-notes-1">Additional Notes</h4>
+<p><a name="graphics-note-1"><code>[1]</code></a> <b>Cirrus Logic GD-5434</b>: Real chip also supports 1MB configurations, however this is not currently supported in PCem.</p>
+<p><a name="graphics-note-2"><code>[2]</code></a> <b>Diamond Stealth 3D 2000</b>: PCem emulates the ViRGE S3D engine in software. This works with most games I tried, but there may be some issues. The Direct3D drivers for the /325 are fairly poor (often showing as missing triangles), so use of the /DX instead is recommended.</p>
+<p><a name="graphics-note-3"><code>[3]</code></a> <b>S3 ViRGE/DX</b>: The drivers that come with Windows are similar to those for the /325, however better ones do exist (try the 8-21-1997 version). With the correct drivers, many early Direct3D games work okay (if slowly).</p>
+<p><a name="graphics-note-4"><code>[4]</code></a> <b>3DFX Voodoo Graphics</b>: PCem emulates this in software. The emulation is a lot faster than in v10 (thanks to a new dynamic recompiler) and should be capable of hitting Voodoo 1 performance on most machines when two render threads are used. As before, the emulated CPU is the bottleneck for most games. <br/><br/>PCem can emulate 6 and 8 MB configurations, but defaults to 4 MB for compatibility. It can also emulate the screen filter present on the original card, though this does at present have a noticeable performance hit.<br/><br/>Almost everything I've tried works okay, with a very few exceptions - Screamer 2 and Rally have serious issues.</p>
+<p><a name="graphics-note-5"><code>[5]</code></a> <b>Obsidian SB50</b>: Drivers for this are a bit limited - the official drivers don't support 2 TMUs in Direct3D.</p>
+<p><a name="graphics-note-6"><code>[6]</code></a> <b>3DFX Voodoo 2</b>: PCem can emulate both 8 and 12 MB configurations. It can also emulate 6 and 10 MB configurations (with 2MB framebuffer memory), which were never sold into the PC market but do exist for arcade systems.</p>
+<hr>
+
+<h2 id="sound-cards">Sound Cards</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><b>PC speaker</b></td>
+<td>The standard beeper on all PCs. Supports samples/RealSound.</td>
+</tr>
+<tr class="even">
+<td><b>Tandy PSG</b></td>
+<td>The Texas Instruments chip in the PCjr and Tandy 1000. Supports 3 voices plus noise. I reused the emulator in B-em for this (slightly modified). PCem emulates the differences between the SN76496 (PCjr and Tandy 1000), and the NCR8496 (currently assigned to the Tandy 1000HX). Maniac Mansion and Zak McKraken will only sound correct on the latter.</td>
+</tr>
+<tr class="odd">
+<td><b>Tandy PSSJ</b></td>
+<td>Used on the Tandy 1000SL/2, this clones the NCR8496, adding an addition frequency divider (did any software actually use this?) and an 8-bit DAC.</td>
+</tr>
+<tr class="even">
+<td><b>PS/1 audio card</b></td>
+<td>An SN76496 clone plus an 8-bit DAC. The SN76496 isn't at the same address as PCjr/Tandy, so most software doesn't support it.</td>
+</tr>
+<tr class="odd">
+<td><b>Gameblaster</b></td>
+<td>The Creative Labs Gameblaster/Creative Music System, Creative's first sound card introduced in 1987. Has two Philips SAA1099, giving 12 voices of square waves plus 4 noise voices. In stereo!</td>
+</tr>
+<tr class="even">
+<td><b>Adlib</b></td>
+<td>Has a Yamaha YM3812, giving 9 voices of 2 op FM, or 6 voices plus a rhythm section. PCem uses the DOSBox dbopl emulator.</td>
+</tr>
+<tr class="odd">
+<td><b>Adlib Gold</b></td>
+<td>OPL3 with YM318Z 12-bit digital section. Possibly some bugs (not a lot of software to test). The surround module is now emulated.</td>
+</tr>
+<tr class="even">
+<td><b>Sound Blaster</b> <i><a href="#sound-note-1">[1]</a></i></td>
+<td>See linked note for more details.</td>
+</tr>
+<tr class="odd">
+<td><b>Gravis Ultrasound</b></td>
+<td>32 voice sample playback. Port address is fixed to 240, IRQ and DMA can be changed from the drivers. Emulation is improved significantly over previous versions.</td>
+</tr>
+<tr class="even">
+<td><b>Windows Sound System</b></td>
+<td>16-bit digital + OPL3. Note that this only emulates WSS itself, and should not be used with drivers from compatible boards with additional components (eg Turtle Beach Monte Carlo)</td>
+</tr>
+<tr class="odd">
+<td><b>Aztech Sound Galaxy Pro 16 AB (Washington)</b></td>
+<td>SB compatible + WSS compatible</td>
+</tr>
+<tr class="even">
+<td><b>Innovation SSI-2001</b></td>
+<td>SID6581. Emulated using resid-fp. Board is fixed to port 280.</td>
+</tr>
+<tr class="odd">
+<td><b>Ensoniq AudioPCI (ES1371)<br/>Sound Blaster PCI 128</b></td>
+<td>Basic PCI sound card. Emulates Sound Blaster in software.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="additional-notes-2">Additional Notes</h3>
+<p><a name="sound-note-1"><code>[1]</code></a> <b>Sound Blaster</b>: Several Sound Blasters are emulated.</p>
+<ul>
+<li>SB v1.0 - The original. Limited to 22khz, and no auto-init DMA (can cause crackles sometimes).</li>
+<li>SB v1.5 - Adds auto-init DMA</li>
+<li>SB v2.0 - Upped to 41khz</li>
+<li>SB Pro v1.0 - Stereo with twin OPL2 chips.</li>
+<li>SB Pro v2.0 - Stereo with OPL 3 chip</li>
+<li>SB 16 - 16 bit stereo</li>
+<li>SB AWE32 - SB 16 + wavetable MIDI. This requires a ROM dump from a real AWE32.</li>
+</ul>
+<p>All cards are set to Address 220, IRQ 7 and DMA 1 (and High DMA 5). IRQ and DMA can be changed for the SB16 &amp; AWE32 in the drivers. The relevant SET line for autoexec.bat is <code>SET BLASTER = A220 I7 D1 Tx</code> - where Tx is T1 for SB v1.0, T3 for SB v2.0, T4 for SB Pro, and T6 for SB16.</p>
+<p>AWE32 requires a ROM dump called <code>awe32.raw</code>. AWE-DUMP is a utility which can get a dump from a real card. Most EMU8000 functionality should work, however filters are not correct and reverb/chorus effects are not currently emulated.</p>
+<hr>
+
+<h2 id="hdd-controller-cards">HDD Controller Cards</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Int.</th>
+<th>Hardware</th>
+<th>Notes</th>
+<th>ROM file needed<br/>(within ./roms/ folder)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">MFM</td>
+<td><b>Fixed Disk Adapter (Xebec)</b></td>
+<td>MFM controller originally included in the IBM XT. This controller only supports HD types 0, 2, 13, and 16.</td>
+<td>ibm_xebec_62x0822_1985.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">MFM</td>
+<td><b>DTC 5150X</b></td>
+<td>8-bit MFM controller.<br/>To configure drive types, run <code>DEBUG.EXE</code> and enter <code>g=c800:5</code>.</td>
+<td>dtc_cxd21a.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">MFM</td>
+<td><b>AT Fixed Disk Adapter</b></td>
+<td>MFM controller originally included in the IBM AT. Supported by all AT-compatible BIOSes.</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">ESDI</td>
+<td><b>Western Digital WD1007V-SE1</b></td>
+<td>16-bit ESDI controller</td>
+<td>62-000279-061.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">ESDI</td>
+<td><b>IBM ESDI Fixed Disk Controller</b></td>
+<td>MCA ESDI controller. Only supported on PS/2 models.</td>
+<td>90x8969.bin<br/>90x8970.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">IDE</td>
+<td><b>Standard IDE</b></td>
+<td>Standard IDE controller. Supported by all AT-compatible BIOSes. Use this if in any doubt!</td>
+<td><i>(none)</i></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">IDE</td>
+<td><b>XTIDE</b></td>
+<td>8-bit IDE controller. The BIOS is available <a href="http://code.google.com/p/xtideuniversalbios/">here</a>. <br/>v2.0.0 beta 1 is the version I've mostly tested. v2.0.0 beta 3 is known to have some issues.</td>
+<td>ide_xt.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">IDE</td>
+<td><b>XTIDE (AT)</b></td>
+<td>16-bit IDE controller.</td>
+<td>ide_at.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">IDE</td>
+<td><b>XTIDE (PS/1)</b></td>
+<td>IDE controller for the PS/1 model 2033. For this machine you will need BIOS version v1.1.5. The PS/1 is a bit fussy with XTIDE, and I've found that it works best when the XTIDE configuration has 'Full Operating Mode' disabled.</td>
+<td>ide_at_1_1_5.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">SCSI</td>
+<td><b>Longshine LCS-6821N</b></td>
+<td>8-bit SCSI controller.</td>
+<td>Longshine LCS-6821N - BIOS version 1.04.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">SCSI</td>
+<td><b>Rancho RT1000B</b></td>
+<td>8-bit SCSI controller.</td>
+<td>Rancho_RT1000_RTBios_version_8.10R.bin</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">SCSI</td>
+<td><b>Trantor T130B</b></td>
+<td>8-bit SCSI controller.</td>
+<td>trantor_t130b_bios_v2.14.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">SCSI</td>
+<td><b>IBM SCSI Adapter with Cache</b></td>
+<td>MCA SCSI controller. Only supported on PS/2 models.</td>
+<td>92F2244.U68<br/>92F2245.U69</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">SCSI</td>
+<td><b>Adaptec AHA-1542C</b></td>
+<td>16-bit SCSI controller.</td>
+<td>adaptec_aha1542c_bios_534201-00.bin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">SCSI</td>
+<td><b>BusLogic BT-545S</b></td>
+<td>16-bit SCSI controller.</td>
+<td>BusLogic_BT-545S_U15_27128_5002026-4.50.bin</td>
+</tr>
+</tbody>
+</table>
+<hr>
+
+<h2 id="misc-cards">Misc Cards</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Hardware</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Serial mouse</td>
+<td>A Microsoft compatible serial mouse on COM1. Compatible drivers are all over the place for this.</td>
+</tr>
+<tr class="even">
+<td>M24 mouse</td>
+<td>I haven't seen a DOS mouse driver for this yet but the regular scancode mode works as does the Windows 1.x driver.</td>
+</tr>
+<tr class="odd">
+<td>PC1512 mouse</td>
+<td>The PC1512's perculiar quadrature mouse. You need Amstrad's actual driver for this one.</td>
+</tr>
+<tr class="even">
+<td>PS/2 mouse</td>
+<td>A standard 2 button PS/2 mouse. As with serial, compatible drivers are common.</td>
+</tr>
+<tr class="odd">
+<td>Microsoft PS/2 Intellimouse</td>
+<td>A PS/2 mouse with mouse wheel.</td>
+</tr>
+<tr class="even">
+<td>ATAPI CD-ROM</td>
+<td>Works with OAKCDROM.SYS, VDD-IDE.SYS, and the internal drivers of every OS I've tried.</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

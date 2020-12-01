@@ -1,19 +1,16 @@
-## Software tested (v16):
+## Software tested (v17):
 
 ### DOS
 - PC-DOS 1.0
-- PC-DOS 2.10
-- PC-DOS 3.30
+- MS-DOS 2.11
 - MS-DOS 3.30
-- MS-DOS 3.31
-- PC-DOS 4.0
 - MS-DOS 4.01
-- PC-DOS 5.02
+- MS-DOS 5.0
+- MS-DOS 6.0
 - MS-DOS 6.22
 
 ### Windows
-- Windows 1.03
-- Windows 2.03
+- Windows 1.04
 - Windows/286 2.11
 - Windows/386 2.11
 - Windows 3.0
@@ -42,304 +39,291 @@
 
 ### Linux
 - Corel Linux 1.2
+- Mandriva LE 2005
 - Red Hat Linux 7.1 (Seawolf)
-- SuSE Linux 6.3
-- Ubuntu 6.06.1
 
 ### BeOS
-- BeOS 5.0 Personal Edition
 - BeOS 5.0 Professional Edition
 
 ### Applications
-- CorelDRAW! v2.5 for OS/2
+- 3DMark 2000
+- 3DMark 2001SE
+- After Dark 3.06
+- Cinemania 1994
+- Creative Writer
 - Cubasis
-- Fasttracker 2.08
-- Lotus SmartSuite 97
-- Microsoft Office 95
-- Microsoft Word 1.1 for OS/2
-- Microsoft Word 1.1 for Windows
-- Microsoft Word 2.0
-- Microsoft Word 6.1
-- Microsoft Works for Windows 3.0
-- Mozilla Firefox 1.5.0.5
-- Visual Basic 4.0
+- Encarta 1994
+- Fasttracker v2.08
+- PageMaker 5.0
+- PC Paintbrush 1.05
+- Photoshop 3.0
+- Smartsuite 97
+- Visual Basic 3.0
+- Visual C++ 6.0
+- Word for Windows 2.0
 - Winzip 6.2
 
 ### Games
-- 3-Demon
-- Abuse
-- Abuse (demo)
+- 1602 AD (demo)
+- 3D Ultra Pinball Thrillride
+- A-10 Tank Killer
 - Actua Soccer
-- Age of Empires
+- Adventure Pinball Forgotten Island (demo)
 - Aladdin
-- Aladdin (demo)
-- Alien Breed : Tower Assault (demo)
-- Alien Carnage (shareware)
 - Alien vs Predator
+- Alien vs Predator 2 (demo)
 - All New World of Lemmings
-- American McGee's Alice
-- Apache (demo)
-- Atomic Bomberman
-- Backtrack (demo)
-- Balls of Steel (demo)
+- Alone in the Dark
+- Alone in the Dark : The New Nightmare (demo)
+- Anachronox
+- Arkanoid
+- Armoured Fist 3 (demo)
+- Asteroids (1998)
+- B-17 Flying Fortress
+- Battle Chess
 - Battlezone
-- Battlezone (1998)
 - Battlezone II
+- Bejeweled
+- Beyond Castle Wolfenstein
 - Big Red Racing
-- Bio Menace (shareware)
-- Blackthorne (demo)
-- Blake Stone (shareware)
-- Blast Doors
-- Blood (demo)
-- Blood 2
-- Breakneck
-- Brix (shareware)
-- Bust-a-Move 2 : Arcade Edition
+- Bio Menace
+- Black & White
+- Brix
+- Bugs Bunny Lost In Time (demo)
 - Cannon Fodder 2
-- Caesar III
-- Captain Claw
-- Carmageddon
 - Carnivores 2
-- Catacomb Abyss (demo)
-- Carmageddon (demo)
-- CD-MAN
-- Charlie the Duck (demo)
-- Clusterball
-- Colin McRae Rally
-- Colonization
-- Command and Conquer (demo)
-- Command and Conquer : Red Alert
-- Commander Keen : Goodbye Galaxy
-- Commander Keen : Invasion of the Vorticons
+- Civilization
+- Civilization for Windows
+- Claw
+- Clive Barker's Undying (demo)
+- Clockwiser
+- Command & Conquer : Red Alert
+- Command & Conquer : Red Alert 2
+- Command & Conquer : Tiberian Sun (demo)
+- Command & Conquer Renegade
+- Conquest
 - Corridor 7
 - Counter-Strike 2D
+- Crimson Skies (demo)
+- Croc
 - Curse of Monkey Island
-- Cyril Cyberpunk (demo)
-- Dark Forces (demo)
-- Dark Forces
+- Cutthroats (demo)
+- Daikatana
 - Dawn Patrol
-- Death Rally
-- Descent (v1.4)
-- Descent (demo)
+- Day of the Tentacle
+- Dance Dance Revolution
+- Dead Reckoning (demo)
+- Death Drome
 - Desert Strike
-- Destruction Derby
-- Destruction Derby (demo)
-- Deus Ex
-- Diablo
 - Digger
+- Dirt Track Racing (demo)
+- Disciples (demo)
 - Discworld II
-- Dogz
 - Doom (v1.2)
-- Doom (shareware)
 - Doom II (v1.666)
-- Doom II for Windows 95
+- Double Dragon
+- Drakan (demo)
+- Duke Nukem 3D (v1.3D)
 - Dune
-- Dune II
-- Duke Nukem (shareware)
-- Duke Nukem 3D (shareware)
 - DX-Ball 2
-- Earthworm Jim (demo)
+- Echelon
 - Ecstatica
 - Epic Pinball
-- Epic Pinball (shareware)
-- Eradicator
+- Every Extend
+- Evolva (demo)
 - Expendable
-- Expendable (demo)
-- Extreme Assault
-- Final Fantasy VII
-- Flashback (demo)
+- Eye of the Beholder
+- Fallout Tactics (demo)
+- Final Fantasy VIII (demo)
+- Flashback
+- Flight Simulator 5
 - Frogger
-- Frogger (1998)
 - Frontier : First Encounters
-- Full Throttle (demo)
-- G-Police
-- Galactix
-- GLQuake (v0.93)
-- Gods (demo)
-- Grand Theft Auto
+- Gabriel Knight 3 (demo)
+- Giants : Citizen Kabuto
+- GLQuake
 - Grand Theft Auto 2
-- Grim Fandango
-- Half-Life (1.0.0.9)
-- Heartlight (shareware)
-- Heretic
-- Heretic (demo)
+- Half-Life
+- Halloween Harry
+- Heartlight
+- Hellbender
 - Hexen
-- Hexen (demo)
-- Hexen95
-- Hocus Pocus (shareware)
-- House of the Dead 2
-- Hover!
+- High Heat Baseball 2002 (demo)
+- Hitch Hiker's Guide to the Galaxy
+- Hocus Pocus
+- Homeworld Cataclysm (demo)
 - Incoming
-- Indiana Jones and the Fate of Atlantis (demo)
-- Indy Car Racing 2 (demo)
-- Interstate 76 Nitro Riders
-- Interstate 82
-- Jazz Jackrabbit (shareware)
+- James Pond 2 : Robocod
+- Jazz Jackrabbit
 - Jazz Jackrabbit 2
-- Jedi Knight
-- Jumpman
-- Kings Quest
-- Kings Quest II
-- Lamborghini American Challenge (demo)
-- LBA 2
+- Jill of the Jungle
+- King's Quest
+- King's Quest II
+- King's Quest III
 - Lemmings
-- Lemmings (demo)
 - Lemmings 2 : The Tribes
-- Lemmings Paintball
+- Lode Runner : The Legend Continues
 - Lotus III
-- Mageslayer
-- Magic Carpet
-- MDK
-- MegaMan X (demo)
+- Madden 2002 (demo)
+- Majesty (demo)
+- Maniac Mansion (enhanced)
+- Max Payne
+- MDK (Direct3D, USA release)
+- MechCommander 2
+- Mechwarrior 2
+- Mechwarrior 3
+- Megaman Legends
 - Metal Gear Solid
 - Microsoft Arcade
-- Monster Bash (shareware)
+- Microsoft Golf 99 (demo)
+- Midtown Madness 2 (demo)
+- Monaco Grand Prix (demo)
+- Monkey Island 2
+- Monster Bash
+- Monster Truck Madness
 - Mortal Kombat
-- Mortal Kombat II
-- Mortal Kombat Trilogy
-- Moto Racer
-- NASCAR Heat
-- NBA Hangtime
-- Need for Speed (demo)
+- Mortal Kombat 2
+- Mortal Kombat 3
+- Motorcross Madness (demo)
+- Mystic Towers
+- Nascar Heat
 - Need for Speed II SE
 - Need for Speed III
-- Nerf Arena Blast
-- Network Q RAC Rally
+- Need for Speed : High Stakes
+- NHL 2001 (demo)
 - No One Lives Forever
-- No One Lives Forever (tech demo)
-- Oddworld : Abe's Oddysee
-- Out of this World (demo)
-- Panzer Dragoon
+- Oddworld : Abe's Exoddus
+- One Must Fall 2097
+- Oni
+- Outlaws
+- Pacific Strike
+- Pacman Adventures in Time (demo)
+- Pharoah (demo)
 - Pinball Fantasies
 - Pinball Illusions
-- Populous : The Beginning
-- Prince of Persia (demo)
-- Prince of Persia 2 (demo)
-- Pro Pinball : Big Race USA
-- Pro Pinball : Timeshock!
+- Police Quest
+- Police Quest 2
+- Porrasturvat
+- Power Drive
+- Prince of Persia
+- Prince of Persia 3D (demo)
 - Pro Pinball : The Web
-- Project X (demo)
 - Psycho Pinball
-- Quake (v1.01)
-- Quake (shareware)
+- Quake
 - Quake II
-- Quake III Arena (1.27g)
-- Quake III Arena (1.30)
-- Radix (demo)
-- Railroad Tycoon II (demo)
-- Raptor (shareware)
-- Rayman
-- Realms of Chaos (shareware)
+- Quake III Arena
+- Rayman 2 (demo)
 - Red Faction
-- Resident Evil 2
-- Return to Castle Wolfenstein (v1.32)
-- Rise of the Triad (shareware)
-- Road Rash
-- Rogue Spear (demo)
-- Rollcage (demo)
-- Rollercoaster Tycoon
-- Sam and Max Hit the Road (demo)
+- Redline Racer
+- Rise of the Triad (v1.2)
 - Screamer
-- Screamer 2 (demo)
-- Screamer Rally (NOT 3DFX)
-- Secret of Monkey Island (demo)
-- Serious Sam
-- Shadow Warrior (demo)
-- Simcity 2000
-- Simcity 2000 (demo)
-- Simcity 2000 for OS/2 Warp
-- SimCity 3000
-- Simcopter
-- Sonic 3 & Knuckles
-- Speed Haste (demo)
-- Star Trek Voyager : Elite Force
+- Sega Rally 2 (demo)
+- Sensible World of Soccer
+- Settlers 3 (demo)
+- Severance : Blade of Darkness (demo)
+- Shadow Company (demo)
+- Shadow Warrior
+- Shadowman (demo)
+- Sid Meier's Alien Crossfire (demo)
+- SimCity 2000
+- SimCity Classic
+- SimTower
+- Sink or Swim
+- Soldat (1.0.5)
+- Sonic CD
+- Space Simulator
+- Space Strike
+- Spider-Man (demo)
+- Springy Madness
+- Star Trek Hidden Evil (demo)
+- Star Trek Voyager Elite Force
+- Star Wars Jedi Academy
+- Starfleet Command 2 (demo)
 - Stargunner
-- Street Racer (demo)
-- Streets of Simcity
-- Striker 95
-- Super Angelo (demo)
-- Superkarts
-- Super Street Fighter 2 (demo)
+- Starlancer (demo)
+- Steel Beasts (demo)
+- Stunt Island
+- SWAT 3 Elite Edition (demo)
 - Syndicate
-- Syndicate (demo)
 - System Shock
-- Tennis Elbow (demo)
-- Terminal velocity
-- Terminal Velocity (shareware)
-- The Adventures of Captain Comic
-- The Chaos Engine
-- The Chaos Engine (demo)
+- Tanktics (demo)
+- Terminal Velocity
+- The Dig
 - The Humans
-- The Incredible Machine (demo)
-- The Lion King
-- The Lion King (demo)
-- Thief II
+- The Labyrinth (RealArcade version)
+- The Lost Vikings
+- The Ultimate Doom (v1.9)
 - Theme Hospital
-- Theme Hospital (demo)
 - Theme Park
-- Threat (demo)
-- Tie Fighter (demo)
 - Tomb Raider
-- Tomb Raider (demo)
 - Tomb Raider II
-- Tomb Raider III
+- Tomb Raider The Last Revelation (demo)
 - Tony Hawk's Pro Skater 2
 - Transport Tycoon
 - Transport Tycoon Deluxe
-- Turok (demo)
-- Tyrian
-- Tyrian (shareware)
+- Tropico (demo)
+- Turrican 2
 - UFO : Enemy Unknown
-- Ultimate Doom (v1.9)
+- Ultimate Ride (demo)
 - Unreal
-- Unreal Gold
 - Unreal Tournament
-- Unreal Tournament (v436 GOTY)
-- Virtual Pool (demo)
+- Unreal Tournament 2004 (Direct3D)
 - Wacky Wheels
-- Warcraft (demo)
-- Warcraft II (demo)
+- Warlords Battlecry (demo)
+- Wheel of Time (demo)
 - Wing Commander
-- Wolfenstein 3D (v1.4)
-- Wolfenstein 3D (shareware)
-- World Cup 98
+- Wing Commander : Privateer
+- Wizkid
+- Wolfenstein 3D
+- World War III : Black Gold (demo)
 - Worms
-- Worms (demo)
-- Worms 2
-- Worms World Party
+- Worms Armageddon
 - X-Com : Terror From The Deep
-- X-Wing
-- Z (demo)
-- Z.A.R. (demo)
+- Xargon
+- Z : Steel Soldiers (demo)
+- Zak McKracken
 - Zone 66
-- Zone 66 (shareware)
 
 ### Demos
 - Cascada - Cronologia
+- Coma - Paimen
 - Complex - Cyboman 2
+- Complex - Dope
 - EMF - Verses
 - Exceed - Heaven 7
 - Future Crew - Second Reality
-- Gazebo - Cyboman!
+- Gazebo - Cyboman
+- Halcyon - Lifeforms
+- Iguana - Heartquake
+- Impact Studios - Legend
+- Impact Studios - Project Angel
 - KFMF - Dance, Move, Shake
 - KFMF - Trip
 - Logic Design - Fashion
+- Majic 12 - Show
+- Majic 12 - Wish
+- Megabusters - Hellraiser
 - Orange - x14
 - Renaissance - Amnesia
 - Skull - Putre Faction
-- Tran - Ambience
-- Tran - Luminati
+- Tran - Ambience (flickery)
+- Tran - Luminati (flickery)
 - Tran - Timeless
-- Triton - Crystal Dream II
 - Triton - Crystal Dream
+- Triton - Crystal Dream 2
 - Ultraforce - Coldcut
 - Ultraforce - Vector Demo
+- Valhalla - Solstice
+- Witan - Witan House
 
 ### Emulators
+- Beebem v1.02
 - BeebInC v0.99f
-- Fellow v0.3.3
-- KGen98 v0.4
-- PaCifiST v0.45
+- CPE v5.2i
+- DOSBox 0.74-3
+- Fellow 0.33
+- KGen98 v0.4b
+- PaCifiST v0.48
 - SNES9x v0.96
 - UltraHLE v1.0.0
 - vMac v0.1.9.1
