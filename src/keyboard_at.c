@@ -591,7 +591,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 			break;
 
                         case 0xba:
-                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA)
+                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA || romset == ROM_ITAUTEC_INFOWAYM)
                                 keyboard_at_adddata(0);
                         break;
 
@@ -625,7 +625,7 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
 			if (romset == ROM_T3100E)
 				keyboard_at.input_port = (t3100e_mono_get() & 1) ? 0xFF : 0xBF;
 
-                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA)
+                        if (romset == ROM_ENDEAVOR || romset == ROM_ZAPPA || romset == ROM_ITAUTEC_INFOWAYM)
                                 keyboard_at_adddata(keyboard_at.input_port | 4 | 0x40);
                         else
                                 keyboard_at_adddata(keyboard_at.input_port | 4);
