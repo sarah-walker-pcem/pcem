@@ -19,7 +19,7 @@ You will need the following libraries (and their dependencies):
 Open a terminal window, navigate to the PCem directory then enter:
 ### Linux
 ```
-./configure --enable-release
+./configure --enable-release-build
 make
 ```
 ### BSD
