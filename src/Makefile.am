@@ -137,7 +137,7 @@ pcem_LDADD += wx.res
 endif
 
 if !HAS_OFF64T
-#pcem_CFLAGS += -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseek -Dftello64=ftell
+pcem_CFLAGS += -Doff64_t=off_t -Dfopen64=fopen -Dfseeko64=fseeko -Dftello64=ftello
 endif
 
 if RELEASE_BUILD
