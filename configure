@@ -6310,6 +6310,7 @@ case "$host" in
        LIBS="$LIBS -framework OpenGL"
        LIBS="$LIBS -framework OpenAL"
        build_macosx="yes"
+       CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
        ;;
     *-*-cygwin* | *-*-mingw32*)
        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for main in -lopengl32" >&5

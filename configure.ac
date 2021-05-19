@@ -140,6 +140,7 @@ case "$host" in
        LIBS="$LIBS -framework OpenGL"
        LIBS="$LIBS -framework OpenAL"
        build_macosx="yes"
+       CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
        ;;
     *-*-cygwin* | *-*-mingw32*)
        AC_CHECK_LIB([opengl32], [main], [], \
