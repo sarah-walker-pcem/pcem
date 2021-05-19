@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#if defined(__APPLE__) && defined(__aarch64__)
+#include <pthread.h>
+#endif
 #include "ibm.h"
 #include "device.h"
 
@@ -307,7 +310,13 @@ void initpc(int argc, char *argv[])
         loadbios();
         mem_add_bios();
                         
+#if defined(__APPLE__) && defined(__aarch64__)
+        pthread_jit_write_protect_np(0);
+#endif
         codegen_init();
+#if defined(__APPLE__) && defined(__aarch64__)
+        pthread_jit_write_protect_np(1);
+#endif
         
         timer_reset();
         sound_reset();
