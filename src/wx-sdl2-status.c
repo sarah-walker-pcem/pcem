@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "video.h"
 #include "wx-sdl2.h"
 #include "wx-sdl2-video.h"

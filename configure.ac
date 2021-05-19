@@ -183,6 +183,7 @@ case "$host" in
        ;;
 esac
 
+CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 
 AM_CONDITIONAL(OS_LINUX, [test "$build_linux" = "yes"])

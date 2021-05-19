@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "ibm.h"
 #include "device.h"
 #include "gameport.h"

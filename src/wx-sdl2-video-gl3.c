@@ -1,8 +1,8 @@
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #define BITMAP WINDOWS_BITMAP
-#include <SDL2/SDL_opengl.h>
+#include <SDL_opengl.h>
 #if SDL_VERSION_ATLEAST(2, 0, 4)
-#include <SDL2/SDL_opengl_glext.h>
+#include <SDL_opengl_glext.h>
 #endif
 #undef BITMAP
 #include "wx-sdl2-glw.h"

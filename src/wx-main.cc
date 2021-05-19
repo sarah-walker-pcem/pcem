@@ -1,5 +1,5 @@
 #include "wx-app.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 extern "C"
 {
