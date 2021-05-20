@@ -482,7 +482,7 @@ void fdc_write(uint16_t addr, uint8_t val, void *priv)
                                 fdc.stat=0x90;
                                 fdc.pos=0;
                                 break;
-                                case 0x0d: case 0x4d: /*Format track*/
+                                case 0x0d: case 0x4d: case 0x8d: case 0xcd: /*Format track*/
                                 fdc.pnum=0;
                                 fdc.ptot=5;
                                 fdc.stat=0x90;
@@ -640,7 +640,7 @@ bad_command:
                                                 timer_set_delay_u64(&fdc.timer, time);
                                         break;
 
-                                        case 0x0d: case 0x4d: /*Format*/
+                                        case 0x0d: case 0x4d: case 0x8d: case 0xcd: /*Format*/
 					fdc_rate(fdc.drive);
                                         fdc.head = (fdc.params[0] & 4) ? 1 : 0;
                                         fdc.format_state = 1;
