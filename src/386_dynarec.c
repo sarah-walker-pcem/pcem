@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#if defined __APPLE__ && defined __aarch64__
+#if defined(__APPLE__) && defined(__aarch64__)
 #include <pthread.h>
 #endif
 #include "ibm.h"
@@ -413,7 +413,7 @@ static inline void exec_recompiler(void)
 
                 cpu_new_blocks++;
 
-#if defined __APPLE__ && defined __aarch64__
+#if defined(__APPLE__) && defined(__aarch64__)
                 pthread_jit_write_protect_np(0);
 #endif
                 codegen_block_start_recompile(block);
@@ -487,7 +487,7 @@ static inline void exec_recompiler(void)
                         codegen_reset();
 
                 codegen_in_recompile = 0;
-#if defined __APPLE__ && defined __aarch64__
+#if defined(__APPLE__) && defined(__aarch64__)
                 pthread_jit_write_protect_np(1);
 #endif
         }
