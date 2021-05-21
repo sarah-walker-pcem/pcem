@@ -58,10 +58,10 @@ static void pc1512_out(uint16_t addr, uint8_t val, void *p)
 //        pclog("PC1512 out %04X %02X %04X:%04X\n",addr,val,CS,pc);
         switch (addr)
         {
-                case 0x3d4:
+                case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
                 pc1512->crtcreg = val & 31;
                 return;
-                case 0x3d5:
+                case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
                 old = pc1512->crtc[pc1512->crtcreg];
                 pc1512->crtc[pc1512->crtcreg] = val & crtcmask[pc1512->crtcreg];
                 if (old != val)

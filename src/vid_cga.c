@@ -28,10 +28,10 @@ void cga_out(uint16_t addr, uint8_t val, void *p)
 //        pclog("CGA_OUT %04X %02X\n", addr, val);
         switch (addr)
         {
-                case 0x3D4:
+                case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
                 cga->crtcreg = val & 31;
                 return;
-                case 0x3D5:
+                case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
                 old = cga->crtc[cga->crtcreg];
                 cga->crtc[cga->crtcreg] = val & crtcmask[cga->crtcreg];
                 if (old != val)

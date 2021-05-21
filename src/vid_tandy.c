@@ -60,10 +60,10 @@ void tandy_out(uint16_t addr, uint8_t val, void *p)
 //        pclog("Tandy OUT %04X %02X\n",addr,val);
         switch (addr)
         {
-                case 0x3d4:
+                case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
                 tandy->crtcreg = val & 0x1f;
                 return;
-                case 0x3d5:
+                case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
                 old = tandy->crtc[tandy->crtcreg];
                 tandy->crtc[tandy->crtcreg] = val & crtcmask[tandy->crtcreg];
                 if (old != val)
