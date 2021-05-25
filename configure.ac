@@ -140,6 +140,7 @@ case "$host" in
        LIBS="$LIBS -framework OpenGL"
        LIBS="$LIBS -framework OpenAL"
        build_macosx="yes"
+       CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
        ;;
     *-*-cygwin* | *-*-mingw32*)
        AC_CHECK_LIB([opengl32], [main], [], \
@@ -183,6 +184,7 @@ case "$host" in
        ;;
 esac
 
+CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $WX_LIBS $SDL_LIBS"
 
 AM_CONDITIONAL(OS_LINUX, [test "$build_linux" = "yes"])

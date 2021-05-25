@@ -80,6 +80,10 @@ typedef char *SLIRPcaddr_t;
 # include <stdint.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #ifndef _MSC_VER
 #include <sys/time.h>
 #else

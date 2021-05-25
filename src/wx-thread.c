@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <sys/time.h>
+#endif
 #include "thread.h"
 #if defined WIN32 || defined _WIN32 || defined _WIN32
 #include <windows.h>
