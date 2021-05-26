@@ -16,7 +16,7 @@ jobs:
           os: ubuntu-latest
           args: --enable-networking --enable-release-build
           artifacts_name: PCem-Ubuntu-${{ github.head_ref }}-${{ github.run_number }}
-          artifacts_path: PCem.tar
+          artifacts_path: PCem.tar.bz2
           installdeps: >-
             libsdl2-dev
             libopenal-dev
@@ -167,7 +167,7 @@ jobs:
       run: |
         cp ./temp/src/pcem.exe dist
         cd dist
-        zip ${{ matrix.artifacts_path }} *
+        zip -9 ${{ matrix.artifacts_path }} *
 
     - name: prepare-package (Linux)
       if: runner.os == 'Linux'
@@ -191,7 +191,7 @@ jobs:
       run: |
        cp ./temp/src/pcem dist
        cd dist
-       tar -czf ${{ matrix.artifacts_path }} *
+       tar -cjf ${{ matrix.artifacts_path }} *
 
     - name: "Upload GitHub Actions artifacts"
       uses: actions/upload-artifact@v2
