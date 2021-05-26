@@ -85,8 +85,8 @@ jobs:
        cd npcap-sdk-1.05
        cp -r Include/* /mingw32/include/
        cp -r Include/* /mingw64/include/
-       cp -r Lib/* /mingw32/lib/
-       cp -r Lib/* /mingw64/lib/
+       cp -r Lib/*.lib /mingw32/lib/
+       cp -r Lib/x64/*.lib /mingw64/lib/
     - name: Setup ubuntu dependencies
       if: runner.os == 'Linux'
       run: |
@@ -167,7 +167,7 @@ jobs:
       run: |
         cp ./temp/src/pcem.exe dist
         cd dist
-        zip -9 ${{ matrix.artifacts_path }} *
+        zip -r -9 ${{ matrix.artifacts_path }} *
 
     - name: prepare-package (Linux)
       if: runner.os == 'Linux'
