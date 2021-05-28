@@ -4,6 +4,15 @@
 
 #include "timer.h"
 
+
+#ifdef PCEM_BUILD_VERSION
+#define STRINGISE2(string) #string
+#define STRINGISE(string) STRINGISE2(string)
+#define PCEM_VERSION_STRING "build " STRINGISE(PCEM_BUILD_VERSION)
+#else
+#define PCEM_VERSION_STRING "v17"
+#endif
+
 #ifdef ABS
 #undef ABS
 #endif

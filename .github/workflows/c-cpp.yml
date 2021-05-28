@@ -14,9 +14,9 @@ jobs:
         include:
         - name: Ubuntu 64bit (gcc)
           os: ubuntu-latest
-          args: --enable-networking --enable-release-build
+          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
           artifacts_name: PCem-Ubuntu-${{ github.head_ref }}-${{ github.run_number }}
-          artifacts_path: PCem.tar.bz2
+          artifacts_path: PCem-${{ github.sha }}.tar.bz2
           installdeps: >-
             libsdl2-dev
             libopenal-dev
@@ -25,9 +25,9 @@ jobs:
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
-          args: --enable-networking --enable-release-build
+          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
           artifacts_name: PCem-Windows-MINGW32-${{ github.head_ref }}-${{ github.run_number }}
-          artifacts_path: PCem.zip
+          artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
             zip
@@ -40,9 +40,9 @@ jobs:
         - name: Windows 64bits (MSYS2)
           os: windows-latest
           compiler: MINGW64
-          args: --enable-networking --enable-release-build
+          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
           artifacts_name: PCem-Windows-MINGW64-${{ github.head_ref }}-${{ github.run_number }}
-          artifacts_path: PCem.zip
+          artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
             zip
