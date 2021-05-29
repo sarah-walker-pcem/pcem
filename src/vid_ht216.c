@@ -154,6 +154,9 @@ void ht216_out(uint16_t addr, uint8_t val, void *p)
                                 ht216->read_bank_reg[0]  = (ht216->read_bank_reg[0] & ~0x10) | ((val & 1) ? 0x10 : 0);
                                 ht216->write_bank_reg[0] = (ht216->write_bank_reg[0] & ~0x10) | ((val & 1) ? 0x10 : 0);
                                 break;
+                                case 0xfc:
+                                svga->packed_chain4 = val & 0x20;
+                                break;
                                 case 0xff:
                                 svga->hwcursor.addr = ((ht216->ht_regs[0x94] << 6) | (3 << 14) | ((val & 0x60) << 11)) << 2;
                                 //pclog("cursor_addr = %05x\n", svga->hwcursor.addr);
@@ -421,6 +424,14 @@ static inline uint8_t extalu(int op, uint8_t input_a, uint8_t input_b)
         return val;
 }
 
+/*Remap address for chain-4/doubleword style layout*/
+static inline uint32_t dword_remap(svga_t *svga, uint32_t in_addr)
+{
+        if (svga->packed_chain4)
+                return in_addr;
+        return ((in_addr & 0xfffc) << 2) | ((in_addr & 0x30000) >> 14) | (in_addr & ~0x3ffff);
+}
+
 static void ht216_dm_write(ht216_t *ht216, uint32_t addr, uint8_t cpu_dat, uint8_t cpu_dat_unexpanded)
 {
         svga_t *svga = &ht216->svga;
@@ -430,10 +441,10 @@ static void ht216_dm_write(ht216_t *ht216, uint32_t addr, uint8_t cpu_dat, uint8
 
         if (!(svga->gdcreg[6] & 1))
                 svga->fullchange = 2;
-        if (svga->chain4 || svga->fb_only)
+        if (svga->chain4)
         {
-                writemask2=1<<(addr&3);
-                addr&=~3;
+                writemask2 = 1 << (addr & 3);
+                addr = dword_remap(svga, addr) & ~3;
         }
         else if (svga->chain2_write)
         {
@@ -666,9 +677,10 @@ static void ht216_dm_extalu_write(ht216_t *ht216, uint32_t addr, uint8_t cpu_dat
         uint8_t input_a = 0, input_b = 0;
         uint8_t fg, bg;
         uint8_t output;
+        uint32_t remapped_addr = dword_remap(svga, addr);
         
         if (ht216->ht_regs[0xcd] & HT_REG_CD_RMWMDE) /*RMW*/
-                input_b = svga->vram[addr];
+                input_b = svga->vram[remapped_addr];
         else
                 input_b = ht216->bg_latch[addr & 7];
 
@@ -695,9 +707,9 @@ static void ht216_dm_extalu_write(ht216_t *ht216, uint32_t addr, uint8_t cpu_dat
         bg = extalu(ht216->ht_regs[0xce] & 0xf,  input_a, input_b);
 //        svga->vram[addr]
         output = (fg & rop_select) | (bg & ~rop_select);
-        svga->vram[addr] = (svga->vram[addr] & ~bit_mask) | (output & bit_mask);
+        svga->vram[addr] = (svga->vram[remapped_addr] & ~bit_mask) | (output & bit_mask);
 //        pclog("  A=%02x B=%02x R=%02x FG=%02x BG=%02x ops=%02x val=%02x addr=%05x\n", input_a, input_b, rop_select, fg, bg, ht216->ht_regs[0xce], svga->vram[addr], addr);
-        svga->changedvram[addr >> 12] = changeframecount;
+        svga->changedvram[remapped_addr >> 12] = changeframecount;
 }
 
 static void ht216_write_common(ht216_t *ht216, uint32_t addr, uint8_t val)
@@ -909,7 +921,7 @@ static uint8_t ht216_read_common(ht216_t *ht216, uint32_t addr)
 
         egareads++;
 
-        if (svga->chain4 || svga->fb_only)
+        if (svga->chain4)
         {
 //                if (ht216->ht_regs[0xcd])
 //                        pclog(" addr=%08x decode_mask=%08x vram_max=%08x\n", addr, svga->decode_mask, svga->vram_max);
@@ -920,20 +932,20 @@ static uint8_t ht216_read_common(ht216_t *ht216, uint32_t addr)
                 latch_addr = (addr & svga->vram_mask) & ~7;
                 if (ht216->ht_regs[0xcd] & HT_REG_CD_ASTODE)
                         latch_addr += (svga->gdcreg[3] & 7);
-                ht216->bg_latch[0] = svga->vram[latch_addr];
-                ht216->bg_latch[1] = svga->vram[latch_addr + 1];
-                ht216->bg_latch[2] = svga->vram[latch_addr + 2];
-                ht216->bg_latch[3] = svga->vram[latch_addr + 3];
-                ht216->bg_latch[4] = svga->vram[latch_addr + 4];
-                ht216->bg_latch[5] = svga->vram[latch_addr + 5];
-                ht216->bg_latch[6] = svga->vram[latch_addr + 6];
-                ht216->bg_latch[7] = svga->vram[latch_addr + 7];
+                ht216->bg_latch[0] = svga->vram[dword_remap(svga, latch_addr)];
+                ht216->bg_latch[1] = svga->vram[dword_remap(svga, latch_addr + 1)];
+                ht216->bg_latch[2] = svga->vram[dword_remap(svga, latch_addr + 2)];
+                ht216->bg_latch[3] = svga->vram[dword_remap(svga, latch_addr + 3)];
+                ht216->bg_latch[4] = svga->vram[dword_remap(svga, latch_addr + 4)];
+                ht216->bg_latch[5] = svga->vram[dword_remap(svga, latch_addr + 5)];
+                ht216->bg_latch[6] = svga->vram[dword_remap(svga, latch_addr + 6)];
+                ht216->bg_latch[7] = svga->vram[dword_remap(svga, latch_addr + 7)];
 
 /*pclog("  Read %08x  %02x %02x %02x %02x %02x %02x %02x %02x\n", addr,
         ht216->bg_latch[0],ht216->bg_latch[1],ht216->bg_latch[2],ht216->bg_latch[3],
         ht216->bg_latch[4],ht216->bg_latch[5],ht216->bg_latch[6],ht216->bg_latch[7]);*/
 
-                return svga->vram[addr & svga->vram_mask];
+                return svga->vram[dword_remap(svga, addr) & svga->vram_mask];
         }
         else if (svga->chain2_read)
         {

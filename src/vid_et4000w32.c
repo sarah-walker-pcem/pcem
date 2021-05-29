@@ -1207,6 +1207,8 @@ void *et4000w32p_init()
         et4000->fifo_not_full_event = thread_create_event();
         et4000->fifo_thread = thread_create(fifo_thread, et4000);
 
+        et4000->svga.packed_chain4 = 1;
+
         return et4000;
 }
 

@@ -3945,6 +3945,9 @@ static void *s3_virge_init()
  
         ddc_init();
 
+        //TODO ViRGE does not use packed chain4
+        virge->svga.packed_chain4 = 1;
+
         return virge;
 }
 
@@ -4043,6 +4046,9 @@ static void *s3_virge_375_init()
         virge->fifo_thread = thread_create(fifo_thread, virge);
 
         ddc_init();
+
+        //TODO ViRGE does not use packed chain4
+        virge->svga.packed_chain4 = 1;
 
         return virge;
 }

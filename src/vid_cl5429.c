@@ -1,4 +1,5 @@
 /*Cirrus Logic CL-GD5429 emulation*/
+//SR7.0 = "true packed-pixel memory addressing"
 #include <stdlib.h>
 #include "ibm.h"
 #include "cpu.h"
@@ -178,6 +179,8 @@ void gd5429_out(uint16_t addr, uint8_t val, void *p)
                                 
                                 case 0x07:
                                 svga->set_reset_disabled = svga->seqregs[7] & 1;
+                                svga->packed_chain4 = svga->seqregs[7] & 1;
+                                svga_recalctimings(svga);
                                 case 0x17:
                                 if (gd5429->type >= CL_TYPE_GD5429)
                                         gd5429_recalc_mapping(gd5429);
@@ -844,10 +847,15 @@ void gd5429_write_linear(uint32_t addr, uint8_t val, void *p)
                 svga->fullchange = 2;
         if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
                 addr <<= 3;
-        else if ((svga->chain4 || svga->fb_only) && (svga->writemode < 4))
+        else if (((svga->chain4 && svga->packed_chain4) || svga->fb_only) && (svga->writemode < 4))
         {
                 writemask2 = 1 << (addr & 3);
                 addr &= ~3;
+        }
+        else if (svga->chain4)
+        {
+                writemask2 = 1 << (addr & 3);
+                addr = ((addr & 0xfffc) << 2) | ((addr & 0x30000) >> 14) | (addr & ~0x3ffff);
         }
         else if (svga->chain2_write)
         {
@@ -1193,12 +1201,17 @@ uint8_t gd5429_read_linear(uint32_t addr, void *p)
         
         if (svga->gdcreg[0xb] & GRB_X8_ADDRESSING)
                 addr <<= 3;
-        else if (svga->chain4 || svga->fb_only)
+        else if ((svga->chain4 && svga->packed_chain4) || svga->fb_only)
         {
                 addr &= svga->decode_mask;
                 if (addr >= svga->vram_max)
                         return 0xff;
                 return svga->vram[addr & svga->vram_mask];
+        }
+        else if (svga->chain4)
+        {
+                readplane = addr & 3;
+                addr = ((addr & 0xfffc) << 2) | ((addr & 0x30000) >> 14) | (addr & ~0x3ffff);
         }
         else if (svga->chain2_read)
         {

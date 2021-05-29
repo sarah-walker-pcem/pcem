@@ -495,6 +495,8 @@ void *et4000_init()
                    et4000_in, et4000_out,
                    NULL,
                    NULL);
+
+        et4000->svga.packed_chain4 = 1;
         
         return et4000;
 }
@@ -526,6 +528,8 @@ void *et4000k_init()
         et4000->svga.ksc5601_udc_area_msb[1] = 0xFE;
         et4000->svga.ksc5601_swap_mode = 0;
         et4000->svga.ksc5601_english_font_type = 0;
+
+        et4000->svga.packed_chain4 = 1;
 
         return et4000;
 }
@@ -570,6 +574,8 @@ void *et4000_kasan_init()
         et4000->svga.ksc5601_udc_area_msb[1] = 0xFE;
         et4000->svga.ksc5601_swap_mode = 0;
         et4000->svga.ksc5601_english_font_type = 0x1FF;
+
+        et4000->svga.packed_chain4 = 1;
 
         return et4000;
 }

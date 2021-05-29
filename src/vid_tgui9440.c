@@ -631,17 +631,34 @@ void tgui_recalcmapping(tgui_t *tgui)
         }
 }
 
+/*Remap address for chain-4/doubleword style layout*/
+static inline uint32_t dword_remap(uint32_t in_addr)
+{
+        return ((in_addr << 2) & 0x3fff0) |
+                ((in_addr >> 14) & 0xc) |
+                (in_addr & ~0x3fffc);
+}
+static inline uint32_t dword_remap_w(uint32_t in_addr)
+{
+        return ((in_addr << 2) & 0x1fff8) |
+                ((in_addr >> 14) & 0x6) |
+                (in_addr & ~0x1fffe);
+}
+
 void tgui_hwcursor_draw(svga_t *svga, int displine)
 {
         uint32_t dat[2];
         int xx;
         int offset = svga->hwcursor_latch.x - svga->hwcursor_latch.xoff;
+        uint32_t remapped_addr;
         
         if (svga->interlace && svga->hwcursor_oddeven)
                 svga->hwcursor_latch.addr += 8;
 
-        dat[0] = (svga->vram[svga->hwcursor_latch.addr]     << 24) | (svga->vram[svga->hwcursor_latch.addr + 1] << 16) | (svga->vram[svga->hwcursor_latch.addr + 2] << 8) | svga->vram[svga->hwcursor_latch.addr + 3];
-        dat[1] = (svga->vram[svga->hwcursor_latch.addr + 4] << 24) | (svga->vram[svga->hwcursor_latch.addr + 5] << 16) | (svga->vram[svga->hwcursor_latch.addr + 6] << 8) | svga->vram[svga->hwcursor_latch.addr + 7];
+        remapped_addr = dword_remap(svga->hwcursor_latch.addr);
+        dat[0] = (svga->vram[remapped_addr] << 24) | (svga->vram[remapped_addr + 1] << 16) | (svga->vram[remapped_addr + 2] << 8) | svga->vram[remapped_addr + 3];
+        remapped_addr = dword_remap(svga->hwcursor_latch.addr+4);
+        dat[1] = (svga->vram[remapped_addr] << 24) | (svga->vram[remapped_addr + 1] << 16) | (svga->vram[remapped_addr + 2] << 8) | svga->vram[remapped_addr + 3];
         for (xx = 0; xx < 32; xx++)
         {
                 if (offset >= svga->hwcursor_latch.x)
@@ -840,8 +857,13 @@ static uint8_t tgui_ext_linear_read(uint32_t addr, void *p)
                 return 0xff;
         
         addr &= ~0xf;
+        addr = dword_remap(addr);
+
         for (c = 0; c < 16; c++)
-                tgui->copy_latch[c] = svga->vram[addr+c];
+        {
+                tgui->copy_latch[c] = svga->vram[addr];
+                addr += ((c & 3) == 3) ? 13 : 1;
+        }
 
         return svga->vram[addr & svga->vram_mask]; 
 }
@@ -871,7 +893,9 @@ static void tgui_ext_linear_write(uint32_t addr, uint8_t val, void *p)
         if (addr >= svga->vram_max)
                 return;
         addr &= svga->vram_mask;
-        addr &= ~0x7;
+        addr &= (tgui->ext_gdc_regs[0] & 8) ? ~0xf : ~0x7;
+
+        addr = dword_remap(addr);
         svga->changedvram[addr >> 12] = changeframecount;
         
         switch (tgui->ext_gdc_regs[0] & 0xf)
@@ -882,7 +906,7 @@ static void tgui_ext_linear_write(uint32_t addr, uint8_t val, void *p)
                 {
                         if (mask & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = (val & (1 << c)) ? fg[0] : bg[0];
-                        addr++;
+                        addr += (c == 4) ? 13 : 1;
                 }
                 break;
 
@@ -892,7 +916,7 @@ static void tgui_ext_linear_write(uint32_t addr, uint8_t val, void *p)
                 {
                         if (mask & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = (val & (1 << c)) ? fg[(c & 1) ^ 1] : bg[(c & 1) ^ 1];
-                        addr++;
+                        addr += (c == 4) ? 13 : 1;
                 }
                 break;
 
@@ -902,7 +926,7 @@ static void tgui_ext_linear_write(uint32_t addr, uint8_t val, void *p)
                 {
                         if ((val & mask) & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = fg[0];
-                        addr++;
+                        addr += (c == 4) ? 13 : 1;
                 }
                 break;
                 
@@ -912,15 +936,17 @@ static void tgui_ext_linear_write(uint32_t addr, uint8_t val, void *p)
                 {
                         if ((val & mask) & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = fg[(c & 1) ^ 1];
-                        addr++;
+                        addr += (c == 4) ? 13 : 1;
                 }
                 break;
 
                 case 0x8: case 0x9: case 0xa: case 0xb:
                 case 0xc: case 0xd: case 0xe: case 0xf:
-                addr &= ~0xf;
                 for (c = 0; c < 16; c++)
-                        *(uint8_t *)&svga->vram[addr+c] = tgui->copy_latch[c];
+                {
+                        *(uint8_t *)&svga->vram[addr] = tgui->copy_latch[c];
+                        addr += ((c & 3) == 3) ? 13 : 1;
+                }
                 break;
         }
 }
@@ -942,6 +968,8 @@ static void tgui_ext_linear_writew(uint32_t addr, uint16_t val, void *p)
                 return;
         addr &= svga->vram_mask;
         addr &= ~0xf;
+
+        addr = dword_remap(addr);
         svga->changedvram[addr >> 12] = changeframecount;
         
         val = (val >> 8) | (val << 8);
@@ -954,7 +982,7 @@ static void tgui_ext_linear_writew(uint32_t addr, uint16_t val, void *p)
                 {
                         if (mask & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = (val & (1 << c)) ? fg[0] : bg[0];
-                        addr++;
+                        addr += (c & 3) ? 1 : 13;
                 }
                 break;
 
@@ -964,7 +992,7 @@ static void tgui_ext_linear_writew(uint32_t addr, uint16_t val, void *p)
                 {
                         if (mask & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = (val & (1 << c)) ? fg[(c & 1) ^ 1] : bg[(c & 1) ^ 1];
-                        addr++;
+                        addr += (c & 3) ? 1 : 13;
                 }
                 break;
 
@@ -974,7 +1002,7 @@ static void tgui_ext_linear_writew(uint32_t addr, uint16_t val, void *p)
                 {
                         if ((val & mask) & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = fg[0];
-                        addr++;
+                        addr += (c & 3) ? 1 : 13;
                 }
                 break;
 
@@ -984,14 +1012,17 @@ static void tgui_ext_linear_writew(uint32_t addr, uint16_t val, void *p)
                 {
                         if ((val & mask) & (1 << c))
                                 *(uint8_t *)&svga->vram[addr] = fg[(c & 1) ^ 1];
-                        addr++;
+                        addr += (c & 3) ? 1 : 13;
                 }
                 break;
                                 
                 case 0x8: case 0x9: case 0xa: case 0xb:
                 case 0xc: case 0xd: case 0xe: case 0xf:
                 for (c = 0; c < 16; c++)
-                        *(uint8_t *)&svga->vram[addr+c] = tgui->copy_latch[c];
+                {
+                        *(uint8_t *)&svga->vram[addr] = tgui->copy_latch[c];
+                        addr += ((c & 3) == 3) ? 13 : 1;
+                }
                 break;
         }
 }
@@ -1044,8 +1075,8 @@ enum
 	TGUI_SOLIDFILL = 0x4000	/*Pattern all zero?*/
 };
 
-#define READ(addr, dat) if (tgui->accel.bpp == 0) dat = svga->vram[addr & 0x1fffff]; \
-                        else                     dat = vram_w[addr & 0xfffff];
+#define READ(addr, dat) if (tgui->accel.bpp == 0) dat = svga->vram[dword_remap(addr) & 0x1fffff]; \
+                        else                     dat = vram_w[dword_remap_w(addr) & 0xfffff];
                         
 #define MIX() do \
 	{								\
@@ -1061,13 +1092,13 @@ enum
 
 #define WRITE(addr, dat)        if (tgui->accel.bpp == 0)                                                \
                                 {                                                                       \
-                                        svga->vram[addr & 0x1fffff] = dat;                                    \
-                                        svga->changedvram[((addr) & 0x1fffff) >> 12] = changeframecount;      \
+                                        svga->vram[dword_remap(addr) & 0x1fffff] = dat;                                    \
+                                        svga->changedvram[(dword_remap(addr) & 0x1fffff) >> 12] = changeframecount;      \
                                 }                                                                       \
                                 else                                                                    \
                                 {                                                                       \
-                                        vram_w[addr & 0xfffff] = dat;                                   \
-                                        svga->changedvram[((addr) & 0xfffff) >> 11] = changeframecount;        \
+                                        vram_w[dword_remap_w(addr) & 0xfffff] = dat;                                   \
+                                        svga->changedvram[(dword_remap_w(addr) & 0xfffff) >> 11] = changeframecount;        \
                                 }
                                 
 void tgui_accel_command(int count, uint32_t cpu_dat, tgui_t *tgui)

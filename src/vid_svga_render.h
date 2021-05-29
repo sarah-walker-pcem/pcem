@@ -9,6 +9,8 @@ extern int scrollcache;
 
 extern uint8_t edatlookup[4][4];
 
+void svga_recalc_remap_func(svga_t *svga);
+
 void svga_render_null(svga_t *svga);
 void svga_render_blank(svga_t *svga);
 void svga_render_text_40(svga_t *svga);

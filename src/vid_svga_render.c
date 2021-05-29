@@ -3,6 +3,7 @@
 #include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
+#include "vid_svga_render_remap.h"
 
 void svga_render_null(svga_t *svga)
 {
@@ -58,9 +59,12 @@ void svga_render_text_40(svga_t *svga)
                 
                 for (x = 0; x < svga->hdisp; x += xinc)
                 {
+                        uint32_t addr = svga->remap_func(svga, svga->ma) & svga->vram_display_mask;
+
                         drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
-                        chr  = svga->vram[(svga->ma << 1) & svga->vram_display_mask];
-                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vram_display_mask];
+                        chr  = svga->vram[addr];
+                        attr = svga->vram[addr+1];
+
                         if (attr & 8) charaddr = svga->charsetb + (chr * 128);
                         else          charaddr = svga->charseta + (chr * 128);
 
@@ -122,9 +126,12 @@ void svga_render_text_80(svga_t *svga)
 
                 for (x = 0; x < svga->hdisp; x += xinc)
                 {
+                        uint32_t addr = svga->remap_func(svga, svga->ma) & svga->vram_display_mask;
+
                         drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
-                        chr  = svga->vram[(svga->ma << 1) & svga->vram_display_mask];
-                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vram_display_mask];
+                        chr  = svga->vram[addr];
+                        attr = svga->vram[addr+1];
+
                         if (attr & 8) charaddr = svga->charsetb + (chr * 128);
                         else          charaddr = svga->charseta + (chr * 128);
 
@@ -186,10 +193,12 @@ void svga_render_text_80_ksc5601(svga_t *svga)
 
                 for (x = 0; x < svga->hdisp; x += xinc)
                 {
+                        uint32_t addr = svga->remap_func(svga, svga->ma) & svga->vram_display_mask;
+
                         drawcursor = ((svga->ma == svga->ca) && svga->con && svga->cursoron);
-                        chr  = svga->vram[(svga->ma << 1) & svga->vram_display_mask];
-                        nextchr = svga->vram[((svga->ma + 4) << 1) & svga->vram_display_mask];
-                        attr = svga->vram[((svga->ma << 1) + 1) & svga->vram_display_mask];
+                        chr  = svga->vram[addr];
+                        nextchr = svga->vram[addr + 8];
+                        attr = svga->vram[addr + 1];
 
                         if (drawcursor) 
                         { 
@@ -304,11 +313,9 @@ void svga_render_text_80_ksc5601(svga_t *svga)
 
 void svga_render_2bpp_lowres(svga_t *svga)
 {
-        int changed_offset;
-        
-        changed_offset = ((svga->ma << 1) + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
                 
-        if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = ((8 - svga->scrollcache) << 1) + 16;
@@ -320,10 +327,11 @@ void svga_render_2bpp_lowres(svga_t *svga)
                        
                 for (x = 0; x <= svga->hdisp; x += 16)
                 {
+                        uint32_t addr = svga->remap_func(svga, svga->ma);
                         uint8_t dat[2];
                         
-                        dat[0] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000];
-                        dat[1] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000 + 1];
+                        dat[0] = svga->vram[addr];
+                        dat[1] = svga->vram[addr + 1];
                         svga->ma += 4; 
                         svga->ma &= svga->vram_display_mask;
 
@@ -343,11 +351,9 @@ void svga_render_2bpp_lowres(svga_t *svga)
 
 void svga_render_2bpp_highres(svga_t *svga)
 {
-        int changed_offset;
-        
-        changed_offset = ((svga->ma << 1) + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
-                                
-        if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - svga->scrollcache) + 24;
@@ -359,30 +365,31 @@ void svga_render_2bpp_highres(svga_t *svga)
                        
                 for (x = 0; x <= svga->hdisp; x += 8)
                 {
+                        uint32_t addr = svga->remap_func(svga, svga->ma);
                         uint8_t dat[2];
                         
-                        dat[0] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000];
-                        dat[1] = svga->vram[(svga->ma << 1) + ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000 + 1];
+                        dat[0] = svga->vram[addr];
+                        dat[1] = svga->vram[addr + 1];
                         svga->ma += 4; 
                         svga->ma &= svga->vram_display_mask;
 
-                        p[0] = svga->pallook[svga->egapal[(dat[0] >> 6) & 3]];
-                        p[1] = svga->pallook[svga->egapal[(dat[0] >> 4) & 3]];
-                        p[2] = svga->pallook[svga->egapal[(dat[0] >> 2) & 3]];
-                        p[3] = svga->pallook[svga->egapal[dat[0] & 3]];
-                        p[4] = svga->pallook[svga->egapal[(dat[1] >> 6) & 3]];
-                        p[5] = svga->pallook[svga->egapal[(dat[1] >> 4) & 3]];
-                        p[6] = svga->pallook[svga->egapal[(dat[1] >> 2) & 3]];
-                        p[7] = svga->pallook[svga->egapal[dat[1] & 3]];
-                        
-                        p += 8;
+                        *p++ = svga->pallook[svga->egapal[(dat[0] >> 6) & 3]];
+                        *p++ = svga->pallook[svga->egapal[(dat[0] >> 4) & 3]];
+                        *p++ = svga->pallook[svga->egapal[(dat[0] >> 2) & 3]];
+                        *p++ = svga->pallook[svga->egapal[dat[0] & 3]];
+                        *p++ = svga->pallook[svga->egapal[(dat[1] >> 6) & 3]];
+                        *p++ = svga->pallook[svga->egapal[(dat[1] >> 4) & 3]];
+                        *p++ = svga->pallook[svga->egapal[(dat[1] >> 2) & 3]];
+                        *p++ = svga->pallook[svga->egapal[dat[1] & 3]];
                 }
         }
 }
 
 void svga_render_4bpp_lowres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = ((8 - svga->scrollcache) << 1) + 16;
@@ -396,8 +403,9 @@ void svga_render_4bpp_lowres(svga_t *svga)
                 {
                         uint8_t edat[4];
                         uint8_t dat;
+                        uint32_t addr = svga->remap_func(svga, svga->ma);
 
-                        *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[svga->ma]);                        
+                        *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[addr]);
                         svga->ma += 4; 
                         svga->ma &= svga->vram_display_mask;
 
@@ -421,11 +429,9 @@ void svga_render_4bpp_lowres(svga_t *svga)
 
 void svga_render_4bpp_highres(svga_t *svga)
 {
-        int changed_offset;
-        
-        changed_offset = (svga->ma + (svga->sc & ~svga->crtc[0x17] & 3) * 0x8000) >> 12;
-                
-        if (svga->changedvram[changed_offset] || svga->changedvram[changed_offset + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - svga->scrollcache) + 24;
@@ -439,32 +445,33 @@ void svga_render_4bpp_highres(svga_t *svga)
                 {
                         uint8_t edat[4];
                         uint8_t dat;
+                        uint32_t addr = svga->remap_func(svga, svga->ma);
 
-                        *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[svga->ma | ((svga->sc & ~svga->crtc[0x17] & 3)) * 0x8000]);
+                        *(uint32_t *)(&edat[0]) = *(uint32_t *)(&svga->vram[addr]);
                         svga->ma += 4;
                         svga->ma &= svga->vram_display_mask;
 
                         dat = edatlookup[edat[0] >> 6][edat[1] >> 6] | (edatlookup[edat[2] >> 6][edat[3] >> 6] << 2);
-                        p[0] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
-                        p[1] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 4) & 3][(edat[1] >> 4) & 3] | (edatlookup[(edat[2] >> 4) & 3][(edat[3] >> 4) & 3] << 2);
-                        p[2] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
-                        p[3] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[(edat[0] >> 2) & 3][(edat[1] >> 2) & 3] | (edatlookup[(edat[2] >> 2) & 3][(edat[3] >> 2) & 3] << 2);
-                        p[4] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
-                        p[5] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                         dat = edatlookup[edat[0] & 3][edat[1] & 3] | (edatlookup[edat[2] & 3][edat[3] & 3] << 2);
-                        p[6] = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
-                        p[7] = svga->pallook[svga->egapal[dat & svga->plane_mask]];
-                        
-                        p += 8;
+                        *p++ = svga->pallook[svga->egapal[(dat >> 4) & svga->plane_mask]];
+                        *p++ = svga->pallook[svga->egapal[dat & svga->plane_mask]];
                 }
         }
 }
 
 void svga_render_8bpp_lowres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - (svga->scrollcache & 6)) + 24;
@@ -474,17 +481,36 @@ void svga_render_8bpp_lowres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
                                                                 
-                for (x = 0; x <= svga->hdisp; x += 8)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
-                        
-                        p[0] = p[1] = svga->pallook[dat & 0xff];
-                        p[2] = p[3] = svga->pallook[(dat >> 8) & 0xff];
-                        p[4] = p[5] = svga->pallook[(dat >> 16) & 0xff];
-                        p[6] = p[7] = svga->pallook[(dat >> 24) & 0xff];
-                        
-                        svga->ma += 4;
-                        p += 8;
+                        for (x = 0; x <= svga->hdisp; x += 8)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
+
+                                p[0] = p[1] = svga->pallook[dat & 0xff];
+                                p[2] = p[3] = svga->pallook[(dat >> 8) & 0xff];
+                                p[4] = p[5] = svga->pallook[(dat >> 16) & 0xff];
+                                p[6] = p[7] = svga->pallook[(dat >> 24) & 0xff];
+
+                                svga->ma += 4;
+                                p += 8;
+                        }
+                }
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 8)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                p[0] = p[1] = svga->pallook[dat & 0xff];
+                                p[2] = p[3] = svga->pallook[(dat >> 8) & 0xff];
+                                p[4] = p[5] = svga->pallook[(dat >> 16) & 0xff];
+                                p[6] = p[7] = svga->pallook[(dat >> 24) & 0xff];
+
+                                svga->ma += 4;
+                                p += 8;
+                        }
                 }
                 svga->ma &= svga->vram_display_mask;
         }
@@ -492,41 +518,62 @@ void svga_render_8bpp_lowres(svga_t *svga)
 
 void svga_render_8bpp_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
                 uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
 
-                if (svga->firstline_draw == 2000) 
+                if (svga->firstline_draw == 2000)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
                                                                 
-                for (x = 0; x <= svga->hdisp; x += 8)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat;
-                        dat = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
-                        p[0] = svga->pallook[dat & 0xff];
-                        p[1] = svga->pallook[(dat >> 8) & 0xff];
-                        p[2] = svga->pallook[(dat >> 16) & 0xff];
-                        p[3] = svga->pallook[(dat >> 24) & 0xff];
+                        for (x = 0; x <= svga->hdisp; x += 8)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
+                                *p++ = svga->pallook[dat & 0xff];
+                                *p++ = svga->pallook[(dat >> 8) & 0xff];
+                                *p++ = svga->pallook[(dat >> 16) & 0xff];
+                                *p++ = svga->pallook[(dat >> 24) & 0xff];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + 4) & svga->vram_display_mask]);
-                        p[4] = svga->pallook[dat & 0xff];
-                        p[5] = svga->pallook[(dat >> 8) & 0xff];
-                        p[6] = svga->pallook[(dat >> 16) & 0xff];
-                        p[7] = svga->pallook[(dat >> 24) & 0xff];
-                        
-                        svga->ma += 8;
-                        p += 8;
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma+4) & svga->vram_display_mask]);
+                                *p++ = svga->pallook[dat & 0xff];
+                                *p++ = svga->pallook[(dat >> 8) & 0xff];
+                                *p++ = svga->pallook[(dat >> 16) & 0xff];
+                                *p++ = svga->pallook[(dat >> 24) & 0xff];
+
+                                svga->ma += 8;
+                        }
                 }
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                svga->ma += 4;
+                        
+                                *p++ = svga->pallook[dat & 0xff];
+                                *p++ = svga->pallook[(dat >> 8) & 0xff];
+                                *p++ = svga->pallook[(dat >> 16) & 0xff];
+                                *p++ = svga->pallook[(dat >> 24) & 0xff];
+                        }
+                }
+
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_15bpp_lowres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - (svga->scrollcache & 6)) + 24;
@@ -536,26 +583,44 @@ void svga_render_15bpp_lowres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
                
-                for (x = 0; x <= svga->hdisp; x += 4)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
 
-                        p[x]     = video_15to32[dat & 0xffff];
-                        p[x + 1] = video_15to32[dat >> 16];
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
 
-                        p[x]     = video_15to32[dat & 0xffff];
-                        p[x + 1] = video_15to32[dat >> 16];
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
+                        }
+                        svga->ma += x << 1;
                 }
-                svga->ma += x << 1; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 2)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
+
+                                svga->ma += 4;
+                        }
+                }
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_15bpp_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
@@ -565,32 +630,51 @@ void svga_render_15bpp_highres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x += 8)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
-                        p[x]     = video_15to32[dat & 0xffff];
-                        p[x + 1] = video_15to32[dat >> 16];
+                        for (x = 0; x <= svga->hdisp; x += 8)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
                         
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
-                        p[x + 2] = video_15to32[dat & 0xffff];
-                        p[x + 3] = video_15to32[dat >> 16];
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 8) & svga->vram_display_mask]);
-                        p[x + 4] = video_15to32[dat & 0xffff];
-                        p[x + 5] = video_15to32[dat >> 16];
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 8) & svga->vram_display_mask]);
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 12) & svga->vram_display_mask]);
-                        p[x + 6] = video_15to32[dat & 0xffff];
-                        p[x + 7] = video_15to32[dat >> 16];
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 12) & svga->vram_display_mask]);
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
+                        }
+
+                        svga->ma += x << 1;
                 }
-                svga->ma += x << 1; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 2)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                *p++ = video_15to32[dat & 0xffff];
+                                *p++ = video_15to32[dat >> 16];
+
+                                svga->ma += 4;
+                        }
+                }
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_16bpp_lowres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - (svga->scrollcache & 6)) + 24;
@@ -600,26 +684,45 @@ void svga_render_16bpp_lowres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
                
-                for (x = 0; x <= svga->hdisp; x += 4)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
 
-                        p[x]     = video_16to32[dat & 0xffff];
-                        p[x + 1] = video_16to32[dat >> 16];
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
 
-                        p[x]     = video_16to32[dat & 0xffff];
-                        p[x + 1] = video_16to32[dat >> 16];
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
+                        }
+                        svga->ma += x << 1;
                 }
-                svga->ma += x << 1; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 2)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
+
+                                svga->ma += 4;
+                        }
+                }
+                svga->ma += x << 1;
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_16bpp_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
@@ -629,55 +732,106 @@ void svga_render_16bpp_highres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x += 8)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
-                        p[x]     = video_16to32[dat & 0xffff];
-                        p[x + 1] = video_16to32[dat >> 16];
-                        
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
-                        p[x + 2] = video_16to32[dat & 0xffff];
-                        p[x + 3] = video_16to32[dat >> 16];
+                        for (x = 0; x <= svga->hdisp; x += 8)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1)) & svga->vram_display_mask]);
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 8) & svga->vram_display_mask]);
-                        p[x + 4] = video_16to32[dat & 0xffff];
-                        p[x + 5] = video_16to32[dat >> 16];
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 4) & svga->vram_display_mask]);
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
 
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 12) & svga->vram_display_mask]);
-                        p[x + 6] = video_16to32[dat & 0xffff];
-                        p[x + 7] = video_16to32[dat >> 16];
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 8) & svga->vram_display_mask]);
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
+
+                                dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 1) + 12) & svga->vram_display_mask]);
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
+                        }
+
+                        svga->ma += x << 1;
                 }
-                svga->ma += x << 1; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 2)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                *p++ = video_16to32[dat & 0xffff];
+                                *p++ = video_16to32[dat >> 16];
+
+                                svga->ma += 4;
+                        }
+                }
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_24bpp_lowres(svga_t *svga)
 {
-        int x, offset;
-        uint32_t fg;
-        
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
+                int x;
+                int offset = (8 - (svga->scrollcache & 6)) + 24;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
+
                 if (svga->firstline_draw == 2000) 
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                offset = (8 - (svga->scrollcache & 6)) + 24;
-
-                for (x = 0; x <= svga->hdisp; x++)
+                if (!svga->remap_required)
                 {
-                        fg = svga->vram[svga->ma] | (svga->vram[svga->ma + 1] << 8) | (svga->vram[svga->ma + 2] << 16);
-                        svga->ma += 3; 
-                        svga->ma &= svga->vram_display_mask;
-                        ((uint32_t *)buffer32->line[svga->displine])[(x << 1) + offset] = ((uint32_t *)buffer32->line[svga->displine])[(x << 1) + 1 + offset] = fg;
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t dat0 = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
+                                uint32_t dat1 = *(uint32_t *)(&svga->vram[(svga->ma + 4) & svga->vram_display_mask]);
+                                uint32_t dat2 = *(uint32_t *)(&svga->vram[(svga->ma + 8) & svga->vram_display_mask]);
+
+                                p[0] = p[1] = dat0 & 0xffffff;
+                                p[2] = p[3] = (dat0 >> 24) | ((dat1 & 0xffff) << 8);
+                                p[4] = p[5] = (dat1 >> 16) | ((dat2 & 0xff) << 16);
+                                p[6] = p[7] = dat2 >> 8;
+
+                                svga->ma += 12;
+                        }
+                }
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t dat0, dat1, dat2;
+                                uint32_t addr;
+
+                                addr = svga->remap_func(svga, svga->ma);
+                                dat0 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                addr = svga->remap_func(svga, svga->ma + 4);
+                                dat1 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                addr = svga->remap_func(svga, svga->ma + 8);
+                                dat2 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                p[0] = p[1] = dat0 & 0xffffff;
+                                p[2] = p[3] = (dat0 >> 24) | ((dat1 & 0xffff) << 8);
+                                p[4] = p[5] = (dat1 >> 16) | ((dat2 & 0xff) << 16);
+                                p[6] = p[7] = dat2 >> 8;
+
+                                svga->ma += 12;
+                        }
                 }
         }
 }
 
 void svga_render_24bpp_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
@@ -687,21 +841,43 @@ void svga_render_24bpp_highres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x += 4)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
-                        p[x] = dat & 0xffffff;
-                        
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + 3) & svga->vram_display_mask]);
-                        p[x + 1] = dat & 0xffffff;
-                        
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + 6) & svga->vram_display_mask]);
-                        p[x + 2] = dat & 0xffffff;
-                        
-                        dat = *(uint32_t *)(&svga->vram[(svga->ma + 9) & svga->vram_display_mask]);
-                        p[x + 3] = dat & 0xffffff;
-                        
-                        svga->ma += 12;
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t dat0 = *(uint32_t *)(&svga->vram[svga->ma & svga->vram_display_mask]);
+                                uint32_t dat1 = *(uint32_t *)(&svga->vram[(svga->ma + 4) & svga->vram_display_mask]);
+                                uint32_t dat2 = *(uint32_t *)(&svga->vram[(svga->ma + 8) & svga->vram_display_mask]);
+
+                                *p++ = dat0 & 0xffffff;
+                                *p++ = (dat0 >> 24) | ((dat1 & 0xffff) << 8);
+                                *p++ = (dat1 >> 16) | ((dat2 & 0xff) << 16);
+                                *p++ = dat2 >> 8;
+
+                                svga->ma += 12;
+                        }
+                }
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x += 4)
+                        {
+                                uint32_t dat0, dat1, dat2;
+                                uint32_t addr;
+
+                                addr = svga->remap_func(svga, svga->ma);
+                                dat0 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                addr = svga->remap_func(svga, svga->ma + 4);
+                                dat1 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                addr = svga->remap_func(svga, svga->ma + 8);
+                                dat2 = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+
+                                *p++ = dat0 & 0xffffff;
+                                *p++ = (dat0 >> 24) | ((dat1 & 0xffff) << 8);
+                                *p++ = (dat1 >> 16) | ((dat2 & 0xff) << 16);
+                                *p++ = dat2 >> 8;
+
+                                svga->ma += 12;
+                        }
                 }
                 svga->ma &= svga->vram_display_mask;
         }
@@ -709,24 +885,40 @@ void svga_render_24bpp_highres(svga_t *svga)
 
 void svga_render_32bpp_lowres(svga_t *svga)
 {
-        int x, offset;
-        uint32_t fg;
-        
-        if (svga->changedvram[svga->ma >> 12] || svga->changedvram[(svga->ma >> 12) + 1] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
+                int x;
+                int offset = (8 - (svga->scrollcache & 6)) + 24;
+                uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
+
                 if (svga->firstline_draw == 2000) 
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                offset = (8 - (svga->scrollcache & 6)) + 24;
-
-                for (x = 0; x <= svga->hdisp; x++)
+                if (!svga->remap_required)
                 {
-                        fg = svga->vram[svga->ma] | (svga->vram[svga->ma + 1] << 8) | (svga->vram[svga->ma + 2] << 16);
-                        svga->ma += 4; 
-                        svga->ma &= svga->vram_display_mask;
-                        ((uint32_t *)buffer32->line[svga->displine])[(x << 1) + offset] = ((uint32_t *)buffer32->line[svga->displine])[(x << 1) + 1 + offset] = fg;
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
+                                *p++ = dat & 0xffffff;
+                                *p++ = dat & 0xffffff;
+                        }
+                        svga->ma += x*4;
                 }
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr]);
+                                *p++ = dat & 0xffffff;
+                                *p++ = dat & 0xffffff;
+                                svga->ma += 4;
+                        }
+                }
+                svga->ma &= svga->vram_display_mask;
         }
 }
 
@@ -734,7 +926,9 @@ void svga_render_32bpp_lowres(svga_t *svga)
   91%*/
 void svga_render_32bpp_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] ||  svga->changedvram[(svga->ma >> 12) + 1] || svga->changedvram[(svga->ma >> 12) + 2] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
@@ -744,56 +938,102 @@ void svga_render_32bpp_highres(svga_t *svga)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x++)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
-                        p[x] = dat & 0xffffff;
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
+                                *p++ = dat & 0xffffff;
+                        }
+                        svga->ma += x*4;
                 }
-                svga->ma += 4; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                *p++ = dat & 0xffffff;
+                                svga->ma += 4;
+                        }
+                }
+
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_ABGR8888_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] ||  svga->changedvram[(svga->ma >> 12) + 1] || svga->changedvram[(svga->ma >> 12) + 2] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
                 uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
-                
-                if (svga->firstline_draw == 2000) 
+
+                if (svga->firstline_draw == 2000)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x++)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
-                        p[x] = ((dat & 0xff0000) >> 16) | (dat & 0x00ff00) | ((dat & 0x0000ff) << 16);
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
+                                *p++ = ((dat & 0xff0000) >> 16) | (dat & 0x00ff00) | ((dat & 0x0000ff) << 16);
+                        }
+                        svga->ma += x*4;
                 }
-                svga->ma += 4; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                *p++ = ((dat & 0xff0000) >> 16) | (dat & 0x00ff00) | ((dat & 0x0000ff) << 16);
+                                svga->ma += 4;
+                        }
+                }
+
                 svga->ma &= svga->vram_display_mask;
         }
 }
 
 void svga_render_RGBA8888_highres(svga_t *svga)
 {
-        if (svga->changedvram[svga->ma >> 12] ||  svga->changedvram[(svga->ma >> 12) + 1] || svga->changedvram[(svga->ma >> 12) + 2] || svga->fullchange)
+        uint32_t changed_addr = svga->remap_func(svga, svga->ma);
+
+        if (svga->changedvram[changed_addr >> 12] || svga->changedvram[(changed_addr >> 12) + 1] || svga->fullchange)
         {
                 int x;
                 int offset = (8 - ((svga->scrollcache & 6) >> 1)) + 24;
                 uint32_t *p = &((uint32_t *)buffer32->line[svga->displine])[offset];
-                
-                if (svga->firstline_draw == 2000) 
+
+                if (svga->firstline_draw == 2000)
                         svga->firstline_draw = svga->displine;
                 svga->lastline_draw = svga->displine;
 
-                for (x = 0; x <= svga->hdisp; x++)
+                if (!svga->remap_required)
                 {
-                        uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
-                        p[x] = dat >> 8;
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t dat = *(uint32_t *)(&svga->vram[(svga->ma + (x << 2)) & svga->vram_display_mask]);
+                                *p++ = dat >> 8;
+                        }
+                        svga->ma += x*4;
                 }
-                svga->ma += 4; 
+                else
+                {
+                        for (x = 0; x <= svga->hdisp; x++)
+                        {
+                                uint32_t addr = svga->remap_func(svga, svga->ma);
+                                uint32_t dat = *(uint32_t *)(&svga->vram[addr & svga->vram_display_mask]);
+                                *p++ = dat >> 8;
+                                svga->ma += 4;
+                        }
+                }
+
                 svga->ma &= svga->vram_display_mask;
         }
 }
