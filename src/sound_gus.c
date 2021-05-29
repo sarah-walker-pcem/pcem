@@ -85,40 +85,6 @@ int gusfreqs[]=
 
 double vol16bit[4096];
 
-void pollgusirqs(gus_t *gus)
-{
-        int c;
-
-        gus->irqstatus&=~0x60;
-        for (c=0;c<32;c++)
-        {
-                if (gus->waveirqs[c])
-                {
-//                        gus->waveirqs[c]=0;
-                        gus->irqstatus2=0x60|c;
-                        if (gus->rampirqs[c]) gus->irqstatus2 |= 0x80;
-                        gus->irqstatus|=0x20;
-//                        printf("Voice IRQ %i %02X %i\n",c,gus->irqstatus2,ins);
-                        if (gus->irq != -1)
-                                picint(1 << gus->irq);
-                        return;
-                }
-                if (gus->rampirqs[c])
-                {
-//                        gus->rampirqs[c]=0;
-                        gus->irqstatus2=0xA0|c;
-                        gus->irqstatus|=0x40;
-//                        printf("Ramp IRQ %i %02X %i\n",c,gus->irqstatus2,ins);
-                        if (gus->irq != -1)
-                                picint(1 << gus->irq);
-                        return;
-                }
-        }
-        gus->irqstatus2=0xE0;
-//        gus->irqstatus&=~0x20;
-        if (!gus->irqstatus && gus->irq != -1) picintc(1 << gus->irq);
-}
-
 enum
 {
         MIDI_INT_RECEIVE = 0x01,
@@ -144,6 +110,73 @@ enum
         GUS_TIMER_CTRL_AUTO = 0x01
 };
 
+void gus_update_int_status(gus_t *gus)
+{
+        int c;
+        int irq_pending = 0;
+        int midi_irq_pending = 0;
+
+        gus->irqstatus&=~0x60;
+        gus->irqstatus2=0xE0;
+        for (c=0;c<32;c++)
+        {
+                if (gus->waveirqs[c])
+                {
+//                        gus->waveirqs[c]=0;
+                        gus->irqstatus2=0x60|c;
+                        if (gus->rampirqs[c]) gus->irqstatus2 |= 0x80;
+                        gus->irqstatus|=0x20;
+//                        printf("  Voice IRQ %i %02X %i\n",c,gus->irqstatus2,ins);
+                        irq_pending = 1;
+                        break;
+                }
+                if (gus->rampirqs[c])
+                {
+//                        gus->rampirqs[c]=0;
+                        gus->irqstatus2=0xA0|c;
+                        gus->irqstatus|=0x40;
+//                        printf("  Ramp IRQ %i %02X %i\n",c,gus->irqstatus2,ins);
+                        irq_pending = 1;
+                        break;
+                }
+        }
+        if ((gus->tctrl & 4) && (gus->irqstatus & 0x04))
+                irq_pending = 1; /*Timer 1 interrupt pending*/
+        if ((gus->tctrl & 8) && (gus->irqstatus & 0x08))
+                irq_pending = 1; /*Timer 2 interrupt pending*/
+        if ((gus->irqstatus & 0x80) && (gus->dmactrl & 0x20))
+                irq_pending = 1; /*DMA TC interrupt pending*/
+
+        midi_irq_pending = gus->midi_status & MIDI_INT_MASTER;
+
+//        pclog("gus_update_int_status: tctrl=%02x irqstatus=%02x irq_pending=%i midi_irq_pending=%i gus->irq=%i gus->irq_midi=%i\n",
+//                        gus->tctrl, gus->irqstatus, irq_pending, midi_irq_pending, gus->irq, gus->irq_midi);
+        if (gus->irq == gus->irq_midi && gus->irq != -1)
+        {
+                if (irq_pending || midi_irq_pending)
+                        picintlevel(1 << gus->irq);
+                else
+                        picintc(1 << gus->irq);
+        }
+        else
+        {
+                if (gus->irq != -1)
+                {
+                        if (irq_pending)
+                                picintlevel(1 << gus->irq);
+                        else
+                                picintc(1 << gus->irq);
+                }
+                if (gus->irq_midi != -1)
+                {
+                        if (midi_irq_pending)
+                                picintlevel(1 << gus->irq_midi);
+                        else
+                                picintc(1 << gus->irq_midi);
+                }
+        }
+}
+
 void gus_midi_update_int_status(gus_t *gus)
 {
         gus->midi_status &= ~MIDI_INT_MASTER;
@@ -163,11 +196,7 @@ void gus_midi_update_int_status(gus_t *gus)
         else
                 gus->irqstatus &= ~GUS_INT_MIDI_RECEIVE;
 
-        if ((gus->midi_status & MIDI_INT_MASTER) && (gus->irq_midi != -1))
-        {
-//                pclog("Take MIDI IRQ\n");
-                picint(1 << gus->irq_midi);
-        }
+        gus_update_int_status(gus);
 }
         
 void writegus(uint16_t addr, uint8_t val, void *p)
@@ -271,6 +300,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xF807F00)|((val<<7)<<8);
                         case 0x45: /*Timer control*/
 //                        printf("Timer control %02X\n",val);
                         gus->tctrl=val;
+                        gus_update_int_status(gus);
                         break;
                 }
                 break;
@@ -291,7 +321,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xF807F00)|((val<<7)<<8);
                         old = gus->waveirqs[gus->voice];                        
                         gus->waveirqs[gus->voice] = ((val & 0xa0) == 0xa0) ? 1 : 0;                        
                         if (gus->waveirqs[gus->voice] != old) 
-                                pollgusirqs(gus);
+                                gus_update_int_status(gus);
                         break;
                         case 1: /*Frequency control*/
                         gus->freq[gus->voice]=(gus->freq[gus->voice]&0xFF)|(val<<8);
@@ -355,7 +385,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                         gus->rctrl[gus->voice] = val & 0x7F;
                         gus->rampirqs[gus->voice] = ((val & 0xa0) == 0xa0) ? 1 : 0;                        
                         if (gus->rampirqs[gus->voice] != old)
-                                pollgusirqs(gus);
+                                gus_update_int_status(gus);
 //                        printf("Ramp control %02i %02X %02X %i\n",gus->voice,val,gus->rampirqs[gus->voice],ins);
                         break;
 
@@ -408,7 +438,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                                         }
 //                                        printf("GUS->MEM Transferred %i bytes\n",c);
                                         gus->dmactrl=val&~0x40;
-                                        if (val&0x20) gus->irqnext=1;
+                                        gus->irqnext = 1;
                                 }
                                 else
                                 {
@@ -440,7 +470,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                                         }
 //                                        printf("MEM->GUS Transferred %i bytes\n",c);
                                         gus->dmactrl=val&~0x40;
-                                        if (val&0x20) gus->irqnext=1;
+                                        gus->irqnext = 1;
                                 }
 //                                exit(-1);
                         }
@@ -477,6 +507,7 @@ gus->curx[gus->voice]=(gus->curx[gus->voice]&0xFFF8000)|((val&0x7F)<<8);
                         }*/
                         gus->tctrl=val;
                         gus->sb_ctrl = val;
+                        gus_update_int_status(gus);
                         break;
                         case 0x46: /*Timer 1*/
                         gus->t1 = gus->t1l = val;
@@ -674,7 +705,7 @@ uint8_t readgus(uint16_t addr, void *p)
 //                        pclog("Read IRQ status - %02X\n",val);
                         gus->rampirqs[gus->irqstatus2&0x1F]=0;
                         gus->waveirqs[gus->irqstatus2&0x1F]=0;
-                        pollgusirqs(gus);
+                        gus_update_int_status(gus);
                         return val;
                         
                         case 0x00: case 0x01: case 0x02: case 0x03:
@@ -722,7 +753,7 @@ uint8_t readgus(uint16_t addr, void *p)
                         val=gus->irqstatus2;
                         gus->rampirqs[gus->irqstatus2&0x1F]=0;
                         gus->waveirqs[gus->irqstatus2&0x1F]=0;
-                        pollgusirqs(gus);
+                        gus_update_int_status(gus);
 //                        pclog("Read IRQ status - %02X  %i %i\n",val, gus->waveirqs[gus->irqstatus2&0x1F], gus->rampirqs[gus->irqstatus2&0x1F]);
                         return val;
 
@@ -837,8 +868,6 @@ void gus_poll_timer_1(void *p)
                         gus->ad_status |= 0x40;
                         if (gus->tctrl&4)
                         {
-                                if (gus->irq != -1)
-                                        picint(1 << gus->irq);
                                 gus->ad_status |= 0x04;
                                 gus->irqstatus |= 0x04;
 //                                pclog("GUS T1 IRQ!\n");
@@ -850,10 +879,9 @@ void gus_poll_timer_1(void *p)
 //                pclog("Take IRQ\n");
                 gus->irqnext=0;
                 gus->irqstatus|=0x80;
-                if (gus->irq != -1)
-                        picint(1 << gus->irq);
         }
         gus_midi_update_int_status(gus);
+        gus_update_int_status(gus);
 }
 
 void gus_poll_timer_2(void *p)
@@ -872,8 +900,6 @@ void gus_poll_timer_2(void *p)
                         gus->ad_status |= 0x20;
                         if (gus->tctrl&8)
                         {
-                                if (gus->irq != -1)
-                                        picint(1 << gus->irq);
                                 gus->ad_status |= 0x02;
                                 gus->irqstatus |= 0x08;
 //                                pclog("GUS T2 IRQ!\n");
@@ -885,9 +911,8 @@ void gus_poll_timer_2(void *p)
 //                pclog("Take IRQ\n");
                 gus->irqnext=0;
                 gus->irqstatus|=0x80;
-                if (gus->irq != -1)
-                        picint(1 << gus->irq);
         }
+        gus_update_int_status(gus);
 }
 
 static void gus_update(gus_t *gus)
@@ -1075,7 +1100,7 @@ void gus_poll_wave(void *p)
         }
 
         if (update_irqs)
-                pollgusirqs(gus);
+                gus_update_int_status(gus);
 }
 
 static void gus_get_buffer(int32_t *buffer, int len, void *p)
