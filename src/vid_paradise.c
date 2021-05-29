@@ -101,9 +101,9 @@ void paradise_out(uint16_t addr, uint8_t val, void *p)
                         paradise_remap(paradise);
                         return;
                 }
-                if (svga->gdcaddr == 0xe)
+                if (svga->gdcaddr == 0xb)
                 {
-                        svga->gdcreg[0xe] = val;
+                        svga->gdcreg[0xb] = val;
                         paradise_remap(paradise);
                         return;
                 }
@@ -211,11 +211,11 @@ void paradise_remap(paradise_t *paradise)
                 paradise->write_bank[0] = paradise->write_bank[2] =  (svga->gdcreg[0xa] & 0x7f) << 12;
                 paradise->write_bank[1] = paradise->write_bank[3] = ((svga->gdcreg[0xa] & 0x7f) << 12) + ((svga->gdcreg[6] & 0x08) ? 0 : 0x8000);
         }
-        else if (svga->gdcreg[0xe] & 0x08)
+        else if (svga->gdcreg[0xb] & 0x08)
         {
                 if (svga->gdcreg[0x6] & 0xc)
                 {
-//                pclog("Remap 2\n");                        
+//                pclog("Remap 2\n");
                         paradise->read_bank[0]  = paradise->read_bank[2]  =  (svga->gdcreg[0xa] & 0x7f) << 12;
                         paradise->write_bank[0] = paradise->write_bank[2] =  (svga->gdcreg[0xa] & 0x7f) << 12;
                         paradise->read_bank[1]  = paradise->read_bank[3]  = ((svga->gdcreg[0x9] & 0x7f) << 12) + ((svga->gdcreg[6] & 0x08) ? 0 : 0x8000);
@@ -238,7 +238,10 @@ void paradise_remap(paradise_t *paradise)
                 paradise->write_bank[0] = paradise->write_bank[2] =  (svga->gdcreg[0x9] & 0x7f) << 12;
                 paradise->write_bank[1] = paradise->write_bank[3] = ((svga->gdcreg[0x9] & 0x7f) << 12) + ((svga->gdcreg[6] & 0x08) ? 0 : 0x8000);
         }
-//        pclog("Remap - %04X %04X\n", paradise->read_bank[0], paradise->write_bank[0]);
+        paradise->read_bank[1] &= 0x7ffff;
+        paradise->write_bank[1] &= 0x7ffff;
+
+//        pclog("Remap - %04X %04X  %04x %04x\n", paradise->read_bank[0], paradise->write_bank[0], paradise->read_bank[1], paradise->write_bank[1]);
 }
 
 void paradise_recalctimings(svga_t *svga)
