@@ -87,36 +87,28 @@ void io_removehandler(uint16_t base, int size,
         int c;
         for (c = 0; c < size; c++)
         {
-                if (port_priv[base + c][0] == priv)
+                if (port_priv[base + c][0] == priv &&
+                     port_inb[base + c][0] == inb  &&  port_inw[base + c][0] == inw  &&  port_inl[base + c][0] == inl &&
+                    port_outb[base + c][0] == outb && port_outw[base + c][0] == outw && port_outl[base + c][0] == outl)
                 {
-                        if (port_inb[ base + c][0] == inb)
-                           port_inb[ base + c][0] = NULL;
-                        if (port_inw[ base + c][0] == inw)
-                           port_inw[ base + c][0] = NULL;
-                        if (port_inl[ base + c][0] == inl)
-                           port_inl[ base + c][0] = NULL;
-                        if (port_outb[ base + c][0] == outb)
-                           port_outb[ base + c][0] = NULL;
-                        if (port_outw[ base + c][0] == outw)
-                           port_outw[ base + c][0] = NULL;
-                        if (port_outl[ base + c][0] == outl)
-                           port_outl[ base + c][0] = NULL;
+                        port_inb[ base + c][0] = NULL;
+                        port_inw[ base + c][0] = NULL;
+                        port_inl[ base + c][0] = NULL;
+                        port_outb[ base + c][0] = NULL;
+                        port_outw[ base + c][0] = NULL;
+                        port_outl[ base + c][0] = NULL;
                         port_priv[base + c][0] = NULL;
                 }
-                if (port_priv[base + c][1] == priv)
+                if (port_priv[base + c][1] == priv &&
+                     port_inb[base + c][1] == inb  &&  port_inw[base + c][1] == inw  &&  port_inl[base + c][1] == inl &&
+                    port_outb[base + c][1] == outb && port_outw[base + c][1] == outw && port_outl[base + c][1] == outl)
                 {
-                        if (port_inb[ base + c][1] == inb)
-                           port_inb[ base + c][1] = NULL;
-                        if (port_inw[ base + c][1] == inw)
-                           port_inw[ base + c][1] = NULL;
-                        if (port_inl[ base + c][1] == inl)
-                           port_inl[ base + c][1] = NULL;
-                        if (port_outb[ base + c][1] == outb)
-                           port_outb[ base + c][1] = NULL;
-                        if (port_outw[ base + c][1] == outw)
-                           port_outw[ base + c][1] = NULL;
-                        if (port_outl[ base + c][1] == outl)
-                           port_outl[ base + c][1] = NULL;
+                        port_inb[ base + c][1] = NULL;
+                        port_inw[ base + c][1] = NULL;
+                        port_inl[ base + c][1] = NULL;
+                        port_outb[base + c][1] = NULL;
+                        port_outw[base + c][1] = NULL;
+                        port_outl[base + c][1] = NULL;
                         port_priv[base + c][1] = NULL;
                 }
         }
