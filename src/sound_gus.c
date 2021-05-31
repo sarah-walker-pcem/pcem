@@ -1181,6 +1181,16 @@ void gus_speed_changed(void *p)
                 gus->samp_latch = (uint64_t)(TIMER_USEC * (1000000.0 / gusfreqs[gus->voices - 14]));
 }
 
+static void gus_add_status_info(char *s, int max_len, void *p)
+{
+        gus_t *gus = (gus_t *)p;
+        char temps[256];
+
+        sprintf(temps, "GUS max voices : %i\nGUS playback frequency : %iHz\n\n",
+                gus->voices, gusfreqs[gus->voices-14]);
+        strncat(s, temps, max_len);
+}
+
 device_t gus_device =
 {
         "Gravis UltraSound",
@@ -1190,5 +1200,5 @@ device_t gus_device =
         NULL,
         gus_speed_changed,
         NULL,
-        NULL
+        gus_add_status_info
 };
