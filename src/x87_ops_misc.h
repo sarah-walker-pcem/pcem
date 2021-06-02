@@ -673,7 +673,8 @@ static int opFSCALE(uint32_t fetchdat)
         cpu_state.pc++;
         if (fplog) pclog("FSCALE\n");
         temp64 = (int64_t)ST(1);
-        ST(0) = ST(0) * pow(2.0, (double)temp64);
+        if (ST(0) != 0.0)
+                ST(0) = ST(0) * pow(2.0, (double)temp64);
         cpu_state.tag[cpu_state.TOP&7] = TAG_VALID;
         CLOCK_CYCLES(x87_timings.fscale);
         return 0;
