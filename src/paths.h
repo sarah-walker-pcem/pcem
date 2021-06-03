@@ -4,8 +4,10 @@ extern char configs_path[512];
 extern char nvr_path[512];
 extern char logs_path[512];
 extern char screenshots_path[512];
+extern char nvr_default_path[512];
 
 void get_pcem_path(char *s, int size);
+void get_pcem_base_path(char *s, int size);
 char get_path_separator();
 void paths_init();
 int dir_exists(char* path);

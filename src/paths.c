@@ -25,6 +25,8 @@ char logs_path[512];
 /* this is where screenshots as stored */
 char screenshots_path[512];
 
+char nvr_default_path[512];
+
 char get_path_separator()
 {
 #ifdef _WIN32
@@ -129,6 +131,11 @@ void set_default_nvr_path(char *s)
         set_nvr_path(s);
 }
 
+static void set_default_nvr_default_path(char *s)
+{
+        safe_strncpy(nvr_default_path, s, 512);
+}
+
 /* set the default logs path, this makes it permanent */
 void set_default_logs_path(char *s)
 {
@@ -203,6 +210,7 @@ void paths_onconfigloaded()
 void paths_init()
 {
         char s[512];
+        char base_path[512];
         char *p;
 
         get_pcem_path(pcem_path, 512);
@@ -220,6 +228,10 @@ void paths_init()
         append_filename(s, pcem_path, "screenshots/", 512);
         set_screenshots_path(s);
         set_logs_path(pcem_path);
+
+        get_pcem_base_path(base_path, 512);
+        append_filename(s, base_path, "nvr/default/", 512);
+        set_default_nvr_default_path(s);
 
         add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
 

@@ -263,6 +263,12 @@ void get_pcem_path(char *s, int size)
 #endif
 }
 
+void get_pcem_base_path(char *s, int size)
+{
+        char* path = SDL_GetBasePath();
+        strcpy(s, path);
+}
+
 void set_window_title(const char *s)
 {
         sdl_set_window_title(s);

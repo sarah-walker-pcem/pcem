@@ -48,11 +48,7 @@ FILE *nvrfopen(char *fn, char *mode)
 
         if (mode[0] == 'r')
         {
-                strcpy(s, nvr_path);
-                put_backslash(s);
-                strcat(s, "default");
-                put_backslash(s);
-                strcat(s, fn);
+                snprintf(s, 512, "%s%s", nvr_default_path, fn);
                 return fopen(s, mode);
         }
         else
