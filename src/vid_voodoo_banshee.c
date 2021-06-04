@@ -147,6 +147,7 @@ enum
 
 #define VGAINIT0_EXTENDED_SHIFT_OUT (1 << 12)
 
+#define VIDPROCCFG_VIDPROC_ENABLE (1 << 0)
 #define VIDPROCCFG_CURSOR_MODE (1 << 1)
 #define VIDPROCCFG_HALF_MODE (1 << 4)
 #define VIDPROCCFG_OVERLAY_ENABLE (1 << 8)
@@ -475,6 +476,8 @@ static void banshee_recalctimings(svga_t *svga)
                 svga->bpp = 8;
                 svga->video_res_override = 0;
         }
+
+        svga->fb_only = (banshee->vidProcCfg & VIDPROCCFG_VIDPROC_ENABLE);
 
         if (((svga->miscout >> 2) & 3) == 3)
         {
