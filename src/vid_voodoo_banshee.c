@@ -205,6 +205,9 @@ enum
 #define VIDSERIAL_I2C_SCK_R (1 << 26)
 #define VIDSERIAL_I2C_SDA_R (1 << 27)
 
+#define MISCINIT0_Y_ORIGIN_SWAP_SHIFT (18)
+#define MISCINIT0_Y_ORIGIN_SWAP_MASK (0xfff << MISCINIT0_Y_ORIGIN_SWAP_SHIFT)
+
 static uint32_t banshee_status(banshee_t *banshee);
 
 static void banshee_out(uint16_t addr, uint8_t val, void *p)
@@ -550,6 +553,7 @@ static void banshee_ext_outl(uint16_t addr, uint32_t val, void *p)
 
                 case Init_miscInit0:
                 banshee->miscInit0 = val;
+                voodoo->y_origin_swap = (val & MISCINIT0_Y_ORIGIN_SWAP_MASK) >> MISCINIT0_Y_ORIGIN_SWAP_SHIFT;
                 break;
                 case Init_miscInit1:
                 banshee->miscInit1 = val;
