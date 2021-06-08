@@ -28,6 +28,9 @@ jobs:
           artifacts_name: PCem-Ubuntu-Clang-${{ github.head_ref }}-${{ github.run_number }}
           artifacts_path: PCem-Clang-${{ github.sha }}.tar.bz2
           compiler: clang
+          env:
+            CC: clang
+            CXX: clang++
           installdeps: >-
             libsdl2-dev
             libopenal-dev
