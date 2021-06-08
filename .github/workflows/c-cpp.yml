@@ -22,6 +22,18 @@ jobs:
             libopenal-dev
             libwxgtk3.0-gtk3-dev
             libncap-dev
+        - name: Ubuntu 64bit (clang)
+          os: ubuntu-latest
+          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
+          artifacts_name: PCem-Ubuntu-Clang-${{ github.head_ref }}-${{ github.run_number }}
+          artifacts_path: PCem-Clang-${{ github.sha }}.tar.bz2
+          compiler: clang
+          installdeps: >-
+            libsdl2-dev
+            libopenal-dev
+            libwxgtk3.0-gtk3-dev
+            libncap-dev
+            clang
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
