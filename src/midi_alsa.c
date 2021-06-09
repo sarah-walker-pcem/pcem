@@ -124,7 +124,7 @@ static int midi_pos, midi_len;
 static uint8_t midi_command[4];
 static int midi_lengths[8] = {3, 3, 3, 3, 2, 2, 3, 1};
 static int midi_insysex;
-static uint8_t midi_sysex_data[1024+2];
+static uint8_t midi_sysex_data[65536];
 
 void midi_write(uint8_t val)
 {
@@ -143,7 +143,7 @@ void midi_write(uint8_t val)
         {
                 midi_sysex_data[midi_pos++] = val;
                 
-                if (val == 0xf7 || midi_pos >= 1024+2)
+                if (val == 0xf7 || midi_pos >= 65536)
 		{
 /*			pclog("MIDI send sysex %i: ", midi_pos);
 			for (int i = 0; i < midi_pos; i++)
@@ -157,15 +157,18 @@ void midi_write(uint8_t val)
         }
                         
         if (midi_len)
-        {                
-                midi_command[midi_pos] = val;
-                
-                midi_pos++;
-                
-                if (midi_pos == midi_len)
+        {
+		if (midi_pos < 3)
 		{
-//			pclog("MIDI send %i: %02x %02x %02x %02x\n", midi_len, midi_command[0], midi_command[1], midi_command[2], midi_command[3]);
-                        snd_rawmidi_write(midiout, midi_command, midi_len);
+			midi_command[midi_pos] = val;
+                
+	                midi_pos++;
+                
+	                if (midi_pos == midi_len)
+			{
+//				pclog("MIDI send %i: %02x %02x %02x %02x\n", midi_len, midi_command[0], midi_command[1], midi_command[2], midi_command[3]);
+				snd_rawmidi_write(midiout, midi_command, midi_len);
+			}
 		}
         }
 }
