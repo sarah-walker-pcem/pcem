@@ -160,6 +160,7 @@ case "$host" in
            [echo "You need to install the OpenAL library."
            exit -1])
        build_linux="yes"
+       CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
        ;;
     *-*-freebsd*)
        CFLAGS="$CFLAGS -I/usr/local/include"
@@ -172,6 +173,7 @@ case "$host" in
            [echo "You need to install the OpenAL library."
            exit -1])
        build_other="yes"
+       CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
        ;;
     *)
        AC_CHECK_LIB([GL], [glGetError], [], \
