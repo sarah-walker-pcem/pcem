@@ -737,6 +737,8 @@ int config_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 c++;
                         }
                         wx_sendmessage(h, WX_CB_SETCURSEL, modeltolist[model], 0);
+                        model = listtomodel[modeltolist[model]];
+                        romset = model_getromset();
                         prev_model = model;
 
                         recalc_vid_list(hdlg, romstomodel[romset], 0);
