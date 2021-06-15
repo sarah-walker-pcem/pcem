@@ -2475,6 +2475,12 @@ static device_config_t banshee_sgram_config[] =
                 .default_int = 1
         },
         {
+                .name = "dithersub",
+                .description = "Dither subtraction",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
                 .name = "dacfilter",
                 .description = "Screen Filter",
                 .type = CONFIG_BINARY,
@@ -2522,6 +2528,12 @@ static device_config_t banshee_sdram_config[] =
         {
                 .name = "bilinear",
                 .description = "Bilinear filtering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
+                .name = "dithersub",
+                .description = "Dither subtraction",
                 .type = CONFIG_BINARY,
                 .default_int = 1
         },

@@ -952,6 +952,7 @@ void *voodoo_card_init()
         memset(voodoo, 0, sizeof(voodoo_t));
 
         voodoo->bilinear_enabled = device_get_config_int("bilinear");
+        voodoo->dithersub_enabled = device_get_config_int("dithersub");
         voodoo->scrfilter = device_get_config_int("dacfilter");
         voodoo->texture_size = device_get_config_int("texture_memory");
         voodoo->texture_mask = (voodoo->texture_size << 20) - 1;
@@ -1098,8 +1099,10 @@ void *voodoo_2d3d_card_init(int type)
         memset(voodoo, 0, sizeof(voodoo_t));
 
         voodoo->bilinear_enabled = device_get_config_int("bilinear");
+        voodoo->dithersub_enabled = device_get_config_int("dithersub");
         voodoo->scrfilter = device_get_config_int("dacfilter");
         voodoo->render_threads = device_get_config_int("render_threads");
+
         voodoo->odd_even_mask = voodoo->render_threads - 1;
 #ifndef NO_CODEGEN
         voodoo->use_recompiler = device_get_config_int("recompiler");
@@ -1404,6 +1407,12 @@ static device_config_t voodoo_config[] =
         {
                 .name = "bilinear",
                 .description = "Bilinear filtering",
+                .type = CONFIG_BINARY,
+                .default_int = 1
+        },
+        {
+                .name = "dithersub",
+                .description = "Dither subtraction",
                 .type = CONFIG_BINARY,
                 .default_int = 1
         },
