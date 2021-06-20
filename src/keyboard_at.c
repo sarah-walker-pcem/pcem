@@ -675,17 +675,14 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv)
                         keyboard_at_adddata(0x00);
                         break;
 
-                        case 0xe8: /* Super-286TR: turbo ON */
-                        // TODO: 0xe8 is always followed by 0xba
-                        // TODO: I don't know where to call cpu_set_turbo(1) to avoid slow POST after ctrl-alt-del when on low speed (if this is the real behavior!)
-                        if (romset == ROM_HYUNDAI_SUPER286TR)
-                                cpu_set_turbo(1); // 12 MHz
-                        break;
-
-                        case 0xe9: /* Super-286TR: turbo OFF */
-                        if (romset == ROM_HYUNDAI_SUPER286TR)
-                                cpu_set_turbo(0); // 8 MHz
-                        break;
+                        // AWARD BIOS: called after turbo ON/OFF in the
+                        // Hyundai Super-286TR and probably other AWARD 286
+                        // bioses. Related to the Turbo LEDs. Exact function
+                        // can't be confirmed because the system in question
+                        // has no such leds.
+                        //case 0xe8: /* Turbo ON, always followed by 0xba */
+                        //case 0xe9: /* Turbo OFF */
+                        //break;
                         
                         case 0xef: /*??? - sent by AMI486*/
                         break;
