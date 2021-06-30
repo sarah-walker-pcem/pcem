@@ -39,7 +39,7 @@ OBJ = 386.o 386_common.o 386_dynarec.o 386_dynarec_ops.o 808x.o 82091aa.o acc203
 	vid_tkd8001_ramdac.o vid_tvga.o vid_unk_ramdac.o vid_vga.o vid_voodoo.o vid_voodoo_banshee.o vid_voodoo_banshee_blitter.o \
 	vid_voodoo_blitter.o vid_voodoo_display.o vid_voodoo_fb.o vid_voodoo_fifo.o vid_voodoo_reg.o \
 	vid_voodoo_render.o vid_voodoo_setup.o vid_voodoo_texture.o vid_wy700.o video.o vl82c480.o \
-	vt82c586b.o w83877tf.o w83977tf.o wd76c10.o x86seg.o x87.o x87_timings.o xi8088.c xtide.o win-midi.o wx-main.o \
+	vt82c586b.o w83877tf.o w83977tf.o wd76c10.o x86seg.o x87.o x87_timings.o xi8088.c xtide.o zenith.o win-midi.o wx-main.o \
 	wx-config_sel.o wx-dialogbox.o wx-hostconfig.o wx-utils.o wx-app.o wx-sdl2-joystick.o wx-sdl2-mouse.o \
 	wx-sdl2-keyboard.o wx-sdl2-video.o wx-sdl2.o wx-config.o wx-deviceconfig.o wx-status.o \
 	wx-sdl2-status.o wx-resources.o wx-thread.o wx-common.o wx-sdl2-display-win.o \
