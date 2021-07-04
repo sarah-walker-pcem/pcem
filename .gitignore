@@ -1,0 +1,11 @@
+*.o
+*.swp
+/Makefile
+/src/Makefile
+autom4te.cache
+config.log
+config.status
+.deps
+.dirstamp
+/pcem
+/src/pcem
