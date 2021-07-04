@@ -3,6 +3,7 @@
 #include "device.h"
 #include "mem.h"
 #include "sst39sf010.h"
+#include "xi8088.h"
 
 typedef struct sst_t
 {
@@ -24,6 +25,18 @@ typedef struct sst_t
 
 static void set_id_mode(sst_t *sst);
 static void clear_id_mode(sst_t *sst);
+
+static uint32_t sst_masked_rom_addr(uint32_t addr)
+{
+	// The flipped MSB of the Xi 8088 is only present in the on-disk files,
+	// in ram the mapping is as the software sees. This does not cause
+	// problems with the programming commands because they only use the
+	// lower 2 bytes.
+	if (romset == ROM_XI8088 && !xi8088_bios_128kb())
+		return addr & 0xffff;
+	else
+		return addr & 0x1ffff;
+}
 
 static void sst_new_command(sst_t *sst, uint8_t val)
 {
@@ -69,11 +82,11 @@ static void sst_new_command(sst_t *sst, uint8_t val)
         }
 }
 
-static void sst_sector_erase(sst_t *sst, uint32_t addr)
+static void sst_sector_erase(sst_t *sst, uint32_t sst_addr)
 {
-//        pclog("SST sector erase %08x\n", addr);
-        memset(&rom[addr & 0x1f000], 0xff, 4096);
-        memset(&sst->data[addr & 0x1f000], 0xff, 4096);
+//        pclog("SST sector erase sst_addr %08x\n", sst_addr);
+        memset(&rom[sst_addr & 0x1f000], 0xff, 4096);
+        memset(&sst->data[sst_addr & 0x1f000], 0xff, 4096);
         sst->dirty = 1;
 }
 
@@ -117,7 +130,7 @@ static void sst_write(uint32_t addr, uint8_t val, void *p)
                         sst_new_command(sst, val);
                 else if (val == SST_SECTOR_ERASE && sst->erase)
                 {
-                        sst_sector_erase(sst, addr);
+                        sst_sector_erase(sst, sst_masked_rom_addr(addr));
                         sst->command_state = 0;
                 }
                 else
@@ -125,8 +138,8 @@ static void sst_write(uint32_t addr, uint8_t val, void *p)
                 break;
                 case 3:
 //                pclog("Byte program %08x %02x\n", addr, val);
-                rom[addr & 0x1ffff] = val;
-                sst->data[addr & 0x1ffff] = val;
+                rom[sst_masked_rom_addr(addr)] = val;
+                sst->data[sst_masked_rom_addr(addr)] = val;
                 sst->command_state = 0;
                 sst->dirty = 1;
                 break;
@@ -177,9 +190,14 @@ static void *sst_39sf010_init()
 
 	switch(romset)
 	{
+		case ROM_XI8088:
+		strcpy(sst->flash_path, "xi8088/");
+		break;
+
 		case ROM_FIC_VA503P:
 		strcpy(sst->flash_path, "fic_va503p/");
 		break;
+
 		default:
                 fatal("sst_39sf010_init on unsupported ROM set %i\n", romset);
 	}
@@ -187,7 +205,21 @@ static void *sst_39sf010_init()
         f = romfopen(sst->flash_path, "rb");
         if (f)
         {
-                fread(rom, 0x20000, 1, f);
+		switch(romset)
+		{
+			case ROM_XI8088:
+			if (xi8088_bios_128kb())
+				fread(rom + 0x10000, 0x10000, 1, f);
+			fread(rom, 0x10000, 1, f);
+			break;
+
+			case ROM_FIC_VA503P:
+			fread(rom, 0x20000, 1, f);
+			break;
+
+			default:
+		        fatal("sst_39sf010_init on unsupported ROM set %i\n", romset);
+		}
                 fclose(f);
         }
         memcpy(sst->data, rom, 0x20000);
@@ -204,7 +236,21 @@ static void sst_39sf010_close(void *p)
         if (sst->dirty)
         {
                 FILE *f = romfopen(sst->flash_path, "wb");
-                fwrite(sst->data, 0x20000, 1, f);
+		switch(romset)
+		{
+			case ROM_XI8088:
+			if (xi8088_bios_128kb())
+		                fwrite(sst->data + 0x10000, 0x10000, 1, f);
+	                fwrite(sst->data, 0x10000, 1, f);
+			break;
+
+			case ROM_FIC_VA503P:
+	                fwrite(sst->data, 0x20000, 1, f);
+			break;
+
+			default:
+		        fatal("sst_39sf010_init on unsupported ROM set %i\n", romset);
+		}
                 fclose(f);
         }
 

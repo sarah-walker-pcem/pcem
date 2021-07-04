@@ -312,7 +312,9 @@ void initpc(int argc, char *argv[])
         initvideo();
         mem_init();
         loadbios();
-        mem_add_bios();
+
+        // this is now done per-model
+        //mem_add_bios();
                         
 #if defined(__APPLE__) && defined(__aarch64__)
         pthread_jit_write_protect_np(0);

@@ -468,7 +468,6 @@ void xt_zenith_init() /* [8088] Zenith Data Systems SupersPort */
 
 void xt_xi8088_init()
 {
-        /* TODO: set UMBs? See if PCem always sets when we have > 640KB ram and avoids conflicts when a peripheral uses the same memory space */
         common_init();
         mem_add_bios();
         keyboard_at_init();
@@ -477,6 +476,7 @@ void xt_xi8088_init()
         device_add(&nvr_device);
         pic2_init();
         device_add(&gameport_device);
+        device_add(&sst_39sf010_device);
 }
 
 void at_init()
