@@ -115,8 +115,10 @@ void wx_checkmenuitem(void* menu, int id, int checked)
 
         if (item)
                 item->Check(checked);
+#ifndef RELEASE_BUILD
         else
                 std::cout << "Menu item not found: " << id << std::endl;
+#endif
 }
 
 void wx_enablemenuitem(void* menu, int id, int enable)
@@ -129,8 +131,10 @@ void wx_enablemenuitem(void* menu, int id, int enable)
 
         if (item)
                 item->Enable(enable);
+#ifndef RELEASE_BUILD
         else
                 std::cout << "Menu item not found: " << id << std::endl;
+#endif
 }
 
 void* wx_getsubmenu(void* menu, int id)

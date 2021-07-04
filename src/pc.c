@@ -621,7 +621,7 @@ void fullspeed()
         cpuspeed2=cpuspeed;
         if (!atfullspeed)
         {
-                printf("Set fullspeed - %i %i %i\n",is386,AT,cpuspeed2);
+                pclog("Set fullspeed - %i %i %i\n",is386,AT,cpuspeed2);
                 if (AT)
                         setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
                 else
