@@ -1567,6 +1567,14 @@ static int create_drive_raw(void* data)
         int c;
         uint8_t buf[512];
         FILE* f = (FILE*)data;
+
+        #ifdef __linux__
+          if(fallocate(fdopen(f), FALLOC_FL_ZERO_RANGE, 0, (hd_new_cyl * hd_new_hpc * hd_new_spt) ) == 0)) {
+            create_drive_pos = (hd_new_cyl * hd_new_hpc * hd_new_spt);
+            return 1;
+          }
+        #endif
+
         memset(buf, 0, 512);
         for (c = 0; c < (hd_new_cyl * hd_new_hpc * hd_new_spt); c++)
         {
