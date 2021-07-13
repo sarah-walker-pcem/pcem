@@ -1570,18 +1570,19 @@ static volatile int create_drive_pos;
 static int create_drive_raw(void* data)
 {
         int c;
+        int c_max = hd_new_cyl * hd_new_hpc * hd_new_spt;
         uint8_t buf[512];
         FILE* f = (FILE*)data;
 
         #ifdef __linux__
-          if((fallocate(fileno(f), FALLOC_FL_ZERO_RANGE, 0, (off64_t) (hd_new_cyl * hd_new_hpc * hd_new_spt) * 512)) == 0) {
-            create_drive_pos = (hd_new_cyl * hd_new_hpc * hd_new_spt);
+          if((fallocate(fileno(f), FALLOC_FL_ZERO_RANGE, 0, (off64_t) c_max * 512)) == 0) {
+            create_drive_pos = c_max;
             return 1;
           }
         #endif
 
         memset(buf, 0, 512);
-        for (c = 0; c < (hd_new_cyl * hd_new_hpc * hd_new_spt); c++)
+        for (c = 0; c < c_max; c++)
         {
                 create_drive_pos = c;
                 fwrite(buf, 512, 1, f);
