@@ -1,5 +1,7 @@
-// Enable glibc extensions
-#define _GNU_SOURCE
+#ifdef __linux__
+  #define _GNU_SOURCE
+  #include <linux/falloc.h>
+#endif
 
 #include "wx-utils.h"
 #include "wx-sdl2.h"
@@ -1572,7 +1574,7 @@ static int create_drive_raw(void* data)
         FILE* f = (FILE*)data;
 
         #ifdef __linux__
-          if(fallocate(fdopen(f, "w+"), FALLOC_FL_ZERO_RANGE, 0, (hd_new_cyl * hd_new_hpc * hd_new_spt)) == 0) {
+          if((fallocate(fileno(f), FALLOC_FL_ZERO_RANGE, 0, (hd_new_cyl * hd_new_hpc * hd_new_spt))) == 0) {
             create_drive_pos = (hd_new_cyl * hd_new_hpc * hd_new_spt);
             return 1;
           }
