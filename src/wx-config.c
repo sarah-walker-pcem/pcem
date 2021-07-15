@@ -1,3 +1,8 @@
+#ifdef __linux__
+  #define _GNU_SOURCE
+  #include <linux/falloc.h>
+#endif
+
 #include "wx-utils.h"
 #include "wx-sdl2.h"
 #include "wx-joystickconfig.h"
@@ -1565,10 +1570,19 @@ static volatile int create_drive_pos;
 static int create_drive_raw(void* data)
 {
         int c;
+        int c_max = hd_new_cyl * hd_new_hpc * hd_new_spt;
         uint8_t buf[512];
         FILE* f = (FILE*)data;
+
+        #ifdef __linux__
+          if((fallocate64(fileno(f), FALLOC_FL_ZERO_RANGE, 0, c_max * 512)) == 0) {
+            create_drive_pos = c_max;
+            return 1;
+          }
+        #endif
+
         memset(buf, 0, 512);
-        for (c = 0; c < (hd_new_cyl * hd_new_hpc * hd_new_spt); c++)
+        for (c = 0; c < c_max; c++)
         {
                 create_drive_pos = c;
                 fwrite(buf, 512, 1, f);
