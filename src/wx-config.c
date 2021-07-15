@@ -1575,7 +1575,7 @@ static int create_drive_raw(void* data)
         FILE* f = (FILE*)data;
 
         #ifdef __linux__
-          if((fallocate(fileno(f), FALLOC_FL_ZERO_RANGE, 0, (off64_t) c_max * 512)) == 0) {
+          if((fallocate64(fileno(f), FALLOC_FL_ZERO_RANGE, 0, c_max * 512)) == 0) {
             create_drive_pos = c_max;
             return 1;
           }
