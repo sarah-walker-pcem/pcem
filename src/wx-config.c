@@ -1,6 +1,6 @@
 #ifdef __linux__
   #define _GNU_SOURCE
-  #include <linux/falloc.h>
+  #include <fcntl.h>
 #endif
 
 #include "wx-utils.h"
