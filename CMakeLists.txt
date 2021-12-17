@@ -2,10 +2,16 @@ cmake_minimum_required(VERSION 3.7)
 
 project(PCem)
 
+if(WIN32)
+    if(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
+        set(CMAKE_SYSTEM_PROCESSOR i386)
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+        set(CMAKE_SYSTEM_PROCESSOR x86_64)
+    endif()
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
-
 set(PCEM_DEFINES PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING}")

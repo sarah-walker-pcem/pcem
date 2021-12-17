@@ -155,7 +155,7 @@ jobs:
       shell: msys2 {0}
       run: |
         cd temp
-        cmake -G "Unix Makefiles" ${{ matrix.args }} .
+        cmake -G "MSYS Makefiles" ${{ matrix.args }} .
     - name: make (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
