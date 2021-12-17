@@ -331,8 +331,6 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
 		codegen_backend_x86_ops_sse.c
 		codegen_backend_x86_uops.c
 	)
-	set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -msse2)
-	set(CMAKE_CXX_FLAGS ${CMAKE_C_FLAGS} -msse2)
 endif()
 
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
