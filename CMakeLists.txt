@@ -29,6 +29,9 @@ include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
+if(WIN32)
+    set(wxWidgets_CONFIGURATION mswu)
+endif()
 find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
 include(${wxWidgets_USE_FILE})
 

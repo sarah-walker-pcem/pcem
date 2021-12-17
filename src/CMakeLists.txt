@@ -344,6 +344,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(PCEM_SRC ${PCEM_SRC}
 		cdrom-ioctl.c
 		wx-sdl2-display-win.c
+		wx.rc
 	)
 endif()
 
