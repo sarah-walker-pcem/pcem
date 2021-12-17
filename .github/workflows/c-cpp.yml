@@ -155,7 +155,7 @@ jobs:
       shell: msys2 {0}
       run: |
         cd temp
-        cmake ${{ matrix.args }} .
+        cmake -G "Unix Makefiles" ${{ matrix.args }} .
     - name: make (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -180,7 +180,6 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         cd temp
-        autoreconf -i
         cmake ${{ matrix.args }} .
     - name: make (Linux)
       if: runner.os == 'Linux'
