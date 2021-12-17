@@ -17,6 +17,9 @@ message("***************************************************************")
 option(USE_NETWORKING "Build PCem with networking support" OFF)
 message("Networking Support: ${USE_NETWORKING}")
 
+option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
+message("ALSA MIDI Support: ${USE_ALSA}")
+
 message("***************************************************************")
 
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -28,6 +31,11 @@ include_directories(${OPENAL_INCLUDE_DIR})
 
 find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
 include(${wxWidgets_USE_FILE})
+
+if(USE_ALSA)
+    find_package(ALSA REQUIRED)
+    include_directories(${ALSA_INCLUDE_DIRS})
+endif()
 
 find_package(OpenGL REQUIRED)
 

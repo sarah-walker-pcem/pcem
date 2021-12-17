@@ -304,8 +304,10 @@ set(PCEM_SRC ${PCEM_SRC}
 	minivhd/minivhd_util.c
 )
 
-if(USE_MCX)
-
+if(USE_ALSA)
+	set(PCEM_SRC ${PCEM_SRC}
+		midi_alsa.c
+	)
 else()
 	set(PCEM_SRC ${PCEM_SRC}
 		wx-sdl2-midi.c
@@ -406,4 +408,4 @@ endif()
 add_executable(pcem ${PCEM_SRC})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
-target_link_libraries(pcem ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES})
+target_link_libraries(pcem ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${ALSA_LIBRARIES})
