@@ -331,6 +331,25 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
 		codegen_backend_x86_ops_sse.c
 		codegen_backend_x86_uops.c
 	)
+	set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -msse2)
+	set(CMAKE_CXX_FLAGS ${CMAKE_C_FLAGS} -msse2)
+endif()
+
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
+	set(PCEM_SRC ${PCEM_SRC}
+		codegen_backend_arm.c
+		codegen_backend_arm_ops.c
+		codegen_backend_arm_uops.c
+	)
+endif()
+
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+	set(PCEM_SRC ${PCEM_SRC}
+		codegen_backend_arm64.c
+		codegen_backend_arm64_imm.c
+		codegen_backend_arm64_ops.c
+		codegen_backend_arm64_uops.c
+	)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
