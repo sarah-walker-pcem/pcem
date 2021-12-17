@@ -9,3 +9,4 @@ config.status
 .dirstamp
 /pcem
 /src/pcem
+build/
