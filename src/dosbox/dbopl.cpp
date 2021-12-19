@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 //#include "dosbox.h"
-#include "dbopl.h"
+#include "dosbox/dbopl.h"
 
 
 #ifndef PI

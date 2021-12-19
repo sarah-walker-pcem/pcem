@@ -39,8 +39,8 @@
  */
 
 #include <stdlib.h>
-#include "slirp.h"
-#include "ip_icmp.h"
+#include "slirp/slirp.h"
+#include "slirp/ip_icmp.h"
 
 struct udpstat udpstat;
 

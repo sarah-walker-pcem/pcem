@@ -6,7 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "cwalk.h"
+#include "minivhd/cwalk.h"
 /**
  * We try to default to a different path style depending on the operating
  * system. So this should detect whether we should use windows or unix paths.

@@ -38,8 +38,8 @@
  * terms and conditions of the copyright.
  */
 
-#include "slirp.h"
-#include "ip_icmp.h"
+#include "slirp/slirp.h"
+#include "slirp/ip_icmp.h"
 #include <stdint.h>
 
 int ip_defttl;

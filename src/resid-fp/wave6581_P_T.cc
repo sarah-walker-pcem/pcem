@@ -17,7 +17,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
 
-#include "wave.h"
+#include "resid-fp/wave.h"
 
 reg8 WaveformGeneratorFP::wave6581_P_T[] =
 {

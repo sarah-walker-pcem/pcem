@@ -19,25 +19,25 @@ You will need the following libraries (and their dependencies):
 Open a terminal window, navigate to the PCem directory then enter:
 ### Linux
 ```
-./configure --enable-release-build
+cmake -DCMAKE_BUILD_TYPE=Release .
 make
 ```
 ### BSD
 ```
-./configure --enable-release-build
+cmake -DCMAKE_BUILD_TYPE=Release .
 gmake
 ```
 
-then `./pcem` to run.
+then `./src/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 
 configure options are :
 ```
-  --enable-release-build : Generate release build. Recommended for regular use.
-  --enable-debug         : Compile with debugging enabled.
-  --enable-networking    : Build with networking support.
-  --enable-alsa          : Build with support for MIDI output through ALSA. Requires libasound.
+  -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
+  -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
+  -DUSE_NETWORKING=ON        : Build with networking support.
+  -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
 ```
 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not

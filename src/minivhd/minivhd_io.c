@@ -8,8 +8,8 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include "minivhd_internal.h"
-#include "minivhd_util.h"
+#include "minivhd/minivhd_internal.h"
+#include "minivhd/minivhd_util.h"
 
 /* The following bit array macros adapted from 
    http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/1-C-intro/bit-array.html */

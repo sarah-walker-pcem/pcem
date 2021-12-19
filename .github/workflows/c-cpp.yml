@@ -14,7 +14,7 @@ jobs:
         include:
         - name: Ubuntu 64bit (gcc)
           os: ubuntu-latest
-          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
           artifacts_name: PCem-Ubuntu-${{ github.head_ref }}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.tar.bz2
           installdeps: >-
@@ -22,10 +22,11 @@ jobs:
             libopenal-dev
             libwxgtk3.0-gtk3-dev
             libncap-dev
+            cmake
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
-          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
           artifacts_name: PCem-Windows-MINGW32-${{ github.head_ref }}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
@@ -37,10 +38,11 @@ jobs:
             mingw-w64-i686-SDL2 
             mingw-w64-i686-openal 
             mingw-w64-i686-wxWidgets
+            mingw-w64-i686-cmake
         - name: Windows 64bits (MSYS2)
           os: windows-latest
           compiler: MINGW64
-          args: --enable-networking --enable-release-build CFLAGS="-DPCEM_BUILD_VERSION=${GITHUB_SHA::8}"
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
           artifacts_name: PCem-Windows-MINGW64-${{ github.head_ref }}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
@@ -52,7 +54,7 @@ jobs:
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-openal
             mingw-w64-x86_64-wxWidgets
-
+            mingw-w64-x86_64-cmake
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     
@@ -114,6 +116,8 @@ jobs:
         cp /mingw32/bin/libwinpthread-1.dll dist
         cp /mingw32/bin/libzstd.dll dist
         cp /mingw32/bin/SDL2.dll dist
+        cp /mingw32/bin/libjbig-0.dll dist
+        cp /mingw32/bin/libLerc.dll dist
         cp /mingw32/bin/wxbase30u_gcc_custom.dll dist
         cp /mingw32/bin/wxbase30u_xml_gcc_custom.dll dist
         cp /mingw32/bin/wxmsw30u_adv_gcc_custom.dll dist
@@ -141,6 +145,8 @@ jobs:
         cp /mingw64/bin/libwinpthread-1.dll dist
         cp /mingw64/bin/libzstd.dll dist
         cp /mingw64/bin/SDL2.dll dist
+        cp /mingw64/bin/libjbig-0.dll dist
+        cp /mingw64/bin/libLerc.dll dist
         cp /mingw64/bin/wxbase30u_gcc_custom.dll dist
         cp /mingw64/bin/wxbase30u_xml_gcc_custom.dll dist
         cp /mingw64/bin/wxmsw30u_adv_gcc_custom.dll dist
@@ -153,8 +159,7 @@ jobs:
       shell: msys2 {0}
       run: |
         cd temp
-        autoreconf -i
-        ./configure ${{ matrix.args }}
+        cmake -G "MSYS Makefiles" ${{ matrix.args }} .
     - name: make (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -179,8 +184,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         cd temp
-        autoreconf -i
-        ./configure ${{ matrix.args }}
+        cmake ${{ matrix.args }} .
     - name: make (Linux)
       if: runner.os == 'Linux'
       run: |

@@ -7,9 +7,9 @@
 
 #define WANT_SYS_IOCTL_H
 #include <stdlib.h>
-#include "slirp.h"
-#include "ip_icmp.h"
-#include "main.h"
+#include "slirp/slirp.h"
+#include "slirp/ip_icmp.h"
+#include "slirp/main.h"
 #ifdef __sun__
 #include <sys/filio.h>
 #endif

@@ -10,8 +10,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include "minivhd_util.h"
-#include "minivhd_internal.h"
+#include "minivhd/minivhd_util.h"
+#include "minivhd/minivhd_internal.h"
 
 /*  Read data from footer into the struct members, swapping endian where necessary
     Note: order matters here! We must read each field in the order the struct is in.

@@ -40,7 +40,7 @@
 
 #define WANT_SYS_IOCTL_H
 #include <stdlib.h>
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 /* patchable/settable parameters for tcp */
 int 	tcp_mssdflt = TCP_MSS;

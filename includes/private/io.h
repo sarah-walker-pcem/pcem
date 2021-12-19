@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 void io_init();
 
 void io_sethandler(uint16_t base, int size, 

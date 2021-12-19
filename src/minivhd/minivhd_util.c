@@ -13,10 +13,10 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "libxml2_encoding.h"
-#include "minivhd_internal.h"
-#include "minivhd_util.h"
-#include "minivhd.h"
+#include "minivhd/libxml2_encoding.h"
+#include "minivhd/minivhd_internal.h"
+#include "minivhd/minivhd_util.h"
+#include "minivhd/minivhd.h"
 
 const char MVHD_CONECTIX_COOKIE[] = "conectix";
 const char MVHD_CREATOR[] = "pcem";

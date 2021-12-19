@@ -1,4 +1,4 @@
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 /* host address */
 struct in_addr our_addr;
