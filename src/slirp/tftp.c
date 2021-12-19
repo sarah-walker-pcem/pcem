@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 struct tftp_session {
     int in_use;

@@ -5,11 +5,11 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "../ibm.h"
-#include "../device.h"
-#include "../mem.h"
-#include "../vid_cga.h"
-#include "vid_cga_comp.h"
+#include "ibm.h"
+#include "device.h"
+#include "mem.h"
+#include "vid_cga.h"
+#include "dosbox/vid_cga_comp.h"
 
 int CGA_Composite_Table[1024];
 

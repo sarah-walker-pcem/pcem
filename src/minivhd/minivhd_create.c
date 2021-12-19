@@ -6,14 +6,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "cwalk.h"
-#include "libxml2_encoding.h"
-#include "minivhd_internal.h"
-#include "minivhd_util.h"
-#include "minivhd_struct_rw.h"
-#include "minivhd_io.h"
-#include "minivhd_create.h"
-#include "minivhd.h"
+#include "minivhd/cwalk.h"
+#include "minivhd/libxml2_encoding.h"
+#include "minivhd/minivhd_internal.h"
+#include "minivhd/minivhd_util.h"
+#include "minivhd/minivhd_struct_rw.h"
+#include "minivhd/minivhd_io.h"
+#include "minivhd/minivhd_create.h"
+#include "minivhd/minivhd.h"
 
 static void mvhd_gen_footer(MVHDFooter* footer, uint64_t size_in_bytes, MVHDGeom* geom, MVHDType type, uint64_t sparse_header_off);
 static void mvhd_gen_sparse_header(MVHDSparseHeader* header, uint32_t num_blks, uint64_t bat_offset, uint32_t block_size_in_sectors);

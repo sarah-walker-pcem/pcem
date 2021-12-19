@@ -10,13 +10,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include "cwalk.h"
-#include "libxml2_encoding.h"
-#include "minivhd_internal.h"
-#include "minivhd_io.h"
-#include "minivhd_util.h"
-#include "minivhd_struct_rw.h"
-#include "minivhd.h"
+#include "minivhd/cwalk.h"
+#include "minivhd/libxml2_encoding.h"
+#include "minivhd/minivhd_internal.h"
+#include "minivhd/minivhd_io.h"
+#include "minivhd/minivhd_util.h"
+#include "minivhd/minivhd_struct_rw.h"
+#include "minivhd/minivhd.h"
 
 int mvhd_errno = 0;
 static char tmp_open_path[MVHD_MAX_PATH_BYTES] = {0};

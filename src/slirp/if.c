@@ -5,7 +5,7 @@
  * terms and conditions of the copyright.
  */
 
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 int if_mtu, if_mru;
 int if_comp;

@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>                  
-#include "queue.h"       
+#include "slirp/queue.h"       
 
 /*
  * Constants

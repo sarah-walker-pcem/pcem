@@ -16,7 +16,7 @@
  */
 
 #include <stdlib.h>
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 struct	mbuf *mbutl;
 char	*mclrefcnt;

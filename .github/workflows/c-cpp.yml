@@ -116,6 +116,8 @@ jobs:
         cp /mingw32/bin/libwinpthread-1.dll dist
         cp /mingw32/bin/libzstd.dll dist
         cp /mingw32/bin/SDL2.dll dist
+        cp /mingw32/bin/libjbig-0.dll dist
+        cp /mingw32/bin/libLerc.dll dist
         cp /mingw32/bin/wxbase30u_gcc_custom.dll dist
         cp /mingw32/bin/wxbase30u_xml_gcc_custom.dll dist
         cp /mingw32/bin/wxmsw30u_adv_gcc_custom.dll dist
@@ -143,6 +145,8 @@ jobs:
         cp /mingw64/bin/libwinpthread-1.dll dist
         cp /mingw64/bin/libzstd.dll dist
         cp /mingw64/bin/SDL2.dll dist
+        cp /mingw64/bin/libjbig-0.dll dist
+        cp /mingw64/bin/libLerc.dll dist
         cp /mingw64/bin/wxbase30u_gcc_custom.dll dist
         cp /mingw64/bin/wxbase30u_xml_gcc_custom.dll dist
         cp /mingw64/bin/wxmsw30u_adv_gcc_custom.dll dist

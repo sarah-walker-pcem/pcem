@@ -18,4 +18,4 @@
 //  ---------------------------------------------------------------------------
 
 #define __VERSION_CC__
-#include "siddefs-fp.h"
+#include "resid-fp/siddefs-fp.h"

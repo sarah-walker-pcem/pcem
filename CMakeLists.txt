@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.7)
 
 project(PCem)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/public)
+
+# TODO: This whole thing is jank, replace with a real way to determine cpu type
 if(WIN32)
     if(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
         set(CMAKE_SYSTEM_PROCESSOR i386)
@@ -10,19 +16,21 @@ if(WIN32)
     endif()
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
+set(PCEM_CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR})
+# End of Jankness
+
+if(${PCEM_CPU_TYPE} STREQUAL "i386")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
 	set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -msse2")
 endif()
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DEFINES PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING}")
 message("***************************************************************")
 message("OS Building For: ${CMAKE_SYSTEM_NAME}")
-message("System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message("System Processor: ${PCEM_CPU_TYPE}")
 message("***************************************************************")
 
 option(USE_NETWORKING "Build PCem with networking support" OFF)

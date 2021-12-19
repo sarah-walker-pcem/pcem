@@ -1,8 +1,8 @@
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-resources.cpp 
-	COMMAND wxrc 
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-resources.cpp
+	COMMAND wxrc
 	ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/pc.xrc -o ${CMAKE_CURRENT_BINARY_DIR}/wx-resources.cpp)
 
-set(PCEM_SRC 
+set(PCEM_SRC
 	386.c
 	386_common.c
 	386_dynarec.c
@@ -314,7 +314,7 @@ else()
 	)
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen_backend_x86-64.c
 		codegen_backend_x86-64_ops.c
@@ -323,7 +323,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 	)
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
+if(${PCEM_CPU_TYPE} STREQUAL "i386")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen_backend_x86.c
 		codegen_backend_x86_ops.c
@@ -333,7 +333,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
 	)
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
+if(${PCEM_CPU_TYPE} STREQUAL "arm")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen_backend_arm.c
 		codegen_backend_arm_ops.c
@@ -341,7 +341,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
 	)
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+if(${PCEM_CPU_TYPE} STREQUAL "arm64")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen_backend_arm64.c
 		codegen_backend_arm64_imm.c
@@ -396,7 +396,7 @@ if(USE_NETWORKING)
 	set(PCEM_DEFINES ${PCEM_DEFINES} USE_NETWORKING)
 	set(PCEM_SRC ${PCEM_SRC}
 		ne2000.c
-		nethandler.c 
+		nethandler.c
 		wx-hostconfig.c
 	)
 

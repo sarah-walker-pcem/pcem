@@ -6,10 +6,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "minivhd_create.h"
-#include "minivhd_internal.h"
-#include "minivhd_util.h"
-#include "minivhd.h"
+#include "minivhd/minivhd_create.h"
+#include "minivhd/minivhd_internal.h"
+#include "minivhd/minivhd_util.h"
+#include "minivhd/minivhd.h"
 
 static FILE* mvhd_open_existing_raw_img(const char* utf8_raw_path, MVHDGeom* geom, int* err);
 

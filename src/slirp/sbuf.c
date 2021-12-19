@@ -6,7 +6,7 @@
  */
 
 #include <stdlib.h>
-#include "slirp.h"
+#include "slirp/slirp.h"
 
 /* Done as a macro in socket.h */
 /* int

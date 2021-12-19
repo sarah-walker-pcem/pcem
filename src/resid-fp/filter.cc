@@ -19,8 +19,8 @@
 //  Filter distortion code written by Antti S. Lankila 2007 - 2008.
 
 #define __FILTER_CC__
-#include "filter.h"
-#include "sid.h"
+#include "resid-fp/filter.h"
+#include "resid-fp/sid.h"
   
 #ifndef HAVE_LOGF_PROTOTYPE
 extern float logf(float val);
