@@ -21,6 +21,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <limits>
