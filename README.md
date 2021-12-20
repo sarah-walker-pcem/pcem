@@ -28,7 +28,7 @@ cmake -DCMAKE_BUILD_TYPE=Release .
 gmake
 ```
 
-then `./src/pcem` to run.
+then `./output/bin/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 
