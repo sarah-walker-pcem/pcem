@@ -15,7 +15,7 @@ jobs:
         - name: Ubuntu 64bit (gcc)
           os: ubuntu-latest
           args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Ubuntu-${{ github.head_ref }}-${{ github.run_number }}
+          artifacts_name: PCem-Ubuntu-${GITHUB_SHA::8}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.tar.bz2
           installdeps: >-
             libsdl2-dev
@@ -27,7 +27,7 @@ jobs:
           os: windows-latest
           compiler: MINGW32
           args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Windows-MINGW32-${{ github.head_ref }}-${{ github.run_number }}
+          artifacts_name: PCem-Windows-MINGW32-${GITHUB_SHA::8}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
@@ -43,7 +43,7 @@ jobs:
           os: windows-latest
           compiler: MINGW64
           args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Windows-MINGW64-${{ github.head_ref }}-${{ github.run_number }}
+          artifacts_name: PCem-Windows-MINGW64-${GITHUB_SHA::8}-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
@@ -101,99 +101,107 @@ jobs:
       shell: msys2 {0}
       run: |
         mkdir dist
-        cp -R ./temp/* dist
-        rm -Rf ./dist/.git
-        cp /mingw32/bin/libdeflate.dll dist
-        cp /mingw32/bin/libexpat-1.dll dist
-        cp /mingw32/bin/libgcc_s_dw2-1.dll dist
-        cp /mingw32/bin/libjpeg-8.dll dist
-        cp /mingw32/bin/liblzma-5.dll dist
-        cp /mingw32/bin/libopenal-1.dll dist
-        cp /mingw32/bin/libpng16-16.dll dist
-        cp /mingw32/bin/libstdc++-6.dll dist
-        cp /mingw32/bin/libtiff-5.dll dist
-        cp /mingw32/bin/libwebp-7.dll dist
-        cp /mingw32/bin/libwinpthread-1.dll dist
-        cp /mingw32/bin/libzstd.dll dist
-        cp /mingw32/bin/SDL2.dll dist
-        cp /mingw32/bin/libjbig-0.dll dist
-        cp /mingw32/bin/libLerc.dll dist
-        cp /mingw32/bin/wxbase30u_gcc_custom.dll dist
-        cp /mingw32/bin/wxbase30u_xml_gcc_custom.dll dist
-        cp /mingw32/bin/wxmsw30u_adv_gcc_custom.dll dist
-        cp /mingw32/bin/wxmsw30u_core_gcc_custom.dll dist
-        cp /mingw32/bin/wxmsw30u_html_gcc_custom.dll dist
-        cp /mingw32/bin/wxmsw30u_xrc_gcc_custom.dll dist
-        cp /mingw32/bin/zlib1.dll dist
+        mkdir dist/bin
+        mkdir dist/src
+        cp -R ./temp/* dist/src
+        rm -Rf ./dist/src/.git
+        cp /mingw32/bin/libdeflate.dll dist/bin
+        cp /mingw32/bin/libexpat-1.dll dist/bin
+        cp /mingw32/bin/libgcc_s_seh-1.dll dist/bin
+        cp /mingw32/bin/libjpeg-8.dll dist/bin
+        cp /mingw32/bin/liblzma-5.dll dist/bin
+        cp /mingw32/bin/libopenal-1.dll dist/bin
+        cp /mingw32/bin/libpng16-16.dll dist/bin
+        cp /mingw32/bin/libstdc++-6.dll dist/bin
+        cp /mingw32/bin/libtiff-5.dll dist/bin
+        cp /mingw32/bin/libwebp-7.dll dist/bin
+        cp /mingw32/bin/libwinpthread-1.dll dist/bin
+        cp /mingw32/bin/libzstd.dll dist/bin
+        cp /mingw32/bin/SDL2.dll dist/bin
+        cp /mingw32/bin/libjbig-0.dll dist/bin
+        cp /mingw32/bin/libLerc.dll dist/bin
+        cp /mingw32/bin/wxbase30u_gcc_custom.dll dist/bin
+        cp /mingw32/bin/wxbase30u_xml_gcc_custom.dll dist/bin
+        cp /mingw32/bin/wxmsw30u_adv_gcc_custom.dll dist/bin
+        cp /mingw32/bin/wxmsw30u_core_gcc_custom.dll dist/bin
+        cp /mingw32/bin/wxmsw30u_html_gcc_custom.dll dist/bin
+        cp /mingw32/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
+        cp /mingw32/bin/zlib1.dll dist/bin
     - name: prepare-package (Windows64)
       if: runner.os == 'Windows' && matrix.compiler == 'MINGW64'
       shell: msys2 {0}
       run: |
         mkdir dist
-        cp -R ./temp/* dist
-        rm -Rf ./dist/.git
-        cp /mingw64/bin/libdeflate.dll dist
-        cp /mingw64/bin/libexpat-1.dll dist
-        cp /mingw64/bin/libgcc_s_seh-1.dll dist
-        cp /mingw64/bin/libjpeg-8.dll dist
-        cp /mingw64/bin/liblzma-5.dll dist
-        cp /mingw64/bin/libopenal-1.dll dist
-        cp /mingw64/bin/libpng16-16.dll dist
-        cp /mingw64/bin/libstdc++-6.dll dist
-        cp /mingw64/bin/libtiff-5.dll dist
-        cp /mingw64/bin/libwebp-7.dll dist
-        cp /mingw64/bin/libwinpthread-1.dll dist
-        cp /mingw64/bin/libzstd.dll dist
-        cp /mingw64/bin/SDL2.dll dist
-        cp /mingw64/bin/libjbig-0.dll dist
-        cp /mingw64/bin/libLerc.dll dist
-        cp /mingw64/bin/wxbase30u_gcc_custom.dll dist
-        cp /mingw64/bin/wxbase30u_xml_gcc_custom.dll dist
-        cp /mingw64/bin/wxmsw30u_adv_gcc_custom.dll dist
-        cp /mingw64/bin/wxmsw30u_core_gcc_custom.dll dist
-        cp /mingw64/bin/wxmsw30u_html_gcc_custom.dll dist
-        cp /mingw64/bin/wxmsw30u_xrc_gcc_custom.dll dist
-        cp /mingw64/bin/zlib1.dll dist
+        mkdir dist/bin
+        mkdir dist/src
+        cp -R ./temp/* dist/src
+        rm -Rf ./dist/src/.git
+        cp /mingw64/bin/libdeflate.dll dist/bin
+        cp /mingw64/bin/libexpat-1.dll dist/bin
+        cp /mingw64/bin/libgcc_s_seh-1.dll dist/bin
+        cp /mingw64/bin/libjpeg-8.dll dist/bin
+        cp /mingw64/bin/liblzma-5.dll dist/bin
+        cp /mingw64/bin/libopenal-1.dll dist/bin
+        cp /mingw64/bin/libpng16-16.dll dist/bin
+        cp /mingw64/bin/libstdc++-6.dll dist/bin
+        cp /mingw64/bin/libtiff-5.dll dist/bin
+        cp /mingw64/bin/libwebp-7.dll dist/bin
+        cp /mingw64/bin/libwinpthread-1.dll dist/bin
+        cp /mingw64/bin/libzstd.dll dist/bin
+        cp /mingw64/bin/SDL2.dll dist/bin
+        cp /mingw64/bin/libjbig-0.dll dist/bin
+        cp /mingw64/bin/libLerc.dll dist/bin
+        cp /mingw64/bin/wxbase30u_gcc_custom.dll dist/bin
+        cp /mingw64/bin/wxbase30u_xml_gcc_custom.dll dist/bin
+        cp /mingw64/bin/wxmsw30u_adv_gcc_custom.dll dist/bin
+        cp /mingw64/bin/wxmsw30u_core_gcc_custom.dll dist/bin
+        cp /mingw64/bin/wxmsw30u_html_gcc_custom.dll dist/bin
+        cp /mingw64/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
+        cp /mingw64/bin/zlib1.dll dist/bin
     - name: configure (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        cd temp
-        cmake -G "MSYS Makefiles" ${{ matrix.args }} .
+        mkdir temp/build
+        cd temp/build
+        cmake -G "MSYS Makefiles" ${{ matrix.args }} ..
     - name: make (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        cd temp
+        cd temp/build
         make -j
     - name: package (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        cp ./temp/src/pcem.exe dist
+        cp ./temp/build/output/bin/pcem.exe dist/bin
         cd dist
         zip -r -9 ${{ matrix.artifacts_path }} *
 
     - name: prepare-package (Linux)
       if: runner.os == 'Linux'
       run: |
-       mkdir dist
-       cp -R ./temp/* dist
-       rm -Rf ./dist/.git
+        mkdir dist
+        mkdir dist/bin
+        mkdir dist/src
+        cp -R ./temp/* dist/src
+        rm -Rf ./dist/src/.git
     - name: configure (Linux)
       if: runner.os == 'Linux'
       run: |
-        cd temp
-        cmake ${{ matrix.args }} .
+        mkdir temp/build
+        cd temp/build
+        cmake ${{ matrix.args }} ..
     - name: make (Linux)
       if: runner.os == 'Linux'
       run: |
-        cd temp
+        cd temp/build
         make -j
     - name: package (Linux)
       if: runner.os == 'Linux'
       run: |
-       cp ./temp/src/pcem dist
+       cp ./temp/build/output/bin/pcem dist/bin
        cd dist
        tar -cjf ${{ matrix.artifacts_path }} *
 
