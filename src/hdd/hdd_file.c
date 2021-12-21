@@ -41,13 +41,13 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
                                         }
                                         return;
                                 }
-                                else if (err == MVHD_ERR_TIMESTAMP)
+                                /*else if (err == MVHD_ERR_TIMESTAMP)
                                 {
                                         pclog("VHD: Parent/child timestamp mismatch");
                                         mvhd_close(vhdm);
                                         hdd->f = NULL;
                                         return;
-                                }
+                                }*/ // FIX: This is to see if this resolves Issue #59
                                 hdd->f = (void*)vhdm;
                                 hdd->img_type = HDD_IMG_VHD;
                         }
