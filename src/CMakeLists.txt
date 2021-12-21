@@ -5,11 +5,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
 	ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/pc.xrc -o ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp)
 
 set(PCEM_SRC
-	386.c
-	386_common.c
-	386_dynarec.c
-	386_dynarec_ops.c
-	808x.c
+	cpu/386.c
+	cpu/386_common.c
+	cpu/386_dynarec.c
+	cpu/386_dynarec_ops.c
+	cpu/808x.c
 	82091aa.c
 	acc2036.c
 	acc2168.c
@@ -17,7 +17,7 @@ set(PCEM_SRC
 	acer386sx.c
 	ali1429.c
 	amstrad.c
-	cassette/cassette.c
+	devices/cassette.c
 	cbm_io.c
 	cdrom/cdrom-image.cc
 	cdrom/cdrom-null.c
@@ -64,20 +64,20 @@ set(PCEM_SRC
 	cpu/cpu_tables.c
 	cs8230.c
 	dells200.c
-	device.c
+	devices/device.c
 	disc/disc.c
 	disc/disc_fdi.c
 	disc/disc_img.c
 	disc/disc_sector.c
 	dma.c
-	esdi_at.c
-	f82c710_upc.c
+	devices/esdi_at.c
+	devices/f82c710_upc.c
 	floppy/fdc.c
 	floppy/fdc37c665.c
 	floppy/fdc37c93x.c
 	floppy/fdd.c
 	fdi2raw.c
-	gameport/gameport.c
+	joystick/gameport.c
 	hdd/hdd.c
 	hdd/hdd_esdi.c
 	hdd/hdd_file.c
@@ -106,15 +106,15 @@ set(PCEM_SRC
 	keyboard/keyboard_pcjr.c
 	keyboard/keyboard_xt.c
 	laserxt.c
-	lpt.c
-	lpt_dac.c
-	lpt_dss.c
-	mca.c
+	lpt/lpt.c
+	lpt/lpt_dac.c
+	lpt/lpt_dss.c
+	bus/mca.c
 	mcr.c
 	memory/mem.c
 	memory/mem_bios.c
-	mfm_at.c
-	mfm_xebec.c
+	mfm/mfm_at.c
+	mfm/mfm_xebec.c
 	model.c
 	mouse/mouse.c
 	mouse/mouse_msystems.c
@@ -123,14 +123,14 @@ set(PCEM_SRC
 	mvp3.c
 	neat.c
 	nmi.c
-	nvr.c
+	devices/nvr.c
 	olivetti_m24.c
 	opti495.c
 	paths.c
 	pc.c
 	pc87306.c
 	pc87307.c
-	pci.c
+	bus/pci.c
 	pic.c
 	piix.c
 	piix_pm.c
@@ -139,10 +139,10 @@ set(PCEM_SRC
 	ps1.c
 	ps2.c
 	ps2_mca.c
-	ps2_nvr.c
+	devices/ps2_nvr.c
 	nvr_tc8521.c
 	pzx.c
-	rom.c
+	flash/rom.c
 	rtc.c
 	rtc_tc8521.c
 	scamp.c
@@ -156,7 +156,7 @@ set(PCEM_SRC
 	scsi/scsi_zip.c
 	serial.c
 	sio.c
-	sis496.c
+	devices/sis496.c
 	sl82c460.c
 	sound/sound.c
 	sound/sound_ad1848.c
@@ -181,7 +181,7 @@ set(PCEM_SRC
 	sound/sound_ym7128.c
 	sound/sound_dbopl.cc
 	sound/sound_resid.cc
-	soundopenal.c
+	sound/soundopenal.c
 	flash/sst39sf010.c
 	superxt.c
 	flash/tandy_eeprom.c
@@ -257,11 +257,11 @@ set(PCEM_SRC
 	vl82c480.c
 	w83877tf.c
 	w83977tf.c
-	x86seg.c
-	x87.c
-	x87_timings.c
+	cpu/x86seg.c
+	cpu/x87.c
+	cpu/x87_timings.c
 	xi8088.c
-	xtide.c
+	ide/xtide.c
 	zenith.c
 )
 
@@ -296,19 +296,19 @@ set(PCEM_SRC ${PCEM_SRC}
 
 # MiniVHD
 set(PCEM_SRC ${PCEM_SRC}
-	minivhd/cwalk.c
-	minivhd/libxml2_encoding.c
-	minivhd/minivhd_convert.c
-	minivhd/minivhd_create.c
-	minivhd/minivhd_io.c
-	minivhd/minivhd_manage.c
-	minivhd/minivhd_struct_rw.c
-	minivhd/minivhd_util.c
+	hdd/minivhd/cwalk.c
+	hdd/minivhd/libxml2_encoding.c
+	hdd/minivhd/minivhd_convert.c
+	hdd/minivhd/minivhd_create.c
+	hdd/minivhd/minivhd_io.c
+	hdd/minivhd/minivhd_manage.c
+	hdd/minivhd/minivhd_struct_rw.c
+	hdd/minivhd/minivhd_util.c
 )
 
 if(USE_ALSA)
 	set(PCEM_SRC ${PCEM_SRC}
-		midi_alsa.c
+		sound/midi_alsa.c
 	)
 else()
 	set(PCEM_SRC ${PCEM_SRC}
