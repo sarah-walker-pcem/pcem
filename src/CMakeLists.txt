@@ -5,23 +5,10 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
 	ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/pc.xrc -o ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp)
 
 set(PCEM_SRC
-	cpu/386.c
-	cpu/386_common.c
-	cpu/386_dynarec.c
-	cpu/386_dynarec_ops.c
-	cpu/808x.c
-	82091aa.c
-	acc2036.c
-	acc2168.c
-	acc3221.c
-	acer386sx.c
-	ali1429.c
-	amstrad.c
-	devices/cassette.c
-	cbm_io.c
+	bus/mca.c
+	bus/pci.c
 	cdrom/cdrom-image.cc
 	cdrom/cdrom-null.c
-	cmd640.c
 	codegen/codegen.c
 	codegen/codegen_accumulate.c
 	codegen/codegen_allocator.c
@@ -35,18 +22,18 @@ set(PCEM_SRC
 	codegen/codegen_ops_fpu_constant.c
 	codegen/codegen_ops_fpu_loadstore.c
 	codegen/codegen_ops_fpu_misc.c
+	codegen/codegen_ops_helpers.c
+	codegen/codegen_ops_jump.c
+	codegen/codegen_ops_logic.c
+	codegen/codegen_ops_misc.c
 	codegen/codegen_ops_mmx_arith.c
 	codegen/codegen_ops_mmx_cmp.c
 	codegen/codegen_ops_mmx_loadstore.c
 	codegen/codegen_ops_mmx_logic.c
 	codegen/codegen_ops_mmx_pack.c
 	codegen/codegen_ops_mmx_shift.c
-	codegen/codegen_ops_helpers.c
-	codegen/codegen_ops_jump.c
-	codegen/codegen_ops_logic.c
-	codegen/codegen_ops_shift.c
-	codegen/codegen_ops_misc.c
 	codegen/codegen_ops_mov.c
+	codegen/codegen_ops_shift.c
 	codegen/codegen_ops_stack.c
 	codegen/codegen_reg.c
 	codegen/codegen_timing_486.c
@@ -58,43 +45,44 @@ set(PCEM_SRC
 	codegen/codegen_timing_pentium.c
 	codegen/codegen_timing_winchip.c
 	codegen/codegen_timing_winchip2.c
-	compaq.c
-	config.c
+	cpu/386.c
+	cpu/386_common.c
+	cpu/386_dynarec.c
+	cpu/386_dynarec_ops.c
+	cpu/808x.c
 	cpu/cpu.c
 	cpu/cpu_tables.c
-	cs8230.c
-	dells200.c
+	cpu/x86seg.c
+	cpu/x87.c
+	cpu/x87_timings.c
+	devices/cassette.c
 	devices/device.c
+	devices/esdi_at.c
+	devices/f82c710_upc.c
+	devices/nvr.c
+	devices/ps2_nvr.c
+	devices/sis496.c
 	disc/disc.c
 	disc/disc_fdi.c
 	disc/disc_img.c
 	disc/disc_sector.c
-	dma.c
-	devices/esdi_at.c
-	devices/f82c710_upc.c
+	flash/intel_flash.c
+	flash/rom.c
+	flash/sst39sf010.c
+	flash/tandy_eeprom.c
+	flash/tandy_rom.c
 	floppy/fdc.c
 	floppy/fdc37c665.c
 	floppy/fdc37c93x.c
 	floppy/fdd.c
-	fdi2raw.c
-	joystick/gameport.c
 	hdd/hdd.c
 	hdd/hdd_esdi.c
 	hdd/hdd_file.c
-	headland.c
-	i430lx.c
-	i430fx.c
-	i430hx.c
-	i430vx.c
-	i440fx.c
-	i440bx.c
 	ide/ide.c
 	ide/ide_atapi.c
 	ide/ide_sff8038i.c
-	intel.c
-	flash/intel_flash.c
-	io.c
-	jim.c
+	ide/xtide.c
+	joystick/gameport.c
 	joystick/joystick_ch_flightstick_pro.c
 	joystick/joystick_standard.c
 	joystick/joystick_sw_pad.c
@@ -105,48 +93,73 @@ set(PCEM_SRC
 	keyboard/keyboard_olim24.c
 	keyboard/keyboard_pcjr.c
 	keyboard/keyboard_xt.c
-	laserxt.c
 	lpt/lpt.c
 	lpt/lpt_dac.c
 	lpt/lpt_dss.c
-	bus/mca.c
-	mcr.c
 	memory/mem.c
 	memory/mem_bios.c
 	mfm/mfm_at.c
 	mfm/mfm_xebec.c
-	model.c
+	models/82091aa.c
+	models/acc2036.c
+	models/acc2168.c
+	models/acc3221.c
+	models/acer386sx.c
+	models/ali1429.c
+	models/amstrad.c
+	models/cbm_io.c
+	models/cmd640.c
+	models/compaq.c
+	models/cs8230.c
+	models/dells200.c
+	models/dma.c
+	models/headland.c
+	models/i430fx.c
+	models/i430hx.c
+	models/i430lx.c
+	models/i430vx.c
+	models/i440bx.c
+	models/i440fx.c
+	models/intel.c
+	models/jim.c
+	models/laserxt.c
+	models/model.c
+	models/mvp3.c
+	models/neat.c
+	models/nmi.c
+	models/nvr_tc8521.c
+	models/olivetti_m24.c
+	models/opti495.c
+	models/pc87306.c
+	models/pc87307.c
+	models/pic.c
+	models/piix.c
+	models/piix_pm.c
+	models/pit.c
+	models/ps1.c
+	models/ps2.c
+	models/ps2_mca.c
+	models/scamp.c
+	models/scat.c
+	models/serial.c
+	models/sio.c
+	models/sl82c460.c
+	models/superxt.c
+	models/t1000.c
+	models/t3100e.c
+	models/um8669f.c
+	models/um8881f.c
+	models/vl82c480.c
+	models/vt82c586b.c
+	models/w83877tf.c
+	models/w83977tf.c
+	models/wd76c10.c
+	models/xi8088.c
+	models/zenith.c
 	mouse/mouse.c
 	mouse/mouse_msystems.c
 	mouse/mouse_ps2.c
 	mouse/mouse_serial.c
-	mvp3.c
-	neat.c
-	nmi.c
-	devices/nvr.c
-	olivetti_m24.c
-	opti495.c
-	paths.c
-	pc.c
-	pc87306.c
-	pc87307.c
-	bus/pci.c
-	pic.c
-	piix.c
-	piix_pm.c
-	pit.c
-	ppi.c
-	ps1.c
-	ps2.c
-	ps2_mca.c
-	devices/ps2_nvr.c
-	nvr_tc8521.c
-	pzx.c
-	flash/rom.c
-	rtc.c
-	rtc_tc8521.c
-	scamp.c
-	scat.c
 	scsi/scsi.c
 	scsi/scsi_53c400.c
 	scsi/scsi_aha1540.c
@@ -154,10 +167,6 @@ set(PCEM_SRC
 	scsi/scsi_hd.c
 	scsi/scsi_ibm.c
 	scsi/scsi_zip.c
-	serial.c
-	sio.c
-	devices/sis496.c
-	sl82c460.c
 	sound/sound.c
 	sound/sound_ad1848.c
 	sound/sound_adlib.c
@@ -165,6 +174,7 @@ set(PCEM_SRC
 	sound/sound_audiopci.c
 	sound/sound_azt2316a.c
 	sound/sound_cms.c
+	sound/sound_dbopl.cc
 	sound/sound_emu8k.c
 	sound/sound_gus.c
 	sound/sound_mpu401_uart.c
@@ -172,6 +182,7 @@ set(PCEM_SRC
 	sound/sound_pas16.c
 	sound/sound_ps1.c
 	sound/sound_pssj.c
+	sound/sound_resid.cc
 	sound/sound_sb.c
 	sound/sound_sb_dsp.c
 	sound/sound_sn76489.c
@@ -179,23 +190,12 @@ set(PCEM_SRC
 	sound/sound_ssi2001.c
 	sound/sound_wss.c
 	sound/sound_ym7128.c
-	sound/sound_dbopl.cc
-	sound/sound_resid.cc
 	sound/soundopenal.c
-	flash/sst39sf010.c
-	superxt.c
-	flash/tandy_eeprom.c
-	flash/tandy_rom.c
-	t1000.c
-	t3100e.c
-	timer.c
-	um8669f.c
-	um8881f.c
-	video/vid_ati_eeprom.c
-	video/vid_ati_mach64.c
 	video/vid_ati18800.c
 	video/vid_ati28800.c
 	video/vid_ati68860_ramdac.c
+	video/vid_ati_eeprom.c
+	video/vid_ati_mach64.c
 	video/vid_cga.c
 	video/vid_cl5429.c
 	video/vid_colorplus.c
@@ -217,9 +217,9 @@ set(PCEM_SRC
 	video/vid_oti037.c
 	video/vid_oti067.c
 	video/vid_paradise.c
-	video/vid_pc200.c
 	video/vid_pc1512.c
 	video/vid_pc1640.c
+	video/vid_pc200.c
 	video/vid_pcjr.c
 	video/vid_pgc.c
 	video/vid_ps1_svga.c
@@ -252,17 +252,17 @@ set(PCEM_SRC
 	video/vid_voodoo_texture.c
 	video/vid_wy700.c
 	video/video.c
-	wd76c10.c
-	vt82c586b.c
-	vl82c480.c
-	w83877tf.c
-	w83977tf.c
-	cpu/x86seg.c
-	cpu/x87.c
-	cpu/x87_timings.c
-	xi8088.c
-	ide/xtide.c
-	zenith.c
+	config.c
+	fdi2raw.c
+	io.c
+	mcr.c
+	paths.c
+	pc.c
+	ppi.c
+	pzx.c
+	rtc.c
+	rtc_tc8521.c
+	timer.c
 )
 
 # DOSBox
