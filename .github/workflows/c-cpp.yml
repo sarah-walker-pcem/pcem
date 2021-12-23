@@ -176,6 +176,7 @@ jobs:
       shell: msys2 {0}
       run: |
         cp ./temp/build/output/bin/pcem.exe dist/bin
+        cp ./temp/build/output/lib/libpcem.dll dist/bin
         cd dist
         zip -r -9 ${{ matrix.artifacts_path }} *
 
@@ -184,6 +185,7 @@ jobs:
       run: |
         mkdir dist
         mkdir dist/bin
+        mkdir dist/lib
         mkdir dist/src
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
@@ -202,6 +204,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
        cp ./temp/build/output/bin/pcem dist/bin
+       cp ./temp/build/output/lib/libpcem.so dist/lib
        cd dist
        tar -cjf ${{ matrix.artifacts_path }} *
 
