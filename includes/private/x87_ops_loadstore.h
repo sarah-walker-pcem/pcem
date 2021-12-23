@@ -1,3 +1,5 @@
+#ifndef _X87_OPS_LOADSTORE_H_
+#define _X87_OPS_LOADSTORE_H_
 static int opFILDiw_a16(uint32_t fetchdat)
 {
         int16_t temp;
@@ -504,3 +506,6 @@ static int opFSTPs_a32(uint32_t fetchdat)
         CLOCK_CYCLES(x87_timings.fst_32);
         return 0;
 }
+
+
+#endif /* _X87_OPS_LOADSTORE_H_ */

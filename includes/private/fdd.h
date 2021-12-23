@@ -1,3 +1,5 @@
+#ifndef _FDD_H_
+#define _FDD_H_
 #define SEEK_RECALIBRATE -999
 uint64_t fdd_seek(int drive, int track_diff);
 int fdd_track0(int drive);
@@ -13,3 +15,6 @@ void fdd_set_type(int drive, int type);
 int fdd_get_type(int drive);
 
 extern int fdd_swap;
+
+
+#endif /* _FDD_H_ */

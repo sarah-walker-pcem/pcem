@@ -1,4 +1,5 @@
-#include <stdint.h>
+#ifndef _NETHANDLER_H_
+#define _NETHANDLER_H_
 
 //void vlan_handler(int (*can_receive)(void *p), void (*receive)(void *p, const uint8_t *buf, int size), void *p);
 void vlan_handler(void (*poller)(void *p), void *p);
@@ -24,3 +25,6 @@ enum
         NET_SLIRP = 0,
         NET_PCAP = 1
 };
+
+
+#endif /* _NETHANDLER_H_ */

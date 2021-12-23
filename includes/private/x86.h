@@ -341,4 +341,4 @@ struct
         uint32_t smhr;
 } cyrix;
 
-#endif
+#endif /* _X86_H_ */

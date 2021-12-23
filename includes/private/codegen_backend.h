@@ -40,4 +40,4 @@ typedef struct host_reg_def_t
 extern host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS];
 extern host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS];
 
-#endif
+#endif /* _CODEGEN_BACKEND_H_ */

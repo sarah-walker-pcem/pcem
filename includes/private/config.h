@@ -1,3 +1,5 @@
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 float config_get_float(int is_global, char *head, char *name, float def);
 int config_get_int(int is_global, char *head, char *name, int def);
 char *config_get_string(int is_global, char *head, char *name, char *def);
@@ -25,3 +27,6 @@ extern char config_name[256];
 
 #define CFG_MACHINE 0
 #define CFG_GLOBAL  1
+
+
+#endif /* _CONFIG_H_ */

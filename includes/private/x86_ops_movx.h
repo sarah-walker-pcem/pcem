@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MOVX_H_
+#define _X86_OPS_MOVX_H_
 static int opMOVZX_w_b_a16(uint32_t fetchdat)
 {
         uint8_t temp;
@@ -207,3 +209,6 @@ static int opMOVSX_l_w_a32(uint32_t fetchdat)
         PREFETCH_RUN(3, 2, rmdat, (cpu_mod == 3) ? 0:1,0,0,0, 1);
         return 0;
 }
+
+
+#endif /* _X86_OPS_MOVX_H_ */

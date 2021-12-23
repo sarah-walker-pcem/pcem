@@ -1,3 +1,5 @@
+#ifndef _FDC_H_
+#define _FDC_H_
 void fdc_init();
 void fdc_add();
 void fdc_add_pcjr();
@@ -34,3 +36,6 @@ enum
         FDC_STATUS_WRONG_CYLINDER,
         FDC_STATUS_BAD_CYLINDER
 };
+
+
+#endif /* _FDC_H_ */

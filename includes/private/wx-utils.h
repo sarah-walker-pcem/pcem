@@ -1,3 +1,5 @@
+#ifndef _WX_UTILS2_H_
+#define _WX_UTILS2_H_
 #include <wx/defs.h>
 
 #ifndef LONG_PARAM
@@ -172,3 +174,6 @@ extern int has_been_inited;
 
 #define ID_IS(s) wParam == wx_xrcid(s)
 #define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)
+
+
+#endif /* _WX_UTILS_H_ */

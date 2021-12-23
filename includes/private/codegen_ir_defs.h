@@ -1,5 +1,5 @@
-#ifndef _CODEGEN_IR_DEFS_
-#define _CODEGEN_IR_DEFS_
+#ifndef _CODEGEN_IR_DEFS_H_
+#define _CODEGEN_IR_DEFS_H_
 
 #include "codegen_reg.h"
 
@@ -814,4 +814,4 @@ void codegen_direct_write_16_imm(codeblock_t *block, void *p, uint16_t imm_data)
 void codegen_direct_write_32_imm(codeblock_t *block, void *p, uint32_t imm_data);
 void codegen_direct_write_32_imm_stack(codeblock_t *block, int stack_offset, uint32_t imm_data);
 
-#endif
+#endif /* _CODEGEN_IR_DEFS_H_ */

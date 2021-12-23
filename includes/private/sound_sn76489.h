@@ -1,3 +1,5 @@
+#ifndef _SOUND_SN76489_H_
+#define _SOUND_SN76489_H_
 #include "sound.h"
 
 enum
@@ -33,3 +35,6 @@ typedef struct sn76489_t
 
 void sn76489_init(sn76489_t *sn76489, uint16_t base, uint16_t size, int type, int freq);
 void sn74689_set_extra_divide(sn76489_t *sn76489, int enable);
+
+
+#endif /* _SOUND_SN76489_H_ */

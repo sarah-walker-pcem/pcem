@@ -1,5 +1,8 @@
 /*Cyrix-only instructions*/
 /*System Management Mode*/
+
+#ifndef _X86_OPS_CYRIX_H_
+#define _X86_OPS_CYRIX_H_
 static void opSVDC_common(uint32_t fetchdat)
 {
         switch (rmdat & 0x38)
@@ -272,3 +275,6 @@ static int opWRSHR_a32(uint32_t fetchdat)
 
         return 1;
 }
+
+
+#endif /* _X86_OPS_CYRIX_H_ */

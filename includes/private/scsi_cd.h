@@ -1,3 +1,5 @@
+#ifndef _SCSI_CD_H_
+#define _SCSI_CD_H_
 extern scsi_device_t scsi_cd;
 
 #define MAX_CD_SPEED 72
@@ -21,3 +23,6 @@ char *cd_model_to_config(char *model);
 char *cd_model_from_config(char *config);
 
 extern char *cd_model;
+
+
+#endif /* _SCSI_CD_H_ */

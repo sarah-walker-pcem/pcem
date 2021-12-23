@@ -1,3 +1,5 @@
+#ifndef _WX_COMMON_H_
+#define _WX_COMMON_H_
 extern int show_machine_info;
 extern int show_status;
 extern int show_machine_on_start;
@@ -24,3 +26,6 @@ typedef struct drive_info_t {
         char drive_letter;
         int readflash;
 } drive_info_t;
+
+
+#endif /* _WX_COMMON_H_ */

@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MMX_SHIFT_H_
+#define _X86_OPS_MMX_SHIFT_H_
 #define MMX_GETSHIFT()                                                  \
         if (cpu_mod == 3)                                                   \
         {                                                               \
@@ -451,3 +453,6 @@ static int opPSRLQ_a32(uint32_t fetchdat)
 
         return 0;
 }
+
+
+#endif /* _X86_OPS_MMX_SHIFT_H_ */

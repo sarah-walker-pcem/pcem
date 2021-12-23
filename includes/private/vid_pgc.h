@@ -1,3 +1,5 @@
+#ifndef _VID_PGC_H_
+#define _VID_PGC_H_
 #include "timer.h"
 
 struct pgc_core_t;
@@ -162,3 +164,6 @@ extern device_t pgc_device;
 
 /* #define PGCLOG(x) pclog x */
 #define PGCLOG(x) 
+
+
+#endif /* _VID_PGC_H_ */

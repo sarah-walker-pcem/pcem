@@ -1,5 +1,5 @@
-#ifndef __FDI2RAW_H
-#define __FDI2RAW_H
+#ifndef _FDI2RAW_H_
+#define _FDI2RAW_H_
 
 #define uae_u8 uint8_t
 #define uae_u16 uint16_t
@@ -31,4 +31,4 @@ extern int fdi2raw_get_write_protect (FDI *);
 }
 #endif
 
-#endif
+#endif /* _FDI2RAW_H_ */

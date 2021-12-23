@@ -1,5 +1,5 @@
-#ifndef SOUND_EMU8K_H
-#define SOUND_EMU8K_H
+#ifndef _SOUND_EMU8K_H_
+#define _SOUND_EMU8K_H_
 
 /* All these defines are in samples, not in bytes. */
 #define EMU8K_MEM_ADDRESS_MASK 0xFFFFFF
@@ -776,4 +776,4 @@ Treble Parameters:
 0x0001  0x0001  0x0001  0x0001  0x0001  0x0002  0x0002  0x0002  0x0002  0x0002  0x0002  0x0002
 */
 
-#endif /* SOUND_EMU8K_H */
+#endif /* _SOUND_EMU8K_H_ */

@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_ARM64_DEFS_H_
+#define _CODEGEN_BACKEND_ARM64_DEFS_H_
+
 #define REG_W0   0
 #define REG_W1   1
 #define REG_W2   2
@@ -133,3 +136,6 @@ extern void *codegen_fp_round_quad;
 
 extern void *codegen_gpf_rout;
 extern void *codegen_exit_rout;
+
+
+#endif /* _CODEGEN_BACKEND_ARM64_DEFS_H_ */

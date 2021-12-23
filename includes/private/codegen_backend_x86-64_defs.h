@@ -1,5 +1,9 @@
 /*RBP = cpu_state + 128
   R12 = ram (if block->flags & CODEBLOCK_NO_IMMEDIATES)*/
+
+#ifndef _CODEGEN_BACKEND_X86_64_DEFS_H_
+#define _CODEGEN_BACKEND_X86_64_DEFS_H_
+
 #define REG_AX 0
 #define REG_CX 1
 #define REG_DX 2
@@ -65,3 +69,6 @@ extern void *codegen_mem_store_double;
 
 extern void *codegen_gpf_rout;
 extern void *codegen_exit_rout;
+
+
+#endif /* _CODEGEN_BACKEND_X86_64_DEFS_H_ */

@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_IO_H_
+#define _X86_OPS_IO_H_
 static int opIN_AL_imm(uint32_t fetchdat)
 {       
         uint16_t port = (uint16_t)getbytef();
@@ -169,3 +171,6 @@ static int opOUT_EAX_DX(uint32_t fetchdat)
                 return 1;
         return 0;
 }
+
+
+#endif /* _X86_OPS_IO_H_ */

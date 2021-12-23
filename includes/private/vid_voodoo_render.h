@@ -1,3 +1,5 @@
+#ifndef _VID_VOODOO_RENDER_H_
+#define _VID_VOODOO_RENDER_H_
 #if !(defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32) && !(defined __amd64__)
 #define NO_CODEGEN
 #endif
@@ -336,3 +338,6 @@ static inline void voodoo_wait_for_render_thread_idle(voodoo_t *voodoo)
                         thread_wait_event(voodoo->render_not_full_event[3], 1);
         }
 }
+
+
+#endif /* _VID_VOODOO_RENDER_H_ */

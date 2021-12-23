@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_X86_64_OPS_SSE_H_
+#define _CODEGEN_BACKEND_X86_64_OPS_SSE_H_
+
 void host_x86_ADDPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
@@ -112,3 +115,6 @@ void host_x86_SUBPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_SUBSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_UNPCKLPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
+
+
+#endif /* _CODEGEN_BACKEND_X86_64_OPS_SSE_H_ */

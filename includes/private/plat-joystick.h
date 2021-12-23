@@ -1,3 +1,5 @@
+#ifndef _PLAT_JOYSTICK_H_
+#define _PLAT_JOYSTICK_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -64,3 +66,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif /* _PLAT_JOYSTICK_H_ */

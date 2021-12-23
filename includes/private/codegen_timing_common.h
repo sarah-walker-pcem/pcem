@@ -1,3 +1,5 @@
+#ifndef _CODEGEN_TIMING_COMMON_H_
+#define _CODEGEN_TIMING_COMMON_H_
 #include "codegen_ops.h"
 
 /*Instruction has input dependency on register in REG field*/
@@ -229,3 +231,6 @@ static inline uint32_t get_dstdep_mask(uint64_t data, uint32_t fetchdat, int bit
 
         return mask;
 }
+
+
+#endif /* _CODEGEN_TIMING_COMMON_H_ */

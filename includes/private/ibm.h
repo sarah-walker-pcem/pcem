@@ -1,3 +1,5 @@
+#ifndef _IBM_H_
+#define _IBM_H_
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -447,3 +449,6 @@ void saveconfig_global_only();
 void ide_padstr(char *str, const char *src, int len);
 
 void stop_emulation_now(void);
+
+
+#endif /* _IBM_H_ */

@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_ARM64_H_
+#define _CODEGEN_BACKEND_ARM64_H_
+
 #include "codegen_backend_arm64_defs.h"
 
 #define BLOCK_SIZE 0x4000
@@ -29,3 +32,6 @@ void host_arm64_call(codeblock_t *block, void *dst_addr);
 void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data);
 
 uint32_t host_arm64_find_imm(uint32_t data);
+
+
+#endif /* _CODEGEN_BACKEND_ARM64_H_ */

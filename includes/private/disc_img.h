@@ -1,3 +1,5 @@
+#ifndef _DISC_IMG_H_
+#define _DISC_IMG_H_
 void img_init();
 void img_load(int drive, char *fn);
 void img_close(int drive);
@@ -11,3 +13,6 @@ void img_stop();
 void img_poll();
 
 extern int bpb_disable;
+
+
+#endif /* _DISC_IMG_H_ */

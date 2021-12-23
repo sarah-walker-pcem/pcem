@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MOV_H_
+#define _X86_OPS_MOV_H_
 static int opMOV_AL_imm(uint32_t fetchdat)
 {
         AL = getbytef();
@@ -783,3 +785,6 @@ opCMOV(L)
 opCMOV(NL)
 opCMOV(LE)
 opCMOV(NLE)
+
+
+#endif /* _X86_OPS_MOV_H_ */

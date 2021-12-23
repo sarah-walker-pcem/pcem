@@ -1,3 +1,5 @@
+#ifndef _WX_SDL2_H_
+#define _WX_SDL2_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,3 +19,6 @@ extern char openfilestring[260];
 extern int pause;
 
 extern int take_screenshot;
+
+
+#endif /* _WX_SDL2_H_ */

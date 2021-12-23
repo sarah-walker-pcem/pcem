@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_X86_OPS_HELPERS_H_
+#define _CODEGEN_BACKEND_X86_OPS_HELPERS_H_
+
 #define JMP_LEN_BYTES 5
 
 static inline void codegen_addbyte(codeblock_t *block, uint8_t val)
@@ -82,3 +85,6 @@ static inline int is_imm8(uint32_t imm_data)
                 return 1;
         return 0;
 }
+
+
+#endif /* _CODEGEN_BACKEND_X86_OPS_HELPERS_H_ */

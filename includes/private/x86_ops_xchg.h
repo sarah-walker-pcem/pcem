@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_XCHG_H_
+#define _X86_OPS_XCHG_H_
 static int opXCHG_b_a16(uint32_t fetchdat)
 {
         uint8_t temp;
@@ -232,3 +234,6 @@ opBSWAP(ESI)
 opBSWAP(EDI)
 opBSWAP(EBP)
 opBSWAP(ESP)
+
+
+#endif /* _X86_OPS_XCHG_H_ */

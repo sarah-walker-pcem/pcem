@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MISC_H_
+#define _X86_OPS_MISC_H_
 static int opCBW(uint32_t fetchdat)
 {
         AH = (AL & 0x80) ? 0xff : 0;
@@ -1006,3 +1008,6 @@ static int opHINTNOP_a32(uint32_t fetchdat)
         fetch_ea_32(fetchdat);
         return 0;
 }
+
+
+#endif /* _X86_OPS_MISC_H_ */

@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_STRING_H_
+#define _X86_OPS_STRING_H_
 static int opMOVSB_a16(uint32_t fetchdat)
 {
         uint8_t temp;
@@ -595,3 +597,6 @@ static int opOUTSL_a32(uint32_t fetchdat)
         PREFETCH_RUN(14, 1, -1, 0,1,0,1, 1);
         return 0;
 }
+
+
+#endif /* _X86_OPS_STRING_H_ */

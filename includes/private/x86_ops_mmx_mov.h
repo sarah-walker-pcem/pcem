@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MMX_MOV_H_
+#define _X86_OPS_MMX_MOV_H_
 static int opMOVD_l_mm_a16(uint32_t fetchdat)
 {
         MMX_ENTER();
@@ -213,3 +215,6 @@ static int opMOVQ_mm_q_a32(uint32_t fetchdat)
         }
         return 0;
 }
+
+
+#endif /* _X86_OPS_MMX_MOV_H_ */

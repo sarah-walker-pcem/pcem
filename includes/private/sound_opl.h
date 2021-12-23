@@ -1,3 +1,5 @@
+#ifndef _SOUND_OPL_H_
+#define _SOUND_OPL_H_
 #include "sound.h"
 
 typedef struct opl_t
@@ -32,3 +34,6 @@ void opl3_update2(opl_t *opl);
 
 #define OPL_DBOPL 0
 #define OPL_NUKED 1
+
+
+#endif /* _SOUND_OPL_H_ */

@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_FPU_H_
+#define _X86_OPS_FPU_H_
 static int opESCAPE_d8_a16(uint32_t fetchdat)
 {
         return x86_opcodes_d8_a16[(fetchdat >> 3) & 0x1f](fetchdat);
@@ -80,3 +82,6 @@ static int opWAIT(uint32_t fetchdat)
         CLOCK_CYCLES(4);
         return 0;
 }
+
+
+#endif /* _X86_OPS_FPU_H_ */

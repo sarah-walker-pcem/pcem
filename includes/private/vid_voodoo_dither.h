@@ -1,3 +1,5 @@
+#ifndef _VID_VOODOO_DITHER_H_
+#define _VID_VOODOO_DITHER_H_
 static const uint8_t dither_rb[256][4][4] =
 {
 	{
@@ -10278,3 +10280,6 @@ static const uint8_t dithersub_rb2x2[256][2][2] =
       },
 };
 
+
+
+#endif /* _VID_VOODOO_DITHER_H_ */

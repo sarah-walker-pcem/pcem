@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_BIT_H_
+#define _X86_OPS_BIT_H_
 static int opBT_w_r_a16(uint32_t fetchdat)
 {
         uint16_t temp;
@@ -330,3 +332,6 @@ static int opBA_l_a32(uint32_t fetchdat)
         PREFETCH_RUN(6, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, 1);
         return 0;
 }
+
+
+#endif /* _X86_OPS_BIT_H_ */

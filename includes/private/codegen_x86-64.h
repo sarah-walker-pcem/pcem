@@ -1,3 +1,5 @@
+#ifndef _CODEGEN_X86_64_H_
+#define _CODEGEN_X86_64_H_
 #define BLOCK_SIZE 0x4000
 #define BLOCK_MASK 0x3fff
 #define BLOCK_START 0
@@ -21,3 +23,6 @@ enum
 extern int host_reg_mapping[NR_HOST_REGS];
 #define NR_HOST_XMM_REGS 7
 extern int host_reg_xmm_mapping[NR_HOST_XMM_REGS];
+
+
+#endif /* _CODEGEN_X86_64_H_ */

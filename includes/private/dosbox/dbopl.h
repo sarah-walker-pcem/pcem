@@ -18,6 +18,9 @@
 
 //#include "adlib.h"
 //#include "dosbox.h"
+
+#ifndef _DBOPL_H_
+#define _DBOPL_H_
 #include <stdint.h>
 typedef signed int Bits;
 typedef unsigned int Bitu;
@@ -271,3 +274,6 @@ struct Chip {
 void InitTables( void );
 
 };		//Namespace
+
+
+#endif /* _DBOPL_H_ */

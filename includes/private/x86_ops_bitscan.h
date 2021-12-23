@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_BITSCAN_H_
+#define _X86_OPS_BITSCAN_H_
 #define BS_common(start, end, dir, dest, time)                                  \
         flags_rebuild();                                                        \
         instr_cycles = 0;                                                       \
@@ -157,3 +159,6 @@ static int opBSR_l_a32(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_BITSCAN_H_ */

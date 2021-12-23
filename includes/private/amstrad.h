@@ -1,3 +1,5 @@
+#ifndef _AMSTRAD_H_
+#define _AMSTRAD_H_
 #include "mouse.h"
 #include "device.h"
 
@@ -16,3 +18,6 @@ enum
         AMSTRAD_SW9,
         AMSTRAD_SW10
 };
+
+
+#endif /* _AMSTRAD_H_ */

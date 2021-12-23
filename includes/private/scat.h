@@ -1,3 +1,5 @@
+#ifndef _SCAT_H_
+#define _SCAT_H_
 #define SCAT_DMA_WAIT_STATE_CONTROL 0x01
 #define SCAT_VERSION                0x40
 #define SCAT_CLOCK_CONTROL          0x41
@@ -27,3 +29,6 @@ typedef struct scat_t
 
 void scat_init();
 void scatsx_init();
+
+
+#endif /* _SCAT_H_ */

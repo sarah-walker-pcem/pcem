@@ -1,3 +1,5 @@
+#ifndef _SERIAL_H_
+#define _SERIAL_H_
 #include "timer.h"
 
 void serial1_init(uint16_t addr, int irq, int has_fifo);
@@ -36,3 +38,6 @@ typedef struct
 void serial_write_fifo(SERIAL *serial, uint8_t dat);
 
 extern SERIAL serial1, serial2;
+
+
+#endif /* _SERIAL_H_ */

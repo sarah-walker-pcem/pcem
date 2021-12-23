@@ -237,4 +237,4 @@ static inline void seteaq(uint64_t v)
 #define getbyte2f() ((uint8_t)(fetchdat>>8)); cpu_state.pc++
 #define getword2f() ((uint16_t)(fetchdat>>8)); cpu_state.pc+=2
 
-#endif
+#endif /* _386_COMMON_H_ */

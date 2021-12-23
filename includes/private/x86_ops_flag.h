@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_FLAG_H_
+#define _X86_OPS_FLAG_H_
 static int opCMC(uint32_t fetchdat)
 {
         flags_rebuild();
@@ -275,3 +277,6 @@ static int opPOPFD(uint32_t fetchdat)
 
         return 0;
 }
+
+
+#endif /* _X86_OPS_FLAG_H_ */

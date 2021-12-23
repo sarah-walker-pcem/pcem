@@ -36,4 +36,4 @@ void codegen_allocator_clean_blocks(struct mem_block_t *block);
 
 extern int codegen_allocator_usage;
 
-#endif
+#endif /* _CODEGEN_ALLOCATOR_H_ */

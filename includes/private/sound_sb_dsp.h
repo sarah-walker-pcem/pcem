@@ -1,5 +1,5 @@
-#ifndef SOUND_SB_DSP_H
-#define SOUND_SB_DSP_H
+#ifndef _SOUND_SB_DSP_H_
+#define _SOUND_SB_DSP_H_
 
 /*Sound Blaster Clones, for quirks*/
 #define SB_SUBTYPE_DEFAULT             0 /*Handle as a Creative card*/
@@ -103,4 +103,4 @@ void sb_dsp_add_status_info(char *s, int max_len, sb_dsp_t *dsp);
 
 void sb_dsp_update(sb_dsp_t *dsp);
 
-#endif /* SOUND_SB_DSP_H */
+#endif /* _SOUND_SB_DSP_H_ */

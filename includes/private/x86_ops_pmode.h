@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_PMODE_H_
+#define _X86_OPS_PMODE_H_
 static int opARPL_a16(uint32_t fetchdat)
 {
         uint16_t temp_seg;
@@ -487,3 +489,6 @@ static int opRSM(uint32_t fetchdat)
 
         return 1;
 }
+
+
+#endif /* _X86_OPS_PMODE_H_ */

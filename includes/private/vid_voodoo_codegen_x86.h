@@ -5,6 +5,9 @@
   fbzColorPath
 */
 
+#ifndef _VID_VOODOO_CODEGEN_X86_H_
+#define _VID_VOODOO_CODEGEN_X86_H_
+
 #if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
 #include <unistd.h>
@@ -3410,3 +3413,6 @@ void voodoo_codegen_close(voodoo_t *voodoo)
         munmap(voodoo->codegen_data, sizeof(voodoo_x86_data_t) * BLOCK_NUM*4);
 #endif
 }
+
+
+#endif /* _VID_VOODOO_CODEGEN_X86_H_ */

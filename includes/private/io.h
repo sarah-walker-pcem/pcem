@@ -1,3 +1,6 @@
+#ifndef _IO_H_
+#define _IO_H_
+
 #include <stdint.h>
 
 void io_init();
@@ -19,3 +22,6 @@ void io_removehandler(uint16_t base, int size,
                    void (*outw)(uint16_t addr, uint16_t val, void *priv),
                    void (*outl)(uint16_t addr, uint32_t val, void *priv),
                    void *priv);
+
+
+#endif /* _IO_H_ */

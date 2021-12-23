@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_ARITH_H_
+#define _X86_OPS_ARITH_H_
 #define OP_ARITH(name, operation, setflags, flagops, gettempc)   \
         static int op ## name ## _b_rmw_a16(uint32_t fetchdat)                                         \
         {                                                                                       \
@@ -810,3 +812,6 @@ static int op83_l_a32(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_ARITH_H_ */

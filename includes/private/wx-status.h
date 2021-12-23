@@ -1,5 +1,5 @@
-#ifndef SRC_WX_STATUS_H_
-#define SRC_WX_STATUS_H_
+#ifndef _WX_STATUS_H_
+#define _WX_STATUS_H_
 
 #include <wx/wx.h>
 #include <wx/timer.h>
@@ -67,4 +67,4 @@ private:
 
 };
 
-#endif /* SRC_WX_STATUS_H_ */
+#endif /* _WX_STATUS_H_ */

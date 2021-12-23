@@ -1,3 +1,5 @@
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
 extern void (*keyboard_send)(uint8_t val);
 extern void (*keyboard_poll)();
 void keyboard_process();
@@ -14,3 +16,6 @@ enum
 
 void keyboard_set_scancode_set(int set);
 void keyboard_send_scancode(int code, int is_break);
+
+
+#endif /* _KEYBOARD_H_ */

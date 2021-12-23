@@ -1,5 +1,6 @@
+#ifndef _386_OPS_H_
+#define _386_OPS_H_
 #include "x86_ops.h"
-
 
 #define ILLEGAL_ON(cond)                \
         do                              \
@@ -1459,3 +1460,5 @@ OpFn OP_TABLE(REPNE)[1024] =
 };
 
 #include "x87_ops.h"
+
+#endif /* _386_OPS_H_ */

@@ -1,3 +1,5 @@
+#ifndef _HDD_FILE_H_
+#define _HDD_FILE_H_
 typedef enum hdd_img_type
 {
         HDD_IMG_RAW,
@@ -21,3 +23,6 @@ void hdd_close(hdd_file_t *hdd);
 int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer);
 int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer);
 int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors);
+
+
+#endif /* _HDD_FILE_H_ */

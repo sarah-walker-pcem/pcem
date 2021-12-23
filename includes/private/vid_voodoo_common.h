@@ -1,3 +1,5 @@
+#ifndef _VID_VOODOO_COMMON_H_
+#define _VID_VOODOO_COMMON_H_
 #ifdef MIN
 #undef MIN
 #endif
@@ -510,3 +512,6 @@ void voodoo_update_ncc(voodoo_t *voodoo, int tmu);
 
 void *voodoo_2d3d_card_init(int type);
 void voodoo_card_close(voodoo_t *voodoo);
+
+
+#endif /* _VID_VOODOO_COMMON_H_ */

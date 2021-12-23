@@ -18,4 +18,4 @@ uint8_t rom_read(uint32_t addr, void *p);
 uint16_t rom_readw(uint32_t addr, void *p);
 uint32_t rom_readl(uint32_t addr, void *p);
 
-#endif
+#endif /* _ROM_H_ */

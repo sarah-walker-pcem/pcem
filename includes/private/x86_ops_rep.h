@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_REP_H_
+#define _X86_OPS_REP_H_
 #define REP_OPS(size, CNT_REG, SRC_REG, DEST_REG) \
 static int opREP_INSB_ ## size(uint32_t fetchdat)                               \
 {                                                                               \
@@ -690,3 +692,6 @@ static int opREPE(uint32_t fetchdat)
                 return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
         return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
+
+
+#endif /* _X86_OPS_REP_H_ */

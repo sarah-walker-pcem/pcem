@@ -1,3 +1,5 @@
+#ifndef _THREAD_H_
+#define _THREAD_H_
 typedef void thread_t;
 thread_t *thread_create(void (*thread_rout)(void *param), void *param);
 void thread_kill(thread_t *handle);
@@ -16,3 +18,6 @@ void thread_unlock_mutex(mutex_t *mutex);
 void thread_destroy_mutex(mutex_t *mutex);
 
 void thread_sleep(int t);
+
+
+#endif /* _THREAD_H_ */

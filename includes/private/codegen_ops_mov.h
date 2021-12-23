@@ -1,3 +1,5 @@
+#ifndef _CODEGEN_OPS_MOV_H_
+#define _CODEGEN_OPS_MOV_H_
 uint32_t ropMOV_rb_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 uint32_t ropMOV_rw_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 uint32_t ropMOV_rl_imm(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
@@ -41,3 +43,6 @@ uint32_t ropXCHG_16(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 uint32_t ropXCHG_32(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 
 uint32_t ropXLAT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
+
+
+#endif /* _CODEGEN_OPS_MOV_H_ */

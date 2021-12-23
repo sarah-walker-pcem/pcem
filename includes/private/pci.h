@@ -1,3 +1,5 @@
+#ifndef _PCI_H_
+#define _PCI_H_
 void pci_init(int type);
 void pci_slot(int card);
 void pci_add_specific(int card, uint8_t (*read)(int func, int addr, void *priv), void (*write)(int func, int addr, uint8_t val, void *priv), void *priv);
@@ -23,3 +25,6 @@ void pci_clear_irq(int card, int pci_int);
 #define PCI_IRQ_DISABLED -1
 
 extern int pci_burst_time, pci_nonburst_time;
+
+
+#endif /* _PCI_H_ */

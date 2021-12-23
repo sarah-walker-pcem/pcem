@@ -1,3 +1,5 @@
+#ifndef _VID_SVGA_RENDER_H_
+#define _VID_SVGA_RENDER_H_
 extern int firstline_draw, lastline_draw;
 extern int displine;
 extern int sc;
@@ -35,3 +37,6 @@ void svga_render_ABGR8888_highres(svga_t *svga);
 void svga_render_RGBA8888_highres(svga_t *svga);
 
 extern void (*svga_render)(svga_t *svga);
+
+
+#endif /* _VID_SVGA_RENDER_H_ */

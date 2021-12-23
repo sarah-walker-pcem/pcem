@@ -1,3 +1,5 @@
+#ifndef _VID_EGA_H_
+#define _VID_EGA_H_
 typedef struct ega_t
 {
         mem_mapping_t mapping;
@@ -76,3 +78,6 @@ uint8_t ega_read(uint32_t addr, void *p);
 void    ega_init(ega_t *ega, int monitor_type, int is_mono);
 
 extern device_t ega_device;
+
+
+#endif /* _VID_EGA_H_ */

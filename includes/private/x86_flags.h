@@ -1,3 +1,5 @@
+#ifndef _X86_FLAGS_H_
+#define _X86_FLAGS_H_
 extern int tempc;
 
 enum
@@ -628,3 +630,6 @@ static inline void setsbc32(uint32_t a, uint32_t b)
 
 extern void cpu_386_flags_extract();
 extern void cpu_386_flags_rebuild();
+
+
+#endif /* _X86_FLAGS_H_ */

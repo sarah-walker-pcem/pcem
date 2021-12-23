@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_SHIFT_H_
+#define _X86_OPS_SHIFT_H_
 #define OP_SHIFT_b(c, ea32)                                                             \
         {                                                                               \
                 uint8_t temp_orig = temp;                                               \
@@ -599,3 +601,6 @@ opSHxD(SHLD_w)
 opSHxD(SHLD_l)
 opSHxD(SHRD_w)
 opSHxD(SHRD_l)
+
+
+#endif /* _X86_OPS_SHIFT_H_ */

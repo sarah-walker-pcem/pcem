@@ -1,3 +1,5 @@
+#ifndef _SOUND_RESID_H_
+#define _SOUND_RESID_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,3 +12,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif /* _SOUND_RESID_H_ */

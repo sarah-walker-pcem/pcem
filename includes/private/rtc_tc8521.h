@@ -1,6 +1,9 @@
 
 /* The TC8521 is a 4-bit RTC, so each memory location can only hold a single
  * BCD digit. Hence everything has 'ones' and 'tens' digits. */
+
+#ifndef _RTC_TC8521_H_
+#define _RTC_TC8521_H_
 enum TC8521_ADDR
 {
 	/* Page 0 registers */
@@ -31,3 +34,6 @@ void tc8521_update(uint8_t *nvrram, int reg);
 void tc8521_get(uint8_t *nvrram);
 void tc8521_internal_set_nvrram(uint8_t *nvrram);
 void tc8521_internal_sync(uint8_t *nvrram);
+
+
+#endif /* _RTC_TC8521_H_ */

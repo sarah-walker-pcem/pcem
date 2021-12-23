@@ -212,4 +212,4 @@ const char *fpu_get_internal_name(int model, int manu, int cpu, int type);
 const char *fpu_get_name_from_index(int model, int manu, int cpu, int c);
 int fpu_get_type_from_index(int model, int manu, int cpu, int c);
 
-#endif
+#endif /* _CPU_H_ */

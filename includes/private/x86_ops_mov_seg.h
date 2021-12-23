@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MOV_SEG_H_
+#define _X86_OPS_MOV_SEG_H_
 static int opMOV_w_seg_a16(uint32_t fetchdat)
 {
         fetch_ea_16(fetchdat);
@@ -432,3 +434,6 @@ static int opLSS_l_a32(uint32_t fetchdat)
 opLsel(ES, cpu_state.seg_es)
 opLsel(FS, cpu_state.seg_fs)
 opLsel(GS, cpu_state.seg_gs)
+
+
+#endif /* _X86_OPS_MOV_SEG_H_ */

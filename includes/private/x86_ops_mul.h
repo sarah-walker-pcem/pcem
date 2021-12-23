@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MUL_H_
+#define _X86_OPS_MUL_H_
 static int opIMUL_w_iw_a16(uint32_t fetchdat)
 {
         int32_t templ;
@@ -262,3 +264,6 @@ static int opIMUL_l_l_a32(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_MUL_H_ */

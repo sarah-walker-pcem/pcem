@@ -1,3 +1,5 @@
+#ifndef _X87_TIMINGS_H_
+#define _X87_TIMINGS_H_
 typedef struct
 {
         int f2xm1;
@@ -54,3 +56,6 @@ extern const x87_timings_t x87_timings_387;
 extern const x87_timings_t x87_timings_486;
 
 extern x87_timings_t x87_timings;
+
+
+#endif /* _X87_TIMINGS_H_ */

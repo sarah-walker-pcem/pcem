@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_ATOMIC_H_
+#define _X86_OPS_ATOMIC_H_
 static int opCMPXCHG_b_a16(uint32_t fetchdat)
 {
         uint8_t temp, temp2 = AL;
@@ -290,3 +292,6 @@ static int opXADD_l_a32(uint32_t fetchdat)
         CLOCK_CYCLES((cpu_mod == 3) ? 3 : 4);
         return 0;
 }
+
+
+#endif /* _X86_OPS_ATOMIC_H_ */

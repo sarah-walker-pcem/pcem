@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MSR_H_
+#define _X86_OPS_MSR_H_
 static int opRDTSC(uint32_t fetchdat)
 {
         if (!cpu_has_feature(CPU_FEATURE_RDTSC))
@@ -28,3 +30,6 @@ static int opRDPMC(uint32_t fetchdat)
         CLOCK_CYCLES(1);
         return 0;
 }
+
+
+#endif /* _X86_OPS_MSR_H_ */

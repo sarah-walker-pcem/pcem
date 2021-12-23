@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_X86_64_OPS_H_
+#define _CODEGEN_BACKEND_X86_64_OPS_H_
+
 void host_x86_ADD8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
 void host_x86_ADD16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
 void host_x86_ADD32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
@@ -194,3 +197,6 @@ void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
+
+
+#endif /* _CODEGEN_BACKEND_X86_64_OPS_H_ */

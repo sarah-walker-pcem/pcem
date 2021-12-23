@@ -1,3 +1,5 @@
+#ifndef _HDD_H_
+#define _HDD_H_
 #include "device.h"
 
 char *hdd_controller_get_name(int hdd);
@@ -15,3 +17,6 @@ int hdd_controller_current_is_scsi();
 void hdd_controller_init(char *internal_name);
 
 extern char hdd_controller_name[16];
+
+
+#endif /* _HDD_H_ */

@@ -1,3 +1,5 @@
+#ifndef _PATHS_H_
+#define _PATHS_H_
 extern int num_roms_paths;
 extern char pcem_path[512];
 extern char configs_path[512];
@@ -27,3 +29,6 @@ void set_nvr_path(char *s);
 void set_logs_path(char *s);
 void set_configs_path(char *s);
 void set_screenshots_path(char *s);
+
+
+#endif /* _PATHS_H_ */

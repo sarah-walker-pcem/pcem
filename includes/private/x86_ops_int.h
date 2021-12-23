@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_INT_H_
+#define _X86_OPS_INT_H_
 static int opINT3(uint32_t fetchdat)
 {
         int cycles_old = cycles; UNUSED(cycles_old);
@@ -121,3 +123,6 @@ static int opINTO(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_INT_H_ */

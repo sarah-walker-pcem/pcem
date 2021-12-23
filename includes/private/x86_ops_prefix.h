@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_PREFIX_H_
+#define _X86_OPS_PREFIX_H_
 #define op_seg(name, seg, opcode_table, normal_opcode_table)    \
 static int op ## name ## _w_a16(uint32_t fetchdat)              \
 {                                                               \
@@ -159,3 +161,6 @@ static int op_67_REPNE(uint32_t fetchdat) /*Address size select*/
                 return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
         return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);        
 }
+
+
+#endif /* _X86_OPS_PREFIX_H_ */

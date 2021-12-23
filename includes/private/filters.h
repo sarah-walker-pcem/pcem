@@ -1,3 +1,5 @@
+#ifndef _FILTERS_H_
+#define _FILTERS_H_
 #define NCoef 2
 
 //fc=350Hz
@@ -375,3 +377,6 @@ static inline float low_fir_sb16(int i, float NewSample)
                         
         return out;
 }
+
+
+#endif /* _FILTERS_H_ */

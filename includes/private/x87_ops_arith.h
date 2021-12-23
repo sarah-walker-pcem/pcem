@@ -1,3 +1,5 @@
+#ifndef _X87_OPS_ARITH_H_
+#define _X87_OPS_ARITH_H_
 #define opFPU(name, optype, a_size, load_var, get, use_var, cycle_postfix)     \
 static int opFADD ## name ## _a ## a_size(uint32_t fetchdat)    \
 {                                                               \
@@ -434,3 +436,6 @@ static int opFUCOMIP(uint32_t fetchdat)
         CLOCK_CYCLES(x87_timings.fucom);
         return 0;
 }
+
+
+#endif /* _X87_OPS_ARITH_H_ */

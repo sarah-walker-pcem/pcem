@@ -1,3 +1,5 @@
+#ifndef _LPT_H_
+#define _LPT_H_
 extern void lpt_init();
 extern void lpt1_init(uint16_t port);
 extern void lpt1_remove();
@@ -25,3 +27,6 @@ typedef struct
         void (*write_ctrl)(uint8_t val, void *p);
         uint8_t (*read_status)(void *p);
 } lpt_device_t;
+
+
+#endif /* _LPT_H_ */

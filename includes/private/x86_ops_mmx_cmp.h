@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MMX_CMP_H_
+#define _X86_OPS_MMX_CMP_H_
 static int opPCMPEQB_a16(uint32_t fetchdat)
 {
         MMX_REG src;
@@ -203,3 +205,6 @@ static int opPCMPGTD_a32(uint32_t fetchdat)
         
         return 0;
 }
+
+
+#endif /* _X86_OPS_MMX_CMP_H_ */

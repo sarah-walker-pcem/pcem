@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MMX_PACK_H_
+#define _X86_OPS_MMX_PACK_H_
 static int opPUNPCKLDQ_a16(uint32_t fetchdat)
 {
         MMX_ENTER();
@@ -324,3 +326,6 @@ static int opPACKSSDW_a32(uint32_t fetchdat)
         
         return 0;
 }
+
+
+#endif /* _X86_OPS_MMX_PACK_H_ */

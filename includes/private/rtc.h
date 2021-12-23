@@ -1,3 +1,5 @@
+#ifndef _RTC_H_
+#define _RTC_H_
 #define BCD(X) (((X) % 10) | (((X) / 10) << 4))
 #define DCB(X) ((((X) & 0xF0) >> 4) * 10 + ((X) & 0x0F))
 
@@ -172,3 +174,6 @@ void time_update(uint8_t *nvrram, int reg);
 void time_get(uint8_t *nvrram);
 void time_internal_set_nvrram(uint8_t *nvrram);
 void time_internal_sync(uint8_t *nvrram);
+
+
+#endif /* _RTC_H_ */

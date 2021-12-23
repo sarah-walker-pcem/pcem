@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_STACK_H_
+#define _X86_OPS_STACK_H_
 #define PUSH_W_OP(reg)                                                                          \
         static int opPUSH_ ## reg (uint32_t fetchdat)                                                  \
         {                                                                                       \
@@ -516,3 +518,6 @@ static int opPOP_SS_l(uint32_t fetchdat)
 
         return 1;
 }
+
+
+#endif /* _X86_OPS_STACK_H_ */

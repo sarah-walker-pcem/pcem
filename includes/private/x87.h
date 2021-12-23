@@ -1,3 +1,5 @@
+#ifndef _X87_H_
+#define _X87_H_
 #define C0 (1<<8)
 #define C1 (1<<9)
 #define C2 (1<<10)
@@ -35,3 +37,6 @@ void x87_reset();
 #define X87_ROUNDING_CHOP    3
 
 void codegen_set_rounding_mode(int mode);
+
+
+#endif /* _X87_H_ */

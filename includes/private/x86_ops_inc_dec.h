@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_INC_DEC_H_
+#define _X86_OPS_INC_DEC_H_
 #define INC_DEC_OP(name, reg, inc, setflags) \
         static int op ## name (uint32_t fetchdat)       \
         {                                               \
@@ -91,3 +93,6 @@ static int opINCDEC_b_a32(uint32_t fetchdat)
         PREFETCH_RUN((cpu_mod == 3) ? timing_rr : timing_mm, 2, rmdat, (cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1,0, 1);
         return 0;
 }
+
+
+#endif /* _X86_OPS_INC_DEC_H_ */

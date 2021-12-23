@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_RET_H_
+#define _X86_OPS_RET_H_
 #define RETF_a16(stack_offset)                                  \
                 if ((msw&1) && !(cpu_state.eflags&VM_FLAG))     \
                 {                                               \
@@ -254,3 +256,6 @@ static int opIRETD(uint32_t fetchdat)
         return cpu_state.abrt;
 }
  
+
+
+#endif /* _X86_OPS_RET_H_ */

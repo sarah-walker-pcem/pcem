@@ -28,4 +28,4 @@ typedef struct
 
 extern int mouse_type;
 
-#endif
+#endif /* _MOUSE_H_ */

@@ -1,3 +1,5 @@
+#ifndef _PLAT_KEYBOARD_H_
+#define _PLAT_KEYBOARD_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,3 +21,6 @@ extern "C" {
 }
 #endif
 
+
+
+#endif /* _PLAT_KEYBOARD_H_ */

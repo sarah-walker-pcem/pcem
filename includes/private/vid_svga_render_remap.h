@@ -12,6 +12,9 @@
 
 //CL, S3, Mach64, ET4000, Banshee, TGUI all okay
 //Still to check - ViRGE, HT216
+
+#ifndef _VID_SVGA_RENDER_REMAP_H_
+#define _VID_SVGA_RENDER_REMAP_H_
 #define VAR_BYTE_MODE      (0 << 0)
 #define VAR_WORD_MODE_MA13 (1 << 0)
 #define VAR_WORD_MODE_MA15 (2 << 0)
@@ -127,3 +130,6 @@ void svga_recalc_remap_func(svga_t *svga)
         svga->remap_required = (func_nr != 0);
         svga->remap_func = address_remap_funcs[func_nr];
 }
+
+
+#endif /* _VID_SVGA_RENDER_REMAP_H_ */

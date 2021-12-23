@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_CALL_H_
+#define _X86_OPS_CALL_H_
 #define CALL_FAR_w(new_seg, new_pc)                                             \
         old_cs = CS;                                                            \
         old_pc = cpu_state.pc;                                                  \
@@ -453,3 +455,6 @@ static int opFF_l_a32(uint32_t fetchdat)
         }
         return cpu_state.abrt;
 }
+
+
+#endif /* _X86_OPS_CALL_H_ */

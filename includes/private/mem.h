@@ -239,4 +239,4 @@ extern int purgeable_page_count;
 
 extern void (*smram_enable)(void);
 extern void (*smram_disable)(void);
-#endif
+#endif /* _MEM_H_ */

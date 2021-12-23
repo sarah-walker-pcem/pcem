@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_ARM_H_
+#define _CODEGEN_BACKEND_ARM_H_
+
 #include "codegen_backend_arm_defs.h"
 
 #define BLOCK_SIZE 0x4000
@@ -22,3 +25,6 @@ void host_arm_call(codeblock_t *block, void *dst_addr);
 void host_arm_nop(codeblock_t *block);
 
 void codegen_alloc(codeblock_t *block, int size);
+
+
+#endif /* _CODEGEN_BACKEND_ARM_H_ */

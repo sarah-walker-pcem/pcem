@@ -20,6 +20,9 @@
 
 *************************************************************************/
 
+#ifndef _PZX_H_
+#define _PZX_H_
+
 typedef enum
 {
 	PZX_CLOSED,	/* File is not open */
@@ -69,3 +72,6 @@ void pzx_close(pzxfile_t *pzx);
 
 /* Advance by 'time' samples (3.5MHz sample rate) and return current state */
 int pzx_advance(pzxfile_t *pzx, int time);
+
+
+#endif /* _PZX_H_ */

@@ -2,7 +2,6 @@
 #define BSWAP_H
 
 //#include "config-host.h"
-
 #include <inttypes.h>
 
 #ifdef HAVE_BYTESWAP_H

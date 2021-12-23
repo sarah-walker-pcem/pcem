@@ -20,6 +20,9 @@
 
 *************************************************************************/
 
+#ifndef _CASSETTE_H_
+#define _CASSETTE_H_
+
 extern device_t cassette_device;
 
 uint8_t cassette_input(void);
@@ -28,3 +31,6 @@ void cassette_eject(void);
 void cassette_load(const char *filename);
 
 extern char cassettefn[256];
+
+
+#endif /* _CASSETTE_H_ */

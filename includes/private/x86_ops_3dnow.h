@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_3DNOW_H_
+#define _X86_OPS_3DNOW_H_
 #include <math.h>
 
 static int opPREFETCH_a16(uint32_t fetchdat)
@@ -344,3 +346,6 @@ static int op3DNOW_a32(uint32_t fetchdat)
         
         return x86_opcodes_3DNOW[opcode](0);
 }
+
+
+#endif /* _X86_OPS_3DNOW_H_ */

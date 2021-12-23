@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef CWK_LIBRARY_H
-#define CWK_LIBRARY_H
+#ifndef _CWALK_H_
+#define _CWALK_H_
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -454,4 +454,4 @@ void cwk_path_set_style(enum cwk_path_style style);
  */
 enum cwk_path_style cwk_path_get_style(void);
 
-#endif
+#endif /* _CWALK_H_ */

@@ -1,3 +1,5 @@
+#ifndef _SOUND_AD1848_H_
+#define _SOUND_AD1848_H_
 #include "timer.h"
 
 #define AD1848_TYPE_DEFAULT 0
@@ -42,3 +44,6 @@ void ad1848_update(ad1848_t *ad1848);
 void ad1848_speed_changed(ad1848_t *ad1848);
 
 void ad1848_init(ad1848_t *ad1848, int type);
+
+
+#endif /* _SOUND_AD1848_H_ */

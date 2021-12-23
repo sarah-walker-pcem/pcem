@@ -1,3 +1,5 @@
+#ifndef _VID_MDA_H_
+#define _VID_MDA_H_
 
 typedef struct mda_t
 {
@@ -36,3 +38,6 @@ void mda_setcol(int chr, int blink, int fg, uint8_t cga_ink);
 
 extern device_t mda_device;
 
+
+
+#endif /* _VID_MDA_H_ */

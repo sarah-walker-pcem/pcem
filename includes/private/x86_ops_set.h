@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_SET_H_
+#define _X86_OPS_SET_H_
 #define opSET(condition)                                                \
         static int opSET ## condition ## _a16(uint32_t fetchdat)        \
         {                                                               \
@@ -35,3 +37,6 @@ opSET(L)
 opSET(NL)
 opSET(LE)
 opSET(NLE)
+
+
+#endif /* _X86_OPS_SET_H_ */

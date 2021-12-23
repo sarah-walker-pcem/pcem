@@ -1,3 +1,5 @@
+#ifndef _VID_ATI68860_RAMDAC_H_
+#define _VID_ATI68860_RAMDAC_H_
 typedef struct ati68860_ramdac_t
 {
         uint8_t regs[16];
@@ -15,3 +17,6 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
 uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svga);
 void ati68860_ramdac_init(ati68860_ramdac_t *ramdac);
 void ati68860_set_ramdac_type(ati68860_ramdac_t *ramdac, int type);
+
+
+#endif /* _VID_ATI68860_RAMDAC_H_ */

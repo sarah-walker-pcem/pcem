@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_X86_64_H_
+#define _CODEGEN_BACKEND_X86_64_H_
+
 #include "codegen_backend_x86-64_defs.h"
 
 #define BLOCK_SIZE 0x4000
@@ -12,3 +15,6 @@
 #define BLOCK_MAX 0x3c0
 
 #define CODEGEN_BACKEND_HAS_MOV_IMM
+
+
+#endif /* _CODEGEN_BACKEND_X86_64_H_ */

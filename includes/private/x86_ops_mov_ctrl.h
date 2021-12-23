@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MOV_CTRL_H_
+#define _X86_OPS_MOV_CTRL_H_
 static int opMOV_r_CRx_a16(uint32_t fetchdat)
 {
         if ((CPL || (cpu_state.eflags&VM_FLAG)) && (cr0&1))
@@ -302,3 +304,6 @@ static int opMOV_TRx_r_a32(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_MOV_CTRL_H_ */

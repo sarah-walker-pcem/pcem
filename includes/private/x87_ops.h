@@ -1,3 +1,5 @@
+#ifndef _X87_OPS_H_
+#define _X87_OPS_H_
 #include <math.h>
 #include <fenv.h>
 #include "x87_timings.h"
@@ -1184,3 +1186,6 @@ OpFn OP_TABLE(nofpu_a32)[256] =
         op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32,
         op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32, op_nofpu_a32,
 };
+
+
+#endif /* _X87_OPS_H_ */

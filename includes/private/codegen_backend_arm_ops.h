@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_ARM_OPS_H_
+#define _CODEGEN_BACKEND_ARM_OPS_H_
+
 #define COND_SHIFT 28
 #define COND_EQ (0x0 << COND_SHIFT)
 #define COND_NE (0x1 << COND_SHIFT)
@@ -250,3 +253,6 @@ void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VZIP_D8(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D32(codeblock_t *block, int d_reg, int m_reg);
+
+
+#endif /* _CODEGEN_BACKEND_ARM_OPS_H_ */

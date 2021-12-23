@@ -1,3 +1,5 @@
+#ifndef _NVR_H_
+#define _NVR_H_
 #include "device.h"
 
 extern device_t nvr_device;
@@ -14,3 +16,6 @@ FILE *nvrfopen(char *fn, char *mode);
 extern uint8_t nvrram[128];
 extern int nvrmask;
 extern int oldromset;
+
+
+#endif /* _NVR_H_ */

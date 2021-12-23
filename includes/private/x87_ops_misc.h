@@ -1,3 +1,5 @@
+#ifndef _X87_OPS_MISC_H_
+#define _X87_OPS_MISC_H_
 static int opFDISI(uint32_t fetchdat)
 {
         FP_ENTER();
@@ -889,3 +891,6 @@ opFCMOV(NB)
 opFCMOV(NE)
 opFCMOV(NBE)
 opFCMOV(NU)
+
+
+#endif /* _X87_OPS_MISC_H_ */

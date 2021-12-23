@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_JUMP_H_
+#define _X86_OPS_JUMP_H_
 #define cond_O   ( VF_SET())
 #define cond_NO  (!VF_SET())
 #define cond_B   ( CF_SET())
@@ -375,3 +377,6 @@ static int opRET_l_imm(uint32_t fetchdat)
         return 0;
 }
 
+
+
+#endif /* _X86_OPS_JUMP_H_ */

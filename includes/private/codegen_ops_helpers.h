@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_OPS_HELPERS_H_
+#define _CODEGEN_OPS_HELPERS_H_
+
 #include "386_common.h"
 #include "codegen_backend.h"
 
@@ -124,3 +127,6 @@ static inline int codegen_can_unroll(codeblock_t *block, ir_data_t *ir, uint32_t
 
         return codegen_can_unroll_full(block, ir, next_pc, dest_addr);
 }
+
+
+#endif /* _CODEGEN_OPS_HELPERS_H_ */

@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_BCD_H_
+#define _X86_OPS_BCD_H_
 static int opAAA(uint32_t fetchdat)
 {
         flags_rebuild();
@@ -111,3 +113,6 @@ static int opDAS(uint32_t fetchdat)
         
         return 0;
 }
+
+
+#endif /* _X86_OPS_BCD_H_ */

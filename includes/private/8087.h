@@ -1,3 +1,6 @@
+#ifndef _8087_H_
+#define _8087_H_
+
 /*This file is a series of macros to get the 386+ based x87 emulation working with
   the 808x emulation*/
 #define X8087
@@ -96,3 +99,5 @@ static inline void seteaq(uint64_t val)
 #define writememb writememb_8087
 #include "x87_ops.h"
 #undef writememb
+
+#endif /* _8087_H_ */

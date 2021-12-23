@@ -1,3 +1,5 @@
+#ifndef _VID_SVGA_H_
+#define _VID_SVGA_H_
 typedef struct svga_t
 {
         mem_mapping_t mapping;
@@ -198,3 +200,6 @@ void svga_set_override(svga_t *svga, int val);
 void svga_set_ramdac_type(svga_t *svga, int type);
 
 void svga_doblit(int y1, int y2, int wx, int wy, svga_t *svga);
+
+
+#endif /* _VID_SVGA_H_ */

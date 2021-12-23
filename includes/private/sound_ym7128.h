@@ -1,3 +1,5 @@
+#ifndef _SOUND_YM7128_H_
+#define _SOUND_YM7128_H_
 typedef struct ym7128_t
 {
         int a0, sci;
@@ -23,3 +25,6 @@ typedef struct ym7128_t
 void ym7128_init(ym7128_t *ym7128);
 void ym7128_write(ym7128_t *ym7128, uint8_t val);
 void ym7128_apply(ym7128_t *ym7128, int16_t *buffer, int len);
+
+
+#endif /* _SOUND_YM7128_H_ */

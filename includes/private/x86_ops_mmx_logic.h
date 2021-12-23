@@ -1,3 +1,5 @@
+#ifndef _X86_OPS_MMX_LOGIC_H_
+#define _X86_OPS_MMX_LOGIC_H_
 static int opPAND_a16(uint32_t fetchdat)
 {
         MMX_REG src;
@@ -89,3 +91,6 @@ static int opPXOR_a32(uint32_t fetchdat)
         cpu_state.MM[cpu_reg].q ^= src.q;
         return 0;
 }
+
+
+#endif /* _X86_OPS_MMX_LOGIC_H_ */

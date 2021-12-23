@@ -1,3 +1,6 @@
+#ifndef _CODEGEN_BACKEND_ARM64_OPS_H_
+#define _CODEGEN_BACKEND_ARM64_OPS_H_
+
 void host_arm64_ADD_IMM(codeblock_t *block, int dst_reg, int src_n_reg, uint32_t imm_data);
 void host_arm64_ADD_REG(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
 void host_arm64_ADD_REG_LSR(codeblock_t *block, int dst_reg, int src_n_reg, int src_m_reg, int shift);
@@ -262,3 +265,6 @@ void host_arm64_mov_imm(codeblock_t *block, int reg, uint32_t imm_data);
 void codegen_direct_read_8(codeblock_t *block, int host_reg, void *p);
 
 void codegen_alloc(codeblock_t *block, int size);
+
+
+#endif /* _CODEGEN_BACKEND_ARM64_OPS_H_ */

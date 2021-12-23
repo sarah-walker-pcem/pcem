@@ -1,3 +1,5 @@
+#ifndef _GAMEPORT_H_
+#define _GAMEPORT_H_
 extern device_t gameport_device;
 extern device_t gameport_201_device;
 
@@ -30,3 +32,6 @@ char *joystick_get_pov_name(int joystick, int id);
 void gameport_update_joystick_type();
 
 #define AXIS_NOT_PRESENT -99999
+
+
+#endif /* _GAMEPORT_H_ */

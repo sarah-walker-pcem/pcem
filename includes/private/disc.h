@@ -1,3 +1,5 @@
+#ifndef _DISC_H_
+#define _DISC_H_
 typedef struct
 {
         void (*seek)(int drive, int track);
@@ -62,3 +64,6 @@ extern int drive_type[2];
 /*Used in the Read A Track command. Only valid for disc_readsector(). */
 #define SECTOR_FIRST -2
 #define SECTOR_NEXT  -1
+
+
+#endif /* _DISC_H_ */

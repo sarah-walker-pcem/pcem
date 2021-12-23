@@ -47,4 +47,4 @@ extern void *codegen_exit_rout;
 #define STACK_ARG2 (8)
 #define STACK_ARG3 (12)
 
-#endif
+#endif /* _CODEGEN_BACKEND_X86_DEFS_H_ */

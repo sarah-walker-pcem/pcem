@@ -1,3 +1,5 @@
+#ifndef _MODEL_H_
+#define _MODEL_H_
 #define MODEL_AT      1
 #define MODEL_PS2     2
 #define MODEL_AMSTRAD 4
@@ -48,3 +50,6 @@ void model_init();
 struct device_t *model_getdevice(int model);
 int model_has_fixed_gfx(int model);
 int model_has_optional_gfx(int model);
+
+
+#endif /* _MODEL_H_ */

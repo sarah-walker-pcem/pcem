@@ -1,3 +1,5 @@
+#ifndef _VID_CGA_H_
+#define _VID_CGA_H_
 typedef struct cga_t
 {
         mem_mapping_t mapping;
@@ -43,3 +45,6 @@ void    cga_recalctimings(cga_t *cga);
 void    cga_poll(void *p);
 
 extern device_t cga_device;
+
+
+#endif /* _VID_CGA_H_ */
