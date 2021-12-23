@@ -233,7 +233,7 @@ static void writenvr(uint16_t addr, uint8_t val, void *p)
 		 * ought not to do it for any XT because their NMI mask 
 		 * register is at 0xA0. But particularly important on the 
 		 * PC200 and PPC because their video subsystem issues NMIs */
-                if (!(models[model].flags & (MODEL_MCA | MODEL_AMSTRAD)))
+                if (!(models[model]->flags & (MODEL_MCA | MODEL_AMSTRAD)))
 		{
                         nmi_mask = ~val & 0x80;
 		}

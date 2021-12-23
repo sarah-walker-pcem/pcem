@@ -44,7 +44,7 @@ void setpitclock(float clock)
         bus_timing = clock/(double)cpu_busspeed;
         video_updatetiming();
 //        pclog("PITCONST=%f CGACONST=%f\n", PITCONST, CGACONST);
-//        pclog("CPUMULTI=%g\n", ((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed));
+//        pclog("CPUMULTI=%g\n", ((14318184.0*(double)(1 << TIMER_SHIFT)) / (double)models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed));
         
         xt_cpu_multi = (uint64_t)((14318184.0*(double)(1ull << 32)) / (double)cpu_get_speed());
 //        pclog("egacycles %i egacycles2 %i temp %f clock %f\n",egacycles,egacycles2,temp,clock);

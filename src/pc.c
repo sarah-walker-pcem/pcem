@@ -224,7 +224,7 @@ void pc_reset()
         serial_reset();
 
         if (AT)
-                setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+                setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
         else
                 setpitclock(14318184.0);
         
@@ -428,7 +428,7 @@ void resetpchard()
         disc_load(0, discfns[0]);
         disc_load(1, discfns[1]);
 
-        if (!AT && models[model].max_ram > 640 && models[model].max_ram <= 768 && !video_is_ega_vga())
+        if (!AT && models[model]->max_ram > 640 && models[model]->max_ram <= 768 && !video_is_ega_vga())
                 mem_set_704kb();
         model_init();
         mouse_emu_init();
@@ -459,7 +459,7 @@ void resetpchard()
 
 //        cpuspeed2 = (AT)?2:1;
 //        atfullspeed = 0;
-//        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+//        setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
 
         ali1429_reset();
         
@@ -607,7 +607,7 @@ void runpc()
         if (win_title_update)
         {
                 win_title_update=0;
-                sprintf(s, "PCem " PCEM_VERSION_STRING " - %i%% - %s - %s - %s", fps, model_getname(), models[model].cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : ((mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON) ? "Press CTRL-END to release mouse" : "Press CTRL-END or middle button to release mouse"));
+                sprintf(s, "PCem " PCEM_VERSION_STRING " - %i%% - %s - %s - %s", fps, model_getname(), models[model]->cpu[cpu_manufacturer].cpus[cpu].name, (!mousecapture) ? "Click to capture mouse" : ((mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON) ? "Press CTRL-END to release mouse" : "Press CTRL-END or middle button to release mouse"));
 #ifdef __APPLE__
                 // Needed due to modifying the UI on the non-main thread is a big no-no.
                 dispatch_async_f(dispatch_get_main_queue(), strdup(s), _set_window_title);
@@ -625,7 +625,7 @@ void fullspeed()
         {
                 pclog("Set fullspeed - %i %i %i\n",is386,AT,cpuspeed2);
                 if (AT)
-                        setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+                        setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
                 else
                         setpitclock(14318184.0);
 //                if (is386) setpitclock(clocks[2][cpuspeed2][0]);
@@ -637,7 +637,7 @@ void fullspeed()
 void speedchanged()
 {
         if (AT)
-                setpitclock(models[model].cpu[cpu_manufacturer].cpus[cpu].rspeed);
+                setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
         else
                 setpitclock(14318184.0);
 }
@@ -778,8 +778,8 @@ void loadconfig(char *fn)
                 strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);        
 
         mem_size = config_get_int(CFG_MACHINE, NULL, "mem_size", 4096);
-        if (mem_size < (((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128) ? models[model].min_ram*1024 : models[model].min_ram))
-                mem_size = (((models[model].flags & MODEL_AT) && models[model].ram_granularity < 128) ? models[model].min_ram*1024 : models[model].min_ram);
+        if (mem_size < (((models[model]->flags & MODEL_AT) && models[model]->ram_granularity < 128) ? models[model]->min_ram*1024 : models[model]->min_ram))
+                mem_size = (((models[model]->flags & MODEL_AT) && models[model]->ram_granularity < 128) ? models[model]->min_ram*1024 : models[model]->min_ram);
 
         cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
         cdrom_channel = config_get_int(CFG_MACHINE, NULL, "cdrom_channel", 2);

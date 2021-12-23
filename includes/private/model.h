@@ -1,5 +1,8 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
+
+#include <pcem/devices.h>
+
 #define MODEL_AT      1
 #define MODEL_PS2     2
 #define MODEL_AMSTRAD 4
@@ -18,24 +21,7 @@
 #define MODEL_GFX_DISABLE_SW 0x300
 #define MODEL_GFX_MASK       0x300
 
-typedef struct
-{
-        char name[64];
-        int id;
-        char internal_name[24];
-        struct
-        {
-                char name[8];
-                CPU *cpus;
-        } cpu[5];
-        int flags;
-        int min_ram, max_ram;
-        int ram_granularity;
-        void (*init)();
-        struct device_t *device;
-} MODEL;
-
-extern MODEL models[];
+extern MODEL *models[256];
 
 extern int model;
 
@@ -47,6 +33,7 @@ char *model_getname();
 char *model_get_internal_name();
 int model_get_model_from_internal_name(char *s);
 void model_init();
+void model_init_builtin();
 struct device_t *model_getdevice(int model);
 int model_has_fixed_gfx(int model);
 int model_has_optional_gfx(int model);

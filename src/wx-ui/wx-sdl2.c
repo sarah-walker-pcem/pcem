@@ -533,6 +533,10 @@ int pc_main(int argc, char** argv)
 {
         paths_init();
 
+        model_init_builtin();
+        video_init_builtin();
+        sound_init_builtin();
+
 #ifdef __linux__
         char s[1024];
         /* create directories if they don't exist */

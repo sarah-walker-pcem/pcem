@@ -102,6 +102,7 @@ void loadfont(char *s, fontformat_t format);
 
 void initvideo();
 void video_init();
+void video_init_builtin();
 void closevideo();
 
 void video_updatetiming();

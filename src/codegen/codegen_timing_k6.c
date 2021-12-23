@@ -2134,7 +2134,7 @@ void codegen_timing_k6_block_start()
 
 void codegen_timing_k6_start()
 {
-        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_K6)
+        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_K6)
         {
                 units = k6_units;
                 nr_units = NR_K6_UNITS;

@@ -89,7 +89,7 @@ void intel_batman_init()
 uint8_t endeavor_brdconfig(uint16_t port, void *p)
 {
         uint8_t temp;
-        CPU *cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[cpu_manufacturer].cpus[cpu];
 //        pclog("endeavor_brdconfig read port=%04x\n", port);
         switch (port)
         {
@@ -140,7 +140,7 @@ void intel_endeavor_init()
 static uint8_t zappa_brdconfig(uint16_t port, void *p)
 {
         uint8_t temp;
-        CPU *cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[cpu_manufacturer].cpus[cpu];
 //        pclog("zappa_brdconfig read port=%04x\n", port);
         switch (port)
         {

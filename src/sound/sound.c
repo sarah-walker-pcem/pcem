@@ -24,77 +24,77 @@
 #include "timer.h"
 #include "thread.h"
 
+#include <pcem/devices.h>
+
 int sound_card_current = 0;
 static int sound_card_last = 0;
 
-typedef struct
-{
-        char name[64];
-        char internal_name[24];
-        device_t *device;
-} SOUND_CARD;
+SOUND_CARD *sound_cards[256];
 
-static SOUND_CARD sound_cards[] =
-{
-        {"None",                                        "none",      NULL},
-        {"Adlib",                                       "adlib",     &adlib_device},
-        {"Adlib",                                       "adlib_mca", &adlib_mca_device},
-        {"Sound Blaster 1.0",                           "sb",        &sb_1_device},
-        {"Sound Blaster 1.5",                           "sb1.5",     &sb_15_device},
-        {"Sound Blaster MCV",                           "sbmcv",     &sb_mcv_device},
-        {"Sound Blaster 2.0",                           "sb2.0",     &sb_2_device},
-        {"Sound Blaster Pro v1",                        "sbprov1",   &sb_pro_v1_device},
-        {"Sound Blaster Pro v2",                        "sbprov2",   &sb_pro_v2_device},
-        {"Sound Blaster Pro MCV",                       "sbpromcv",  &sb_pro_mcv_device},
-        {"Sound Blaster 16",                            "sb16",      &sb_16_device},
-        {"Sound Blaster AWE32",                         "sbawe32",   &sb_awe32_device},
-        {"Adlib Gold",                                  "adlibgold", &adgold_device},
-        {"Windows Sound System",                        "wss",       &wss_device},        
-        {"Aztech Sound Galaxy Pro 16 AB (Washington)",  "azt2316a",  &azt2316a_device},
-        {"Aztech Sound Galaxy Nova 16 Extra (Clinton)", "azt1605",   &azt1605_device},
-        {"Pro Audio Spectrum 16",                       "pas16",     &pas16_device},
-        {"Ensoniq AudioPCI (ES1371)",                   "es1371",    &es1371_device},
-        {"Sound Blaster PCI 128",                       "sbpci128",  &es1371_device},
-        {"", "", NULL}
-};
+SOUND_CARD sc_1 = {"None", "none", NULL};
+SOUND_CARD sc_2 = {"Adlib", "adlib", &adlib_device};
+SOUND_CARD sc_3 = {"Adlib", "adlib_mca", &adlib_mca_device};
+SOUND_CARD sc_4 = {"Sound Blaster 1.0", "sb", &sb_1_device};
+SOUND_CARD sc_5 = {"Sound Blaster 1.5", "sb1.5", &sb_15_device};
+SOUND_CARD sc_6 = {"Sound Blaster MCV", "sbmcv", &sb_mcv_device};
+SOUND_CARD sc_7 = {"Sound Blaster 2.0", "sb2.0", &sb_2_device};
+SOUND_CARD sc_8 = {"Sound Blaster Pro v1", "sbprov1", &sb_pro_v1_device};
+SOUND_CARD sc_9 = {"Sound Blaster Pro v2", "sbprov2", &sb_pro_v2_device};
+SOUND_CARD sc_10 = {"Sound Blaster Pro MCV", "sbpromcv", &sb_pro_mcv_device};
+SOUND_CARD sc_11 = {"Sound Blaster 16", "sb16", &sb_16_device};
+SOUND_CARD sc_12 = {"Sound Blaster AWE32", "sbawe32", &sb_awe32_device};
+SOUND_CARD sc_13 = {"Adlib Gold", "adlibgold", &adgold_device};
+SOUND_CARD sc_14 = {"Windows Sound System", "wss", &wss_device};
+SOUND_CARD sc_15 = {"Aztech Sound Galaxy Pro 16 AB (Washington)", "azt2316a", &azt2316a_device};
+SOUND_CARD sc_16 = {"Aztech Sound Galaxy Nova 16 Extra (Clinton)", "azt1605", &azt1605_device};
+SOUND_CARD sc_17 = {"Pro Audio Spectrum 16", "pas16", &pas16_device};
+SOUND_CARD sc_18 = {"Ensoniq AudioPCI (ES1371)", "es1371", &es1371_device};
+SOUND_CARD sc_19 = {"Sound Blaster PCI 128", "sbpci128", &es1371_device};
 
 int sound_card_available(int card)
 {
-        if (sound_cards[card].device)
-                return device_available(sound_cards[card].device);
+        if (sound_cards[card] != NULL && sound_cards[card]->device != NULL)
+                return device_available(sound_cards[card]->device);
 
         return 1;
 }
 
 char *sound_card_getname(int card)
 {
-        return sound_cards[card].name;
+        if (sound_cards[card] != NULL)
+                return sound_cards[card]->name;
+
+        return "";
 }
 
 device_t *sound_card_getdevice(int card)
 {
-        return sound_cards[card].device;
+        if (sound_cards[card] != NULL)
+                return sound_cards[card]->device;
+
+        return NULL;
 }
 
 int sound_card_has_config(int card)
 {
-        if (!sound_cards[card].device)
+        if (sound_cards[card] != NULL || !sound_cards[card]->device)
                 return 0;
-        return sound_cards[card].device->config ? 1 : 0;
+        return sound_cards[card]->device->config ? 1 : 0;
 }
 
 char *sound_card_get_internal_name(int card)
 {
-        return sound_cards[card].internal_name;
+        if (sound_cards[card] != NULL)
+                return sound_cards[card]->internal_name;
 }
 
 int sound_card_get_from_internal_name(char *s)
 {
 	int c = 0;
 	
-	while (strlen(sound_cards[c].internal_name))
+	while (sound_cards[c] != NULL)
 	{
-		if (!strcmp(sound_cards[c].internal_name, s))
+		if (!strcmp(sound_cards[c]->internal_name, s))
 			return c;
 		c++;
 	}
@@ -104,8 +104,8 @@ int sound_card_get_from_internal_name(char *s)
 
 void sound_card_init()
 {
-        if (sound_cards[sound_card_current].device)
-                device_add(sound_cards[sound_card_current].device);
+        if (sound_cards[sound_card_current]->device)
+                device_add(sound_cards[sound_card_current]->device);
         sound_card_last = sound_card_current;
 }
 
@@ -285,4 +285,29 @@ void sound_reset()
         sound_set_cd_volume(65535, 65535);
         ioctl_audio_stop();
         image_audio_stop();
+}
+
+void sound_init_builtin()
+{
+        memset(sound_cards, 0, sizeof(sound_cards));
+
+        sound_cards[0] = &sc_1;
+        sound_cards[1] = &sc_2;
+        sound_cards[2] = &sc_3;
+        sound_cards[3] = &sc_4;
+        sound_cards[4] = &sc_5;
+        sound_cards[5] = &sc_6;
+        sound_cards[6] = &sc_7;
+        sound_cards[7] = &sc_8;
+        sound_cards[8] = &sc_9;
+        sound_cards[9] = &sc_10;
+        sound_cards[10] = &sc_11;
+        sound_cards[11] = &sc_12;
+        sound_cards[12] = &sc_13;
+        sound_cards[13] = &sc_14;
+        sound_cards[14] = &sc_15;
+        sound_cards[15] = &sc_16;
+        sound_cards[16] = &sc_17;
+        sound_cards[17] = &sc_18;
+        sound_cards[18] = &sc_19;
 }

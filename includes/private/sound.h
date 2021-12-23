@@ -22,6 +22,7 @@ extern int sound_pos_global;
 void sound_speed_changed();
 
 void sound_init();
+void sound_init_builtin();
 void sound_reset();
 
 void initalmain(int argc, char *argv[]);

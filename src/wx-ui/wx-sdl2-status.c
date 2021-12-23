@@ -35,7 +35,7 @@ drive_info_t* get_machine_info(char* s, int* num_drive_info) {
                         "Model: %s\n"
                         "CPU: %s",
                         model_getname(),
-                        models[model].cpu[cpu_manufacturer].cpus[cpu].name);
+                        models[model]->cpu[cpu_manufacturer].cpus[cpu].name);
         if (emulation_state == EMULATION_RUNNING)
                 sprintf(s+strlen(s), "\nEmulation speed: %d%%", fps);
         else if (emulation_state == EMULATION_PAUSED)

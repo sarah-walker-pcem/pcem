@@ -125,12 +125,12 @@ static struct
 
 void cpu_set_edx()
 {
-        EDX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
+        EDX = models[model]->cpu[cpu_manufacturer].cpus[cpu].edx_reset;
 }
 
 int fpu_get_type(int model, int manu, int cpu, const char *internal_name)
 {
-        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[manu].cpus[cpu];
         const FPU *fpus = cpu_s->fpus;
         int fpu_type = fpus[0].type;
         int c = 0;
@@ -147,7 +147,7 @@ int fpu_get_type(int model, int manu, int cpu, const char *internal_name)
 
 const char *fpu_get_internal_name(int model, int manu, int cpu, int type)
 {
-        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[manu].cpus[cpu];
         const FPU *fpus = cpu_s->fpus;
         int c = 0;
 
@@ -163,7 +163,7 @@ const char *fpu_get_internal_name(int model, int manu, int cpu, int type)
 
 const char *fpu_get_name_from_index(int model, int manu, int cpu, int c)
 {
-        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[manu].cpus[cpu];
         const FPU *fpus = cpu_s->fpus;
         
         return fpus[c].name;
@@ -171,7 +171,7 @@ const char *fpu_get_name_from_index(int model, int manu, int cpu, int c)
 
 int fpu_get_type_from_index(int model, int manu, int cpu, int c)
 {
-        CPU *cpu_s = &models[model].cpu[manu].cpus[cpu];
+        CPU *cpu_s = &models[model]->cpu[manu].cpus[cpu];
         const FPU *fpus = cpu_s->fpus;
 
         return fpus[c].type;
@@ -181,14 +181,14 @@ CPU *cpu_s;
 
 void cpu_set()
 {
-        if (!models[model].cpu[cpu_manufacturer].cpus)
+        if (!models[model]->cpu[cpu_manufacturer].cpus)
         {
                 /*CPU is invalid, set to default*/
                 cpu_manufacturer = 0;
                 cpu = 0;
         }
         
-        cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+        cpu_s = &models[model]->cpu[cpu_manufacturer].cpus[cpu];
 
         CPUID    = cpu_s->cpuid_model;
         cpuspeed = cpu_s->speed;
@@ -1176,7 +1176,7 @@ void cpu_set()
 
 void cpu_CPUID()
 {
-        switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
+        switch (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_i486DX:
                 if (!EAX)
@@ -1652,7 +1652,7 @@ void cpu_CPUID()
                         break;
 
                         case 0x80000006: /*L2 Cache information*/
-                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_K6_3P)
+                        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_K6_3P)
                                 ECX = 0x01004220;
                         else
                                 ECX = 0x00804220;
@@ -1714,9 +1714,9 @@ void cpu_CPUID()
                         EAX = 0x03020101;
                         EBX = 0;
                         ECX = 0;
-                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_PENTIUM_2)
+                        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_PENTIUM_2)
                                 EDX = 0x08040c43; /*512kb L2 cache*/
-                        else if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_CELERON)
+                        else if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_CELERON)
                                 EDX = 0x08040c40; /*No L2 cache*/
                         else
                                 EDX = 0x08040c41; /*128kb L2 cache*/
@@ -1735,7 +1735,7 @@ void cpu_CPUID()
                         EDX = 0x48727561;
                         break;
                         case 1:
-                        EAX = models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
+                        EAX = models[model]->cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
                         EBX = ECX = 0;
                         EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
 			if (cpu_has_feature(CPU_FEATURE_CX8))
@@ -1747,7 +1747,7 @@ void cpu_CPUID()
                         EAX = 0x80000006;
                         break;
                         case 0x80000001:
-                        EAX = models[model].cpu[cpu_manufacturer].cpus[cpu].edx_reset;
+                        EAX = models[model]->cpu[cpu_manufacturer].cpus[cpu].edx_reset;
                         EDX = CPUID_FPU | CPUID_TSC | CPUID_MSR;
 			if (cpu_has_feature(CPU_FEATURE_CX8))
 				EDX |= CPUID_CMPXCHG8B;
@@ -1758,7 +1758,7 @@ void cpu_CPUID()
                         break;
 
                         case 0x80000002: /*Processor name string*/
-                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
+                        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
                         {
                                 EAX = 0x20414956; /*VIA Samuel 2*/
                                 EBX = 0x756d6153;
@@ -1781,7 +1781,7 @@ void cpu_CPUID()
                         break;
 
                         case 0x80000006: /*L2 Cache information*/
-                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
+                        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpuid_model >= 0x670)
                                 ECX = 0x40040120; /*L2 cache*/
                         else
                                 ECX = 0;
@@ -1798,7 +1798,7 @@ void cpu_CPUID()
 
 void cpu_RDMSR()
 {
-        switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
+        switch (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_WINCHIP:
                 case CPU_WINCHIP2:
@@ -1900,7 +1900,7 @@ void cpu_RDMSR()
 
 void cpu_WRMSR()
 {
-        switch (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type)
+        switch (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type)
         {
                 case CPU_WINCHIP:
                 case CPU_WINCHIP2:
@@ -1929,14 +1929,14 @@ void cpu_WRMSR()
                                 cpu_features |= CPU_FEATURE_CX8;
 			else
                                 cpu_features &= ~CPU_FEATURE_CX8;
-			if ((EAX & (1 << 20)) && models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type >= CPU_WINCHIP2)
+			if ((EAX & (1 << 20)) && models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type >= CPU_WINCHIP2)
                                 cpu_features |= CPU_FEATURE_3DNOW;
 			else
                                 cpu_features &= ~CPU_FEATURE_3DNOW;
                         if (EAX & (1 << 29))
                                 CPUID = 0;
                         else
-                                CPUID = models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
+                                CPUID = models[model]->cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
                         break;
                         case 0x108:
                         msr.fcr2 = EAX | ((uint64_t)EDX << 32);
@@ -2066,10 +2066,10 @@ void cyrix_write(uint16_t addr, uint8_t val, void *priv)
                 if ((ccr3 & 0xf0) == 0x10)
                 {
                         ccr4 = val;
-                        if (models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type >= CPU_Cx6x86)
+                        if (models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type >= CPU_Cx6x86)
                         {
                                 if (val & 0x80)
-                                        CPUID = models[model].cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
+                                        CPUID = models[model]->cpu[cpu_manufacturer].cpus[cpu].cpuid_model;
                                 else
                                         CPUID = 0;
                         }
@@ -2099,10 +2099,10 @@ uint8_t cyrix_read(uint16_t addr, void *priv)
                         case 0xe8: return ((ccr3 & 0xf0) == 0x10) ? ccr4 : 0xff;
                         case 0xe9: return ((ccr3 & 0xf0) == 0x10) ? ccr5 : 0xff;
                         case 0xea: return ((ccr3 & 0xf0) == 0x10) ? ccr6 : 0xff;
-                        case 0xfe: return models[model].cpu[cpu_manufacturer].cpus[cpu].cyrix_id & 0xff;
-                        case 0xff: return models[model].cpu[cpu_manufacturer].cpus[cpu].cyrix_id >> 8;
+                        case 0xfe: return models[model]->cpu[cpu_manufacturer].cpus[cpu].cyrix_id & 0xff;
+                        case 0xff: return models[model]->cpu[cpu_manufacturer].cpus[cpu].cyrix_id >> 8;
                 }
-                if (cyrix_addr == 0x20 && models[model].cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_Cx5x86) return 0xff;
+                if (cyrix_addr == 0x20 && models[model]->cpu[cpu_manufacturer].cpus[cpu].cpu_type == CPU_Cx5x86) return 0xff;
         }
         return 0xff;
 }
@@ -2117,7 +2117,7 @@ void x86_setopcodes(OpFn *opcodes, OpFn *opcodes_0f, OpFn *dynarec_opcodes, OpFn
 
 void cpu_update_waitstates()
 {
-        cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+        cpu_s = &models[model]->cpu[cpu_manufacturer].cpus[cpu];
         
         if (is486)
                 cpu_prefetch_width = 16;
@@ -2169,7 +2169,7 @@ void cpu_set_turbo(int turbo)
         {
                 cpu_turbo = turbo;
 
-                cpu_s = &models[model].cpu[cpu_manufacturer].cpus[cpu];
+                cpu_s = &models[model]->cpu[cpu_manufacturer].cpus[cpu];
                 if (cpu_s->cpu_type >= CPU_286)
                 {
                         if (cpu_turbo)
