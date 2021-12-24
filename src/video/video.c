@@ -65,7 +65,7 @@ enum
 #define VIDEO_FLAG_TYPE_SPECIAL 2
 #define VIDEO_FLAG_TYPE_MASK    3
 
-VIDEO_CARD *video_cards[256];
+VIDEO_CARD *video_cards[GFX_MAX];
 
 VIDEO_CARD v_1 = {"3DFX Voodoo Banshee (reference)", "banshee", &voodoo_banshee_device, GFX_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
 VIDEO_CARD v_2 = {"3DFX Voodoo 3 2000", "v3_2000", &voodoo_3_2000_device, GFX_VOODOO_3_2000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};

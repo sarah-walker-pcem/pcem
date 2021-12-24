@@ -21,7 +21,7 @@
 #define MODEL_GFX_DISABLE_SW 0x300
 #define MODEL_GFX_MASK       0x300
 
-extern MODEL *models[256];
+extern MODEL *models[ROM_MAX];
 
 extern int model;
 

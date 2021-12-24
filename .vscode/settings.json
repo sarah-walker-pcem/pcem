@@ -1,3 +1,8 @@
 {
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "rom.h": "c",
+        "vid_t1000.h": "c",
+        "devices.h": "c"
+    }
 }

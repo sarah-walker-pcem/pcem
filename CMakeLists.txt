@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/bin)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/public)
@@ -39,6 +40,11 @@ message("***************************************************************")
 option(USE_NETWORKING "Build PCem with networking support" OFF)
 message("Networking Support: ${USE_NETWORKING}")
 
+if(USE_NETWORKING)
+    option(USE_PCAP_NETWORKING "Build PCem with PCAP support" ON)
+    message("PCAP Networking Support: ${USE_PCAP_NETWORKING}")
+endif()
+
 option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
 message("ALSA MIDI Support: ${USE_ALSA}")
 
@@ -60,6 +66,11 @@ include(${wxWidgets_USE_FILE})
 if(USE_ALSA)
     find_package(ALSA REQUIRED)
     include_directories(${ALSA_INCLUDE_DIRS})
+endif()
+
+if(USE_PCAP_NETWORKING)
+    find_package(PCAP REQUIRED)
+    include_directories(${PCAP_INCLUDE_DIR})
 endif()
 
 find_package(OpenGL REQUIRED)

@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/cmake/pcem_includes.cmake)
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wx-ui)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
@@ -368,6 +370,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 endif()
 
 set(PCEM_SRC ${PCEM_SRC}
+	wx-ui/pc.xrc
 	wx-ui/wx-main.cc
 	wx-ui/wx-config_sel.c
 	wx-ui/wx-dialogbox.cc
@@ -396,6 +399,12 @@ set(PCEM_SRC ${PCEM_SRC}
 
 if(USE_NETWORKING)
 	set(PCEM_DEFINES ${PCEM_DEFINES} USE_NETWORKING)
+	
+	if(USE_PCAP_NETWORKING)
+		set(PCEM_DEFINES ${PCEM_DEFINES} USE_PCAP_NETWORKING)
+		set(NETWORKING_LIBRARIES ${NETWORKING_LIBRARIES} ${PCAP_LIBRARY})
+	endif()
+
 	set(PCEM_SRC ${PCEM_SRC}
 		networking/ne2000.c
 		networking/nethandler.c
@@ -429,11 +438,13 @@ if(USE_NETWORKING)
 	endif()
 endif()
 
-add_library(pcem SHARED ${PCEM_SRC})
+set(PCEM_LIBRARIES ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${ALSA_LIBRARIES} ${NETWORKING_LIBRARIES})
+
+add_library(pcem SHARED ${PCEM_SRC} ${PCEM_PRIVATE_HEADERS} ${PCEM_PUBLIC_HEADERS})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
-target_link_libraries(pcem ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${ALSA_LIBRARIES} ${NETWORKING_LIBRARIES})
+target_link_libraries(pcem ${PCEM_LIBRARIES})
 
 add_executable(pcem-bin main.c)
-target_link_libraries(pcem-bin pcem)
+target_link_libraries(pcem-bin pcem ${PCEM_LIBRARIES})
 set_target_properties(pcem-bin PROPERTIES OUTPUT_NAME "pcem")

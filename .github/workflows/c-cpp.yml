@@ -21,7 +21,7 @@ jobs:
             libsdl2-dev
             libopenal-dev
             libwxgtk3.0-gtk3-dev
-            libncap-dev
+            libpcap-dev
             cmake
         - name: Windows 32bits (MSYS2)
           os: windows-latest
@@ -39,6 +39,7 @@ jobs:
             mingw-w64-i686-openal 
             mingw-w64-i686-wxWidgets
             mingw-w64-i686-cmake
+            mingw-w64-i686-libpcap
         - name: Windows 64bits (MSYS2)
           os: windows-latest
           compiler: MINGW64
@@ -55,6 +56,7 @@ jobs:
             mingw-w64-x86_64-openal
             mingw-w64-x86_64-wxWidgets
             mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-libpcap
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     
@@ -78,17 +80,6 @@ jobs:
         update: false
         # Install packages after installation through pacman
         install: ${{ matrix.installdeps }}
-    - name: npcap download (Windows)
-      if: runner.os == 'Windows'
-      shell: msys2 {0}
-      run: |
-       wget https://nmap.org/npcap/dist/npcap-sdk-1.05.zip
-       unzip -d npcap-sdk-1.05/ npcap-sdk-1.05.zip
-       cd npcap-sdk-1.05
-       cp -r Include/* /mingw32/include/
-       cp -r Include/* /mingw64/include/
-       cp -r Lib/*.lib /mingw32/lib/
-       cp -r Lib/x64/*.lib /mingw64/lib/
     - name: Setup ubuntu dependencies
       if: runner.os == 'Linux'
       run: |
@@ -127,6 +118,7 @@ jobs:
         cp /mingw32/bin/wxmsw30u_html_gcc_custom.dll dist/bin
         cp /mingw32/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
         cp /mingw32/bin/zlib1.dll dist/bin
+        cp /mingw32/bin/libpcap.dll dist/bin
     - name: prepare-package (Windows64)
       if: runner.os == 'Windows' && matrix.compiler == 'MINGW64'
       shell: msys2 {0}
@@ -158,6 +150,7 @@ jobs:
         cp /mingw64/bin/wxmsw30u_html_gcc_custom.dll dist/bin
         cp /mingw64/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
         cp /mingw64/bin/zlib1.dll dist/bin
+        cp /mingw64/bin/libpcap.dll dist/bin
     - name: configure (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -176,7 +169,7 @@ jobs:
       shell: msys2 {0}
       run: |
         cp ./temp/build/output/bin/pcem.exe dist/bin
-        cp ./temp/build/output/lib/libpcem.dll dist/bin
+        cp ./temp/build/output/bin/libpcem.dll dist/bin
         cd dist
         zip -r -9 ${{ matrix.artifacts_path }} *
 

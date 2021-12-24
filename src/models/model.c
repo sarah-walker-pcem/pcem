@@ -84,6 +84,8 @@
 #include "xi8088.h"
 #include "zenith.h"
 
+#include <pcem/devices.h>
+
 void             xt_init();
 void           pcjr_init();
 void        tandy1k_init();
@@ -142,13 +144,13 @@ int model;
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
 
-MODEL *models[256];
+MODEL *models[ROM_MAX];
 
 int model_count()
 {
         int ret = 0;
 
-        while (models[ret] != NULL && ret < 256)
+        while (models[ret] != NULL && ret < ROM_MAX)
                 ret++;
 
         return ret;
@@ -881,101 +883,106 @@ MODEL m_92 = {"[Socket 8] Intel VS440FX", ROM_VS440FX, "vs440fx", {{"Intel", cpu
 
 MODEL m_93 = {"[Slot 1] Gigabyte GA-686BX", ROM_GA686BX, "ga686bx", {{"Intel", cpus_Slot1_100MHz}, {"VIA", cpus_VIA_100MHz}}, MODEL_GFX_NONE | MODEL_AT | MODEL_PCI | MODEL_PS2 | MODEL_HAS_IDE, 8, 512, 8, at_ga686bx_init, NULL};
 
+void pcem_add_model(MODEL *model)
+{
+        models[model_count()] = model;
+}
+
 void model_init_builtin()
 {
         memset(models, 0, sizeof(models));
 
-        models[0] = &m_1;
-models[1] = &m_2;
-models[2] = &m_3;
-models[3] = &m_4;
-models[4] = &m_5;
-models[5] = &m_6;
-models[6] = &m_7;
-models[7] = &m_8;
-models[8] = &m_9;
-models[9] = &m_10;
-models[10] = &m_11;
-models[11] = &m_12;
-models[12] = &m_13;
-models[13] = &m_14;
-models[14] = &m_15;
-models[15] = &m_16;
-models[16] = &m_17;
-models[17] = &m_18;
-models[18] = &m_19;
-models[19] = &m_20;
-models[20] = &m_21;
-models[21] = &m_22;
-models[22] = &m_23;
-models[23] = &m_24;
-models[24] = &m_25;
-models[25] = &m_26;
-models[26] = &m_27;
-models[27] = &m_28;
-models[28] = &m_29;
-models[29] = &m_30;
-models[30] = &m_31;
-models[31] = &m_32;
-models[32] = &m_33;
-models[33] = &m_34;
-models[34] = &m_35;
-models[35] = &m_36;
-models[36] = &m_37;
-models[37] = &m_38;
-models[38] = &m_39;
-models[39] = &m_40;
-models[40] = &m_41;
-models[41] = &m_42;
-models[42] = &m_43;
-models[43] = &m_44;
-models[44] = &m_45;
-models[45] = &m_46;
-models[46] = &m_47;
-models[47] = &m_48;
-models[48] = &m_49;
-models[49] = &m_50;
-models[50] = &m_51;
-models[51] = &m_52;
-models[52] = &m_53;
-models[53] = &m_54;
-models[54] = &m_55;
-models[55] = &m_56;
-models[56] = &m_57;
-models[57] = &m_58;
-models[58] = &m_59;
-models[59] = &m_60;
-models[60] = &m_61;
-models[61] = &m_62;
-models[62] = &m_63;
-models[63] = &m_64;
-models[64] = &m_65;
-models[65] = &m_66;
-models[66] = &m_67;
-models[67] = &m_68;
-models[68] = &m_69;
-models[69] = &m_70;
-models[70] = &m_71;
-models[71] = &m_72;
-models[72] = &m_73;
-models[73] = &m_74;
-models[74] = &m_75;
-models[75] = &m_76;
-models[76] = &m_77;
-models[77] = &m_78;
-models[78] = &m_79;
-models[79] = &m_80;
-models[80] = &m_81;
-models[81] = &m_82;
-models[82] = &m_83;
-models[83] = &m_84;
-models[84] = &m_85;
-models[85] = &m_86;
-models[86] = &m_87;
-models[87] = &m_88;
-models[88] = &m_89;
-models[89] = &m_90;
-models[90] = &m_91;
-models[91] = &m_92;
-models[92] = &m_93;
+        pcem_add_model(&m_1);
+        pcem_add_model(&m_2);
+        pcem_add_model(&m_3);
+        pcem_add_model(&m_4);
+        pcem_add_model(&m_5);
+        pcem_add_model(&m_6);
+        pcem_add_model(&m_7);
+        pcem_add_model(&m_8);
+        pcem_add_model(&m_9);
+        pcem_add_model(&m_10);
+        pcem_add_model(&m_11);
+        pcem_add_model(&m_12);
+        pcem_add_model(&m_13);
+        pcem_add_model(&m_14);
+        pcem_add_model(&m_15);
+        pcem_add_model(&m_16);
+        pcem_add_model(&m_17);
+        pcem_add_model(&m_18);
+        pcem_add_model(&m_19);
+        pcem_add_model(&m_20);
+        pcem_add_model(&m_21);
+        pcem_add_model(&m_22);
+        pcem_add_model(&m_23);
+        pcem_add_model(&m_24);
+        pcem_add_model(&m_25);
+        pcem_add_model(&m_26);
+        pcem_add_model(&m_27);
+        pcem_add_model(&m_28);
+        pcem_add_model(&m_29);
+        pcem_add_model(&m_30);
+        pcem_add_model(&m_31);
+        pcem_add_model(&m_32);
+        pcem_add_model(&m_33);
+        pcem_add_model(&m_34);
+        pcem_add_model(&m_35);
+        pcem_add_model(&m_36);
+        pcem_add_model(&m_37);
+        pcem_add_model(&m_38);
+        pcem_add_model(&m_39);
+        pcem_add_model(&m_40);
+        pcem_add_model(&m_41);
+        pcem_add_model(&m_42);
+        pcem_add_model(&m_43);
+        pcem_add_model(&m_44);
+        pcem_add_model(&m_45);
+        pcem_add_model(&m_46);
+        pcem_add_model(&m_47);
+        pcem_add_model(&m_48);
+        pcem_add_model(&m_49);
+        pcem_add_model(&m_50);
+        pcem_add_model(&m_51);
+        pcem_add_model(&m_52);
+        pcem_add_model(&m_53);
+        pcem_add_model(&m_54);
+        pcem_add_model(&m_55);
+        pcem_add_model(&m_56);
+        pcem_add_model(&m_57);
+        pcem_add_model(&m_58);
+        pcem_add_model(&m_59);
+        pcem_add_model(&m_60);
+        pcem_add_model(&m_61);
+        pcem_add_model(&m_62);
+        pcem_add_model(&m_63);
+        pcem_add_model(&m_64);
+        pcem_add_model(&m_65);
+        pcem_add_model(&m_66);
+        pcem_add_model(&m_67);
+        pcem_add_model(&m_68);
+        pcem_add_model(&m_69);
+        pcem_add_model(&m_70);
+        pcem_add_model(&m_71);
+        pcem_add_model(&m_72);
+        pcem_add_model(&m_73);
+        pcem_add_model(&m_74);
+        pcem_add_model(&m_75);
+        pcem_add_model(&m_76);
+        pcem_add_model(&m_77);
+        pcem_add_model(&m_78);
+        pcem_add_model(&m_79);
+        pcem_add_model(&m_80);
+        pcem_add_model(&m_81);
+        pcem_add_model(&m_82);
+        pcem_add_model(&m_83);
+        pcem_add_model(&m_84);
+        pcem_add_model(&m_85);
+        pcem_add_model(&m_86);
+        pcem_add_model(&m_87);
+        pcem_add_model(&m_88);
+        pcem_add_model(&m_89);
+        pcem_add_model(&m_90);
+        pcem_add_model(&m_91);
+        pcem_add_model(&m_92);
+        pcem_add_model(&m_93);
 }

@@ -6,6 +6,8 @@
 
 #include "timer.h"
 
+#include <pcem/defines.h>
+
 #ifdef ABS
 #undef ABS
 #endif
@@ -270,7 +272,7 @@ enum
         ROM_GA686BX,
         ROM_PC5086,
 
-        ROM_MAX
+        ROM_BUILTIN_MAX,
 };
 
 extern int romspresent[ROM_MAX];
@@ -329,7 +331,7 @@ enum
         GFX_VOODOO_3_2000, /*Voodoo 3 2000*/
         GFX_VOODOO_3_3000, /*Voodoo 3 3000*/
 
-        GFX_MAX
+        GFX_BUILTIN_MAX,
 };
 
 extern int gfx_present[GFX_MAX];

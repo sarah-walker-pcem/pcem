@@ -1,5 +1,7 @@
-#ifndef _DEVICES_H_
-#define _DEVICES_H_
+#ifndef _PCEM_DEVICES_H_
+#define _PCEM_DEVICES_H_
+
+#include <pcem/cpu.h>
 
 typedef struct device_config_selection_t
 {
@@ -54,31 +56,6 @@ typedef struct VIDEO_CARD
         video_timings_t timing;
 } VIDEO_CARD;
 
-typedef struct FPU
-{
-        const char *name;
-        const char *internal_name;
-        const int type;
-} FPU;
-
-typedef struct CPU
-{
-        char name[32];
-        int cpu_type;
-        const FPU *fpus;
-        int speed;
-        int rspeed;
-        int multi;
-        int pci_speed;
-        uint32_t edx_reset;
-        uint32_t cpuid_model;
-        uint16_t cyrix_id;
-        int cpu_flags;
-        int mem_read_cycles, mem_write_cycles;
-        int cache_read_cycles, cache_write_cycles;
-        int atclk_div;
-} CPU;
-
 typedef struct MODEL
 {
         char name[64];
@@ -101,4 +78,4 @@ extern void pcem_add_video(VIDEO_CARD *video);
 extern void pcem_add_sound(SOUND_CARD *sound);
 extern void pcem_add_device(device_t *device);
 
-#endif /* _DEVICES_H_ */
+#endif /* _PCEM_DEVICES_H_ */
