@@ -1,7 +1,8 @@
 extern int pcem_lib_main(int argc, char **argv);
 
 #ifdef WIN32
-#include <winbase.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nShowCmd)
 {

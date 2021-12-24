@@ -3,7 +3,9 @@
 #include <windows.h>
 #include <windowsx.h>
 #undef BITMAP
+#endif
 
+#ifdef USE_PCAP_NETWORKING
 #include <pcap.h>
 #endif
 
@@ -15,17 +17,9 @@
 #include "config.h"
 #include "nethandler.h"
 
-#ifdef _WIN32
-static HINSTANCE net_hLib = 0;
-static char *net_lib_name = "wpcap.dll";
+#ifdef USE_PCAP_NETWORKING
 static pcap_if_t *alldevs;
 static char *dev_name[20];
-        
-int     (*_pcap_findalldevs)(pcap_if_t **, char *);
-void    (*_pcap_freealldevs)(pcap_if_t *);
-pcap_t *(*_pcap_open_live)(const char *, int, int, int, char *);
-int     (*_pcap_datalink)(pcap_t *);
-void    (*_pcap_close)(pcap_t *);
 #endif
 
 #define ETH_DEV_NAME_MAX     256                        /* maximum device name size */
@@ -35,9 +29,10 @@ void    (*_pcap_close)(pcap_t *);
 #define ETH_MAX_PACKET      1514                        /* maximum ethernet packet size */
 #define PCAP_READ_TIMEOUT -1
 
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
 static int get_network_name(char *dev_name, char *regval)
 {
+        #if _WIN32
         if (dev_name[strlen( "\\Device\\NPF_" )] == '{')
         {
                 char regkey[2048];
@@ -65,13 +60,14 @@ static int get_network_name(char *dev_name, char *regval)
                         RegCloseKey (reghnd);
                 }
         }
+        #endif
         return -1;
 }
 #endif
 int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
         void *h;
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         pcap_if_t *dev;
         char errbuf[PCAP_ERRBUF_SIZE];
 #endif
@@ -85,21 +81,12 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_DEVICE"));
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
                 wx_enablewindow(h, FALSE);
-#ifdef _WIN32
-                net_hLib = LoadLibraryA(net_lib_name);
+#ifdef USE_PCAP_NETWORKING
                 
-                if (net_hLib)
-                {
                         int c = 0;
                         int match = 0;
-                        
-                        _pcap_findalldevs = (void *)GetProcAddress(net_hLib, "pcap_findalldevs");
-                        _pcap_freealldevs = (void *)GetProcAddress(net_hLib, "pcap_freealldevs");
-                        _pcap_open_live   = (void *)GetProcAddress(net_hLib, "pcap_open_live");
-                        _pcap_datalink    = (void *)GetProcAddress(net_hLib, "pcap_datalink");
-                        _pcap_close       = (void *)GetProcAddress(net_hLib, "pcap_close");
 
-                        if (_pcap_findalldevs(&alldevs, errbuf) != -1)
+                        if (pcap_findalldevs(&alldevs, errbuf) != -1)
                         {
                                 char *pcap_device = config_get_string(CFG_GLOBAL, NULL, "pcap_device", "nothing");
                                 
@@ -107,13 +94,13 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
 
                                 for (dev = alldevs; dev; dev = dev->next)
                                 {
-                                        pcap_t *conn = _pcap_open_live(dev->name, ETH_MAX_PACKET, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
+                                        pcap_t *conn = pcap_open_live(dev->name, ETH_MAX_PACKET, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
                                         int datalink = 0;
                                         
                                         if (conn)
                                         {
-                                                datalink = _pcap_datalink(conn);
-                                                _pcap_close(conn);
+                                                datalink = pcap_datalink(conn);
+                                                pcap_close(conn);
                                         }
                                         
                                         if (conn && datalink == DLT_EN10MB)
@@ -154,7 +141,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                         wx_enablewindow(h, TRUE);
                                 }
                         }
-                }
+                
 #endif
                 return TRUE;
 
@@ -165,7 +152,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                         
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_TYPE"));
                         type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
                         if (type) /*PCAP*/
                         {
                                 int dev;
@@ -181,41 +168,19 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
 #endif
                                 config_set_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP);
                                 config_set_string(CFG_GLOBAL, NULL, "pcap_device", "nothing");
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
                         }
 #endif
                         saveconfig_global_only();
 
                         wx_enddialog(hdlg, 1);
-#ifdef _WIN32
-                        if (net_hLib)
-                        {
-                                _pcap_freealldevs(alldevs);
-                                _pcap_findalldevs = NULL;
-                                _pcap_freealldevs = NULL;
-                                _pcap_open_live   = NULL;
-                                _pcap_datalink    = NULL;
-                                _pcap_close       = NULL;
-                                FreeLibrary(net_hLib);
-                        }
-#endif
+
                         return TRUE;
                 }
                 else if (wParam == wxID_CANCEL)
                 {
                         wx_enddialog(hdlg, 0);
-#ifdef _WIN32
-                        if (net_hLib)
-                        {
-                                _pcap_freealldevs(alldevs);
-                                _pcap_findalldevs = NULL;
-                                _pcap_freealldevs = NULL;
-                                _pcap_open_live   = NULL;
-                                _pcap_datalink    = NULL;
-                                _pcap_close       = NULL;
-                                FreeLibrary(net_hLib);
-                        }
-#endif
+
                         return TRUE;
                 }
                 else if (ID_IS("IDC_COMBO_NETWORK_TYPE"))

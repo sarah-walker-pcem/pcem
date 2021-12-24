@@ -34,7 +34,7 @@
 
 #include "slirp/slirp.h"
 #include "slirp/queue.h"
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
 #include <pcap.h>
 #endif
 
@@ -65,29 +65,9 @@ typedef enum
 
 //#define NE2000_DEBUG
 
-#ifdef _WIN32
-static HINSTANCE net_hLib = 0;                      /* handle to DLL */
-static char *net_lib_name = "wpcap.dll";
-pcap_t *net_pcap;
-typedef pcap_t* (__cdecl * PCAP_OPEN_LIVE)(const char *, int, int, int, char *);
-typedef int (__cdecl * PCAP_SENDPACKET)(pcap_t* handle, const u_char* msg, int len);
-typedef int (__cdecl * PCAP_SETNONBLOCK)(pcap_t *, int, char *);
-typedef const u_char*(__cdecl *PCAP_NEXT)(pcap_t *, struct pcap_pkthdr *);
-typedef const char*(__cdecl *PCAP_LIB_VERSION)(void);
-typedef void (__cdecl *PCAP_CLOSE)(pcap_t *);
-typedef int  (__cdecl *PCAP_GETNONBLOCK)(pcap_t *p, char *errbuf);
-typedef int (__cdecl *PCAP_COMPILE)(pcap_t *p, struct bpf_program *fp, const char *str, int optimize, bpf_u_int32 netmask);
-typedef int (__cdecl *PCAP_SETFILTER)(pcap_t *p, struct bpf_program *fp);
+#ifdef USE_PCAP_NETWORKING
 
-PCAP_LIB_VERSION 	_pcap_lib_version;
-PCAP_OPEN_LIVE		_pcap_open_live;
-PCAP_SENDPACKET		_pcap_sendpacket;
-PCAP_SETNONBLOCK	_pcap_setnonblock;
-PCAP_NEXT		_pcap_next;
-PCAP_CLOSE		_pcap_close;
-PCAP_GETNONBLOCK	_pcap_getnonblock;
-PCAP_COMPILE		_pcap_compile;
-PCAP_SETFILTER		_pcap_setfilter;
+pcap_t *net_pcap;
 #endif
 
 queueADT slirpq;
@@ -921,10 +901,10 @@ void ne2000_write(uint16_t address, uint8_t value, void *p)
                                 pclog("ne2000 slirp sending packet\n");
 #endif
                         }
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
                         if(net_is_pcap && net_pcap!=NULL)
                         {
-                                _pcap_sendpacket(net_pcap, &ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
+                                pcap_sendpacket(net_pcap, &ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
 #ifdef NE2000_DEBUG
                                 pclog("ne2000 pcap sending packet\n");
 #endif
@@ -1620,7 +1600,7 @@ static void ne2000_poller(void *p)
         ne2000_t *ne2000 = (ne2000_t *)p;
         struct queuepacket *qp;
         const unsigned char *data;
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         struct pcap_pkthdr h;
 #endif
         if (net_is_slirp)
@@ -1646,10 +1626,10 @@ static void ne2000_poller(void *p)
                         slirp_tic();
                 }
 	}//end slirp
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         if (net_is_pcap && net_pcap!=NULL)
 	{
-        	data = _pcap_next(net_pcap,&h);
+        	data = pcap_next(net_pcap,&h);
         	if (data == 0x0)
                         return;
         	if ((memcmp(data+6,maclocal,6)) == 0)
@@ -1707,7 +1687,7 @@ void *ne2000_common_init()
         //0 pcap
         //1 slirp
         //
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         net_is_slirp = (config_get_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP) == NET_SLIRP) ? 1 : 0;
         pclog("ne2000 pcap device %s\n",config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"));
     
@@ -1770,34 +1750,19 @@ void *ne2000_common_init()
                         net_is_slirp=0;
                 }
         }
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         if (net_is_pcap)
         {	//pcap
                 char errbuf[32768];
 
                 pclog("ne2000 initalizing libpcap\n");
                 net_is_slirp=0;
-                net_hLib = LoadLibraryA(net_lib_name);
-                if(net_hLib==0)
-                {
-                        pclog("ne2000 Failed to load %s\n",net_lib_name);
-                        net_is_pcap=0;
-                }
-                _pcap_lib_version =(PCAP_LIB_VERSION)GetProcAddress(net_hLib,"pcap_lib_version");
-                _pcap_open_live=(PCAP_OPEN_LIVE)GetProcAddress(net_hLib,"pcap_open_live");		
-                _pcap_sendpacket=(PCAP_SENDPACKET)GetProcAddress(net_hLib,"pcap_sendpacket");		
-                _pcap_setnonblock=(PCAP_SETNONBLOCK)GetProcAddress(net_hLib,"pcap_setnonblock");	
-                _pcap_next=(PCAP_NEXT)GetProcAddress(net_hLib,"pcap_next");		
-                _pcap_close=(PCAP_CLOSE)GetProcAddress(net_hLib,"pcap_close");
-                _pcap_getnonblock=(PCAP_GETNONBLOCK)GetProcAddress(net_hLib,"pcap_getnonblock");
-                _pcap_compile=(PCAP_COMPILE)GetProcAddress(net_hLib,"pcap_compile");
-                _pcap_setfilter=(PCAP_SETFILTER)GetProcAddress(net_hLib,"pcap_setfilter");   
     
-                if (_pcap_lib_version && _pcap_open_live && _pcap_sendpacket && _pcap_setnonblock && _pcap_next && _pcap_close && _pcap_getnonblock)
+                if (pcap_lib_version && pcap_open_live && pcap_sendpacket && pcap_setnonblock && pcap_next && pcap_close && pcap_getnonblock)
                 {
-                        pclog("ne2000 Pcap version [%s]\n",_pcap_lib_version());
+                        pclog("ne2000 Pcap version [%s]\n", pcap_lib_version());
 
-                        if ((net_pcap=_pcap_open_live(config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"),1518,1,15,errbuf))==0)
+                        if ((net_pcap=pcap_open_live(config_get_string(CFG_GLOBAL, NULL,"pcap_device","nothing"),1518,1,15,errbuf))==0)
 			{
                                 pclog("ne2000 pcap_open_live error on %s!\n",config_get_string(CFG_GLOBAL, NULL,"pcap_device","whatever the ethernet is"));
                                 net_is_pcap=0; return(ne2000);	//YUCK!!!
@@ -1805,22 +1770,22 @@ void *ne2000_common_init()
 		}
 		else
                 {	
-                        pclog("%d %d %d %d %d %d %d\n",_pcap_lib_version, _pcap_open_live,_pcap_sendpacket,_pcap_setnonblock,_pcap_next,_pcap_close,_pcap_getnonblock);
+                        pclog("%d %d %d %d %d %d %d\n",pcap_lib_version, pcap_open_live,pcap_sendpacket,pcap_setnonblock,pcap_next,pcap_close,pcap_getnonblock);
 			net_is_pcap=1;
 		}
 
 		//Time to check that we are in non-blocking mode.
-		rc=_pcap_getnonblock(net_pcap,errbuf);
+		rc=pcap_getnonblock(net_pcap,errbuf);
 		pclog("ne2000 pcap is currently in %s mode\n",rc? "non-blocking":"blocking");
 		switch(rc)
 		{
                         case 0:
                         pclog("ne2000 Setting interface to non-blocking mode..");
-			rc=_pcap_setnonblock(net_pcap,1,errbuf);
+			rc=pcap_setnonblock(net_pcap,1,errbuf);
 			if (rc==0)
                         {
                                 pclog("..");
-                                rc=_pcap_getnonblock(net_pcap,errbuf);
+                                rc=pcap_getnonblock(net_pcap,errbuf);
                                 if (rc==1)
                                 {
                                         pclog("..!",rc);
@@ -1849,7 +1814,7 @@ void *ne2000_common_init()
 		}
                 if( net_is_pcap )
                 {
-                        if(_pcap_compile && _pcap_setfilter)
+                        if(pcap_compile && pcap_setfilter)
                         {
                                 struct bpf_program fp;
                                 char filter_exp[255];
@@ -1860,14 +1825,14 @@ void *ne2000_common_init()
                                         maclocal[0], maclocal[1], maclocal[2], maclocal[3], maclocal[4], maclocal[5]);
 
                                 //I'm doing a MAC level filter so TCP/IP doesn't matter.
-                                if (_pcap_compile(net_pcap, &fp, filter_exp, 0, 0xffffffff) == -1)
+                                if (pcap_compile(net_pcap, &fp, filter_exp, 0, 0xffffffff) == -1)
                                 {
                                         pclog("\nne2000 Couldn't compile filter\n");
                                 }
                                 else
                                 {
                                         pclog("...");
-                                        if (_pcap_setfilter(net_pcap, &fp) == -1)
+                                        if (pcap_setfilter(net_pcap, &fp) == -1)
                                         {
                                                 pclog("\nError installing pcap filter.\n");
                                         }
@@ -1934,11 +1899,10 @@ void ne2000_close(void *p)
         	net_slirp_inited=0;
         	pclog("ne2000 exiting slirp\n");
 	}
-#ifdef _WIN32
+#ifdef USE_PCAP_NETWORKING
         if(net_is_pcap && net_pcap!=NULL)
 	{
-        	_pcap_close(net_pcap);
-        	FreeLibrary(net_hLib);
+        	pcap_close(net_pcap);
         	pclog("ne2000 closing pcap\n");
 	}
 #endif
