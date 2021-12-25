@@ -31,7 +31,7 @@ endif()
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DEFINES PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
-message("PCem ${PCEM_VERSION_STRING}")
+message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
 message("***************************************************************")
 message("OS Building For: ${CMAKE_SYSTEM_NAME}")
 message("System Processor: ${PCEM_CPU_TYPE}")
