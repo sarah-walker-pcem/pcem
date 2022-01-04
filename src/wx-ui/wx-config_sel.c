@@ -8,6 +8,20 @@ static int active_config = -1;
 
 extern int config_open(void* hwnd);
 
+char *validate_config_name(const char *name)
+{
+        char notAllowed[] = {'/', '<', '>', ':', '"', '\\', '|', '?', '*'};
+
+        for(int i = 0; i < sizeof(notAllowed) / sizeof(char); i++) 
+        {
+                char * ret = strchr(name, notAllowed[i]);
+                if(ret != NULL)
+                        return ret;
+        }
+
+        return NULL;
+}
+
 static void select_config(void* hdlg, char* name)
 {
         char s[512];
@@ -132,28 +146,35 @@ static int config_selection_dlgproc(void* hdlg, int message, INT_PARAM wParam, L
                                 {
                                         if (wx_textentrydialog(hdlg, "Enter name:", "New config", name, 1, 64, (LONG_PARAM)name))
                                         {
-                                                char cfg[512];
-
-                                                strcpy(cfg, configs_path);
-                                                put_backslash(cfg);
-                                                strcat(cfg, name);
-                                                strcat(cfg, ".cfg");
-
-                                                pclog("Config %s\n", cfg);
-
-                                                if (!wx_file_exists(cfg))
+                                                if(validate_config_name(name) != NULL) 
                                                 {
-                                                        if (config_open(hdlg))
-                                                        {
-                                                                saveconfig(cfg);
+                                                        wx_simple_messagebox("Invalid name", "The following characters cannot be in the name: /, <, >, :, \", \\, |, ?, *");
+                                                } 
+                                                else 
+                                                {
+                                                        char cfg[512];
 
-                                                                config_list_update(hdlg);
-                                                                select_config(hdlg, name);
+                                                        strcpy(cfg, configs_path);
+                                                        put_backslash(cfg);
+                                                        strcat(cfg, name);
+                                                        strcat(cfg, ".cfg");
+
+                                                        pclog("Config %s\n", cfg);
+
+                                                        if (!wx_file_exists(cfg))
+                                                        {
+                                                                if (config_open(hdlg))
+                                                                {
+                                                                        saveconfig(cfg);
+
+                                                                        config_list_update(hdlg);
+                                                                        select_config(hdlg, name);
+                                                                }
+                                                                done = 1;
                                                         }
-                                                        done = 1;
+                                                        else
+                                                                wx_simple_messagebox("Already exists", "A configuration with that name already exists.");
                                                 }
-                                                else
-                                                        wx_simple_messagebox("Already exists", "A configuration with that name already exists.");
                                         }
                                         else
                                                 done = 1;
