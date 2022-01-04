@@ -62,8 +62,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
 	message("SB_DSP_RECORD_DEBUG debug output: ${PCEM_SB_DSP_RECORD_DEBUG}")
 	option(PCEM_MACH64_DEBUG "Build PCem with MACH64_DEBUG debug output" OFF)
 	message("MACH64_DEBUG debug output: ${PCEM_MACH64_DEBUG}")
-	option(USE_ALSA "Build PCem with DEBUG_EXTRA debug output" OFF)
-	message("SLIRP_DEBUG debug output: ${PCEM_SLIRP_DEBUG}")
 	option(PCEM_DEBUG_EXTRA "Build PCem with DEBUG_EXTRA debug output" OFF)
 	message("DEBUG_EXTRA debug output: ${PCEM_DEBUG_EXTRA}")
     message("***************************************************************")

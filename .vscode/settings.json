@@ -1,8 +1,6 @@
 {
     "cmake.configureOnOpen": true,
     "files.associations": {
-        "rom.h": "c",
-        "vid_t1000.h": "c",
-        "devices.h": "c"
+        "*.xrc": "xml"
     }
 }

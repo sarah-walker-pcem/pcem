@@ -336,14 +336,9 @@ void StatusFrame::OnCommand(wxCommandEvent& event)
         {
                 wxDialog dlg;
                 wxXmlResource::Get()->LoadDialog(&dlg, this, "AboutDlg");
-                dlg.FindWindow("VERSION_TEXT")->SetLabel(
-                        "PCem " PCEM_VERSION_STRING "\n"
-                        "https://pcem-emulator.co.uk/\n\n"
-                        "This program is licensed under the GNU General Public License version 2.\n"
-                        "See COPYING for more details.\n\n"
-                        "Toolbar-icons made by Roundicons (https://roundicons.com/) from www.flaticon.com\n"
-                        "Other icons made by FatCow (http://www.fatcow.com/free-icons/)"
-                );
+                wxString version = dlg.FindWindow("VERSION_TEXT")->GetLabel();
+                version.Replace("PCEM-VERSION-STRING", PCEM_VERSION_STRING);
+                dlg.FindWindow("VERSION_TEXT")->SetLabel(version);
                 dlg.Fit();
                 dlg.ShowModal();
         }
