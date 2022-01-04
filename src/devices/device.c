@@ -5,6 +5,8 @@
 #include "model.h"
 #include "sound.h"
 
+#include <pcem/devices.h>
+
 static void *device_priv[256];
 static device_t *devices[256];
 
@@ -40,6 +42,11 @@ void device_add(device_t *d)
         devices[c] = d;
         device_priv[c] = priv;        
         current_device_name = NULL;
+}
+
+void pcem_add_device(device_t *device)
+{
+        device_add(device);
 }
 
 void device_close_all()

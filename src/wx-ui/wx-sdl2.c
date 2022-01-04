@@ -26,6 +26,7 @@
 #include "video.h"
 #include "cpu.h"
 #include "ide.h"
+#include "hdd.h"
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
@@ -38,6 +39,7 @@
 #include "disc_img.h"
 #include "mem.h"
 #include "paths.h"
+#include "nethandler.h"
 
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
@@ -536,6 +538,8 @@ int pc_main(int argc, char** argv)
         model_init_builtin();
         video_init_builtin();
         sound_init_builtin();
+        hdd_controller_init_builtin();
+        network_card_init_builtin();
 
 #ifdef __linux__
         char s[1024];

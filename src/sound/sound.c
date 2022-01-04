@@ -287,27 +287,42 @@ void sound_reset()
         image_audio_stop();
 }
 
+int sound_count()
+{
+        int ret = 0;
+
+        while (sound_cards[ret] != NULL && ret < SOUND_MAX)
+                ret++;
+
+        return ret;
+}
+
+void pcem_add_sound(SOUND_CARD *sound)
+{
+        sound_cards[sound_count()] = sound;
+}
+
 void sound_init_builtin()
 {
         memset(sound_cards, 0, sizeof(sound_cards));
 
-        sound_cards[0] = &sc_1;
-        sound_cards[1] = &sc_2;
-        sound_cards[2] = &sc_3;
-        sound_cards[3] = &sc_4;
-        sound_cards[4] = &sc_5;
-        sound_cards[5] = &sc_6;
-        sound_cards[6] = &sc_7;
-        sound_cards[7] = &sc_8;
-        sound_cards[8] = &sc_9;
-        sound_cards[9] = &sc_10;
-        sound_cards[10] = &sc_11;
-        sound_cards[11] = &sc_12;
-        sound_cards[12] = &sc_13;
-        sound_cards[13] = &sc_14;
-        sound_cards[14] = &sc_15;
-        sound_cards[15] = &sc_16;
-        sound_cards[16] = &sc_17;
-        sound_cards[17] = &sc_18;
-        sound_cards[18] = &sc_19;
+        pcem_add_sound(&sc_1);
+        pcem_add_sound(&sc_2);
+        pcem_add_sound(&sc_3);
+        pcem_add_sound(&sc_4);
+        pcem_add_sound(&sc_5);
+        pcem_add_sound(&sc_6);
+        pcem_add_sound(&sc_7);
+        pcem_add_sound(&sc_8);
+        pcem_add_sound(&sc_9);
+        pcem_add_sound(&sc_10);
+        pcem_add_sound(&sc_11);
+        pcem_add_sound(&sc_12);
+        pcem_add_sound(&sc_13);
+        pcem_add_sound(&sc_14);
+        pcem_add_sound(&sc_15);
+        pcem_add_sound(&sc_16);
+        pcem_add_sound(&sc_17);
+        pcem_add_sound(&sc_18);
+        pcem_add_sound(&sc_19);
 }

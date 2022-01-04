@@ -1319,54 +1319,69 @@ void cgapal_rebuild(int display_type, int contrast)
         }
 }
 
+int video_count()
+{
+        int ret = 0;
+
+        while (video_cards[ret] != NULL && ret < GFX_MAX)
+                ret++;
+
+        return ret;
+}
+
+void pcem_add_video(VIDEO_CARD *video) 
+{
+        video_cards[video_count()] = video;
+}
+
 void video_init_builtin()
 {
         memset(video_cards, 0, sizeof(video_cards));
 
-        video_cards[0] = &v_1;
-        video_cards[1] = &v_2;
-        video_cards[2] = &v_3;
-        video_cards[3] = &v_4;
-        video_cards[4] = &v_5;
-        video_cards[5] = &v_6;
-        video_cards[6] = &v_7;
-        video_cards[7] = &v_8;
-        video_cards[8] = &v_9;
-        video_cards[9] = &v_10;
-        video_cards[10] = &v_11;
-        video_cards[11] = &v_12;
-        video_cards[12] = &v_13;
-        video_cards[13] = &v_14;
-        video_cards[14] = &v_15;
-        video_cards[15] = &v_16;
-        video_cards[16] = &v_17;
-        video_cards[17] = &v_18;
-        video_cards[18] = &v_19;
-        video_cards[19] = &v_20;
-        video_cards[20] = &v_21;
-        video_cards[21] = &v_22;
-        video_cards[22] = &v_23;
-        video_cards[23] = &v_24;
-        video_cards[24] = &v_25;
-        video_cards[25] = &v_26;
-        video_cards[26] = &v_27;
-        video_cards[27] = &v_28;
-        video_cards[28] = &v_29;
-        video_cards[29] = &v_30;
-        video_cards[30] = &v_31;
-        video_cards[31] = &v_32;
-        video_cards[32] = &v_33;
-        video_cards[33] = &v_35;
-        video_cards[34] = &v_36;
-        video_cards[35] = &v_37;
-        video_cards[36] = &v_38;
-        video_cards[37] = &v_39;
-        video_cards[38] = &v_40;
-        video_cards[39] = &v_41;
-        video_cards[40] = &v_42;
-        video_cards[41] = &v_43;
-        video_cards[42] = &v_44;
-        video_cards[43] = &v_45;
-        video_cards[44] = &v_46;
-        video_cards[45] = &v_47;
+        pcem_add_video(&v_1);
+        pcem_add_video(&v_2);
+        pcem_add_video(&v_3);
+        pcem_add_video(&v_4);
+        pcem_add_video(&v_5);
+        pcem_add_video(&v_6);
+        pcem_add_video(&v_7);
+        pcem_add_video(&v_8);
+        pcem_add_video(&v_9);
+        pcem_add_video(&v_10);
+        pcem_add_video(&v_11);
+        pcem_add_video(&v_12);
+        pcem_add_video(&v_13);
+        pcem_add_video(&v_14);
+        pcem_add_video(&v_15);
+        pcem_add_video(&v_16);
+        pcem_add_video(&v_17);
+        pcem_add_video(&v_18);
+        pcem_add_video(&v_19);
+        pcem_add_video(&v_20);
+        pcem_add_video(&v_21);
+        pcem_add_video(&v_22);
+        pcem_add_video(&v_23);
+        pcem_add_video(&v_24);
+        pcem_add_video(&v_25);
+        pcem_add_video(&v_26);
+        pcem_add_video(&v_27);
+        pcem_add_video(&v_28);
+        pcem_add_video(&v_29);
+        pcem_add_video(&v_30);
+        pcem_add_video(&v_31);
+        pcem_add_video(&v_32);
+        pcem_add_video(&v_33);
+        pcem_add_video(&v_35);
+        pcem_add_video(&v_36);
+        pcem_add_video(&v_37);
+        pcem_add_video(&v_38);
+        pcem_add_video(&v_39);
+        pcem_add_video(&v_40);
+        pcem_add_video(&v_41);
+        pcem_add_video(&v_42);
+        pcem_add_video(&v_43);
+        pcem_add_video(&v_44);
+        pcem_add_video(&v_45);
+        pcem_add_video(&v_46);
+        pcem_add_video(&v_47);
 }

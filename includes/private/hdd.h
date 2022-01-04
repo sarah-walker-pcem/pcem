@@ -15,6 +15,7 @@ int hdd_controller_current_is_mfm();
 int hdd_controller_current_is_ide();
 int hdd_controller_current_is_scsi();
 void hdd_controller_init(char *internal_name);
+void hdd_controller_init_builtin();
 
 extern char hdd_controller_name[16];
 

@@ -26,5 +26,6 @@ enum
         NET_PCAP = 1
 };
 
+void network_card_init_builtin();
 
 #endif /* _NETHANDLER_H_ */

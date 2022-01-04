@@ -73,9 +73,28 @@ typedef struct MODEL
         struct device_t *device;
 } MODEL;
 
+typedef struct HDD_CONTROLLER
+{
+        char name[50];
+        char internal_name[16];
+        device_t *device;
+        int is_mfm;
+        int is_ide;
+        int is_scsi;
+} HDD_CONTROLLER;
+
+typedef struct NETWORK_CARD
+{
+        char name[32];
+        char internal_name[24];
+        device_t *device;
+} NETWORK_CARD;
+
 extern void pcem_add_model(MODEL *model);
 extern void pcem_add_video(VIDEO_CARD *video);
 extern void pcem_add_sound(SOUND_CARD *sound);
+extern void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller);
+extern void pcem_add_networkcard(NETWORK_CARD *netcard);
 extern void pcem_add_device(device_t *device);
 
 #endif /* _PCEM_DEVICES_H_ */
