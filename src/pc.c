@@ -112,6 +112,7 @@ void pclog(const char *format, ...)
         vsprintf(buf, format, ap);
         va_end(ap);
         fputs(buf,pclogf);
+        fputs(buf,stdout);
 //        fflush(pclogf);
 #endif
 }

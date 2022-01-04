@@ -49,7 +49,7 @@ option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
 message("ALSA MIDI Support: ${USE_ALSA}")
 
 message("***************************************************************")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	option(PCEM_SLIRP_DEBUG "Build PCem with SLIRP_DEBUG debug output" OFF)
 	message("SLIRP_DEBUG debug output: ${PCEM_SLIRP_DEBUG}")
 	option(PCEM_RECOMPILER_DEBUG "Build PCem with RECOMPILER_DEBUG debug output" OFF)
