@@ -81,9 +81,11 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1983 | <b>Leading Edge Model M</b><br/>8088 at 7.16 MHz<br/>128KB - 704KB RAM | leadingedge_modelm/Leading Edge - Model M - BIOS ROM - Version 4.71.bin
 1984 | <b>IBM PCjr</b> <i>[[5]](#system-note-5)</i><br/>8088 at 4.77 MHz<br/>64KB - 640KB RAM (min. 128KB)<br/>Built-in 16 colour graphics<br/>3 voice sound<br/>Not generally PC compatible. | ibmpcjr/bios.rom
 1984 | <b>Tandy 1000</b> <i>[[5]](#system-note-5)</i><br/>8088 at 4.77 MHz<br/>128KB - 640KB RAM<br/>Built-in 16 colour graphics<br/>3 voice sound | tandy/tandy1t1.020
+1985 | <b>Commodore PC10</b><br/>8088 at 4.77 MHz<br/>640KB RAM CGA/Monochrome | cbm_pc10/cbm-pc10c-bios-v4.41-318085-08.bin
 1985 | <b>NCR PC4i</b><br/>8088 at 4.77 MHz<br/>256KB - 640KB RAM | ncr_pc4i/NCR_PC4i_BIOSROM_1985.BIN
 1986 | <b>DTK Clone XT</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM | dtk/dtk_erso_2.42_2764.bin
 1986 | <b>Phoenix XT clone</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM | pxxt/000p001.bin
+1987 | <b>Hyundai Super 16T</b><br/>8088/8087 at 4.77/8.0 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | ./huyndaixte/super16te_v2.00id.bin
 1987 | <b>Tandy 1000HX</b><br/>8088 at 7.16 MHz<br/>256KB - 640KB RAM<br/>Built-in 16 colour graphics<br/>3 voice sound<br/>Has DOS 2.11 in ROM | tandy1000hx/v020000.u12
 1987 | <b>Thomson TO16 PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM | to16_pc/TO16_103.bin
 1987 | <b>Toshiba T1000</b> <i>[[1]](#system-note-1)</i> <i>[[5]](#system-note-5)</i><br/>8088 at 4.77 MHz<br/>512KB - 1024KB RAM<br/>CGA on built-in LCD | t1000/t1000.rom<br/>t1000/t1000font.rom
@@ -94,6 +96,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1988 | <b>Juko XT clone</b> | jukopc/000o001.bin
 1988 | <b>Schneider Euro PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM | europc/50145<br/>europc/50146
 1989 | <b>AMI XT clone</b><br/>8088 at 8+ MHz<br/>64KB - 640KB RAM | amixt/ami_8088_bios_31jan89.bin
+1989 | <b>Hyundai Super 16TE</b><br/>8088/8087 at 10 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | ./huyndaixte/super16te_v2.00id.bin
 2015 | <b>Xi8088</b><br/>8088 at 4.77-13.33 MHz<br/>640KB RAM | xi8088/bios-xi8088.bin
 
 ### 8086 based
@@ -308,8 +311,8 @@ Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 <b>S3 ViRGE/DX</b> <i>[[3]](#graphics-note-3)</i>| S3 ViRGE/DX based<br/>2MB - 4MB VRAM | 86c375_1.bin
 
 ### 3D only cards
-Hardware | Addl. Info 
---- | --- 
+Hardware | Addl. Info
+--- | ---
 <b>3DFX Voodoo Graphics</b> <i>[[4]](#graphics-note-4)</i>| 3D accelerator. Widely supported in late 90s games.
 <b>Obsidian SB50</b> <i>[[5]](#graphics-note-5)</i>| Voodoo with 2 TMUs
 <b>3DFX Voodoo 2</b> <i>[[6]](#graphics-note-6)</i>| Improved Voodoo Graphics<br/>Higher clocks<br/>2 TMUs<br/>Triangle setup, etc.

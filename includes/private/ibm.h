@@ -174,6 +174,9 @@ enum
         ROM_IBMXT,
         ROM_IBMPCJR,
         ROM_GENXT,      /*'Generic XT BIOS'*/
+        ROM_CBM_PC10,
+        ROM_SUPER16T,
+        ROM_SUPER16TE,
         ROM_DTKXT,
         ROM_EUROPC,
         ROM_OLIM24,
