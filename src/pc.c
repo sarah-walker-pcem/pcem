@@ -228,7 +228,7 @@ void pc_reset()
                 setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
         else
                 setpitclock(14318184.0);
-        
+
 //        sb_reset();
 
         ali1429_reset();
@@ -261,19 +261,19 @@ void initpc(int argc, char *argv[])
                 else if (!strcasecmp(argv[c], "--config"))
                 {
                         char *ext;
-                        
+
                         if ((c+1) == argc)
                                 break;
                         strncpy(config_file_default, argv[c+1], 256);
                         strcpy(config_name, get_filename(config_file_default));
-                        
+
                         ext = get_extension(config_name);
                         if (ext && ext[0])
                         {
                                 ext--;
                                 *ext = 0;
                         }
-                        
+
                         config_override = 1;
                         c++;
                 }
@@ -298,7 +298,7 @@ void initpc(int argc, char *argv[])
         }
 
 //        append_filename(config_file_default, pcempath, "pcem.cfg", 511);
-        
+
         loadconfig(NULL);
         pclog("Config loaded\n");
 //        if (config_file)
@@ -308,15 +308,15 @@ void initpc(int argc, char *argv[])
 //        cpuspeed2=cpuspeed;
         atfullspeed=0;
 
-        device_init();        
-        
+        device_init();
+
         initvideo();
         mem_init();
         loadbios();
 
         // this is now done per-model
         //mem_add_bios();
-                        
+
 #if defined(__APPLE__) && defined(__aarch64__)
         pthread_jit_write_protect_np(0);
 #endif
@@ -324,7 +324,7 @@ void initpc(int argc, char *argv[])
 #if defined(__APPLE__) && defined(__aarch64__)
         pthread_jit_write_protect_np(1);
 #endif
-        
+
         timer_reset();
         sound_reset();
         io_init();
@@ -342,7 +342,7 @@ void initpc(int argc, char *argv[])
         resetide();
 #if __unix
 	if (cdrom_drive == -1)
-	        cdrom_null_open(cdrom_drive);	
+	        cdrom_null_open(cdrom_drive);
 	else
 #endif
 	{
@@ -370,7 +370,7 @@ void initpc(int argc, char *argv[])
 			ioctl_set_drive(cdrom_drive);
 		}
 	}
-        
+
 /*        if (romset==ROM_AMI386 || romset==ROM_AMI486) */fullspeed();
         ali1429_reset();
 //        CPUID=(is486 && (cpuspeed==7 || cpuspeed>=9));
@@ -378,7 +378,7 @@ void initpc(int argc, char *argv[])
 
 #if __unix
 	if (cdrom_drive == -1)
-	        cdrom_null_reset();	
+	        cdrom_null_reset();
 	else
 #endif
 	{
@@ -418,7 +418,7 @@ void resetpchard()
         device_close_all();
         mouse_emu_close();
         device_init();
-        
+
         timer_reset();
         sound_reset();
         io_init();
@@ -439,7 +439,7 @@ void resetpchard()
 
 #ifdef USE_NETWORKING
 	vlan_reset();	//NETWORK
-	network_card_init(network_card_current);      
+	network_card_init(network_card_current);
 #endif
 
         sound_card_init(sound_card_current);
@@ -453,9 +453,9 @@ void resetpchard()
                 device_add(&voodoo_device);
         hdd_controller_init(hdd_controller_name);
         pc_reset();
-        
+
         resetide();
-        
+
         loadnvr();
 
 //        cpuspeed2 = (AT)?2:1;
@@ -463,17 +463,17 @@ void resetpchard()
 //        setpitclock(models[model]->cpu[cpu_manufacturer].cpus[cpu].rspeed);
 
         ali1429_reset();
-        
+
         keyboard_at_reset();
-        
+
         cpu_cache_int_enabled = cpu_cache_ext_enabled = 0;
-        
+
 //        output=3;
 
         image_close();
 #if __unix
 	if (cdrom_drive == -1)
-	        cdrom_null_reset();	
+	        cdrom_null_reset();
 	else
 #endif
 	{
@@ -534,28 +534,45 @@ static void _set_window_title(void *s)
 }
 #endif
 
+static void exec_init();
+typedef void(*cpu_exec_f)();
+static cpu_exec_f exec_cpu = exec_init;
+
+static void exec_init(int cycs)
+{
+        if (is386)
+        {
+                if (cpu_use_dynarec)
+                        exec_cpu = exec386_dynarec;
+                else
+                        exec_cpu = exec386;
+        }
+        else if (AT)
+                exec_cpu = exec386;
+        else
+                exec_cpu = execx86;
+
+        //run first time
+        exec_cpu(cycs);
+}
+
+static void restore_initial_exec_cpu()
+{
+        exec_cpu = exec_init;
+}
+
 void runpc()
 {
         char s[200];
         int done=0;
         int cycles_to_run = cpu_get_speed() / 100;
-        
+
         override_drive_a = override_drive_b = 0;
 
         startblit();
-        
-        if (is386)   
-        {
-                if (cpu_use_dynarec)
-                        exec386_dynarec(cycles_to_run);
-                else
-                        exec386(cycles_to_run);
-        }
-        else if (AT)
-                exec386(cycles_to_run);
-        else
-                execx86(cycles_to_run);
-        
+
+        exec_cpu(cycles_to_run);
+
         keyboard_poll_host();
         keyboard_process();
 //        checkkeys();
@@ -660,6 +677,7 @@ void closepc()
         mouse_emu_close();
         device_close_all();
         zip_eject();
+        restore_initial_exec_cpu();
 }
 
 /*int main()
@@ -702,7 +720,7 @@ void loadconfig(char *fn)
         append_filename(global_config_file, pcem_path, "pcem.cfg", 511);
 
         config_load(CFG_GLOBAL, global_config_file);
-        
+
         if (!fn)
                 config_load(CFG_MACHINE, config_file_default);
         else
@@ -723,12 +741,12 @@ void loadconfig(char *fn)
 
         sound_buf_len = config_get_int(CFG_GLOBAL, NULL, "sound_buf_len", 200);
         sound_gain = config_get_int(CFG_GLOBAL, NULL, "sound_gain", 0);
-        
+
         GAMEBLASTER = config_get_int(CFG_MACHINE, NULL, "gameblaster", 0);
         GUS = config_get_int(CFG_MACHINE, NULL, "gus", 0);
         SSI2001 = config_get_int(CFG_MACHINE, NULL, "ssi2001", 0);
         voodoo_enabled = config_get_int(CFG_MACHINE, NULL, "voodoo", 0);
-        
+
         p = (char *)config_get_string(CFG_MACHINE, NULL, "model", "");
         if (p)
                 model = model_get_model_from_internal_name(p);
@@ -745,7 +763,7 @@ void loadconfig(char *fn)
         fpu_type = fpu_get_type(model, cpu_manufacturer, cpu, p);
         cpu_use_dynarec = config_get_int(CFG_MACHINE, NULL, "cpu_use_dynarec", 0);
         cpu_waitstates = config_get_int(CFG_MACHINE, NULL, "cpu_waitstates", 0);
-                
+
         p = (char *)config_get_string(CFG_MACHINE, NULL, "gfxcard", "");
         if (p)
                 gfxcard = video_get_video_from_internal_name(p);
@@ -776,7 +794,7 @@ void loadconfig(char *fn)
         if (p)
                 strncpy(hdd_controller_name, p, sizeof(hdd_controller_name)-1);
         else
-                strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);        
+                strncpy(hdd_controller_name, "none", sizeof(hdd_controller_name)-1);
 
         mem_size = config_get_int(CFG_MACHINE, NULL, "mem_size", 4096);
         if (mem_size < (((models[model]->flags & MODEL_AT) && models[model]->ram_granularity < 128) ? models[model]->min_ram*1024 : models[model]->min_ram))
@@ -784,13 +802,13 @@ void loadconfig(char *fn)
 
         cdrom_drive = config_get_int(CFG_MACHINE, NULL, "cdrom_drive", 0);
         cdrom_channel = config_get_int(CFG_MACHINE, NULL, "cdrom_channel", 2);
-        
+
         zip_channel = config_get_int(CFG_MACHINE, NULL, "zip_channel", -1);
-        
+
         p = (char *)config_get_string(CFG_MACHINE, NULL, "cdrom_path", "");
         if (p) strcpy(image_path, p);
         else   strcpy(image_path, "");
-        
+
         hdc[0].spt = config_get_int(CFG_MACHINE, NULL, "hdc_sectors", 0);
         hdc[0].hpc = config_get_int(CFG_MACHINE, NULL, "hdc_heads", 0);
         hdc[0].tracks = config_get_int(CFG_MACHINE, NULL, "hdc_cylinders", 0);
@@ -840,29 +858,29 @@ void loadconfig(char *fn)
 
         cd_speed = config_get_int(CFG_MACHINE, NULL, "cd_speed", 24);
         cd_model = cd_model_from_config((char *)config_get_string(CFG_MACHINE, NULL, "cd_model", cd_get_config_model(0)));
-        
+
         joystick_type = config_get_int(CFG_MACHINE, NULL, "joystick_type", 0);
         mouse_type = config_get_int(CFG_MACHINE, NULL, "mouse_type", 0);
-        
+
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
                 sprintf(s, "joystick_%i_nr", c);
                 joystick_state[c].plat_joystick_nr = config_get_int(CFG_MACHINE, "Joysticks", s, 0);
-                
+
                 if (joystick_state[c].plat_joystick_nr)
                 {
                         for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_axis_%i", c, d);
                                 joystick_state[c].axis_mapping[d] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                         }
                         for (d = 0; d < joystick_get_button_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_button_%i", c, d);
                                 joystick_state[c].button_mapping[d] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                         }
                         for (d = 0; d < joystick_get_pov_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_pov_%i_x", c, d);
                                 joystick_state[c].pov_mapping[d][0] = config_get_int(CFG_MACHINE, "Joysticks", s, d);
                                 sprintf(s, "joystick_%i_pov_%i_y", c, d);
@@ -876,7 +894,7 @@ void loadconfig(char *fn)
         p = (char *)config_get_string(CFG_MACHINE, NULL, "lpt1_device", "");
         if (p) strcpy(lpt1_device_name, p);
         else   strcpy(lpt1_device_name, "");
-        
+
 #ifdef USE_NETWORKING
 	//network
 	ethif = config_get_int(CFG_GLOBAL, NULL, "netinterface", 1);
@@ -925,19 +943,19 @@ void saveconfig(char *fn)
 
         config_set_int(CFG_GLOBAL, NULL, "sound_buf_len", sound_buf_len);
         config_set_int(CFG_GLOBAL, NULL, "sound_gain", sound_gain);
-        
+
         config_set_int(CFG_MACHINE, NULL, "gameblaster", GAMEBLASTER);
         config_set_int(CFG_MACHINE, NULL, "gus", GUS);
         config_set_int(CFG_MACHINE, NULL, "ssi2001", SSI2001);
         config_set_int(CFG_MACHINE, NULL, "voodoo", voodoo_enabled);
-        
+
         config_set_string(CFG_MACHINE, NULL, "model", model_get_internal_name());
         config_set_int(CFG_MACHINE, NULL, "cpu_manufacturer", cpu_manufacturer);
         config_set_int(CFG_MACHINE, NULL, "cpu", cpu);
         config_set_string(CFG_MACHINE, NULL, "fpu", (char *)fpu_get_internal_name(model, cpu_manufacturer, cpu, fpu_type));
         config_set_int(CFG_MACHINE, NULL, "cpu_use_dynarec", cpu_use_dynarec);
         config_set_int(CFG_MACHINE, NULL, "cpu_waitstates", cpu_waitstates);
-        
+
         config_set_string(CFG_MACHINE, NULL, "gfxcard", video_get_internal_name(video_old_to_new(gfxcard)));
         config_set_int(CFG_MACHINE, NULL, "video_speed", video_speed);
         config_set_string(CFG_MACHINE, NULL, "sndcard", sound_card_get_internal_name(sound_card_current));
@@ -952,7 +970,7 @@ void saveconfig(char *fn)
         config_set_string(CFG_MACHINE, NULL, "cdrom_path", image_path);
 
         config_set_int(CFG_MACHINE, NULL, "zip_channel", zip_channel);
-                
+
         config_set_int(CFG_MACHINE, NULL, "hdc_sectors", hdc[0].spt);
         config_set_int(CFG_MACHINE, NULL, "hdc_heads", hdc[0].hpc);
         config_set_int(CFG_MACHINE, NULL, "hdc_cylinders", hdc[0].tracks);
@@ -988,31 +1006,31 @@ void saveconfig(char *fn)
 
         config_set_int(CFG_MACHINE, NULL, "cd_speed", cd_speed);
         config_set_string(CFG_MACHINE, NULL, "cd_model", cd_model_to_config(cd_model));
-        
+
         config_set_int(CFG_MACHINE, NULL, "joystick_type", joystick_type);
         config_set_int(CFG_MACHINE, NULL, "mouse_type", mouse_type);
-                
+
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++)
         {
                 char s[80];
 
                 sprintf(s, "joystick_%i_nr", c);
                 config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].plat_joystick_nr);
-                
+
                 if (joystick_state[c].plat_joystick_nr)
                 {
                         for (d = 0; d < joystick_get_axis_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_axis_%i", c, d);
                                 config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].axis_mapping[d]);
                         }
                         for (d = 0; d < joystick_get_button_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_button_%i", c, d);
                                 config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].button_mapping[d]);
                         }
                         for (d = 0; d < joystick_get_pov_count(joystick_type); d++)
-                        {                        
+                        {
                                 sprintf(s, "joystick_%i_pov_%i_x", c, d);
                                 config_set_int(CFG_MACHINE, "Joysticks", s, joystick_state[c].pov_mapping[d][0]);
                                 sprintf(s, "joystick_%i_pov_%i_y", c, d);
@@ -1020,7 +1038,7 @@ void saveconfig(char *fn)
                         }
                 }
         }
-        
+
         config_set_int(CFG_MACHINE, NULL, "enable_sync", enable_sync);
 
 #ifdef USE_NETWORKING
@@ -1029,7 +1047,7 @@ void saveconfig(char *fn)
 #endif
 
         config_set_string(CFG_MACHINE, NULL, "lpt1_device", lpt1_device_name);
-        
+
         for (d = 0; d < num_config_callbacks; ++d)
                 if (config_callbacks[d].saveconfig)
                         config_callbacks[d].saveconfig();
