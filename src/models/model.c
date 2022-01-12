@@ -780,9 +780,12 @@ void model_init()
 MODEL m_1 = {"[8088] AMI XT clone", ROM_AMIXT, "amixt", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 64, 640, 64, xt_init, NULL};
 
 MODEL m_2 = {"[8088] Atari PC3", ROM_ATARIPC3, "ataripc3", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 64, 640, 64, xt_init, NULL};
+MODEL m_cbmPC10 = {"[8088] Commodore PC-10", ROM_CBM_PC10, "cbm_pc10", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 640, 640, 64, xt_init, NULL};
 MODEL m_3 = {"[8088] Compaq Portable Plus", ROM_COMPAQ_PIP, "compaq_pip", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 128, 640, 64, compaq_xt_init, NULL};
 MODEL m_4 = {"[8088] DTK XT clone", ROM_DTKXT, "dtk", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 64, 640, 64, xt_init, NULL};
 MODEL m_5 = {"[8088] Generic XT clone", ROM_GENXT, "genxt", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 32, 704, 16, xt_init, NULL};
+MODEL m_huyndai16t = {"[8088] Huyndai Super16T", ROM_SUPER16T, "hyundaixt", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 640, 640, 64, xt_init, NULL};
+MODEL m_huyndai16te = {"[8088] Huyndai Super16TE", ROM_SUPER16TE, "huyndaixte", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 640, 640, 64, xt_init, NULL};
 MODEL m_6 = {"[8088] IBM PC", ROM_IBMPC, "ibmpc", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 64, 640, 32, xt_init, NULL};
 MODEL m_7 = {"[8088] IBM PCjr", ROM_IBMPCJR, "ibmpcjr", {{"", cpus_pcjr}, {"", NULL}, {"", NULL}}, MODEL_GFX_FIXED, 128, 640, 64, pcjr_init, &pcjr_device};
 MODEL m_8 = {"[8088] IBM XT", ROM_IBMXT, "ibmxt", {{"", cpus_8088}, {"", NULL}, {"", NULL}}, MODEL_GFX_NONE, 64, 640, 64, xt_init, NULL};
@@ -894,9 +897,12 @@ void model_init_builtin()
 
         pcem_add_model(&m_1);
         pcem_add_model(&m_2);
+        pcem_add_model(&m_cbmPC10);
         pcem_add_model(&m_3);
         pcem_add_model(&m_4);
         pcem_add_model(&m_5);
+        pcem_add_model(&m_huyndai16t);
+        pcem_add_model(&m_huyndai16te);
         pcem_add_model(&m_6);
         pcem_add_model(&m_7);
         pcem_add_model(&m_8);

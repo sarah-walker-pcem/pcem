@@ -200,6 +200,28 @@ int loadbios()
                 if (!mem_load_basic("genxt"))
                         break;
                 return 1;
+
+                case ROM_CBM_PC10:
+                f=romfopen("cbm_pc10/cbm-pc10c-bios-v4.41-318085-08.bin","rb");
+                if (!f) break;
+                romfread(rom+0x8000,32768,1,f);
+                fclose(f);
+                return 1;
+
+                case ROM_SUPER16T:
+                f=romfopen("huyndaixt/super16t_v1.12ta.bin","rb");
+                if (!f) break;
+                romfread(rom+0xC000,16384,1,f);
+                fclose(f);
+                return 1;
+
+                case ROM_SUPER16TE:
+                f=romfopen("huyndaixte/super16te_v2.00id.bin","rb");
+                if (!f) break;
+                romfread(rom+0xC000,16384,1,f);
+                fclose(f);
+                return 1;
+
                 case ROM_DTKXT:
                 f=romfopen("dtk/dtk_erso_2.42_2764.bin","rb");
                 if (!f) break;
