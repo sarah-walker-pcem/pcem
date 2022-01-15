@@ -296,6 +296,7 @@ set(PCEM_PRIVATE_HEADERS ${PCEM_PRIVATE_HEADERS}
 	${CMAKE_SOURCE_DIR}/includes/private/vid_tgui9440.h
 	${CMAKE_SOURCE_DIR}/includes/private/vid_tkd8001_ramdac.h
 	${CMAKE_SOURCE_DIR}/includes/private/vid_tvga.h
+	${CMAKE_SOURCE_DIR}/includes/private/vid_tvp3026_ramdac.h
 	${CMAKE_SOURCE_DIR}/includes/private/vid_unk_ramdac.h
 	${CMAKE_SOURCE_DIR}/includes/private/vid_vga.h
 	${CMAKE_SOURCE_DIR}/includes/private/vid_voodoo_banshee_blitter.h

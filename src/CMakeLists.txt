@@ -271,6 +271,7 @@ set(PCEM_SRC
 	video/vid_tgui9440.c
 	video/vid_tkd8001_ramdac.c
 	video/vid_tvga.c
+	video/vid_tvp3026_ramdac.c
 	video/vid_unk_ramdac.c
 	video/vid_vga.c
 	video/vid_voodoo.c
