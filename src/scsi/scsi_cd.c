@@ -304,6 +304,7 @@ static struct
                 CD_MODEL_INTERFACE_ALL,
                 -1,
         },
+	
         {
                 // A 4x CD-ROM drive from Aztech. Choose if your system image has the SGIDECD.SYS driver
                 "AZT",
@@ -320,19 +321,20 @@ static struct
                 CD_MODEL_INTERFACE_IDE,
                 4,
         },
+	
 	 {
                 // A 32x CD-ROM drive from Creative Labs. 
                 "Creative",
                 "Creative CR-588-B v1.0",
                 "8516DFA30742",
-                "CR-588-B",
+                "CREATIVE CR-588-B",
                 "1.0",
 
                 "",
                 "v1.0",
                 "CR-588-B",
-                "Creative CR-588-B 32X",
-                "creative_cr_588_b_32x",
+                "Creative CR-588-B",
+                "cr-588-b",
                 CD_MODEL_INTERFACE_IDE,
                 32,
         },
