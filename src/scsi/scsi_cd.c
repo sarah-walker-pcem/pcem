@@ -324,15 +324,15 @@ static struct
                 // A 32x CD-ROM drive from Creative Labs. 
                 "Creative",
                 "Creative CR-588-B v1.0",
-                "8516DFA30742", // 
+                "8516DFA30742",
                 "CR-588-B",
                 "1.0",
 
                 "",
                 "v1.0",
                 "CR-588-B",
-                "Creative CR-588-B",
-                "creative_cr_588_b",
+                "Creative CR-588-B 32X",
+                "creative_cr_588_b_32x",
                 CD_MODEL_INTERFACE_IDE,
                 32,
         },
