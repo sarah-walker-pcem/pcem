@@ -93,29 +93,30 @@ VIDEO_CARD v_23 = {"IBM 1MB SVGA Adapter/A (CL GD5428)", "ibm1mbsvga", &ibm_gd54
 VIDEO_CARD v_24 = {"Image Manager 1024", "im1024", &im1024_device, GFX_IM1024, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 VIDEO_CARD v_25 = {"Kasan Hangulmadang-16 (Tseng ET4000AX)", "kasan16", &et4000_kasan_device, GFX_KASAN16VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
 VIDEO_CARD v_26 = {"Matrox Mystique", "mystique", &mystique_device, GFX_MYSTIQUE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 4, 10, 10, 10}};
-VIDEO_CARD v_27 = {"MDA", "mda", &mda_device, GFX_MDA, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_28 = {"MDSI Genius", "genius", &genius_device, GFX_GENIUS, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_29 = {"Number Nine 9FX (S3 Trio64)", "n9_9fx", &s3_9fx_device, GFX_N9_9FX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_30 = {"OAK OTI-037", "oti037", &oti037_device, GFX_OTI037, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_31 = {"OAK OTI-067", "oti067", &oti067_device, GFX_OTI067, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_32 = {"Olivetti GO481 (Paradise PVGA1A)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_33 = {"Paradise Bahamas 64 (S3 Vision864)", "bahamas64", &s3_bahamas64_device, GFX_BAHAMAS64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 5, 20, 20, 35}};
+VIDEO_CARD v_27 = {"Matrox Millennium", "millennium", &millennium_device, GFX_MILLENNIUM, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 10, 10, 10}};
+VIDEO_CARD v_28 = {"MDA", "mda", &mda_device, GFX_MDA, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_29 = {"MDSI Genius", "genius", &genius_device, GFX_GENIUS, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_30 = {"Number Nine 9FX (S3 Trio64)", "n9_9fx", &s3_9fx_device, GFX_N9_9FX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_31 = {"OAK OTI-037", "oti037", &oti037_device, GFX_OTI037, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_32 = {"OAK OTI-067", "oti067", &oti067_device, GFX_OTI067, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_33 = {"Olivetti GO481 (Paradise PVGA1A)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_34 = {"Paradise Bahamas 64 (S3 Vision864)", "bahamas64", &s3_bahamas64_device, GFX_BAHAMAS64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 5, 20, 20, 35}};
 /* Not offered as the emulation is very incomplete
-VIDEO_CARD v_34 = {"Professional Graphics Controller", "pgc", &pgc_device, GFX_PGC, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_35 = {"Professional Graphics Controller", "pgc", &pgc_device, GFX_PGC, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 */
-VIDEO_CARD v_35 = {"Phoenix S3 Trio32", "px_trio32", &s3_phoenix_trio32_device, GFX_PHOENIX_TRIO32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_36 = {"Phoenix S3 Trio64", "px_trio64", &s3_phoenix_trio64_device, GFX_PHOENIX_TRIO64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_37 = {"Plantronics ColorPlus", "plantronics", &colorplus_device, GFX_COLORPLUS, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_38 = {"S3 ViRGE/DX", "virge375", &s3_virge_375_device, GFX_VIRGEDX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
-VIDEO_CARD v_39 = {"Sigma Color 400", "sigma400", &sigma_device, GFX_SIGMA400, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_40 = {"Trident TVGA8900D", "tvga8900d", &tvga8900d_device, GFX_TVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 8, 8, 12}};
-VIDEO_CARD v_41 = {"Trident TVGA9000B", "tvga9000b", &tvga9000b_device, GFX_TVGA9000B, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 7, 7, 12, 7, 7, 12}};
-VIDEO_CARD v_42 = {"Trident TGUI9400CXi", "tgui9400cxi", &tgui9400cxi_device, GFX_TGUI9400CXI, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
-VIDEO_CARD v_43 = {"Trident TGUI9440", "tgui9440", &tgui9440_device, GFX_TGUI9440, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
-VIDEO_CARD v_44 = {"Trigem Korean VGA (Tseng ET4000AX)", "tgkorvga", &et4000k_device, GFX_TGKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_45 = {"Tseng ET4000AX", "et4000ax", &et4000_device, GFX_ET4000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_46 = {"VGA", "vga", &vga_device, GFX_VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_47 = {"Wyse 700", "wy700", &wy700_device, GFX_WY700, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_36 = {"Phoenix S3 Trio32", "px_trio32", &s3_phoenix_trio32_device, GFX_PHOENIX_TRIO32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_37 = {"Phoenix S3 Trio64", "px_trio64", &s3_phoenix_trio64_device, GFX_PHOENIX_TRIO64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_38 = {"Plantronics ColorPlus", "plantronics", &colorplus_device, GFX_COLORPLUS, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_39 = {"S3 ViRGE/DX", "virge375", &s3_virge_375_device, GFX_VIRGEDX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
+VIDEO_CARD v_40 = {"Sigma Color 400", "sigma400", &sigma_device, GFX_SIGMA400, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_41 = {"Trident TVGA8900D", "tvga8900d", &tvga8900d_device, GFX_TVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 8, 8, 12}};
+VIDEO_CARD v_42 = {"Trident TVGA9000B", "tvga9000b", &tvga9000b_device, GFX_TVGA9000B, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 7, 7, 12, 7, 7, 12}};
+VIDEO_CARD v_43 = {"Trident TGUI9400CXi", "tgui9400cxi", &tgui9400cxi_device, GFX_TGUI9400CXI, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
+VIDEO_CARD v_44 = {"Trident TGUI9440", "tgui9440", &tgui9440_device, GFX_TGUI9440, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
+VIDEO_CARD v_45 = {"Trigem Korean VGA (Tseng ET4000AX)", "tgkorvga", &et4000k_device, GFX_TGKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_46 = {"Tseng ET4000AX", "et4000ax", &et4000_device, GFX_ET4000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_47 = {"VGA", "vga", &vga_device, GFX_VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_48 = {"Wyse 700", "wy700", &wy700_device, GFX_WY700, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 
 static video_timings_t timing_dram     = {VIDEO_BUS, 0,0,0, 0,0,0}; /*No additional waitstates*/
 static video_timings_t timing_pc1512   = {VIDEO_BUS, 0,0,0, 0,0,0}; /*PC1512 video code handles waitstates itself*/
@@ -1371,7 +1372,7 @@ void video_init_builtin()
         pcem_add_video(&v_31);
         pcem_add_video(&v_32);
         pcem_add_video(&v_33);
-        pcem_add_video(&v_35);
+        pcem_add_video(&v_34);
         pcem_add_video(&v_36);
         pcem_add_video(&v_37);
         pcem_add_video(&v_38);
@@ -1384,4 +1385,5 @@ void video_init_builtin()
         pcem_add_video(&v_45);
         pcem_add_video(&v_46);
         pcem_add_video(&v_47);
+        pcem_add_video(&v_48);
 }

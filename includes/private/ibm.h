@@ -333,6 +333,7 @@ enum
         GFX_CL_BANSHEE, /*Creative Labs Voodoo Blaster Banshee PCI - with SDRAM*/
         GFX_VOODOO_3_2000, /*Voodoo 3 2000*/
         GFX_VOODOO_3_3000, /*Voodoo 3 3000*/
+        GFX_MILLENNIUM, /*Matrox Millennium*/
 
         GFX_BUILTIN_MAX,
 };
