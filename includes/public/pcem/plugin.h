@@ -5,6 +5,4 @@
     const char *plugin_name = #name; \
     void init_plugin()
 
-extern void init_plugin_engine();
-
 #endif /* _PCEM_PLUGIN_H_ */

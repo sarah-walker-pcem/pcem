@@ -24,8 +24,11 @@ char configs_path[512];
 char logs_path[512];
 /* this is where screenshots as stored */
 char screenshots_path[512];
+/* this is where plugins are stored */
+char plugins_default_path[512];
 
 char nvr_default_path[512];
+char base_path[512];
 
 char get_path_separator()
 {
@@ -115,6 +118,11 @@ void set_screenshots_path(char *s)
 {
         safe_strncpy(screenshots_path, s, 512);
         append_slash(screenshots_path, 512);
+}
+
+void set_plugins_path(char *s) {
+        safe_strncpy(plugins_default_path, s, 512);
+        append_slash(plugins_default_path, 512);
 }
 
 /* set the default roms paths, this makes them permanent */
@@ -210,7 +218,7 @@ void paths_onconfigloaded()
 void paths_init()
 {
         char s[512];
-        char base_path[512];
+
         char *p;
 
         get_pcem_path(pcem_path, 512);
@@ -219,19 +227,22 @@ void paths_init()
         *p=0;
 
         /* set up default paths for this session */
-        append_filename(s, pcem_path, "roms/", 512);
-        set_roms_paths(s);
-        append_filename(s, pcem_path, "nvr/", 512);
-        set_nvr_path(s);
-        append_filename(s, pcem_path, "configs/", 512);
-        set_configs_path(s);
-        append_filename(s, pcem_path, "screenshots/", 512);
-        set_screenshots_path(s);
-        set_logs_path(pcem_path);
-
         get_pcem_base_path(base_path, 512);
-        append_filename(s, base_path, "nvr/default/", 512);
+
+        append_filename(s, base_path, "../share/pcem/roms/", 512);
+        set_roms_paths(s);
+        append_filename(s, base_path, "../share/pcem/nvr/", 512);
+        set_nvr_path(s);
+        append_filename(s, base_path, "../share/pcem/configs/", 512);
+        set_configs_path(s);
+        append_filename(s, base_path, "../share/pcem/screenshots/", 512);
+        set_screenshots_path(s);
+        append_filename(s, base_path, "../share/pcem/logs/", 512);
+        set_logs_path(s);
+        append_filename(s, base_path, "../share/pcem/nvr/default/", 512);
         set_default_nvr_default_path(s);
+        append_filename(s, base_path, "../share/pcem/plugins/", 512);
+        set_plugins_path(s);
 
         add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
 

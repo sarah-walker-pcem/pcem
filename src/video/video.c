@@ -67,56 +67,56 @@ enum
 
 VIDEO_CARD *video_cards[GFX_MAX];
 
-VIDEO_CARD v_1 = {"3DFX Voodoo Banshee (reference)", "banshee", &voodoo_banshee_device, GFX_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_2 = {"3DFX Voodoo 3 2000", "v3_2000", &voodoo_3_2000_device, GFX_VOODOO_3_2000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_3 = {"3DFX Voodoo 3 3000", "v3_3000", &voodoo_3_3000_device, GFX_VOODOO_3_3000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_4 = {"Acumos AVGA2 / Cirrus Logic CL-GD5402", "avga2", &avga2_device, GFX_AVGA2, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_5 = {"ATI Graphics Pro Turbo (Mach64 GX)", "mach64gx", &mach64gx_device, GFX_MACH64GX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_6 = {"ATI Video Xpression (Mach64 VT2)", "mach64vt2", &mach64vt2_device, GFX_MACH64VT2, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_7 = {"ATI EGA Wonder 800+ (ATI-18800)", "egawonder800", &ati_ega_wonder_800_device, GFX_EGAWONDER800, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_8 = {"ATI Korean VGA (ATI-28800)", "ati28800k", &ati28800k_device, GFX_ATIKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_9 = {"ATI VGA Charger (ATI-28800)", "ati28800", &ati28800_device, GFX_VGACHARGER, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_10 = {"ATI VGA Edge-16 (ATI-18800)", "ati18800", &ati18800_device, GFX_VGAEDGE16, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_11 = {"CGA", "cga", &cga_device, GFX_CGA, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_12 = {"Cirrus Logic CL-GD5428", "cl_gd5428", &gd5428_device, GFX_CL_GD5428, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
-VIDEO_CARD v_13 = {"Cirrus Logic CL-GD5429", "cl_gd5429", &gd5429_device, GFX_CL_GD5429, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
-VIDEO_CARD v_14 = {"Cirrus Logic CL-GD5430", "cl_gd5430", &gd5430_device, GFX_CL_GD5430, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
-VIDEO_CARD v_15 = {"Cirrus Logic CL-GD5434", "cl_gd5434", &gd5434_device, GFX_CL_GD5434, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
-VIDEO_CARD v_16 = {"Compaq CGA", "compaq_cga", &compaq_cga_device, GFX_COMPAQ_CGA, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_17 = {"Creative Labs 3D Blaster Banshee PCI", "cl_banshee", &creative_voodoo_banshee_device, GFX_CL_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
-VIDEO_CARD v_18 = {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32", &et4000w32p_device, GFX_ET4000W32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 4, 10, 10, 10}};
-VIDEO_CARD v_19 = {"Diamond Stealth 3D 2000 (S3 ViRGE)", "stealth3d_2000", &s3_virge_device, GFX_VIRGE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
-VIDEO_CARD v_20 = {"EGA", "ega", &ega_device, GFX_EGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_21 = {"Hercules", "hercules", &hercules_device, GFX_HERCULES, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_22 = {"Hercules InColor", "incolor", &incolor_device, GFX_INCOLOR, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_23 = {"IBM 1MB SVGA Adapter/A (CL GD5428)", "ibm1mbsvga", &ibm_gd5428_device, GFX_IBM_GD5428, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
-VIDEO_CARD v_24 = {"Image Manager 1024", "im1024", &im1024_device, GFX_IM1024, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_25 = {"Kasan Hangulmadang-16 (Tseng ET4000AX)", "kasan16", &et4000_kasan_device, GFX_KASAN16VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_26 = {"Matrox Mystique", "mystique", &mystique_device, GFX_MYSTIQUE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 4, 10, 10, 10}};
-VIDEO_CARD v_27 = {"Matrox Millennium", "millennium", &millennium_device, GFX_MILLENNIUM, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 10, 10, 10}};
-VIDEO_CARD v_28 = {"MDA", "mda", &mda_device, GFX_MDA, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_29 = {"MDSI Genius", "genius", &genius_device, GFX_GENIUS, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_30 = {"Number Nine 9FX (S3 Trio64)", "n9_9fx", &s3_9fx_device, GFX_N9_9FX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_31 = {"OAK OTI-037", "oti037", &oti037_device, GFX_OTI037, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_32 = {"OAK OTI-067", "oti067", &oti067_device, GFX_OTI067, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_33 = {"Olivetti GO481 (Paradise PVGA1A)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
-VIDEO_CARD v_34 = {"Paradise Bahamas 64 (S3 Vision864)", "bahamas64", &s3_bahamas64_device, GFX_BAHAMAS64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 5, 20, 20, 35}};
+VIDEO_CARD v_banshee = {"3DFX Voodoo Banshee (reference)", "banshee", &voodoo_banshee_device, GFX_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_v3_2000 = {"3DFX Voodoo 3 2000", "v3_2000", &voodoo_3_2000_device, GFX_VOODOO_3_2000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_v3_3000 = {"3DFX Voodoo 3 3000", "v3_3000", &voodoo_3_3000_device, GFX_VOODOO_3_3000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_avga2 = {"Acumos AVGA2 / Cirrus Logic CL-GD5402", "avga2", &avga2_device, GFX_AVGA2, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_mach64gx = {"ATI Graphics Pro Turbo (Mach64 GX)", "mach64gx", &mach64gx_device, GFX_MACH64GX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_mach64vt2 = {"ATI Video Xpression (Mach64 VT2)", "mach64vt2", &mach64vt2_device, GFX_MACH64VT2, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_egawonder800 = {"ATI EGA Wonder 800+ (ATI-18800)", "egawonder800", &ati_ega_wonder_800_device, GFX_EGAWONDER800, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_ati28800k = {"ATI Korean VGA (ATI-28800)", "ati28800k", &ati28800k_device, GFX_ATIKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_ati28800 = {"ATI VGA Charger (ATI-28800)", "ati28800", &ati28800_device, GFX_VGACHARGER, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_ati18800 = {"ATI VGA Edge-16 (ATI-18800)", "ati18800", &ati18800_device, GFX_VGAEDGE16, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_cga = {"CGA", "cga", &cga_device, GFX_CGA, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_cl_gd5428 = {"Cirrus Logic CL-GD5428", "cl_gd5428", &gd5428_device, GFX_CL_GD5428, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
+VIDEO_CARD v_cl_gd5429 = {"Cirrus Logic CL-GD5429", "cl_gd5429", &gd5429_device, GFX_CL_GD5429, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
+VIDEO_CARD v_cl_gd5430 = {"Cirrus Logic CL-GD5430", "cl_gd5430", &gd5430_device, GFX_CL_GD5430, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
+VIDEO_CARD v_cl_gd5434 = {"Cirrus Logic CL-GD5434", "cl_gd5434", &gd5434_device, GFX_CL_GD5434, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
+VIDEO_CARD v_compaq_cga_device = {"Compaq CGA", "compaq_cga", &compaq_cga_device, GFX_COMPAQ_CGA, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_cl_banshee = {"Creative Labs 3D Blaster Banshee PCI", "cl_banshee", &creative_voodoo_banshee_device, GFX_CL_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 20, 20, 21}};
+VIDEO_CARD v_stealth32 = {"Diamond Stealth 32 (Tseng ET4000/w32p)", "stealth32", &et4000w32p_device, GFX_ET4000W32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 4, 10, 10, 10}};
+VIDEO_CARD v_stealth3d_2000 = {"Diamond Stealth 3D 2000 (S3 ViRGE)", "stealth3d_2000", &s3_virge_device, GFX_VIRGE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
+VIDEO_CARD v_ega = {"EGA", "ega", &ega_device, GFX_EGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_hercules = {"Hercules", "hercules", &hercules_device, GFX_HERCULES, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_incolor = {"Hercules InColor", "incolor", &incolor_device, GFX_INCOLOR, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_ibm1mbsvga = {"IBM 1MB SVGA Adapter/A (CL GD5428)", "ibm1mbsvga", &ibm_gd5428_device, GFX_IBM_GD5428, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 8, 10, 10, 20}};
+VIDEO_CARD v_im1024 = {"Image Manager 1024", "im1024", &im1024_device, GFX_IM1024, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_kasan16 = {"Kasan Hangulmadang-16 (Tseng ET4000AX)", "kasan16", &et4000_kasan_device, GFX_KASAN16VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_mystique = {"Matrox Mystique", "mystique", &mystique_device, GFX_MYSTIQUE, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 4, 10, 10, 10}};
+VIDEO_CARD v_millennium = {"Matrox Millennium", "millennium", &millennium_device, GFX_MILLENNIUM, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 1, 10, 10, 10}};
+VIDEO_CARD v_mda = {"MDA", "mda", &mda_device, GFX_MDA, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_genius = {"MDSI Genius", "genius", &genius_device, GFX_GENIUS, VIDEO_FLAG_TYPE_MDA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_n9_9fx = {"Number Nine 9FX (S3 Trio64)", "n9_9fx", &s3_9fx_device, GFX_N9_9FX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_oti037 = {"OAK OTI-037", "oti037", &oti037_device, GFX_OTI037, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_oti067 = {"OAK OTI-067", "oti067", &oti067_device, GFX_OTI067, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_olivetti_go481 = {"Olivetti GO481 (Paradise PVGA1A)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
+VIDEO_CARD v_bahamas64 = {"Paradise Bahamas 64 (S3 Vision864)", "bahamas64", &s3_bahamas64_device, GFX_BAHAMAS64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 5, 20, 20, 35}};
 /* Not offered as the emulation is very incomplete
-VIDEO_CARD v_35 = {"Professional Graphics Controller", "pgc", &pgc_device, GFX_PGC, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_pgc = {"Professional Graphics Controller", "pgc", &pgc_device, GFX_PGC, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 */
-VIDEO_CARD v_36 = {"Phoenix S3 Trio32", "px_trio32", &s3_phoenix_trio32_device, GFX_PHOENIX_TRIO32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_37 = {"Phoenix S3 Trio64", "px_trio64", &s3_phoenix_trio64_device, GFX_PHOENIX_TRIO64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
-VIDEO_CARD v_38 = {"Plantronics ColorPlus", "plantronics", &colorplus_device, GFX_COLORPLUS, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_39 = {"S3 ViRGE/DX", "virge375", &s3_virge_375_device, GFX_VIRGEDX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
-VIDEO_CARD v_40 = {"Sigma Color 400", "sigma400", &sigma_device, GFX_SIGMA400, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_41 = {"Trident TVGA8900D", "tvga8900d", &tvga8900d_device, GFX_TVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 8, 8, 12}};
-VIDEO_CARD v_42 = {"Trident TVGA9000B", "tvga9000b", &tvga9000b_device, GFX_TVGA9000B, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 7, 7, 12, 7, 7, 12}};
-VIDEO_CARD v_43 = {"Trident TGUI9400CXi", "tgui9400cxi", &tgui9400cxi_device, GFX_TGUI9400CXI, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
-VIDEO_CARD v_44 = {"Trident TGUI9440", "tgui9440", &tgui9440_device, GFX_TGUI9440, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
-VIDEO_CARD v_45 = {"Trigem Korean VGA (Tseng ET4000AX)", "tgkorvga", &et4000k_device, GFX_TGKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_46 = {"Tseng ET4000AX", "et4000ax", &et4000_device, GFX_ET4000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
-VIDEO_CARD v_47 = {"VGA", "vga", &vga_device, GFX_VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-VIDEO_CARD v_48 = {"Wyse 700", "wy700", &wy700_device, GFX_WY700, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_px_trio32 = {"Phoenix S3 Trio32", "px_trio32", &s3_phoenix_trio32_device, GFX_PHOENIX_TRIO32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_px_trio64 = {"Phoenix S3 Trio64", "px_trio64", &s3_phoenix_trio64_device, GFX_PHOENIX_TRIO64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
+VIDEO_CARD v_plantronics = {"Plantronics ColorPlus", "plantronics", &colorplus_device, GFX_COLORPLUS, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_virge375 = {"S3 ViRGE/DX", "virge375", &s3_virge_375_device, GFX_VIRGEDX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
+VIDEO_CARD v_sigma400 = {"Sigma Color 400", "sigma400", &sigma_device, GFX_SIGMA400, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_tvga8900d = {"Trident TVGA8900D", "tvga8900d", &tvga8900d_device, GFX_TVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 8, 8, 12}};
+VIDEO_CARD v_tvga9000b = {"Trident TVGA9000B", "tvga9000b", &tvga9000b_device, GFX_TVGA9000B, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 7, 7, 12, 7, 7, 12}};
+VIDEO_CARD v_tgui9400cxi = {"Trident TGUI9400CXi", "tgui9400cxi", &tgui9400cxi_device, GFX_TGUI9400CXI, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
+VIDEO_CARD v_tgui9440 = {"Trident TGUI9440", "tgui9440", &tgui9440_device, GFX_TGUI9440, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 8, 16, 4, 8, 16}};
+VIDEO_CARD v_tgkorvga = {"Trigem Korean VGA (Tseng ET4000AX)", "tgkorvga", &et4000k_device, GFX_TGKOREANVGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_et4000ax = {"Tseng ET4000AX", "et4000ax", &et4000_device, GFX_ET4000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
+VIDEO_CARD v_vga = {"VGA", "vga", &vga_device, GFX_VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_wy700 = {"Wyse 700", "wy700", &wy700_device, GFX_WY700, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 
 static video_timings_t timing_dram     = {VIDEO_BUS, 0,0,0, 0,0,0}; /*No additional waitstates*/
 static video_timings_t timing_pc1512   = {VIDEO_BUS, 0,0,0, 0,0,0}; /*PC1512 video code handles waitstates itself*/
@@ -1332,6 +1332,7 @@ int video_count()
 
 void pcem_add_video(VIDEO_CARD *video) 
 {
+        //TODO: Add sanity check to not go past MAX amount
         video_cards[video_count()] = video;
 }
 
@@ -1339,51 +1340,54 @@ void video_init_builtin()
 {
         memset(video_cards, 0, sizeof(video_cards));
 
-        pcem_add_video(&v_1);
-        pcem_add_video(&v_2);
-        pcem_add_video(&v_3);
-        pcem_add_video(&v_4);
-        pcem_add_video(&v_5);
-        pcem_add_video(&v_6);
-        pcem_add_video(&v_7);
-        pcem_add_video(&v_8);
-        pcem_add_video(&v_9);
-        pcem_add_video(&v_10);
-        pcem_add_video(&v_11);
-        pcem_add_video(&v_12);
-        pcem_add_video(&v_13);
-        pcem_add_video(&v_14);
-        pcem_add_video(&v_15);
-        pcem_add_video(&v_16);
-        pcem_add_video(&v_17);
-        pcem_add_video(&v_18);
-        pcem_add_video(&v_19);
-        pcem_add_video(&v_20);
-        pcem_add_video(&v_21);
-        pcem_add_video(&v_22);
-        pcem_add_video(&v_23);
-        pcem_add_video(&v_24);
-        pcem_add_video(&v_25);
-        pcem_add_video(&v_26);
-        pcem_add_video(&v_27);
-        pcem_add_video(&v_28);
-        pcem_add_video(&v_29);
-        pcem_add_video(&v_30);
-        pcem_add_video(&v_31);
-        pcem_add_video(&v_32);
-        pcem_add_video(&v_33);
-        pcem_add_video(&v_34);
-        pcem_add_video(&v_36);
-        pcem_add_video(&v_37);
-        pcem_add_video(&v_38);
-        pcem_add_video(&v_39);
-        pcem_add_video(&v_40);
-        pcem_add_video(&v_41);
-        pcem_add_video(&v_42);
-        pcem_add_video(&v_43);
-        pcem_add_video(&v_44);
-        pcem_add_video(&v_45);
-        pcem_add_video(&v_46);
-        pcem_add_video(&v_47);
-        pcem_add_video(&v_48);
+        pcem_add_video(&v_banshee);
+        pcem_add_video(&v_v3_2000);
+        pcem_add_video(&v_v3_3000);
+        pcem_add_video(&v_avga2);
+        pcem_add_video(&v_mach64gx);
+        pcem_add_video(&v_mach64vt2);
+        pcem_add_video(&v_egawonder800);
+        pcem_add_video(&v_ati28800k);
+        pcem_add_video(&v_ati28800);
+        pcem_add_video(&v_ati18800);
+        pcem_add_video(&v_cga);
+        pcem_add_video(&v_cl_gd5428);
+        pcem_add_video(&v_cl_gd5429);
+        pcem_add_video(&v_cl_gd5430);
+        pcem_add_video(&v_cl_gd5434);
+        pcem_add_video(&v_compaq_cga_device);
+        pcem_add_video(&v_cl_banshee);
+        pcem_add_video(&v_stealth32);
+        pcem_add_video(&v_stealth3d_2000);
+        pcem_add_video(&v_ega);
+        pcem_add_video(&v_hercules);
+        pcem_add_video(&v_incolor);
+        pcem_add_video(&v_ibm1mbsvga);
+        pcem_add_video(&v_im1024);
+        pcem_add_video(&v_kasan16);
+        pcem_add_video(&v_mystique);
+        pcem_add_video(&v_millennium);
+        pcem_add_video(&v_mda);
+        pcem_add_video(&v_genius);
+        pcem_add_video(&v_n9_9fx);
+        pcem_add_video(&v_oti037);
+        pcem_add_video(&v_oti067);
+        pcem_add_video(&v_olivetti_go481);
+        pcem_add_video(&v_bahamas64);
+/* Not offered as the emulation is very incomplete
+        pcem_add_video(&v_pgc);
+*/
+        pcem_add_video(&v_px_trio32);
+        pcem_add_video(&v_px_trio64);
+        pcem_add_video(&v_plantronics);
+        pcem_add_video(&v_virge375);
+        pcem_add_video(&v_sigma400);
+        pcem_add_video(&v_tvga8900d);
+        pcem_add_video(&v_tvga9000b);
+        pcem_add_video(&v_tgui9400cxi);
+        pcem_add_video(&v_tgui9440);
+        pcem_add_video(&v_tgkorvga);
+        pcem_add_video(&v_et4000ax);
+        pcem_add_video(&v_vga);
+        pcem_add_video(&v_wy700);
 }

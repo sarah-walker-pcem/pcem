@@ -7,6 +7,8 @@ extern char nvr_path[512];
 extern char logs_path[512];
 extern char screenshots_path[512];
 extern char nvr_default_path[512];
+extern char plugins_default_path[512];
+extern char base_path[512];
 
 void get_pcem_path(char *s, int size);
 void get_pcem_base_path(char *s, int size);
@@ -29,6 +31,7 @@ void set_nvr_path(char *s);
 void set_logs_path(char *s);
 void set_configs_path(char *s);
 void set_screenshots_path(char *s);
+void set_plugins_path(char *s);
 
 
 #endif /* _PATHS_H_ */

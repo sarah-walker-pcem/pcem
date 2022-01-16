@@ -14,8 +14,8 @@ jobs:
         include:
         - name: Ubuntu 64bit (gcc)
           os: ubuntu-latest
-          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Ubuntu-${{ github.ref_name }}-${{ github.run_number }}
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+          artifacts_name: PCem-vNext-Ubuntu-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.tar.bz2
           installdeps: >-
             libsdl2-dev
@@ -26,8 +26,8 @@ jobs:
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
-          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Windows-MINGW32-${{ github.ref_name }}-${{ github.run_number }}
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+          artifacts_name: PCem-vNext-Windows-MINGW32-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
@@ -43,8 +43,8 @@ jobs:
         - name: Windows 64bits (MSYS2)
           os: windows-latest
           compiler: MINGW64
-          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="build ${GITHUB_SHA::8}"
-          artifacts_name: PCem-Windows-MINGW64-${{ github.ref_name }}-${{ github.run_number }}
+          args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+          artifacts_name: PCem-vNext-Windows-MINGW64-${{ github.run_number }}
           artifacts_path: PCem-${{ github.sha }}.zip
           installdeps: >-
             base-devel
@@ -96,29 +96,6 @@ jobs:
         mkdir dist/src
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
-        cp /mingw32/bin/libdeflate.dll dist/bin
-        cp /mingw32/bin/libexpat-1.dll dist/bin
-        cp /mingw32/bin/libgcc_s_dw2-1.dll dist/bin
-        cp /mingw32/bin/libjpeg-8.dll dist/bin
-        cp /mingw32/bin/liblzma-5.dll dist/bin
-        cp /mingw32/bin/libopenal-1.dll dist/bin
-        cp /mingw32/bin/libpng16-16.dll dist/bin
-        cp /mingw32/bin/libstdc++-6.dll dist/bin
-        cp /mingw32/bin/libtiff-5.dll dist/bin
-        cp /mingw32/bin/libwebp-7.dll dist/bin
-        cp /mingw32/bin/libwinpthread-1.dll dist/bin
-        cp /mingw32/bin/libzstd.dll dist/bin
-        cp /mingw32/bin/SDL2.dll dist/bin
-        cp /mingw32/bin/libjbig-0.dll dist/bin
-        cp /mingw32/bin/libLerc.dll dist/bin
-        cp /mingw32/bin/wxbase30u_gcc_custom.dll dist/bin
-        cp /mingw32/bin/wxbase30u_xml_gcc_custom.dll dist/bin
-        cp /mingw32/bin/wxmsw30u_adv_gcc_custom.dll dist/bin
-        cp /mingw32/bin/wxmsw30u_core_gcc_custom.dll dist/bin
-        cp /mingw32/bin/wxmsw30u_html_gcc_custom.dll dist/bin
-        cp /mingw32/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
-        cp /mingw32/bin/zlib1.dll dist/bin
-        cp /mingw32/bin/libpcap.dll dist/bin
     - name: prepare-package (Windows64)
       if: runner.os == 'Windows' && matrix.compiler == 'MINGW64'
       shell: msys2 {0}
@@ -128,29 +105,6 @@ jobs:
         mkdir dist/src
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
-        cp /mingw64/bin/libdeflate.dll dist/bin
-        cp /mingw64/bin/libexpat-1.dll dist/bin
-        cp /mingw64/bin/libgcc_s_seh-1.dll dist/bin
-        cp /mingw64/bin/libjpeg-8.dll dist/bin
-        cp /mingw64/bin/liblzma-5.dll dist/bin
-        cp /mingw64/bin/libopenal-1.dll dist/bin
-        cp /mingw64/bin/libpng16-16.dll dist/bin
-        cp /mingw64/bin/libstdc++-6.dll dist/bin
-        cp /mingw64/bin/libtiff-5.dll dist/bin
-        cp /mingw64/bin/libwebp-7.dll dist/bin
-        cp /mingw64/bin/libwinpthread-1.dll dist/bin
-        cp /mingw64/bin/libzstd.dll dist/bin
-        cp /mingw64/bin/SDL2.dll dist/bin
-        cp /mingw64/bin/libjbig-0.dll dist/bin
-        cp /mingw64/bin/libLerc.dll dist/bin
-        cp /mingw64/bin/wxbase30u_gcc_custom.dll dist/bin
-        cp /mingw64/bin/wxbase30u_xml_gcc_custom.dll dist/bin
-        cp /mingw64/bin/wxmsw30u_adv_gcc_custom.dll dist/bin
-        cp /mingw64/bin/wxmsw30u_core_gcc_custom.dll dist/bin
-        cp /mingw64/bin/wxmsw30u_html_gcc_custom.dll dist/bin
-        cp /mingw64/bin/wxmsw30u_xrc_gcc_custom.dll dist/bin
-        cp /mingw64/bin/zlib1.dll dist/bin
-        cp /mingw64/bin/libpcap.dll dist/bin
     - name: configure (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -170,6 +124,8 @@ jobs:
       run: |
         cp ./temp/build/output/bin/pcem.exe dist/bin
         cp ./temp/build/output/bin/libpcem.dll dist/bin
+        cp -r ./temp/build/output/share dist
+        ntldd -R "dist/bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="dist/bin"
         cd dist
         zip -r -9 ${{ matrix.artifacts_path }} *
 
@@ -198,6 +154,7 @@ jobs:
       run: |
        cp ./temp/build/output/bin/pcem dist/bin
        cp ./temp/build/output/lib/libpcem.so dist/lib
+       cp -r ./temp/build/output/share dist
        cd dist
        tar -cjf ${{ matrix.artifacts_path }} *
 
@@ -206,4 +163,3 @@ jobs:
       with:
         name: ${{ matrix.artifacts_name }}
         path: ./dist/${{ matrix.artifacts_path }}
-
