@@ -94,8 +94,6 @@ jobs:
         mkdir dist
         mkdir dist/bin
         mkdir dist/src
-        mkdir dist/share
-        mkdir dist/share/pcem
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
     - name: prepare-package (Windows64)
@@ -105,8 +103,6 @@ jobs:
         mkdir dist
         mkdir dist/bin
         mkdir dist/src
-        mkdir dist/share
-        mkdir dist/share/pcem
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
     - name: configure (Windows)
@@ -128,8 +124,7 @@ jobs:
       run: |
         cp ./temp/build/output/bin/pcem.exe dist/bin
         cp ./temp/build/output/bin/libpcem.dll dist/bin
-        cp ./temp/nvr dist/share/pcem
-        cp ./temp/roms dist/share/pcem
+        cp -r ./temp/build/output/share dist
         ntldd -R "dist/bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="dist/bin"
         cd dist
         zip -r -9 ${{ matrix.artifacts_path }} *
@@ -141,8 +136,6 @@ jobs:
         mkdir dist/bin
         mkdir dist/lib
         mkdir dist/src
-        mkdir dist/share
-        mkdir dist/share/pcem
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
     - name: configure (Linux)
@@ -161,8 +154,7 @@ jobs:
       run: |
        cp ./temp/build/output/bin/pcem dist/bin
        cp ./temp/build/output/lib/libpcem.so dist/lib
-       cp ./temp/nvr dist/share/pcem
-       cp ./temp/roms dist/share/pcem
+       cp -r ./temp/build/output/share dist
        cd dist
        tar -cjf ${{ matrix.artifacts_path }} *
 
