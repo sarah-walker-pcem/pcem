@@ -230,6 +230,7 @@ static struct
         {20,  50, 300},
         {24,  45, 270},
         {32,  45, 270},
+	{36,  45, 270},
         {40,  50, 300},
         {44,  50, 300},
         {48,  50, 300},
@@ -319,6 +320,22 @@ static struct
                 "azt_cda_468_02i_4x",
                 CD_MODEL_INTERFACE_IDE,
                 4,
+        },
+	 {
+                // A 32x CD-ROM drive from Creative Labs. 
+                "Creative",
+                "Creative CR-588-B v1.0",
+                "8516DFA30742", // 
+                "CR-588-B",
+                "1.0",
+
+                "",
+                "v1.0",
+                "CR-588-B",
+                "Creative CR-588-B",
+                "creative_cr_588_b",
+                CD_MODEL_INTERFACE_IDE,
+                32,
         },
 };
 
