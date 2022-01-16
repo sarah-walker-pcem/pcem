@@ -293,6 +293,7 @@ set(PCEM_SRC
 	mcr.c
 	paths.c
 	pc.c
+	plugin.c
 	ppi.c
 	pzx.c
 	rtc.c
@@ -482,3 +483,5 @@ target_link_libraries(pcem ${PCEM_LIBRARIES})
 add_executable(pcem-bin main.c)
 target_link_libraries(pcem-bin pcem ${PCEM_LIBRARIES})
 set_target_properties(pcem-bin PROPERTIES OUTPUT_NAME "pcem")
+add_custom_command(TARGET pcem-bin POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/roms ${CMAKE_BINARY_DIR}/output/share/pcem/roms)
+add_custom_command(TARGET pcem-bin POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/nvr ${CMAKE_BINARY_DIR}/output/share/pcem/nvr)

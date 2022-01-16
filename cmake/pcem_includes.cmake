@@ -161,6 +161,7 @@ set(PCEM_PRIVATE_HEADERS ${PCEM_PRIVATE_HEADERS}
 	${CMAKE_SOURCE_DIR}/includes/private/plat-keyboard.h
 	${CMAKE_SOURCE_DIR}/includes/private/plat-midi.h
 	${CMAKE_SOURCE_DIR}/includes/private/plat-mouse.h
+	${CMAKE_SOURCE_DIR}/includes/private/plugin.h
 	${CMAKE_SOURCE_DIR}/includes/private/ps1.h
 	${CMAKE_SOURCE_DIR}/includes/private/ps2.h
 	${CMAKE_SOURCE_DIR}/includes/private/ps2_mca.h
@@ -394,4 +395,5 @@ set(PCEM_PUBLIC_HEADERS ${PCEM_PUBLIC_HEADERS}
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/devices.h
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/defines.h
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/cpu.h
+	${CMAKE_SOURCE_DIR}/includes/public/pcem/plugin.h
 )

@@ -22,9 +22,9 @@ static int network_card_last = 0;
 
 NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
 
-NETWORK_CARD n1 = {"None", "", NULL};
-NETWORK_CARD n2 = {"Novell NE2000", "ne2000", &ne2000_device};
-NETWORK_CARD n3 = {"Realtek RTL8029AS", "rtl8029as", &rtl8029as_device};
+NETWORK_CARD n_none = {"None", "", NULL};
+NETWORK_CARD n_ne2000 = {"Novell NE2000", "ne2000", &ne2000_device};
+NETWORK_CARD n_rtl8029as = {"Realtek RTL8029AS", "rtl8029as", &rtl8029as_device};
 
 int network_card_available(int card)
 {
@@ -131,6 +131,7 @@ int network_card_count()
 
 void pcem_add_networkcard(NETWORK_CARD *netcard)
 {
+        //TODO: Add sanity check to not go past MAX amount
         network_cards[network_card_count()] = netcard;
 }
 
@@ -138,7 +139,7 @@ void network_card_init_builtin()
 {
         memset(network_cards, 0, sizeof(network_cards));
 
-        pcem_add_networkcard(&n1);
-        pcem_add_networkcard(&n2);
-        pcem_add_networkcard(&n3);
+        pcem_add_networkcard(&n_none);
+        pcem_add_networkcard(&n_ne2000);
+        pcem_add_networkcard(&n_rtl8029as);
 }

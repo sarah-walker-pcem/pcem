@@ -200,25 +200,26 @@ int hdd_controller_count()
         return ret;
 }
 
-HDD_CONTROLLER h1 = {"None", "none", &null_hdd_device, 0, 0, 0};
-HDD_CONTROLLER h2 = {"[MFM] AT Fixed Disk Adapter", "mfm_at", &mfm_at_device, 1, 0, 0};
-HDD_CONTROLLER h3 = {"[MFM] DTC 5150X", "dtc5150x", &dtc_5150x_device, 1, 0, 0};
-HDD_CONTROLLER h4 = {"[MFM] Fixed Disk Adapter (Xebec)", "mfm_xebec", &mfm_xebec_device, 1, 0, 0};
-HDD_CONTROLLER h5 = {"[ESDI] IBM ESDI Fixed Disk Controller", "esdi_mca", &hdd_esdi_device, 1, 0, 0};
-HDD_CONTROLLER h6 = {"[ESDI] Western Digital WD1007V-SE1", "wd1007vse1", &wd1007vse1_device, 0, 0, 0};
-HDD_CONTROLLER h7 = {"[IDE] Standard IDE", "ide", &ide_device, 0, 1, 0};
-HDD_CONTROLLER h8 = {"[IDE] XTIDE", "xtide", &xtide_device, 0, 1, 0};
-HDD_CONTROLLER h9 = {"[IDE] XTIDE (AT)", "xtide_at", &xtide_at_device, 0, 1, 0};
-HDD_CONTROLLER h10 = {"[IDE] XTIDE (PS/1)", "xtide_ps1", &xtide_ps1_device, 0, 1, 0};
-HDD_CONTROLLER h11 = {"[SCSI] Adaptec AHA-1542C", "aha1542c", &scsi_aha1542c_device, 0, 0, 1};
-HDD_CONTROLLER h12 = {"[SCSI] BusLogic BT-545S", "bt545s", &scsi_bt545s_device, 0, 0, 1};
-HDD_CONTROLLER h13 = {"[SCSI] IBM SCSI Adapter with Cache", "ibmscsi_mca", &scsi_ibm_device, 0, 0, 1};
-HDD_CONTROLLER h14 = {"[SCSI] Longshine LCS-6821N", "lcs6821n", &scsi_lcs6821n_device, 0, 0, 1};
-HDD_CONTROLLER h15 = {"[SCSI] Rancho RT1000B", "rt1000b", &scsi_rt1000b_device, 0, 0, 1};
-HDD_CONTROLLER h16 = {"[SCSI] Trantor T130B", "t130b", &scsi_t130b_device, 0, 0, 1};
+HDD_CONTROLLER h_none = {"None", "none", &null_hdd_device, 0, 0, 0};
+HDD_CONTROLLER h_mfm_at = {"[MFM] AT Fixed Disk Adapter", "mfm_at", &mfm_at_device, 1, 0, 0};
+HDD_CONTROLLER h_dtc5150x = {"[MFM] DTC 5150X", "dtc5150x", &dtc_5150x_device, 1, 0, 0};
+HDD_CONTROLLER h_mfm_xebec = {"[MFM] Fixed Disk Adapter (Xebec)", "mfm_xebec", &mfm_xebec_device, 1, 0, 0};
+HDD_CONTROLLER h_esdi_mca = {"[ESDI] IBM ESDI Fixed Disk Controller", "esdi_mca", &hdd_esdi_device, 1, 0, 0};
+HDD_CONTROLLER h_wd1007vse1 = {"[ESDI] Western Digital WD1007V-SE1", "wd1007vse1", &wd1007vse1_device, 0, 0, 0};
+HDD_CONTROLLER h_ide = {"[IDE] Standard IDE", "ide", &ide_device, 0, 1, 0};
+HDD_CONTROLLER h_xtide = {"[IDE] XTIDE", "xtide", &xtide_device, 0, 1, 0};
+HDD_CONTROLLER h_xtide_at = {"[IDE] XTIDE (AT)", "xtide_at", &xtide_at_device, 0, 1, 0};
+HDD_CONTROLLER h_xtide_ps1 = {"[IDE] XTIDE (PS/1)", "xtide_ps1", &xtide_ps1_device, 0, 1, 0};
+HDD_CONTROLLER h_aha1542c = {"[SCSI] Adaptec AHA-1542C", "aha1542c", &scsi_aha1542c_device, 0, 0, 1};
+HDD_CONTROLLER h_bt545s = {"[SCSI] BusLogic BT-545S", "bt545s", &scsi_bt545s_device, 0, 0, 1};
+HDD_CONTROLLER h_ibmscsi_mca = {"[SCSI] IBM SCSI Adapter with Cache", "ibmscsi_mca", &scsi_ibm_device, 0, 0, 1};
+HDD_CONTROLLER h_lcs6821n = {"[SCSI] Longshine LCS-6821N", "lcs6821n", &scsi_lcs6821n_device, 0, 0, 1};
+HDD_CONTROLLER h_rt1000b = {"[SCSI] Rancho RT1000B", "rt1000b", &scsi_rt1000b_device, 0, 0, 1};
+HDD_CONTROLLER h_t130b = {"[SCSI] Trantor T130B", "t130b", &scsi_t130b_device, 0, 0, 1};
 
 void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller)
 {
+        //TODO: Add sanity check to not go past MAX amount
         hdd_controllers[hdd_controller_count()] = hddcontroller;
 }
 
@@ -226,20 +227,20 @@ void hdd_controller_init_builtin()
 {
         memset(hdd_controllers, 0, sizeof(hdd_controllers));
 
-        pcem_add_hddcontroller(&h1);
-        pcem_add_hddcontroller(&h2);
-        pcem_add_hddcontroller(&h3);
-        pcem_add_hddcontroller(&h4);
-        pcem_add_hddcontroller(&h5);
-        pcem_add_hddcontroller(&h6);
-        pcem_add_hddcontroller(&h7);
-        pcem_add_hddcontroller(&h8);
-        pcem_add_hddcontroller(&h9);
-        pcem_add_hddcontroller(&h10);
-        pcem_add_hddcontroller(&h11);
-        pcem_add_hddcontroller(&h12);
-        pcem_add_hddcontroller(&h13);
-        pcem_add_hddcontroller(&h14);
-        pcem_add_hddcontroller(&h15);
-        pcem_add_hddcontroller(&h16);
+        pcem_add_hddcontroller(&h_none);
+        pcem_add_hddcontroller(&h_mfm_at);
+        pcem_add_hddcontroller(&h_dtc5150x);
+        pcem_add_hddcontroller(&h_mfm_xebec);
+        pcem_add_hddcontroller(&h_esdi_mca);
+        pcem_add_hddcontroller(&h_wd1007vse1);
+        pcem_add_hddcontroller(&h_ide);
+        pcem_add_hddcontroller(&h_xtide);
+        pcem_add_hddcontroller(&h_xtide_at);
+        pcem_add_hddcontroller(&h_xtide_ps1);
+        pcem_add_hddcontroller(&h_aha1542c);
+        pcem_add_hddcontroller(&h_bt545s);
+        pcem_add_hddcontroller(&h_ibmscsi_mca);
+        pcem_add_hddcontroller(&h_lcs6821n);
+        pcem_add_hddcontroller(&h_rt1000b);
+        pcem_add_hddcontroller(&h_t130b);
 }

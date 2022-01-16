@@ -5,8 +5,8 @@
 - Numerous bugfixes in this build
 
 ## Added the following machines to v18
-- Huyndai SUPER-16T
-- Huyndai SUPER-16TE
+- Hyundai SUPER-16T
+- Hyundai SUPER-16TE
 - Commodore PC10C
 
 ## Developer Changes to v18
