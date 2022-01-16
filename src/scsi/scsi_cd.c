@@ -323,6 +323,57 @@ static struct
                 4,
         },
 	
+	{
+                // An 8x CD-ROM drive from Sony. 
+                "Sony",
+                "Sony CDU311 3.0h",
+                "5345074",
+                "CD-ROM CDU311",
+                "3.0h",
+
+                "",
+                "3.0h",
+                "CDU311",
+                "Sony CDU311",
+                "cdu311",
+                CD_MODEL_INTERFACE_IDE,
+                8,
+        },
+	
+	{
+                // A 12x CD-ROM drive from Toshiba. 
+                "Toshiba",
+                "Toshiba XM-5702B TA70201",
+                "11S02K1151ZJ13VG108019",
+                "XM-5702B",
+                "TA70201",
+
+                "",
+                "TA70201",
+                "XM-5702B",
+                "Toshiba XM-5702B",
+                "xm5702b",
+                CD_MODEL_INTERFACE_IDE,
+                12,
+        },
+	
+	{
+                // A 16x CD-ROM drive from Goldstar. 
+                "GoldStar",
+                "GoldStar CRD-8160B 3.14",
+                "11S02K1151ZJ13VG108019",
+                "CD-ROM CRD-8160B",
+                "3.14",
+
+                "",
+                "3.14",
+                "CRD-8160B",
+                "GoldStar CRD-8160B",
+                "crd-8160b",
+                CD_MODEL_INTERFACE_IDE,
+                16,
+        },
+	
 	 {
                 // A 24x CD-ROM drive from Creative Labs. 
                 "Creative",
@@ -332,7 +383,7 @@ static struct
                 "7S13",
 
                 "",
-                "LS15",
+                "7S13",
                 "CR-587-B",
                 "Creative CR-587-B",
                 "cr-587-b",
@@ -358,20 +409,37 @@ static struct
         },
 	
 	{
-                // A 16x CD-ROM drive from Goldstar. 
-                "GoldStar",
-                "GoldStar CRD-8160B 3.14",
-                "11S02K1151ZJ13VG108019",
-                "CD-ROM CRD-8160B",
-                "3.14",
+                // A 36x CD-ROM drive from BTC. 
+                "BTC",
+                "BTC BCD36XH U1.0",
+                "P81729496",
+                "CD-ROM BCD36XH",
+                "U1.0",
 
                 "",
-                "3.14",
-                "CRD-8160B",
-                "GoldStar CRD-8160B",
-                "crd-8160b",
+                "U1.0",
+                "BCD36XH",
+                "BTC BCD36XH",
+                "bcd36xh",
                 CD_MODEL_INTERFACE_IDE,
-                16,
+                36,
+        },	
+	
+	{
+                // A 40x CD-ROM drive from Philips. 
+                "Philips",
+                "Philips PCA403CD U31P",
+                "P81729496",
+                "CD-ROM PCA403CD",
+                "U31P",
+
+                "",
+                "U31P",
+                "PCA403CD",
+                "Philips PCA403CD",
+                "pca403cd",
+                CD_MODEL_INTERFACE_IDE,
+                40,
         },
 };
 
