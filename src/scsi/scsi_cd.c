@@ -323,20 +323,54 @@ static struct
         },
 	
 	 {
-                // A 32x CD-ROM drive from Creative Labs. 
+                // A 24x CD-ROM drive from Creative Labs. 
                 "Creative",
-                "Creative CR-588-B v1.0",
-                "8516DFA30742",
-                "CREATIVE CR-588-B",
-                "1.0",
+                "Creative CR-587-B 7S13",
+                "8307DDB76196",
+                "CD-ROM CR-587",
+                "7S13",
 
                 "",
-                "v1.0",
+                "LS15",
+                "CR-587-B",
+                "Creative CR-587-B",
+                "cr-587-b",
+                CD_MODEL_INTERFACE_IDE,
+                24,
+        },
+	
+	 {
+                // A 32x CD-ROM drive from Creative Labs. 
+                "Creative",
+                "Creative CR-588-B LS15",
+                "8516DFA30742",
+                "CD-ROM CR-588-B",
+                "LS15",
+
+                "",
+                "LS15",
                 "CR-588-B",
-                "Creative CR-588-B",
+                "Creative CR-588",
                 "cr-588-b",
                 CD_MODEL_INTERFACE_IDE,
                 32,
+        },
+	
+	{
+                // A 16x CD-ROM drive from Goldstar. 
+                "GoldStar",
+                "GoldStar CRD-8160B 3.14",
+                "11S02K1151ZJ13VG108019",
+                "CD-ROM CRD-8160B",
+                "3.14",
+
+                "",
+                "3.14",
+                "CRD-8160B",
+                "GoldStar CRD-8160B",
+                "crd-8160b",
+                CD_MODEL_INTERFACE_IDE,
+                16,
         },
 };
 
