@@ -19,8 +19,8 @@ You will need the following libraries (and their dependencies):
 Open a terminal window, navigate to the PCem directory then enter:
 ### Linux
 ```
-cmake -DCMAKE_BUILD_TYPE=Release .
-make
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .
+ninja
 ```
 ### BSD
 ```
@@ -37,7 +37,19 @@ configure options are :
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
   -DUSE_NETWORKING=ON        : Build with networking support.
+  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile)
   -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
+```
+
+If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
+```
+  -DPCEM_SLIRP_DEBUG           : Build PCem with SLIRP_DEBUG debug output
+  -DPCEM_RECOMPILER_DEBUG      : Build PCem with RECOMPILER_DEBUG debug output
+  -DPCEM_NE2000_DEBUG          : Build PCem with NE2000_DEBUG debug output
+  -DPCEM_EMU8K_DEBUG_REGISTERS : Build PCem with EMU8K_DEBUG_REGISTERS debug output
+  -DPCEM_SB_DSP_RECORD_DEBUG   : Build PCem with SB_DSP_RECORD_DEBUG debug output
+  -DPCEM_MACH64_DEBUG          : Build PCem with MACH64_DEBUG debug output
+  -DPCEM_DEBUG_EXTRA           : Build PCem with DEBUG_EXTRA debug output
 ```
 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not
