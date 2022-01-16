@@ -333,7 +333,7 @@ static struct
 
                 "",
                 "3.0h",
-                "CDU311",
+                "SONY CDU311",
                 "Sony CDU311",
                 "cdu311",
                 CD_MODEL_INTERFACE_IDE,
@@ -343,14 +343,14 @@ static struct
 	{
                 // A 12x CD-ROM drive from Toshiba. 
                 "Toshiba",
-                "Toshiba XM-5702B TA70201",
-                "11S02K1151ZJ13VG108019",
-                "XM-5702B",
-                "TA70201",
+                "Toshiba XM-5702B TA70",
+                "784P009803",
+                "CD-ROM XM-5702B",
+                "TA70",
 
                 "",
-                "TA70201",
-                "XM-5702B",
+                "TA70",
+                "TOSHIBA XM-5702B",
                 "Toshiba XM-5702B",
                 "xm5702b",
                 CD_MODEL_INTERFACE_IDE,
@@ -367,7 +367,7 @@ static struct
 
                 "",
                 "3.14",
-                "CRD-8160B",
+                "GOLDSTAR CRD-8160B",
                 "GoldStar CRD-8160B",
                 "crd-8160b",
                 CD_MODEL_INTERFACE_IDE,
@@ -384,7 +384,7 @@ static struct
 
                 "",
                 "7S13",
-                "CR-587-B",
+                "CREATIVE CD-ROM CR-587-B",
                 "Creative CR-587-B",
                 "cr-587-b",
                 CD_MODEL_INTERFACE_IDE,
@@ -401,7 +401,7 @@ static struct
 
                 "",
                 "LS15",
-                "CR-588-B",
+                "CREATIVE CD-ROM CR-588-B",
                 "Creative CR-588-B",
                 "cr-588-b",
                 CD_MODEL_INTERFACE_IDE,
@@ -435,7 +435,7 @@ static struct
 
                 "",
                 "U31P",
-                "PCA403CD",
+                "PHILIPS PCA403CD",
                 "Philips PCA403CD",
                 "pca403cd",
                 CD_MODEL_INTERFACE_IDE,
