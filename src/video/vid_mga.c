@@ -5847,7 +5847,7 @@ device_t millennium_device =
 device_t mystique_device =
 {
         "Matrox Mystique",
-        DEVICE_NOT_WORKING,
+        0,
         mystique_init,
         mystique_close,
         mystique_available,
