@@ -429,7 +429,7 @@ static struct
                 // A 40x CD-ROM drive from Philips. 
                 "Philips",
                 "Philips PCA403CD U31P",
-                "P81729496",
+                "P66839-20942 B1",
                 "CD-ROM PCA403CD",
                 "U31P",
 
