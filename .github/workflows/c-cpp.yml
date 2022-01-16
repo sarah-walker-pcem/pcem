@@ -23,6 +23,7 @@ jobs:
             libwxgtk3.0-gtk3-dev
             libpcap-dev
             cmake
+            ninja
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
@@ -40,6 +41,7 @@ jobs:
             mingw-w64-i686-wxWidgets
             mingw-w64-i686-cmake
             mingw-w64-i686-libpcap
+            mingw-w64-i686-ninja
         - name: Windows 64bits (MSYS2)
           os: windows-latest
           compiler: MINGW64
@@ -57,6 +59,7 @@ jobs:
             mingw-w64-x86_64-wxWidgets
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-libpcap
+            mingw-w64-x86_64-ninja
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     
@@ -111,13 +114,13 @@ jobs:
       run: |
         mkdir temp/build
         cd temp/build
-        cmake -G "MSYS Makefiles" ${{ matrix.args }} ..
-    - name: make (Windows)
+        cmake -G "Ninja" ${{ matrix.args }} ..
+    - name: ninja (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
         cd temp/build
-        make -j
+        ninja
     - name: package (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -143,12 +146,12 @@ jobs:
       run: |
         mkdir temp/build
         cd temp/build
-        cmake ${{ matrix.args }} ..
-    - name: make (Linux)
+        cmake -G "Ninja" ${{ matrix.args }} ..
+    - name: ninja (Linux)
       if: runner.os == 'Linux'
       run: |
         cd temp/build
-        make -j
+        ninja
     - name: package (Linux)
       if: runner.os == 'Linux'
       run: |
