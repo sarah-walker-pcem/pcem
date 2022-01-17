@@ -32,7 +32,7 @@ cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_BUILD_TYPE=Release .
 ninja
 ```
 
-then `./output/bin/pcem` to run.
+then `./src/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 

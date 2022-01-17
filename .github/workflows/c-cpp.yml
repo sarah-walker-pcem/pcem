@@ -90,21 +90,11 @@ jobs:
         sudo apt-get install ${{ matrix.installdeps }}
 
     # Copy all the sources to the dist folder, before we start generating intermediate files.
-    - name: prepare-package (Windows32)
-      if: runner.os == 'Windows' && matrix.compiler == 'MINGW32'
+    - name: prepare-package (Windows)
+      if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
         mkdir dist
-        mkdir dist/bin
-        mkdir dist/src
-        cp -R ./temp/* dist/src
-        rm -Rf ./dist/src/.git
-    - name: prepare-package (Windows64)
-      if: runner.os == 'Windows' && matrix.compiler == 'MINGW64'
-      shell: msys2 {0}
-      run: |
-        mkdir dist
-        mkdir dist/bin
         mkdir dist/src
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
@@ -125,19 +115,17 @@ jobs:
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        cp ./temp/build/output/bin/pcem.exe dist/bin
-        cp ./temp/build/output/bin/libpcem.dll dist/bin
-        cp -r ./temp/build/output/share dist
-        ntldd -R "dist/bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="dist/bin"
-        cd dist
+        export DESTDIR=$(pwd)/dist
+        cd temp/build
+        ninja install
+        cd $DESTDIR
+        ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="bin"
         zip -r -9 ${{ matrix.artifacts_path }} *
 
     - name: prepare-package (Linux)
       if: runner.os == 'Linux'
       run: |
         mkdir dist
-        mkdir dist/bin
-        mkdir dist/lib
         mkdir dist/src
         cp -R ./temp/* dist/src
         rm -Rf ./dist/src/.git
@@ -155,10 +143,10 @@ jobs:
     - name: package (Linux)
       if: runner.os == 'Linux'
       run: |
-       cp ./temp/build/output/bin/pcem dist/bin
-       cp ./temp/build/output/lib/libpcem.so dist/lib
-       cp -r ./temp/build/output/share dist
-       cd dist
+       export DESTDIR=$(pwd)/dist
+       cd temp/build
+       ninja install
+       cd $DESTDIR
        tar -cjf ${{ matrix.artifacts_path }} *
 
     - name: "Upload GitHub Actions artifacts"

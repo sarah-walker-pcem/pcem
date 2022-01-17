@@ -24,6 +24,7 @@ void set_default_nvr_path(char *s);
 void set_default_logs_path(char *s);
 void set_default_configs_path(char *s);
 void set_default_screenshots_path(char *s);
+void set_default_nvr_default_path(char *s);
 
 /* set the paths temporarily for this session */
 void set_roms_paths(char* path);
