@@ -90,9 +90,27 @@ typedef struct NETWORK_CARD
         device_t *device;
 } NETWORK_CARD;
 
+typedef struct lpt_device_t
+{
+        char name[80];
+        void *(*init)();
+        void (*close)(void *p);
+        void (*write_data)(uint8_t val, void *p);
+        void (*write_ctrl)(uint8_t val, void *p);
+        uint8_t (*read_status)(void *p);
+} lpt_device_t;
+
+typedef struct LPT_DEVICE
+{
+        char name[64];
+        char internal_name[16];
+        lpt_device_t *device;
+} LPT_DEVICE;
+
 extern void pcem_add_model(MODEL *model);
 extern void pcem_add_video(VIDEO_CARD *video);
 extern void pcem_add_sound(SOUND_CARD *sound);
+extern void pcem_add_lpt(LPT_DEVICE *lpt);
 extern void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller);
 extern void pcem_add_networkcard(NETWORK_CARD *netcard);
 extern void pcem_add_device(device_t *device);

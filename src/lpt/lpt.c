@@ -5,33 +5,38 @@
 #include "lpt_dac.h"
 #include "lpt_dss.h"
 
+#include <pcem/devices.h>
+#include <pcem/defines.h>
+
+#ifdef USE_EXPERIMENTAL_PRINTER
+#include "lpt_printer.h"
+#endif
+
 char lpt1_device_name[16];
 
-static struct
-{
-        char name[64];
-        char internal_name[16];
-        lpt_device_t *device;
-} lpt_devices[] =
-{
-        {"None",                         "none",           NULL},
-        {"Disney Sound Source",          "dss",            &dss_device},
-        {"LPT DAC / Covox Speech Thing", "lpt_dac",        &lpt_dac_device},
-        {"Stereo LPT DAC",               "lpt_dac_stereo", &lpt_dac_stereo_device},
-        {"", "", NULL}
-};
+LPT_DEVICE *lpt_devices[LPT_MAX];
+
+LPT_DEVICE l_none = {"None", "none", NULL};
+LPT_DEVICE l_dss = {"Disney Sound Source", "dss", &dss_device};
+LPT_DEVICE l_lpt_dac = {"LPT DAC / Covox Speech Thing", "lpt_dac", &lpt_dac_device};
+LPT_DEVICE l_lpt_dac_stereo = {"Stereo LPT DAC", "lpt_dac_stereo", &lpt_dac_stereo_device};
+
+#ifdef USE_EXPERIMENTAL_PRINTER
+LPT_DEVICE l_textprinter = {"Text-Only Printer", "lpt_textprinter", &textprinter_device};
+LPT_DEVICE l_esc = {"ESC/P Dot-Matrix Printer", "lpt_esc", &esc_device};
+#endif
 
 char *lpt_device_get_name(int id)
 {
-        if (strlen(lpt_devices[id].name) == 0)
+        if (lpt_devices[id] == NULL || strlen(lpt_devices[id]->name) == 0)
                 return NULL;
-        return lpt_devices[id].name;
+        return lpt_devices[id]->name;
 }
 char *lpt_device_get_internal_name(int id)
 {
-        if (strlen(lpt_devices[id].internal_name) == 0)
+        if (lpt_devices[id] == NULL || strlen(lpt_devices[id]->internal_name) == 0)
                 return NULL;
-        return lpt_devices[id].internal_name;
+        return lpt_devices[id]->internal_name;
 }
 
 static lpt_device_t *lpt1_device;
@@ -41,14 +46,14 @@ void lpt1_device_init()
 {
         int c = 0;
 
-        while (strcmp(lpt_devices[c].internal_name, lpt1_device_name) && strlen(lpt_devices[c].internal_name) != 0)
+        while (lpt_devices[c] != NULL && strcmp(lpt_devices[c]->internal_name, lpt1_device_name) && strlen(lpt_devices[c]->internal_name) != 0)
                 c++;
 
-        if (strlen(lpt_devices[c].internal_name) == 0)
+        if (lpt_devices[c] == NULL || strlen(lpt_devices[c]->internal_name) == 0)
                 lpt1_device = NULL;
-        else
+        else if(lpt_devices[c] != NULL)
         {
-                lpt1_device = lpt_devices[c].device;
+                lpt1_device = lpt_devices[c]->device;
                 if (lpt1_device)
                         lpt1_device_p = lpt1_device->init();
         }
@@ -154,4 +159,34 @@ void lpt2_remove()
 void lpt2_remove_ams()
 {
         io_removehandler(0x0379, 0x0002, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL,  NULL);
+}
+
+int lpt_count()
+{
+        int ret = 0;
+
+        while (lpt_devices[ret] != NULL && ret < LPT_MAX)
+                ret++;
+
+        return ret;
+}
+
+void pcem_add_lpt(LPT_DEVICE *lpt) 
+{
+        //TODO: Add sanity check to not go past MAX amount
+        lpt_devices[lpt_count()] = lpt;
+}
+
+void lpt_init_builtin()
+{
+        memset(lpt_devices, 0, sizeof(lpt_devices));
+
+        pcem_add_lpt(&l_none);
+        pcem_add_lpt(&l_dss);
+        pcem_add_lpt(&l_lpt_dac);
+        pcem_add_lpt(&l_lpt_dac_stereo);
+        #ifdef USE_EXPERIMENTAL_PRINTER
+        pcem_add_lpt(&l_textprinter);
+        pcem_add_lpt(&l_esc);
+        #endif
 }

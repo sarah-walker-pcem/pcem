@@ -535,6 +535,7 @@ int pc_main(int argc, char **argv)
 
         model_init_builtin();
         video_init_builtin();
+        lpt_init_builtin();
         sound_init_builtin();
         hdd_controller_init_builtin();
 #ifdef USE_NETWORKING

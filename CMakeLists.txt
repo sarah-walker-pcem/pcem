@@ -54,6 +54,8 @@ message("Experimental Modules: ${USE_EXPERIMENTAL}")
 if(USE_EXPERIMENTAL)
     option(USE_EXPERIMENTAL_PGC "Build Professional Graphics Controller Support" OFF)
     message("PGC Support: ${USE_EXPERIMENTAL_PGC}")
+	option(USE_EXPERIMENTAL_PRINTER "Build Printer Support" OFF)
+    message("Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
 endif()
 
 message("***************************************************************")
