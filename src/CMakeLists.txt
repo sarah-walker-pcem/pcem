@@ -352,6 +352,12 @@ else()
 	)
 endif()
 
+if(USE_EXPERIMENTAL)
+	if(USE_EXPERIMENTAL_PGC)
+		set(PCEM_DEFINES ${PCEM_DEFINES} USE_EXPERIMENTAL_PGC)
+	endif()
+endif()
+
 if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen/x86-64/codegen_backend_x86-64.c

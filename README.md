@@ -1,7 +1,8 @@
 # [PCem](https://pcem-emulator.co.uk/)
+![C/C++ CI](https://github.com/sarah-walker-pcem/pcem/actions/workflows/c-cpp.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
 
-Latest version: <b>v17</b> [Changelog](CHANGELOG.md#dos)
+Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
 
 PCem is licensed under GPL v2.0, see [COPYING](COPYING) for more details.
 
@@ -11,21 +12,24 @@ You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3). Befor
 
 ## BSD and Linux supplement (v17)
 
-You will need the following libraries (and their dependencies):
+You will need the following libraries and buildtools (and their dependencies):
 - SDL2
 - wxWidgets 3.x
 - OpenAL
+- CMake
+- Ninja (Recommended, but you can use a Makefile generator if you prefer)
 
 Open a terminal window, navigate to the PCem directory then enter:
-### Linux
+### Linux/BSD
 ```
 cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .
 ninja
 ```
-### BSD
+
+### Windows (MSYS2)
 ```
-cmake -DCMAKE_BUILD_TYPE=Release .
-gmake
+cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_BUILD_TYPE=Release .
+ninja
 ```
 
 then `./output/bin/pcem` to run.
@@ -37,21 +41,27 @@ configure options are :
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
   -DUSE_NETWORKING=ON        : Build with networking support.
-  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile)
+  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile) Requires libpcap
   -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
 ```
-  -DPCEM_SLIRP_DEBUG           : Build PCem with SLIRP_DEBUG debug output
-  -DPCEM_RECOMPILER_DEBUG      : Build PCem with RECOMPILER_DEBUG debug output
-  -DPCEM_NE2000_DEBUG          : Build PCem with NE2000_DEBUG debug output
-  -DPCEM_EMU8K_DEBUG_REGISTERS : Build PCem with EMU8K_DEBUG_REGISTERS debug output
-  -DPCEM_SB_DSP_RECORD_DEBUG   : Build PCem with SB_DSP_RECORD_DEBUG debug output
-  -DPCEM_MACH64_DEBUG          : Build PCem with MACH64_DEBUG debug output
-  -DPCEM_DEBUG_EXTRA           : Build PCem with DEBUG_EXTRA debug output
+  -DPCEM_SLIRP_DEBUG=ON           : Build PCem with SLIRP_DEBUG debug output
+  -DPCEM_RECOMPILER_DEBUG=ON      : Build PCem with RECOMPILER_DEBUG debug output
+  -DPCEM_NE2000_DEBUG=ON          : Build PCem with NE2000_DEBUG debug output
+  -DPCEM_EMU8K_DEBUG_REGISTERS=ON : Build PCem with EMU8K_DEBUG_REGISTERS debug output
+  -DPCEM_SB_DSP_RECORD_DEBUG=ON   : Build PCem with SB_DSP_RECORD_DEBUG debug output
+  -DPCEM_MACH64_DEBUG=ON          : Build PCem with MACH64_DEBUG debug output
+  -DPCEM_DEBUG_EXTRA=ON           : Build PCem with DEBUG_EXTRA debug output
 ```
 
+They are some extra modules you can add if you build with `-DUSE_EXPERIMENTAL=ON`. These modules are untested.
+incomplete, and may or may not be in a future build of PCem. We do not provide builds with these enabled as
+well.
+```
+  -DUSE_EXPERIMENTAL_PGC=ON       : Build PCem with Professional Graphics Controller support.
+``` 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not
 captured.
 

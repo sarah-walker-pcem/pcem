@@ -48,6 +48,14 @@ endif()
 option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
 message("ALSA MIDI Support: ${USE_ALSA}")
 
+option(USE_EXPERIMENTAL "Build PCem with experimental code" OFF)
+message("Experimental Modules: ${USE_EXPERIMENTAL}")
+
+if(USE_EXPERIMENTAL)
+    option(USE_EXPERIMENTAL_PGC "Build Professional Graphics Controller Support" OFF)
+    message("PGC Support: ${USE_EXPERIMENTAL_PGC}")
+endif()
+
 message("***************************************************************")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	option(PCEM_SLIRP_DEBUG "Build PCem with SLIRP_DEBUG debug output" OFF)

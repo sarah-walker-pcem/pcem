@@ -23,7 +23,7 @@ jobs:
             libwxgtk3.0-gtk3-dev
             libpcap-dev
             cmake
-            ninja
+            ninja-build
         - name: Windows 32bits (MSYS2)
           os: windows-latest
           compiler: MINGW32
@@ -114,7 +114,7 @@ jobs:
       run: |
         mkdir temp/build
         cd temp/build
-        cmake -G "Ninja" ${{ matrix.args }} ..
+        cmake -G "Ninja" -DMSYS=TRUE ${{ matrix.args }} ..
     - name: ninja (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
