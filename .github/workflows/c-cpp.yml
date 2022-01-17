@@ -104,7 +104,7 @@ jobs:
       run: |
         mkdir temp/build
         cd temp/build
-        cmake -G "Ninja" -DMSYS=TRUE ${{ matrix.args }} ..
+        cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=/ ${{ matrix.args }} ..
     - name: ninja (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
