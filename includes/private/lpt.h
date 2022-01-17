@@ -18,15 +18,6 @@ char *lpt_device_get_internal_name(int id);
 
 extern char lpt1_device_name[16];
 
-typedef struct
-{
-        char name[80];
-        void *(*init)();
-        void (*close)(void *p);
-        void (*write_data)(uint8_t val, void *p);
-        void (*write_ctrl)(uint8_t val, void *p);
-        uint8_t (*read_status)(void *p);
-} lpt_device_t;
-
+void lpt_init_builtin();
 
 #endif /* _LPT_H_ */

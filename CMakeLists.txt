@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.7)
 project(PCem)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/bin)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private)
@@ -47,6 +44,16 @@ endif()
 
 option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
 message("ALSA MIDI Support: ${USE_ALSA}")
+
+option(USE_EXPERIMENTAL "Build PCem with experimental code" OFF)
+message("Experimental Modules: ${USE_EXPERIMENTAL}")
+
+if(USE_EXPERIMENTAL)
+    option(USE_EXPERIMENTAL_PGC "Build Professional Graphics Controller Support" OFF)
+    message("PGC Support: ${USE_EXPERIMENTAL_PGC}")
+	option(USE_EXPERIMENTAL_PRINTER "Build Printer Support" OFF)
+    message("Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
+endif()
 
 message("***************************************************************")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -93,4 +100,3 @@ endif()
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(src)
-

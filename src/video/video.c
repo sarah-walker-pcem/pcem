@@ -101,9 +101,9 @@ VIDEO_CARD v_oti037 = {"OAK OTI-037", "oti037", &oti037_device, GFX_OTI037, VIDE
 VIDEO_CARD v_oti067 = {"OAK OTI-067", "oti067", &oti067_device, GFX_OTI067, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
 VIDEO_CARD v_olivetti_go481 = {"Olivetti GO481 (Paradise PVGA1A)", "olivetti_go481", &paradise_pvga1a_oli_go481_device, GFX_OLIVETTI_GO481, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 6, 8, 16, 6, 8, 16}};
 VIDEO_CARD v_bahamas64 = {"Paradise Bahamas 64 (S3 Vision864)", "bahamas64", &s3_bahamas64_device, GFX_BAHAMAS64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 4, 4, 5, 20, 20, 35}};
-/* Not offered as the emulation is very incomplete
+#ifdef USE_EXPERIMENTAL_PGC
 VIDEO_CARD v_pgc = {"Professional Graphics Controller", "pgc", &pgc_device, GFX_PGC, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
-*/
+#endif
 VIDEO_CARD v_px_trio32 = {"Phoenix S3 Trio32", "px_trio32", &s3_phoenix_trio32_device, GFX_PHOENIX_TRIO32, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
 VIDEO_CARD v_px_trio64 = {"Phoenix S3 Trio64", "px_trio64", &s3_phoenix_trio64_device, GFX_PHOENIX_TRIO64, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
 VIDEO_CARD v_plantronics = {"Plantronics ColorPlus", "plantronics", &colorplus_device, GFX_COLORPLUS, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
@@ -282,7 +282,7 @@ int video_card_getid(char *s)
 {
         int c = 0;
 
-        while (video_cards[c]->device)
+        while (video_cards[c] != NULL && video_cards[c]->device)
         {
                 if (!strcmp(video_cards[c]->name, s))
                         return c;
@@ -1374,9 +1374,9 @@ void video_init_builtin()
         pcem_add_video(&v_oti067);
         pcem_add_video(&v_olivetti_go481);
         pcem_add_video(&v_bahamas64);
-/* Not offered as the emulation is very incomplete
+#ifdef USE_EXPERIMENTAL_PGC
         pcem_add_video(&v_pgc);
-*/
+#endif
         pcem_add_video(&v_px_trio32);
         pcem_add_video(&v_px_trio64);
         pcem_add_video(&v_plantronics);

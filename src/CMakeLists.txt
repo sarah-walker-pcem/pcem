@@ -1,4 +1,5 @@
 include(${CMAKE_SOURCE_DIR}/cmake/pcem_includes.cmake)
+set(PCEM_DEFINES ${PCEM_DEFINES} INST_PREFIX="${CMAKE_INSTALL_PREFIX}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(PCEM_DEFINES ${PCEM_DEFINES} DEBUG)
@@ -352,6 +353,19 @@ else()
 	)
 endif()
 
+if(USE_EXPERIMENTAL)
+	if(USE_EXPERIMENTAL_PGC)
+		set(PCEM_DEFINES ${PCEM_DEFINES} USE_EXPERIMENTAL_PGC)
+	endif()
+
+	if(USE_EXPERIMENTAL_PRINTER)
+		set(PCEM_DEFINES ${PCEM_DEFINES} USE_EXPERIMENTAL_PRINTER)
+		set(PCEM_SRC ${PCEM_SRC}
+			lpt/lpt_printer.c
+		)
+	endif()
+endif()
+
 if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
 	set(PCEM_SRC ${PCEM_SRC}
 		codegen/x86-64/codegen_backend_x86-64.c
@@ -479,9 +493,13 @@ add_library(pcem SHARED ${PCEM_SRC} ${PCEM_PRIVATE_HEADERS} ${PCEM_PUBLIC_HEADER
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
 target_link_libraries(pcem ${PCEM_LIBRARIES})
+set_target_properties(pcem PROPERTIES PUBLIC_HEADER "${PCEM_PUBLIC_HEADERS}")
 
 add_executable(pcem-bin main.c)
 target_link_libraries(pcem-bin pcem ${PCEM_LIBRARIES})
 set_target_properties(pcem-bin PROPERTIES OUTPUT_NAME "pcem")
-add_custom_command(TARGET pcem-bin POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/roms ${CMAKE_BINARY_DIR}/output/share/pcem/roms)
-add_custom_command(TARGET pcem-bin POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/nvr ${CMAKE_BINARY_DIR}/output/share/pcem/nvr)
+
+install(TARGETS pcem pcem-bin RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib PUBLIC_HEADER DESTINATION include/pcem)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/nvr/ DESTINATION share/pcem/nvr/default)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/roms DESTINATION share/pcem)
+install(FILES ${CMAKE_SOURCE_DIR}/COPYING DESTINATION share/licenses/pcem)

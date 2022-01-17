@@ -139,7 +139,7 @@ void set_default_nvr_path(char *s)
         set_nvr_path(s);
 }
 
-static void set_default_nvr_default_path(char *s)
+void set_default_nvr_default_path(char *s)
 {
         safe_strncpy(nvr_default_path, s, 512);
 }
@@ -229,19 +229,19 @@ void paths_init()
         /* set up default paths for this session */
         get_pcem_base_path(base_path, 512);
 
-        append_filename(s, base_path, "../share/pcem/roms/", 512);
+        append_filename(s, base_path, "roms/", 512);
         set_roms_paths(s);
-        append_filename(s, base_path, "../share/pcem/nvr/", 512);
+        append_filename(s, base_path, "nvr/", 512);
         set_nvr_path(s);
-        append_filename(s, base_path, "../share/pcem/configs/", 512);
+        append_filename(s, base_path, "configs/", 512);
         set_configs_path(s);
-        append_filename(s, base_path, "../share/pcem/screenshots/", 512);
+        append_filename(s, base_path, "screenshots/", 512);
         set_screenshots_path(s);
-        append_filename(s, base_path, "../share/pcem/logs/", 512);
+        append_filename(s, base_path, "logs/", 512);
         set_logs_path(s);
-        append_filename(s, base_path, "../share/pcem/nvr/default/", 512);
+        append_filename(s, base_path, "nvr/default/", 512);
         set_default_nvr_default_path(s);
-        append_filename(s, base_path, "../share/pcem/plugins/", 512);
+        append_filename(s, base_path, "plugins/", 512);
         set_plugins_path(s);
 
         add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
