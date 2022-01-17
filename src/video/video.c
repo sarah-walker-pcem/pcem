@@ -282,7 +282,7 @@ int video_card_getid(char *s)
 {
         int c = 0;
 
-        while (video_cards[c]->device)
+        while (video_cards[c] != NULL && video_cards[c]->device)
         {
                 if (!strcmp(video_cards[c]->name, s))
                         return c;

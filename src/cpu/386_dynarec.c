@@ -304,7 +304,11 @@ static inline void exec_interpreter(void)
         cpu_end_block_after_ins = 0;
 }
 
-static inline void exec_recompiler(void)
+/* TODO: Look in deeper for why, but this is to fix crashing. Somehow a function is being optimized out, causing
+ *       a SEGFAULT
+ */
+
+static inline void __attribute__((optimize("O0"))) exec_recompiler(void)
 {
         uint32_t phys_addr = get_phys(cs+cpu_state.pc);
         int hash = HASH(phys_addr);
@@ -393,12 +397,12 @@ static inline void exec_recompiler(void)
 
         if (valid_block && (block->flags & CODEBLOCK_WAS_RECOMPILED))
         {
-                void (*code)() = (void *)&block->data[BLOCK_START];
+                 void (*code)() = (void *)&block->data[BLOCK_START]; // FIX: This seems to get optimized out, I tried making volatile but still segfaulted
 
 //                if (output) pclog("Run block at %04x:%04x  %04x %04x %04x %04x  %04x %04x  ESP=%08x %04x  %08x %08x  %016llx %08x\n", CS, pc, AX, BX, CX, DX, SI, DI, ESP, BP, get_phys(cs+pc), block->phys, block->page_mask, block->endpc);
 
                 inrecomp=1;
-                code();
+                code(); 
                 inrecomp=0;
 
                 cpu_recomp_blocks++;
