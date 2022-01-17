@@ -102,9 +102,10 @@ jobs:
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
+        export INSTALL_PREFIX=$(pwd)/dist
         mkdir temp/build
         cd temp/build
-        cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=/ ${{ matrix.args }} ..
+        cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX ${{ matrix.args }} ..
     - name: ninja (Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
@@ -115,10 +116,10 @@ jobs:
       if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        export DESTDIR=$(pwd)/dist
+        export INSTALL_PREFIX=$(pwd)/dist
         cd temp/build
         ninja install
-        cd $DESTDIR
+        cd $INSTALL_PREFIX
         ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="bin"
         zip -r -9 ${{ matrix.artifacts_path }} *
 
