@@ -441,6 +441,23 @@ static struct
                 CD_MODEL_INTERFACE_IDE,
                 40,
         },
+	
+	{
+                // A 48x CD-ROM drive from Mitsumi. 
+                "Mitsumi",
+                "Mitsumi CRMC-FX4820T D02A",
+                "10600125426",
+                "CRMC-FX4820T",
+                "D02A",
+
+                "",
+                "D02A",
+                "MITSUMI CRMC-FX4820T",
+                "Mitsumi CRMC-FX4820T",
+                "crmc-fx4820t",
+                CD_MODEL_INTERFACE_IDE,
+                48,
+        },
 };
 
 char *cd_model = NULL;
