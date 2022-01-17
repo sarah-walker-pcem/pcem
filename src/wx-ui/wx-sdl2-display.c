@@ -559,7 +559,7 @@ int render()
                 trigger_screenshot = 0;
                 take_screenshot = 1;
         }
-        else if ((event.key.keysym.scancode == SDL_SCANCODE_END || event.key.keysym.scancode == SDL_SCANCODE_KP_1) &&
+        else if ((rawinputkey[sdl_scancode(SDL_SCANCODE_END)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_1)]) &&
                         (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
                 trigger_inputrelease = 1;
         else if (trigger_inputrelease)
