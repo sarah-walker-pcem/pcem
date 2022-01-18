@@ -544,28 +544,30 @@
 					</object>
 					<object class="listitem">
 						<text>Port Devices</text>
-					</object>
-					<object class="listitem">
-						<text>Mouse Device</text>
 						<image-small>4</image-small>
 					</object>
 					<object class="listitem">
-						<text>GamePad/Joystick</text>
+						<text>Mouse Device</text>
 						<image-small>5</image-small>
 					</object>
 					<object class="listitem">
-						<text>Network Device</text>
+						<text>GamePad/Joystick</text>
 						<image-small>6</image-small>
+					</object>
+					<object class="listitem">
+						<text>Network Device</text>
+						<image-small>7</image-small>
 					</object>
 					<imagelist-small>
 						<size>16,16</size>
-						<bitmap>icons/32x32/motherboard.png</bitmap>
-						<bitmap>icons/32x32/video_mode.png</bitmap>
-						<bitmap>icons/32x32/sound.png</bitmap>
-						<bitmap>icons/32x32/drive.png</bitmap>
-						<bitmap>icons/32x32/mouse_pc.png</bitmap>
-						<bitmap>icons/32x32/joystick.png</bitmap>
-						<bitmap>icons/32x32/network_ethernet.png</bitmap>
+						<bitmap>icons/16x16/motherboard.png</bitmap>
+						<bitmap>icons/16x16/video_mode.png</bitmap>
+						<bitmap>icons/16x16/sound.png</bitmap>
+						<bitmap>icons/16x16/drive.png</bitmap>
+						<bitmap>icons/16x16/port.png</bitmap>
+						<bitmap>icons/16x16/mouse_pc.png</bitmap>
+						<bitmap>icons/16x16/joystick.png</bitmap>
+						<bitmap>icons/16x16/network_ethernet.png</bitmap>
 					</imagelist-small>
 				</object>
 			</object>
