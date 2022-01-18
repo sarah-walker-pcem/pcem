@@ -2461,7 +2461,7 @@ int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 void config_change_page_index(void *hdlg, int index)
 {
         void *h;
-        h = wx_getdlgitem(hdlg, WX_ID("IDN_CONTROLSNB"));
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_NOTEBOOK"));
         wx_sendmessage(h, WX_SB_SETCURSEL, index, 0);
 
         if(index == 3)

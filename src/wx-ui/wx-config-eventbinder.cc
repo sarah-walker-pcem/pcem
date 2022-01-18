@@ -14,7 +14,7 @@ public:
     void selectedPageCallbackExecute(wxListEvent &event)
     {
         long item = -1;
-        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDL_PAGESELECTION"));
+        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDC_PAGESELECTION"));
 
         for (;;)
         {
@@ -33,7 +33,7 @@ public:
         this->selectedPageCallback = selectedPageCallback;
         this->hdlg = hdlg;
 
-        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDL_PAGESELECTION"));
+        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDC_PAGESELECTION"));
         control->SetMaxSize(wxSize(250, -1));
         control->SetMinSize(wxSize(250, -1));
         control->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( WXConfigEventBinder::selectedPageCallbackExecute ), NULL, this );
@@ -41,7 +41,7 @@ public:
 
     ~WXConfigEventBinder()
     {
-        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDL_PAGESELECTION"));
+        wxListCtrl *control = (wxListCtrl *)this->hdlg->FindWindow(XRCID("IDC_PAGESELECTION"));
         control->Disconnect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( WXConfigEventBinder::selectedPageCallbackExecute ), NULL, this );
     }
 };
