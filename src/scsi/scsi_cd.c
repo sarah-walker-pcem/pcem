@@ -230,6 +230,7 @@ static struct
         {20,  50, 300},
         {24,  45, 270},
         {32,  45, 270},
+	{36,  45, 270},
         {40,  50, 300},
         {44,  50, 300},
         {48,  50, 300},
@@ -304,6 +305,7 @@ static struct
                 CD_MODEL_INTERFACE_ALL,
                 -1,
         },
+	
         {
                 // A 4x CD-ROM drive from Aztech. Choose if your system image has the SGIDECD.SYS driver
                 "AZT",
@@ -319,6 +321,142 @@ static struct
                 "azt_cda_468_02i_4x",
                 CD_MODEL_INTERFACE_IDE,
                 4,
+        },
+	
+	{
+                // An 8x CD-ROM drive from Sony. 
+                "Sony",
+                "Sony CDU311 3.0h",
+                "5345074",
+                "CD-ROM CDU311",
+                "3.0h",
+
+                "",
+                "3.0h",
+                "SONY CDU311",
+                "Sony CDU311",
+                "cdu311",
+                CD_MODEL_INTERFACE_IDE,
+                8,
+        },
+	
+	{
+                // A 12x CD-ROM drive from Toshiba. 
+                "Toshiba",
+                "Toshiba XM-5702B TA70",
+                "784P009803",
+                "CD-ROM XM-5702B",
+                "TA70",
+
+                "",
+                "TA70",
+                "TOSHIBA XM-5702B",
+                "Toshiba XM-5702B",
+                "xm5702b",
+                CD_MODEL_INTERFACE_IDE,
+                12,
+        },
+	
+	{
+                // A 16x CD-ROM drive from Goldstar. 
+                "GoldStar",
+                "GoldStar CRD-8160B 3.14",
+                "11S02K1151ZJ13VG108019",
+                "CD-ROM CRD-8160B",
+                "3.14",
+
+                "",
+                "3.14",
+                "GOLDSTAR CRD-8160B",
+                "GoldStar CRD-8160B",
+                "crd-8160b",
+                CD_MODEL_INTERFACE_IDE,
+                16,
+        },
+	
+	 {
+                // A 24x CD-ROM drive from Creative Labs. 
+                "Creative",
+                "Creative CR-587-B 7S13",
+                "8307DDB76196",
+                "CD-ROM CR-587",
+                "7S13",
+
+                "",
+                "7S13",
+                "CREATIVE CD-ROM CR-587-B",
+                "Creative CR-587-B",
+                "cr-587-b",
+                CD_MODEL_INTERFACE_IDE,
+                24,
+        },
+	
+	 {
+                // A 32x CD-ROM drive from Creative Labs. 
+                "Creative",
+                "Creative CR-588-B LS15",
+                "8516DFA30742",
+                "CD-ROM CR-588-B",
+                "LS15",
+
+                "",
+                "LS15",
+                "CREATIVE CD-ROM CR-588-B",
+                "Creative CR-588-B",
+                "cr-588-b",
+                CD_MODEL_INTERFACE_IDE,
+                32,
+        },
+	
+	{
+                // A 36x CD-ROM drive from BTC. 
+                "BTC",
+                "BTC BCD36XH U1.0",
+                "P81729496",
+                "CD-ROM BCD36XH",
+                "U1.0",
+
+                "",
+                "U1.0",
+                "BCD36XH",
+                "BTC BCD36XH",
+                "bcd36xh",
+                CD_MODEL_INTERFACE_IDE,
+                36,
+        },	
+	
+	{
+                // A 40x CD-ROM drive from Philips. 
+                "Philips",
+                "Philips PCA403CD U31P",
+                "P66839-20942 B1",
+                "CD-ROM PCA403CD",
+                "U31P",
+
+                "",
+                "U31P",
+                "PHILIPS PCA403CD",
+                "Philips PCA403CD",
+                "pca403cd",
+                CD_MODEL_INTERFACE_IDE,
+                40,
+        },
+	
+	{
+                // A 48x CD-ROM drive from Mitsumi. 
+                "Mitsumi",
+                "Mitsumi CRMC-FX4820T D02A",
+                "10600125426",
+                "CRMC-FX4820T",
+                "D02A",
+
+                "",
+                "D02A",
+                "MITSUMI CRMC-FX4820T",
+                "Mitsumi CRMC-FX4820T",
+                "crmc-fx4820t",
+                CD_MODEL_INTERFACE_IDE,
+                48,
         },
 };
 
