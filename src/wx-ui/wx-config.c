@@ -19,6 +19,7 @@
 #include "sound.h"
 #include "video.h"
 #include "vid_voodoo.h"
+#include "wx-config-eventbinder.h"
 
 #include "minivhd/minivhd.h"
 
@@ -35,6 +36,7 @@ static int settings_mouse_to_list[20], settings_list_to_mouse[20];
 static int settings_network_to_list[20], settings_list_to_network[20];
 #endif
 static char *hdd_names[16];
+static void *eventBinder;
 
 int has_been_inited = 0;
 
@@ -2456,17 +2458,30 @@ int hdconf_dlgproc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
         return FALSE;
 }
 
+void config_change_page_index(void *hdlg, int index)
+{
+        void *h;
+        h = wx_getdlgitem(hdlg, WX_ID("IDN_CONTROLSNB"));
+        wx_sendmessage(h, WX_SB_SETCURSEL, index, 0);
+
+        if(index == 3)
+                update_hdd_cdrom(hdlg);
+}
+
 int config_dialog_proc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
         switch (message)
         {
         case WX_INITDIALOG:
                 pause = 1;
+                eventBinder = wx_config_eventbinder(hdlg, config_change_page_index);
                 return config_dlgproc(hdlg, message, wParam, lParam);
         case WX_COMMAND:
         {
                 if (wParam == wxID_OK)
                 {
+                        wx_config_destroyeventbinder(eventBinder);
+                        eventBinder = NULL;
                         config_dlgsave(hdlg);
                         pause = 0;
                         wx_enddialog(hdlg, 1);
@@ -2474,14 +2489,11 @@ int config_dialog_proc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lPa
                 }
                 else if (wParam == wxID_CANCEL)
                 {
+                        wx_config_destroyeventbinder(eventBinder);
+                        eventBinder = NULL;
                         pause = 0;
                         wx_enddialog(hdlg, 0);
                         return TRUE;
-                }
-                else if (wParam == WX_ID("IDC_NOTEBOOK"))
-                {
-                        if (lParam == 3)
-                                hdconf_update(hdlg);
                 }
                 break;
         }
@@ -2490,7 +2502,6 @@ int config_dialog_proc(void* hdlg, int message, INT_PARAM wParam, LONG_PARAM lPa
         hdconf_dlgproc(hdlg, message, wParam, lParam);
         return TRUE;
 }
-
 
 int config_open(void* hwnd)
 {

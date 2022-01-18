@@ -441,6 +441,7 @@ set(PCEM_SRC ${PCEM_SRC}
 	wx-ui/wx-shader_man.c
 	wx-ui/wx-shaderconfig.cc
 	wx-ui/wx-joystickconfig.cc
+	wx-ui/wx-config-eventbinder.cc
 	wx-ui/wx-createdisc.cc
 	${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
 )

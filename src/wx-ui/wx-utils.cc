@@ -13,6 +13,7 @@
 #include <wx/progdlg.h>
 #include <wx/choicebk.h>
 #include <wx/combobox.h>
+#include <wx/simplebook.h>
 
 #include "wx-dialogbox.h"
 #include "wx-app.h"
@@ -421,6 +422,10 @@ int wx_sendmessage(void* window, int type, LONG_PARAM param1, LONG_PARAM param2)
                 ((wxWindow*)window)->Layout();
                 break;
         }
+        case WX_SB_SETCURSEL:
+                if (param1 >= 0 && param1 < (int)((wxSimplebook *)window)->GetChildren().GetCount())
+                        ((wxSimplebook *)window)->SetSelection(param1);
+                break;
         }
 
         ((wxWindow*)window)->Fit();
