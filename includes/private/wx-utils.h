@@ -159,6 +159,8 @@ extern void (*wx_idle_func)(void* window, void* event);
 #define WX_WM_SHOW 81
 #define WX_WM_LAYOUT 82
 
+#define WX_SB_SETCURSEL 90
+
 #define WX_MB_YES wxYES
 #define WX_MB_OK wxOK
 #define WX_MB_OKCANCEL wxOK|wxCANCEL

@@ -1,16 +1,30 @@
 # PCem v18
 ## Changes in v18
 - PCAP Support is now both Windows and Linux
-- Added plugin support. You can add video, hdd, network, sound, and PC Models using a plugin.
+- Added plugin support. You can add Video, HDD, Network, Sound, LPT Devices, and PC Models using a plugin.
 - Numerous bugfixes in this build
+- Changed some GUI elements.
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
 - Hyundai SUPER-16TE
 - Commodore PC10C
 
+## Added the following CD-Drives to v18
+- Sony CDU311 (8X)
+- Toshiba XM-5702B (12X)
+- GoldStar CRD-8160B (16X)
+- Creative CR-587-B (24X)
+- Creative CR-588-B (32X)
+- BTC BCD36XH (36X)
+- Philips PCA403CD (40X)
+- Mitsumi CRMC-FX4820T (48X)
+
+## Added the following Video Cards to v18
+- Matrox Millennium
+
 ## Developer Changes to v18
-- First release to switch from autotools to CMake
+- First release to switch from autotools/make to CMake/Ninja
 - Legacy autotools and mingw makefiles are removed
 
 # PCem v17

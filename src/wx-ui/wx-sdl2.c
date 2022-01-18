@@ -29,6 +29,7 @@
 #include "model.h"
 #include "mouse.h"
 #include "nvr.h"
+#include "lpt.h"
 #include "plat-joystick.h"
 #include "plat-midi.h"
 #include "scsi_zip.h"

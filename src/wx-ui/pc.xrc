@@ -510,21 +510,73 @@
 		<centered>1</centered>
 		<object class="wxPanel" name="ROOT_PANEL">
 		<object class="wxFlexGridSizer">
-			<rows>0</rows>
-			<cols>1</cols>
+			<rows>2</rows>
+			<cols>2</cols>
 			<vgap>0</vgap>
 			<hgap>0</hgap>
 			<growablecols></growablecols>
 			<growablerows></growablerows>
 			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxListCtrl" name="IDC_PAGESELECTION">
+					<style>wxLC_REPORT|wxLC_NO_HEADER|wxLC_SINGLE_SEL</style>
+					<object class="listcol">
+						<text>Page Name</text>
+						<width>250</width>
+					</object>
+					<object class="listitem">
+						<text>Motherboard</text>
+						<image-small>0</image-small>
+					</object>
+					<object class="listitem">
+						<text>Video Devices</text>
+						<image-small>1</image-small>
+					</object>
+					<object class="listitem">
+						<text>Sound Devices</text>
+						<image-small>2</image-small>
+					</object>
+					<object class="listitem">
+						<text>Storage Devices</text>
+						<image-small>3</image-small>
+					</object>
+					<object class="listitem">
+						<text>Port Devices</text>
+					</object>
+					<object class="listitem">
+						<text>Mouse Device</text>
+						<image-small>4</image-small>
+					</object>
+					<object class="listitem">
+						<text>GamePad/Joystick</text>
+						<image-small>5</image-small>
+					</object>
+					<object class="listitem">
+						<text>Network Device</text>
+						<image-small>6</image-small>
+					</object>
+					<imagelist-small>
+						<size>16,16</size>
+						<bitmap>icons/32x32/motherboard.png</bitmap>
+						<bitmap>icons/32x32/video_mode.png</bitmap>
+						<bitmap>icons/32x32/sound.png</bitmap>
+						<bitmap>icons/32x32/drive.png</bitmap>
+						<bitmap>icons/32x32/mouse_pc.png</bitmap>
+						<bitmap>icons/32x32/joystick.png</bitmap>
+						<bitmap>icons/32x32/network_ethernet.png</bitmap>
+					</imagelist-small>
+				</object>
+			</object>
+			<object class="sizeritem">
 				<option>1</option>
 				<flag>wxALL|wxEXPAND</flag>
 				<border>5</border>
-				<object class="wxNotebook" name="IDC_NOTEBOOK">
-					<style>wxNB_DEFAULT</style>
-					<object class="notebookpage">
+				<object class="wxSimplebook" name="IDC_NOTEBOOK">
+					<object class="simplebookpage">
+						<!-- Motherboard -->
 						<selected>1</selected>
-						<bitmap>icons/32x32/motherboard.png</bitmap>
 						<object class="wxPanel">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -779,9 +831,9 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
+						<!-- Video -->
 						<selected>0</selected>
-						<bitmap>icons/32x32/video_mode.png</bitmap>
 						<object class="wxPanel">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -890,9 +942,9 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
+						<!-- Sound -->
 						<selected>0</selected>
-						<bitmap>icons/32x32/sound.png</bitmap>
 						<object class="wxPanel">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -1004,35 +1056,6 @@
 									<size>0,0</size>
 								</object>
 
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
-									<border>5</border>
-									<object class="wxStaticText">
-										<size>80,-1</size>
-										<label>LPT Device:</label>
-										<wrap>-1</wrap>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>1</option>
-									<flag>wxEXPAND</flag>
-									<border>5</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxALL</flag>
-											<border>5</border>
-											<object class="wxComboBox" name="IDC_COMBOLPT1">
-												<style>wxCB_DROPDOWN|wxCB_READONLY</style>
-												<size>350,-1</size>
-												<value></value>
-												<content />
-											</object>
-										</object>
-									</object>
-								</object>
 								<object class="spacer">
 									<option>1</option>
 									<flag>wxEXPAND</flag>
@@ -1044,9 +1067,9 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
+						<!-- Drives -->
 						<selected>0</selected>
-						<bitmap>icons/32x32/drive.png</bitmap>
 						<object class="wxPanel" name="PANEL_DRIVES">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -1266,9 +1289,59 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
+						<!-- Ports -->
 						<selected>0</selected>
-						<bitmap>icons/32x32/mouse_pc.png</bitmap>
+						<object class="wxPanel">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxFlexGridSizer">
+								<rows>0</rows>
+								<cols>3</cols>
+								<vgap>0</vgap>
+								<hgap>0</hgap>
+								<growablecols>1</growablecols>
+								<growablerows></growablerows>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL | wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<object class="wxStaticText">
+										<size>80,-1</size>
+										<label>LPT Device:</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxComboBox" name="IDC_COMBOLPT1">
+												<style>wxCB_DROPDOWN|wxCB_READONLY</style>
+												<size>350,-1</size>
+												<value></value>
+												<content />
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<size>0,0</size>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="simplebookpage">
+						<!-- Mouse -->
+						<selected>0</selected>
 						<object class="wxPanel">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -1310,9 +1383,8 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
 						<selected>0</selected>
-						<bitmap>icons/32x32/joystick.png</bitmap>
 						<object class="wxPanel">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -1406,10 +1478,10 @@
 							</object>
 						</object>
 					</object>
-					<object class="notebookpage">
+					<object class="simplebookpage">
+						<!-- Ethernet -->
 						<label></label>
 						<selected>0</selected>
-						<bitmap>icons/32x32/network_ethernet.png</bitmap>
 						<object class="wxPanel" name="m_panelnet">
                                                         <style>wxTAB_TRAVERSAL</style>
 							<object class="wxFlexGridSizer">
@@ -1463,6 +1535,7 @@
 					</object>
 				</object>
 			</object>
+			<object class="spacer"></object>
 			<object class="sizeritem">
 				<option>1</option>
 				<flag>wxEXPAND</flag>
