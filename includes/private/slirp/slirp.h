@@ -1,6 +1,11 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#ifdef __linux__
+#include <fcntl.h> // for open
+#include <unistd.h> // for close
+#endif
+
 #define SLIRP_VERSION "Cockatrice special"
 
 #define CONFIG_QEMU

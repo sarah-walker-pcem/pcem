@@ -341,7 +341,7 @@ insert:
 
 	q = (struct ipasfrag *) q->ipf_next;
 	while (q != (struct ipasfrag*)&fp->frag_link) {
-		struct mbuf *t = dtom(q);
+		struct SLIRPmbuf *t = dtom(q);
 		q = (struct ipasfrag *) q->ipf_next;
 		m_cat(m, t);
 	}

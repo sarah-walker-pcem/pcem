@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include "slirp/slirp.h"
 
-struct	mbuf *mbutl;
+struct	SLIRPmbuf *mbutl;
 char	*mclrefcnt;
 int mbuf_alloced = 0;
 struct SLIRPmbuf m_freelist, m_usedlist;
