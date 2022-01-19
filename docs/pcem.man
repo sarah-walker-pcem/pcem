@@ -1,0 +1,26 @@
+.\" Manpage for pcem
+.TH man 1 "Sat Jun 13 2020" "16" "pcem man page"
+.SH NAME
+pcem \- PCem (short for PC Emulator) is an IBM PC emulator for Windows and Linux that specializes in running old operating systems and software that are designed for IBM PC compatibles.
+.SH SYNOPSIS
+pcem [--config {file.cfg}] [--fullscreen] [--load_drive_a {file.img}] [--load_drive_b {file.img}]
+.SH DESCRIPTION
+PCem (short for PC Emulator) is an IBM PC emulator for Windows and Linux that specializes in running old operating systems and software that are designed for IBM PC compatibles. Originally developed as an IBM PC XT emulator, it later emulates other IBM PC compatible computers as well. (from wikipedia)
+.SH OPTIONS
+.TP
+.B --config \fIfile.cfg\fR
+\fIfile.cfg\fR use given config file as initial configuration
+.TP
+.B --fullscreen
+start in fullscreen mode
+.TP
+.B --load_drive_a \fIfile.cfg\fR
+\fIfile.cfg\fR load drive A: with the given disc image
+.TP
+.B --load_drive_b \fIfile.cfg\fR
+\fIfile.cfg\fR load drive B: with the given disc image
+.RE
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Michael Manley, Sarah Walker (including contributors)
