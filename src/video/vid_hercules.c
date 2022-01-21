@@ -11,15 +11,15 @@
 typedef struct hercules_t
 {
         mem_mapping_t mapping;
-        
+
         uint8_t crtc[32];
         int crtcreg;
 
         uint8_t ctrl, ctrl2, stat;
 
         uint64_t dispontime, dispofftime;
-	pc_timer_t timer;
-        
+        pc_timer_t timer;
+
         int firstline, lastline;
 
         int linepos, displine;
@@ -29,26 +29,31 @@ typedef struct hercules_t
         int dispon, blink;
         int vsynctime, vadj;
 
-        uint8_t *vram;
+        uint8_t* vram;
 } hercules_t;
 
 static uint32_t mdacols[256][2][2];
 
-void hercules_recalctimings(hercules_t *hercules);
-void hercules_write(uint32_t addr, uint8_t val, void *p);
-uint8_t hercules_read(uint32_t addr, void *p);
+void hercules_recalctimings(hercules_t* hercules);
+void hercules_write(uint32_t addr, uint8_t val, void* p);
+uint8_t hercules_read(uint32_t addr, void* p);
 
-
-void hercules_out(uint16_t addr, uint8_t val, void *p)
+void hercules_out(uint16_t addr, uint8_t val, void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
+        hercules_t* hercules = (hercules_t*)p;
 //        pclog("Herc out %04X %02X\n",addr,val);
         switch (addr)
         {
-                case 0x3b0: case 0x3b2: case 0x3b4: case 0x3b6:
+        case 0x3b0:
+        case 0x3b2:
+        case 0x3b4:
+        case 0x3b6:
                 hercules->crtcreg = val & 31;
                 return;
-                case 0x3b1: case 0x3b3: case 0x3b5: case 0x3b7:
+        case 0x3b1:
+        case 0x3b3:
+        case 0x3b5:
+        case 0x3b7:
                 hercules->crtc[hercules->crtcreg] = val;
                 if (hercules->crtc[10] == 6 && hercules->crtc[11] == 7) /*Fix for Generic Turbo XT BIOS, which sets up cursor registers wrong*/
                 {
@@ -57,10 +62,10 @@ void hercules_out(uint16_t addr, uint8_t val, void *p)
                 }
                 hercules_recalctimings(hercules);
                 return;
-                case 0x3b8:
+        case 0x3b8:
                 hercules->ctrl = val;
                 return;
-                case 0x3bf:
+        case 0x3bf:
                 hercules->ctrl2 = val;
                 if (val & 2)
                         mem_mapping_set_addr(&hercules->mapping, 0xb0000, 0x10000);
@@ -70,53 +75,59 @@ void hercules_out(uint16_t addr, uint8_t val, void *p)
         }
 }
 
-uint8_t hercules_in(uint16_t addr, void *p)
+uint8_t hercules_in(uint16_t addr, void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
- //       pclog("Herc in %04X %02X %04X:%04X %04X\n",addr,(hercules_stat & 0xF) | ((hercules_stat & 8) << 4),CS,pc,CX);
+        hercules_t* hercules = (hercules_t*)p;
+        //       pclog("Herc in %04X %02X %04X:%04X %04X\n",addr,(hercules_stat & 0xF) | ((hercules_stat & 8) << 4),CS,pc,CX);
         switch (addr)
         {
-                case 0x3b0: case 0x3b2: case 0x3b4: case 0x3b6:
+        case 0x3b0:
+        case 0x3b2:
+        case 0x3b4:
+        case 0x3b6:
                 return hercules->crtcreg;
-                case 0x3b1: case 0x3b3: case 0x3b5: case 0x3b7:
+        case 0x3b1:
+        case 0x3b3:
+        case 0x3b5:
+        case 0x3b7:
                 return hercules->crtc[hercules->crtcreg];
-                case 0x3ba:
+        case 0x3ba:
                 return (hercules->stat & 0xf) | ((hercules->stat & 8) << 4);
         }
         return 0xff;
 }
 
-void hercules_write(uint32_t addr, uint8_t val, void *p)
+void hercules_write(uint32_t addr, uint8_t val, void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
+        hercules_t* hercules = (hercules_t*)p;
         egawrites++;
 //        pclog("Herc write %08X %02X\n",addr,val);
         hercules->vram[addr & 0xffff] = val;
 }
 
-uint8_t hercules_read(uint32_t addr, void *p)
+uint8_t hercules_read(uint32_t addr, void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
+        hercules_t* hercules = (hercules_t*)p;
         egareads++;
         return hercules->vram[addr & 0xffff];
 }
 
-void hercules_recalctimings(hercules_t *hercules)
+void hercules_recalctimings(hercules_t* hercules)
 {
         double disptime;
-	double _dispontime, _dispofftime;
+        double _dispontime, _dispofftime;
         disptime = hercules->crtc[0] + 1;
-        _dispontime  = hercules->crtc[1];
+        _dispontime = hercules->crtc[1];
         _dispofftime = disptime - _dispontime;
-        _dispontime  *= MDACONST;
+        _dispontime *= MDACONST;
         _dispofftime *= MDACONST;
-	hercules->dispontime  = (uint64_t)_dispontime;
-	hercules->dispofftime = (uint64_t)_dispofftime;
+        hercules->dispontime = (uint64_t)_dispontime;
+        hercules->dispofftime = (uint64_t)_dispofftime;
 }
 
-void hercules_poll(void *p)
+void hercules_poll(void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
+        hercules_t* hercules = (hercules_t*)p;
         uint16_t ca = (hercules->crtc[15] | (hercules->crtc[14] << 8)) & 0x3fff;
         int drawcursor;
         int x, c;
@@ -132,7 +143,7 @@ void hercules_poll(void *p)
                 hercules->stat |= 1;
                 hercules->linepos = 1;
                 oldsc = hercules->sc;
-                if ((hercules->crtc[8] & 3) == 3) 
+                if ((hercules->crtc[8] & 3) == 3)
                         hercules->sc = (hercules->sc << 1) & 7;
                 if (hercules->dispon)
                 {
@@ -145,7 +156,7 @@ void hercules_poll(void *p)
                         if ((hercules->ctrl & 2) && (hercules->ctrl2 & 1))
                         {
                                 ca = (hercules->sc & 3) * 0x2000;
-                                if ((hercules->ctrl & 0x80) && (hercules->ctrl2 & 2)) 
+                                if ((hercules->ctrl & 0x80) && (hercules->ctrl2 & 2))
                                         ca += 0x8000;
 //                                printf("Draw herc %04X\n",ca);
                                 for (x = 0; x < hercules->crtc[1]; x++)
@@ -153,36 +164,36 @@ void hercules_poll(void *p)
                                         dat = (hercules->vram[((hercules->ma << 1) & 0x1fff) + ca] << 8) | hercules->vram[((hercules->ma << 1) & 0x1fff) + ca + 1];
                                         hercules->ma++;
                                         for (c = 0; c < 16; c++)
-                                                ((uint32_t *)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? cgapal[0x7] : 0;
+                                                ((uint32_t*)buffer32->line[hercules->displine])[(x << 4) + c] = (dat & (32768 >> c)) ? cgapal[0x7] : 0;
                                 }
                         }
                         else
                         {
                                 for (x = 0; x < hercules->crtc[1]; x++)
                                 {
-                                        chr  = hercules->vram[(hercules->ma << 1) & 0xfff];
+                                        chr = hercules->vram[(hercules->ma << 1) & 0xfff];
                                         attr = hercules->vram[((hercules->ma << 1) + 1) & 0xfff];
                                         drawcursor = ((hercules->ma == ca) && hercules->con && hercules->cursoron);
                                         blink = ((hercules->blink & 16) && (hercules->ctrl & 0x20) && (attr & 0x80) && !drawcursor);
                                         if (hercules->sc == 12 && ((attr & 7) == 1))
                                         {
                                                 for (c = 0; c < 9; c++)
-                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][1];
+                                                        ((uint32_t*)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][1];
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][(fontdatm[chr][hercules->sc] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t*)buffer32->line[hercules->displine])[(x * 9) + c] = mdacols[attr][blink][(fontdatm[chr][hercules->sc] & (1 << (c ^ 7))) ? 1 : 0];
                                                 if ((chr & ~0x1f) == 0xc0)
-                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][fontdatm[chr][hercules->sc] & 1];
+                                                        ((uint32_t*)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][fontdatm[chr][hercules->sc] & 1];
                                                 else
-                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][0];
+                                                        ((uint32_t*)buffer32->line[hercules->displine])[(x * 9) + 8] = mdacols[attr][blink][0];
                                         }
                                         hercules->ma++;
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 9; c++)
-                                                        ((uint32_t *)buffer32->line[hercules->displine])[(x * 9) + c] ^= mdacols[attr][0][1];
+                                                        ((uint32_t*)buffer32->line[hercules->displine])[(x * 9) + c] ^= mdacols[attr][0][1];
                                         }
                                 }
                         }
@@ -194,13 +205,13 @@ void hercules_poll(void *p)
 //                        printf("VSYNC on %i %i\n",vc,sc);
                 }
                 hercules->displine++;
-                if (hercules->displine >= 500) 
+                if (hercules->displine >= 500)
                         hercules->displine = 0;
         }
         else
         {
                 timer_advance_u64(&hercules->timer, hercules->dispontime);
-                if (hercules->dispon) 
+                if (hercules->dispon)
                         hercules->stat &= ~1;
                 hercules->linepos = 0;
                 if (hercules->vsynctime)
@@ -212,10 +223,10 @@ void hercules_poll(void *p)
 //                                printf("VSYNC off %i %i\n",vc,sc);
                         }
                 }
-                if (hercules->sc == (hercules->crtc[11] & 31) || ((hercules->crtc[8] & 3) == 3 && hercules->sc == ((hercules->crtc[11] & 31) >> 1))) 
-                { 
-                        hercules->con = 0; 
-                        hercules->coff = 1; 
+                if (hercules->sc == (hercules->crtc[11] & 31) || ((hercules->crtc[8] & 3) == 3 && hercules->sc == ((hercules->crtc[11] & 31) >> 1)))
+                {
+                        hercules->con = 0;
+                        hercules->coff = 1;
                 }
                 if (hercules->vadj)
                 {
@@ -237,17 +248,17 @@ void hercules_poll(void *p)
                         oldvc = hercules->vc;
                         hercules->vc++;
                         hercules->vc &= 127;
-                        if (hercules->vc == hercules->crtc[6]) 
+                        if (hercules->vc == hercules->crtc[6])
                                 hercules->dispon = 0;
                         if (oldvc == hercules->crtc[4])
                         {
 //                                printf("Display over at %i\n",displine);
                                 hercules->vc = 0;
                                 hercules->vadj = hercules->crtc[5];
-                                if (!hercules->vadj) hercules->dispon=1;
+                                if (!hercules->vadj) hercules->dispon = 1;
                                 if (!hercules->vadj) hercules->ma = hercules->maback = (hercules->crtc[13] | (hercules->crtc[12] << 8)) & 0x3fff;
                                 if ((hercules->crtc[10] & 0x60) == 0x20) hercules->cursoron = 0;
-                                else                                     hercules->cursoron = hercules->blink & 16;
+                                else hercules->cursoron = hercules->blink & 16;
                         }
                         if (hercules->vc == hercules->crtc[7])
                         {
@@ -258,7 +269,7 @@ void hercules_poll(void *p)
                                 {
 //                                        printf("Lastline %i Firstline %i  %i\n",lastline,firstline,lastline-firstline);
                                         if ((hercules->ctrl & 2) && (hercules->ctrl2 & 1)) x = hercules->crtc[1] << 4;
-                                        else                                               x = hercules->crtc[1] * 9;
+                                        else x = hercules->crtc[1] * 9;
                                         hercules->lastline++;
                                         if (x != xsize || (hercules->lastline - hercules->firstline) != ysize)
                                         {
@@ -305,17 +316,17 @@ void hercules_poll(void *p)
         }
 }
 
-void *hercules_init()
+void* hercules_init()
 {
         int display_type;
         int c;
-        hercules_t *hercules = malloc(sizeof(hercules_t));
+        hercules_t* hercules = malloc(sizeof(hercules_t));
         memset(hercules, 0, sizeof(hercules_t));
 
         hercules->vram = malloc(0x10000);
 
         timer_add(&hercules->timer, hercules_poll, hercules, 1);
-        mem_mapping_add(&hercules->mapping, 0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL,  NULL, MEM_MAPPING_EXTERNAL, hercules);
+        mem_mapping_add(&hercules->mapping, 0xb0000, 0x08000, hercules_read, NULL, NULL, hercules_write, NULL, NULL, NULL, MEM_MAPPING_EXTERNAL, hercules);
         io_sethandler(0x03b0, 0x0010, hercules_in, NULL, NULL, hercules_out, NULL, NULL, hercules);
 
         display_type = device_get_config_int("display_type");
@@ -325,7 +336,7 @@ void *hercules_init()
         {
                 mdacols[c][0][0] = mdacols[c][1][0] = mdacols[c][1][1] = cgapal[0];
                 if (c & 8) mdacols[c][0][1] = cgapal[0xf];
-                else       mdacols[c][0][1] = cgapal[0x7];
+                else mdacols[c][0][1] = cgapal[0x7];
         }
         mdacols[0x70][0][1] = cgapal[0];
         mdacols[0x70][0][0] = mdacols[0x70][1][0] = mdacols[0x70][1][1] = cgapal[0xf];
@@ -343,61 +354,61 @@ void *hercules_init()
         return hercules;
 }
 
-void hercules_close(void *p)
+void hercules_close(void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
+        hercules_t* hercules = (hercules_t*)p;
 
         free(hercules->vram);
         free(hercules);
 }
 
-void hercules_speed_changed(void *p)
+void hercules_speed_changed(void* p)
 {
-        hercules_t *hercules = (hercules_t *)p;
-        
+        hercules_t* hercules = (hercules_t*)p;
+
         hercules_recalctimings(hercules);
 }
 
 static device_config_t hercules_config[] =
-{
         {
-                .name = "display_type",
-                .description = "Display type",
-                .type = CONFIG_SELECTION,
-                .selection =
                 {
-                        {
-                                .description = "Green",
-                                .value = DISPLAY_GREEN
-                        },
-                        {
-                                .description = "Amber",
-                                .value = DISPLAY_AMBER
-                        },
-                        {
-                                .description = "White",
-                                .value = DISPLAY_WHITE
-                        },
-                        {
-                                .description = ""
-                        }
+                        .name = "display_type",
+                        .description = "Display type",
+                        .type = CONFIG_SELECTION,
+                        .selection =
+                                {
+                                        {
+                                                .description = "Green",
+                                                .value = DISPLAY_GREEN
+                                        },
+                                        {
+                                                .description = "Amber",
+                                                .value = DISPLAY_AMBER
+                                        },
+                                        {
+                                                .description = "White",
+                                                .value = DISPLAY_WHITE
+                                        },
+                                        {
+                                                .description = ""
+                                        }
+                                },
+                        .default_int = DISPLAY_WHITE
                 },
-                .default_int = DISPLAY_WHITE
-        },
-        {
-                .type = -1
-        }
-};
+                {
+                        .type = -1
+                }
+        };
 
 device_t hercules_device =
-{
-        "Hercules",
-        0,
-        hercules_init,
-        hercules_close,
-        NULL,
-        hercules_speed_changed,
-        NULL,
-        NULL,
-        hercules_config
-};
+        {
+                "Hercules",
+                0,
+                hercules_init,
+                hercules_close,
+                NULL,
+                hercules_speed_changed,
+                NULL,
+                NULL,
+                hercules_config
+        };

@@ -6,7 +6,7 @@ int cdrom_drive;
 
 static ATAPI null_atapi;
 
-void cdrom_null_audio_callback(int16_t *output, int len)
+void cdrom_null_audio_callback(int16_t* output, int len)
 {
         memset(output, 0, len * 2);
 }
@@ -46,7 +46,7 @@ static int null_medium_changed(void)
         return 0;
 }
 
-static uint8_t null_getcurrentsubchannel(uint8_t *b, int msf)
+static uint8_t null_getcurrentsubchannel(uint8_t* b, int msf)
 {
         return 0x13;
 }
@@ -59,26 +59,26 @@ static void null_load(void)
 {
 }
 
-static int null_readsector(uint8_t *b, int sector, int count)
+static int null_readsector(uint8_t* b, int sector, int count)
 {
         return 0;
 }
 
-static void null_readsector_raw(uint8_t *b, int sector)
+static void null_readsector_raw(uint8_t* b, int sector)
 {
 }
 
-static int null_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single)
-{
-        return 0;
-}
-
-static int null_readtoc_session(unsigned char *b, int msf, int maxlen)
+static int null_readtoc(unsigned char* b, unsigned char starttrack, int msf, int maxlen, int single)
 {
         return 0;
 }
 
-static int null_readtoc_raw(unsigned char *b, int maxlen)
+static int null_readtoc_session(unsigned char* b, int msf, int maxlen)
+{
+        return 0;
+}
+
+static int null_readtoc_raw(unsigned char* b, int maxlen)
 {
         return 0;
 }
@@ -90,7 +90,7 @@ static uint32_t null_size()
 
 static int null_status()
 {
-	return CD_STATUS_EMPTY;
+        return CD_STATUS_EMPTY;
 }
 
 void cdrom_null_reset()
@@ -113,28 +113,28 @@ static void null_exit(void)
 
 static int null_is_track_audio(uint32_t pos, int ismsf)
 {
-	return 0;
+        return 0;
 }
 
 static ATAPI null_atapi =
-{
-        null_ready,
-	null_medium_changed,
-        null_readtoc,
-        null_readtoc_session,
-	null_readtoc_raw,
-        null_getcurrentsubchannel,
-        null_readsector,
-	null_readsector_raw,
-        null_playaudio,
-        null_seek,
-        null_load,
-        null_eject,
-        null_pause,
-        null_resume,
-        null_size,
-	null_status,
-	null_is_track_audio,
-        null_stop,
-        null_exit
-};
+        {
+                null_ready,
+                null_medium_changed,
+                null_readtoc,
+                null_readtoc_session,
+                null_readtoc_raw,
+                null_getcurrentsubchannel,
+                null_readsector,
+                null_readsector_raw,
+                null_playaudio,
+                null_seek,
+                null_load,
+                null_eject,
+                null_pause,
+                null_resume,
+                null_size,
+                null_status,
+                null_is_track_audio,
+                null_stop,
+                null_exit
+        };

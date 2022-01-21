@@ -8,14 +8,14 @@
 #include "minivhd/minivhd.h"
 #include "minivhd/minivhd_util.h"
 
-void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks, int read_only)
+void hdd_load_ext(hdd_file_t* hdd, const char* fn, int spt, int hpc, int tracks, int read_only)
 {
-	if (hdd->f == NULL)
+        if (hdd->f == NULL)
         {
-		/* Try to open existing hard disk image */
-		if (read_only)
+                /* Try to open existing hard disk image */
+                if (read_only)
                         hdd->f = (void*)fopen64(fn, "rb");
-		else
+                else
                         hdd->f = (void*)fopen64(fn, "rb+");
                 if (hdd->f != NULL)
                 {
@@ -25,7 +25,7 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
                         {
                                 int err;
                                 fclose((FILE*)hdd->f);
-                                MVHDMeta *vhdm = mvhd_open(fn, (bool)read_only, &err);
+                                MVHDMeta* vhdm = mvhd_open(fn, (bool)read_only, &err);
                                 if (vhdm == NULL)
                                 {
                                         hdd->f = NULL;
@@ -52,34 +52,34 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
                                 hdd->img_type = HDD_IMG_VHD;
                         }
                 }
-		else
+                else
                 {
-			/* Failed to open existing hard disk image */
-			if (errno == ENOENT && !read_only)
+                        /* Failed to open existing hard disk image */
+                        if (errno == ENOENT && !read_only)
                         {
-				/* Failed because it does not exist,
-				   so try to create new file */
-				hdd->f = (void*)fopen64(fn, "wb+");
-				if (hdd->f == NULL)
+                                /* Failed because it does not exist,
+                                   so try to create new file */
+                                hdd->f = (void*)fopen64(fn, "wb+");
+                                if (hdd->f == NULL)
                                 {
-					pclog("Cannot create file '%s': %s",
-					      fn, strerror(errno));
-					return;
-				}
-			}
+                                        pclog("Cannot create file '%s': %s",
+                                                fn, strerror(errno));
+                                        return;
+                                }
+                        }
                         else
                         {
-				/* Failed for another reason */
-				pclog("Cannot open file '%s': %s",
-				      fn, strerror(errno));
-				return;
-			}
+                                /* Failed for another reason */
+                                pclog("Cannot open file '%s': %s",
+                                        fn, strerror(errno));
+                                return;
+                        }
                         hdd->img_type = HDD_IMG_RAW;
-		}
-	}
+                }
+        }
         if (hdd->img_type == HDD_IMG_VHD)
         {
-                MVHDMeta *vhdm = (MVHDMeta*)hdd->f;
+                MVHDMeta* vhdm = (MVHDMeta*)hdd->f;
                 MVHDGeom geom = mvhd_get_geometry(vhdm);
                 hdd->spt = geom.spt;
                 hdd->hpc = geom.heads;
@@ -95,12 +95,12 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
         hdd->read_only = read_only;
 }
 
-void hdd_load(hdd_file_t *hdd, int d, const char *fn)
+void hdd_load(hdd_file_t* hdd, int d, const char* fn)
 {
         hdd_load_ext(hdd, fn, hdc[d].spt, hdc[d].hpc, hdc[d].tracks, 0);
 }
 
-void hdd_close(hdd_file_t *hdd)
+void hdd_close(hdd_file_t* hdd)
 {
         if (hdd->f)
         {
@@ -113,7 +113,7 @@ void hdd_close(hdd_file_t *hdd)
         hdd->f = NULL;
 }
 
-int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
+int hdd_read_sectors(hdd_file_t* hdd, int offset, int nr_sectors, void* buffer)
 {
         if (hdd->img_type == HDD_IMG_VHD)
         {
@@ -129,7 +129,7 @@ int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
                 addr = (uint64_t)offset * 512;
 
                 fseeko64((FILE*)hdd->f, addr, SEEK_SET);
-                fread(buffer, transfer_sectors*512, 1, (FILE*)hdd->f);
+                fread(buffer, transfer_sectors * 512, 1, (FILE*)hdd->f);
 
                 if (nr_sectors != transfer_sectors)
                         return 1;
@@ -139,7 +139,7 @@ int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
         return 1;
 }
 
-int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
+int hdd_write_sectors(hdd_file_t* hdd, int offset, int nr_sectors, void* buffer)
 {
         if (hdd->img_type == HDD_IMG_VHD)
         {
@@ -158,7 +158,7 @@ int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
                 addr = (uint64_t)offset * 512;
 
                 fseeko64((FILE*)hdd->f, addr, SEEK_SET);
-                fwrite(buffer, transfer_sectors*512, 1, (FILE*)hdd->f);
+                fwrite(buffer, transfer_sectors * 512, 1, (FILE*)hdd->f);
 
                 if (nr_sectors != transfer_sectors)
                         return 1;
@@ -168,7 +168,7 @@ int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
         return 1;
 }
 
-int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors)
+int hdd_format_sectors(hdd_file_t* hdd, int offset, int nr_sectors)
 {
         if (hdd->img_type == HDD_IMG_VHD)
         {
@@ -185,7 +185,7 @@ int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors)
                         return 1;
 
                 memset(zero_buffer, 0, 512);
-                
+
                 if ((hdd->sectors - offset) < transfer_sectors)
                         transfer_sectors = hdd->sectors - offset;
                 addr = (uint64_t)offset * 512;

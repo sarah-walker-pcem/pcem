@@ -28,13 +28,13 @@ uint16_t x87_gettag()
 {
         uint16_t ret = 0;
         int c;
-        
+
         for (c = 0; c < 8; c++)
         {
                 if (cpu_state.tag[c] == TAG_EMPTY)
                         ret |= X87_TAG_EMPTY << (c * 2);
                 else if (cpu_state.tag[c] & TAG_UINT64)
-                        ret |= 2 << (c*2);
+                        ret |= 2 << (c * 2);
                 else if (cpu_state.ST[c] == 0.0 && !cpu_state.ismmx)
                         ret |= X87_TAG_ZERO << (c * 2);
                 else
@@ -47,11 +47,11 @@ uint16_t x87_gettag()
 void x87_settag(uint16_t new_tag)
 {
         int c;
-        
+
         for (c = 0; c < 8; c++)
         {
                 int tag = (new_tag >> (c * 2)) & 3;
-                
+
                 if (tag == X87_TAG_EMPTY)
                         cpu_state.tag[c] = TAG_EMPTY;
                 else if (tag == 2)
@@ -70,8 +70,10 @@ void x87_dumpregs()
         }
         else
         {
-                pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n",cpu_state.ST[cpu_state.TOP&7],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
-                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7]);
+                pclog("ST(0)=%f\tST(1)=%f\tST(2)=%f\tST(3)=%f\t\n", cpu_state.ST[cpu_state.TOP & 7], cpu_state.ST[(cpu_state.TOP + 1) & 7], cpu_state.ST[(cpu_state.TOP + 2) & 7], cpu_state.ST[
+                        (cpu_state.TOP + 3) & 7]);
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\t\n", cpu_state.ST[(cpu_state.TOP + 4) & 7], cpu_state.ST[(cpu_state.TOP + 5) & 7], cpu_state.ST[(cpu_state.TOP + 6) & 7], cpu_state.ST[
+                        (cpu_state.TOP + 7) & 7]);
         }
         pclog("Status = %04X  Control = %04X  Tag = %04X\n", cpu_state.npxs, cpu_state.npxc, x87_gettag());
 }
@@ -85,8 +87,10 @@ void x87_print()
         }
         else
         {
-                pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t",cpu_state.ST[cpu_state.TOP&7],cpu_state.ST[(cpu_state.TOP+1)&7],cpu_state.ST[(cpu_state.TOP+2)&7],cpu_state.ST[(cpu_state.TOP+3)&7]);
-                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\tTOP=%i CR=%04X SR=%04X TAG=%04X\n",cpu_state.ST[(cpu_state.TOP+4)&7],cpu_state.ST[(cpu_state.TOP+5)&7],cpu_state.ST[(cpu_state.TOP+6)&7],cpu_state.ST[(cpu_state.TOP+7)&7], cpu_state.TOP, cpu_state.npxc, cpu_state.npxs, x87_gettag());
+                pclog("\tST(0)=%.20f\tST(1)=%.20f\tST(2)=%f\tST(3)=%f\t", cpu_state.ST[cpu_state.TOP & 7], cpu_state.ST[(cpu_state.TOP + 1) & 7], cpu_state.ST[(cpu_state.TOP + 2) & 7], cpu_state.ST[
+                        (cpu_state.TOP + 3) & 7]);
+                pclog("ST(4)=%f\tST(5)=%f\tST(6)=%f\tST(7)=%f\tTOP=%i CR=%04X SR=%04X TAG=%04X\n", cpu_state.ST[(cpu_state.TOP + 4) & 7], cpu_state.ST[(cpu_state.TOP + 5) & 7], cpu_state.ST[
+                        (cpu_state.TOP + 6) & 7], cpu_state.ST[(cpu_state.TOP + 7) & 7], cpu_state.TOP, cpu_state.npxc, cpu_state.npxs, x87_gettag());
         }
 }
 

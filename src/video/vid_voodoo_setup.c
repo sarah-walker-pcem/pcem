@@ -10,7 +10,7 @@
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_setup.h"
 
-void voodoo_triangle_setup(voodoo_t *voodoo)
+void voodoo_triangle_setup(voodoo_t* voodoo)
 {
         float dxAB, dxBC, dyAB, dyBC;
         float area;
@@ -92,9 +92,9 @@ void voodoo_triangle_setup(voodoo_t *voodoo)
         {
                 int cull_sign = voodoo->sSetupMode & SETUPMODE_CULLING_SIGN;
                 int sign = (area < 0.0);
-                
+
                 if ((voodoo->sSetupMode & (SETUPMODE_CULLING_ENABLE | SETUPMODE_DISABLE_PINGPONG))
-                                == SETUPMODE_CULLING_ENABLE && voodoo->cull_pingpong)
+                    == SETUPMODE_CULLING_ENABLE && voodoo->cull_pingpong)
                         cull_sign = !cull_sign;
 
                 if (cull_sign && sign)
@@ -102,7 +102,6 @@ void voodoo_triangle_setup(voodoo_t *voodoo)
                 if (!cull_sign && !sign)
                         return;
         }
-
 
         dxAB = verts[va].sVx - verts[vb].sVx;
         dxBC = verts[vb].sVx - verts[vc].sVx;
@@ -115,8 +114,6 @@ void voodoo_triangle_setup(voodoo_t *voodoo)
         dxBC /= area;
         dyAB /= area;
         dyBC /= area;
-
-
 
         voodoo->params.vertexAx = (int32_t)(int16_t)((int32_t)(verts[va].sVx * 16.0f) & 0xffff);
         voodoo->params.vertexAy = (int32_t)(int16_t)((int32_t)(verts[va].sVy * 16.0f) & 0xffff);

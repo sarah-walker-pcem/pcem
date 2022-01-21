@@ -6,19 +6,19 @@
 #include "mouse_serial.h"
 #include "keyboard_olim24.h"
 
-static mouse_t *mouse_list[] =
-{
-        &mouse_serial_microsoft,
-        &mouse_serial_msystems,
-        &mouse_ps2_2_button,
-        &mouse_intellimouse,
-        &mouse_amstrad,
-        &mouse_olim24,
-        NULL
-};
+static mouse_t* mouse_list[] =
+        {
+                &mouse_serial_microsoft,
+                &mouse_serial_msystems,
+                &mouse_ps2_2_button,
+                &mouse_intellimouse,
+                &mouse_amstrad,
+                &mouse_olim24,
+                NULL
+        };
 
-static mouse_t *cur_mouse;
-static void *mouse_p;
+static mouse_t* cur_mouse;
+static void* mouse_p;
 int mouse_type = 0;
 
 void mouse_emu_init()
@@ -40,7 +40,7 @@ void mouse_poll(int x, int y, int z, int b)
                 cur_mouse->poll(x, y, z, b, mouse_p);
 }
 
-char *mouse_get_name(int mouse)
+char* mouse_get_name(int mouse)
 {
         if (!mouse_list[mouse])
                 return NULL;

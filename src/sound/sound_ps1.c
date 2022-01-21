@@ -10,23 +10,23 @@
 typedef struct ps1_audio_t
 {
         sn76489_t sn76489;
-        
+
         uint8_t status, ctrl;
-        
+
         uint64_t timer_latch;
-	pc_timer_t timer;
-        
+        pc_timer_t timer;
+
         uint8_t fifo[2048];
         int fifo_read_idx, fifo_write_idx;
         int fifo_threshold;
-        
+
         uint8_t dac_val;
 
         int16_t buffer[MAXSOUNDBUFLEN];
         int pos;
 } ps1_audio_t;
 
-static void ps1_update_irq_status(ps1_audio_t *ps1)
+static void ps1_update_irq_status(ps1_audio_t* ps1)
 {
         if (((ps1->status & ps1->ctrl) & 0x12) && (ps1->ctrl & 0x01))
                 picint(1 << 7);
@@ -34,20 +34,20 @@ static void ps1_update_irq_status(ps1_audio_t *ps1)
                 picintc(1 << 7);
 }
 
-static uint8_t ps1_audio_read(uint16_t port, void *p)
+static uint8_t ps1_audio_read(uint16_t port, void* p)
 {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
         uint8_t temp;
-        
+
 //        pclog("ps1_audio_read %04x %04x:%04x\n", port, CS, pc);
 
         switch (port & 7)
         {
-                case 0: /*ADC data*/
+        case 0: /*ADC data*/
                 ps1->status &= ~0x10;
                 ps1_update_irq_status(ps1);
                 return 0;
-                case 2: /*Status*/
+        case 2: /*Status*/
                 temp = ps1->status;
                 temp |= (ps1->ctrl & 0x01);
                 if ((ps1->fifo_write_idx - ps1->fifo_read_idx) >= 2048)
@@ -56,25 +56,28 @@ static uint8_t ps1_audio_read(uint16_t port, void *p)
                         temp |= 0x04; /*FIFO empty*/
 //                pclog("Return status %02x\n", temp);
                 return temp;
-                case 3: /*FIFO timer*/
+        case 3: /*FIFO timer*/
                 /*PS/1 technical reference says this should return the current value,
                   but the PS/1 BIOS and Stunt Island expect it not to change*/
                 return ps1->timer_latch;
-                case 4: case 5: case 6: case 7:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
                 return 0;
         }
         return 0xff;
 }
 
-static void ps1_audio_write(uint16_t port, uint8_t val, void *p)
+static void ps1_audio_write(uint16_t port, uint8_t val, void* p)
 {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
-        
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
+
 //        pclog("ps1_audio_write %04x %02x\n", port, val);
-        
+
         switch (port & 7)
         {
-                case 0: /*DAC output*/
+        case 0: /*DAC output*/
 //                pclog("DAC write %08x %08x %i\n", ps1->fifo_write_idx, ps1->fifo_read_idx, ps1->fifo_write_idx - ps1->fifo_read_idx);
                 if ((ps1->fifo_write_idx - ps1->fifo_read_idx) < 2048)
                 {
@@ -82,37 +85,37 @@ static void ps1_audio_write(uint16_t port, uint8_t val, void *p)
                         ps1->fifo_write_idx++;
                 }
                 break;
-                case 2: /*Control*/
+        case 2: /*Control*/
                 ps1->ctrl = val;
                 if (!(val & 0x02))
                         ps1->status &= ~0x02;
                 ps1_update_irq_status(ps1);
                 break;
-                case 3: /*Timer reload value*/
+        case 3: /*Timer reload value*/
                 ps1->timer_latch = val;
-		if (val)
-	                timer_set_delay_u64(&ps1->timer, (0xff-val) * TIMER_USEC);
-		else
-			timer_disable(&ps1->timer);
+                if (val)
+                        timer_set_delay_u64(&ps1->timer, (0xff - val) * TIMER_USEC);
+                else
+                        timer_disable(&ps1->timer);
                 break;
-                case 4: /*Almost empty*/
+        case 4: /*Almost empty*/
                 ps1->fifo_threshold = val * 4;
                 break;
-        }       
+        }
 }
 
-static void ps1_audio_update(ps1_audio_t *ps1)
+static void ps1_audio_update(ps1_audio_t* ps1)
 {
-        for (; ps1->pos < sound_pos_global; ps1->pos++)        
+        for (; ps1->pos < sound_pos_global; ps1->pos++)
                 ps1->buffer[ps1->pos] = (int8_t)(ps1->dac_val ^ 0x80) * 0x20;
 }
 
-static void ps1_audio_callback(void *p)
+static void ps1_audio_callback(void* p)
 {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
-        
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
+
         ps1_audio_update(ps1);
-        
+
         if (ps1->fifo_read_idx != ps1->fifo_write_idx)
         {
                 ps1->dac_val = ps1->fifo[ps1->fifo_read_idx & 2047];
@@ -126,26 +129,26 @@ static void ps1_audio_callback(void *p)
         }
         ps1->status |= 0x10; /*ADC data ready*/
         ps1_update_irq_status(ps1);
-        
+
         timer_advance_u64(&ps1->timer, ps1->timer_latch * TIMER_USEC);
 }
 
-static void ps1_audio_get_buffer(int32_t *buffer, int len, void *p)
+static void ps1_audio_get_buffer(int32_t* buffer, int len, void* p)
 {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
         int c;
-        
+
         ps1_audio_update(ps1);
-        
+
         for (c = 0; c < len * 2; c++)
                 buffer[c] += ps1->buffer[c >> 1];
 
         ps1->pos = 0;
 }
 
-static void *ps1_audio_init()
+static void* ps1_audio_init()
 {
-        ps1_audio_t *ps1 = malloc(sizeof(ps1_audio_t));
+        ps1_audio_t* ps1 = malloc(sizeof(ps1_audio_t));
         memset(ps1, 0, sizeof(ps1_audio_t));
 
         sn76489_init(&ps1->sn76489, 0x0205, 0x0001, SN76496, 4000000);
@@ -154,25 +157,25 @@ static void *ps1_audio_init()
         io_sethandler(0x0202, 0x0006, ps1_audio_read, NULL, NULL, ps1_audio_write, NULL, NULL, ps1);
         timer_add(&ps1->timer, ps1_audio_callback, ps1, 0);
         sound_add_handler(ps1_audio_get_buffer, ps1);
-        
+
         return ps1;
 }
 
-static void ps1_audio_close(void *p)
+static void ps1_audio_close(void* p)
 {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
 
         free(ps1);
 }
 
 device_t ps1_audio_device =
-{
-        "PS/1 Audio Card",
-        0,
-        ps1_audio_init,
-        ps1_audio_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
+        {
+                "PS/1 Audio Card",
+                0,
+                ps1_audio_init,
+                ps1_audio_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

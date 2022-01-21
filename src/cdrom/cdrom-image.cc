@@ -13,17 +13,17 @@ static int image_changed = 0;
 
 extern ATAPI image_atapi;
 
-CDROM_Interface_Image *cdrom = NULL;
+CDROM_Interface_Image* cdrom = NULL;
 
-#define MSFtoLBA(m,s,f)  (((((m*60)+s)*75)+f))
+#define MSFtoLBA(m, s, f)  (((((m*60)+s)*75)+f))
 
 static uint32_t cdrom_capacity = 0;
 
 enum
 {
-    CD_STOPPED = 0,
-    CD_PLAYING,
-    CD_PAUSED
+        CD_STOPPED = 0,
+        CD_PLAYING,
+        CD_PAUSED
 };
 
 static int image_cd_state = CD_STOPPED;
@@ -33,7 +33,7 @@ static uint32_t image_cd_pos = 0, image_cd_end = 0;
 static int16_t cd_buffer[BUF_SIZE];
 static int cd_buflen = 0;
 
-void image_audio_callback(int16_t *output, int len)
+void image_audio_callback(int16_t* output, int len)
 {
         if (image_cd_state != CD_PLAYING)
                 return;
@@ -42,7 +42,7 @@ void image_audio_callback(int16_t *output, int len)
                 if (image_cd_pos < image_cd_end)
                 {
 //                      pclog("Read to %i\n", cd_buflen);
-                        if (!cdrom->ReadSector((unsigned char *)&cd_buffer[cd_buflen], true, image_cd_pos - 150))
+                        if (!cdrom->ReadSector((unsigned char*)&cd_buffer[cd_buflen], true, image_cd_pos - 150))
                         {
 //                                pclog("DeviceIoControl returned false\n");
                                 memset(&cd_buffer[cd_buflen], 0, (BUF_SIZE - cd_buflen) * 2);
@@ -83,7 +83,7 @@ static int image_is_track_audio(uint32_t pos, int ismsf)
                 int f = pos & 0xff;
                 pos = MSF_TO_FRAMES(m, s, f);
         }
-        
+
         unsigned char attr;
         TMSF tmsf;
         int number;
@@ -124,8 +124,8 @@ static void image_playaudio(uint32_t pos, uint32_t len, int ismsf)
         }
         else
                 len += pos;
-        image_cd_pos   = pos;// + 150;
-        image_cd_end   = len;// + 150;
+        image_cd_pos = pos;// + 150;
+        image_cd_end = len;// + 150;
         image_cd_state = CD_PLAYING;
         if (image_cd_pos < 150)
                 image_cd_pos = 150;
@@ -156,7 +156,7 @@ static void image_stop(void)
 static void image_seek(uint32_t pos)
 {
         if (!cdrom) return;
-        image_cd_pos   = pos;
+        image_cd_pos = pos;
         image_cd_state = CD_STOPPED;
 }
 
@@ -177,7 +177,7 @@ static int image_ready(void)
 static int image_get_last_block(unsigned char starttrack, int msf, int maxlen, int single)
 {
         int c;
-        uint32_t lb=0;
+        uint32_t lb = 0;
 
         if (!cdrom) return 0;
 
@@ -191,7 +191,7 @@ static int image_get_last_block(unsigned char starttrack, int msf, int maxlen, i
         for (c = 0; c <= last_track; c++)
         {
                 uint32_t address;
-                cdrom->GetAudioTrackInfo(c+1, number, tmsf, attr);
+                cdrom->GetAudioTrackInfo(c + 1, number, tmsf, attr);
                 address = MSFtoLBA(tmsf.min, tmsf.sec, tmsf.fr) - 150;
                 if (address > lb)
                         lb = address;
@@ -221,11 +221,11 @@ static int image_medium_changed(void)
         return 0;
 }
 
-static uint8_t image_getcurrentsubchannel(uint8_t *b, int msf)
+static uint8_t image_getcurrentsubchannel(uint8_t* b, int msf)
 {
         if (!cdrom) return 0;
         uint8_t ret;
-        int pos=0;
+        int pos = 0;
 
         uint32_t cdpos = image_cd_pos;
         if (cdpos >= 150) cdpos -= 150;
@@ -247,16 +247,20 @@ static uint8_t image_getcurrentsubchannel(uint8_t *b, int msf)
         if (msf)
         {
                 uint32_t dat = MSFtoLBA(absPos.min, absPos.sec, absPos.fr);
-                b[pos + 3] = (uint8_t)(dat % 75); dat /= 75;
-                b[pos + 2] = (uint8_t)(dat % 60); dat /= 60;
+                b[pos + 3] = (uint8_t)(dat % 75);
+                dat /= 75;
+                b[pos + 2] = (uint8_t)(dat % 60);
+                dat /= 60;
                 b[pos + 1] = (uint8_t)dat;
-                b[pos]     = 0;
+                b[pos] = 0;
                 pos += 4;
                 dat = MSFtoLBA(relPos.min, relPos.sec, relPos.fr);
-                b[pos + 3] = (uint8_t)(dat % 75); dat /= 75;
-                b[pos + 2] = (uint8_t)(dat % 60); dat /= 60;
+                b[pos + 3] = (uint8_t)(dat % 75);
+                dat /= 75;
+                b[pos + 2] = (uint8_t)(dat % 60);
+                dat /= 60;
                 b[pos + 1] = (uint8_t)dat;
-                b[pos]     = 0;
+                b[pos] = 0;
                 pos += 4;
         }
         else
@@ -284,23 +288,23 @@ static void image_load(void)
 {
 }
 
-static int image_readsector(uint8_t *b, int sector, int count)
+static int image_readsector(uint8_t* b, int sector, int count)
 {
         if (!cdrom) return -1;
         return !cdrom->ReadSectors((PhysPt)b, false, sector, count);
 }
 
-static void image_readsector_raw(uint8_t *b, int sector)
+static void image_readsector_raw(uint8_t* b, int sector)
 {
         if (!cdrom) return;
         cdrom->ReadSector(b, true, sector);
 }
 
-static int image_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single)
+static int image_readtoc(unsigned char* b, unsigned char starttrack, int msf, int maxlen, int single)
 {
         if (!cdrom) return 0;
-        int len=4;
-        int c,d;
+        int len = 4;
+        int c, d;
         uint32_t temp;
 
         int first_track;
@@ -316,21 +320,21 @@ static int image_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
         d = 0;
         for (c = 0; c <= last_track; c++)
         {
-                cdrom->GetAudioTrackInfo(c+1, number, tmsf, attr);
+                cdrom->GetAudioTrackInfo(c + 1, number, tmsf, attr);
                 if (number >= starttrack)
                 {
-                        d=c;
+                        d = c;
                         break;
                 }
         }
-        cdrom->GetAudioTrackInfo(c+1, number, tmsf, attr);
+        cdrom->GetAudioTrackInfo(c + 1, number, tmsf, attr);
         b[2] = number;
 
         for (c = d; c <= last_track; c++)
         {
                 if ((len + 8) > maxlen)
                         break;
-                cdrom->GetAudioTrackInfo(c+1, number, tmsf, attr);
+                cdrom->GetAudioTrackInfo(c + 1, number, tmsf, attr);
 
 //                pclog("Len %i max %i Track %02X - %02X %02X %02i:%02i:%02i %08X\n",len,maxlen,toc[c].cdte_track,toc[c].cdte_adr,toc[c].cdte_ctrl,toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame,MSFtoLBA(toc[c].cdte_addr.msf.minute, toc[c].cdte_addr.msf.second, toc[c].cdte_addr.msf.frame));
                 b[len++] = 0; /* reserved */
@@ -356,8 +360,8 @@ static int image_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
                 if (single)
                         break;
         }
-        b[0] = (uint8_t)(((len-2) >> 8) & 0xff);
-        b[1] = (uint8_t)((len-2) & 0xff);
+        b[0] = (uint8_t)(((len - 2) >> 8) & 0xff);
+        b[1] = (uint8_t)((len - 2) & 0xff);
         /*
         pclog("Table of Contents:\n");
         pclog("First track - %02X\n", first_track);
@@ -375,7 +379,7 @@ static int image_readtoc(unsigned char *b, unsigned char starttrack, int msf, in
         return len;
 }
 
-static int image_readtoc_session(unsigned char *b, int msf, int maxlen)
+static int image_readtoc_session(unsigned char* b, int msf, int maxlen)
 {
         if (!cdrom) return 0;
         int len = 4;
@@ -412,7 +416,7 @@ static int image_readtoc_session(unsigned char *b, int msf, int maxlen)
         return len;
 }
 
-static int image_readtoc_raw(unsigned char *b, int maxlen)
+static int image_readtoc_raw(unsigned char* b, int maxlen)
 {
         if (!cdrom) return 0;
 
@@ -442,13 +446,13 @@ static int image_readtoc_raw(unsigned char *b, int maxlen)
 //              pclog("read_toc: Track %02X - number %02X control %02X adr %02X address %02X %02X %02X %02X\n", track, toc[track].cdte_track, toc[track].cdte_ctrl, toc[track].cdte_adr, 0, toc[track].cdte_addr.msf.minute, toc[track].cdte_addr.msf.second, toc[track].cdte_addr.msf.frame);
 
                 b[len++] = track;
-                b[len++]= attr;
-                b[len++]=0;
-                b[len++]=0;
-                b[len++]=0;
-                b[len++]=0;
-                b[len++]=0;
-                b[len++]=0;
+                b[len++] = attr;
+                b[len++] = 0;
+                b[len++] = 0;
+                b[len++] = 0;
+                b[len++] = 0;
+                b[len++] = 0;
+                b[len++] = 0;
                 b[len++] = tmsf.min;
                 b[len++] = tmsf.sec;
                 b[len++] = tmsf.fr;
@@ -466,14 +470,14 @@ static int image_status()
         if (!cdrom) return CD_STATUS_EMPTY;
         if (cdrom->HasAudioTracks())
         {
-                switch(image_cd_state)
+                switch (image_cd_state)
                 {
-                        case CD_PLAYING:
+                case CD_PLAYING:
                         return CD_STATUS_PLAYING;
-                        case CD_PAUSED:
+                case CD_PAUSED:
                         return CD_STATUS_PAUSED;
-                        case CD_STOPPED:
-                        default:
+                case CD_STOPPED:
+                default:
                         return CD_STATUS_STOPPED;
                 }
         }
@@ -494,7 +498,7 @@ void image_close(void)
 //        memset(image_path, 0, 1024);
 }
 
-int image_open(char *fn)
+int image_open(char* fn)
 {
         if (strcmp(fn, image_path) != 0)
                 image_changed = 1;
@@ -524,25 +528,25 @@ static void image_exit(void)
 {
 }
 
-ATAPI image_atapi=
-{
-        image_ready,
-        image_medium_changed,
-        image_readtoc,
-        image_readtoc_session,
-        image_readtoc_raw,
-        image_getcurrentsubchannel,
-        image_readsector,
-        image_readsector_raw,
-        image_playaudio,
-        image_seek,
-        image_load,
-        image_eject,
-        image_pause,
-        image_resume,
-        image_size,
-	image_status,
-	image_is_track_audio,
-        image_stop,
-        image_exit
-};
+ATAPI image_atapi =
+        {
+                image_ready,
+                image_medium_changed,
+                image_readtoc,
+                image_readtoc_session,
+                image_readtoc_raw,
+                image_getcurrentsubchannel,
+                image_readsector,
+                image_readsector_raw,
+                image_playaudio,
+                image_seek,
+                image_load,
+                image_eject,
+                image_pause,
+                image_resume,
+                image_size,
+                image_status,
+                image_is_track_audio,
+                image_stop,
+                image_exit
+        };

@@ -13,7 +13,6 @@
 
 #include "386_common.h"
 
-
 static inline void fetch_ea_32_long(uint32_t rmdat)
 {
         eal_r = eal_w = NULL;
@@ -21,10 +20,10 @@ static inline void fetch_ea_32_long(uint32_t rmdat)
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;
-                if ( readlookup2[addr >> 12] != -1)
-                   eal_r = (uint32_t *)(readlookup2[addr >> 12] + addr);
+                if (readlookup2[addr >> 12] != -1)
+                        eal_r = (uint32_t*)(readlookup2[addr >> 12] + addr);
                 if (writelookup2[addr >> 12] != -1)
-                   eal_w = (uint32_t *)(writelookup2[addr >> 12] + addr);
+                        eal_w = (uint32_t*)(writelookup2[addr >> 12] + addr);
         }
 }
 
@@ -35,16 +34,15 @@ static inline void fetch_ea_16_long(uint32_t rmdat)
         if (easeg != 0xFFFFFFFF && ((easeg + cpu_state.eaaddr) & 0xFFF) <= 0xFFC)
         {
                 uint32_t addr = easeg + cpu_state.eaaddr;
-                if ( readlookup2[addr >> 12] != -1)
-                   eal_r = (uint32_t *)(readlookup2[addr >> 12] + addr);
+                if (readlookup2[addr >> 12] != -1)
+                        eal_r = (uint32_t*)(readlookup2[addr >> 12] + addr);
                 if (writelookup2[addr >> 12] != -1)
-                   eal_w = (uint32_t *)(writelookup2[addr >> 12] + addr);
+                        eal_w = (uint32_t*)(writelookup2[addr >> 12] + addr);
         }
 }
 
 #define fetch_ea_16(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_16_long(rmdat);
 #define fetch_ea_32(rmdat)              cpu_state.pc++; if (cpu_mod != 3) fetch_ea_32_long(rmdat);
-
 
 #define PREFETCH_RUN(instr_cycles, bytes, modrm, reads, read_ls, writes, write_ls, ea32)
 #define PREFETCH_PREFIX()

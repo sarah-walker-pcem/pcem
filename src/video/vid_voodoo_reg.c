@@ -26,9 +26,9 @@ enum
         CHIP_TREX2 = 0x8
 };
 
-void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
+void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
 {
-        voodoo_t *voodoo = (voodoo_t *)p;
+        voodoo_t* voodoo = (voodoo_t*)p;
         union
         {
                 uint32_t i;
@@ -47,7 +47,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 addr |= 0x400;
         switch (addr)
         {
-                case SST_swapbufferCMD:
+        case SST_swapbufferCMD:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
 //                        pclog("swapbufferCMD %08x %08x\n", val, voodoo->leftOverlayBuf);
@@ -129,53 +129,67 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->cmd_read++;
                 break;
 
-                case SST_vertexAx: case SST_remap_vertexAx:
+        case SST_vertexAx:
+        case SST_remap_vertexAx:
                 voodoo->params.vertexAx = val & 0xffff;
                 break;
-                case SST_vertexAy: case SST_remap_vertexAy:
+        case SST_vertexAy:
+        case SST_remap_vertexAy:
                 voodoo->params.vertexAy = val & 0xffff;
                 break;
-                case SST_vertexBx: case SST_remap_vertexBx:
+        case SST_vertexBx:
+        case SST_remap_vertexBx:
                 voodoo->params.vertexBx = val & 0xffff;
                 break;
-                case SST_vertexBy: case SST_remap_vertexBy:
+        case SST_vertexBy:
+        case SST_remap_vertexBy:
                 voodoo->params.vertexBy = val & 0xffff;
                 break;
-                case SST_vertexCx: case SST_remap_vertexCx:
+        case SST_vertexCx:
+        case SST_remap_vertexCx:
                 voodoo->params.vertexCx = val & 0xffff;
                 break;
-                case SST_vertexCy: case SST_remap_vertexCy:
+        case SST_vertexCy:
+        case SST_remap_vertexCy:
                 voodoo->params.vertexCy = val & 0xffff;
                 break;
 
-                case SST_startR: case SST_remap_startR:
+        case SST_startR:
+        case SST_remap_startR:
                 voodoo->params.startR = val & 0xffffff;
                 break;
-                case SST_startG: case SST_remap_startG:
+        case SST_startG:
+        case SST_remap_startG:
                 voodoo->params.startG = val & 0xffffff;
                 break;
-                case SST_startB: case SST_remap_startB:
+        case SST_startB:
+        case SST_remap_startB:
                 voodoo->params.startB = val & 0xffffff;
                 break;
-                case SST_startZ: case SST_remap_startZ:
+        case SST_startZ:
+        case SST_remap_startZ:
                 voodoo->params.startZ = val;
                 break;
-                case SST_startA: case SST_remap_startA:
+        case SST_startA:
+        case SST_remap_startA:
                 voodoo->params.startA = val & 0xffffff;
                 break;
-                case SST_startS: case SST_remap_startS:
+        case SST_startS:
+        case SST_remap_startS:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].startS = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].startS = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_startT: case SST_remap_startT:
+        case SST_startT:
+        case SST_remap_startT:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].startT = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].startT = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_startW: case SST_remap_startW:
+        case SST_startW:
+        case SST_remap_startW:
                 if (chip & CHIP_FBI)
                         voodoo->params.startW = (int64_t)(int32_t)val << 2;
                 if (chip & CHIP_TREX0)
@@ -184,34 +198,42 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.tmu[1].startW = (int64_t)(int32_t)val << 2;
                 break;
 
-                case SST_dRdX: case SST_remap_dRdX:
+        case SST_dRdX:
+        case SST_remap_dRdX:
                 voodoo->params.dRdX = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dGdX: case SST_remap_dGdX:
+        case SST_dGdX:
+        case SST_remap_dGdX:
                 voodoo->params.dGdX = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dBdX: case SST_remap_dBdX:
+        case SST_dBdX:
+        case SST_remap_dBdX:
                 voodoo->params.dBdX = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dZdX: case SST_remap_dZdX:
+        case SST_dZdX:
+        case SST_remap_dZdX:
                 voodoo->params.dZdX = val;
                 break;
-                case SST_dAdX: case SST_remap_dAdX:
+        case SST_dAdX:
+        case SST_remap_dAdX:
                 voodoo->params.dAdX = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dSdX: case SST_remap_dSdX:
+        case SST_dSdX:
+        case SST_remap_dSdX:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dSdX = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dSdX = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_dTdX: case SST_remap_dTdX:
+        case SST_dTdX:
+        case SST_remap_dTdX:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dTdX = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dTdX = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_dWdX: case SST_remap_dWdX:
+        case SST_dWdX:
+        case SST_remap_dWdX:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dWdX = (int64_t)(int32_t)val << 2;
                 if (chip & CHIP_TREX1)
@@ -220,34 +242,42 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.dWdX = (int64_t)(int32_t)val << 2;
                 break;
 
-                case SST_dRdY: case SST_remap_dRdY:
+        case SST_dRdY:
+        case SST_remap_dRdY:
                 voodoo->params.dRdY = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dGdY: case SST_remap_dGdY:
+        case SST_dGdY:
+        case SST_remap_dGdY:
                 voodoo->params.dGdY = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dBdY: case SST_remap_dBdY:
+        case SST_dBdY:
+        case SST_remap_dBdY:
                 voodoo->params.dBdY = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dZdY: case SST_remap_dZdY:
+        case SST_dZdY:
+        case SST_remap_dZdY:
                 voodoo->params.dZdY = val;
                 break;
-                case SST_dAdY: case SST_remap_dAdY:
+        case SST_dAdY:
+        case SST_remap_dAdY:
                 voodoo->params.dAdY = (val & 0xffffff) | ((val & 0x800000) ? 0xff000000 : 0);
                 break;
-                case SST_dSdY: case SST_remap_dSdY:
+        case SST_dSdY:
+        case SST_remap_dSdY:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dSdY = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dSdY = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_dTdY: case SST_remap_dTdY:
+        case SST_dTdY:
+        case SST_remap_dTdY:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dTdY = ((int64_t)(int32_t)val) << 14;
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dTdY = ((int64_t)(int32_t)val) << 14;
                 break;
-                case SST_dWdY: case SST_remap_dWdY:
+        case SST_dWdY:
+        case SST_remap_dWdY:
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dWdY = (int64_t)(int32_t)val << 2;
                 if (chip & CHIP_TREX1)
@@ -256,7 +286,8 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.dWdY = (int64_t)(int32_t)val << 2;
                 break;
 
-                case SST_triangleCMD: case SST_remap_triangleCMD:
+        case SST_triangleCMD:
+        case SST_remap_triangleCMD:
                 voodoo->params.sign = val & (1 << 31);
 
                 if (voodoo->ncc_dirty[0])
@@ -270,66 +301,80 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->cmd_read++;
                 break;
 
-                case SST_fvertexAx: case SST_remap_fvertexAx:
+        case SST_fvertexAx:
+        case SST_remap_fvertexAx:
                 voodoo->fvertexAx.i = val;
                 voodoo->params.vertexAx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAx.f * 16.0f) & 0xffff;
                 break;
-                case SST_fvertexAy: case SST_remap_fvertexAy:
+        case SST_fvertexAy:
+        case SST_remap_fvertexAy:
                 voodoo->fvertexAy.i = val;
                 voodoo->params.vertexAy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexAy.f * 16.0f) & 0xffff;
                 break;
-                case SST_fvertexBx: case SST_remap_fvertexBx:
+        case SST_fvertexBx:
+        case SST_remap_fvertexBx:
                 voodoo->fvertexBx.i = val;
                 voodoo->params.vertexBx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBx.f * 16.0f) & 0xffff;
                 break;
-                case SST_fvertexBy: case SST_remap_fvertexBy:
+        case SST_fvertexBy:
+        case SST_remap_fvertexBy:
                 voodoo->fvertexBy.i = val;
                 voodoo->params.vertexBy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexBy.f * 16.0f) & 0xffff;
                 break;
-                case SST_fvertexCx: case SST_remap_fvertexCx:
+        case SST_fvertexCx:
+        case SST_remap_fvertexCx:
                 voodoo->fvertexCx.i = val;
                 voodoo->params.vertexCx = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCx.f * 16.0f) & 0xffff;
                 break;
-                case SST_fvertexCy: case SST_remap_fvertexCy:
+        case SST_fvertexCy:
+        case SST_remap_fvertexCy:
                 voodoo->fvertexCy.i = val;
                 voodoo->params.vertexCy = (int32_t)(int16_t)(int32_t)(voodoo->fvertexCy.f * 16.0f) & 0xffff;
                 break;
 
-                case SST_fstartR: case SST_remap_fstartR:
+        case SST_fstartR:
+        case SST_remap_fstartR:
                 tempif.i = val;
                 voodoo->params.startR = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fstartG: case SST_remap_fstartG:
+        case SST_fstartG:
+        case SST_remap_fstartG:
                 tempif.i = val;
                 voodoo->params.startG = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fstartB: case SST_remap_fstartB:
+        case SST_fstartB:
+        case SST_remap_fstartB:
                 tempif.i = val;
                 voodoo->params.startB = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fstartZ: case SST_remap_fstartZ:
+        case SST_fstartZ:
+        case SST_remap_fstartZ:
                 tempif.i = val;
                 voodoo->params.startZ = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fstartA: case SST_remap_fstartA:
+        case SST_fstartA:
+        case SST_remap_fstartA:
                 tempif.i = val;
                 voodoo->params.startA = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fstartS: case SST_remap_fstartS:
+        case SST_fstartS:
+        case SST_remap_fstartS:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].startS = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].startS = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fstartT: case SST_remap_fstartT:
+        case SST_fstartT:
+        case SST_remap_fstartT:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].startT = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].startT = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fstartW: case SST_remap_fstartW:
+        case SST_fstartW:
+        case SST_remap_fstartW:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].startW = (int64_t)(tempif.f * 4294967296.0f);
@@ -339,41 +384,49 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.startW = (int64_t)(tempif.f * 4294967296.0f);
                 break;
 
-                case SST_fdRdX: case SST_remap_fdRdX:
+        case SST_fdRdX:
+        case SST_remap_fdRdX:
                 tempif.i = val;
                 voodoo->params.dRdX = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdGdX: case SST_remap_fdGdX:
+        case SST_fdGdX:
+        case SST_remap_fdGdX:
                 tempif.i = val;
                 voodoo->params.dGdX = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdBdX: case SST_remap_fdBdX:
+        case SST_fdBdX:
+        case SST_remap_fdBdX:
                 tempif.i = val;
                 voodoo->params.dBdX = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdZdX: case SST_remap_fdZdX:
+        case SST_fdZdX:
+        case SST_remap_fdZdX:
                 tempif.i = val;
                 voodoo->params.dZdX = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdAdX: case SST_remap_fdAdX:
+        case SST_fdAdX:
+        case SST_remap_fdAdX:
                 tempif.i = val;
                 voodoo->params.dAdX = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdSdX: case SST_remap_fdSdX:
+        case SST_fdSdX:
+        case SST_remap_fdSdX:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dSdX = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dSdX = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fdTdX: case SST_remap_fdTdX:
+        case SST_fdTdX:
+        case SST_remap_fdTdX:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dTdX = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dTdX = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fdWdX: case SST_remap_fdWdX:
+        case SST_fdWdX:
+        case SST_remap_fdWdX:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dWdX = (int64_t)(tempif.f * 4294967296.0f);
@@ -383,41 +436,49 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.dWdX = (int64_t)(tempif.f * 4294967296.0f);
                 break;
 
-                case SST_fdRdY: case SST_remap_fdRdY:
+        case SST_fdRdY:
+        case SST_remap_fdRdY:
                 tempif.i = val;
                 voodoo->params.dRdY = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdGdY: case SST_remap_fdGdY:
+        case SST_fdGdY:
+        case SST_remap_fdGdY:
                 tempif.i = val;
                 voodoo->params.dGdY = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdBdY: case SST_remap_fdBdY:
+        case SST_fdBdY:
+        case SST_remap_fdBdY:
                 tempif.i = val;
                 voodoo->params.dBdY = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdZdY: case SST_remap_fdZdY:
+        case SST_fdZdY:
+        case SST_remap_fdZdY:
                 tempif.i = val;
                 voodoo->params.dZdY = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdAdY: case SST_remap_fdAdY:
+        case SST_fdAdY:
+        case SST_remap_fdAdY:
                 tempif.i = val;
                 voodoo->params.dAdY = (int32_t)(tempif.f * 4096.0f);
                 break;
-                case SST_fdSdY: case SST_remap_fdSdY:
+        case SST_fdSdY:
+        case SST_remap_fdSdY:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dSdY = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dSdY = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fdTdY: case SST_remap_fdTdY:
+        case SST_fdTdY:
+        case SST_remap_fdTdY:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dTdY = (int64_t)(tempif.f * 4294967296.0f);
                 if (chip & CHIP_TREX1)
                         voodoo->params.tmu[1].dTdY = (int64_t)(tempif.f * 4294967296.0f);
                 break;
-                case SST_fdWdY: case SST_remap_fdWdY:
+        case SST_fdWdY:
+        case SST_remap_fdWdY:
                 tempif.i = val;
                 if (chip & CHIP_TREX0)
                         voodoo->params.tmu[0].dWdY = (int64_t)(tempif.f * 4294967296.0f);
@@ -427,7 +488,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.dWdY = (int64_t)(tempif.f * 4294967296.0f);
                 break;
 
-                case SST_ftriangleCMD:
+        case SST_ftriangleCMD:
                 voodoo->params.sign = val & (1 << 31);
 
                 if (voodoo->ncc_dirty[0])
@@ -441,27 +502,27 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->cmd_read++;
                 break;
 
-                case SST_fbzColorPath:
+        case SST_fbzColorPath:
                 voodoo->params.fbzColorPath = val;
                 voodoo->rgb_sel = val & 3;
                 break;
 
-                case SST_fogMode:
+        case SST_fogMode:
                 voodoo->params.fogMode = val;
                 break;
-                case SST_alphaMode:
+        case SST_alphaMode:
                 voodoo->params.alphaMode = val;
                 break;
-                case SST_fbzMode:
+        case SST_fbzMode:
                 voodoo->params.fbzMode = val;
                 voodoo_recalc(voodoo);
                 break;
-                case SST_lfbMode:
+        case SST_lfbMode:
                 voodoo->lfbMode = val;
                 voodoo_recalc(voodoo);
                 break;
 
-                case SST_clipLeftRight:
+        case SST_clipLeftRight:
                 if (voodoo->type >= VOODOO_2)
                 {
                         voodoo->params.clipRight = val & 0xfff;
@@ -473,7 +534,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.clipLeft = (val >> 16) & 0x3ff;
                 }
                 break;
-                case SST_clipLowYHighY:
+        case SST_clipLowYHighY:
                 if (voodoo->type >= VOODOO_2)
                 {
                         voodoo->params.clipHighY = val & 0xfff;
@@ -486,7 +547,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_nopCMD:
+        case SST_nopCMD:
                 voodoo->cmd_read++;
                 voodoo->fbiPixelsIn = 0;
                 voodoo->fbiChromaFail = 0;
@@ -494,60 +555,84 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->fbiAFuncFail = 0;
                 voodoo->fbiPixelsOut = 0;
                 break;
-                case SST_fastfillCMD:
+        case SST_fastfillCMD:
                 voodoo_wait_for_render_thread_idle(voodoo);
                 voodoo_fastfill(voodoo, &voodoo->params);
                 voodoo->cmd_read++;
                 break;
 
-                case SST_fogColor:
+        case SST_fogColor:
                 voodoo->params.fogColor.r = (val >> 16) & 0xff;
                 voodoo->params.fogColor.g = (val >> 8) & 0xff;
                 voodoo->params.fogColor.b = val & 0xff;
                 break;
 
-                case SST_zaColor:
+        case SST_zaColor:
                 voodoo->params.zaColor = val;
                 break;
-                case SST_chromaKey:
+        case SST_chromaKey:
                 voodoo->params.chromaKey_r = (val >> 16) & 0xff;
                 voodoo->params.chromaKey_g = (val >> 8) & 0xff;
                 voodoo->params.chromaKey_b = val & 0xff;
                 voodoo->params.chromaKey = val & 0xffffff;
                 break;
-                case SST_stipple:
+        case SST_stipple:
                 voodoo->params.stipple = val;
                 break;
-                case SST_color0:
+        case SST_color0:
                 voodoo->params.color0 = val;
                 break;
-                case SST_color1:
+        case SST_color1:
                 voodoo->params.color1 = val;
                 break;
 
-                case SST_fogTable00: case SST_fogTable01: case SST_fogTable02: case SST_fogTable03:
-                case SST_fogTable04: case SST_fogTable05: case SST_fogTable06: case SST_fogTable07:
-                case SST_fogTable08: case SST_fogTable09: case SST_fogTable0a: case SST_fogTable0b:
-                case SST_fogTable0c: case SST_fogTable0d: case SST_fogTable0e: case SST_fogTable0f:
-                case SST_fogTable10: case SST_fogTable11: case SST_fogTable12: case SST_fogTable13:
-                case SST_fogTable14: case SST_fogTable15: case SST_fogTable16: case SST_fogTable17:
-                case SST_fogTable18: case SST_fogTable19: case SST_fogTable1a: case SST_fogTable1b:
-                case SST_fogTable1c: case SST_fogTable1d: case SST_fogTable1e: case SST_fogTable1f:
+        case SST_fogTable00:
+        case SST_fogTable01:
+        case SST_fogTable02:
+        case SST_fogTable03:
+        case SST_fogTable04:
+        case SST_fogTable05:
+        case SST_fogTable06:
+        case SST_fogTable07:
+        case SST_fogTable08:
+        case SST_fogTable09:
+        case SST_fogTable0a:
+        case SST_fogTable0b:
+        case SST_fogTable0c:
+        case SST_fogTable0d:
+        case SST_fogTable0e:
+        case SST_fogTable0f:
+        case SST_fogTable10:
+        case SST_fogTable11:
+        case SST_fogTable12:
+        case SST_fogTable13:
+        case SST_fogTable14:
+        case SST_fogTable15:
+        case SST_fogTable16:
+        case SST_fogTable17:
+        case SST_fogTable18:
+        case SST_fogTable19:
+        case SST_fogTable1a:
+        case SST_fogTable1b:
+        case SST_fogTable1c:
+        case SST_fogTable1d:
+        case SST_fogTable1e:
+        case SST_fogTable1f:
                 addr = (addr - SST_fogTable00) >> 1;
-                voodoo->params.fogTable[addr].dfog   = val & 0xff;
-                voodoo->params.fogTable[addr].fog    = (val >> 8) & 0xff;
-                voodoo->params.fogTable[addr+1].dfog = (val >> 16) & 0xff;
-                voodoo->params.fogTable[addr+1].fog  = (val >> 24) & 0xff;
+                voodoo->params.fogTable[addr].dfog = val & 0xff;
+                voodoo->params.fogTable[addr].fog = (val >> 8) & 0xff;
+                voodoo->params.fogTable[addr + 1].dfog = (val >> 16) & 0xff;
+                voodoo->params.fogTable[addr + 1].fog = (val >> 24) & 0xff;
                 break;
-                
-                case SST_clipLeftRight1:
+
+        case SST_clipLeftRight1:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->params.clipRight1 = val & 0xfff;
                         voodoo->params.clipLeft1 = (val >> 16) & 0xfff;
                 }
                 break;
-                case SST_clipTopBottom1:
+        case SST_clipTopBottom1:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->params.clipHighY1 = val & 0xfff;
@@ -555,7 +640,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_colBufferAddr:
+        case SST_colBufferAddr:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->params.draw_offset = val & 0xfffff0;
@@ -563,14 +648,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
 //                        pclog("colorBufferAddr=%06x\n", voodoo->params.draw_offset);
                 }
                 break;
-                case SST_colBufferStride:
+        case SST_colBufferStride:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->col_tiled = val & (1 << 15);
                         voodoo->params.col_tiled = voodoo->col_tiled;
                         if (voodoo->col_tiled)
                         {
-                                voodoo->row_width = (val & 0x7f) * 128*32;
+                                voodoo->row_width = (val & 0x7f) * 128 * 32;
 //                                pclog("colBufferStride tiled = %i bytes, tiled  %08x\n", voodoo->row_width, val);
                         }
                         else
@@ -581,21 +666,21 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.row_width = voodoo->row_width;
                 }
                 break;
-                case SST_auxBufferAddr:
+        case SST_auxBufferAddr:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->params.aux_offset = val & 0xfffff0;
 //                        pclog("auxBufferAddr=%06x\n", voodoo->params.aux_offset);
                 }
                 break;
-                case SST_auxBufferStride:
+        case SST_auxBufferStride:
                 if (voodoo->type >= VOODOO_BANSHEE)
                 {
                         voodoo->aux_tiled = val & (1 << 15);
                         voodoo->params.aux_tiled = voodoo->aux_tiled;
                         if (voodoo->aux_tiled)
                         {
-                                voodoo->aux_row_width = (val & 0x7f) * 128*32;
+                                voodoo->aux_row_width = (val & 0x7f) * 128 * 32;
 //                                pclog("auxBufferStride tiled = %i bytes, tiled\n", voodoo->aux_row_width);
                         }
                         else
@@ -607,7 +692,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_clutData:
+        case SST_clutData:
                 voodoo->clutData[(val >> 24) & 0x3f].b = val & 0xff;
                 voodoo->clutData[(val >> 24) & 0x3f].g = (val >> 8) & 0xff;
                 voodoo->clutData[(val >> 24) & 0x3f].r = (val >> 16) & 0xff;
@@ -620,75 +705,75 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->clutData_dirty = 1;
                 break;
 
-                case SST_sSetupMode:
+        case SST_sSetupMode:
                 voodoo->sSetupMode = val;
                 break;
-                case SST_sVx:
+        case SST_sVx:
                 tempif.i = val;
                 voodoo->verts[3].sVx = tempif.f;
 //                pclog("sVx[%i]=%f\n", voodoo->vertex_num, tempif.f);
                 break;
-                case SST_sVy:
+        case SST_sVy:
                 tempif.i = val;
                 voodoo->verts[3].sVy = tempif.f;
 //                pclog("sVy[%i]=%f\n", voodoo->vertex_num, tempif.f);
                 break;
-                case SST_sARGB:
-                voodoo->verts[3].sBlue  = (float)(val & 0xff);
+        case SST_sARGB:
+                voodoo->verts[3].sBlue = (float)(val & 0xff);
                 voodoo->verts[3].sGreen = (float)((val >> 8) & 0xff);
-                voodoo->verts[3].sRed   = (float)((val >> 16) & 0xff);
+                voodoo->verts[3].sRed = (float)((val >> 16) & 0xff);
                 voodoo->verts[3].sAlpha = (float)((val >> 24) & 0xff);
                 break;
-                case SST_sRed:
+        case SST_sRed:
                 tempif.i = val;
                 voodoo->verts[3].sRed = tempif.f;
                 break;
-                case SST_sGreen:
+        case SST_sGreen:
                 tempif.i = val;
                 voodoo->verts[3].sGreen = tempif.f;
                 break;
-                case SST_sBlue:
+        case SST_sBlue:
                 tempif.i = val;
                 voodoo->verts[3].sBlue = tempif.f;
                 break;
-                case SST_sAlpha:
+        case SST_sAlpha:
                 tempif.i = val;
                 voodoo->verts[3].sAlpha = tempif.f;
                 break;
-                case SST_sVz:
+        case SST_sVz:
                 tempif.i = val;
                 voodoo->verts[3].sVz = tempif.f;
                 break;
-                case SST_sWb:
+        case SST_sWb:
                 tempif.i = val;
                 voodoo->verts[3].sWb = tempif.f;
                 break;
-                case SST_sW0:
+        case SST_sW0:
                 tempif.i = val;
                 voodoo->verts[3].sW0 = tempif.f;
                 break;
-                case SST_sS0:
+        case SST_sS0:
                 tempif.i = val;
                 voodoo->verts[3].sS0 = tempif.f;
                 break;
-                case SST_sT0:
+        case SST_sT0:
                 tempif.i = val;
                 voodoo->verts[3].sT0 = tempif.f;
                 break;
-                case SST_sW1:
+        case SST_sW1:
                 tempif.i = val;
                 voodoo->verts[3].sW1 = tempif.f;
                 break;
-                case SST_sS1:
+        case SST_sS1:
                 tempif.i = val;
                 voodoo->verts[3].sS1 = tempif.f;
                 break;
-                case SST_sT1:
+        case SST_sT1:
                 tempif.i = val;
                 voodoo->verts[3].sT1 = tempif.f;
                 break;
 
-                case SST_sBeginTriCMD:
+        case SST_sBeginTriCMD:
 //                pclog("sBeginTriCMD %i %f\n", voodoo->vertex_num, voodoo->verts[4].sVx);
                 voodoo->verts[0] = voodoo->verts[3];
                 voodoo->verts[1] = voodoo->verts[3];
@@ -699,7 +784,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->num_verticies = 1;
                 voodoo->cull_pingpong = 0;
                 break;
-                case SST_sDrawTriCMD:
+        case SST_sDrawTriCMD:
 //                pclog("sDrawTriCMD %i %i\n", voodoo->num_verticies, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);
                 /*I'm not sure this is the vertex selection algorithm actually used in the 3dfx
                   chips, but this works with a number of games that switch between strip and fan
@@ -723,7 +808,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                                     (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
                                         vertex_nr = 0;
                                 else if ((voodoo->vertex_ages[1] < voodoo->vertex_ages[0]) &&
-                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
+                                         (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
                                         vertex_nr = 1;
                                 else
                                         vertex_nr = 2;
@@ -735,13 +820,13 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                                     (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
                                         vertex_nr = 0;
                                 else if ((voodoo->vertex_ages[2] < voodoo->vertex_ages[0]) &&
-                                    (voodoo->vertex_ages[0] < voodoo->vertex_ages[1]))
+                                         (voodoo->vertex_ages[0] < voodoo->vertex_ages[1]))
                                         vertex_nr = 0;
                                 else if ((voodoo->vertex_ages[0] < voodoo->vertex_ages[1]) &&
-                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
+                                         (voodoo->vertex_ages[1] < voodoo->vertex_ages[2]))
                                         vertex_nr = 1;
                                 else if ((voodoo->vertex_ages[2] < voodoo->vertex_ages[1]) &&
-                                    (voodoo->vertex_ages[1] < voodoo->vertex_ages[0]))
+                                         (voodoo->vertex_ages[1] < voodoo->vertex_ages[0]))
                                         vertex_nr = 1;
                                 else
                                         vertex_nr = 2;
@@ -761,19 +846,19 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_bltSrcBaseAddr:
+        case SST_bltSrcBaseAddr:
                 voodoo->bltSrcBaseAddr = val & 0x3fffff;
                 break;
-                case SST_bltDstBaseAddr:
+        case SST_bltDstBaseAddr:
 //                pclog("Write bltDstBaseAddr %08x\n", val);
                 voodoo->bltDstBaseAddr = val & 0x3fffff;
                 break;
-                case SST_bltXYStrides:
+        case SST_bltXYStrides:
                 voodoo->bltSrcXYStride = val & 0xfff;
                 voodoo->bltDstXYStride = (val >> 16) & 0xfff;
 //                pclog("Write bltXYStrides %08x\n", val);
                 break;
-                case SST_bltSrcChromaRange:
+        case SST_bltSrcChromaRange:
                 voodoo->bltSrcChromaRange = val;
                 voodoo->bltSrcChromaMinB = val & 0x1f;
                 voodoo->bltSrcChromaMinG = (val >> 5) & 0x3f;
@@ -782,7 +867,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->bltSrcChromaMaxG = (val >> 21) & 0x3f;
                 voodoo->bltSrcChromaMaxR = (val >> 27) & 0x1f;
                 break;
-                case SST_bltDstChromaRange:
+        case SST_bltDstChromaRange:
                 voodoo->bltDstChromaRange = val;
                 voodoo->bltDstChromaMinB = val & 0x1f;
                 voodoo->bltDstChromaMinG = (val >> 5) & 0x3f;
@@ -791,27 +876,27 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->bltDstChromaMaxG = (val >> 21) & 0x3f;
                 voodoo->bltDstChromaMaxR = (val >> 27) & 0x1f;
                 break;
-                case SST_bltClipX:
+        case SST_bltClipX:
                 voodoo->bltClipRight = val & 0xfff;
                 voodoo->bltClipLeft = (val >> 16) & 0xfff;
                 break;
-                case SST_bltClipY:
+        case SST_bltClipY:
                 voodoo->bltClipHighY = val & 0xfff;
                 voodoo->bltClipLowY = (val >> 16) & 0xfff;
                 break;
 
-                case SST_bltSrcXY:
+        case SST_bltSrcXY:
                 voodoo->bltSrcX = val & 0x7ff;
                 voodoo->bltSrcY = (val >> 16) & 0x7ff;
                 break;
-                case SST_bltDstXY:
+        case SST_bltDstXY:
 //                pclog("Write bltDstXY %08x\n", val);
                 voodoo->bltDstX = val & 0x7ff;
                 voodoo->bltDstY = (val >> 16) & 0x7ff;
                 if (val & (1 << 31))
                         voodoo_v2_blit_start(voodoo);
                 break;
-                case SST_bltSize:
+        case SST_bltSize:
 //                pclog("Write bltSize %08x\n", val);
                 voodoo->bltSizeX = val & 0xfff;
                 if (voodoo->bltSizeX & 0x800)
@@ -822,29 +907,29 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 if (val & (1 << 31))
                         voodoo_v2_blit_start(voodoo);
                 break;
-                case SST_bltRop:
+        case SST_bltRop:
                 voodoo->bltRop[0] = val & 0xf;
                 voodoo->bltRop[1] = (val >> 4) & 0xf;
                 voodoo->bltRop[2] = (val >> 8) & 0xf;
                 voodoo->bltRop[3] = (val >> 12) & 0xf;
                 break;
-                case SST_bltColor:
+        case SST_bltColor:
 //                pclog("Write bltColor %08x\n", val);
                 voodoo->bltColorFg = val & 0xffff;
                 voodoo->bltColorBg = (val >> 16) & 0xffff;
                 break;
 
-                case SST_bltCommand:
+        case SST_bltCommand:
                 voodoo->bltCommand = val;
 //                pclog("Write bltCommand %08x\n", val);
                 if (val & (1 << 31))
                         voodoo_v2_blit_start(voodoo);
                 break;
-                case SST_bltData:
+        case SST_bltData:
                 voodoo_v2_blit_data(voodoo, val);
                 break;
 
-                case SST_textureMode:
+        case SST_textureMode:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->params.textureMode[0] = val;
@@ -856,7 +941,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.tformat[1] = (val >> 8) & 0xf;
                 }
                 break;
-                case SST_tLOD:
+        case SST_tLOD:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->params.tLOD[0] = val;
@@ -868,7 +953,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo_recalc_tex(voodoo, 1);
                 }
                 break;
-                case SST_tDetail:
+        case SST_tDetail:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->params.detail_max[0] = val & 0xff;
@@ -882,7 +967,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->params.detail_scale[1] = (val >> 14) & 7;
                 }
                 break;
-                case SST_texBaseAddr:
+        case SST_texBaseAddr:
                 if (chip & CHIP_TREX0)
                 {
                         if (voodoo->type >= VOODOO_BANSHEE)
@@ -901,7 +986,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo_recalc_tex(voodoo, 1);
                 }
                 break;
-                case SST_texBaseAddr1:
+        case SST_texBaseAddr1:
                 if (chip & CHIP_TREX0)
                 {
                         if (voodoo->type >= VOODOO_BANSHEE)
@@ -919,7 +1004,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo_recalc_tex(voodoo, 1);
                 }
                 break;
-                case SST_texBaseAddr2:
+        case SST_texBaseAddr2:
                 if (chip & CHIP_TREX0)
                 {
                         if (voodoo->type >= VOODOO_BANSHEE)
@@ -937,7 +1022,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo_recalc_tex(voodoo, 1);
                 }
                 break;
-                case SST_texBaseAddr38:
+        case SST_texBaseAddr38:
                 if (chip & CHIP_TREX0)
                 {
                         if (voodoo->type >= VOODOO_BANSHEE)
@@ -956,14 +1041,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_trexInit1:
+        case SST_trexInit1:
                 if (chip & CHIP_TREX0)
                         voodoo->trexInit1[0] = val;
                 if (chip & CHIP_TREX1)
                         voodoo->trexInit1[1] = val;
                 break;
 
-                case SST_nccTable0_Y0:
+        case SST_nccTable0_Y0:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][0].y[0] = val;
@@ -975,7 +1060,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable0_Y1:
+        case SST_nccTable0_Y1:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][0].y[1] = val;
@@ -987,7 +1072,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable0_Y2:
+        case SST_nccTable0_Y2:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][0].y[2] = val;
@@ -999,7 +1084,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable0_Y3:
+        case SST_nccTable0_Y3:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][0].y[3] = val;
@@ -1012,7 +1097,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_nccTable0_I0:
+        case SST_nccTable0_I0:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1027,7 +1112,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_I2:
+        case SST_nccTable0_I2:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1042,7 +1127,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_Q0:
+        case SST_nccTable0_Q0:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1057,7 +1142,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_Q2:
+        case SST_nccTable0_Q2:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1088,7 +1173,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_nccTable0_I1:
+        case SST_nccTable0_I1:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1103,7 +1188,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_I3:
+        case SST_nccTable0_I3:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1118,7 +1203,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_Q1:
+        case SST_nccTable0_Q1:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1133,7 +1218,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         }
                         break;
                 }
-                case SST_nccTable0_Q3:
+        case SST_nccTable0_Q3:
                 if (!(val & (1 << 31)))
                 {
                         if (chip & CHIP_TREX0)
@@ -1164,7 +1249,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_nccTable1_Y0:
+        case SST_nccTable1_Y0:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].y[0] = val;
@@ -1176,7 +1261,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Y1:
+        case SST_nccTable1_Y1:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].y[1] = val;
@@ -1188,7 +1273,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Y2:
+        case SST_nccTable1_Y2:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].y[2] = val;
@@ -1200,7 +1285,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Y3:
+        case SST_nccTable1_Y3:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].y[3] = val;
@@ -1212,7 +1297,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_I0:
+        case SST_nccTable1_I0:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].i[0] = val;
@@ -1224,7 +1309,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_I1:
+        case SST_nccTable1_I1:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].i[1] = val;
@@ -1236,7 +1321,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_I2:
+        case SST_nccTable1_I2:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].i[2] = val;
@@ -1248,7 +1333,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_I3:
+        case SST_nccTable1_I3:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].i[3] = val;
@@ -1260,7 +1345,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Q0:
+        case SST_nccTable1_Q0:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].q[0] = val;
@@ -1272,7 +1357,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Q1:
+        case SST_nccTable1_Q1:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].q[1] = val;
@@ -1284,7 +1369,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Q2:
+        case SST_nccTable1_Q2:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].q[2] = val;
@@ -1296,7 +1381,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
-                case SST_nccTable1_Q3:
+        case SST_nccTable1_Q3:
                 if (chip & CHIP_TREX0)
                 {
                         voodoo->nccTable[0][1].q[3] = val;
@@ -1309,12 +1394,11 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p)
                 }
                 break;
 
-                case SST_userIntrCMD:
+        case SST_userIntrCMD:
                 fatal("userIntrCMD write %08x from FIFO\n", val);
                 break;
 
-
-                case SST_leftOverlayBuf:
+        case SST_leftOverlayBuf:
                 voodoo->leftOverlayBuf = val;
                 break;
         }
