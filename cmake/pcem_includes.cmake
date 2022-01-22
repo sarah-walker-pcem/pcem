@@ -396,4 +396,5 @@ set(PCEM_PUBLIC_HEADERS ${PCEM_PUBLIC_HEADERS}
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/defines.h
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/cpu.h
 	${CMAKE_SOURCE_DIR}/includes/public/pcem/plugin.h
+	${CMAKE_SOURCE_DIR}/includes/public/pcem/unsafe/devices.h
 )

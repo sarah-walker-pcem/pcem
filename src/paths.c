@@ -10,6 +10,9 @@ char default_nvr_path[512];
 char default_configs_path[512];
 char default_logs_path[512];
 char default_screenshots_path[512];
+#ifdef USE_EXPERIMENTAL_PRINTER
+char default_printer_path[512];
+#endif
 
 /* the number of roms paths */
 int num_roms_paths;
@@ -22,6 +25,10 @@ char nvr_path[512];
 char configs_path[512];
 /* this is where log-files as stored */
 char logs_path[512];
+#ifdef USE_EXPERIMENTAL_PRINTER
+/* this is where printer data is stored */
+char printer_path[512];
+#endif
 /* this is where screenshots as stored */
 char screenshots_path[512];
 /* this is where plugins are stored */
@@ -171,6 +178,9 @@ void paths_loadconfig()
         char *cfg_nvr_path = config_get_string(CFG_GLOBAL, "Paths", "nvr_path", 0);
         char *cfg_configs_path = config_get_string(CFG_GLOBAL, "Paths", "configs_path", 0);
         char *cfg_logs_path = config_get_string(CFG_GLOBAL, "Paths", "logs_path", 0);
+#ifdef USE_EXPERIMENTAL_PRINTER
+        char *cfg_printer_path = config_get_string(CFG_GLOBAL, "Paths", "printer_path", 0);
+#endif
         char *cfg_screenshots_path = config_get_string(CFG_GLOBAL, "Paths", "screenshots_path", 0);
 
         if (cfg_roms_paths)
@@ -181,6 +191,10 @@ void paths_loadconfig()
                 safe_strncpy(default_configs_path, cfg_configs_path, 512);
         if (cfg_logs_path)
                 safe_strncpy(default_logs_path, cfg_logs_path, 512);
+#ifdef USE_EXPERIMENTAL_PRINTER
+        if (cfg_printer_path)
+                safe_strncpy(default_printer_path, cfg_printer_path, 512);
+#endif
         if (cfg_screenshots_path)
                 safe_strncpy(default_screenshots_path, cfg_screenshots_path, 512);
 }
@@ -191,6 +205,9 @@ void paths_saveconfig()
         config_set_string(CFG_GLOBAL, "Paths", "nvr_path", default_nvr_path);
         config_set_string(CFG_GLOBAL, "Paths", "configs_path", default_configs_path);
         config_set_string(CFG_GLOBAL, "Paths", "logs_path", default_logs_path);
+#ifdef USE_EXPERIMENTAL_PRINTER
+        config_set_string(CFG_GLOBAL, "Paths", "printer_path", default_printer_path);
+#endif
         config_set_string(CFG_GLOBAL, "Paths", "screenshots_path", default_screenshots_path);
 }
 
@@ -207,6 +224,11 @@ void paths_onconfigloaded()
 
         if (strlen(default_logs_path) > 0)
                 set_logs_path(default_logs_path);
+
+#ifdef USE_EXPERIMENTAL_PRINTER
+        if (strlen(default_printer_path) > 0)
+                set_printer_path(default_printer_path);
+#endif
 
         if (strlen(default_screenshots_path) > 0)
                 set_screenshots_path(default_screenshots_path);
@@ -239,6 +261,10 @@ void paths_init()
         set_screenshots_path(s);
         append_filename(s, base_path, "logs/", 512);
         set_logs_path(s);
+#ifdef USE_EXPERIMENTAL_PRINTER
+        append_filename(s, base_path, "printer/", 512);
+        set_printer_path(s);
+#endif
         append_filename(s, base_path, "nvr/default/", 512);
         set_default_nvr_default_path(s);
         append_filename(s, base_path, "plugins/", 512);
@@ -247,3 +273,17 @@ void paths_init()
         add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
 
 }
+
+#ifdef USE_EXPERIMENTAL_PRINTER
+void set_printer_path(char *s)
+{
+        safe_strncpy(printer_path, s, 512);
+        append_slash(printer_path, 512);
+}
+
+void set_default_printer_path(char *s)
+{
+        safe_strncpy(default_printer_path, s, 512);
+        set_printer_path(s);
+}
+#endif

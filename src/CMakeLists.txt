@@ -28,6 +28,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
         if(PCEM_DEBUG_EXTRA)
                 set(PCEM_DEFINES ${PCEM_DEFINES} DEBUG_EXTRA)
         endif()
+        if(PCEM_PRINTER_DEBUG)
+                set(PCEM_DEFINES ${PCEM_DEFINES} PRINTER_DEBUG)
+        endif()
 else()
         set(PCEM_DEFINES ${PCEM_DEFINES} RELEASE_BUILD)
 endif()
@@ -360,8 +363,9 @@ endif()
 if(USE_EXPERIMENTAL AND USE_EXPERIMENTAL_PRINTER)
         set(PCEM_DEFINES ${PCEM_DEFINES} USE_EXPERIMENTAL_PRINTER)
         set(PCEM_SRC ${PCEM_SRC}
-                lpt/lpt_printer.c
+                lpt/lpt_epsonlx810.c
                 )
+        set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} Freetype::Freetype)
 endif()
 
 if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
@@ -453,7 +457,7 @@ if(USE_NETWORKING)
 
         if(USE_PCAP_NETWORKING)
                 set(PCEM_DEFINES ${PCEM_DEFINES} USE_PCAP_NETWORKING)
-                set(NETWORKING_LIBRARIES ${NETWORKING_LIBRARIES} ${PCAP_LIBRARY})
+                set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} ${PCAP_LIBRARY})
         endif()
 
         set(PCEM_SRC ${PCEM_SRC}
@@ -485,7 +489,7 @@ if(USE_NETWORKING)
                 )
 
         if(WIN32)
-                set(NETWORKING_LIBRARIES ${NETWORKING_LIBRARIES} wsock32 iphlpapi)
+                set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} wsock32 iphlpapi)
         endif()
 endif()
 
@@ -493,19 +497,19 @@ set(PCEM_BIN_SRC ${PCEM_BIN_SRC}
         main.c
         )
 
-set(PCEM_LIBRARIES ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${ALSA_LIBRARIES} ${NETWORKING_LIBRARIES})
+set(PCEM_LIBRARIES ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${PCEM_ADDITIONAL_LIBS})
 
 add_library(pcem SHARED ${PCEM_SRC} ${PCEM_PRIVATE_HEADERS} ${PCEM_PUBLIC_HEADERS})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
 target_link_libraries(pcem ${PCEM_LIBRARIES})
-set_target_properties(pcem PROPERTIES PUBLIC_HEADER "${PCEM_PUBLIC_HEADERS}")
 
 add_executable(pcem-bin ${PCEM_BIN_SRC})
 target_link_libraries(pcem-bin pcem ${PCEM_LIBRARIES})
-set_target_properties(pcem-bin PROPERTIES OUTPUT_NAME "pcem")
+set_target_properties(pcem-bin PROPERTIES OUTPUT_NAME pcem)
 
-install(TARGETS pcem pcem-bin RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib PUBLIC_HEADER DESTINATION include/pcem)
+install(TARGETS pcem pcem-bin RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/nvr/ DESTINATION share/pcem/nvr/default)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/roms DESTINATION share/pcem)
 install(FILES ${CMAKE_SOURCE_DIR}/COPYING DESTINATION share/licenses/pcem)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/includes/public/ DESTINATION include FILES_MATCHING PATTERN *.h)

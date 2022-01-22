@@ -73,6 +73,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
         message("       MACH64_DEBUG debug output: ${PCEM_MACH64_DEBUG}")
         option(PCEM_DEBUG_EXTRA "Build PCem with DEBUG_EXTRA debug output" OFF)
         message("       DEBUG_EXTRA debug output: ${PCEM_DEBUG_EXTRA}")
+        option(PCEM_PRINTER_DEBUG "Build PCem with PRINTER_DEBUG debug output" OFF)
+        message("       PRINTER_DEBUG debug output: ${PCEM_PRINTER_DEBUG}")
 endif()
 message("***************************************************************")
 
@@ -97,6 +99,11 @@ endif()
 if(USE_PCAP_NETWORKING)
         find_package(PCAP REQUIRED)
         include_directories(${PCAP_INCLUDE_DIR})
+endif()
+
+if(USE_EXPERIMENTAL_PRINTER)
+        find_package(Freetype REQUIRED)
+        include_directories(${FREETYPE_INCLUDE_DIRS})
 endif()
 
 find_package(OpenGL REQUIRED)

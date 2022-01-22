@@ -9,10 +9,12 @@
 #include <pcem/defines.h>
 
 #ifdef USE_EXPERIMENTAL_PRINTER
-#include "lpt_printer.h"
+#include "lpt_epsonlx810.h"
 #endif
 
 char lpt1_device_name[16];
+
+int lpt1_current = 0;
 
 LPT_DEVICE* lpt_devices[LPT_MAX];
 
@@ -22,8 +24,7 @@ LPT_DEVICE l_lpt_dac = { "LPT DAC / Covox Speech Thing", "lpt_dac", &lpt_dac_dev
 LPT_DEVICE l_lpt_dac_stereo = { "Stereo LPT DAC", "lpt_dac_stereo", &lpt_dac_stereo_device };
 
 #ifdef USE_EXPERIMENTAL_PRINTER
-LPT_DEVICE l_textprinter = { "Text-Only Printer", "lpt_textprinter", &textprinter_device };
-LPT_DEVICE l_esc = { "ESC/P Dot-Matrix Printer", "lpt_esc", &esc_device };
+LPT_DEVICE l_epsonlx810 = { "Epson LX-810 Printer", "lpt_epsonlx810", &lpt_epsonprinter_device };
 #endif
 
 char* lpt_device_get_name(int id)
@@ -85,6 +86,37 @@ void lpt1_write(uint16_t port, uint8_t val, void* priv)
                 break;
         }
 }
+
+int lpt_device_has_config(int devId)
+{
+        if (lpt_devices[devId] == NULL || !lpt_devices[devId]->device)
+                return 0;
+        return lpt_devices[devId]->device->config ? 1 : 0;
+}
+
+
+lpt_device_t *lpt_get_device(int devId)
+{
+        if (lpt_devices[devId] == NULL || !lpt_devices[devId]->device)
+                return 0;
+
+        return lpt_devices[devId]->device;
+}
+
+int lpt_device_get_from_internal_name(char *s)
+{
+        	int c = 0;
+
+                	while (lpt_devices[c] != NULL && strlen(lpt_devices[c]->internal_name))
+                	{
+                        		if (!strcmp(lpt_devices[c]->internal_name, s))
+                        			return c;
+                        		c++;
+                        	}
+
+                	return 0;
+}
+
 uint8_t lpt1_read(uint16_t port, void* priv)
 {
         switch (port & 3)
@@ -186,7 +218,6 @@ void lpt_init_builtin()
         pcem_add_lpt(&l_lpt_dac);
         pcem_add_lpt(&l_lpt_dac_stereo);
 #ifdef USE_EXPERIMENTAL_PRINTER
-        pcem_add_lpt(&l_textprinter);
-        pcem_add_lpt(&l_esc);
+        pcem_add_lpt(&l_epsonlx810);
 #endif
 }

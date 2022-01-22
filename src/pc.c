@@ -876,6 +876,8 @@ void loadconfig(char* fn)
         p = (char*)config_get_string(CFG_MACHINE, NULL, "lpt1_device", "");
         if (p) strcpy(lpt1_device_name, p);
         else strcpy(lpt1_device_name, "");
+        if (p) lpt1_current = lpt_device_get_from_internal_name(p);
+        else   lpt1_current = 0;
 
 #ifdef USE_NETWORKING
         //network

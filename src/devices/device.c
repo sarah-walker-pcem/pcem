@@ -5,12 +5,10 @@
 #include "model.h"
 #include "sound.h"
 
-#include <pcem/devices.h>
-
 static void *device_priv[256];
 static device_t *devices[256];
 
-static device_t *current_device;
+device_t *current_device;
 char *current_device_name = NULL;
 
 void device_init()

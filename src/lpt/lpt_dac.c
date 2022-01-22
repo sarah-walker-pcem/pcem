@@ -96,18 +96,30 @@ static void dac_close(void* p)
 lpt_device_t lpt_dac_device =
         {
                 "LPT DAC / Covox Speech Thing",
+                0,
                 dac_init,
                 dac_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
                 dac_write_data,
                 dac_write_ctrl,
-                dac_read_status
+                dac_read_status,
         };
 lpt_device_t lpt_dac_stereo_device =
         {
                 "Stereo LPT DAC",
+                0,
                 dac_stereo_init,
                 dac_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
                 dac_write_data,
                 dac_write_ctrl,
-                dac_read_status
+                dac_read_status,
         };

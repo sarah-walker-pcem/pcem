@@ -61,7 +61,7 @@ incomplete, and may or may not be in a future build of PCem. We do not provide b
 well.
 ```
   -DUSE_EXPERIMENTAL_PGC=ON       : Build PCem with Professional Graphics Controller support.
-  -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support.
+  -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support. Requires freetype.
 ``` 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not
 captured.
