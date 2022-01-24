@@ -46,6 +46,8 @@
 #include "wx-common.h"
 #include "wx-display.h"
 
+#include "plugin.h"
+
 #if __APPLE__
 #define pause __pause
 #include <util.h>
@@ -534,6 +536,7 @@ int pc_main(int argc, char** argv)
 {
         paths_init();
 
+        init_plugin_engine();
         model_init_builtin();
         video_init_builtin();
         lpt_init_builtin();
@@ -542,6 +545,8 @@ int pc_main(int argc, char** argv)
 #ifdef USE_NETWORKING
         network_card_init_builtin();
 #endif
+
+        load_plugins();
 
 #ifdef __linux__
         char s[1024];

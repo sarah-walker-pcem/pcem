@@ -15,13 +15,12 @@
 #include <pcem/devices.h>
 #include <pcem/defines.h>
 
+extern HDD_CONTROLLER* hdd_controllers[HDDCONTROLLERS_MAX];
 char hdd_controller_name[16];
 
 static device_t null_hdd_device;
 
 static int hdd_controller_current;
-
-HDD_CONTROLLER* hdd_controllers[HDDCONTROLLERS_MAX];
 
 char* hdd_controller_get_name(int hdd)
 {
@@ -190,16 +189,6 @@ static device_t null_hdd_device =
                 NULL,
                 NULL };
 
-int hdd_controller_count()
-{
-        int ret = 0;
-
-        while (hdd_controllers[ret] != NULL && ret < HDDCONTROLLERS_MAX)
-                ret++;
-
-        return ret;
-}
-
 HDD_CONTROLLER h_none = { "None", "none", &null_hdd_device, 0, 0, 0 };
 HDD_CONTROLLER h_mfm_at = { "[MFM] AT Fixed Disk Adapter", "mfm_at", &mfm_at_device, 1, 0, 0 };
 HDD_CONTROLLER h_dtc5150x = { "[MFM] DTC 5150X", "dtc5150x", &dtc_5150x_device, 1, 0, 0 };
@@ -217,16 +206,8 @@ HDD_CONTROLLER h_lcs6821n = { "[SCSI] Longshine LCS-6821N", "lcs6821n", &scsi_lc
 HDD_CONTROLLER h_rt1000b = { "[SCSI] Rancho RT1000B", "rt1000b", &scsi_rt1000b_device, 0, 0, 1 };
 HDD_CONTROLLER h_t130b = { "[SCSI] Trantor T130B", "t130b", &scsi_t130b_device, 0, 0, 1 };
 
-void pcem_add_hddcontroller(HDD_CONTROLLER* hddcontroller)
-{
-        //TODO: Add sanity check to not go past MAX amount
-        hdd_controllers[hdd_controller_count()] = hddcontroller;
-}
-
 void hdd_controller_init_builtin()
 {
-        memset(hdd_controllers, 0, sizeof(hdd_controllers));
-
         pcem_add_hddcontroller(&h_none);
         pcem_add_hddcontroller(&h_mfm_at);
         pcem_add_hddcontroller(&h_dtc5150x);

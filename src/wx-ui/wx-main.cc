@@ -4,10 +4,10 @@
 extern "C"
 {
 int pc_main(int, char**);
-int pcem_lib_main(int argc, char** argv);
+int main(int argc, char** argv);
 }
 
-int pcem_lib_main(int argc, char** argv)
+int main(int argc, char** argv)
 {
         if (!pc_main(argc, argv))
                 return -1;

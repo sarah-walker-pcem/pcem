@@ -34,6 +34,9 @@ message("OS Building For: ${CMAKE_SYSTEM_NAME}")
 message("System Processor: ${PCEM_CPU_TYPE}")
 message("***************************************************************")
 
+option(PLUGIN_ENGINE "Build PCem with plugin support" OFF)
+message("Plugin Support: ${PLUGIN_ENGINE}")
+
 option(USE_NETWORKING "Build PCem with networking support" OFF)
 message("Networking Support: ${USE_NETWORKING}")
 

@@ -19,5 +19,4 @@ void hdd_controller_init_builtin();
 
 extern char hdd_controller_name[16];
 
-
 #endif /* _HDD_H_ */

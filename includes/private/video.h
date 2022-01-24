@@ -1,5 +1,6 @@
 #ifndef _VIDEO_H_
 #define _VIDEO_H_
+
 typedef struct
 {
         int w, h;
@@ -121,6 +122,5 @@ extern uint32_t cgapal[16];
 #define DISPLAY_WHITE 5
 
 void cgapal_rebuild(int display_type, int contrast);
-
 
 #endif /* _VIDEO_H_ */

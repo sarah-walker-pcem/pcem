@@ -54,6 +54,8 @@
 
 #include <pcem/devices.h>
 
+extern VIDEO_CARD* video_cards[GFX_MAX];
+
 enum
 {
         VIDEO_ISA = 0,
@@ -64,8 +66,6 @@ enum
 #define VIDEO_FLAG_TYPE_MDA     1
 #define VIDEO_FLAG_TYPE_SPECIAL 2
 #define VIDEO_FLAG_TYPE_MASK    3
-
-VIDEO_CARD* video_cards[GFX_MAX];
 
 VIDEO_CARD v_banshee = { "3DFX Voodoo Banshee (reference)", "banshee", &voodoo_banshee_device, GFX_BANSHEE, VIDEO_FLAG_TYPE_SPECIAL, { VIDEO_BUS, 2, 2, 1, 20, 20, 21 }};
 VIDEO_CARD v_v3_2000 = { "3DFX Voodoo 3 2000", "v3_2000", &voodoo_3_2000_device, GFX_VOODOO_3_2000, VIDEO_FLAG_TYPE_SPECIAL, { VIDEO_BUS, 2, 2, 1, 20, 20, 21 }};
@@ -1318,26 +1318,8 @@ void cgapal_rebuild(int display_type, int contrast)
         }
 }
 
-int video_count()
-{
-        int ret = 0;
-
-        while (video_cards[ret] != NULL && ret < GFX_MAX)
-                ret++;
-
-        return ret;
-}
-
-void pcem_add_video(VIDEO_CARD* video)
-{
-        //TODO: Add sanity check to not go past MAX amount
-        video_cards[video_count()] = video;
-}
-
 void video_init_builtin()
 {
-        memset(video_cards, 0, sizeof(video_cards));
-
         pcem_add_video(&v_banshee);
         pcem_add_video(&v_v3_2000);
         pcem_add_video(&v_v3_3000);

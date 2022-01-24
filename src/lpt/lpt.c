@@ -16,7 +16,7 @@ char lpt1_device_name[16];
 
 int lpt1_current = 0;
 
-LPT_DEVICE* lpt_devices[LPT_MAX];
+extern LPT_DEVICE* lpt_devices[LPT_MAX];
 
 LPT_DEVICE l_none = { "None", "none", NULL };
 LPT_DEVICE l_dss = { "Disney Sound Source", "dss", &dss_device };
@@ -193,26 +193,8 @@ void lpt2_remove_ams()
         io_removehandler(0x0379, 0x0002, lpt2_read, NULL, NULL, lpt2_write, NULL, NULL, NULL);
 }
 
-int lpt_count()
-{
-        int ret = 0;
-
-        while (lpt_devices[ret] != NULL && ret < LPT_MAX)
-                ret++;
-
-        return ret;
-}
-
-void pcem_add_lpt(LPT_DEVICE* lpt)
-{
-        //TODO: Add sanity check to not go past MAX amount
-        lpt_devices[lpt_count()] = lpt;
-}
-
 void lpt_init_builtin()
 {
-        memset(lpt_devices, 0, sizeof(lpt_devices));
-
         pcem_add_lpt(&l_none);
         pcem_add_lpt(&l_dss);
         pcem_add_lpt(&l_lpt_dac);

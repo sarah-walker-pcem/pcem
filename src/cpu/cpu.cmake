@@ -1,0 +1,12 @@
+set(PCEM_SRC_CPU
+        cpu/386.c
+        cpu/386_common.c
+        cpu/386_dynarec.c
+        cpu/386_dynarec_ops.c
+        cpu/808x.c
+        cpu/cpu.c
+        cpu/cpu_tables.c
+        cpu/x86seg.c
+        cpu/x87.c
+        cpu/x87_timings.c
+        )

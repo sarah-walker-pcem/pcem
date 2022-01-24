@@ -26,10 +26,10 @@
 
 #include <pcem/devices.h>
 
+extern SOUND_CARD* sound_cards[SOUND_MAX];
+
 int sound_card_current = 0;
 static int sound_card_last = 0;
-
-SOUND_CARD* sound_cards[256];
 
 SOUND_CARD sc_none = { "None", "none", NULL };
 SOUND_CARD sc_adlib = { "Adlib", "adlib", &adlib_device };
@@ -287,26 +287,8 @@ void sound_reset()
         image_audio_stop();
 }
 
-int sound_count()
-{
-        int ret = 0;
-
-        while (sound_cards[ret] != NULL && ret < SOUND_MAX)
-                ret++;
-
-        return ret;
-}
-
-void pcem_add_sound(SOUND_CARD* sound)
-{
-        //TODO: Add sanity check to not go past MAX amount
-        sound_cards[sound_count()] = sound;
-}
-
 void sound_init_builtin()
 {
-        memset(sound_cards, 0, sizeof(sound_cards));
-
         pcem_add_sound(&sc_none);
         pcem_add_sound(&sc_adlib);
         pcem_add_sound(&sc_adlib_mca);

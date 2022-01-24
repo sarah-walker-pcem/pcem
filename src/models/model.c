@@ -144,18 +144,6 @@ int model;
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
 
-MODEL *models[ROM_MAX];
-
-int model_count()
-{
-        int ret = 0;
-
-        while (models[ret] != NULL && ret < ROM_MAX)
-                ret++;
-
-        return ret;
-}
-
 int model_getromset()
 {
         return models[model]->id;
@@ -897,16 +885,8 @@ MODEL m_vs440fx = {"[Socket 8] Intel VS440FX", ROM_VS440FX, "vs440fx", {{"Intel"
 /* Slot 1 PC's */
 MODEL m_ga686bx = {"[Slot 1] Gigabyte GA-686BX", ROM_GA686BX, "ga686bx", {{"Intel", cpus_Slot1_100MHz}, {"VIA", cpus_VIA_100MHz}}, MODEL_GFX_NONE | MODEL_AT | MODEL_PCI | MODEL_PS2 | MODEL_HAS_IDE, 8, 512, 8, at_ga686bx_init, NULL};
 
-void pcem_add_model(MODEL *model)
-{
-        //TODO: Add sanity check to not go past MAX amount
-        models[model_count()] = model;
-}
-
 void model_init_builtin()
 {
-        memset(models, 0, sizeof(models));
-
         /* 8088 PC's */
         pcem_add_model(&m_amixt);
         pcem_add_model(&m_ataripc3);
