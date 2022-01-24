@@ -350,6 +350,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND USE_ALSA)
         set(PCEM_SRC ${PCEM_SRC}
                 sound/midi_alsa.c
                 )
+        set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} ${ALSA_LIBRARIES})
 else()
         set(PCEM_SRC ${PCEM_SRC}
                 wx-ui/wx-sdl2-midi.c
