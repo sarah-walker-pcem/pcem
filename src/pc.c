@@ -93,53 +93,6 @@ int atfullspeed;
 void saveconfig(char* fn);
 int infocus;
 int mousecapture;
-FILE* pclogf;
-void pclog(const char* format, ...)
-{
-#ifndef RELEASE_BUILD
-        char buf[1024];
-        //return;
-        if (!pclogf)
-        {
-                strcpy(buf, logs_path);
-                put_backslash(buf);
-                strcat(buf, "pcem.log");
-                pclogf = fopen(buf, "wt");
-        }
-        //return;
-        va_list ap;
-        va_start(ap, format);
-        vsprintf(buf, format, ap);
-        va_end(ap);
-        fputs(buf, pclogf);
-        fputs(buf, stdout);
-//        fflush(pclogf);
-#endif
-}
-
-void fatal(const char* format, ...)
-{
-        char buf[256];
-        //   return;
-        if (!pclogf)
-        {
-                strcpy(buf, logs_path);
-                put_backslash(buf);
-                strcat(buf, "pcem.log");
-                pclogf = fopen(buf, "wt");
-        }
-        //return;
-        va_list ap;
-        va_start(ap, format);
-        vsprintf(buf, format, ap);
-        va_end(ap);
-        fputs(buf, pclogf);
-        fflush(pclogf);
-        savenvr();
-        dumppic();
-        dumpregs();
-        exit(-1);
-}
 
 uint8_t cgastat;
 
@@ -675,22 +628,7 @@ void closepc()
 
 END_OF_MAIN();*/
 
-typedef struct config_callback_t
-{
-        void (* loadconfig)();
-        void (* saveconfig)();
-        void (* onloaded)();
-} config_callback_t;
-config_callback_t config_callbacks[10];
-int num_config_callbacks = 0;
 
-void add_config_callback(void(* loadconfig)(), void(* saveconfig)(), void(* onloaded)())
-{
-        config_callbacks[num_config_callbacks].loadconfig = loadconfig;
-        config_callbacks[num_config_callbacks].saveconfig = saveconfig;
-        config_callbacks[num_config_callbacks].onloaded = onloaded;
-        num_config_callbacks++;
-}
 
 void loadconfig(char* fn)
 {

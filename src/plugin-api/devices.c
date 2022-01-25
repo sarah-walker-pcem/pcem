@@ -1,9 +1,14 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 
+#include <pcem/logging.h>
 #include "plugin.h"
 
+device_t *current_device;
+char *current_device_name = NULL;
+void *device_priv[DEV_MAX];
+
+device_t *devices[DEV_MAX];
 MODEL *models[ROM_MAX];
 VIDEO_CARD* video_cards[GFX_MAX];
 SOUND_CARD* sound_cards[SOUND_MAX];
@@ -107,19 +112,28 @@ void pcem_add_networkcard(NETWORK_CARD *netcard)
         network_cards[network_card_count()] = netcard;
 }
 
-void init_plugin_engine()
+void pcem_add_device(device_t *d)
 {
-        memset(models, 0, sizeof(models));
-        memset(video_cards, 0, sizeof(video_cards));
-        memset(lpt_devices, 0, sizeof(lpt_devices));
-        memset(sound_cards, 0, sizeof(sound_cards));
-        memset(hdd_controllers, 0, sizeof(hdd_controllers));
-        memset(network_cards, 0, sizeof(network_cards));
-}
+        int c = 0;
+        void *priv = NULL;
 
-void load_plugins()
-{
-#ifdef PLUGIN_ENGINE
+        while (devices[c] != NULL && c < 256)
+                c++;
 
-#endif
+        if (c >= 256)
+                fatal("device_add : too many devices\n");
+
+        current_device = d;
+        current_device_name = d->name;
+
+        if (d->init != NULL)
+        {
+                priv = d->init();
+                if (priv == NULL)
+                        fatal("device_add : device init failed\n");
+        }
+
+        devices[c] = d;
+        device_priv[c] = priv;
+        current_device_name = NULL;
 }

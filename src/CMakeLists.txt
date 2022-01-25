@@ -1,4 +1,3 @@
-include(${CMAKE_SOURCE_DIR}/cmake/pcem_includes.cmake)
 set(PCEM_DEFINES ${PCEM_DEFINES} INST_PREFIX="${CMAKE_INSTALL_PREFIX}")
 
 if(PLUGIN_ENGINE)
@@ -71,11 +70,9 @@ ${PCEM_SRC_MFM} ${PCEM_SRC_DOSBOX} ${PCEM_SRC_WXUI} ${PCEM_SRC_MODELS} ${PCEM_SR
 
 set(PCEM_SRC
         ${PCEM_SRC}
-        config.c
         fdi2raw.c
         io.c
         mcr.c
-        paths.c
         pc.c
         ppi.c
         pzx.c
@@ -84,22 +81,20 @@ set(PCEM_SRC
         timer.c
         )
 
-set(PCEM_LIB_SRC
-        ${PCEM_LIB_SRC}
-        plugin.c)
-
 set(PCEM_LIBRARIES ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${PCEM_ADDITIONAL_LIBS})
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin-api/plugin-api.cmake)
+
 if(PLUGIN_ENGINE)
-        add_library(pcem-plugin-api SHARED ${PCEM_LIB_SRC} ${PCEM_PRIVATE_HEADERS} ${PCEM_PUBLIC_HEADERS})
+        add_library(pcem-plugin-api SHARED ${PCEM_SRC_PLUGINAPI} ${PCEM_PUBLIC_API})
         target_compile_definitions(pcem-plugin-api PUBLIC ${PCEM_DEFINES})
         install(TARGETS pcem-plugin-api RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
         set(PCEM_LIBRARIES ${PCEM_LIBRARIES} pcem-plugin-api)
 else()
-        set(PCEM_EMBEDDED_PLUGIN_API ${PCEM_LIB_SRC})
+        set(PCEM_EMBEDDED_PLUGIN_API ${PCEM_SRC_PLUGINAPI} ${PCEM_PUBLIC_API})
 endif()
 
-add_executable(pcem ${PCEM_SRC} ${PCEM_EMBEDDED_PLUGIN_API})
+add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
 target_link_libraries(pcem ${PCEM_LIBRARIES})

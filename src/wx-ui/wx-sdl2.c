@@ -126,18 +126,6 @@ char screenshot_format[10];
 int screenshot_flash = 1;
 int take_screenshot = 0;
 
-void warning(const char* format, ...)
-{
-        char buf[1024];
-        va_list ap;
-
-        va_start(ap, format);
-        vsprintf(buf, format, ap);
-        va_end(ap);
-
-        wx_messagebox(ghwnd, buf, "PCem", WX_MB_OK);
-}
-
 void updatewindowsize(int x, int y)
 {
         video_width = x;
@@ -234,42 +222,6 @@ void stop_emulation_now(void)
           run before the main thread is terminated*/
         cycles -= 99999999;
         wx_stop_emulation_now(ghwnd);
-}
-
-int dir_exists(char* path)
-{
-        return wx_dir_exists(path);
-}
-
-void get_pcem_path(char* s, int size)
-{
-#ifdef __linux
-        wx_get_home_directory(s);
-        strcat(s, ".pcem/");
-#elif defined(__APPLE__)
-        /*TODO: Use CoreFoundation functions to get proper directory, in case 
-          the Application Support directory is different (I.E., with signing)*/
-        wx_get_home_directory(s);
-        strcat(s, "Library/Application Support/PCem/");
-
-        struct stat st = {0};
-
-        // create ~/Library/Application Support/PCem/
-        // if it doesn't exist
-        if (stat(s, &st) == -1)
-        {
-                mkdir(s, 0700);
-        }
-#else
-        char *path = SDL_GetBasePath();
-        strcpy(s, path);
-#endif
-}
-
-void get_pcem_base_path(char* s, int size)
-{
-        char* path = SDL_GetBasePath();
-        strcpy(s, path);
 }
 
 void set_window_title(const char* s)
