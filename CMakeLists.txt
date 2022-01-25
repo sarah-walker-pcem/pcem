@@ -5,8 +5,7 @@ project(PCem)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-include(${CMAKE_SOURCE_DIR}/includes/private/private_api.cmake)
-include(${CMAKE_SOURCE_DIR}/includes/public/public_api.cmake)
+include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
 
 # TODO: This whole thing is jank, replace with a real way to determine cpu type
 if(WIN32)

@@ -1,8 +1,79 @@
+set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
+        ${CMAKE_SOURCE_DIR}/includes/private/video/video.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_et4000.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_et4000w32.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_genius.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_hercules.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ht216.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_icd2061.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ics2595.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_im1024.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_incolor.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_mda.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_mga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_olivetti_m24.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_oti037.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_oti067.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_paradise.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pc1512.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pc1640.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pc200.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pcjr.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pgc.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ps1_svga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3_virge.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_sdac_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_sigma.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_stg_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_svga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_svga_render.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_svga_render_remap.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_t1000.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_t3100e.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tandy.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tandysl.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tgui9440.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tkd8001_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tvga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_tvp3026_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_unk_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_vga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_banshee_blitter.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_banshee.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_blitter.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_codegen_x86-64.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_codegen_x86.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_common.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_display.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_dither.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_fb.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_fifo.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_reg.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_regs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_render.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_setup.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_voodoo_texture.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_wy700.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ati18800.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ati28800.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ati68860_ramdac.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ati_eeprom.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ati_mach64.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_cga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_cl5429.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_colorplus.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_compaq_cga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ddc.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ega.h
+        )
+
 if(USE_EXPERIMENTAL AND USE_EXPERIMENTAL_PGC)
         set(PCEM_DEFINES ${PCEM_DEFINES} USE_EXPERIMENTAL_PGC)
 endif()
 
-set(PCEM_SRC_VIDEO
+set(PCEM_SRC ${PCEM_SRC}
         video/vid_ati18800.c
         video/vid_ati28800.c
         video/vid_ati68860_ramdac.c

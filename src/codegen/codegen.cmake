@@ -1,4 +1,54 @@
-set(PCEM_SRC_CODEGEN
+set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_accumulate.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_allocator.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm64_defs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm64.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm64_ops.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm_defs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_arm_ops.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86-64_defs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86-64.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86-64_ops.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86-64_ops_helpers.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86-64_ops_sse.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86_defs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86_ops_fpu.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86_ops.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86_ops_helpers.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_backend_x86_ops_sse.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ir_defs.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ir.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_3dnow.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_arith.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_branch.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_fpu_arith.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_fpu_constant.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_fpu_loadstore.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_fpu_misc.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_helpers.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_jump.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_logic.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_misc.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_arith.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_cmp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_loadstore.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_logic.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_pack.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mmx_shift.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_mov.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_shift.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_ops_stack.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_reg.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_timing_common.h
+        ${CMAKE_SOURCE_DIR}/includes/private/codegen/codegen_x86-64.h
+        )
+
+set(PCEM_SRC ${PCEM_SRC}
         codegen/codegen.c
         codegen/codegen_accumulate.c
         codegen/codegen_allocator.c
@@ -38,7 +88,7 @@ set(PCEM_SRC_CODEGEN
         )
 
 if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
-        set(PCEM_SRC_CODEGEN ${PCEM_SRC_CODEGEN}
+        set(PCEM_SRC ${PCEM_SRC}
                 codegen/x86-64/codegen_backend_x86-64.c
                 codegen/x86-64/codegen_backend_x86-64_ops.c
                 codegen/x86-64/codegen_backend_x86-64_ops_sse.c
@@ -47,7 +97,7 @@ if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
 endif()
 
 if(${PCEM_CPU_TYPE} STREQUAL "i386")
-        set(PCEM_SRC_CODEGEN ${PCEM_SRC_CODEGEN}
+        set(PCEM_SRC ${PCEM_SRC}
                 codegen/x86/codegen_backend_x86.c
                 codegen/x86/codegen_backend_x86_ops.c
                 codegen/x86/codegen_backend_x86_ops_fpu.c
@@ -57,7 +107,7 @@ if(${PCEM_CPU_TYPE} STREQUAL "i386")
 endif()
 
 if(${PCEM_CPU_TYPE} STREQUAL "arm")
-        set(PCEM_SRC_CODEGEN ${PCEM_SRC_CODEGEN}
+        set(PCEM_SRC ${PCEM_SRC}
                 codegen/arm32/codegen_backend_arm.c
                 codegen/arm32/codegen_backend_arm_ops.c
                 codegen/arm32/codegen_backend_arm_uops.c
@@ -65,7 +115,7 @@ if(${PCEM_CPU_TYPE} STREQUAL "arm")
 endif()
 
 if(${PCEM_CPU_TYPE} STREQUAL "arm64")
-        set(PCEM_SRC_CODEGEN ${PCEM_SRC_CODEGEN}
+        set(PCEM_SRC ${PCEM_SRC}
                 codegen/arm64/codegen_backend_arm64.c
                 codegen/arm64/codegen_backend_arm64_imm.c
                 codegen/arm64/codegen_backend_arm64_ops.c

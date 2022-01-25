@@ -1,3 +1,32 @@
+set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/bootp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/config.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/config-host.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/ctl.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/debug.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/icmp_var.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/if.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/ip.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/ip_icmp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/libslirp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/main.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/mbuf.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/misc.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/queue.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/sbuf.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/slirp_config.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/slirp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/socket.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/tcp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/tcpip.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/tcp_timer.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/tcp_var.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/tftp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/slirp/udp.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/ne2000.h
+        ${CMAKE_SOURCE_DIR}/includes/private/networking/nethandler.h
+        )
+
 set(PCEM_DEFINES ${PCEM_DEFINES} USE_NETWORKING)
 
 if(USE_PCAP_NETWORKING)
@@ -5,13 +34,12 @@ if(USE_PCAP_NETWORKING)
         set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} ${PCAP_LIBRARY})
 endif()
 
-set(PCEM_SRC_NETWORKING
+set(PCEM_SRC ${PCEM_SRC}
         networking/ne2000.c
         networking/nethandler.c
         )
 
-set(PCEM_SRC_NETWORKING
-        ${PCEM_SRC_NETWORKING}
+set(PCEM_SRC ${PCEM_SRC}
         networking/slirp/bootp.c
         networking/slirp/cksum.c
         networking/slirp/debug.c
